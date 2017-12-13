@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.replication;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -30,4 +31,6 @@ public interface IReplicaResourcesManager {
      * @throws HyracksDataException
      */
     long getPartitionsMinLSN(Set<Integer> partitions) throws HyracksDataException;
+
+    List<String> getPartitionIndexesFiles(int partition, boolean relativePath) throws HyracksDataException;
 }

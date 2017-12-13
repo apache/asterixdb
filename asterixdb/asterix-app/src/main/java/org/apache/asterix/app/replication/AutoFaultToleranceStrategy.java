@@ -45,8 +45,8 @@ import org.apache.asterix.app.replication.message.PreparePartitionsFailbackReque
 import org.apache.asterix.app.replication.message.PreparePartitionsFailbackResponseMessage;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.app.replication.message.RegistrationTasksResponseMessage;
-import org.apache.asterix.app.replication.message.TakeoverMetadataNodeRequestMessage;
-import org.apache.asterix.app.replication.message.TakeoverMetadataNodeResponseMessage;
+import org.apache.asterix.app.replication.message.MetadataNodeRequestMessage;
+import org.apache.asterix.app.replication.message.MetadataNodeResponseMessage;
 import org.apache.asterix.app.replication.message.TakeoverPartitionsRequestMessage;
 import org.apache.asterix.app.replication.message.TakeoverPartitionsResponseMessage;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
@@ -337,7 +337,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
         validateClusterState();
     }
 
-    public synchronized void process(TakeoverMetadataNodeResponseMessage response) throws HyracksDataException {
+    public synchronized void process(MetadataNodeResponseMessage response) throws HyracksDataException {
         currentMetadataNode = response.getNodeId();
         metadataNodeActive = true;
         clusterManager.updateMetadataNode(currentMetadataNode, metadataNodeActive);
@@ -403,7 +403,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
         ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
         ClusterPartition metadataPartiton = appCtx.getMetadataProperties().getMetadataPartition();
         //request the metadataPartition node to register itself as the metadata node
-        TakeoverMetadataNodeRequestMessage takeoverRequest = new TakeoverMetadataNodeRequestMessage();
+        MetadataNodeRequestMessage takeoverRequest = new MetadataNodeRequestMessage(true);
         try {
             messageBroker.sendApplicationMessageToNC(takeoverRequest, metadataPartiton.getActiveNodeId());
             // Since the metadata node will be changed, we need to rebind the proxy object
@@ -440,8 +440,8 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
             case TAKEOVER_PARTITION_RESPONSE:
                 process((TakeoverPartitionsResponseMessage) message);
                 break;
-            case TAKEOVER_METADATA_NODE_RESPONSE:
-                process((TakeoverMetadataNodeResponseMessage) message);
+            case METADATA_NODE_RESPONSE:
+                process((MetadataNodeResponseMessage) message);
                 break;
             case PREPARE_FAILBACK_RESPONSE:
                 process((PreparePartitionsFailbackResponseMessage) message);

@@ -24,13 +24,15 @@ import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class TakeoverMetadataNodeResponseMessage implements INCLifecycleMessage, ICcAddressedMessage {
+public class MetadataNodeResponseMessage implements INCLifecycleMessage, ICcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private final String nodeId;
+    private final boolean exported;
 
-    public TakeoverMetadataNodeResponseMessage(String nodeId) {
+    public MetadataNodeResponseMessage(String nodeId, boolean exported) {
         this.nodeId = nodeId;
+        this.exported = exported;
     }
 
     public String getNodeId() {
@@ -44,11 +46,15 @@ public class TakeoverMetadataNodeResponseMessage implements INCLifecycleMessage,
 
     @Override
     public String toString() {
-        return TakeoverMetadataNodeResponseMessage.class.getSimpleName();
+        return MetadataNodeResponseMessage.class.getSimpleName();
     }
 
     @Override
     public MessageType getType() {
-        return MessageType.TAKEOVER_METADATA_NODE_RESPONSE;
+        return MessageType.METADATA_NODE_RESPONSE;
+    }
+
+    public boolean isExported() {
+        return exported;
     }
 }

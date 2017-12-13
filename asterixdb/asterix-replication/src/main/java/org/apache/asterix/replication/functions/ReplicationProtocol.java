@@ -25,10 +25,18 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
+import org.apache.asterix.common.exceptions.ReplicationException;
 import org.apache.asterix.common.replication.ReplicaEvent;
+import org.apache.asterix.replication.api.IReplicationMessage;
 import org.apache.asterix.replication.management.NetworkingUtil;
+import org.apache.asterix.replication.messaging.CheckpointPartitionIndexesTask;
+import org.apache.asterix.replication.messaging.DeleteFileTask;
+import org.apache.asterix.replication.messaging.PartitionResourcesListResponse;
+import org.apache.asterix.replication.messaging.PartitionResourcesListTask;
+import org.apache.asterix.replication.messaging.ReplicateFileTask;
 import org.apache.asterix.replication.storage.LSMComponentProperties;
 import org.apache.asterix.replication.storage.LSMIndexFileProperties;
+import org.apache.asterix.replication.storage.PartitionReplica;
 import org.apache.hyracks.data.std.util.ExtendedByteArrayOutputStream;
 
 public class ReplicationProtocol {
@@ -38,8 +46,8 @@ public class ReplicationProtocol {
      */
     public static final String JOB_REPLICATION_ACK = "$";
 
-    public final static int REPLICATION_REQUEST_TYPE_SIZE = Integer.BYTES;
-    public final static int REPLICATION_REQUEST_HEADER_SIZE = REPLICATION_REQUEST_TYPE_SIZE + Integer.BYTES;
+    public static final  int REPLICATION_REQUEST_TYPE_SIZE = Integer.BYTES;
+    private static final  int REPLICATION_REQUEST_HEADER_SIZE = REPLICATION_REQUEST_TYPE_SIZE + Integer.BYTES;
 
     /*
      * ReplicationRequestType:
@@ -64,7 +72,12 @@ public class ReplicationProtocol {
         REPLICA_EVENT,
         LSM_COMPONENT_PROPERTIES,
         ACK,
-        FLUSH_INDEX
+        FLUSH_INDEX,
+        PARTITION_RESOURCES_REQUEST,
+        PARTITION_RESOURCES_RESPONSE,
+        REPLICATE_RESOURCE_FILE,
+        DELETE_RESOURCE_FILE,
+        CHECKPOINT_PARTITION
     }
 
     public static ByteBuffer readRequest(SocketChannel socketChannel, ByteBuffer dataBuffer) throws IOException {
@@ -255,5 +268,87 @@ public class ReplicationProtocol {
     public static void sendAck(SocketChannel socketChannel) throws IOException {
         ByteBuffer ackBuffer = ReplicationProtocol.getAckBuffer();
         NetworkingUtil.transferBufferToChannel(socketChannel, ackBuffer);
+    }
+
+    public static void sendAck(SocketChannel socketChannel, ByteBuffer buf) {
+        try {
+            buf.clear();
+            buf.putInt(ReplicationRequestType.ACK.ordinal());
+            buf.flip();
+            NetworkingUtil.transferBufferToChannel(socketChannel, buf);
+        } catch (IOException e) {
+            throw new ReplicationException(e);
+        }
+    }
+
+    public static void waitForAck(PartitionReplica replica) throws IOException {
+        final SocketChannel channel = replica.getChannel();
+        final ByteBuffer buf = replica.gerReusableBuffer();
+        ReplicationRequestType responseFunction = ReplicationProtocol.getRequestType(channel, buf);
+        if (responseFunction != ReplicationRequestType.ACK) {
+            throw new IllegalStateException("Unexpected response while waiting for ack.");
+        }
+    }
+
+    public static void sendTo(PartitionReplica replica, IReplicationMessage task) {
+        final SocketChannel channel = replica.getChannel();
+        final ByteBuffer buf = replica.gerReusableBuffer();
+        sendTo(channel, task, buf);
+    }
+
+    public static void sendTo(SocketChannel channel, IReplicationMessage task, ByteBuffer buf) {
+        ExtendedByteArrayOutputStream outputStream = new ExtendedByteArrayOutputStream();
+        try (DataOutputStream oos = new DataOutputStream(outputStream)) {
+            task.serialize(oos);
+            final int requestSize = REPLICATION_REQUEST_HEADER_SIZE + oos.size();
+            final ByteBuffer requestBuffer = ensureSize(buf, requestSize);
+            requestBuffer.putInt(task.getMessageType().ordinal());
+            requestBuffer.putInt(oos.size());
+            requestBuffer.put(outputStream.getByteArray(), 0, outputStream.getLength());
+            requestBuffer.flip();
+            NetworkingUtil.transferBufferToChannel(channel, requestBuffer);
+        } catch (IOException e) {
+            throw new ReplicationException(e);
+        }
+    }
+
+    public static IReplicationMessage read(SocketChannel socketChannel, ByteBuffer buffer) throws IOException {
+        final ReplicationRequestType type = getRequestType(socketChannel, buffer);
+        return readMessage(type, socketChannel, buffer);
+    }
+
+    public static IReplicationMessage readMessage(ReplicationRequestType type, SocketChannel socketChannel,
+            ByteBuffer buffer) {
+        try {
+            ReplicationProtocol.readRequest(socketChannel, buffer);
+            final ByteArrayInputStream input =
+                    new ByteArrayInputStream(buffer.array(), buffer.position(), buffer.limit());
+            try (DataInputStream dis = new DataInputStream(input)) {
+                switch (type) {
+                    case PARTITION_RESOURCES_REQUEST:
+                        return PartitionResourcesListTask.create(dis);
+                    case PARTITION_RESOURCES_RESPONSE:
+                        return PartitionResourcesListResponse.create(dis);
+                    case REPLICATE_RESOURCE_FILE:
+                        return ReplicateFileTask.create(dis);
+                    case DELETE_RESOURCE_FILE:
+                        return DeleteFileTask.create(dis);
+                    case CHECKPOINT_PARTITION:
+                        return CheckpointPartitionIndexesTask.create(dis);
+                    default:
+                        throw new IllegalStateException("Unrecognized replication message");
+                }
+            }
+        } catch (IOException e) {
+            throw new ReplicationException(e);
+        }
+    }
+
+    private static ByteBuffer ensureSize(ByteBuffer buffer, int size) {
+        if (buffer.capacity() < size) {
+            return ByteBuffer.allocate(size);
+        }
+        buffer.clear();
+        return buffer;
     }
 }

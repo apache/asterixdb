@@ -64,4 +64,12 @@ public interface IFaultToleranceStrategy {
      */
     IFaultToleranceStrategy from(ICCServiceContext serviceCtx, IReplicationStrategy replicationStrategy);
 
+    /**
+     * Performs the required steps to change the metadata node to {@code node}
+     *
+     * @param node
+     */
+    default void notifyMetadataNodeChange(String node) throws HyracksDataException {
+        throw new UnsupportedOperationException(getClass() + " does not support metadata node change");
+    }
 }

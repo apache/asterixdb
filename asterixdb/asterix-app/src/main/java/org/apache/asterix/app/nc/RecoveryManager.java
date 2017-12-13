@@ -375,8 +375,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                 } else {
                                     maxDiskLastLsn = resourceId2MaxLSNMap.get(resourceId);
                                 }
-
-                                if (lsn > maxDiskLastLsn) {
+                                // lsn @ maxDiskLastLsn is either a flush log or a master replica log
+                                if (lsn >= maxDiskLastLsn) {
                                     redo(logRecord, datasetLifecycleManager);
                                     redoCount++;
                                 }

@@ -33,6 +33,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
@@ -90,6 +91,9 @@ public class StorageApiServlet extends AbstractServlet {
                 break;
             case "/removeReplica":
                 processRemoveReplica(request, response);
+                break;
+            case "/promote":
+                processPromote(request, response);
                 break;
             default:
                 sendError(response, HttpResponseStatus.NOT_FOUND);
@@ -159,5 +163,15 @@ public class StorageApiServlet extends AbstractServlet {
         }
         final InetSocketAddress replicaAddress = new InetSocketAddress(host, Integer.valueOf(port));
         return ReplicaIdentifier.of(Integer.valueOf(partition), replicaAddress);
+    }
+
+    private void processPromote(IServletRequest request, IServletResponse response) throws HyracksDataException {
+        final String partition = request.getParameter("partition");
+        if (partition == null) {
+            response.setStatus(HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+        appCtx.getReplicaManager().promote(Integer.valueOf(partition));
+        response.setStatus(HttpResponseStatus.OK);
     }
 }

@@ -1,0 +1,10 @@
+[ {
+  "partition" : 0,
+  "replicas" : [ ]
+}, {
+  "partition" : 2,
+  "replicas" : [ ]
+}, {
+  "partition" : 3,
+  "replicas" : [ ]
+} ]

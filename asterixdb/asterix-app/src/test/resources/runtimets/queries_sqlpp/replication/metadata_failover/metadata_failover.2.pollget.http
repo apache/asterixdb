@@ -16,30 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.replication;
+//polltimeoutsecs=30
 
-import org.apache.hyracks.api.messages.IMessage;
-
-public interface INCLifecycleMessage extends IMessage {
-
-    enum MessageType {
-        REPLAY_LOGS_REQUEST,
-        REPLAY_LOGS_RESPONSE,
-        PREPARE_FAILBACK_REQUEST,
-        PREPARE_FAILBACK_RESPONSE,
-        COMPLETE_FAILBACK_REQUEST,
-        COMPLETE_FAILBACK_RESPONSE,
-        REGISTRATION_TASKS_REQUEST,
-        REGISTRATION_TASKS_RESPONSE,
-        REGISTRATION_TASKS_RESULT,
-        TAKEOVER_PARTITION_REQUEST,
-        TAKEOVER_PARTITION_RESPONSE,
-        METADATA_NODE_REQUEST,
-        METADATA_NODE_RESPONSE
-    }
-
-    /**
-     * @return The message type.
-     */
-    MessageType getType();
-}
+nc:asterix_nc1 /admin/storage/partition/0

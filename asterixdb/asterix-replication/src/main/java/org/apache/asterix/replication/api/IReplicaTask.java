@@ -16,4 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-nc:asterix_nc1 /admin/storage/partition/0
+package org.apache.asterix.replication.api;
+
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.replication.IReplicationThread;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+public interface IReplicaTask extends IReplicationMessage {
+
+    /**
+     * Performs the task on the replica
+     *
+     * @param appCtx
+     * @param worker
+     * @throws HyracksDataException
+     */
+    void perform(INcApplicationContext appCtx, IReplicationThread worker) throws HyracksDataException;
+}

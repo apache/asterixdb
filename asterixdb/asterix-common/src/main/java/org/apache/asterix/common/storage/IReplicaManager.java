@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.common.replication.IPartitionReplica;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IReplicaManager {
 
@@ -54,4 +55,11 @@ public interface IReplicaManager {
      * @return The list of partition
      */
     Set<Integer> getPartitions();
+
+    /**
+     * Promotes a partition by making this node its master replica
+     *
+     * @param partition
+     */
+    void promote(int partition) throws HyracksDataException;
 }

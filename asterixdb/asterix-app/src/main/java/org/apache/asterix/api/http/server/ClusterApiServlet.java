@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.http.api.IServletRequest;
@@ -90,6 +91,21 @@ public class ClusterApiServlet extends AbstractServlet {
         responseWriter.flush();
     }
 
+    @Override
+    protected void post(IServletRequest request, IServletResponse response) throws Exception {
+        switch (localPath(request)) {
+            case "/partition/master":
+                processPartitionMaster(request, response);
+                break;
+            case "/metadataNode":
+                processMetadataNode(request, response);
+                break;
+            default:
+                sendError(response, HttpResponseStatus.NOT_FOUND);
+                break;
+        }
+    }
+
     protected ObjectNode getClusterStateSummaryJSON() {
         return appCtx.getClusterStateManager().getClusterStateSummary();
     }
@@ -143,4 +159,16 @@ public class ClusterApiServlet extends AbstractServlet {
                 && option != ControllerConfig.Option.CONFIG_FILE_URL;
     }
 
+    private void processPartitionMaster(IServletRequest request, IServletResponse response) {
+        final String partition = request.getParameter("partition");
+        final String node = request.getParameter("node");
+        appCtx.getClusterStateManager().updateClusterPartition(Integer.valueOf(partition), node, true);
+        response.setStatus(HttpResponseStatus.OK);
+    }
+
+    private void processMetadataNode(IServletRequest request, IServletResponse response) throws HyracksDataException {
+        final String node = request.getParameter("node");
+        appCtx.getFaultToleranceStrategy().notifyMetadataNodeChange(node);
+        response.setStatus(HttpResponseStatus.OK);
+    }
 }

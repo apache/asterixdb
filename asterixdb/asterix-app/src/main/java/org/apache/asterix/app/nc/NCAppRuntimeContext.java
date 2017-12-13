@@ -213,7 +213,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         final ClusterPartition[] nodePartitions = metadataProperties.getNodePartitions().get(nodeId);
         final Set<Integer> nodePartitionsIds = Arrays.stream(nodePartitions).map(ClusterPartition::getPartitionId)
                 .collect(Collectors.toSet());
-        replicaManager = new ReplicaManager(nodePartitionsIds);
+        replicaManager = new ReplicaManager(this, nodePartitionsIds);
         isShuttingdown = false;
         activeManager = new ActiveManager(threadExecutor, getServiceContext().getNodeId(),
                 activeProperties.getMemoryComponentGlobalBudget(), compilerProperties.getFrameSize(),

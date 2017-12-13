@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -53,7 +54,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
+import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
@@ -1175,6 +1178,25 @@ public class ReplicationManager implements IReplicationManager {
         }
         //move the buffer position to the sent limit
         buffer.position(buffer.limit());
+    }
+
+    @Override
+    public void register(IPartitionReplica replica) {
+        // find the replica node based on ip and replication port
+        final Optional<Node> replicaNode = ClusterProperties.INSTANCE.getCluster().getNode().stream()
+                .filter(node -> node.getClusterIp().equals(replica.getIdentifier().getLocation().getHostString())
+                        && node.getReplicationPort().intValue() == replica.getIdentifier().getLocation().getPort())
+                .findAny();
+        if (!replicaNode.isPresent()) {
+            throw new IllegalStateException("Couldn't find node for replica: " + replica);
+        }
+        Replica replicaRef = new Replica(replicaNode.get());
+        final String replicaId = replicaRef.getId();
+        replicas.putIfAbsent(replicaId, replicaRef);
+        replica2PartitionsMap.computeIfAbsent(replicaId, k -> new HashSet<>());
+        replica2PartitionsMap.get(replicaId).add(replica.getIdentifier().getPartition());
+        updateReplicaInfo(replicaRef);
+        checkReplicaState(replicaId, false, true);
     }
 
     //supporting classes

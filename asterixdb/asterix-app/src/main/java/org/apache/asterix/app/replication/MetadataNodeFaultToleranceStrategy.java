@@ -38,6 +38,8 @@ import org.apache.asterix.app.nc.task.RemoteRecoveryTask;
 import org.apache.asterix.app.nc.task.ReportLocalCountersTask;
 import org.apache.asterix.app.nc.task.StartLifecycleComponentsTask;
 import org.apache.asterix.app.nc.task.StartReplicationServiceTask;
+import org.apache.asterix.app.replication.message.MetadataNodeRequestMessage;
+import org.apache.asterix.app.replication.message.MetadataNodeResponseMessage;
 import org.apache.asterix.app.replication.message.NCLifecycleTaskReportMessage;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.app.replication.message.ReplayPartitionLogsRequestMessage;
@@ -132,6 +134,9 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
             case REPLAY_LOGS_RESPONSE:
                 process((ReplayPartitionLogsResponseMessage) message);
                 break;
+            case METADATA_NODE_RESPONSE:
+                process((MetadataNodeResponseMessage) message);
+                break;
             default:
                 throw new RuntimeDataException(ErrorCode.UNSUPPORTED_MESSAGE_TYPE, message.getType().name());
         }
@@ -141,6 +146,26 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
     public synchronized void bindTo(IClusterStateManager clusterManager) {
         this.clusterManager = clusterManager;
         this.metadataNodeId = clusterManager.getCurrentMetadataNodeId();
+    }
+
+    @Override
+    public void notifyMetadataNodeChange(String node) throws HyracksDataException {
+        if (metadataNodeId.equals(node)) {
+            return;
+        }
+        // if current metadata node is active, we need to unbind its metadata proxy object
+        if (clusterManager.isMetadataNodeActive()) {
+            MetadataNodeRequestMessage msg = new MetadataNodeRequestMessage(false);
+            try {
+                messageBroker.sendApplicationMessageToNC(msg, metadataNodeId);
+                // when the current node responses, we will bind to the new one
+                metadataNodeId = node;
+            } catch (Exception e) {
+                throw HyracksDataException.create(e);
+            }
+        } else {
+            requestMetadataNodeTakeover(node);
+        }
     }
 
     private synchronized void process(ReplayPartitionLogsResponseMessage msg) {
@@ -255,5 +280,21 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
         Set<Integer> metadataPartition = new HashSet<>(Arrays.asList(metadataPartitionId));
         recoveryPlan.put(hotStandbyMetadataReplica.iterator().next(), metadataPartition);
         return new RemoteRecoveryTask(recoveryPlan);
+    }
+
+    private void process(MetadataNodeResponseMessage response) throws HyracksDataException {
+        clusterManager.updateMetadataNode(response.getNodeId(), response.isExported());
+        if (!response.isExported()) {
+            requestMetadataNodeTakeover(metadataNodeId);
+        }
+    }
+
+    private void requestMetadataNodeTakeover(String node) throws HyracksDataException {
+        MetadataNodeRequestMessage msg = new MetadataNodeRequestMessage(true);
+        try {
+            messageBroker.sendApplicationMessageToNC(msg, node);
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
     }
 }

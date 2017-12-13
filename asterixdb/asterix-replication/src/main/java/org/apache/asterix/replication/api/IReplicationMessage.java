@@ -16,30 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.replication;
+package org.apache.asterix.replication.api;
 
-import org.apache.hyracks.api.messages.IMessage;
+import java.io.OutputStream;
 
-public interface INCLifecycleMessage extends IMessage {
+import org.apache.asterix.replication.functions.ReplicationProtocol;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-    enum MessageType {
-        REPLAY_LOGS_REQUEST,
-        REPLAY_LOGS_RESPONSE,
-        PREPARE_FAILBACK_REQUEST,
-        PREPARE_FAILBACK_RESPONSE,
-        COMPLETE_FAILBACK_REQUEST,
-        COMPLETE_FAILBACK_RESPONSE,
-        REGISTRATION_TASKS_REQUEST,
-        REGISTRATION_TASKS_RESPONSE,
-        REGISTRATION_TASKS_RESULT,
-        TAKEOVER_PARTITION_REQUEST,
-        TAKEOVER_PARTITION_RESPONSE,
-        METADATA_NODE_REQUEST,
-        METADATA_NODE_RESPONSE
-    }
+public interface IReplicationMessage {
 
     /**
-     * @return The message type.
+     * @return the message type
      */
-    MessageType getType();
+    ReplicationProtocol.ReplicationRequestType getMessageType();
+
+    /**
+     * Serializes {@link IReplicationMessage} to {@code out}
+     *
+     * @param out
+     * @throws HyracksDataException
+     */
+    void serialize(OutputStream out) throws HyracksDataException;
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.replication;
 
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 import org.apache.asterix.common.transactions.LogRecord;
@@ -27,13 +28,19 @@ public interface IReplicationThread extends Runnable {
     /**
      * Sends a notification to this thread that logRecord has been flushed.
      *
-     * @param logRecord
-     *            The log that has been flushed.
+     * @param logRecord The log that has been flushed.
      */
-    public void notifyLogReplicationRequester(LogRecord logRecord);
+    void notifyLogReplicationRequester(LogRecord logRecord);
 
     /**
-     * @return The replication client socket channel.
+     * @return The replication socket channel.
      */
-    public SocketChannel getReplicationClientSocket();
+    SocketChannel getChannel();
+
+    /**
+     * Gets a reusable buffer that can be used to send data
+     *
+     * @return the reusable buffer
+     */
+    ByteBuffer getReusableBuffer();
 }

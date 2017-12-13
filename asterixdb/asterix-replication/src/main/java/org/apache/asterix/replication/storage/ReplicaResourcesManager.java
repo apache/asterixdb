@@ -182,6 +182,7 @@ public class ReplicaResourcesManager implements IReplicaResourcesManager {
      * @param partition
      * @return Absolute paths to all partition files
      */
+    @Override
     public List<String> getPartitionIndexesFiles(int partition, boolean relativePath) throws HyracksDataException {
         List<String> partitionFiles = new ArrayList<String>();
         Set<File> partitionIndexes = localRepository.getPartitionIndexes(partition);

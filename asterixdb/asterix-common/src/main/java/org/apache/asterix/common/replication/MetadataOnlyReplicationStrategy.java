@@ -69,26 +69,26 @@ public class MetadataOnlyReplicationStrategy implements IReplicationStrategy {
         if (metadataNode == null) {
             throw new IllegalStateException("Invalid metadata node specified");
         }
-
-        if (cluster.getHighAvailability().getFaultTolerance().getReplica() == null
-                || cluster.getHighAvailability().getFaultTolerance().getReplica().getNodeId() == null
-                || cluster.getHighAvailability().getFaultTolerance().getReplica().getNodeId().isEmpty()) {
-            throw new RuntimeDataException(ErrorCode.INVALID_CONFIGURATION,
-                    "One or more replicas must be specified for metadata node.");
-        }
-
         final Set<Replica> replicas = new HashSet<>();
-        for (String nodeId : cluster.getHighAvailability().getFaultTolerance().getReplica().getNodeId()) {
-            Node node = ClusterProperties.INSTANCE.getNodeById(nodeId);
-            if (node == null) {
-                throw new RuntimeDataException(ErrorCode.INVALID_CONFIGURATION, "Invalid replica specified: " + nodeId);
+        if (cluster.getHighAvailability().getFaultTolerance().getReplica() != null) {
+            for (String nodeId : cluster.getHighAvailability().getFaultTolerance().getReplica().getNodeId()) {
+                Node node = ClusterProperties.INSTANCE.getNodeById(nodeId);
+                if (node == null) {
+                    throw new RuntimeDataException(ErrorCode.INVALID_CONFIGURATION,
+                            "Invalid replica specified: " + nodeId);
+                }
+                replicas.add(new Replica(node));
             }
-            replicas.add(new Replica(node));
         }
         MetadataOnlyReplicationStrategy st = new MetadataOnlyReplicationStrategy();
         st.metadataNodeId = cluster.getMetadataNode();
         st.metadataPrimaryReplica = new Replica(metadataNode);
         st.metadataNodeReplicas = replicas;
         return st;
+    }
+
+    @Override
+    public boolean isParticipant(String nodeId) {
+        return true;
     }
 }

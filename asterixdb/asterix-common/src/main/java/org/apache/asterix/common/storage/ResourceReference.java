@@ -71,6 +71,10 @@ public class ResourceReference {
         return Paths.get(root, partition, dataverse, dataset, rebalance, index);
     }
 
+    public Path getFileRelativePath() {
+        return Paths.get(root, partition, dataverse, dataset, rebalance, index, name);
+    }
+
     protected static void parse(ResourceReference ref, String path) {
         // format: root/partition/dataverse/dataset/rebalanceCount/index/fileName
         final String[] tokens = path.split(File.separator);

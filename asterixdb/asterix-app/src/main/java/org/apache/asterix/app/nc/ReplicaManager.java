@@ -25,14 +25,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.replication.IPartitionReplica;
+import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
 import org.apache.asterix.replication.storage.PartitionReplica;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ReplicaManager implements IReplicaManager {
 
+    private final INcApplicationContext appCtx;
     /**
      * the partitions to which the current node is master
      */
@@ -42,7 +47,8 @@ public class ReplicaManager implements IReplicaManager {
      */
     private final Map<ReplicaIdentifier, PartitionReplica> replicas = new HashMap<>();
 
-    public ReplicaManager(Set<Integer> partitions) {
+    public ReplicaManager(INcApplicationContext appCtx, Set<Integer> partitions) {
+        this.appCtx = appCtx;
         this.partitions.addAll(partitions);
     }
 
@@ -52,7 +58,7 @@ public class ReplicaManager implements IReplicaManager {
             throw new IllegalStateException(
                     "This node is not the current master of partition(" + id.getPartition() + ")");
         }
-        replicas.computeIfAbsent(id, key -> new PartitionReplica(key));
+        replicas.computeIfAbsent(id, k -> new PartitionReplica(k, appCtx));
         replicas.get(id).sync();
     }
 
@@ -73,5 +79,12 @@ public class ReplicaManager implements IReplicaManager {
     @Override
     public Set<Integer> getPartitions() {
         return Collections.unmodifiableSet(partitions);
+    }
+
+    @Override
+    public synchronized void promote(int partition) throws HyracksDataException {
+        final IRemoteRecoveryManager remoteRecoveryManager = appCtx.getRemoteRecoveryManager();
+        remoteRecoveryManager.replayReplicaPartitionLogs(Stream.of(partition).collect(Collectors.toSet()), true);
+        partitions.add(partition);
     }
 }

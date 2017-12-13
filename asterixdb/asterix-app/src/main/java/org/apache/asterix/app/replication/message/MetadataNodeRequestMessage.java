@@ -27,24 +27,33 @@ import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class TakeoverMetadataNodeRequestMessage implements INCLifecycleMessage, INcAddressedMessage {
+public class MetadataNodeRequestMessage implements INCLifecycleMessage, INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(TakeoverMetadataNodeRequestMessage.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MetadataNodeRequestMessage.class.getName());
+    private final boolean export;
+
+    public MetadataNodeRequestMessage(boolean export) {
+        this.export = export;
+    }
 
     @Override
     public void handle(INcApplicationContext appContext) throws HyracksDataException, InterruptedException {
         INCMessageBroker broker = (INCMessageBroker) appContext.getServiceContext().getMessageBroker();
         HyracksDataException hde = null;
         try {
-            appContext.initializeMetadata(false);
-            appContext.exportMetadataNodeStub();
+            if (export) {
+                appContext.initializeMetadata(false);
+                appContext.exportMetadataNodeStub();
+            } else {
+                appContext.unexportMetadataNodeStub();
+            }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
             hde = HyracksDataException.create(e);
         } finally {
-            TakeoverMetadataNodeResponseMessage reponse =
-                    new TakeoverMetadataNodeResponseMessage(appContext.getTransactionSubsystem().getId());
+            MetadataNodeResponseMessage reponse =
+                    new MetadataNodeResponseMessage(appContext.getTransactionSubsystem().getId(), export);
             try {
                 broker.sendMessageToCC(reponse);
             } catch (Exception e) {
@@ -59,11 +68,11 @@ public class TakeoverMetadataNodeRequestMessage implements INCLifecycleMessage, 
 
     @Override
     public String toString() {
-        return TakeoverMetadataNodeRequestMessage.class.getSimpleName();
+        return MetadataNodeRequestMessage.class.getSimpleName();
     }
 
     @Override
     public MessageType getType() {
-        return MessageType.TAKEOVER_METADATA_NODE_REQUEST;
+        return MessageType.METADATA_NODE_REQUEST;
     }
 }

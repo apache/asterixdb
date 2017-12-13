@@ -35,6 +35,7 @@ public class StorageConstants {
      */
     public static final String INDEX_CHECKPOINT_FILE_PREFIX = ".idx_checkpoint_";
     public static final String METADATA_FILE_NAME = ".metadata";
+    public static final String MASK_FILE_PREFIX = ".mask_";
     public static final String LEGACY_DATASET_INDEX_NAME_SEPARATOR = "_idx_";
 
     /**

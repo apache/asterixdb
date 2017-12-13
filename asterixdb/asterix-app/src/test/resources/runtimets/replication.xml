@@ -24,5 +24,10 @@
         <output-dir compare="Text">add_replica</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="replication">
+      <compilation-unit name="metadata_failover">
+        <output-dir compare="Text">metadata_failover</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

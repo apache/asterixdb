@@ -30,9 +30,6 @@
     </data_replication>
     <fault_tolerance>
        <strategy>metadata_node</strategy>
-       <replica>
-         <node_id>nc2</node_id>
-       </replica>
     </fault_tolerance>
   </high_availability>
 

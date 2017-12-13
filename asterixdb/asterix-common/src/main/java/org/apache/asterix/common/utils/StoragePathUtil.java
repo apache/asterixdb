@@ -90,10 +90,18 @@ public class StoragePathUtil {
 
     /**
      * @param fileAbsolutePath
-     * @return the file relative path starting from the partition directory
+     * @return the file's index relative path starting from the storage directory
      */
     public static String getIndexFileRelativePath(String fileAbsolutePath) {
         return ResourceReference.of(fileAbsolutePath).getRelativePath().toString();
+    }
+
+    /**
+     * @param fileAbsolutePath
+     * @return the file's relative path starting from the storage directory
+     */
+    public static String getFileRelativePath(String fileAbsolutePath) {
+        return ResourceReference.of(fileAbsolutePath).getFileRelativePath().toString();
     }
 
     /**

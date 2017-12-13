@@ -127,4 +127,11 @@ public interface IReplicationManager extends IIOReplicationManager {
      * @param buffer
      */
     public void replicateTxnLogBatch(ByteBuffer buffer);
+
+    /**
+     * Registers {@code replica}. After registration, the replica will be included in all replication events
+     *
+     * @param replica
+     */
+    void register(IPartitionReplica replica);
 }
