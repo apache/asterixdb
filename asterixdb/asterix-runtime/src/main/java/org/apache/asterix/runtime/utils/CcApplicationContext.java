@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 import org.apache.asterix.common.api.IMetadataLockManager;
+import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ActiveProperties;
@@ -42,6 +43,7 @@ import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.transactions.IResourceIdManager;
+import org.apache.asterix.runtime.job.listener.NodeJobTracker;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -81,6 +83,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private IJobLifecycleListener activeLifeCycleListener;
     private IMetadataLockManager mdLockManager;
     private IClusterStateManager clusterStateManager;
+    private final INodeJobTracker nodeJobTracker;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
@@ -114,6 +117,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         clusterStateManager = new ClusterStateManager();
         clusterStateManager.setCcAppCtx(this);
         this.resourceIdManager = new ResourceIdManager(clusterStateManager);
+        nodeJobTracker = new NodeJobTracker();
     }
 
     @Override
@@ -250,5 +254,10 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IClusterStateManager getClusterStateManager() {
         return clusterStateManager;
+    }
+
+    @Override
+    public INodeJobTracker getNodeJobTracker() {
+        return nodeJobTracker;
     }
 }

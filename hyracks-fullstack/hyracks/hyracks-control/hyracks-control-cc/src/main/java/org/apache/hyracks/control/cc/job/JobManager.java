@@ -106,6 +106,8 @@ public class JobManager implements IJobManager {
         checkJob(jobRun);
         JobSpecification job = jobRun.getJobSpecification();
         IJobCapacityController.JobSubmissionStatus status = jobCapacityController.allocate(job);
+        CCServiceContext serviceCtx = ccs.getContext();
+        serviceCtx.notifyJobCreation(jobRun.getJobId(), job);
         switch (status) {
             case QUEUE:
                 queueJob(jobRun);
@@ -304,10 +306,6 @@ public class JobManager implements IJobManager {
         run.setStartTime(System.currentTimeMillis());
         JobId jobId = run.getJobId();
         activeRunMap.put(jobId, run);
-
-        CCServiceContext serviceCtx = ccs.getContext();
-        JobSpecification spec = run.getJobSpecification();
-        serviceCtx.notifyJobCreation(jobId, spec);
         run.setStatus(JobStatus.RUNNING, null);
         executeJobInternal(run);
     }
