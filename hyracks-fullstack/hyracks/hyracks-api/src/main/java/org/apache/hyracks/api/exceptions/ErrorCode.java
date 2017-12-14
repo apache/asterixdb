@@ -139,6 +139,7 @@ public class ErrorCode {
     public static final int VBC_ALREADY_CLOSED = 103;
     public static final int INDEX_DOES_NOT_EXIST = 104;
     public static final int CANNOT_DROP_IN_USE_INDEX = 105;
+    public static final int CANNOT_DEACTIVATE_PINNED_BLOOM_FILTER = 106;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

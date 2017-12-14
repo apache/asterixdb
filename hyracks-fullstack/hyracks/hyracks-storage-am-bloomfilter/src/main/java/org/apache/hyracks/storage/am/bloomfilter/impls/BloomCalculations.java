@@ -43,12 +43,9 @@ public class BloomCalculations {
      * Each cell (i,j) the false positive rate determined by using i buckets per
      * element and j hash functions.
      */
-    static final double[][] probs = new double[][] {
-            { 1.0 }, // dummy row representing 0 buckets per element
+    static final double[][] probs = new double[][] { { 1.0 }, // dummy row representing 0 buckets per element
             { 1.0, 1.0 }, // dummy row representing 1 buckets per element
-            { 1.0, 0.393, 0.400 },
-            { 1.0, 0.283, 0.237, 0.253 },
-            { 1.0, 0.221, 0.155, 0.147, 0.160 },
+            { 1.0, 0.393, 0.400 }, { 1.0, 0.283, 0.237, 0.253 }, { 1.0, 0.221, 0.155, 0.147, 0.160 },
             { 1.0, 0.181, 0.109, 0.092, 0.092, 0.101 }, // 5
             { 1.0, 0.154, 0.0804, 0.0609, 0.0561, 0.0578, 0.0638 },
             { 1.0, 0.133, 0.0618, 0.0423, 0.0359, 0.0347, 0.0364 },
@@ -63,8 +60,8 @@ public class BloomCalculations {
             { 1.0, 0.0606, 0.0138, 0.005, 0.00239, 0.00139, 0.000935, 0.000702, 0.000574, 0.000505, 0.00047, 0.000459 },
             { 1.0, 0.0571, 0.0123, 0.00423, 0.00193, 0.00107, 0.000692, 0.000499, 0.000394, 0.000335, 0.000302,
                     0.000287, 0.000284 },
-            { 1.0, 0.054, 0.0111, 0.00362, 0.00158, 0.000839, 0.000519, 0.00036, 0.000275, 0.000226, 0.000198,
-                    0.000183, 0.000176 },
+            { 1.0, 0.054, 0.0111, 0.00362, 0.00158, 0.000839, 0.000519, 0.00036, 0.000275, 0.000226, 0.000198, 0.000183,
+                    0.000176 },
             { 1.0, 0.0513, 0.00998, 0.00312, 0.0013, 0.000663, 0.000394, 0.000264, 0.000194, 0.000155, 0.000132,
                     0.000118, 0.000111, 0.000109 },
             { 1.0, 0.0488, 0.00906, 0.0027, 0.00108, 0.00053, 0.000303, 0.000196, 0.00014, 0.000108, 8.89e-05,
@@ -148,8 +145,9 @@ public class BloomCalculations {
             K--;
         }
 
-        return new BloomFilterSpecification(K, bucketsPerElement);
-    }
+        // we allocate one more bucket per element to compensate the effect introduced by using blocked bloom filter
+        // a detail analysis can be found at https://dl.acm.org/citation.cfm?id=1594230
+        return new BloomFilterSpecification(K, bucketsPerElement + 1);    }
 
     /**
      * Calculates the maximum number of buckets per element that this implementation
