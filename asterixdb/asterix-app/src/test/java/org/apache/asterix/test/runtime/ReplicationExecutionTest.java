@@ -25,9 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.junit.After;
 import org.junit.Before;
@@ -39,13 +39,12 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class ReplicationExecutionTest {
-    protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
+    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc-rep.conf";
     private static final TestExecutor testExecutor = new TestExecutor();
     private static boolean configured = false;
 
     @BeforeClass
     public static void setUp() {
-        ClusterProperties.INSTANCE.getCluster().getHighAvailability().setEnabled(String.valueOf(true));
         LangExecutionUtil.setCheckStorageDistribution(false);
     }
 
@@ -61,7 +60,7 @@ public class ReplicationExecutionTest {
                 final String nodeId = nc.getId();
                 final INcApplicationContext appCtx = (INcApplicationContext) nc.getApplicationContext();
                 int apiPort = appCtx.getExternalProperties().getNcApiPort();
-                int replicationPort = appCtx.getReplicationProperties().getDataReplicationPort(nodeId);
+                int replicationPort = (int) appCtx.getServiceContext().getAppConfig().get(NCConfig.Option.REPLICATION_LISTEN_PORT);
                 ncEndPoints.put(nodeId, InetSocketAddress.createUnresolved(ip, apiPort));
                 replicationAddress.put(nodeId, InetSocketAddress.createUnresolved(ip, replicationPort));
             }

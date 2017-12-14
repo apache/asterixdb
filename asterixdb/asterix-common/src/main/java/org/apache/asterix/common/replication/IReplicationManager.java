@@ -56,8 +56,8 @@ public interface IReplicationManager extends IIOReplicationManager {
      *            a list of already existing files on the requester
      * @throws IOException
      */
-    public void requestReplicaFiles(String remoteReplicaId, Set<Integer> partitionsToRecover,
-            Set<String> existingFiles) throws IOException;
+    public void requestReplicaFiles(String remoteReplicaId, Set<Integer> partitionsToRecover, Set<String> existingFiles)
+            throws IOException;
 
     /**
      * Requests current maximum LSN from remote replicas.
@@ -127,6 +127,8 @@ public interface IReplicationManager extends IIOReplicationManager {
      * @param buffer
      */
     public void replicateTxnLogBatch(ByteBuffer buffer);
+
+    IReplicationStrategy getReplicationStrategy();
 
     /**
      * Registers {@code replica}. After registration, the replica will be included in all replication events

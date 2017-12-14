@@ -234,6 +234,9 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
         final List<INCLifecycleTask> tasks = new ArrayList<>();
         switch (state) {
             case PERMANENT_DATA_LOSS:
+                if (failedNodes.isEmpty()) { //bootstrap
+                    break;
+                }
                 // If the metadata node (or replica) failed and lost its data
                 // => Metadata Remote Recovery from standby replica
                 tasks.add(getMetadataPartitionRecoveryPlan());

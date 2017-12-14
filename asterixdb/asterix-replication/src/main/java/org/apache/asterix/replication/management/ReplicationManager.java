@@ -54,7 +54,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.replication.IReplicaResourcesManager;
@@ -64,6 +63,7 @@ import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.Replica.ReplicaState;
 import org.apache.asterix.common.replication.ReplicaEvent;
 import org.apache.asterix.common.replication.ReplicationJob;
+import org.apache.asterix.common.replication.ReplicationStrategyFactory;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
@@ -71,7 +71,6 @@ import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.LogType;
-import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.asterix.replication.functions.ReplicaFilesRequest;
 import org.apache.asterix.replication.functions.ReplicaIndexFlushRequest;
 import org.apache.asterix.replication.functions.ReplicationProtocol;
@@ -83,11 +82,16 @@ import org.apache.asterix.replication.storage.LSMIndexFileProperties;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
+import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
+import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
@@ -137,26 +141,33 @@ public class ReplicationManager implements IReplicationManager {
     private Future<? extends Object> txnLogReplicatorTask;
     private SocketChannel[] logsRepSockets;
     private final ByteBuffer txnLogsBatchSizeBuffer = ByteBuffer.allocate(Integer.BYTES);
-    private final IReplicationStrategy replicationStrategy;
+    private IReplicationStrategy replicationStrategy;
     private final PersistentLocalResourceRepository localResourceRepo;
+    private NCConfig ncConfig;
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
 
     //TODO this class needs to be refactored by moving its private classes to separate files
     //and possibly using MessageBroker to send/receive remote replicas events.
     public ReplicationManager(String nodeId, ReplicationProperties replicationProperties,
             IReplicaResourcesManager remoteResoucesManager, ILogManager logManager,
-            IAppRuntimeContextProvider asterixAppRuntimeContextProvider) {
+            IAppRuntimeContextProvider asterixAppRuntimeContextProvider, INCServiceContext ncServiceContext) {
         this.nodeId = nodeId;
+        this.ncConfig = ((NodeControllerService) ncServiceContext.getControllerService()).getConfiguration();
         this.replicationProperties = replicationProperties;
-        replicationStrategy = replicationProperties.getReplicationStrategy();
+        try {
+            replicationStrategy = ReplicationStrategyFactory.create(replicationProperties.getReplicationStrategy(),
+                    replicationProperties, ncConfig.getConfigManager());
+        } catch (HyracksDataException e) {
+            LOGGER.log(Level.WARNING, "Couldn't initialize replication strategy", e);
+        }
         this.replicaResourcesManager = (ReplicaResourcesManager) remoteResoucesManager;
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
         this.logManager = logManager;
-        this.indexCheckpointManagerProvider =
-                asterixAppRuntimeContextProvider.getAppContext().getIndexCheckpointManagerProvider();
         localResourceRepo =
                 (PersistentLocalResourceRepository) asterixAppRuntimeContextProvider.getLocalResourceRepository();
-        this.hostIPAddressFirstOctet = replicationProperties.getReplicaIPAddress(nodeId).substring(0, 3);
+        this.hostIPAddressFirstOctet = ncConfig.getPublicAddress().substring(0, 3);
+        this.indexCheckpointManagerProvider =
+                asterixAppRuntimeContextProvider.getAppContext().getIndexCheckpointManagerProvider();
         replicas = new HashMap<>();
         replicationJobsQ = new LinkedBlockingQueue<>();
         replicaEventsQ = new LinkedBlockingQueue<>();
@@ -169,7 +180,7 @@ public class ReplicationManager implements IReplicationManager {
         dataBuffer = ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
         replicationMonitor = new ReplicasEventsMonitor();
         //add list of replicas from configurations (To be read from another source e.g. Zookeeper)
-        Set<Replica> replicaNodes = replicationProperties.getReplicationStrategy().getRemoteReplicas(nodeId);
+        Set<Replica> replicaNodes = replicationStrategy.getRemoteReplicas(nodeId);
 
         //Used as async listeners from replicas
         replicationListenerThreads = Executors.newCachedThreadPool();
@@ -181,11 +192,11 @@ public class ReplicationManager implements IReplicationManager {
         for (Replica replica : replicaNodes) {
             replicas.put(replica.getId(), replica);
             //for each remote replica, get the list of replication clients
-            Set<String> nodeReplicationClients = replicationProperties.getRemotePrimaryReplicasIds(replica.getId());
+            Set<Replica> nodeReplicationClients = replicationStrategy.getRemotePrimaryReplicas(replica.getId());
             //get the partitions of each client
             List<Integer> clientPartitions = new ArrayList<>();
-            for (String clientId : nodeReplicationClients) {
-                for (ClusterPartition clusterPartition : nodePartitions.get(clientId)) {
+            for (Replica client : nodeReplicationClients) {
+                for (ClusterPartition clusterPartition : nodePartitions.get(client.getId())) {
                     clientPartitions.add(clusterPartition.getPartitionId());
                 }
             }
@@ -313,8 +324,8 @@ public class ReplicationManager implements IReplicationManager {
                         //send LSMComponent properties
                         LSMComponentJob = (ILSMIndexReplicationJob) job;
                         LSMComponentProperties lsmCompProp = new LSMComponentProperties(LSMComponentJob, nodeId);
-                        requestBuffer =
-                                ReplicationProtocol.writeLSMComponentPropertiesRequest(lsmCompProp, requestBuffer);
+                        requestBuffer = ReplicationProtocol.writeLSMComponentPropertiesRequest(lsmCompProp, //NOSONAR
+                                requestBuffer);
                         sendRequest(replicasSockets, requestBuffer);
                     }
 
@@ -438,17 +449,17 @@ public class ReplicationManager implements IReplicationManager {
 
     @Override
     public boolean isReplicationEnabled() {
-        return replicationProperties.isParticipant(nodeId);
+        return replicationStrategy.isParticipant(nodeId);
     }
 
     @Override
     public synchronized void updateReplicaInfo(Replica replicaNode) {
-        Replica replica = replicas.get(replicaNode.getNode().getId());
+        Replica replica = replicas.get(replicaNode.getId());
         //should not update the info of an active replica
         if (replica.getState() == ReplicaState.ACTIVE) {
             return;
         }
-        replica.getNode().setClusterIp(replicaNode.getNode().getClusterIp());
+        replica.setClusterIp(replicaNode.getClusterIp());
     }
 
     /**
@@ -616,10 +627,8 @@ public class ReplicationManager implements IReplicationManager {
      * @throws IOException
      */
     private void sendShutdownNotifiction() throws IOException {
-        Node node = new Node();
-        node.setId(nodeId);
-        node.setClusterIp(NetworkingUtil.getHostAddress(hostIPAddressFirstOctet));
-        Replica replica = new Replica(node);
+        Replica replica = new Replica(nodeId, NetworkingUtil.getHostAddress(hostIPAddressFirstOctet),
+                ncConfig.getReplicationPublicPort());
         ReplicaEvent event = new ReplicaEvent(replica, ClusterEventType.NODE_SHUTTING_DOWN);
         ByteBuffer buffer = ReplicationProtocol.writeReplicaEventRequest(event);
         Map<String, SocketChannel> replicaSockets = getActiveRemoteReplicasSockets();
@@ -678,7 +687,7 @@ public class ReplicationManager implements IReplicationManager {
     @Override
     public void initializeReplicasState() {
         for (Replica replica : replicas.values()) {
-            checkReplicaState(replica.getNode().getId(), false, false);
+            checkReplicaState(replica.getId(), false, false);
         }
     }
 
@@ -696,7 +705,7 @@ public class ReplicationManager implements IReplicationManager {
         Replica replica = replicas.get(replicaId);
 
         ReplicaStateChecker connector = new ReplicaStateChecker(replica, replicationProperties.getReplicationTimeOut(),
-                this, replicationProperties, suspendReplication);
+                this, suspendReplication);
         Future<? extends Object> ft = asterixAppRuntimeContextProvider.getThreadExecutor().submit(connector);
 
         if (!async) {
@@ -848,11 +857,11 @@ public class ReplicationManager implements IReplicationManager {
      * @throws IOException
      */
     private SocketChannel getReplicaSocket(String replicaId) throws IOException {
-        Replica replica = replicationProperties.getReplicaById(replicaId);
         SocketChannel sc = SocketChannel.open();
         sc.configureBlocking(true);
-        InetSocketAddress address = replica.getAddress(replicationProperties);
-        sc.connect(new InetSocketAddress(address.getHostString(), address.getPort()));
+        IApplicationConfig config = ncConfig.getConfigManager().getNodeEffectiveConfig(replicaId);
+        sc.connect(new InetSocketAddress(config.getString(NCConfig.Option.REPLICATION_LISTEN_ADDRESS),
+                config.getInt(NCConfig.Option.REPLICATION_LISTEN_PORT)));
         return sc;
     }
 
@@ -861,7 +870,7 @@ public class ReplicationManager implements IReplicationManager {
         Set<String> replicasIds = new HashSet<>();
         for (Replica replica : replicas.values()) {
             if (replica.getState() == ReplicaState.DEAD) {
-                replicasIds.add(replica.getNode().getId());
+                replicasIds.add(replica.getId());
             }
         }
         return replicasIds;
@@ -872,7 +881,7 @@ public class ReplicationManager implements IReplicationManager {
         Set<String> replicasIds = new HashSet<>();
         for (Replica replica : replicas.values()) {
             if (replica.getState() == ReplicaState.ACTIVE) {
-                replicasIds.add(replica.getNode().getId());
+                replicasIds.add(replica.getId());
             }
         }
         return replicasIds;
@@ -970,9 +979,8 @@ public class ReplicationManager implements IReplicationManager {
     private String getReplicaIdBySocket(SocketChannel socketChannel) {
         InetSocketAddress socketAddress = NetworkingUtil.getSocketAddress(socketChannel);
         for (Replica replica : replicas.values()) {
-            InetSocketAddress replicaAddress = replica.getAddress(replicationProperties);
-            if (replicaAddress.getHostName().equals(socketAddress.getHostName())
-                    && replicaAddress.getPort() == socketAddress.getPort()) {
+            if (replica.getClusterIp().equals(socketAddress.getHostName())
+                    && ncConfig.getReplicationPublicPort() == socketAddress.getPort()) {
                 return replica.getId();
             }
         }
@@ -1176,21 +1184,21 @@ public class ReplicationManager implements IReplicationManager {
                 buffer.reset();
             }
         }
-        //move the buffer position to the sent limit
+        //move the bufeer position to the sent limit
         buffer.position(buffer.limit());
     }
 
     @Override
     public void register(IPartitionReplica replica) {
         // find the replica node based on ip and replication port
-        final Optional<Node> replicaNode = ClusterProperties.INSTANCE.getCluster().getNode().stream()
+        Optional<Replica> replicaNode = replicationStrategy.getRemoteReplicasAndSelf(nodeId).stream()
                 .filter(node -> node.getClusterIp().equals(replica.getIdentifier().getLocation().getHostString())
-                        && node.getReplicationPort().intValue() == replica.getIdentifier().getLocation().getPort())
+                        && node.getPort() == replica.getIdentifier().getLocation().getPort())
                 .findAny();
         if (!replicaNode.isPresent()) {
             throw new IllegalStateException("Couldn't find node for replica: " + replica);
         }
-        Replica replicaRef = new Replica(replicaNode.get());
+        Replica replicaRef = replicaNode.get();
         final String replicaId = replicaRef.getId();
         replicas.putIfAbsent(replicaId, replicaRef);
         replica2PartitionsMap.computeIfAbsent(replicaId, k -> new HashSet<>());
@@ -1352,5 +1360,10 @@ public class ReplicationManager implements IReplicationManager {
                 handleReplicationFailure(replicaSocket, e);
             }
         }
+    }
+
+    @Override
+    public IReplicationStrategy getReplicationStrategy() {
+        return replicationStrategy;
     }
 }

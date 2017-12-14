@@ -67,15 +67,15 @@ public class OptimizerTest {
     private static final String EXTENSION_RESULT = "plan";
     private static final String FILENAME_IGNORE = "ignore.txt";
     private static final String FILENAME_ONLY = "only.txt";
-    private static final String PATH_BASE =
-            "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR + "optimizerts" + SEPARATOR;
+    private static final String PATH_BASE = "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR
+            + "optimizerts" + SEPARATOR;
     private static final String PATH_QUERIES = PATH_BASE + "queries" + SEPARATOR;
     private static final String PATH_EXPECTED = PATH_BASE + "results" + SEPARATOR;
     protected static final String PATH_ACTUAL = "target" + File.separator + "opttest" + SEPARATOR;
 
     private static final ArrayList<String> ignore = AsterixTestHelper.readTestListFile(FILENAME_IGNORE, PATH_BASE);
     private static final ArrayList<String> only = AsterixTestHelper.readTestListFile(FILENAME_ONLY, PATH_BASE);
-    protected static String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
+    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
     private static final ILangCompilationProvider aqlCompilationProvider = new AqlCompilationProvider();
     private static final ILangCompilationProvider sqlppCompilationProvider = new SqlppCompilationProvider();
     protected static ILangCompilationProvider extensionLangCompilationProvider = null;
@@ -86,13 +86,12 @@ public class OptimizerTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
         final File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
         HDFSCluster.getInstance().setup();
 
-        integrationUtil.init(true);
+        integrationUtil.init(true, TEST_CONFIG_FILE_NAME);
         // Set the node resolver to be the identity resolver that expects node names
         // to be node controller ids; a valid assumption in test environment.
         System.setProperty(ExternalDataConstants.NODE_RESOLVER_FACTORY_PROPERTY,
@@ -154,10 +153,10 @@ public class OptimizerTest {
     @Test
     public void test() throws Exception {
         try {
-            String queryFileShort =
-                    queryFile.getPath().substring(PATH_QUERIES.length()).replace(SEPARATOR.charAt(0), '/');
+            String queryFileShort = queryFile.getPath().substring(PATH_QUERIES.length()).replace(SEPARATOR.charAt(0),
+                    '/');
             if (!only.isEmpty()) {
-                boolean toRun = TestHelper.isInPrefixList(only, queryFileShort);
+                boolean toRun =  TestHelper.isInPrefixList(only, queryFileShort);
                 if (!toRun) {
                     LOGGER.info("SKIP TEST: \"" + queryFile.getPath()
                             + "\" \"only.txt\" not empty and not in \"only.txt\".");
@@ -179,15 +178,15 @@ public class OptimizerTest {
             actualFile.getParentFile().mkdirs();
 
             PrintWriter plan = new PrintWriter(actualFile);
-            ILangCompilationProvider provider =
-                    queryFile.getName().endsWith("aql") ? aqlCompilationProvider : sqlppCompilationProvider;
+            ILangCompilationProvider provider = queryFile.getName().endsWith("aql") ? aqlCompilationProvider
+                    : sqlppCompilationProvider;
             if (extensionLangCompilationProvider != null) {
                 provider = extensionLangCompilationProvider;
             }
             IHyracksClientConnection hcc = integrationUtil.getHyracksClientConnection();
-            AsterixJavaClient asterix =
-                    new AsterixJavaClient((ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc,
-                            query, plan, provider, statementExecutorFactory, storageComponentProvider);
+            AsterixJavaClient asterix = new AsterixJavaClient(
+                    (ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc, query, plan, provider,
+                    statementExecutorFactory, storageComponentProvider);
             try {
                 asterix.compile(true, false, false, true, true, false, false);
             } catch (AlgebricksException e) {
@@ -198,10 +197,10 @@ public class OptimizerTest {
             plan.close();
             query.close();
 
-            BufferedReader readerExpected =
-                    new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
-            BufferedReader readerActual =
-                    new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
+            BufferedReader readerExpected = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
+            BufferedReader readerActual = new BufferedReader(
+                    new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
 
             String lineExpected, lineActual;
             int num = 1;

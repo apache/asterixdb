@@ -126,6 +126,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         //initially the node active partitions are the same as the original partitions
         nodeOriginalPartitions = new HashSet<>(nodePartitions.length);
         nodeActivePartitions = new HashSet<>(nodePartitions.length);
+        nodeInactivePartitions = new HashSet<>(nodePartitions.length);
         for (ClusterPartition partition : nodePartitions) {
             nodeOriginalPartitions.add(partition.getPartitionId());
             nodeActivePartitions.add(partition.getPartitionId());
@@ -169,8 +170,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             throw HyracksDataException.create(CANNOT_CREATE_FILE, parent.getAbsolutePath());
         }
 
-        try (FileOutputStream fos = new FileOutputStream(
-                resourceFile.getFile()); ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
+        try (FileOutputStream fos = new FileOutputStream(resourceFile.getFile());
+                ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
             oosToFos.writeObject(resource);
             oosToFos.flush();
         } catch (IOException e) {
@@ -200,8 +201,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             resourceCache.invalidate(relativePath);
             IoUtil.delete(resourceFile);
         } else {
-            throw HyracksDataException
-                    .create(org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST, relativePath);
+            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST,
+                    relativePath);
         }
     }
 
@@ -242,14 +243,13 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     private static String getFileName(String path) {
-        return path.endsWith(File.separator) ?
-                (path + StorageConstants.METADATA_FILE_NAME) :
-                (path + File.separator + StorageConstants.METADATA_FILE_NAME);
+        return path.endsWith(File.separator) ? (path + StorageConstants.METADATA_FILE_NAME)
+                : (path + File.separator + StorageConstants.METADATA_FILE_NAME);
     }
 
     public static LocalResource readLocalResource(File file) throws HyracksDataException {
-        try (FileInputStream fis = new FileInputStream(file); ObjectInputStream oisFromFis = new ObjectInputStream(
-                fis)) {
+        try (FileInputStream fis = new FileInputStream(file);
+                ObjectInputStream oisFromFis = new ObjectInputStream(fis)) {
             LocalResource resource = (LocalResource) oisFromFis.readObject();
             if (resource.getVersion() == ITreeIndexFrame.Constants.VERSION) {
                 return resource;

@@ -101,9 +101,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         this.serviceCtx = serviceCtx;
         this.txnSubsystem = txnSubsystem;
         logMgr = (LogManager) txnSubsystem.getLogManager();
-        ReplicationProperties repProperties =
-                txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext().getReplicationProperties();
-        replicationEnabled = repProperties.isParticipant(txnSubsystem.getId());
+        ReplicationProperties repProperties = txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext()
+                .getReplicationProperties();
+        replicationEnabled = repProperties.isReplicationEnabled();
         localResourceRepository = (PersistentLocalResourceRepository) txnSubsystem.getAsterixAppRuntimeContextProvider()
                 .getLocalResourceRepository();
         cachedEntityCommitsPerJobSize = txnSubsystem.getTransactionProperties().getJobRecoveryMemorySize();
@@ -426,16 +426,16 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     @Override
     public long getLocalMinFirstLSN() throws HyracksDataException {
-        IDatasetLifecycleManager datasetLifecycleManager =
-                txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
+        IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getDatasetLifecycleManager();
         List<IIndex> openIndexList = datasetLifecycleManager.getOpenResources();
         long firstLSN;
         //the min first lsn can only be the current append or smaller
         long minFirstLSN = logMgr.getAppendLSN();
         if (!openIndexList.isEmpty()) {
             for (IIndex index : openIndexList) {
-                AbstractLSMIOOperationCallback ioCallback =
-                        (AbstractLSMIOOperationCallback) ((ILSMIndex) index).getIOOperationCallback();
+                AbstractLSMIOOperationCallback ioCallback = (AbstractLSMIOOperationCallback) ((ILSMIndex) index)
+                        .getIOOperationCallback();
                 if (!((AbstractLSMIndex) index).isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()) {
                     firstLSN = ioCallback.getFirstLSN();
                     minFirstLSN = Math.min(minFirstLSN, firstLSN);
@@ -446,8 +446,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     private long getRemoteMinFirstLSN() throws HyracksDataException {
-        IReplicaResourcesManager remoteResourcesManager =
-                txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext().getReplicaResourcesManager();
+        IReplicaResourcesManager remoteResourcesManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+                .getAppContext().getReplicaResourcesManager();
         return remoteResourcesManager.getPartitionsMinLSN(localResourceRepository.getInactivePartitions());
     }
 
@@ -566,9 +566,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         if (activePartitions.contains(logRecord.getResourcePartition())) {
                             undoLSNSet = jobLoserEntity2LSNsMap.get(tempKeyTxnEntityId);
                             if (undoLSNSet == null) {
-                                loserEntity =
-                                        new TxnEntityId(logTxnId, logRecord.getDatasetId(), logRecord.getPKHashValue(),
-                                                logRecord.getPKValue(), logRecord.getPKValueSize(), true);
+                                loserEntity = new TxnEntityId(logTxnId, logRecord.getDatasetId(),
+                                        logRecord.getPKHashValue(), logRecord.getPKValue(), logRecord.getPKValueSize(),
+                                        true);
                                 undoLSNSet = new LinkedList<>();
                                 jobLoserEntity2LSNsMap.put(loserEntity, undoLSNSet);
                             }
@@ -611,8 +611,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             //undo loserTxn's effect
             LOGGER.log(Level.INFO, "undoing loser transaction's effect");
 
-            IDatasetLifecycleManager datasetLifecycleManager =
-                    txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
+            IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
+                    .getDatasetLifecycleManager();
             //TODO sort loser entities by smallest LSN to undo in one pass.
             Iterator<Entry<TxnEntityId, List<Long>>> iter = jobLoserEntity2LSNsMap.entrySet().iterator();
             int undoCount = 0;
@@ -664,8 +664,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     private static void undo(ILogRecord logRecord, IDatasetLifecycleManager datasetLifecycleManager) {
         try {
-            ILSMIndex index =
-                    (ILSMIndex) datasetLifecycleManager.getIndex(logRecord.getDatasetId(), logRecord.getResourceId());
+            ILSMIndex index = (ILSMIndex) datasetLifecycleManager.getIndex(logRecord.getDatasetId(),
+                    logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.INSERT_BYTE) {
                 indexAccessor.forceDelete(logRecord.getNewValue());

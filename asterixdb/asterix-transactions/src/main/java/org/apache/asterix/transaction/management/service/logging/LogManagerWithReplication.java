@@ -34,12 +34,11 @@ import org.apache.asterix.common.transactions.LogType;
 public class LogManagerWithReplication extends LogManager {
 
     private IReplicationManager replicationManager;
-    private final IReplicationStrategy replicationStrategy;
+    private IReplicationStrategy replicationStrategy;
     private final Set<Long> replicatedTxn = ConcurrentHashMap.newKeySet();
 
-    public LogManagerWithReplication(ITransactionSubsystem txnSubsystem, IReplicationStrategy replicationStrategy) {
+    public LogManagerWithReplication(ITransactionSubsystem txnSubsystem) {
         super(txnSubsystem);
-        this.replicationStrategy = replicationStrategy;
     }
 
     @Override
@@ -144,6 +143,7 @@ public class LogManagerWithReplication extends LogManager {
     @Override
     public void setReplicationManager(IReplicationManager replicationManager) {
         this.replicationManager = replicationManager;
+        this.replicationStrategy = replicationManager.getReplicationStrategy();
     }
 
 }

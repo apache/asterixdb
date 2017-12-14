@@ -35,7 +35,7 @@ import org.junit.runners.Parameterized.Parameters;
  */
 @RunWith(Parameterized.class)
 public class SqlppExecutionFullParallelismIT {
-    protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration2.xml";
+    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc2.conf";
 
     @BeforeClass
     public static void setUp() throws Exception {

@@ -36,7 +36,7 @@ import org.junit.runners.Parameterized.Parameters;
  */
 @RunWith(Parameterized.class)
 public class SqlppExecutionWithCancellationTest {
-    protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
+    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
     public static int numCancelledQueries = 0;
 
     @BeforeClass

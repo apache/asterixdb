@@ -18,47 +18,31 @@
  */
 package org.apache.asterix.app.replication;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.IReplicationStrategy;
-import org.apache.asterix.event.schema.cluster.Cluster;
 import org.apache.hyracks.api.application.ICCServiceContext;
 
 public class FaultToleranceStrategyFactory {
-
-    private static final Map<String, Class<? extends IFaultToleranceStrategy>> BUILT_IN_FAULT_TOLERANCE_STRATEGY =
-            new HashMap<>();
-
-    static {
-        BUILT_IN_FAULT_TOLERANCE_STRATEGY.put("no_fault_tolerance", NoFaultToleranceStrategy.class);
-        BUILT_IN_FAULT_TOLERANCE_STRATEGY.put("metadata_node", MetadataNodeFaultToleranceStrategy.class);
-        BUILT_IN_FAULT_TOLERANCE_STRATEGY.put("auto", AutoFaultToleranceStrategy.class);
-    }
 
     private FaultToleranceStrategyFactory() {
         throw new AssertionError();
     }
 
-    public static IFaultToleranceStrategy create(Cluster cluster, IReplicationStrategy repStrategy,
-            ICCServiceContext serviceCtx) {
-        boolean highAvailabilityEnabled =
-                cluster.getHighAvailability() != null && cluster.getHighAvailability().getEnabled() != null
-                        && Boolean.valueOf(cluster.getHighAvailability().getEnabled());
+    public static final String STRATEGY_NAME = "metadata_only";
 
-        if (!highAvailabilityEnabled || cluster.getHighAvailability().getFaultTolerance() == null
-                || cluster.getHighAvailability().getFaultTolerance().getStrategy() == null) {
-            return new NoFaultToleranceStrategy().from(serviceCtx, repStrategy);
+    public static IFaultToleranceStrategy create(ICCServiceContext serviceCtx, ReplicationProperties repProp,
+            IReplicationStrategy strategy) {
+        Class<? extends IFaultToleranceStrategy> clazz;
+        if (!repProp.isReplicationEnabled()) {
+            clazz = NoFaultToleranceStrategy.class;
+        } else if (STRATEGY_NAME.equals(repProp.getReplicationStrategy())) {
+            clazz = MetadataNodeFaultToleranceStrategy.class;
+        } else {
+            clazz = AutoFaultToleranceStrategy.class;
         }
-        String strategyName = cluster.getHighAvailability().getFaultTolerance().getStrategy().toLowerCase();
-        if (!BUILT_IN_FAULT_TOLERANCE_STRATEGY.containsKey(strategyName)) {
-            throw new IllegalArgumentException(String.format("Unsupported Replication Strategy. Available types: %s",
-                    BUILT_IN_FAULT_TOLERANCE_STRATEGY.keySet().toString()));
-        }
-        Class<? extends IFaultToleranceStrategy> clazz = BUILT_IN_FAULT_TOLERANCE_STRATEGY.get(strategyName);
         try {
-            return clazz.newInstance().from(serviceCtx, repStrategy);
+            return clazz.newInstance().from(serviceCtx, strategy);
         } catch (InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException(e);
         }

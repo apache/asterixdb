@@ -150,7 +150,9 @@
           <excludes combine.children="append">
             <exclude>src/main/licenses/**</exclude>
             <exclude>**/*.iml</exclude>
+            <exclude>**/*.json</exclude>
             <exclude>**/*.adm</exclude>
+            <exclude>**/*.template</exclude>
             <exclude>asterix-installer/**</exclude> <!-- in case -DskipInstaller -->
           </excludes>
         </configuration>
@@ -680,17 +682,6 @@
         </plugins>
       </build>
     </profile>
-    <profile>
-      <id>include-managix</id>
-      <activation>
-        <property>
-          <name>!skipManagix</name>
-        </property>
-      </activation>
-      <modules>
-        <module>asterix-installer</module>
-      </modules>
-    </profile>
   </profiles>
 
   <modules>
@@ -711,7 +702,6 @@
     <module>asterix-test-framework</module>
     <module>asterix-maven-plugins</module>
     <module>asterix-server</module>
-    <module>asterix-events</module>
     <module>asterix-doc</module>
     <module>asterix-fuzzyjoin</module>
     <module>asterix-replication</module>
@@ -720,6 +710,7 @@
     <module>asterix-active</module>
     <module>asterix-client-helper</module>
     <module>asterix-license</module>
+    <module>asterix-installer</module>
   </modules>
 
   <dependencyManagement>

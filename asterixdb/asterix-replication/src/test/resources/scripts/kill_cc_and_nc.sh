@@ -16,3 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 ps -ef | awk '/java.*org\.apache\.hyracks\.control\.[cn]c\.[CN]CDriver/ {print $2}' | xargs -n 1 kill -9
+ps -ef | awk '/java.*org\.apache\.hyracks\.control\.nc\.NCService/ {print $2}' | xargs -n 1 kill -9

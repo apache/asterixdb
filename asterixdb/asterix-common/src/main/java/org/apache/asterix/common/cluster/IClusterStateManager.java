@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.config.IOption;
@@ -210,11 +209,6 @@ public interface IClusterStateManager {
     void notifyNodeFailure(String deadNode) throws HyracksException;
 
     /**
-     * @return a substitution node or null
-     */
-    Node getAvailableSubstitutionNode();
-
-    /**
      * Add node to the list of nodes pending removal
      *
      * @param nodeId
@@ -228,4 +222,6 @@ public interface IClusterStateManager {
      * @return
      */
     boolean cancelRemovePending(String nodeId);
+
+    Map<String, Map<IOption, Object>> getActiveNcConfiguration();
 }

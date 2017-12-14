@@ -26,6 +26,7 @@ import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNEC
 import static org.apache.asterix.common.api.IClusterManagementWork.ClusterState.SHUTTING_DOWN;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
@@ -58,17 +59,19 @@ import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.replication.FaultToleranceStrategyFactory;
 import org.apache.asterix.common.api.AsterixThreadFactory;
-import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
+import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.config.AsterixExtension;
-import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.config.PropertiesAccessor;
+import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.IReplicationStrategy;
+import org.apache.asterix.common.replication.ReplicationStrategyFactory;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.file.StorageComponentProvider;
@@ -76,7 +79,6 @@ import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
-import org.apache.asterix.metadata.cluster.ClusterManagerProvider;
 import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.runtime.job.resource.JobCapacityController;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
@@ -122,8 +124,8 @@ public class CCApplication extends BaseCCApplication {
         if (args.length > 0) {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
-        final ClusterControllerService controllerService =
-                (ClusterControllerService) ccServiceCtx.getControllerService();
+        final ClusterControllerService controllerService = (ClusterControllerService) ccServiceCtx
+                .getControllerService();
         ccServiceCtx.setMessageBroker(new CCMessageBroker(controllerService));
 
         configureLoggingLevel(ccServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
@@ -136,16 +138,19 @@ public class CCApplication extends BaseCCApplication {
         int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
         hcc = new HyracksConnection(strIP, port);
         ILibraryManager libraryManager = new ExternalLibraryManager();
-
-        IReplicationStrategy repStrategy = ClusterProperties.INSTANCE.getReplicationStrategy();
-        IFaultToleranceStrategy ftStrategy = FaultToleranceStrategyFactory
-                .create(ClusterProperties.INSTANCE.getCluster(), repStrategy, ccServiceCtx);
+        ReplicationProperties repProp = new ReplicationProperties(
+                PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig()));
+        IReplicationStrategy repStrategy = ReplicationStrategyFactory.create(repProp.getReplicationStrategy(), repProp,
+                getConfigManager());
+        IFaultToleranceStrategy ftStrategy = FaultToleranceStrategyFactory.create(ccServiceCtx, repProp, repStrategy);
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
         componentProvider = new StorageComponentProvider();
         GlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
         statementExecutorCtx = new StatementExecutorContext();
         appCtx = createApplicationContext(libraryManager, globalRecoveryManager, ftStrategy);
-        ccExtensionManager = new CCExtensionManager(getExtensions());
+        List<AsterixExtension> extensions = new ArrayList<>();
+        extensions.addAll(this.getExtensions());
+        ccExtensionManager = new CCExtensionManager(extensions);
         appCtx.setExtensionManager(ccExtensionManager);
         final CCConfig ccConfig = controllerService.getCCConfig();
         if (System.getProperty("java.rmi.server.hostname") == null) {
@@ -162,7 +167,6 @@ public class CCApplication extends BaseCCApplication {
         webManager = new WebManager();
         configureServers();
         webManager.start();
-        ClusterManagerProvider.getClusterManager().registerSubscriber(globalRecoveryManager);
         ccServiceCtx.addClusterLifecycleListener(new ClusterLifecycleListener(appCtx));
         final INodeJobTracker nodeJobTracker = appCtx.getNodeJobTracker();
         ccServiceCtx.addJobLifecycleListener(nodeJobTracker);
@@ -222,8 +226,8 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected HttpServer setupJSONAPIServer(ExternalProperties externalProperties) throws Exception {
-        HttpServer jsonAPIServer =
-                new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getAPIServerPort());
+        HttpServer jsonAPIServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
+                externalProperties.getAPIServerPort());
         jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, appCtx);
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,
@@ -346,8 +350,7 @@ public class CCApplication extends BaseCCApplication {
     @Override
     public void startupCompleted() throws Exception {
         ccServiceCtx.getControllerService().getExecutor().submit(() -> {
-            appCtx.getClusterStateManager().waitForState(ClusterState.ACTIVE);
-            ClusterManagerProvider.getClusterManager().notifyStartupCompleted();
+            appCtx.getClusterStateManager().waitForState(IClusterManagementWork.ClusterState.ACTIVE);
             return null;
         });
     }

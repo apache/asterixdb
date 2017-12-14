@@ -90,8 +90,8 @@ public class ComponentRollbackTest {
     private static final IAType[] KEY_TYPES = { BuiltinType.AINT32 };
     private static final ARecordType RECORD_TYPE = new ARecordType("TestRecordType", new String[] { "key", "value" },
             new IAType[] { BuiltinType.AINT32, BuiltinType.AINT64 }, false);
-    private static final GenerationFunction[] RECORD_GEN_FUNCTION =
-            { GenerationFunction.DETERMINISTIC, GenerationFunction.DETERMINISTIC };
+    private static final GenerationFunction[] RECORD_GEN_FUNCTION = { GenerationFunction.DETERMINISTIC,
+            GenerationFunction.DETERMINISTIC };
     private static final boolean[] UNIQUE_RECORD_FIELDS = { true, false };
     private static final ARecordType META_TYPE = null;
     private static final GenerationFunction[] META_GEN_FUNCTION = null;
@@ -133,7 +133,7 @@ public class ComponentRollbackTest {
         System.out.println("SetUp: ");
         TestHelper.deleteExistingInstanceFiles();
         String configPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "test"
-                + File.separator + "resources" + File.separator + "multi-partition-test-configuration.xml";
+                + File.separator + "resources" + File.separator + "cc.conf";
         nc = new TestNodeController(configPath, false);
         nc.init();
         ncAppCtx = nc.getAppRuntimeContext();
@@ -152,15 +152,14 @@ public class ComponentRollbackTest {
         List<List<String>> partitioningKeys = new ArrayList<>();
         partitioningKeys.add(Collections.singletonList("key"));
         int partition = 0;
-        dataset =
-                new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
-                        NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
-                                partitioningKeys, null, null, null, false, null),
-                        null, DatasetType.INTERNAL, DATASET_ID, 0);
+        dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
+                NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
+                        partitioningKeys, null, null, null, false, null),
+                null, DatasetType.INTERNAL, DATASET_ID, 0);
         PrimaryIndexInfo primaryIndexInfo = nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
                 storageManager, KEY_INDEXES, KEY_INDICATORS_LIST, partition);
-        IndexDataflowHelperFactory iHelperFactory =
-                new IndexDataflowHelperFactory(nc.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
+        IndexDataflowHelperFactory iHelperFactory = new IndexDataflowHelperFactory(nc.getStorageManager(),
+                primaryIndexInfo.getFileSplitProvider());
         JobId jobId = nc.newJobId();
         ctx = nc.createTestContext(jobId, partition, false);
         indexDataflowHelper = iHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);

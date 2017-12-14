@@ -59,13 +59,13 @@ public class DmlTest {
         }
         outdir.mkdirs();
 
-        integrationUtil.init(true);
+        integrationUtil.init(true, AsterixHyracksIntegrationUtil.DEFAULT_CONF_FILE);
         Reader loadReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(LOAD_FOR_ENLIST_FILE), "UTF-8"));
-        AsterixJavaClient asterixLoad =
-                new AsterixJavaClient((ICcApplicationContext) integrationUtil.cc.getApplicationContext(),
-                        integrationUtil.getHyracksClientConnection(), loadReader,
-                ERR, new AqlCompilationProvider(), new DefaultStatementExecutorFactory(), new StorageComponentProvider());
+        AsterixJavaClient asterixLoad = new AsterixJavaClient(
+                (ICcApplicationContext) integrationUtil.cc.getApplicationContext(),
+                integrationUtil.getHyracksClientConnection(), loadReader, ERR, new AqlCompilationProvider(),
+                new DefaultStatementExecutorFactory(), new StorageComponentProvider());
         try {
             asterixLoad.compile(true, false, false, false, false, true, false);
         } catch (AsterixException e) {

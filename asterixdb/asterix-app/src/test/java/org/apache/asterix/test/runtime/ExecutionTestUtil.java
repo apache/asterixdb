@@ -34,6 +34,8 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestSuite;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
 public class ExecutionTestUtil {
@@ -42,33 +44,36 @@ public class ExecutionTestUtil {
 
     protected static final String PATH_ACTUAL = "rttest" + File.separator;
 
-    protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
-
     public static TestGroup FailedGroup;
 
     public static AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
 
     public static List<ILibraryManager> setUp(boolean cleanup) throws Exception {
-        return setUp(cleanup, TEST_CONFIG_FILE_NAME, integrationUtil, true);
+        return setUp(cleanup, AsterixHyracksIntegrationUtil.DEFAULT_CONF_FILE, integrationUtil, true, null);
     }
 
     public static List<ILibraryManager> setUp(boolean cleanup, String configFile) throws Exception {
-        return setUp(cleanup, configFile, integrationUtil, true);
+        return setUp(cleanup, configFile, integrationUtil, true, null);
     }
 
     public static List<ILibraryManager> setUp(boolean cleanup, String configFile,
-            AsterixHyracksIntegrationUtil alternateIntegrationUtil, boolean startHdfs) throws Exception {
+            AsterixHyracksIntegrationUtil alternateIntegrationUtil, boolean startHdfs, List<Pair<IOption, Object>> opts)
+            throws Exception {
         System.out.println("Starting setup");
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("Starting setup");
         }
-        System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, configFile);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing pseudo cluster");
         }
         integrationUtil = alternateIntegrationUtil;
-        integrationUtil.init(cleanup);
+        if (opts != null) {
+            for (Pair<IOption, Object> p : opts) {
+                integrationUtil.addOption(p.getLeft(), p.getRight());
+            }
+        }
+        integrationUtil.init(cleanup, configFile);
 
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.info("initializing HDFS");

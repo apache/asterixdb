@@ -20,7 +20,8 @@ package org.apache.asterix.common.replication;
 
 import java.util.Set;
 
-import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IReplicationStrategy {
@@ -30,6 +31,8 @@ public interface IReplicationStrategy {
      * @return True, if the dataset should be replicated. Otherwise false.
      */
     boolean isMatch(int datasetId);
+
+    Set<Replica> getRemoteReplicasAndSelf(String nodeId);
 
     /**
      * @param nodeId
@@ -52,8 +55,8 @@ public interface IReplicationStrategy {
     }
 
     /**
-     * @param cluster
+     * @param p
      * @return A replication strategy based on the passed configurations.
      */
-    IReplicationStrategy from(Cluster cluster) throws HyracksDataException;
+    IReplicationStrategy from(ReplicationProperties p, IConfigManager configManager) throws HyracksDataException;
 }

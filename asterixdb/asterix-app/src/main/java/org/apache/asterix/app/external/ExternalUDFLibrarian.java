@@ -19,18 +19,25 @@
 package org.apache.asterix.app.external;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.rmi.RemoteException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.event.service.AsterixEventServiceUtil;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
+@SuppressWarnings("squid:S134")
 public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
 
     // The following list includes a library manager for the CC
@@ -39,6 +46,38 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
 
     public ExternalUDFLibrarian(List<ILibraryManager> libraryManagers) {
         this.libraryManagers = libraryManagers;
+    }
+
+    public static void removeLibraryDir() throws IOException {
+        File installLibDir = ExternalLibraryUtils.getLibraryInstallDir();
+        FileUtils.deleteQuietly(installLibDir);
+    }
+
+    public static void unzip(String sourceFile, String outputDir) throws IOException {
+        if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
+            try (ZipFile zipFile = new ZipFile(sourceFile)) {
+                Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    File entryDestination = new File(outputDir, entry.getName());
+                    if (!entry.isDirectory()) {
+                        entryDestination.getParentFile().mkdirs();
+                        try (InputStream in = zipFile.getInputStream(entry);
+                                OutputStream out = new FileOutputStream(entryDestination)) {
+                            IOUtils.copy(in, out);
+                        }
+                    }
+                }
+            }
+        } else {
+            Process process = new ProcessBuilder("unzip", "-d", outputDir, sourceFile).start();
+            try {
+                process.waitFor();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException(e);
+            }
+        }
     }
 
     @Override
@@ -55,7 +94,7 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
         FileUtils.deleteQuietly(destinationDir);
         destinationDir.mkdirs();
         try {
-            AsterixEventServiceUtil.unzip(libPath, destinationDir.getAbsolutePath());
+            unzip(libPath, destinationDir.getAbsolutePath());
         } catch (Exception e) {
 
             throw new Exception("Couldn't unzip the file: " + libPath, e);
@@ -76,11 +115,6 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
         for (ILibraryManager libraryManager : libraryManagers) {
             libraryManager.deregisterLibraryClassLoader(dvName, libName);
         }
-    }
-
-    public static void removeLibraryDir() throws IOException {
-        File installLibDir = ExternalLibraryUtils.getLibraryInstallDir();
-        FileUtils.deleteQuietly(installLibDir);
     }
 
     public void cleanup() throws AsterixException, RemoteException, ACIDException {

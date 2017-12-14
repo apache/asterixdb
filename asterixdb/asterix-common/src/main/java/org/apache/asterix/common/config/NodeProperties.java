@@ -112,4 +112,12 @@ public class NodeProperties extends AbstractProperties {
     public boolean isVirtualNc() {
         return accessor.getInt(NCConfig.Option.NCSERVICE_PORT) == NCConfig.NCSERVICE_PORT_DISABLED;
     }
+
+    public String getTxnLogDir() {
+        return accessor.getString(Option.TXN_LOG_DIR);
+    }
+
+    public String getStorageSubdir() {
+        return accessor.getString(Option.STORAGE_SUBDIR);
+    }
 }

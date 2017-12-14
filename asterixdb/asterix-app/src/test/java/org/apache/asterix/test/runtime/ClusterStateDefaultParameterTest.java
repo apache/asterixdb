@@ -40,7 +40,7 @@ import org.junit.runners.Parameterized.Parameters;
  */
 @RunWith(Parameterized.class)
 public class ClusterStateDefaultParameterTest {
-    protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration4.xml";
+    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc4.conf";
 
     @BeforeClass
     public static void setUp() throws Exception {

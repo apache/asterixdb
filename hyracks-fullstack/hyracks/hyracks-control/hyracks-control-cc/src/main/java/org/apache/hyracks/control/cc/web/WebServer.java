@@ -49,6 +49,7 @@ public class WebServer {
         addJSONHandler("/rest/jobs/*", new JobsRESTAPIFunction(ccs));
         addJSONHandler("/rest/nodes/*", new NodesRESTAPIFunction(ccs));
         addJSONHandler("/rest/statedump", new StateDumpRESTAPIFunction(ccs));
+        server.addServlet(new StartNodeApiServlet(ctx, new String[] { "/rest/startnode" }, ccs));
         server.addServlet(new StaticResourceServlet(ctx, new String[] { "/static/*" }));
         server.addServlet(new ApplicationInstallationHandler(ctx, new String[] { "/applications/*" }, ccs));
     }

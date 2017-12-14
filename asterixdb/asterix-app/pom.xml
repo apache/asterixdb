@@ -177,10 +177,12 @@
                 <exclude>src/test/resources/**/results/**</exclude>
                 <exclude>src/test/resources/fuzzyjoin/pub/fuzzy-join-aql*.dot</exclude>
                 <exclude>src/test/resources/fuzzyjoin/pub/fuzzy-join-aql*.json</exclude>
-                <exclude>data/**</exclude>
+                <exclude>**/data/**</exclude>
+                <exclude>src/test//resources/**/data/**</exclude>
                 <exclude>src/main/resources/queryui/**</exclude>
                 <exclude>src/main/resources/webui/**</exclude>
                 <exclude>src/test/resources/**/only*.xml</exclude>
+                <exclude>src/main/resources/sdk/**</exclude>
               </excludes>
             </configuration>
           </execution>
@@ -407,11 +409,6 @@
       <artifactId>hyracks-storage-am-lsm-btree</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.asterix</groupId>
-      <artifactId>asterix-events</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
     </dependency>
@@ -572,6 +569,11 @@
       <artifactId>hyracks-storage-am-lsm-btree-test</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.4.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>

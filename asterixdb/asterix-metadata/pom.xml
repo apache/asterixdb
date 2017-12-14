@@ -56,12 +56,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.asterix</groupId>
-      <artifactId>asterix-events</artifactId>
-      <version>${project.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
     </dependency>
@@ -116,10 +110,6 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>algebricks-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>javax.xml.bind</groupId>
-      <artifactId>jaxb-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

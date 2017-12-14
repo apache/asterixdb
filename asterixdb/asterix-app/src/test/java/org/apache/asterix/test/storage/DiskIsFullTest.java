@@ -63,8 +63,8 @@ public class DiskIsFullTest {
     private static final IAType[] KEY_TYPES = { BuiltinType.AINT32 };
     private static final ARecordType RECORD_TYPE = new ARecordType("TestRecordType", new String[] { "key", "value" },
             new IAType[] { BuiltinType.AINT32, BuiltinType.AINT64 }, false);
-    private static final GenerationFunction[] RECORD_GEN_FUNCTION =
-            { GenerationFunction.DETERMINISTIC, GenerationFunction.DETERMINISTIC };
+    private static final GenerationFunction[] RECORD_GEN_FUNCTION = { GenerationFunction.DETERMINISTIC,
+            GenerationFunction.DETERMINISTIC };
     private static final boolean[] UNIQUE_RECORD_FIELDS = { true, false };
     private static final ARecordType META_TYPE = null;
     private static final GenerationFunction[] META_GEN_FUNCTION = null;
@@ -111,8 +111,8 @@ public class DiskIsFullTest {
         if (!shouldRun) {
             return;
         }
-        HyracksDataException expectedException =
-                HyracksDataException.create(ErrorCode.CANNOT_MODIFY_INDEX_DISK_IS_FULL);
+        HyracksDataException expectedException = HyracksDataException
+                .create(ErrorCode.CANNOT_MODIFY_INDEX_DISK_IS_FULL);
         try {
             TestNodeController nc = new TestNodeController(null, false);
             nc.init();

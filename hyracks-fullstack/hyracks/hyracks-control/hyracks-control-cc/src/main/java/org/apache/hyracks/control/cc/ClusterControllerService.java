@@ -171,8 +171,8 @@ public class ClusterControllerService implements IControllerService {
         final ClusterTopology topology = computeClusterTopology(ccConfig);
         ccContext = new ClusterControllerContext(topology);
         sweeper = new DeadNodeSweeper();
-        datasetDirectoryService =
-                new DatasetDirectoryService(ccConfig.getResultTTL(), ccConfig.getResultSweepThreshold());
+        datasetDirectoryService = new DatasetDirectoryService(ccConfig.getResultTTL(),
+                ccConfig.getResultSweepThreshold());
 
         deploymentRunMap = new HashMap<>();
         stateDumpRunMap = new HashMap<>();
@@ -270,8 +270,8 @@ public class ClusterControllerService implements IControllerService {
 
     private void connectNCs() {
         getNCServices().forEach((key, value) -> {
-            final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this,
-                    value.getLeft(), value.getRight(), key);
+            final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this, value.getLeft(),
+                    value.getRight(), key);
             executor.submit(triggerWork);
         });
         serviceCtx.addClusterLifecycleListener(new IClusterLifecycleListener() {
@@ -284,16 +284,20 @@ public class ClusterControllerService implements IControllerService {
             @Override
             public void notifyNodeFailure(Collection<String> deadNodeIds) throws HyracksException {
                 LOGGER.log(Level.WARNING, "Getting notified that nodes: " + deadNodeIds + " has failed");
-                for (String nodeId : deadNodeIds) {
-                    Pair<String, Integer> ncService = getNCService(nodeId);
-                    if (ncService.getRight() != NCConfig.NCSERVICE_PORT_DISABLED) {
-                        final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this,
-                                ncService.getLeft(), ncService.getRight(), nodeId);
-                        executor.submit(triggerWork);
-                    }
-                }
             }
         });
+    }
+
+    public boolean startNC(String nodeId) {
+        Pair<String, Integer> ncServiceAddress = getNCService(nodeId);
+        if (ncServiceAddress == null) {
+            return false;
+        }
+        final TriggerNCWork startNc = new TriggerNCWork(ClusterControllerService.this, ncServiceAddress.getLeft(),
+                ncServiceAddress.getRight(), nodeId);
+        executor.submit(startNc);
+        return true;
+
     }
 
     private void terminateNCServices() throws Exception {

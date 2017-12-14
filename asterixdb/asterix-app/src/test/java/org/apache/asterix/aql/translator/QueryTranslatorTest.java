@@ -29,11 +29,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
-import org.apache.asterix.common.config.ClusterProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
-import org.apache.asterix.event.schema.cluster.Cluster;
-import org.apache.asterix.event.schema.cluster.MasterNode;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.RunStatement;
@@ -41,7 +38,9 @@ import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.application.ICCServiceContext;
+import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.junit.Assert;
 import org.junit.Test;
@@ -64,18 +63,14 @@ public class QueryTranslatorTest {
         when(mockAsterixExternalProperties.getAPIServerPort()).thenReturn(19002);
         ICCServiceContext mockServiceContext = mock(ICCServiceContext.class);
         when(mockAsterixAppContextInfo.getServiceContext()).thenReturn(mockServiceContext);
+        ICCContext mockCCContext = mock(ICCContext.class);
+        when(mockServiceContext.getCCContext()).thenReturn(mockCCContext);
+        ClusterControllerInfo mockCCInfo = mock(ClusterControllerInfo.class);
+        when(mockCCContext.getClusterControllerInfo()).thenReturn(mockCCInfo);
+        when(mockCCInfo.getClientNetAddress()).thenReturn("127.0.0.1");
         IApplicationConfig mockApplicationConfig = mock(IApplicationConfig.class);
         when(mockServiceContext.getAppConfig()).thenReturn(mockApplicationConfig);
         when(mockApplicationConfig.getBoolean(CCConfig.Option.ENFORCE_FRAME_WRITER_PROTOCOL)).thenReturn(true);
-
-        // Mocks AsterixClusterProperties.
-        Cluster mockCluster = mock(Cluster.class);
-        MasterNode mockMasterNode = mock(MasterNode.class);
-        ClusterProperties mockClusterProperties = mock(ClusterProperties.class);
-        setFinalStaticField(ClusterProperties.class.getDeclaredField("INSTANCE"), mockClusterProperties);
-        when(mockClusterProperties.getCluster()).thenReturn(mockCluster);
-        when(mockCluster.getMasterNode()).thenReturn(mockMasterNode);
-        when(mockMasterNode.getClientIp()).thenReturn("127.0.0.1");
 
         IStatementExecutor aqlTranslator = new DefaultStatementExecutorFactory().create(mockAsterixAppContextInfo,
                 statements, mockSessionOutput, new AqlCompilationProvider(), new StorageComponentProvider());

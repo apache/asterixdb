@@ -35,14 +35,11 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
-import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.transactions.IResourceIdManager;
-import org.apache.asterix.event.schema.cluster.Cluster;
-import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.config.IOption;
@@ -71,7 +68,6 @@ public class ClusterStateManager implements IClusterStateManager {
     private static final Logger LOGGER = Logger.getLogger(ClusterStateManager.class.getName());
     private final Map<String, Map<IOption, Object>> ncConfigMap = new HashMap<>();
     private Set<String> pendingRemoval = new HashSet<>();
-    private final Cluster cluster;
     private ClusterState state = ClusterState.UNUSABLE;
     private AlgebricksAbsolutePartitionConstraint clusterPartitionConstraint;
     private Map<String, ClusterPartition[]> node2PartitionsMap;
@@ -82,10 +78,6 @@ public class ClusterStateManager implements IClusterStateManager {
     private Set<String> participantNodes = new HashSet<>();
     private IFaultToleranceStrategy ftStrategy;
     private ICcApplicationContext appCtx;
-
-    public ClusterStateManager() {
-        cluster = ClusterProperties.INSTANCE.getCluster();
-    }
 
     @Override
     public void setCcAppCtx(ICcApplicationContext appCtx) {
@@ -179,8 +171,8 @@ public class ClusterStateManager implements IClusterStateManager {
         }
         resetClusterPartitionConstraint();
         // if the cluster has no registered partitions or all partitions are pending activation -> UNUSABLE
-        if (clusterPartitions.isEmpty() || clusterPartitions.values().stream()
-                .allMatch(ClusterPartition::isPendingActivation)) {
+        if (clusterPartitions.isEmpty()
+                || clusterPartitions.values().stream().allMatch(ClusterPartition::isPendingActivation)) {
             LOGGER.info("Cluster does not have any registered partitions");
             setState(ClusterState.UNUSABLE);
             return;
@@ -262,12 +254,6 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public synchronized Node getAvailableSubstitutionNode() {
-        List<Node> subNodes = cluster.getSubstituteNodes() == null ? null : cluster.getSubstituteNodes().getNode();
-        return subNodes == null || subNodes.isEmpty() ? null : subNodes.get(0);
-    }
-
-    @Override
     public synchronized Set<String> getParticipantNodes() {
         return new HashSet<>(participantNodes);
     }
@@ -302,10 +288,6 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized boolean isClusterActive() {
-        if (cluster == null) {
-            // this is a virtual cluster
-            return true;
-        }
         return state == ClusterState.ACTIVE;
     }
 
@@ -456,6 +438,11 @@ public class ClusterStateManager implements IClusterStateManager {
         }
     }
 
+    @Override
+    public Map<String, Map<IOption, Object>> getActiveNcConfiguration() {
+        return ncConfigMap;
+    }
+
     public synchronized Set<String> getNodesPendingRemoval() {
         return new HashSet<>(pendingRemoval);
     }
@@ -468,6 +455,10 @@ public class ClusterStateManager implements IClusterStateManager {
                 configManager.set(nodeId, key, value);
             }
         });
+    }
+
+    public String getStoragePathPrefix() {
+        return appCtx.getNodeProperties().getStorageSubdir();
     }
 
 }

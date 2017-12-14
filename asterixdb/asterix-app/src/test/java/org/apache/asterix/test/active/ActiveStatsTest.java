@@ -60,26 +60,27 @@ public class ActiveStatsTest {
 
     protected boolean cleanUp = true;
     private static String EXPECTED_STATS = "\"Mock stats\"";
+    private static String CONF_PATH = "src/main/resources/cc.conf";
 
     @Before
     public void setUp() throws Exception {
-        ExecutionTestUtil.setUp(cleanUp);
+        ExecutionTestUtil.setUp(cleanUp, CONF_PATH);
     }
 
     @Test
     public void refreshStatsTest() throws Exception {
         // Entities to be used
         EntityId entityId = new EntityId("MockExtension", "MockDataverse", "MockEntity");
-        ActiveRuntimeId activeRuntimeId =
-                new ActiveRuntimeId(entityId, FeedIntakeOperatorNodePushable.class.getSimpleName(), 0);
+        ActiveRuntimeId activeRuntimeId = new ActiveRuntimeId(entityId,
+                FeedIntakeOperatorNodePushable.class.getSimpleName(), 0);
         List<Dataset> datasetList = new ArrayList<>();
-        AlgebricksAbsolutePartitionConstraint partitionConstraint =
-                new AlgebricksAbsolutePartitionConstraint(new String[] { "asterix_nc1" });
+        AlgebricksAbsolutePartitionConstraint partitionConstraint = new AlgebricksAbsolutePartitionConstraint(
+                new String[] { "asterix_nc1" });
         String requestedStats;
-        CcApplicationContext appCtx =
-                (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
-        ActiveNotificationHandler activeJobNotificationHandler =
-                (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
+        CcApplicationContext appCtx = (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc
+                .getApplicationContext();
+        ActiveNotificationHandler activeJobNotificationHandler = (ActiveNotificationHandler) appCtx
+                .getActiveNotificationHandler();
         JobId jobId = new JobId(1);
 
         // Mock ActiveRuntime
@@ -103,8 +104,8 @@ public class ActiveStatsTest {
                 entityId, datasetList, partitionConstraint, FeedIntakeOperatorNodePushable.class.getSimpleName(),
                 NoRetryPolicyFactory.INSTANCE, null, Collections.emptyList());
         // Register mock runtime
-        NCAppRuntimeContext nc1AppCtx =
-                (NCAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0].getApplicationContext();
+        NCAppRuntimeContext nc1AppCtx = (NCAppRuntimeContext) ExecutionTestUtil.integrationUtil.ncs[0]
+                .getApplicationContext();
         nc1AppCtx.getActiveManager().registerRuntime(mockRuntime);
 
         // Check init stats
@@ -115,8 +116,8 @@ public class ActiveStatsTest {
         eventsListener.refreshStats(1000);
         requestedStats = eventsListener.getStats();
         Assert.assertTrue(requestedStats.contains("N/A"));
-        WaitForStateSubscriber startingSubscriber =
-                new WaitForStateSubscriber(eventsListener, Collections.singleton(ActivityState.STARTING));
+        WaitForStateSubscriber startingSubscriber = new WaitForStateSubscriber(eventsListener,
+                Collections.singleton(ActivityState.STARTING));
         // Update stats of created/started job without joined partition
         TestUserActor user = new TestUserActor("Xikui", mdProvider, null);
         Action start = user.startActivity(eventsListener);
@@ -127,8 +128,8 @@ public class ActiveStatsTest {
         requestedStats = eventsListener.getStats();
         Assert.assertTrue(requestedStats.contains("N/A"));
         // Fake partition message and notify eventListener
-        ActivePartitionMessage partitionMessage =
-                new ActivePartitionMessage(activeRuntimeId, jobId, Event.RUNTIME_REGISTERED, null);
+        ActivePartitionMessage partitionMessage = new ActivePartitionMessage(activeRuntimeId, jobId,
+                Event.RUNTIME_REGISTERED, null);
         partitionMessage.handle(appCtx);
         start.sync();
         if (start.hasFailed()) {

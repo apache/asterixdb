@@ -35,7 +35,7 @@ import org.junit.runners.Parameterized.Parameters;
  */
 @RunWith(Parameterized.class)
 public class RebalanceWithCancellationIT {
-    protected static final String TEST_CONFIG_FILE_NAME = "asterix-build-configuration.xml";
+    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
     private static RebalanceCancellationTestExecutor executor = new RebalanceCancellationTestExecutor();
 
     @BeforeClass

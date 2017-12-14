@@ -75,8 +75,8 @@ public class LogMarkerTest {
     private static final IAType[] KEY_TYPES = { BuiltinType.AINT32 };
     private static final ARecordType RECORD_TYPE = new ARecordType("TestRecordType", new String[] { "key", "value" },
             new IAType[] { BuiltinType.AINT32, BuiltinType.AINT64 }, false);
-    private static final GenerationFunction[] RECORD_GEN_FUNCTION =
-            { GenerationFunction.DETERMINISTIC, GenerationFunction.DETERMINISTIC };
+    private static final GenerationFunction[] RECORD_GEN_FUNCTION = { GenerationFunction.DETERMINISTIC,
+            GenerationFunction.DETERMINISTIC };
     private static final boolean[] UNIQUE_RECORD_FIELDS = { true, false };
     private static final ARecordType META_TYPE = null;
     private static final GenerationFunction[] META_GEN_FUNCTION = null;
@@ -150,10 +150,10 @@ public class LogMarkerTest {
                 }
                 insertOp.close();
                 nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
-                IndexDataflowHelperFactory iHelperFactory =
-                        new IndexDataflowHelperFactory(nc.getStorageManager(), indexInfo.getFileSplitProvider());
-                IIndexDataflowHelper dataflowHelper =
-                        iHelperFactory.create(ctx.getJobletContext().getServiceContext(), 0);
+                IndexDataflowHelperFactory iHelperFactory = new IndexDataflowHelperFactory(nc.getStorageManager(),
+                        indexInfo.getFileSplitProvider());
+                IIndexDataflowHelper dataflowHelper = iHelperFactory.create(ctx.getJobletContext().getServiceContext(),
+                        0);
                 dataflowHelper.open();
                 LSMBTree btree = (LSMBTree) dataflowHelper.getIndexInstance();
                 LongPointable longPointable = LongPointable.FACTORY.createPointable();

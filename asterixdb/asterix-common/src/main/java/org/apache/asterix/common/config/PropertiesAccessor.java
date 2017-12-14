@@ -18,23 +18,17 @@
  */
 package org.apache.asterix.common.config;
 
-import static org.apache.asterix.common.config.MetadataProperties.Option.INSTANCE_NAME;
-import static org.apache.asterix.common.config.MetadataProperties.Option.METADATA_NODE;
 import static org.apache.asterix.common.config.NodeProperties.Option.STORAGE_SUBDIR;
 import static org.apache.hyracks.control.common.controllers.NCConfig.Option.IODEVICES;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
@@ -43,23 +37,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.configuration.AsterixConfiguration;
-import org.apache.asterix.common.configuration.Coredump;
-import org.apache.asterix.common.configuration.Extension;
-import org.apache.asterix.common.configuration.Property;
-import org.apache.asterix.common.configuration.Store;
-import org.apache.asterix.common.configuration.TransactionLogDir;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.utils.ConfigUtil;
-import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.config.IApplicationConfig;
@@ -68,8 +49,6 @@ import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
 import org.apache.hyracks.control.common.config.ConfigManager;
-import org.apache.hyracks.control.common.controllers.ControllerConfig;
-import org.apache.hyracks.control.common.controllers.NCConfig;
 
 public class PropertiesAccessor implements IApplicationConfig {
     private static final Logger LOGGER = Logger.getLogger(PropertiesAccessor.class.getName());
@@ -93,140 +72,19 @@ public class PropertiesAccessor implements IApplicationConfig {
         nodePartitionsMap = new ConcurrentHashMap<>();
         clusterPartitions = Collections.synchronizedSortedMap(new TreeMap<>());
         extensions = new ArrayList<>();
-        // Determine whether to use old-style asterix-configuration.xml or new-style configuration.
-        // QQQ strip this out eventually
-        // QQQ this is NOT a good way to determine whether to use config file
         ConfigManager configManager = ((ConfigManagerApplicationConfig) cfg).getConfigManager();
-        boolean usingConfigFile = Stream
-                .of((IOption) ControllerConfig.Option.CONFIG_FILE, ControllerConfig.Option.CONFIG_FILE_URL)
-                .map(configManager::get).anyMatch(Objects::nonNull);
-        AsterixConfiguration asterixConfiguration = null;
-        try {
-            asterixConfiguration = configure(
-                    System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY, GlobalConfig.DEFAULT_CONFIG_FILE_NAME));
-        } catch (Exception e) {
-            // cannot load config file, assume new-style config
+        MutableInt uniquePartitionId = new MutableInt(0);
+        // Iterate through each configured NC.
+        for (String ncName : cfg.getNCNames()) {
+            configureNc(configManager, ncName, uniquePartitionId);
         }
-
-        if (!usingConfigFile && asterixConfiguration != null) {
-            LOGGER.info("using old-style configuration: " + System.getProperty(GlobalConfig.CONFIG_FILE_PROPERTY));
-            if (asterixConfiguration.getInstanceName() != null) {
-                configManager.set(INSTANCE_NAME, asterixConfiguration.getInstanceName());
-            }
-            if (asterixConfiguration.getMetadataNode() != null) {
-                configManager.set(METADATA_NODE, asterixConfiguration.getMetadataNode());
-            }
-            List<Store> configuredStores = asterixConfiguration.getStore();
-
-            int uniquePartitionId = 0;
-            // Here we iterate through all <store> elements in asterix-configuration.xml.
-            // For each one, we create an array of ClusterPartitions and store this array
-            // in nodePartitionsMap, keyed by the node name. The array is the same length
-            // as the comma-separated <storeDirs> child element, because Managix will have
-            // arranged for that element to be populated with the full paths to each
-            // partition directory (as formed by appending the <store> subdirectory to
-            // each <iodevices> path from the user's original cluster.xml).
-            for (Store store : configuredStores) {
-                configManager.set(store.getNcId(), NodeProperties.Option.STARTING_PARTITION_ID, uniquePartitionId);
-                String trimmedStoreDirs = store.getStoreDirs().trim();
-                String[] nodeStores = trimmedStoreDirs.split(",");
-                ClusterPartition[] nodePartitions = new ClusterPartition[nodeStores.length];
-                for (int i = 0; i < nodePartitions.length; i++) {
-                    ClusterPartition partition = new ClusterPartition(uniquePartitionId++, store.getNcId(), i);
-                    clusterPartitions.put(partition.getPartitionId(), partition);
-                    nodePartitions[i] = partition;
-                }
-                stores.put(store.getNcId(), nodeStores);
-                nodePartitionsMap.put(store.getNcId(), nodePartitions);
-                // push the store info to the config manager
-                configManager.set(store.getNcId(), NCConfig.Option.IODEVICES, nodeStores);
-                // marking node as virtual, as we're not using NCServices with old-style config
-                configManager.set(store.getNcId(), NCConfig.Option.NCSERVICE_PORT, NCConfig.NCSERVICE_PORT_DISABLED);
-            }
-            // populate nc api port from cluster properties
-            final ExternalProperties.Option ncApiPort = ExternalProperties.Option.NC_API_PORT;
-            for (Node node : ClusterProperties.INSTANCE.getCluster().getNode()) {
-                configManager.set(node.getId(), ncApiPort, node.getNcApiPort().intValue());
-            }
-            // Get extensions
-            if (asterixConfiguration.getExtensions() != null) {
-                for (Extension ext : asterixConfiguration.getExtensions().getExtension()) {
-                    extensions.add(ConfigUtil.toAsterixExtension(ext));
-                }
-            }
-            for (Property p : asterixConfiguration.getProperty()) {
-                IOption option = null;
-                for (Section section : Arrays.asList(Section.COMMON, Section.CC, Section.NC)) {
-                    IOption optionTemp = cfg.lookupOption(section.sectionName(), p.getName());
-                    if (optionTemp == null) {
-                        continue;
-                    }
-                    if (option != null) {
-                        throw new IllegalStateException(
-                                "ERROR: option found in multiple sections: " + Arrays.asList(option, optionTemp));
-                    }
-                    option = optionTemp;
-                }
-                if (option == null) {
-                    LOGGER.warning("Ignoring unknown property: " + p.getName());
-                } else {
-                    configManager.set(option, option.type().parse(p.getValue()));
-                }
-            }
-            for (Coredump cd : asterixConfiguration.getCoredump()) {
-                coredumpConfig.put(cd.getNcId(), cd.getCoredumpPath());
-            }
-            for (TransactionLogDir txnLogDir : asterixConfiguration.getTransactionLogDir()) {
-                transactionLogDirs.put(txnLogDir.getNcId(), txnLogDir.getTxnLogDirPath());
-            }
-        } else {
-            LOGGER.info("using new-style configuration");
-            MutableInt uniquePartitionId = new MutableInt(0);
-            // Iterate through each configured NC.
-            for (String ncName : cfg.getNCNames()) {
-                configureNc(configManager, ncName, uniquePartitionId);
-            }
-            for (String section : cfg.getSectionNames()) {
-                if (section.startsWith(AsterixProperties.SECTION_PREFIX_EXTENSION)) {
-                    String className = AsterixProperties.getSectionId(AsterixProperties.SECTION_PREFIX_EXTENSION,
-                            section);
-                    configureExtension(className, section);
-                }
+        for (String section : cfg.getSectionNames()) {
+            if (section.startsWith(AsterixProperties.SECTION_PREFIX_EXTENSION)) {
+                String className = AsterixProperties.getSectionId(AsterixProperties.SECTION_PREFIX_EXTENSION, section);
+                configureExtension(className, section);
             }
         }
         loadAsterixBuildProperties();
-    }
-
-    private AsterixConfiguration configure(String fileName) throws IOException, AsterixException {
-        try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(fileName)) {
-            if (is != null) {
-                return configure(is, fileName);
-            }
-        }
-        try (FileInputStream is = new FileInputStream(fileName)) {
-            return configure(is, fileName);
-        } catch (FileNotFoundException fnf1) {
-            LOGGER.warning(
-                    "Failed to get configuration file " + fileName + " as FileInputStream. FileNotFoundException");
-            LOGGER.warning("Attempting to get default configuration file " + GlobalConfig.DEFAULT_CONFIG_FILE_NAME
-                    + " as FileInputStream");
-            try (FileInputStream fis = new FileInputStream(GlobalConfig.DEFAULT_CONFIG_FILE_NAME)) {
-                return configure(fis, GlobalConfig.DEFAULT_CONFIG_FILE_NAME);
-            } catch (FileNotFoundException fnf2) {
-                fnf1.addSuppressed(fnf2);
-                throw new AsterixException("Could not find configuration file " + fileName, fnf1);
-            }
-        }
-    }
-
-    private AsterixConfiguration configure(InputStream is, String fileName) throws AsterixException {
-        try {
-            JAXBContext ctx = JAXBContext.newInstance(AsterixConfiguration.class);
-            Unmarshaller unmarshaller = ctx.createUnmarshaller();
-            return (AsterixConfiguration) unmarshaller.unmarshal(is);
-        } catch (JAXBException e) {
-            throw new AsterixException("Failed to read configuration file " + fileName, e);
-        }
     }
 
     private void configureExtension(String className, String section) {

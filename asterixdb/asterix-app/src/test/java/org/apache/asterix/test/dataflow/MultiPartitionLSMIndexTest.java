@@ -86,8 +86,8 @@ public class MultiPartitionLSMIndexTest {
     private static final IAType[] KEY_TYPES = { BuiltinType.AINT32 };
     private static final ARecordType RECORD_TYPE = new ARecordType("TestRecordType", new String[] { "key", "value" },
             new IAType[] { BuiltinType.AINT32, BuiltinType.AINT64 }, false);
-    private static final GenerationFunction[] RECORD_GEN_FUNCTION =
-            { GenerationFunction.DETERMINISTIC, GenerationFunction.DETERMINISTIC };
+    private static final GenerationFunction[] RECORD_GEN_FUNCTION = { GenerationFunction.DETERMINISTIC,
+            GenerationFunction.DETERMINISTIC };
     private static final boolean[] UNIQUE_RECORD_FIELDS = { true, false };
     private static final ARecordType META_TYPE = null;
     private static final GenerationFunction[] META_GEN_FUNCTION = null;
@@ -104,8 +104,8 @@ public class MultiPartitionLSMIndexTest {
     private static final String DATA_TYPE_NAME = "DUMMY";
     private static final String NODE_GROUP_NAME = "DEFAULT";
     private static final IndexType INDEX_TYPE = IndexType.BTREE;
-    private static final List<List<String>> INDEX_FIELD_NAMES =
-            Arrays.asList(Arrays.asList(RECORD_TYPE.getFieldNames()[1]));
+    private static final List<List<String>> INDEX_FIELD_NAMES = Arrays
+            .asList(Arrays.asList(RECORD_TYPE.getFieldNames()[1]));
     private static final List<Integer> INDEX_FIELD_INDICATORS = Arrays.asList(Index.RECORD_INDICATOR);
     private static final List<IAType> INDEX_FIELD_TYPES = Arrays.asList(BuiltinType.AINT64);
     private static final StorageComponentProvider storageManager = new StorageComponentProvider();
@@ -129,7 +129,7 @@ public class MultiPartitionLSMIndexTest {
         System.out.println("SetUp: ");
         TestHelper.deleteExistingInstanceFiles();
         String configPath = System.getProperty("user.dir") + File.separator + "src" + File.separator + "test"
-                + File.separator + "resources" + File.separator + "multi-partition-test-configuration.xml";
+                + File.separator + "resources" + File.separator + "cc-multipart.conf";
         nc = new TestNodeController(configPath, false);
         nc.init();
         ncAppCtx = nc.getAppRuntimeContext();
@@ -147,11 +147,10 @@ public class MultiPartitionLSMIndexTest {
     public void createIndex() throws Exception {
         List<List<String>> partitioningKeys = new ArrayList<>();
         partitioningKeys.add(Collections.singletonList("key"));
-        dataset =
-                new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
-                        NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
-                                partitioningKeys, null, null, null, false, null),
-                        null, DatasetType.INTERNAL, DATASET_ID, 0);
+        dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
+                NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
+                        partitioningKeys, null, null, null, false, null),
+                null, DatasetType.INTERNAL, DATASET_ID, 0);
         secondaryIndex = new Index(DATAVERSE_NAME, DATASET_NAME, INDEX_NAME, INDEX_TYPE, INDEX_FIELD_NAMES,
                 INDEX_FIELD_INDICATORS, INDEX_FIELD_TYPES, false, false, false, 0);
         taskCtxs = new IHyracksTaskContext[NUM_PARTITIONS];
@@ -168,18 +167,18 @@ public class MultiPartitionLSMIndexTest {
             taskCtxs[i] = nc.createTestContext(jobId, i, false);
             PrimaryIndexInfo primaryIndexInfo = nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null,
                     storageManager, KEY_INDEXES, KEY_INDICATORS_LIST, i);
-            SecondaryIndexInfo secondaryIndexInfo =
-                    nc.createSecondaryIndex(primaryIndexInfo, secondaryIndex, storageManager, i);
-            IndexDataflowHelperFactory iHelperFactory =
-                    new IndexDataflowHelperFactory(nc.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
-            primaryIndexDataflowHelpers[i] =
-                    iHelperFactory.create(taskCtxs[i].getJobletContext().getServiceContext(), i);
+            SecondaryIndexInfo secondaryIndexInfo = nc.createSecondaryIndex(primaryIndexInfo, secondaryIndex,
+                    storageManager, i);
+            IndexDataflowHelperFactory iHelperFactory = new IndexDataflowHelperFactory(nc.getStorageManager(),
+                    primaryIndexInfo.getFileSplitProvider());
+            primaryIndexDataflowHelpers[i] = iHelperFactory.create(taskCtxs[i].getJobletContext().getServiceContext(),
+                    i);
             primaryIndexDataflowHelpers[i].open();
             primaryLsmBtrees[i] = (TestLsmBtree) primaryIndexDataflowHelpers[i].getIndexInstance();
-            iHelperFactory =
-                    new IndexDataflowHelperFactory(nc.getStorageManager(), secondaryIndexInfo.getFileSplitProvider());
-            secondaryIndexDataflowHelpers[i] =
-                    iHelperFactory.create(taskCtxs[i].getJobletContext().getServiceContext(), i);
+            iHelperFactory = new IndexDataflowHelperFactory(nc.getStorageManager(),
+                    secondaryIndexInfo.getFileSplitProvider());
+            secondaryIndexDataflowHelpers[i] = iHelperFactory.create(taskCtxs[i].getJobletContext().getServiceContext(),
+                    i);
             secondaryIndexDataflowHelpers[i].open();
             secondaryLsmBtrees[i] = (TestLsmBtree) secondaryIndexDataflowHelpers[i].getIndexInstance();
             secondaryIndexDataflowHelpers[i].close();

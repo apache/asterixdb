@@ -30,7 +30,6 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.MetadataProperties;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
 import org.apache.asterix.runtime.utils.CcApplicationContext;

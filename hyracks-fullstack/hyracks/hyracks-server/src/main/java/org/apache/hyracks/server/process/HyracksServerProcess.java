@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,7 +66,13 @@ abstract class HyracksServerProcess {
     public void stop() {
         process.destroy();
         try {
-            process.waitFor();
+            boolean success = process.waitFor(30, TimeUnit.SECONDS);
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning("Killing unresponsive NC Process");
+            }
+            if (!success) {
+                process.destroyForcibly();
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

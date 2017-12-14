@@ -18,10 +18,12 @@
  */
 package org.apache.hyracks.api.application;
 
+import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 
 public interface ICCApplication extends IApplication {
 
     IJobCapacityController getJobCapacityController();
 
+    IConfigManager getConfigManager();
 }

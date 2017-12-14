@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.app.nc.task.BindMetadataNodeTask;
 import org.apache.asterix.app.nc.task.CheckpointTask;
@@ -61,9 +62,11 @@ import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.IReplicationStrategy;
+import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.util.FaultToleranceUtil;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -84,9 +87,11 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
     private IReplicationStrategy replicationStrategy;
     private ICCServiceContext serviceCtx;
     private Set<String> pendingStartupCompletionNodes = new HashSet<>();
+    private List<String> nodeIds;
+    private Map<String, SystemState> startupQueue = new HashMap<>();
 
     @Override
-    public void notifyNodeJoin(String nodeId) throws HyracksDataException {
+    public void notifyNodeJoin(String nodeId) {
         pendingStartupCompletionNodes.add(nodeId);
     }
 
@@ -135,14 +140,13 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
     private synchronized void requestPartitionsTakeover(String failedNodeId) {
         //replica -> list of partitions to takeover
         Map<String, List<Integer>> partitionRecoveryPlan = new HashMap<>();
-        ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
-        ReplicationProperties replicationProperties = appCtx.getReplicationProperties();
         //collect the partitions of the failed NC
         List<ClusterPartition> lostPartitions = getNodeAssignedPartitions(failedNodeId);
         if (!lostPartitions.isEmpty()) {
             for (ClusterPartition partition : lostPartitions) {
                 //find replicas for this partitions
-                Set<String> partitionReplicas = replicationProperties.getNodeReplicasIds(partition.getNodeId());
+                Set<String> partitionReplicas = replicationStrategy.getRemoteReplicas(partition.getNodeId()).stream()
+                        .map(Replica::getId).collect(Collectors.toSet());
                 //find a replica that is still active
                 for (String replica : partitionReplicas) {
                     //TODO (mhubail) currently this assigns the partition to the first found active replica.
@@ -203,9 +207,8 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
         planId2FailbackPlanMap.put(plan.getPlanId(), plan);
 
         //get all partitions this node requires to resync
-        ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
-        ReplicationProperties replicationProperties = appCtx.getReplicationProperties();
-        Set<String> nodeReplicas = replicationProperties.getNodeReplicasIds(failingBackNodeId);
+        Set<String> nodeReplicas = replicationStrategy.getRemoteReplicas(failingBackNodeId).stream().map(Replica::getId)
+                .collect(Collectors.toSet());
         clusterManager.getClusterPartitons();
         for (String replicaId : nodeReplicas) {
             ClusterPartition[] nodePartitions = clusterManager.getNodePartitions(replicaId);
@@ -425,6 +428,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
         ft.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
         ft.replicationStrategy = replicationStrategy;
         ft.serviceCtx = serviceCtx;
+        ft.nodeIds = serviceCtx.getAppConfig().getNCNames();
         return ft;
     }
 
@@ -486,18 +490,29 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
     private synchronized void process(RegistrationTasksRequestMessage msg) throws HyracksDataException {
         final String nodeId = msg.getNodeId();
         final SystemState state = msg.getState();
-        List<INCLifecycleTask> tasks;
-        if (state == SystemState.BOOTSTRAPPING || state == SystemState.HEALTHY) {
-            tasks = buildStartupSequence(nodeId);
+        //last node needed to start
+        if (startupQueue.keySet().size() == nodeIds.size() - 1) {
+            startupQueue.put(nodeId, state);
+            for (Map.Entry<String, SystemState> nodeState : startupQueue.entrySet()) {
+                List<INCLifecycleTask> tasks = buildStartupSequence(nodeState.getKey());
+                RegistrationTasksResponseMessage response = new RegistrationTasksResponseMessage(nodeState.getKey(),
+                        tasks);
+                try {
+                    messageBroker.sendApplicationMessageToNC(response, nodeState.getKey());
+                } catch (Exception e) {
+                    throw HyracksDataException.create(e);
+                }
+            }
+        } else if (!failedNodes.isEmpty()) {
+            List<INCLifecycleTask> tasks = buildFailbackStartupSequence();
+            RegistrationTasksResponseMessage response = new RegistrationTasksResponseMessage(nodeId, tasks);
+            try {
+                messageBroker.sendApplicationMessageToNC(response, msg.getNodeId());
+            } catch (Exception e) {
+                throw HyracksDataException.create(e);
+            }
         } else {
-            // failed node returned. Need to start failback process
-            tasks = buildFailbackStartupSequence();
-        }
-        RegistrationTasksResponseMessage response = new RegistrationTasksResponseMessage(nodeId, tasks);
-        try {
-            messageBroker.sendApplicationMessageToNC(response, msg.getNodeId());
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+            startupQueue.put(nodeId, state);
         }
     }
 

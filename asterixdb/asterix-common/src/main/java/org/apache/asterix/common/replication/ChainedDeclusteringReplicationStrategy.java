@@ -24,16 +24,18 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.asterix.common.config.ClusterProperties;
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.event.schema.cluster.Cluster;
+import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.common.config.ConfigManager;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 
 public class ChainedDeclusteringReplicationStrategy implements IReplicationStrategy {
 
     private static final Logger LOGGER = Logger.getLogger(ChainedDeclusteringReplicationStrategy.class.getName());
     private int replicationFactor;
+    private ReplicationProperties repProp;
+    private ConfigManager configManager;
 
     @Override
     public boolean isMatch(int datasetId) {
@@ -43,9 +45,8 @@ public class ChainedDeclusteringReplicationStrategy implements IReplicationStrat
     @Override
     public Set<Replica> getRemoteReplicas(String nodeId) {
         Set<Replica> remoteReplicas = new HashSet<>();
-        Cluster cluster = ClusterProperties.INSTANCE.getCluster();
         int numberOfRemoteReplicas = replicationFactor - 1;
-        int nodeIndex = ClusterProperties.INSTANCE.getNodeIndex(nodeId);
+        int nodeIndex = repProp.getNodeIds().indexOf(nodeId);
 
         if (nodeIndex == -1) {
             if (LOGGER.isLoggable(Level.WARNING)) {
@@ -56,35 +57,49 @@ public class ChainedDeclusteringReplicationStrategy implements IReplicationStrat
 
         //find nodes to the right of this node
         while (remoteReplicas.size() != numberOfRemoteReplicas) {
-            remoteReplicas.add(new Replica(cluster.getNode().get(++nodeIndex % cluster.getNode().size())));
+            String replica = repProp.getNodeIds().get(++nodeIndex % repProp.getNodeIds().size());
+            remoteReplicas.add(new Replica(replica,
+                    configManager.getNodeEffectiveConfig(replica).getString(NCConfig.Option.REPLICATION_LISTEN_ADDRESS),
+                    configManager.getNodeEffectiveConfig(replica).getInt(NCConfig.Option.REPLICATION_LISTEN_PORT)));
         }
 
         return remoteReplicas;
     }
 
     @Override
+    public Set<Replica> getRemoteReplicasAndSelf(String nodeId) {
+        Set<Replica> replicas = getRemoteReplicas(nodeId);
+        replicas.add(new Replica(nodeId,
+                configManager.getNodeEffectiveConfig(nodeId).getString(NCConfig.Option.REPLICATION_LISTEN_ADDRESS),
+                configManager.getNodeEffectiveConfig(nodeId).getInt(NCConfig.Option.REPLICATION_LISTEN_PORT)));
+        return replicas;
+
+    }
+
+    @Override
     public Set<Replica> getRemotePrimaryReplicas(String nodeId) {
         Set<Replica> clientReplicas = new HashSet<>();
-        Cluster cluster = ClusterProperties.INSTANCE.getCluster();
         final int remotePrimaryReplicasCount = replicationFactor - 1;
-
-        int nodeIndex = ClusterProperties.INSTANCE.getNodeIndex(nodeId);
+        int nodeIndex = repProp.getNodeIds().indexOf(nodeId);
 
         //find nodes to the left of this node
         while (clientReplicas.size() != remotePrimaryReplicasCount) {
-            clientReplicas.add(new Replica(cluster.getNode().get(Math.abs(--nodeIndex % cluster.getNode().size()))));
+            String replica = repProp.getNodeIds().get(Math.abs(--nodeIndex % repProp.getNodeIds().size()));
+            clientReplicas.add(new Replica(replica,
+                    configManager.getNodeEffectiveConfig(replica).getString(NCConfig.Option.REPLICATION_LISTEN_ADDRESS),
+                    configManager.getNodeEffectiveConfig(replica).getInt(NCConfig.Option.REPLICATION_LISTEN_PORT)));
         }
 
         return clientReplicas;
     }
 
     @Override
-    public ChainedDeclusteringReplicationStrategy from(Cluster cluster) throws HyracksDataException {
-        if (cluster.getHighAvailability().getDataReplication().getReplicationFactor() == null) {
-            throw new RuntimeDataException(ErrorCode.INVALID_CONFIGURATION, "Replication factor must be specified.");
-        }
+    public ChainedDeclusteringReplicationStrategy from(ReplicationProperties repProp, IConfigManager configManager)
+            throws HyracksDataException {
         ChainedDeclusteringReplicationStrategy cd = new ChainedDeclusteringReplicationStrategy();
-        cd.replicationFactor = cluster.getHighAvailability().getDataReplication().getReplicationFactor().intValue();
+        cd.repProp = repProp;
+        cd.replicationFactor = repProp.getReplicationFactor();
+        cd.configManager = (ConfigManager) configManager;
         return cd;
     }
 }

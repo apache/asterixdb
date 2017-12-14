@@ -23,10 +23,6 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
-
-import org.apache.asterix.common.config.ReplicationProperties;
-import org.apache.asterix.event.schema.cluster.Node;
 
 public class Replica {
 
@@ -36,13 +32,15 @@ public class Replica {
         UNKNOWN
     }
 
-    private final Node node;
     private ReplicaState state = ReplicaState.UNKNOWN;
+    String nodeId;
+    String ipAddr;
+    int port;
 
-    public Replica(Node node) {
-        this.node = new Node();
-        this.node.setId(node.getId());
-        this.node.setClusterIp(node.getClusterIp());
+    public Replica(String id, String ip, int port) {
+        nodeId = id;
+        ipAddr = ip;
+        this.port = port;
     }
 
     public ReplicaState getState() {
@@ -53,41 +51,62 @@ public class Replica {
         this.state = state;
     }
 
-    public Node getNode() {
-        return node;
-    }
-
-    public String getId() {
-        return node.getId();
-    }
-
-    public InetSocketAddress getAddress(ReplicationProperties asterixReplicationProperties) {
-        String replicaIPAddress = node.getClusterIp();
-        int replicationPort = asterixReplicationProperties.getDataReplicationPort(node.getId());
-        return InetSocketAddress.createUnresolved(replicaIPAddress, replicationPort);
-    }
-
     public static Replica create(DataInput input) throws IOException {
-        Node node = new Node();
-        Replica replica = new Replica(node);
+        Replica replica = new Replica(null, null, -1);
         replica.readFields(input);
         return replica;
     }
 
+    public String getId() {
+        return nodeId;
+    }
+
     public void writeFields(DataOutput output) throws IOException {
-        output.writeUTF(node.getId());
-        output.writeUTF(node.getClusterIp());
+        output.writeUTF(nodeId);
+        output.writeUTF(ipAddr);
+        output.writeInt(port);
         output.writeInt(state.ordinal());
     }
 
     public void readFields(DataInput input) throws IOException {
-        this.node.setId(input.readUTF());
-        this.node.setClusterIp(input.readUTF());
+        this.nodeId = input.readUTF();
+        this.ipAddr = input.readUTF();
+        this.port = input.readInt();
         this.state = ReplicaState.values()[input.readInt()];
+    }
+
+    public String getClusterIp() {
+        return ipAddr;
+    }
+
+    public void setClusterIp(String ip) {
+        ipAddr = ip;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 
     public void serialize(OutputStream out) throws IOException {
         DataOutputStream dos = new DataOutputStream(out);
         writeFields(dos);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Replica)) {
+            return false;
+        }
+        Replica other = (Replica) o;
+        return nodeId.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return nodeId.hashCode();
     }
 }

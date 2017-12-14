@@ -22,7 +22,6 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.replication.ReplicaEvent;
-import org.apache.asterix.event.schema.cluster.Node;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -32,10 +31,12 @@ public class ReplicaEventMessage implements INcAddressedMessage {
     private final String nodeId;
     private final ClusterEventType event;
     private final String nodeIPAddress;
+    private final int nodePort;
 
-    public ReplicaEventMessage(String nodeId, String nodeIPAddress, ClusterEventType event) {
+    public ReplicaEventMessage(String nodeId, String nodeIPAddress, int nodePort, ClusterEventType event) {
         this.nodeId = nodeId;
         this.nodeIPAddress = nodeIPAddress;
+        this.nodePort = nodePort;
         this.event = event;
     }
 
@@ -53,10 +54,7 @@ public class ReplicaEventMessage implements INcAddressedMessage {
 
     @Override
     public void handle(INcApplicationContext appContext) throws HyracksDataException, InterruptedException {
-        Node node = new Node();
-        node.setId(nodeId);
-        node.setClusterIp(nodeIPAddress);
-        Replica replica = new Replica(node);
+        Replica replica = new Replica(nodeId, nodeIPAddress, nodePort);
         appContext.getReplicationManager().reportReplicaEvent(new ReplicaEvent(replica, event));
     }
 

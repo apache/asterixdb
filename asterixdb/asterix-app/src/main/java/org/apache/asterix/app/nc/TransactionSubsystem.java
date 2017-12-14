@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.CheckpointProperties;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
@@ -72,8 +71,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.lockManager = new ConcurrentLockManager(txnProperties.getLockManagerShrinkTimer());
         ReplicationProperties repProperties =
                 asterixAppRuntimeContextProvider.getAppContext().getReplicationProperties();
-        IReplicationStrategy replicationStrategy = repProperties.getReplicationStrategy();
-        final boolean replicationEnabled = repProperties.isParticipant(id);
+        final boolean replicationEnabled = repProperties.isReplicationEnabled();
+
         final CheckpointProperties checkpointProperties = new CheckpointProperties(txnProperties, id);
         if (LOGGER.isLoggable(Level.INFO)) {
             LOGGER.log(Level.INFO, "Checkpoint Properties: " + checkpointProperties);
@@ -84,11 +83,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
             transactionManager.ensureMaxTxnId(latestCheckpoint.getMaxTxnId());
         }
 
-        if (replicationEnabled) {
-            this.logManager = new LogManagerWithReplication(this, replicationStrategy);
-        } else {
-            this.logManager = new LogManager(this);
-        }
+        this.logManager = replicationEnabled ? new LogManagerWithReplication(this) : new LogManager(this);
         this.recoveryManager = new RecoveryManager(this, serviceCtx);
         if (this.txnProperties.isCommitProfilerEnabled()) {
             ecp = new EntityCommitProfiler(this, this.txnProperties.getCommitProfilerReportInterval());
