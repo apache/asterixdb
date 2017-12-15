@@ -62,11 +62,9 @@ FROM [  (
                   ]
                   FROM [                    (
                       SELECT ELEMENT [
-                      FunctionCall asterix.resolve@-1[
-                        LiteralExpr [STRING] [l]
-                        Variable [ Name=$l_suppkey ]
+                      FunctionCall asterix.field-access-by-name@2[
                         Variable [ Name=$g ]
-                        Variable [ Name=$l_partkey ]
+                        LiteralExpr [STRING] [l]
                       ]
                       ]
                       FROM [                        Variable [ Name=$g ]

@@ -29,11 +29,11 @@ SELECT sig_id, COUNT(1) total_count,
        (
          SELECT chapter_name, COUNT(e) AS escount
          FROM es AS e
-         GROUP BY chapter_name
+         GROUP BY sponsor.chapter_name
        ) chapter_breakdown
 FROM  Event,
       Event.sponsoring_sigs AS sponsor
-GROUP BY sig_id GROUP AS es
+GROUP BY sponsor.sig_id GROUP AS es
 ORDER BY total_count DESC
 LIMIT 5
 ;

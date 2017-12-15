@@ -227,11 +227,7 @@ RecordConstructor [
     LiteralExpr [STRING] [numcust]
     :
     FunctionCall asterix.count@1[
-      FunctionCall asterix.resolve@-1[
-        LiteralExpr [STRING] [ct]
-        Variable [ Name=$cntrycode ]
-        Variable [ Name=#1 ]
-      ]
+      Variable [ Name=$g ]
     ]
   )
   (
@@ -241,13 +237,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=ct
+          ]
           Field=c_acctbal
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [ct]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -295,7 +292,7 @@ Groupby
     Variable [ Name=$ct ]
     Field=cntrycode
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     ct:=Variable [ Name=$ct ]
   )

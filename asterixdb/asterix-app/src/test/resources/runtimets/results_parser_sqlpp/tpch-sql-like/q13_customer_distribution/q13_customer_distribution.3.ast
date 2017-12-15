@@ -36,10 +36,9 @@ FROM [  (
             ]
             FROM [              (
                 SELECT ELEMENT [
-                FunctionCall asterix.resolve@-1[
-                  LiteralExpr [STRING] [co]
+                FunctionCall asterix.field-access-by-name@2[
                   Variable [ Name=$g2 ]
-                  Variable [ Name=$c_custkey ]
+                  LiteralExpr [STRING] [co]
                 ]
                 ]
                 FROM [                  Variable [ Name=$g2 ]
@@ -145,23 +144,16 @@ Groupby
 
 Let Variable [ Name=$custdist ]
   :=
-  FunctionCall asterix.sql-count@1[
+  FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
-      (
-        SELECT ELEMENT [
-        FieldAccessor [
-          Variable [ Name=#1 ]
-          Field=gco
-        ]
-        ]
-        FROM [          Variable [ Name=$g ]
-          AS Variable [ Name=$g ]
-        ]
-      )
+      FunctionCall asterix.field-access-by-name@2[
+        Variable [ Name=$g ]
+        LiteralExpr [STRING] [gco]
+      ]
       ]
       FROM [        Variable [ Name=$g ]
-        AS Variable [ Name=#1 ]
+        AS Variable [ Name=$g ]
       ]
     )
   ]

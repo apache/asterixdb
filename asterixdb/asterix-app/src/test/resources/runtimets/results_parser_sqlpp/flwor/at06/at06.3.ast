@@ -54,14 +54,7 @@ FROM [  (
       (
         LiteralExpr [STRING] [partkey]
         :
-        FieldAccessor [
-          FunctionCall asterix.resolve@-1[
-            LiteralExpr [STRING] [i]
-            Variable [ Name=$g ]
-            Variable [ Name=$l_partkey ]
-          ]
-          Field=l_partkey
-        ]
+        Variable [ Name=$l_partkey ]
       )
     ]
     ]

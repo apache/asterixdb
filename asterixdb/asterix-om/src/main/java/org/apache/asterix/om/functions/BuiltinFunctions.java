@@ -871,8 +871,6 @@ public class BuiltinFunctions {
             FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier META_KEY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "meta-key",
             FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier RESOLVE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "resolve",
-            FunctionIdentifier.VARARGS);
 
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
         return registeredFunctions.get(fid);
@@ -1184,7 +1182,7 @@ public class BuiltinFunctions {
         addPrivateFunction(OPEN_RECORD_CONSTRUCTOR, OpenRecordConstructorResultType.INSTANCE, true);
         addPrivateFunction(FIELD_ACCESS_BY_INDEX, FieldAccessByIndexResultType.INSTANCE, true);
         addPrivateFunction(FIELD_ACCESS_NESTED, FieldAccessNestedResultType.INSTANCE, true);
-        addPrivateFunction(FIELD_ACCESS_BY_NAME, FieldAccessByNameResultType.INSTANCE, true);
+        addFunction(FIELD_ACCESS_BY_NAME, FieldAccessByNameResultType.INSTANCE, true);
         addFunction(GET_RECORD_FIELDS, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addFunction(GET_RECORD_FIELD_VALUE, FieldAccessNestedResultType.INSTANCE, true);
         addFunction(RECORD_PAIRS, RecordPairsTypeComputer.INSTANCE, true);
@@ -1270,7 +1268,6 @@ public class BuiltinFunctions {
         // meta() function
         addFunction(META, OpenARecordTypeComputer.INSTANCE, true);
         addPrivateFunction(META_KEY, AnyTypeComputer.INSTANCE, false);
-        addFunction(RESOLVE, AnyTypeComputer.INSTANCE, false);
 
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
 

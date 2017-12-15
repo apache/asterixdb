@@ -31,40 +31,40 @@ SELECT
   ,s_county
   ,s_state
   ,s_zip
-  ,SUM((CASE WHEN (sr_returned_date_sk - ss_sold_date_sk) <= 30  THEN 1 ELSE 0 END))  AS c30_days
-  ,SUM((CASE WHEN ((sr_returned_date_sk - ss_sold_date_sk) > 30 AND
-                 (sr_returned_date_sk - ss_sold_date_sk) <= 60) THEN 1 ELSE 0 END ))  AS c31_60_days
-  ,SUM((CASE WHEN ((sr_returned_date_sk - ss_sold_date_sk) > 60 AND
-                 (sr_returned_date_sk - ss_sold_date_sk) <= 90) THEN 1 ELSE 0 END))  AS c61_90_days
-  ,SUM((CASE WHEN ((sr_returned_date_sk - ss_sold_date_sk) > 90 AND
-                 (sr_returned_date_sk - ss_sold_date_sk) <= 120) THEN 1 ELSE 0 END))  AS c91_120_days
-  ,SUM((CASE WHEN (sr_returned_date_sk - ss_sold_date_sk)  > 120 THEN 1 ELSE 0 END))  AS gt120_days
+  ,SUM((CASE WHEN (sr.sr_returned_date_sk - ss.ss_sold_date_sk) <= 30  THEN 1 ELSE 0 END))  AS c30_days
+  ,SUM((CASE WHEN ((sr.sr_returned_date_sk - ss.ss_sold_date_sk) > 30 AND
+                 (sr.sr_returned_date_sk - ss.ss_sold_date_sk) <= 60) THEN 1 ELSE 0 END ))  AS c31_60_days
+  ,SUM((CASE WHEN ((sr.sr_returned_date_sk - ss.ss_sold_date_sk) > 60 AND
+                 (sr.sr_returned_date_sk - ss.ss_sold_date_sk) <= 90) THEN 1 ELSE 0 END))  AS c61_90_days
+  ,SUM((CASE WHEN ((sr.sr_returned_date_sk - ss.ss_sold_date_sk) > 90 AND
+                 (sr.sr_returned_date_sk - ss.ss_sold_date_sk) <= 120) THEN 1 ELSE 0 END))  AS c91_120_days
+  ,SUM((CASE WHEN (sr.sr_returned_date_sk - ss.ss_sold_date_sk)  > 120 THEN 1 ELSE 0 END))  AS gt120_days
 FROM
-   store_sales
-  ,store_returns
-  ,store
+   store_sales ss
+  ,store_returns sr
+  ,store s
   ,date_dim d1
   ,date_dim d2
 WHERE
     d2.d_year = 2000
 AND d2.d_moy  = 9
-AND ss_ticket_number = sr_ticket_number
-AND ss_item_sk = sr_item_sk
-AND ss_sold_date_sk   = d1.d_date_sk
-AND sr_returned_date_sk   = d2.d_date_sk
-AND ss_customer_sk = sr_customer_sk
-AND ss_store_sk = s_store_sk
+AND ss.ss_ticket_number = sr.sr_ticket_number
+AND ss.ss_item_sk = sr.sr_item_sk
+AND ss.ss_sold_date_sk   = d1.d_date_sk
+AND sr.sr_returned_date_sk   = d2.d_date_sk
+AND ss.ss_customer_sk = sr.sr_customer_sk
+AND ss.ss_store_sk = s.s_store_sk
 GROUP BY
-   s_store_name
-  ,s_company_id
-  ,s_street_number
-  ,s_street_name
-  ,s_street_type
-  ,s_suite_number
-  ,s_city
-  ,s_county
-  ,s_state
-  ,s_zip
+   s.s_store_name
+  ,s.s_company_id
+  ,s.s_street_number
+  ,s.s_street_name
+  ,s.s_street_type
+  ,s.s_suite_number
+  ,s.s_city
+  ,s.s_county
+  ,s.s_state
+  ,s.s_zip
 ORDER BY s_store_name
         ,s_company_id
         ,s_street_number

@@ -19,24 +19,24 @@
 
 USE tpch;
 
-SELECT n_name, sum(l_extendedprice * (1 - l_discount)) AS revenue
+SELECT n_name, sum(o1.l_extendedprice * (1 - o1.l_discount)) AS revenue
 FROM
-  Customer JOIN
-    ( SELECT n_name, l_extendedprice, l_discount, s_nationkey, o_custkey
-      FROM Orders JOIN
-      ( SELECT n_name, l_extendedprice, l_discount, l_orderkey, s_nationkey
-        FROM LineItem JOIN
-            (   SELECT n_name, s_suppkey, s_nationkey
-                FROM Supplier JOIN
-                (   SELECT n_name, n_nationkey
+  Customer c JOIN
+    ( SELECT l1.n_name, l1.l_extendedprice, l1.l_discount, l1.s_nationkey, o.o_custkey
+      FROM Orders o JOIN
+      ( SELECT s1.n_name, l.l_extendedprice, l.l_discount, l.l_orderkey, s1.s_nationkey
+        FROM LineItem l JOIN
+            (   SELECT n1.n_name, s.s_suppkey, s.s_nationkey
+                FROM Supplier s JOIN
+                (   SELECT n.n_name, n.n_nationkey
                     FROM Nation n JOIN Region r
-                    ON n_regionkey = r_regionkey
-                ) n1 ON s_nationkey = n_nationkey
+                    ON n.n_regionkey = r.r_regionkey
+                ) n1 ON s.s_nationkey = n1.n_nationkey
             ) s1
-        ON l_suppkey = s_suppkey
-      ) l1 ON l_orderkey = o_orderkey AND o_orderdate >= '1990-01-01'
-              AND o_orderdate < '1995-01-01'
+        ON l.l_suppkey = s1.s_suppkey
+      ) l1 ON l1.l_orderkey = o.o_orderkey AND o.o_orderdate >= '1990-01-01'
+              AND o.o_orderdate < '1995-01-01'
    ) o1
-ON c_nationkey = s_nationkey AND c_custkey = o_custkey
-GROUP BY n_name
+ON c.c_nationkey = o1.s_nationkey AND c.c_custkey = o1.o_custkey
+GROUP BY o1.n_name
 ORDER BY revenue DESC;

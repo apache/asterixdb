@@ -72,7 +72,7 @@ from  CSX as paperCSX,
               sim as fuzzyjoin.`similarity-jaccard-prefix`(lenDBLP,tokensDBLP,lenCSX,tokensCSX,prefixTokenDBLP,0.500000f)
         where ((prefixTokenDBLP = prefixTokenCSX) and (sim >= 0.500000f))
         /* +hash */
-        group by idDBLP as idDBLP,idCSX as idCSX
+        group by idDBLP as idDBLP,idCSX as idCSX,sim as sim
     ) as ridpair
     where (ridpair.idDBLP = paperDBLP.id)
 ) as paperDBLPridpair

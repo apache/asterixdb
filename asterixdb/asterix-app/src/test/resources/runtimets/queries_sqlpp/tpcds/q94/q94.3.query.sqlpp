@@ -22,24 +22,24 @@ USE tpcds;
 
 SELECT
    COUNT(wsnondup.ws_order_number) order_count,
-   SUM(ws_ext_ship_cost) total_shipping_cost,
-   SUM(ws_net_profit) total_net_profit
+   SUM(ws1.ws_ext_ship_cost) total_shipping_cost,
+   SUM(ws1.ws_net_profit) total_net_profit
 FROM
    (SELECT ws_order_number
     FROM web_sales
     GROUP BY ws_order_number) AS wsnondup,
    web_sales as ws1,
-   date_dim,
-   customer_address,
-   web_site
+   date_dim d,
+   customer_address ca,
+   web_site web
 WHERE
-    date(d_date) >= date('1999-05-01')
-AND date(d_date) <= date('1999-06-29')
-AND ws1.ws_ship_date_sk = d_date_sk
-AND ws1.ws_ship_addr_sk = ca_address_sk
-AND ca_state = 'TX'
-AND ws1.ws_web_site_sk = web_site_sk
-AND web_company_name = 'pri'
+    date(d.d_date) >= date('1999-05-01')
+AND date(d.d_date) <= date('1999-06-29')
+AND ws1.ws_ship_date_sk = d.d_date_sk
+AND ws1.ws_ship_addr_sk = ca.ca_address_sk
+AND ca.ca_state = 'TX'
+AND ws1.ws_web_site_sk = web.web_site_sk
+AND web.web_company_name = 'pri'
 AND EXISTS (SELECT *
             FROM web_sales ws2
             WHERE ws1.ws_order_number = ws2.ws_order_number

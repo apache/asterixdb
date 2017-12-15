@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.lang.sqlpp.util;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +28,6 @@ import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupBySugarVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.CheckSubqueryVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.DeepCopyVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
@@ -38,14 +36,6 @@ import org.apache.asterix.lang.sqlpp.visitor.SqlppSubstituteExpressionVisitor;
 public class SqlppRewriteUtil {
 
     private SqlppRewriteUtil() {
-    }
-
-    // Applying sugar rewriting for group-by.
-    public static Expression rewriteExpressionUsingGroupVariable(VariableExpr groupVar,
-            Collection<VariableExpr> fieldVars, ILangExpression expr, LangRewritingContext context)
-            throws CompilationException {
-        SqlppGroupBySugarVisitor visitor = new SqlppGroupBySugarVisitor(context, groupVar, fieldVars);
-        return expr.accept(visitor, null);
     }
 
     public static Set<VariableExpr> getFreeVariable(Expression expr) throws CompilationException {

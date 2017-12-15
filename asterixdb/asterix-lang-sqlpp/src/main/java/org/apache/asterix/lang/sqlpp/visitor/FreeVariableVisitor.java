@@ -166,7 +166,8 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
         selectBlock.getSelectClause().accept(this, selectFreeVars);
         // Removes group-by, from, let, and gby-let binding vars.
-        removeAllBindingVarsInSelectBlock(selectFreeVars, fromBindingVars, letsBindingVars, gbyLetsBindingVars);
+        removeAllBindingVarsInSelectBlock(selectFreeVars, fromBindingVars, letsBindingVars, gbyBindingVars,
+                gbyLetsBindingVars);
 
         if (selectBlock.hasFromClause()) {
             selectBlock.getFromClause().accept(this, fromFreeVars);
@@ -193,13 +194,15 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
             }
             if (selectBlock.hasHavingClause()) {
                 selectBlock.getHavingClause().accept(this, selectFreeVars);
-                removeAllBindingVarsInSelectBlock(selectFreeVars, fromBindingVars, letsBindingVars, gbyLetsBindingVars);
+                removeAllBindingVarsInSelectBlock(selectFreeVars, fromBindingVars, letsBindingVars, gbyBindingVars,
+                        gbyLetsBindingVars);
             }
         }
 
         // Removes all binding vars from <code>freeVars</code>, which contains the free
         // vars in the order-by and limit.
-        removeAllBindingVarsInSelectBlock(freeVars, fromBindingVars, letsBindingVars, gbyLetsBindingVars);
+        removeAllBindingVarsInSelectBlock(freeVars, fromBindingVars, letsBindingVars, gbyBindingVars,
+                gbyLetsBindingVars);
 
         // Adds all free vars.
         freeVars.addAll(selectFreeVars);
@@ -462,23 +465,23 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     /**
      * Removes all binding variables defined in the select block for a free variable collection.
-     *
-     * @param freeVars,
+     *  @param selectFreeVars,
      *            free variables.
      * @param fromBindingVars,
      *            binding variables defined in the from clause of a select block.
      * @param letsBindingVars,
      *            binding variables defined in the let clauses of the select block.
-     * @param gbyLetsBindingVars,
-     *            binding variables defined in the let clauses after a group-by in the select block.
+     * @param gbyBindingVars
+     *            binding variables defined in the groupby clauses of the select block
+     * @param gbyLetsBindingVars
+     *            binding variables defined in the let clauses after groupby of the select block.
      */
     private void removeAllBindingVarsInSelectBlock(Collection<VariableExpr> selectFreeVars,
             Collection<VariableExpr> fromBindingVars, Collection<VariableExpr> letsBindingVars,
-            Collection<VariableExpr> gbyLetsBindingVars) {
+            Collection<VariableExpr> gbyBindingVars, Collection<VariableExpr> gbyLetsBindingVars) {
         selectFreeVars.removeAll(fromBindingVars);
         selectFreeVars.removeAll(letsBindingVars);
-        selectFreeVars.removeAll(gbyLetsBindingVars);
+        selectFreeVars.removeAll(gbyBindingVars);
         selectFreeVars.removeAll(gbyLetsBindingVars);
     }
-
 }

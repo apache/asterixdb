@@ -421,47 +421,47 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
             AggregateOperator nspAgg = (AggregateOperator) nspAggRef.getValue();
             Mutable<ILogicalOperator> nspAggChildRef = nspAgg.getInputs().get(0);
             LogicalVariable listifyVar = findListifiedVariable(nspAgg, varFromNestedAgg);
-            if (listifyVar == null) {
-                    continue;
-            }
-            OperatorManipulationUtil.substituteVarRec(aggInSubplanOp, unnestVar, listifyVar, true, context);
-            nspAgg.getVariables().addAll(aggInSubplanOp.getVariables());
-            nspAgg.getExpressions().addAll(aggInSubplanOp.getExpressions());
-            for (LogicalVariable v : aggInSubplanOp.getVariables()) {
-                nspWithAgg.put(v, nspOp);
-                nspAggVars.put(v, 0);
-                nspAggVarToPlanIndex.put(v, i);
-            }
+            if (listifyVar != null) {
+                OperatorManipulationUtil.substituteVarRec(aggInSubplanOp, unnestVar, listifyVar, true, context);
+                nspAgg.getVariables().addAll(aggInSubplanOp.getVariables());
+                nspAgg.getExpressions().addAll(aggInSubplanOp.getExpressions());
+                for (LogicalVariable v : aggInSubplanOp.getVariables()) {
+                    nspWithAgg.put(v, nspOp);
+                    nspAggVars.put(v, 0);
+                    nspAggVarToPlanIndex.put(v, i);
+                }
 
-            Mutable<ILogicalOperator> opRef1InSubplan = aggInSubplanOp.getInputs().get(0);
-            if (!opRef1InSubplan.getValue().getInputs().isEmpty()) {
-                Mutable<ILogicalOperator> opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
-                AbstractLogicalOperator op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
-                if (op2InSubplan.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
-                    List<Mutable<ILogicalOperator>> nspInpList = nspAgg.getInputs();
-                    nspInpList.clear();
-                    nspInpList.add(opRef1InSubplan);
-                    while (true) {
-                        opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
-                        op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
-                        if (op2InSubplan.getOperatorTag() == LogicalOperatorTag.UNNEST) {
-                            List<Mutable<ILogicalOperator>> opInpList = opRef1InSubplan.getValue().getInputs();
-                            opInpList.clear();
-                            opInpList.add(nspAggChildRef);
-                            break;
-                        }
-                        opRef1InSubplan = opRef2InSubplan;
-                        if (opRef1InSubplan.getValue().getInputs().isEmpty()) {
-                            throw new IllegalStateException(
+                Mutable<ILogicalOperator> opRef1InSubplan = aggInSubplanOp.getInputs().get(0);
+                if (!opRef1InSubplan.getValue().getInputs().isEmpty()) {
+                    Mutable<ILogicalOperator> opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
+                    AbstractLogicalOperator op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
+                    if (op2InSubplan.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
+                        List<Mutable<ILogicalOperator>> nspInpList = nspAgg.getInputs();
+                        nspInpList.clear();
+                        nspInpList.add(opRef1InSubplan);
+                        while (true) {
+                            opRef2InSubplan = opRef1InSubplan.getValue().getInputs().get(0);
+                            op2InSubplan = (AbstractLogicalOperator) opRef2InSubplan.getValue();
+                            if (op2InSubplan.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+                                List<Mutable<ILogicalOperator>> opInpList = opRef1InSubplan.getValue().getInputs();
+                                opInpList.clear();
+                                opInpList.add(nspAggChildRef);
+                                break;
+                            }
+                            opRef1InSubplan = opRef2InSubplan;
+                            if (opRef1InSubplan.getValue().getInputs().isEmpty()) {
+                                throw new IllegalStateException(
                                         "PushAggregateIntoNestedSubplanRule: could not find UNNEST.");
+                            }
                         }
                     }
                 }
+                subplanOpRef.setValue(subplan.getInputs().get(0).getValue());
+                OperatorPropertiesUtil.typeOpRec(nspAggRef, context);
+                return true;
             }
-            subplanOpRef.setValue(subplan.getInputs().get(0).getValue());
-            OperatorPropertiesUtil.typeOpRec(nspAggRef, context);
         }
-        return true;
+        return false;
     }
 
     private LogicalVariable findListifiedVariable(AggregateOperator nspAgg, LogicalVariable varFromNestedAgg) {

@@ -32,11 +32,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [age]
     :
-    FunctionCall asterix.resolve@-1[
-      LiteralExpr [STRING] [age]
-      Variable [ Name=$name ]
-      Variable [ Name=#1 ]
-    ]
+    Variable [ Name=$age ]
   )
 ]
 ]
@@ -52,6 +48,12 @@ Groupby
     Variable [ Name=$c ]
     Field=name
   ]
+  Variable [ Name=$age ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$c ]
+    Field=age
+  ]
   GROUP AS Variable [ Name=#1 ]
   (
     c:=Variable [ Name=$c ]
@@ -60,10 +62,6 @@ Groupby
 Orderby
   Variable [ Name=$name ]
   DESC
-  FunctionCall asterix.resolve@-1[
-    LiteralExpr [STRING] [age]
-    Variable [ Name=$name ]
-    Variable [ Name=#1 ]
-  ]
+  Variable [ Name=$age ]
   ASC
 

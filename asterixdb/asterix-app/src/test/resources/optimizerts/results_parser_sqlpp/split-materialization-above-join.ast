@@ -60,19 +60,12 @@ FROM [  FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [sim]
         :
         IndexAccessor [
-          FunctionCall asterix.resolve@-1[
-            LiteralExpr [STRING] [sim]
-            Variable [ Name=#5 ]
-            Variable [ Name=$lenLeft ]
-            Variable [ Name=$idLeft ]
-            Variable [ Name=$lenRight ]
-            Variable [ Name=$tokensLeft ]
-            Variable [ Name=$prefixTokenRight ]
-            Variable [ Name=$tokensRight ]
-            Variable [ Name=$paperLeft ]
-            Variable [ Name=$paperRight ]
-            Variable [ Name=$idRight ]
-            Variable [ Name=$prefixTokenLeft ]
+          FieldAccessor [
+            IndexAccessor [
+              Variable [ Name=$g ]
+              Index:               LiteralExpr [LONG] [0]
+            ]
+            Field=sim
           ]
           Index:           LiteralExpr [LONG] [0]
         ]
@@ -85,17 +78,13 @@ FROM [  FunctionCall asterix.dataset@1[
       AS Variable [ Name=$paperLeft ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall asterix.resolve@-1[
+        FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [tokensLeft]
-          Variable [ Name=$paperLeft ]
-          Variable [ Name=$paperRight ]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-          FunctionCall asterix.resolve@-1[
+          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [lenLeft]
-            Variable [ Name=$paperLeft ]
-            Variable [ Name=$paperRight ]
           ]
           LiteralExpr [FLOAT] [0.5]
         ]
@@ -108,19 +97,13 @@ FROM [  FunctionCall asterix.dataset@1[
       AS Variable [ Name=$paperRight ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
-        FunctionCall asterix.resolve@-1[
+        FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [tokensRight]
-          Variable [ Name=$paperLeft ]
-          Variable [ Name=$paperRight ]
-          Variable [ Name=$prefixTokenLeft ]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
-          FunctionCall asterix.resolve@-1[
+          FunctionCall asterix.dataset@1[
             LiteralExpr [STRING] [lenRight]
-            Variable [ Name=$paperLeft ]
-            Variable [ Name=$paperRight ]
-            Variable [ Name=$prefixTokenLeft ]
           ]
           LiteralExpr [FLOAT] [0.5]
         ]
@@ -183,12 +166,12 @@ FROM [  FunctionCall asterix.dataset@1[
                 (
                   SELECT ELEMENT [
                   FieldAccessor [
-                    Variable [ Name=#2 ]
+                    Variable [ Name=#3 ]
                     Field=paper
                   ]
                   ]
                   FROM [                    Variable [ Name=#1 ]
-                    AS Variable [ Name=#2 ]
+                    AS Variable [ Name=#3 ]
                   ]
                 )
               ]
@@ -198,7 +181,7 @@ FROM [  FunctionCall asterix.dataset@1[
 
           )
           AS Variable [ Name=$tokenRanked ]
- AT
+ AT 
 Variable [ Name=$i ]
         ]
         Where
@@ -257,7 +240,7 @@ Variable [ Name=$i ]
               Variable [ Name=$tokenGroupped ]
               :=
               Variable [ Name=$token ]
-              GROUP AS Variable [ Name=#3 ]
+              GROUP AS Variable [ Name=#2 ]
               (
                 paper:=Variable [ Name=$paper ]
                 token:=Variable [ Name=$token ]
@@ -272,7 +255,7 @@ Variable [ Name=$i ]
                     Field=paper
                   ]
                   ]
-                  FROM [                    Variable [ Name=#3 ]
+                  FROM [                    Variable [ Name=#2 ]
                     AS Variable [ Name=#4 ]
                   ]
                 )
@@ -283,7 +266,7 @@ Variable [ Name=$i ]
 
           )
           AS Variable [ Name=$tokenRanked ]
- AT
+ AT 
 Variable [ Name=$i ]
         ]
         Where
@@ -348,12 +331,9 @@ Variable [ Name=$i ]
         Variable [ Name=$paperRight ]
         Field=id
       ]
-      GROUP AS Variable [ Name=#5 ]
+      GROUP AS Variable [ Name=$g ]
       (
-        paperLeft:=Variable [ Name=$paperLeft ]
-        prefixTokenLeft:=Variable [ Name=$prefixTokenLeft ]
-        paperRight:=Variable [ Name=$paperRight ]
-        prefixTokenRight:=Variable [ Name=$prefixTokenRight ]
+        sim:=Variable [ Name=$sim ]
       )
 
   )

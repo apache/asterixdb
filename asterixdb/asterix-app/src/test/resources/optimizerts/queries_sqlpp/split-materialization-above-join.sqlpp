@@ -40,7 +40,7 @@ select element {'left':paperLeft,'right':paperRight,'sim':ridpair.sim}
 from  DBLP as paperLeft,
       DBLP as paperRight,
       (
-    select element {'idLeft':idLeft,'idRight':idRight,'sim':sim[0]}
+    select element {'idLeft':idLeft,'idRight':idRight,'sim':g[0].sim[0]}
     from  DBLP as paperLeft,
           fuzzyjoin.`subset-collection`(tokensLeft,0,fuzzyjoin.`prefix-len-jaccard`(lenLeft,0.500000f)) as prefixTokenLeft,
           DBLP as paperRight,
@@ -75,7 +75,7 @@ from  DBLP as paperLeft,
       ),
           sim as fuzzyjoin.`similarity-jaccard-prefix`(lenLeft,tokensLeft,lenRight,tokensRight,prefixTokenLeft,0.500000f)
     where ((prefixTokenLeft = prefixTokenRight) and ((sim >= 0.500000f) and (paperLeft.id < paperRight.id)))
-    group by paperLeft.id as idLeft,paperRight.id as idRight
+    group by paperLeft.id as idLeft,paperRight.id as idRight group as g(sim as sim)
 ) as ridpair
 where ((ridpair.idLeft = paperLeft.id) and (ridpair.idRight = paperRight.id))
 order by paperLeft.id,paperRight.id

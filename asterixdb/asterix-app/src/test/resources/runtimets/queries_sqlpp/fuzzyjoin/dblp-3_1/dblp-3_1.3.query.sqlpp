@@ -61,7 +61,7 @@ from  DBLP as paperLeft,
       ),
           sim as fuzzyjoin.`similarity-jaccard-prefix`(lenLeft,tokensLeft,lenRight,tokensRight,prefixTokenLeft,0.500000f)
     where ((prefixTokenLeft = prefixTokenRight) and ((sim >= 0.500000f) and (paperLeft.id < paperRight.id)))
-    group by paperLeft.id as idLeft,paperRight.id as idRight
+    group by paperLeft.id as idLeft,paperRight.id as idRight,sim as sim
 ) as ridpair
 where ((ridpair.idLeft = paperLeft.id) and (ridpair.idRight = paperRight.id))
 order by paperLeft.id,paperRight.id

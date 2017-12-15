@@ -21,4 +21,5 @@ use test;
 
 select *
 from samptable s1, samptable s2
-where samptable > 0;
+where samptable > 0
+order by s1.id

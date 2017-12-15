@@ -41,6 +41,6 @@ from  (
 ) as gco
 group by gco.c_count as c_count
 group as g
-let  custdist = count(( select value gco from g ))
+let  custdist = count(gco)
 order by custdist desc,c_count desc
 ;

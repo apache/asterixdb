@@ -21,9 +21,9 @@ use tpch;
 
 
 SELECT ELEMENT 100.0 *
-     SUM( CASE WHEN p_type LIKE 'PROMO%' THEN l_extendedprice * (1 - l_discount) ELSE 0.0 END )
-     / SUM(l_extendedprice * (1 - l_discount))
-FROM  LineItem,
-      Part
-WHERE l_partkey = p_partkey AND l_shipdate >= '1995-09-01' AND l_shipdate < '1995-10-01'
+     SUM( CASE WHEN p.p_type LIKE 'PROMO%' THEN l.l_extendedprice * (1 - l.l_discount) ELSE 0.0 END )
+     / SUM(l.l_extendedprice * (1 - l.l_discount))
+FROM  LineItem l,
+      Part p
+WHERE l.l_partkey = p.p_partkey AND l.l_shipdate >= '1995-09-01' AND l.l_shipdate < '1995-10-01'
 ;

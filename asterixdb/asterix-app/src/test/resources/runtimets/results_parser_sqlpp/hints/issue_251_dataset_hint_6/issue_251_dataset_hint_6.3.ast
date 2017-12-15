@@ -13,10 +13,9 @@ RecordConstructor [
     FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
-        FunctionCall asterix.resolve@-1[
-          LiteralExpr [STRING] [token]
+        FunctionCall asterix.field-access-by-name@2[
           Variable [ Name=$g ]
-          Variable [ Name=$tok ]
+          LiteralExpr [STRING] [token]
         ]
         ]
         FROM [          Variable [ Name=$g ]

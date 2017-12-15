@@ -5,32 +5,18 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [l_linenumber]
     :
-    FieldAccessor [
-      FunctionCall asterix.resolve@-1[
-        LiteralExpr [STRING] [l]
-        Variable [ Name=$g ]
-        Variable [ Name=$l_linenumber ]
-      ]
-      Field=l_linenumber
-    ]
+    Variable [ Name=$l_linenumber ]
   )
   (
     LiteralExpr [STRING] [count_order]
     :
-    FunctionCall asterix.sql-count@1[
+    FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
-        (
-          SELECT ELEMENT [
-          Variable [ Name=$g ]
-          ]
-          FROM [            Variable [ Name=$g ]
-            AS Variable [ Name=$g ]
-          ]
-        )
+        Variable [ Name=$g ]
         ]
         FROM [          Variable [ Name=$g ]
-          AS Variable [ Name=#1 ]
+          AS Variable [ Name=$g ]
         ]
       )
     ]
@@ -55,13 +41,6 @@ Groupby
   )
 
 Orderby
-  FieldAccessor [
-    FunctionCall asterix.resolve@-1[
-      LiteralExpr [STRING] [l]
-      Variable [ Name=$g ]
-      Variable [ Name=$l_linenumber ]
-    ]
-    Field=l_linenumber
-  ]
+  Variable [ Name=$l_linenumber ]
   ASC
 

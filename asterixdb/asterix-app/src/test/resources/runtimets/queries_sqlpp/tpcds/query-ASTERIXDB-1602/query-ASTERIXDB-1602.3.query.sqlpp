@@ -33,7 +33,7 @@ with tab as
              where d3.d_date in ['1900-01-02', '1900-01-12', '1900-01-15']
             )
         )
- group by i_item_id
+ group by item.i_item_id
 )
 
 select coll_count((

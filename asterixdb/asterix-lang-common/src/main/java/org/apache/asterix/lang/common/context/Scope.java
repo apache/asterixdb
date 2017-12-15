@@ -18,40 +18,39 @@
  */
 package org.apache.asterix.lang.common.context;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
-import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.commons.collections4.iterators.ReverseListIterator;
 
 public final class Scope {
-    private Scope parent;
-    private Map<String, Identifier> symbols = new HashMap<String, Identifier>();
-    private Map<String, Expression> varExprMap = new HashMap<String, Expression>();
-    private FunctionSignatures functionSignatures = null;
     private final ScopeChecker scopeChecker;
-    private boolean maskParentScope = false;
-
-    public Scope(ScopeChecker scopeChecker, Scope parent) {
-        this.scopeChecker = scopeChecker;
-        this.parent = parent;
-    }
+    private final Scope parent;
+    private final LinkedHashMap<String, Identifier> symbols;
+    private final boolean maskParentScope;
+    private FunctionSignatures functionSignatures;
 
     public Scope(ScopeChecker scopeChecker) {
         this(scopeChecker, null);
     }
 
+    public Scope(ScopeChecker scopeChecker, Scope parent) {
+        this(scopeChecker, parent, false);
+    }
+
     public Scope(ScopeChecker scopeChecker, Scope parent, boolean maskParentScope) {
-        this(scopeChecker, parent);
+        this.scopeChecker = scopeChecker;
+        this.parent = parent;
         this.maskParentScope = maskParentScope;
+        this.symbols = new LinkedHashMap<>();
     }
 
     /**
@@ -81,36 +80,6 @@ public final class Scope {
         symbols.put(ident.getValue(), ident);
     }
 
-    /**
-     * Add a symbol and its definition expression into the scope
-     *
-     * @param ident
-     */
-    public void addSymbolExpressionMappingToScope(VariableExpr ident, Expression expr) {
-        varExprMap.put(ident.getVar().getValue(), expr);
-    }
-
-    /**
-     * Remove a symbol and its definition expression into the scope
-     *
-     * @param ident
-     */
-    public Expression removeSymbolExpressionMapping(VariableExpr ident) {
-        if (ident == null) {
-            return null;
-        }
-        return varExprMap.remove(ident.getVar().getValue());
-    }
-
-    /**
-     * @return the variable substituion environment for inlining variable references by its original
-     */
-    public VariableSubstitutionEnvironment getVarSubstitutionEnvironment() {
-        VariableSubstitutionEnvironment env = new VariableSubstitutionEnvironment();
-        env.addMappings(varExprMap);
-        return env;
-    }
-
     public void addNewVarSymbolToScope(VarIdentifier ident) {
         scopeChecker.incVarCounter();
         ident.setId(scopeChecker.getVarCounter());
@@ -120,8 +89,8 @@ public final class Scope {
     /**
      * Add a FunctionDescriptor into functionSignatures
      *
-     * @param fd
-     *            FunctionDescriptor
+     * @param signature
+     *            FunctionSignature
      * @param varargs
      *            whether this function has varargs
      */
@@ -163,7 +132,6 @@ public final class Scope {
         if (functionSignatures != null && scope.functionSignatures != null) {
             functionSignatures.addAll(scope.functionSignatures);
         }
-        varExprMap.putAll(scope.varExprMap);
     }
 
     /**
@@ -171,16 +139,17 @@ public final class Scope {
      *
      * @return an iterator of visible symbols.
      */
-    public Iterator<Identifier> liveSymbols() {
-        final Iterator<Identifier> identifierIterator = symbols.values().iterator();
-        final Iterator<Identifier> parentIterator = parent == null ? null : parent.liveSymbols();
+    public Iterator<Identifier> liveSymbols(Scope stopAtExclusive) {
+        final Iterator<Identifier> identifierIterator = new ReverseListIterator<>(new ArrayList<>(symbols.values()));
+        final Iterator<Identifier> parentIterator =
+                parent == null || parent == stopAtExclusive ? null : parent.liveSymbols(stopAtExclusive);
         return new Iterator<Identifier>() {
             private Identifier currentSymbol = null;
 
             @Override
             public boolean hasNext() {
                 currentSymbol = null;
-                if (identifierIterator != null && identifierIterator.hasNext()) {
+                if (identifierIterator.hasNext()) {
                     currentSymbol = identifierIterator.next();
                 } else if (!maskParentScope && parentIterator != null && parentIterator.hasNext()) {
                     do {
@@ -214,8 +183,12 @@ public final class Scope {
     }
 
     public Set<VariableExpr> getLiveVariables() {
-        Set<VariableExpr> vars = new HashSet<VariableExpr>();
-        Iterator<Identifier> identifierIterator = liveSymbols();
+        return getLiveVariables(null);
+    }
+
+    public Set<VariableExpr> getLiveVariables(Scope stopAtExclusive) {
+        LinkedHashSet<VariableExpr> vars = new LinkedHashSet<>();
+        Iterator<Identifier> identifierIterator = liveSymbols(stopAtExclusive);
         while (identifierIterator.hasNext()) {
             Identifier identifier = identifierIterator.next();
             if (identifier instanceof VarIdentifier) {

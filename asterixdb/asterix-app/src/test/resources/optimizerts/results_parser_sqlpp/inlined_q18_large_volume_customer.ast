@@ -148,7 +148,7 @@ FROM [  FunctionCall asterix.dataset@1[
         Variable [ Name=$l ]
         Field=l_orderkey
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#2 ]
       (
         l:=Variable [ Name=$l ]
       )
@@ -241,7 +241,7 @@ Groupby
     Variable [ Name=$o ]
     Field=o_totalprice
   ]
-  GROUP AS Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#1 ]
   (
     c:=Variable [ Name=$c ]
     o:=Variable [ Name=$o ]

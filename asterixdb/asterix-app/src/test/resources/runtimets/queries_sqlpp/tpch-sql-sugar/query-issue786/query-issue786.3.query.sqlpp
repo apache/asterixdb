@@ -29,11 +29,11 @@ USE tpch;
 SELECT  nation.n_nationkey AS nation_key,
         nation.n_name AS name,
         (
-            SELECT orderdate AS order_date, sum(o_totalprice) AS sum_price
-            FROM  Orders,
-                  Customer
-            WHERE o_custkey = c_custkey AND c_nationkey = nation.n_nationkey
-            GROUP BY o_orderdate as orderdate
+            SELECT orderdate AS order_date, sum(o.o_totalprice) AS sum_price
+            FROM  Orders o,
+                  Customer c
+            WHERE o.o_custkey = c.c_custkey AND c.c_nationkey = nation.n_nationkey
+            GROUP BY o.o_orderdate as orderdate
             ORDER BY sum_price DESC
             LIMIT 3
         ) AS aggregates

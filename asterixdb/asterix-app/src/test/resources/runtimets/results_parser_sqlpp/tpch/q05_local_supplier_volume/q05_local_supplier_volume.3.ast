@@ -326,10 +326,9 @@ Let Variable [ Name=$revenue ]
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall asterix.resolve@-1[
-            LiteralExpr [STRING] [o1]
+          FunctionCall asterix.field-access-by-name@2[
             Variable [ Name=$g ]
-            Variable [ Name=$n_name ]
+            LiteralExpr [STRING] [o1]
           ]
           ]
           FROM [            Variable [ Name=$g ]

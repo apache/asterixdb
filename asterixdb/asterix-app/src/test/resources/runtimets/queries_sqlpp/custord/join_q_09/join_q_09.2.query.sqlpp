@@ -17,10 +17,10 @@
  * under the License.
  */
 
-/** This query is a negative test for ambiguous alias reference. */
+/** This query is a test for ambiguous alias reference. */
 
 SELECT c.name AS cust_name,
-       age AS cust_age,
+       age AS age,
        o.total AS order_total,
        [o.oid,o.cid] AS orderList
 FROM test.Customers c, test.Orders o

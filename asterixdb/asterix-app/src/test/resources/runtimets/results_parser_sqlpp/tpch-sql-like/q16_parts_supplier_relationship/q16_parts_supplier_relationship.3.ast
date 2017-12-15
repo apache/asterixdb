@@ -341,12 +341,9 @@ Let Variable [ Name=$supplier_cnt ]
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall asterix.resolve@-1[
-            LiteralExpr [STRING] [t2]
+          FunctionCall asterix.field-access-by-name@2[
             Variable [ Name=$g ]
-            Variable [ Name=$p_brand ]
-            Variable [ Name=$p_size ]
-            Variable [ Name=$p_type ]
+            LiteralExpr [STRING] [t2]
           ]
           ]
           FROM [            Variable [ Name=$g ]

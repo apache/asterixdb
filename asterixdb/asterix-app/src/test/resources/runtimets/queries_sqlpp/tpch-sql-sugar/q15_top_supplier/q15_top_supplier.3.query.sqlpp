@@ -33,13 +33,13 @@ m AS (
       FROM revenue
 )[0]
 
-SELECT s_suppkey,
-       s_name,
-       s_address,
-       s_phone,
-       total_revenue
-FROM  Supplier,
-      revenue
-WHERE s_suppkey = supplier_no AND total_revenue < m + 0.000000001
-      AND total_revenue > m - 0.000000001
+SELECT s.s_suppkey,
+       s.s_name,
+       s.s_address,
+       s.s_phone,
+       r.total_revenue
+FROM  Supplier s,
+      revenue r
+WHERE s.s_suppkey = r.supplier_no AND r.total_revenue < m + 0.000000001
+      AND r.total_revenue > m - 0.000000001
 ;

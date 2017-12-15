@@ -37,3 +37,8 @@ Where
     LiteralExpr [LONG] [3]
   ]
 Group All
+  GROUP AS Variable [ Name=#1 ]
+  (
+    t:=Variable [ Name=$t ]
+  )
+

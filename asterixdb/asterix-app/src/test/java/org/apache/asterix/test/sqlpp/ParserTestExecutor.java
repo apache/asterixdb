@@ -192,9 +192,13 @@ public class ParserTestExecutor extends TestExecutor {
                         + "org.apache.asterix.lang.common.rewrites.LangRewritingContext)",
                 declaredFunctions, topExpr, metadataProvider, context);
         PA.invokeMethod(rewriter, "inlineColumnAlias()");
-        PA.invokeMethod(rewriter, "rewriteGlobalAggregations()");
+        PA.invokeMethod(rewriter, "generateColumnNames()");
+        PA.invokeMethod(rewriter, "substituteGroupbyKeyExpression()");
         PA.invokeMethod(rewriter, "rewriteGroupBys()");
-        PA.invokeMethod(rewriter, "variableCheckAndRewrite(boolean)", Boolean.TRUE);
+        PA.invokeMethod(rewriter, "rewriteSetOperations()");
+        PA.invokeMethod(rewriter, "variableCheckAndRewrite()");
+        PA.invokeMethod(rewriter, "rewriteGroupByAggregationSugar()");
+
     }
 
 }

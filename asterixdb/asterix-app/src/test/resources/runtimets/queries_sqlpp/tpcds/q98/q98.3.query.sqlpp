@@ -33,35 +33,35 @@ FROM
         i_class,
         i_current_price,
         i_item_id,
-        SUM(ss_ext_sales_price) itemrevenue
+        SUM(ss.ss_ext_sales_price) itemrevenue
 FROM
-  store_sales,
-  item,
-  date_dim
+  store_sales ss,
+  item i,
+  date_dim d
 WHERE
-  ss_item_sk = i_item_sk
-  AND i_category IN ["Jewelry", "Sports", "Books"]
-  AND ss_sold_date_sk = d_date_sk
-  AND date(d_date) >= date('2001-01-12')
-  AND date(d_date) <= date('2001-02-11')
+  ss.ss_item_sk = i.i_item_sk
+  AND i.i_category IN ["Jewelry", "Sports", "Books"]
+  AND ss.ss_sold_date_sk = d.d_date_sk
+  AND date(d.d_date) >= date('2001-01-12')
+  AND date(d.d_date) <= date('2001-02-11')
 GROUP BY
-  i_item_id,
-  i_item_desc,
-  i_category,
-  i_class,
-  i_current_price
+  i.i_item_id,
+  i.i_item_desc,
+  i.i_category,
+  i.i_class,
+  i.i_current_price
 ) AS currpricetable
 JOIN
-(SELECT i_item_id, i_item_desc, i_category, i_class, SUM(ss_ext_sales_price) revrat
+(SELECT i_item_id, i_item_desc, i_category, i_class, SUM(ss.ss_ext_sales_price) revrat
   FROM
-  store_sales,
-  item
-  WHERE ss_item_sk = i_item_sk
+  store_sales ss,
+  item i
+  WHERE ss.ss_item_sk = i.i_item_sk
   GROUP BY
-     i_item_id,
-     i_item_desc,
-     i_category,
-     i_class
+     i.i_item_id,
+     i.i_item_desc,
+     i.i_category,
+     i.i_class
 ) AS revrattable
 ON  currpricetable.i_item_id = revrattable.i_item_id
 AND currpricetable.i_class = revrattable.i_class

@@ -199,11 +199,9 @@ RecordConstructor [
     FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
-        FunctionCall asterix.resolve@-1[
-          LiteralExpr [STRING] [l]
+        FunctionCall asterix.field-access-by-name@2[
           Variable [ Name=$g ]
-          Variable [ Name=$l_linestatus ]
-          Variable [ Name=$l_returnflag ]
+          LiteralExpr [STRING] [l]
         ]
         ]
         FROM [          Variable [ Name=$g ]

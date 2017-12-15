@@ -36,12 +36,12 @@ SELECT  nation_key,
             LIMIT 3
         ) AS sum_price
 FROM  (
-        SELECT nation_key, orderdate AS order_date, sum(o_totalprice) AS sum_price
-        FROM  Nation,
-              Customer,
-              Orders AS orders
-        WHERE o_custkey = c_custkey AND c_nationkey = n_nationkey
-        GROUP BY o_orderdate as orderdate, n_nationkey as nation_key
+        SELECT nation_key, orderdate AS order_date, sum(o.o_totalprice) AS sum_price
+        FROM  Nation n,
+              Customer c,
+              Orders o
+        WHERE o.o_custkey = c.c_custkey AND c.c_nationkey = n.n_nationkey
+        GROUP BY o.o_orderdate as orderdate, n.n_nationkey as nation_key
 ) AS x
 GROUP BY nation_key
 GROUP AS g

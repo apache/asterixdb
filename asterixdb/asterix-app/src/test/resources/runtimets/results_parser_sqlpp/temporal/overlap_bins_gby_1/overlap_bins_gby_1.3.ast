@@ -10,20 +10,13 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [count]
     :
-    FunctionCall asterix.sql-count@1[
+    FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
-        (
-          SELECT ELEMENT [
-          LiteralExpr [LONG] [1]
-          ]
-          FROM [            Variable [ Name=$g ]
-            AS Variable [ Name=$g ]
-          ]
-        )
+        LiteralExpr [LONG] [1]
         ]
         FROM [          Variable [ Name=$g ]
-          AS Variable [ Name=#1 ]
+          AS Variable [ Name=$g ]
         ]
       )
     ]

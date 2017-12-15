@@ -22,11 +22,11 @@ USE tpch;
 
 WITH q2_minimum_cost_supplier_tmp1 AS
 (
- SELECT s_acctbal, s_name, n_name, p_partkey, ps_supplycost, p_mfgr, s_address, s_phone, s_comment
- FROM Nation JOIN Region ON n_regionkey = r_regionkey and r_name = 'EUROPE'
- JOIN Supplier ON s_nationkey = n_nationkey
- JOIN Partsupp ON s_suppkey = ps_suppkey
- JOIN Part ON p_partkey = ps_partkey AND p_type LIKE '%BRASS'
+ SELECT s.s_acctbal, s.s_name, n.n_name, p.p_partkey, ps.ps_supplycost, p.p_mfgr, s.s_address, s.s_phone, s.s_comment
+ FROM Nation n JOIN Region r ON n.n_regionkey = r.r_regionkey and r.r_name = 'EUROPE'
+ JOIN Supplier s ON s.s_nationkey = n.n_nationkey
+ JOIN Partsupp ps ON s.s_suppkey = ps.ps_suppkey
+ JOIN Part p ON p.p_partkey = ps.ps_partkey AND p.p_type LIKE '%BRASS'
 ),
 q2_minimum_cost_supplier_tmp2 AS
 (
@@ -35,10 +35,10 @@ q2_minimum_cost_supplier_tmp2 AS
   GROUP BY p_partkey
 )
 
-SELECT s_acctbal, s_name, n_name, t1.p_partkey, p_mfgr, s_address, s_phone, s_comment
+SELECT t1.s_acctbal, t1.s_name, t1.n_name, t1.p_partkey, t1.p_mfgr, t1.s_address, t1.s_phone, t1.s_comment
 FROM
   q2_minimum_cost_supplier_tmp1 t1 JOIN q2_minimum_cost_supplier_tmp2 t2
 ON
-  t1.p_partkey = t2.p_partkey AND ps_supplycost=ps_min_supplycost
-ORDER BY s_acctbal DESC, n_name, s_name, t1.p_partkey
+  t1.p_partkey = t2.p_partkey AND t1.ps_supplycost = t2.ps_min_supplycost
+ORDER BY t1.s_acctbal DESC, t1.n_name, t1.s_name, t1.p_partkey
 LIMIT 100;

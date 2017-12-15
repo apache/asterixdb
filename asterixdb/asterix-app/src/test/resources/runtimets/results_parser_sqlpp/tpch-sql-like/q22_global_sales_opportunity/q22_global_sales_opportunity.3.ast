@@ -79,10 +79,9 @@ RecordConstructor [
     FunctionCall asterix.count@1[
       (
         SELECT ELEMENT [
-        FunctionCall asterix.resolve@-1[
-          LiteralExpr [STRING] [ct]
+        FunctionCall asterix.field-access-by-name@2[
           Variable [ Name=$g ]
-          Variable [ Name=$cntrycode ]
+          LiteralExpr [STRING] [ct]
         ]
         ]
         FROM [          Variable [ Name=$g ]
@@ -104,10 +103,9 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall asterix.resolve@-1[
-              LiteralExpr [STRING] [ct]
+            FunctionCall asterix.field-access-by-name@2[
               Variable [ Name=$g ]
-              Variable [ Name=$cntrycode ]
+              LiteralExpr [STRING] [ct]
             ]
             ]
             FROM [              Variable [ Name=$g ]

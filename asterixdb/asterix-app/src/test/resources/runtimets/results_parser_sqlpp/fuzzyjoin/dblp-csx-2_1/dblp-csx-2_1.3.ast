@@ -29,16 +29,14 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$paperDBLP ]
 ,
   FunctionCall fuzzyjoin.subset-collection@3[
-    FunctionCall asterix.resolve@-1[
+    FunctionCall asterix.dataset@1[
       LiteralExpr [STRING] [tokensDBLP]
-      Variable [ Name=$paperDBLP ]
     ]
     LiteralExpr [LONG] [0]
     FunctionCall fuzzyjoin.prefix-len-jaccard@2[
       FunctionCall fuzzyjoin.len@1[
-        FunctionCall asterix.resolve@-1[
+        FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [tokensDBLP]
-          Variable [ Name=$paperDBLP ]
         ]
       ]
       LiteralExpr [FLOAT] [0.5]
@@ -52,20 +50,14 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$paperCSX ]
 ,
   FunctionCall fuzzyjoin.subset-collection@3[
-    FunctionCall asterix.resolve@-1[
+    FunctionCall asterix.dataset@1[
       LiteralExpr [STRING] [tokensCSX]
-      Variable [ Name=$prefixTokenDBLP ]
-      Variable [ Name=$paperDBLP ]
-      Variable [ Name=$paperCSX ]
     ]
     LiteralExpr [LONG] [0]
     FunctionCall fuzzyjoin.prefix-len-jaccard@2[
       FunctionCall fuzzyjoin.len@1[
-        FunctionCall asterix.resolve@-1[
+        FunctionCall asterix.dataset@1[
           LiteralExpr [STRING] [tokensCSX]
-          Variable [ Name=$prefixTokenDBLP ]
-          Variable [ Name=$paperDBLP ]
-          Variable [ Name=$paperCSX ]
         ]
       ]
       LiteralExpr [FLOAT] [0.5]
@@ -108,7 +100,7 @@ Let Variable [ Name=$tokensDBLP ]
           Variable [ Name=$tokenGroupped ]
           :=
           Variable [ Name=$token ]
-          GROUP AS Variable [ Name=#1 ]
+          GROUP AS Variable [ Name=#2 ]
           (
             paper:=Variable [ Name=$paper ]
             token:=Variable [ Name=$token ]
@@ -119,12 +111,12 @@ Let Variable [ Name=$tokensDBLP ]
             (
               SELECT ELEMENT [
               FieldAccessor [
-                Variable [ Name=#2 ]
+                Variable [ Name=#4 ]
                 Field=paper
               ]
               ]
-              FROM [                Variable [ Name=#1 ]
-                AS Variable [ Name=#2 ]
+              FROM [                Variable [ Name=#2 ]
+                AS Variable [ Name=#4 ]
               ]
             )
           ]
@@ -194,12 +186,12 @@ Let Variable [ Name=$tokensCSX ]
             (
               SELECT ELEMENT [
               FieldAccessor [
-                Variable [ Name=#4 ]
+                Variable [ Name=#5 ]
                 Field=paper
               ]
               ]
               FROM [                Variable [ Name=#3 ]
-                AS Variable [ Name=#4 ]
+                AS Variable [ Name=#5 ]
               ]
             )
           ]
@@ -277,12 +269,15 @@ Groupby
   Variable [ Name=$sim ]
   :=
   Variable [ Name=$sim ]
-  GROUP AS Variable [ Name=#5 ]
+  GROUP AS Variable [ Name=#1 ]
   (
     paperDBLP:=Variable [ Name=$paperDBLP ]
     prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
     paperCSX:=Variable [ Name=$paperCSX ]
     prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
+    tokensDBLP:=Variable [ Name=$tokensDBLP ]
+    tokensCSX:=Variable [ Name=$tokensCSX ]
+    sim:=Variable [ Name=$sim ]
   )
 
 Orderby

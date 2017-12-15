@@ -56,7 +56,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SetOperationVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppBuiltinFunctionRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppDistinctAggregationSugarVisitor;
-import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGlobalAggregationSugarVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppInlineUdfsVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppListInputFunctionRewriteVisitor;
@@ -90,8 +90,6 @@ class SqlppQueryRewriter implements IQueryRewriter {
         if (topStatement == null) {
             return;
         }
-        // Marks the current variable counter.
-        context.markCounter();
 
         // Sets up parameters.
         setup(declaredFunctions, topStatement, metadataProvider, context);
@@ -105,20 +103,20 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Substitutes group-by key expressions.
         substituteGroupbyKeyExpression();
 
-        // Rewrites SQL-92 global aggregations.
-        rewriteGlobalAggregations();
-
-        // Group-by core/sugar rewrites.
+        // Group-by core rewrites
         rewriteGroupBys();
 
         // Rewrites set operations.
         rewriteSetOperations();
 
+        // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
+        variableCheckAndRewrite();
+
+        // Rewrites SQL-92 aggregate functions
+        rewriteGroupByAggregationSugar();
+
         // Rewrites like/not-like expressions.
         rewriteOperatorExpression();
-
-        // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
-        variableCheckAndRewrite(true);
 
         // Inlines WITH expressions after variableCheckAndRewrite(...) so that the variable scoping for WITH
         // expression is correct.
@@ -138,21 +136,13 @@ class SqlppQueryRewriter implements IQueryRewriter {
         // Rewrites distinct aggregates into regular aggregates
         rewriteDistinctAggregations();
 
-        // Resets the variable counter to the previous marked value.
-        // Therefore, the variable ids in the final query plans will not be perturbed
-        // by the additon or removal of intermediate AST rewrites.
-        context.resetCounter();
-
-        // Replace global variable access with the dataset function for inlined expressions.
-        variableCheckAndRewrite(true);
-
         // Sets the var counter of the query.
         topStatement.setVarCounter(context.getVarCounter());
     }
 
-    protected void rewriteGlobalAggregations() throws CompilationException {
-        SqlppGlobalAggregationSugarVisitor globalAggregationVisitor = new SqlppGlobalAggregationSugarVisitor();
-        topExpr.accept(globalAggregationVisitor, null);
+    protected void rewriteGroupByAggregationSugar() throws CompilationException {
+        SqlppGroupByAggregationSugarVisitor visitor = new SqlppGroupByAggregationSugarVisitor(context);
+        topExpr.accept(visitor, null);
     }
 
     protected void rewriteDistinctAggregations() throws CompilationException {
@@ -212,9 +202,9 @@ class SqlppQueryRewriter implements IQueryRewriter {
         topExpr.accept(inlineColumnAliasVisitor, null);
     }
 
-    protected void variableCheckAndRewrite(boolean overwrite) throws CompilationException {
+    protected void variableCheckAndRewrite() throws CompilationException {
         VariableCheckAndRewriteVisitor variableCheckAndRewriteVisitor =
-                new VariableCheckAndRewriteVisitor(context, overwrite, metadataProvider);
+                new VariableCheckAndRewriteVisitor(context, metadataProvider, topExpr.getExternalVars());
         topExpr.accept(variableCheckAndRewriteVisitor, null);
     }
 

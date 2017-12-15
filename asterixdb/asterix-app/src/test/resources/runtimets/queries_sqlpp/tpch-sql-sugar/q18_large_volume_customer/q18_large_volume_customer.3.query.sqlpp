@@ -27,14 +27,14 @@ WITH tmp AS
 )
 
 SELECT c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice,
-       sum(l_quantity) sum_quantity
-FROM  Customer,
-      Orders,
+       sum(l.l_quantity) sum_quantity
+FROM  Customer c,
+      Orders o,
       tmp t,
       LineItem l
-WHERE c_custkey = o_custkey AND o_orderkey = t.l_orderkey
-      AND t.l_orderkey = l.l_orderkey AND t_sum_quantity > 30
-GROUP BY c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice
+WHERE c.c_custkey = o.o_custkey AND o.o_orderkey = t.l_orderkey
+      AND t.l_orderkey = l.l_orderkey AND t.t_sum_quantity > 30
+GROUP BY c.c_name, c.c_custkey, o.o_orderkey, o.o_orderdate, o.o_totalprice
 ORDER BY o_totalprice DESC,o_orderdate
 LIMIT 100
 ;

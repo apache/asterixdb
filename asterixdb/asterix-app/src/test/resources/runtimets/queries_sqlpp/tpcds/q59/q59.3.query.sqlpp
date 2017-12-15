@@ -23,41 +23,41 @@ USE tpcds;
 WITH wss AS
  (SELECT d_week_seq,
         ss_store_sk,
-        SUM(CASE WHEN d_day_name='Sunday' THEN ss_sales_price ELSE null END) sun_sales,
-        SUM(CASE WHEN d_day_name='Monday' THEN ss_sales_price ELSE null END) mon_sales,
-        SUM(CASE WHEN d_day_name='Tuesday' THEN ss_sales_price ELSE  null END) tue_sales,
-        SUM(CASE WHEN d_day_name='Wednesday' THEN ss_sales_price ELSE null END) wed_sales,
-        SUM(CASE WHEN d_day_name='Thursday' THEN ss_sales_price ELSE null END) thu_sales,
-        SUM(CASE WHEN d_day_name='Friday' THEN ss_sales_price ELSE null END) fri_sales,
-        SUM(CASE WHEN d_day_name='Saturday' THEN ss_sales_price ELSE null END) sat_sales
- FROM store_sales,date_dim
- WHERE d_date_sk = ss_sold_date_sk
- GROUP BY d_week_seq,ss_store_sk
+        SUM(CASE WHEN d.d_day_name='Sunday' THEN ss.ss_sales_price ELSE null END) sun_sales,
+        SUM(CASE WHEN d.d_day_name='Monday' THEN ss.ss_sales_price ELSE null END) mon_sales,
+        SUM(CASE WHEN d.d_day_name='Tuesday' THEN ss.ss_sales_price ELSE  null END) tue_sales,
+        SUM(CASE WHEN d.d_day_name='Wednesday' THEN ss.ss_sales_price ELSE null END) wed_sales,
+        SUM(CASE WHEN d.d_day_name='Thursday' THEN ss.ss_sales_price ELSE null END) thu_sales,
+        SUM(CASE WHEN d.d_day_name='Friday' THEN ss.ss_sales_price ELSE null END) fri_sales,
+        SUM(CASE WHEN d.d_day_name='Saturday' THEN ss.ss_sales_price ELSE null END) sat_sales
+ FROM store_sales ss,date_dim d
+ WHERE d.d_date_sk = ss.ss_sold_date_sk
+ GROUP BY d.d_week_seq,ss.ss_store_sk
  )
-  SELECT  s_store_name1,s_store_id1,d_week_seq1
-       ,sun_sales1/sun_sales2,mon_sales1/mon_sales2
-       ,tue_sales1/tue_sales2,wed_sales1/wed_sales2,thu_sales1/thu_sales2
-       ,fri_sales1/fri_sales2,sat_sales1/sat_sales2
+  SELECT  y.s_store_name1,y.s_store_id1,y.d_week_seq1
+       ,y.sun_sales1/x.sun_sales2,y.mon_sales1/x.mon_sales2
+       ,y.tue_sales1/x.tue_sales2,y.wed_sales1/x.wed_sales2,y.thu_sales1/x.thu_sales2
+       ,y.fri_sales1/x.fri_sales2,y.sat_sales1/x.sat_sales2
  FROM
- (SELECT s_store_name s_store_name1,wss.d_week_seq d_week_seq1
-        ,s_store_id s_store_id1,sun_sales sun_sales1
-        ,mon_sales mon_sales1,tue_sales tue_sales1
-        ,wed_sales wed_sales1,thu_sales thu_sales1
-        ,fri_sales fri_sales1,sat_sales sat_sales1
-  FROM wss,store,date_dim d
+ (SELECT s.s_store_name s_store_name1,wss.d_week_seq d_week_seq1
+        ,s.s_store_id s_store_id1,wss.sun_sales sun_sales1
+        ,wss.mon_sales mon_sales1,wss.tue_sales tue_sales1
+        ,wss.wed_sales wed_sales1,wss.thu_sales thu_sales1
+        ,wss.fri_sales fri_sales1,wss.sat_sales sat_sales1
+  FROM wss,store s,date_dim d
   WHERE d.d_week_seq = wss.d_week_seq AND
-        ss_store_sk = s_store_sk AND
-        d_month_seq >= 1185 AND d_month_seq <= 1185 + 11) y,
- (SELECT s_store_name s_store_name2,wss.d_week_seq d_week_seq2
-        ,s_store_id s_store_id2,sun_sales sun_sales2
-        ,mon_sales mon_sales2,tue_sales tue_sales2
-        ,wed_sales wed_sales2,thu_sales thu_sales2
-        ,fri_sales fri_sales2,sat_sales sat_sales2
-  FROM wss,store,date_dim d
+        wss.ss_store_sk = s.s_store_sk AND
+        d.d_month_seq >= 1185 AND d.d_month_seq <= 1185 + 11) y,
+ (SELECT s.s_store_name s_store_name2,wss.d_week_seq d_week_seq2
+        ,s.s_store_id s_store_id2,wss.sun_sales sun_sales2
+        ,wss.mon_sales mon_sales2,wss.tue_sales tue_sales2
+        ,wss.wed_sales wed_sales2,wss.thu_sales thu_sales2
+        ,wss.fri_sales fri_sales2,wss.sat_sales sat_sales2
+  FROM wss,store s,date_dim d
   WHERE d.d_week_seq = wss.d_week_seq AND
-        ss_store_sk = s_store_sk AND
-        d_month_seq >= 1185+ 12 AND d_month_seq <= 1185 + 23) x
-  WHERE s_store_id1=s_store_id2
-  AND d_week_seq1=d_week_seq2-52
- ORDER BY s_store_name1,s_store_id1,d_week_seq1
+        wss.ss_store_sk = s.s_store_sk AND
+        d.d_month_seq >= 1185+ 12 AND d.d_month_seq <= 1185 + 23) x
+  WHERE y.s_store_id1=x.s_store_id2
+  AND y.d_week_seq1=x.d_week_seq2-52
+ ORDER BY y.s_store_name1,y.s_store_id1,y.d_week_seq1
 LIMIT 100;

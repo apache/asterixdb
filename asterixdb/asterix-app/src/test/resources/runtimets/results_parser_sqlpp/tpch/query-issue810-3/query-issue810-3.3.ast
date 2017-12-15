@@ -85,11 +85,9 @@ Let Variable [ Name=$expensives ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall asterix.resolve@-1[
-          LiteralExpr [STRING] [l]
+        FunctionCall asterix.field-access-by-name@2[
           Variable [ Name=$g ]
-          Variable [ Name=$l_linestatus ]
-          Variable [ Name=$l_returnflag ]
+          LiteralExpr [STRING] [l]
         ]
         ]
         FROM [          Variable [ Name=$g ]
@@ -116,12 +114,9 @@ Let Variable [ Name=$cheaps ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall asterix.resolve@-1[
-          LiteralExpr [STRING] [l]
-          Variable [ Name=$expensives ]
+        FunctionCall asterix.field-access-by-name@2[
           Variable [ Name=$g ]
-          Variable [ Name=$l_linestatus ]
-          Variable [ Name=$l_returnflag ]
+          LiteralExpr [STRING] [l]
         ]
         ]
         FROM [          Variable [ Name=$g ]
@@ -171,13 +166,9 @@ Let Variable [ Name=$charges ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall asterix.resolve@-1[
-          LiteralExpr [STRING] [l]
-          Variable [ Name=$expensives ]
+        FunctionCall asterix.field-access-by-name@2[
           Variable [ Name=$g ]
-          Variable [ Name=$l_linestatus ]
-          Variable [ Name=$l_returnflag ]
-          Variable [ Name=$cheaps ]
+          LiteralExpr [STRING] [l]
         ]
         ]
         FROM [          Variable [ Name=$g ]
@@ -209,14 +200,9 @@ Let Variable [ Name=$disc_prices ]
     ]
     FROM [      (
         SELECT ELEMENT [
-        FunctionCall asterix.resolve@-1[
-          LiteralExpr [STRING] [l]
-          Variable [ Name=$expensives ]
+        FunctionCall asterix.field-access-by-name@2[
           Variable [ Name=$g ]
-          Variable [ Name=$l_linestatus ]
-          Variable [ Name=$l_returnflag ]
-          Variable [ Name=$charges ]
-          Variable [ Name=$cheaps ]
+          LiteralExpr [STRING] [l]
         ]
         ]
         FROM [          Variable [ Name=$g ]

@@ -52,6 +52,6 @@ create  dataset Customers(CustomerType) primary key cid on group1;
 write output to asterix_nc1:"rttest/gby-using-orderby-desc.adm";
 select element {'name':name,'age':age}
 from  Customers as c
-group by c.name as name
+group by c.name as name, c.age as age
 order by name desc,age
 ;

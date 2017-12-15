@@ -98,7 +98,7 @@ public class OperatorExpr extends AbstractExpression {
         addOperator(op);
     }
 
-    public void addOperator(OperatorType op) throws CompilationException {
+    public void addOperator(OperatorType op) {
         if (op == null) {
             throw new NullPointerException();
         }

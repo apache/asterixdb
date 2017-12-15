@@ -23,7 +23,7 @@ USE tpcds;
 SELECT  dt.d_year
   ,item.i_category_id
   ,item.i_category
-  ,sum(ss_ext_sales_price)
+  ,sum(store_sales.ss_ext_sales_price)
  FROM  date_dim dt
   ,store_sales
   ,item
@@ -35,7 +35,7 @@ SELECT  dt.d_year
  GROUP BY  dt.d_year
    ,item.i_category_id
    ,item.i_category
- ORDER BY SUM(ss_ext_sales_price) desc,dt.d_year
+ ORDER BY SUM(store_sales.ss_ext_sales_price) desc,dt.d_year
    ,item.i_category_id
    ,item.i_category
 LIMIT 100 ;

@@ -17,8 +17,8 @@
  * under the License.
  */
 
-SELECT SQRT(t.a*t.b) AS root FROM tbl_name root
+SELECT sum(t.a*t.b) AS root FROM tbl_name root
 GROUP BY root.id
-WITH u AS root.time
-HAVING root.orders > 0
+WITH u AS min(root.time)
+HAVING count(root.orders) > 0
 ORDER BY u;

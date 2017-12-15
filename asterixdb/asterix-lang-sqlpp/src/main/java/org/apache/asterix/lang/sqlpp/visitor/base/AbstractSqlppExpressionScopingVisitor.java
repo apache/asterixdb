@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.lang.sqlpp.visitor.base;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,19 +25,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.context.Scope;
-import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
-import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
@@ -57,7 +52,6 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 
@@ -71,8 +65,23 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
      *            manages ids of variables and guarantees uniqueness of variables.
      */
     public AbstractSqlppExpressionScopingVisitor(LangRewritingContext context) {
+        this(context, null);
+    }
+
+    /**
+     * @param context,
+     *            manages ids of variables and guarantees uniqueness of variables.
+     * @param externalVars
+     *            pre-defined (external) variables that must be added to the initial scope
+     */
+    public AbstractSqlppExpressionScopingVisitor(LangRewritingContext context, List<VarIdentifier> externalVars) {
         this.context = context;
         this.scopeChecker.setVarCounter(new Counter(context.getVarCounter()));
+        if (externalVars != null) {
+            for (VarIdentifier paramVar : externalVars) {
+                scopeChecker.getCurrentScope().addSymbolToScope(paramVar);
+            }
+        }
     }
 
     @Override
@@ -219,7 +228,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     public Expression visit(GroupbyClause gc, ILangExpression arg) throws CompilationException {
         // After a GROUP BY, variables defined before the current SELECT BLOCK (e.g., in a WITH clause
         // or an outer scope query) should still be visible.
-        Scope newScope = new Scope(scopeChecker, scopeChecker.getCurrentScope().getParentScope());
+        Scope newScope = new Scope(scopeChecker, scopeChecker.getPrecedingScope());
         // Puts all group-by variables into the symbol set of the new scope.
         for (GbyVariableExpressionPair gbyKeyVarExpr : gc.getGbyPairList()) {
             gbyKeyVarExpr.setExpr(visit(gbyKeyVarExpr.getExpr(), gc));
@@ -243,7 +252,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             }
         }
         if (gc.hasGroupVar()) {
-            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), gc.getGroupVar().getVar());
+            addNewVarSymbolToScope(newScope, gc.getGroupVar().getVar());
         }
         if (gc.hasWithMap()) {
             Map<Expression, VariableExpr> newWithMap = new HashMap<>();
@@ -288,8 +297,6 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // visit let list
         if (selectExpression.hasLetClauses()) {
             for (LetClause letClause : selectExpression.getLetList()) {
-                // Variables defined in WITH clauses are considered as named access instead of real variables.
-                letClause.getVarExpr().getVar().setNamedValueAccess(true);
                 letClause.accept(this, selectExpression);
             }
             scopeChecker.createNewScope();
@@ -363,17 +370,6 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             insertStatement.setReturnExpression(visit(returningExpr, insertStatement));
         }
         return null;
-    }
-
-    // Rewrites for an undefined variable reference, which potentially could be a syntatic sugar.
-    protected Expression wrapWithResolveFunction(VariableExpr expr, Set<VariableExpr> liveVars)
-            throws CompilationException {
-        List<Expression> argList = new ArrayList<>();
-        //Ignore the parser-generated prefix "$" for a dataset.
-        String varName = SqlppVariableUtil.toUserDefinedVariableName(expr.getVar().getValue()).getValue();
-        argList.add(new LiteralExpr(new StringLiteral(varName)));
-        argList.addAll(liveVars);
-        return new CallExpr(new FunctionSignature(BuiltinFunctions.RESOLVE), argList);
     }
 
     // Adds a new encountered alias identifier into a scope

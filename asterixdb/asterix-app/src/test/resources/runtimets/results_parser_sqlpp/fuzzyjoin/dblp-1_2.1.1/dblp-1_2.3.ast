@@ -31,19 +31,16 @@ Groupby
   (
     paper:=Variable [ Name=$paper ]
     token:=Variable [ Name=$token ]
+    id:=Variable [ Name=$id ]
   )
 
 Orderby
   FunctionCall asterix.sql-count@1[
     (
       SELECT ELEMENT [
-      FunctionCall asterix.resolve@-1[
-        LiteralExpr [STRING] [id]
-        Variable [ Name=$token ]
-        Variable [ Name=$paper ]
-        Variable [ Name=$tokenGroupped ]
-        Variable [ Name=#1 ]
+      FieldAccessor [
         Variable [ Name=#2 ]
+        Field=id
       ]
       ]
       FROM [        Variable [ Name=#1 ]

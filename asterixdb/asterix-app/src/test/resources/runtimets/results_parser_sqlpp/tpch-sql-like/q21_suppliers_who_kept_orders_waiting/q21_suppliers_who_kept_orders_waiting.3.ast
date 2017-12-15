@@ -481,23 +481,16 @@ Groupby
 
 Let Variable [ Name=$numwait ]
   :=
-  FunctionCall asterix.sql-count@1[
+  FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
-      (
-        SELECT ELEMENT [
-        FieldAccessor [
-          Variable [ Name=#1 ]
-          Field=t4
-        ]
-        ]
-        FROM [          Variable [ Name=$g ]
-          AS Variable [ Name=$g ]
-        ]
-      )
+      FunctionCall asterix.field-access-by-name@2[
+        Variable [ Name=$g ]
+        LiteralExpr [STRING] [t4]
+      ]
       ]
       FROM [        Variable [ Name=$g ]
-        AS Variable [ Name=#1 ]
+        AS Variable [ Name=$g ]
       ]
     )
   ]

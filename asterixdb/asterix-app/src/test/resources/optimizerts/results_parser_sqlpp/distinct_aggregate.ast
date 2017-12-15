@@ -45,7 +45,7 @@ RecordConstructor [
           Field=g
         ]
         ]
-        FROM [          Variable [ Name=#2 ]
+        FROM [          Variable [ Name=#1 ]
           AS Variable [ Name=#3 ]
         ]
       )
@@ -106,7 +106,7 @@ FROM [  (
         Variable [ Name=$l ]
         Field=l_suppkey
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#2 ]
       (
         l:=Variable [ Name=$l ]
       )
@@ -127,7 +127,7 @@ Groupby
     Variable [ Name=$g ]
     Field=l_linestatus
   ]
-  GROUP AS Variable [ Name=#2 ]
+  GROUP AS Variable [ Name=#1 ]
   (
     g:=Variable [ Name=$g ]
   )

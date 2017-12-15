@@ -82,3 +82,8 @@ Where
     ]
   ]
 Group All
+  GROUP AS Variable [ Name=#1 ]
+  (
+    l:=Variable [ Name=$l ]
+  )
+

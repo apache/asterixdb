@@ -41,13 +41,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_quantity
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [l]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -60,13 +61,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_extendedprice
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [l]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -80,7 +82,10 @@ RecordConstructor [
         SELECT ELEMENT [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=$i ]
+            FieldAccessor [
+              Variable [ Name=$i ]
+              Field=l
+            ]
             Field=l_extendedprice
           ]
           *
@@ -88,15 +93,16 @@ RecordConstructor [
             LiteralExpr [LONG] [1]
             -
             FieldAccessor [
-              Variable [ Name=$i ]
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=l
+              ]
               Field=l_discount
             ]
           ]
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [l]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -110,7 +116,10 @@ RecordConstructor [
         SELECT ELEMENT [
         OperatorExpr [
           FieldAccessor [
-            Variable [ Name=$i ]
+            FieldAccessor [
+              Variable [ Name=$i ]
+              Field=l
+            ]
             Field=l_extendedprice
           ]
           *
@@ -118,7 +127,10 @@ RecordConstructor [
             LiteralExpr [LONG] [1]
             -
             FieldAccessor [
-              Variable [ Name=$i ]
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=l
+              ]
               Field=l_discount
             ]
           ]
@@ -127,15 +139,16 @@ RecordConstructor [
             LiteralExpr [LONG] [1]
             +
             FieldAccessor [
-              Variable [ Name=$i ]
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=l
+              ]
               Field=l_tax
             ]
           ]
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [l]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -148,13 +161,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_quantity
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [l]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -167,13 +181,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_extendedprice
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [l]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -186,13 +201,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l
+          ]
           Field=l_discount
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [l]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -202,12 +218,7 @@ RecordConstructor [
     LiteralExpr [STRING] [count_order]
     :
     FunctionCall asterix.count@1[
-      FunctionCall asterix.resolve@-1[
-        LiteralExpr [STRING] [l]
-        Variable [ Name=$l_linestatus ]
-        Variable [ Name=$l_returnflag ]
-        Variable [ Name=#1 ]
-      ]
+      Variable [ Name=$g ]
     ]
   )
 ]
@@ -239,7 +250,7 @@ Groupby
     Variable [ Name=$l ]
     Field=l_linestatus
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     l:=Variable [ Name=$l ]
   )

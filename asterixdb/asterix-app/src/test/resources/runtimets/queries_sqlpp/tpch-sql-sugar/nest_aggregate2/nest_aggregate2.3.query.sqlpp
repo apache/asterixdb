@@ -31,11 +31,11 @@ SELECT  Nation.n_nationkey AS nation_key,
         Nation.n_name AS name,
         (
             SELECT ELEMENT orderdate
-            FROM  Orders,
-                  Customer
-            WHERE o_custkey = c_custkey AND c_nationkey = Nation.n_nationkey
-            GROUP BY o_orderdate AS orderdate
-            ORDER BY sum(o_totalprice)
+            FROM  Orders o,
+                  Customer c
+            WHERE o.o_custkey = c.c_custkey AND c.c_nationkey = Nation.n_nationkey
+            GROUP BY o.o_orderdate AS orderdate
+            ORDER BY sum(o.o_totalprice)
             LIMIT 3
         ) AS aggregates
 from  Nation,

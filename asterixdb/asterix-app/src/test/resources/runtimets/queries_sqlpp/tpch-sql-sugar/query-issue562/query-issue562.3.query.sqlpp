@@ -28,8 +28,8 @@ USE tpch;
 
 WITH q22_customer_tmp AS
 (
-    SELECT c_acctbal, c_custkey, phone_substr AS cntrycode
-    FROM  Customer
+    SELECT c.c_acctbal, c.c_custkey, phone_substr AS cntrycode
+    FROM  Customer c
     LET  phone_substr = substring(c_phone,1,2)
     WHERE phone_substr = '13' OR phone_substr = '31' OR phone_substr = '23' OR phone_substr = '29'
           OR phone_substr = '30' OR phone_substr = '18' OR phone_substr = '17'
@@ -40,7 +40,7 @@ FROM  q22_customer_tmp as ct
 WHERE coll_count((
                 SELECT ELEMENT Orders
                 FROM  Orders
-                WHERE c_custkey = o_custkey
+                WHERE ct.c_custkey = o_custkey
             )) = 0
 GROUP BY cntrycode
 ORDER BY cntrycode

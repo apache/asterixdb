@@ -24,43 +24,43 @@ SELECT  year,
         SUM( CASE s_name = 'BRAZIL' WHEN true THEN revenue ELSE 0.0 END ) / SUM(revenue) AS mkt_share
 FROM  (
         SELECT o_year AS year,
-               l_extendedprice * (1 - l_discount) AS revenue,
-               n_name AS s_name
+               slnrcop.l_extendedprice * (1 - slnrcop.l_discount) AS revenue,
+               n.n_name AS s_name
         FROM  (
-                SELECT o_orderdate, l_discount, l_extendedprice, l_suppkey, s_nationkey
-                FROM  Supplier,
+                SELECT lnrcop.o_orderdate, lnrcop.l_discount, lnrcop.l_extendedprice, lnrcop.l_suppkey, s.s_nationkey
+                FROM  Supplier s,
                 (
-                  SELECT o_orderdate, l_discount, l_extendedprice, l_suppkey
+                  SELECT lnrco.o_orderdate, lnrco.l_discount, lnrco.l_extendedprice, lnrco.l_suppkey
                   FROM  (
-                         SELECT o_orderdate, l_partkey, l_discount, l_extendedprice, l_suppkey
-                         FROM  LineItem,
+                         SELECT nrco.o_orderdate, l.l_partkey, l.l_discount, l.l_extendedprice, l.l_suppkey
+                         FROM  LineItem l,
                                (
-                                SELECT o_orderdate, o_orderkey
-                                FROM  Orders,
+                                SELECT o.o_orderdate, o.o_orderkey
+                                FROM  Orders o,
                                       (
-                                        SELECT c_custkey
-                                        FROM  Customer,
+                                        SELECT c.c_custkey
+                                        FROM  Customer c,
                                               (
-                                                SELECT n_nationkey
-                                                FROM  Nation,
-                                                      Region
-                                                WHERE n_regionkey = r_regionkey AND r_name = 'AMERICA'
+                                                SELECT n.n_nationkey
+                                                FROM  Nation n,
+                                                      Region r
+                                                WHERE n.n_regionkey = r.r_regionkey AND r.r_name = 'AMERICA'
                                                 ) AS nr
-                                         WHERE c_nationkey = n_nationkey
+                                         WHERE c.c_nationkey = nr.n_nationkey
                                        ) AS nrc
-                                WHERE c_custkey = o_custkey
+                                WHERE nrc.c_custkey = o.o_custkey
                                 ) AS nrco
-                        WHERE l_orderkey = o_orderkey and o_orderdate >= '1995-01-01' and o_orderdate < '1996-12-31'
+                        WHERE l.l_orderkey = nrco.o_orderkey and nrco.o_orderdate >= '1995-01-01' and nrco.o_orderdate < '1996-12-31'
                         ) AS lnrco,
-                        Part
-                        WHERE p_partkey = l_partkey and p_type = 'ECONOMY ANODIZED STEEL'
+                        Part p
+                        WHERE p.p_partkey = lnrco.l_partkey and p.p_type = 'ECONOMY ANODIZED STEEL'
                     ) AS lnrcop
-                WHERE s_suppkey = l_suppkey
-                ) AS slnrcop,
-                Nation
-                LET o_year = GET_YEAR(o_orderdate)
-                WHERE s_nationkey = n_nationkey
-             ) as t
+                WHERE s.s_suppkey = lnrcop.l_suppkey
+            ) AS slnrcop,
+            Nation n
+        LET o_year = GET_YEAR(slnrcop.o_orderdate)
+        WHERE slnrcop.s_nationkey = n.n_nationkey
+    ) as t
 GROUP BY year
 ORDER BY year
 ;

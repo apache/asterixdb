@@ -21,30 +21,30 @@ use tpch;
 
 
 WITH sum as (
-      SELECT ELEMENT SUM(ps_supplycost * ps_availqty)
-      FROM  Partsupp,
+      SELECT ELEMENT SUM(ps.ps_supplycost * ps.ps_availqty)
+      FROM  Partsupp ps,
             (
-                SELECT s_suppkey
-                FROM  Supplier,
-                      Nation
-                WHERE s_nationkey = n_nationkey
+                SELECT s.s_suppkey
+                FROM  Supplier s,
+                      Nation n
+                WHERE s.s_nationkey = n.n_nationkey
             ) AS sn
-      WHERE ps_suppkey = s_suppkey
+      WHERE ps.ps_suppkey = sn.s_suppkey
 )[0]
 
 SELECT ps_partkey AS partkey, part_value
 FROM  (
-        SELECT ps_partkey,
-               sum(ps_supplycost * ps_availqty) AS part_value
-        FROM  Partsupp,
+        SELECT ps.ps_partkey,
+               sum(ps.ps_supplycost * ps.ps_availqty) AS part_value
+        FROM  Partsupp ps,
               (
-                SELECT s_suppkey
-                FROM  Supplier,
-                      Nation
-                WHERE s_nationkey = n_nationkey
+                SELECT s.s_suppkey
+                FROM  Supplier s,
+                      Nation n
+                WHERE s.s_nationkey = n.n_nationkey
               ) sn
-        WHERE ps_suppkey = s_suppkey
-        GROUP BY ps_partkey
+        WHERE ps.ps_suppkey = sn.s_suppkey
+        GROUP BY ps.ps_partkey
 ) t1
 WHERE part_value > sum * 0.00001
 ORDER BY part_value DESC

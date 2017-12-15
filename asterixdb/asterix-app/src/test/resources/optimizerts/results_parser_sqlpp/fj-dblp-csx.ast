@@ -176,6 +176,12 @@ Groupby
     prefixTokenDBLP:=Variable [ Name=$prefixTokenDBLP ]
     paperCSX:=Variable [ Name=$paperCSX ]
     prefixTokenCSX:=Variable [ Name=$prefixTokenCSX ]
+    idDBLP:=Variable [ Name=$idDBLP ]
+    unrankedTokensDBLP:=Variable [ Name=$unrankedTokensDBLP ]
+    tokensDBLP:=Variable [ Name=$tokensDBLP ]
+    idCSX:=Variable [ Name=$idCSX ]
+    unrankedTokensCSX:=Variable [ Name=$unrankedTokensCSX ]
+    tokensCSX:=Variable [ Name=$tokensCSX ]
   )
 
 Orderby

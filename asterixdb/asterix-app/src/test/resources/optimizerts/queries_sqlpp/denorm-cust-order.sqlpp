@@ -62,9 +62,9 @@ create  dataset Customers(CustomerType) primary key cid on group1;
 create  dataset Orders(OrderType) primary key oid on group1;
 
 write output to asterix_nc1:"/tmp/custorder.adm";
-select element {'cid':cid,'cust':cust,'cnt-orders':count(o),'orders':o}
+select element {'cid':cid,'cust':(from g select c),'cnt-orders':count(o),'orders': (from g select o)}
 from  Customers as c,
       Orders as o
 where (c.cid = o.cid)
-group by c.cid as cid
+group by c.cid as cid group as g
 ;

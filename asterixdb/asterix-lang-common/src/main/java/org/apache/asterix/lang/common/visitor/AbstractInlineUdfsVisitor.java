@@ -274,7 +274,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         } else {
             // Rewrite the function body itself (without setting unbounded variables to dataset access).
             // TODO(buyingyi): throw an exception for recursive function definition or limit the stack depth.
-            implem.setFuncBody(rewriteFunctionBody(implem.getFuncBody()));
+            implem.setFuncBody(rewriteFunctionBody(implem.getFuncBody(), implem.getParamList()));
             // it's one of the functions we want to inline
             List<LetClause> clauses = new ArrayList<>();
             Iterator<VarIdentifier> paramIter = implem.getParamList().iterator();
@@ -321,10 +321,13 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         return new Pair<>(changed, newList);
     }
 
-    protected Expression rewriteFunctionBody(Expression expr) throws CompilationException {
+    protected Expression rewriteFunctionBody(Expression expr, List<VarIdentifier> paramList)
+            throws CompilationException {
         Query wrappedQuery = new Query(false);
         wrappedQuery.setBody(expr);
         wrappedQuery.setTopLevel(false);
+        wrappedQuery.setExternalVars(paramList);
+
         IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
         queryRewriter.rewrite(declaredFunctions, wrappedQuery, metadataProvider, context);
         return wrappedQuery.getBody();

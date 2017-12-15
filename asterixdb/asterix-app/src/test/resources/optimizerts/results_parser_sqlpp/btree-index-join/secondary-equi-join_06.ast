@@ -20,12 +20,12 @@ FROM [  (
         SELECT ELEMENT [
         LiteralExpr [LONG] [1]
         ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#2 ]
+        FROM [          Variable [ Name=#2 ]
+          AS Variable [ Name=#3 ]
         ]
       )
     ]
-    null
+    $1
     ]
     FROM [      FunctionCall asterix.dataset@1[
         LiteralExpr [STRING] [testdst]
@@ -35,11 +35,11 @@ FROM [  (
     Groupby
       Variable [ Name=$val ]
       :=
-      FunctionCall asterix.resolve@-1[
-        LiteralExpr [STRING] [val]
+      FunctionCall asterix.field-access-by-name@2[
         Variable [ Name=$testdst ]
+        LiteralExpr [STRING] [val]
       ]
-      GROUP AS Variable [ Name=#1 ]
+      GROUP AS Variable [ Name=#2 ]
       (
         testdst:=Variable [ Name=$testdst ]
       )

@@ -22,16 +22,16 @@ USE tpch;
 
 WITH tmp AS
 (
-    SELECT p_brand, p_type, p_size, ps_suppkey
+    SELECT psp.p_brand, psp.p_type, psp.p_size, psp.ps_suppkey
     FROM  (
-            SELECT p_brand, p_type, p_size, ps_suppkey
-            FROM  Partsupp,
-                  Part
-            WHERE p_partkey = ps_partkey AND p_brand != 'Brand#45' AND
-                  p_type NOT LIKE 'MEDIUM POLISHED%'
+            SELECT p.p_brand, p.p_type, p.p_size, ps.ps_suppkey
+            FROM  Partsupp ps,
+                  Part p
+            WHERE p.p_partkey = ps.ps_partkey AND p.p_brand != 'Brand#45' AND
+                  p.p_type NOT LIKE 'MEDIUM POLISHED%'
            ) AS psp,
-           Supplier
-    WHERE ps_suppkey = s_suppkey AND s_comment NOT LIKE '%Customer%Complaints%'
+           Supplier s
+    WHERE psp.ps_suppkey = s.s_suppkey AND s.s_comment NOT LIKE '%Customer%Complaints%'
 )
 
 SELECT p_brand, p_type, p_size, count(ps_suppkey) supplier_cnt

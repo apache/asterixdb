@@ -44,24 +44,23 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Substitutes group-by key expressions.
         substituteGroupbyKeyExpression();
 
-        // Rewrites SQL-92 global aggregations.
-        rewriteGlobalAggregations();
-
-        // Group-by core/sugar rewrites.
+        // Group-by core rewrites
         rewriteGroupBys();
 
         // Rewrites set operations.
         rewriteSetOperations();
+
+        // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
+        variableCheckAndRewrite();
+
+        // Rewrites SQL-92 global aggregations.
+        rewriteGroupByAggregationSugar();
 
         // Rewrites like/not-like expressions.
         rewriteOperatorExpression();
 
         // Rewrites several variable-arg functions into their corresponding internal list-input functions.
         rewriteListInputFunctions();
-
-        // Generates ids for variables (considering scopes) but DOES NOT replace unbounded variable access with the dataset function.
-        // An unbounded variable within a function could be a bounded variable in the top-level query.
-        variableCheckAndRewrite(false);
 
         // Inlines functions recursively.
         inlineDeclaredUdfs();

@@ -21,13 +21,13 @@ USE tpch;
 
 
 SELECT l_shipmode,
-       sum(CASE WHEN o_orderpriority = '1-URGENT' or o_orderpriority = '2-HIGH' THEN 1 ELSE 0 END) high_line_count,
-       sum(CASE o_orderpriority = '1-URGENT' or o_orderpriority = '2-HIGH' WHEN true THEN 0 ELSE 1 END) low_line_count
-FROM  LineItem,
-      Orders
-WHERE o_orderkey = l_orderkey AND l_commitdate < l_receiptdate AND
-      l_shipdate < l_commitdate AND l_receiptdate >= '1994-01-01' AND
-      l_receiptdate < '1995-01-01' AND (l_shipmode = 'MAIL' OR l_shipmode = 'SHIP')
-GROUP BY l_shipmode
+       sum(CASE WHEN o.o_orderpriority = '1-URGENT' or o.o_orderpriority = '2-HIGH' THEN 1 ELSE 0 END) high_line_count,
+       sum(CASE o.o_orderpriority = '1-URGENT' or o.o_orderpriority = '2-HIGH' WHEN true THEN 0 ELSE 1 END) low_line_count
+FROM  LineItem l,
+      Orders o
+WHERE o.o_orderkey = l.l_orderkey AND l.l_commitdate < l.l_receiptdate AND
+      l.l_shipdate < l.l_commitdate AND l.l_receiptdate >= '1994-01-01' AND
+      l.l_receiptdate < '1995-01-01' AND (l.l_shipmode = 'MAIL' OR l.l_shipmode = 'SHIP')
+GROUP BY l.l_shipmode
 ORDER BY l_shipmode
 ;

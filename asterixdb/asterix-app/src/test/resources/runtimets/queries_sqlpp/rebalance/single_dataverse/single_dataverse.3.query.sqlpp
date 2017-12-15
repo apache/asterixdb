@@ -26,11 +26,11 @@ WITH tmp AS
     WHERE l_commitdate < l_receiptdate
 )
 
-SELECT o_orderpriority AS order_priority, count(*) AS count
-FROM Orders
-JOIN tmp
-ON l_orderkey = o_orderkey
-WHERE o_orderdate >= '1993-07-01' AND o_orderdate < '1993-10-01'
-GROUP BY o_orderpriority
-ORDER BY o_orderpriority
+SELECT o.o_orderpriority AS order_priority, count(*) AS count
+FROM Orders o
+JOIN tmp t
+ON t.l_orderkey = o.o_orderkey
+WHERE o.o_orderdate >= '1993-07-01' AND o.o_orderdate < '1993-10-01'
+GROUP BY o.o_orderpriority
+ORDER BY o.o_orderpriority
 ;

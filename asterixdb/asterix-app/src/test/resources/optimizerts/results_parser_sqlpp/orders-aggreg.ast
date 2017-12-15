@@ -23,11 +23,7 @@ RecordConstructor [
     LiteralExpr [STRING] [ordpercust]
     :
     FunctionCall asterix.count@1[
-      FunctionCall asterix.resolve@-1[
-        LiteralExpr [STRING] [o]
-        Variable [ Name=$cid ]
-        Variable [ Name=#1 ]
-      ]
+      Variable [ Name=$g ]
     ]
   )
   (
@@ -37,13 +33,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=o
+          ]
           Field=total
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [o]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -56,13 +53,14 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=$i ]
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=o
+          ]
           Field=total
         ]
         ]
-        FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [o]
-          ]
+        FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
         ]
       )
@@ -82,7 +80,7 @@ Groupby
     Variable [ Name=$o ]
     Field=cid
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     o:=Variable [ Name=$o ]
   )

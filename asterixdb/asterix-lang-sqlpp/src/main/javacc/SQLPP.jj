@@ -143,6 +143,7 @@ import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -1973,6 +1974,7 @@ Expression BetweenExpr()throws ParseException:
        <AND>
        operand = IsExpr()
        {
+         op.addOperator(OperatorType.AND);
          op.addOperand(operand);
        }
     )?

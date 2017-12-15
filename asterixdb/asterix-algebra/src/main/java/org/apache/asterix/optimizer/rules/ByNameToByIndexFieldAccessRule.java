@@ -87,7 +87,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             return changed;
         }
         changed |= extractFirstArg(fce, op, context);
-        IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op);
+        IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op.getInputs().get(0).getValue());
         IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
         changed |= rewriteFieldAccess(exprRef, fce, getActualType(t));
         return changed;

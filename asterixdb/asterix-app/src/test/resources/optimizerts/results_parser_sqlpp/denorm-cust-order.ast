@@ -43,11 +43,18 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [cust]
     :
-    FunctionCall asterix.resolve@-1[
-      LiteralExpr [STRING] [cust]
-      Variable [ Name=$cid ]
-      Variable [ Name=#1 ]
-    ]
+    (
+      SELECT [
+      FunctionCall asterix.field-access-by-name@2[
+        Variable [ Name=$g ]
+        LiteralExpr [STRING] [c]
+      ]
+      c
+      ]
+      FROM [        Variable [ Name=$g ]
+        AS Variable [ Name=$g ]
+      ]
+    )
   )
   (
     LiteralExpr [STRING] [cnt-orders]
@@ -56,12 +63,12 @@ RecordConstructor [
       (
         SELECT ELEMENT [
         FieldAccessor [
-          Variable [ Name=#2 ]
+          Variable [ Name=#1 ]
           Field=o
         ]
         ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#2 ]
+        FROM [          Variable [ Name=$g ]
+          AS Variable [ Name=#1 ]
         ]
       )
     ]
@@ -69,11 +76,18 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [orders]
     :
-    FunctionCall asterix.resolve@-1[
-      LiteralExpr [STRING] [o]
-      Variable [ Name=$cid ]
-      Variable [ Name=#1 ]
-    ]
+    (
+      SELECT [
+      FunctionCall asterix.field-access-by-name@2[
+        Variable [ Name=$g ]
+        LiteralExpr [STRING] [o]
+      ]
+      o
+      ]
+      FROM [        Variable [ Name=$g ]
+        AS Variable [ Name=$g ]
+      ]
+    )
   )
 ]
 ]
@@ -106,7 +120,7 @@ Groupby
     Variable [ Name=$c ]
     Field=cid
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=$g ]
   (
     c:=Variable [ Name=$c ]
     o:=Variable [ Name=$o ]

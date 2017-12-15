@@ -28,6 +28,7 @@ import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class InsertStatement implements IReturningStatement {
@@ -111,6 +112,16 @@ public class InsertStatement implements IReturningStatement {
 
     public void setReturnExpression(Expression expr) {
         this.returnExpression = expr;
+    }
+
+    @Override
+    public List<VarIdentifier> getExternalVars() {
+        return null;
+    }
+
+    @Override
+    public void setExternalVars(List<VarIdentifier> externalVars) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

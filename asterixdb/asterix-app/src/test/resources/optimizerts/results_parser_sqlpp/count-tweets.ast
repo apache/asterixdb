@@ -63,5 +63,6 @@ Groupby
   (
     t:=Variable [ Name=$t ]
     token:=Variable [ Name=$token ]
+    tokens:=Variable [ Name=$tokens ]
   )
 

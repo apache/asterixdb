@@ -223,7 +223,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             for (LetClause letClause : selectBlock.getLetList()) {
                 newLet = letClause.accept(this, currentEnv);
                 currentEnv = newLet.second;
-                newLetClauses.add(letClause);
+                newLetClauses.add((LetClause) newLet.first);
             }
         }
 
@@ -346,7 +346,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         if (selectExpression.hasLetClauses()) {
             for (LetClause letClause : selectExpression.getLetList()) {
                 p = letClause.accept(this, currentEnv);
-                newLetList.add(letClause);
+                newLetList.add((LetClause) p.first);
                 currentEnv = p.second;
             }
         }

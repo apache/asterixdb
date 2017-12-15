@@ -21,13 +21,13 @@
 USE tpcds;
 
 SELECT  i_brand_id brand_id, i_brand brand,
-  SUM(ss_ext_sales_price) ext_price
- FROM date_dim, store_sales, item
- WHERE d_date_sk = ss_sold_date_sk
-  AND ss_item_sk = i_item_sk
-  AND i_manager_id=36
-  AND d_moy=12
-  AND d_year=2001
- GROUP BY i_brand, i_brand_id
+  SUM(ss.ss_ext_sales_price) ext_price
+ FROM date_dim d, store_sales ss, item i
+ WHERE d.d_date_sk = ss.ss_sold_date_sk
+  AND ss.ss_item_sk = i.i_item_sk
+  AND i.i_manager_id=36
+  AND d.d_moy=12
+  AND d.d_year=2001
+ GROUP BY i.i_brand, i.i_brand_id
  ORDER BY ext_price desc, i_brand_id
 LIMIT 100 ;

@@ -54,6 +54,7 @@ Groupby
   (
     event:=Variable [ Name=$event ]
     sponsor:=Variable [ Name=$sponsor ]
+    es:=Variable [ Name=$es ]
   )
 
 Let Variable [ Name=$sig_sponsorship_count ]
@@ -61,17 +62,13 @@ Let Variable [ Name=$sig_sponsorship_count ]
   FunctionCall asterix.sql-count@1[
     (
       SELECT ELEMENT [
-      FunctionCall asterix.resolve@-1[
-        LiteralExpr [STRING] [es]
-        Variable [ Name=$sponsor ]
-        Variable [ Name=$event ]
-        Variable [ Name=$sig_name ]
-        Variable [ Name=#1 ]
-        Variable [ Name=#2 ]
+      FieldAccessor [
+        Variable [ Name=#3 ]
+        Field=es
       ]
       ]
       FROM [        Variable [ Name=#1 ]
-        AS Variable [ Name=#2 ]
+        AS Variable [ Name=#3 ]
       ]
     )
   ]
@@ -91,19 +88,15 @@ Let Variable [ Name=$by_chapter ]
         FunctionCall asterix.sql-count@1[
           (
             SELECT ELEMENT [
-            FunctionCall asterix.resolve@-1[
-              LiteralExpr [STRING] [es]
-              Variable [ Name=#4 ]
-              Variable [ Name=$sponsor ]
-              Variable [ Name=$sig_sponsorship_count ]
-              Variable [ Name=$chapter_name ]
-              Variable [ Name=$event ]
-              Variable [ Name=$sig_name ]
-              Variable [ Name=#1 ]
-              Variable [ Name=#3 ]
+            FieldAccessor [
+              FieldAccessor [
+                Variable [ Name=#4 ]
+                Field=e
+              ]
+              Field=es
             ]
             ]
-            FROM [              Variable [ Name=#3 ]
+            FROM [              Variable [ Name=#2 ]
               AS Variable [ Name=#4 ]
             ]
           )
@@ -126,7 +119,7 @@ Let Variable [ Name=$by_chapter ]
         ]
         Field=chapter_name
       ]
-      GROUP AS Variable [ Name=#3 ]
+      GROUP AS Variable [ Name=#2 ]
       (
         e:=Variable [ Name=$e ]
       )

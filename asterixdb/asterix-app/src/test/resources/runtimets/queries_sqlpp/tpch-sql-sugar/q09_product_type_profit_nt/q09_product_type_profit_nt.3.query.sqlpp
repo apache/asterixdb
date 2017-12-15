@@ -23,24 +23,24 @@ USE tpch;
 SELECT nation, o_year, sum(amount) AS sum_profit
 FROM
   (
-    SELECT   n_name AS nation,
-             get_year(o_orderdate) AS o_year,
-             l_extendedprice * (1 - l_discount) -  ps_supplycost * l_quantity AS amount
+    SELECT   l3.n_name AS nation,
+             get_year(o.o_orderdate) AS o_year,
+             l3.l_extendedprice * (1 - l3.l_discount) -  l3.ps_supplycost * l3.l_quantity AS amount
     FROM
-      Orders JOIN
+      Orders o JOIN
       (
-       SELECT l_extendedprice, l_discount, l_quantity, l_orderkey, n_name, ps_supplycost
-       FROM Part JOIN
-         (SELECT l_extendedprice, l_discount, l_quantity, l_partkey, l_orderkey, n_name, ps_supplycost
-          FROM Partsupp join
-            (SELECT l_suppkey, l_extendedprice, l_discount, l_quantity, l_partkey, l_orderkey, n_name
+       SELECT l2.l_extendedprice, l2.l_discount, l2.l_quantity, l2.l_orderkey, l2.n_name, l2.ps_supplycost
+       FROM Part p JOIN
+         (SELECT l1.l_extendedprice, l1.l_discount, l1.l_quantity, l1.l_partkey, l1.l_orderkey, l1.n_name, ps.ps_supplycost
+          FROM Partsupp ps join
+            (SELECT l.l_suppkey, l.l_extendedprice, l.l_discount, l.l_quantity, l.l_partkey, l.l_orderkey, s1.n_name
              FROM
-               (SELECT s_suppkey, n_name
-                FROM Nation JOIN Supplier ON n_nationkey = s_nationkey
-               ) s1 JOIN LineItem ON s_suppkey = l_suppkey
-            ) l1 ON ps_suppkey = l_suppkey AND ps_partkey = l_partkey
-         ) l2 ON contains(p_name,'green') AND p_partkey = l_partkey
-     ) l3 ON o_orderkey = l_orderkey
+               (SELECT s.s_suppkey, n.n_name
+                FROM Nation n JOIN Supplier s ON n.n_nationkey = s.s_nationkey
+               ) s1 JOIN LineItem l ON s1.s_suppkey = l.l_suppkey
+            ) l1 ON ps.ps_suppkey = l1.l_suppkey AND ps.ps_partkey = l1.l_partkey
+         ) l2 ON contains(p.p_name,'green') AND p.p_partkey = l2.l_partkey
+     ) l3 ON o.o_orderkey = l3.l_orderkey
   ) profit
 GROUP BY nation, o_year
 ORDER BY nation, o_year desc;

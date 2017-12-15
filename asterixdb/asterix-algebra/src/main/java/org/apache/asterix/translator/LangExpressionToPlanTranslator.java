@@ -173,8 +173,7 @@ class LangExpressionToPlanTranslator
 
     public LangExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounterValue)
             throws AlgebricksException {
-        this.context = new TranslationContext(new Counter(currentVarCounterValue));
-        this.metadataProvider = metadataProvider;
+        this(metadataProvider, new Counter(currentVarCounterValue));
     }
 
     // Keeps the given Counter if one is provided instead of a value.
@@ -794,6 +793,8 @@ class LangExpressionToPlanTranslator
     public Pair<ILogicalOperator, LogicalVariable> visit(GroupbyClause gc, Mutable<ILogicalOperator> tupSource)
             throws CompilationException {
         Mutable<ILogicalOperator> topOp = tupSource;
+
+        LogicalVariable groupRecordVar = null;
         if (gc.hasGroupVar()) {
             List<Pair<Expression, Identifier>> groupFieldList = gc.getGroupFieldList();
             List<Mutable<ILogicalExpression>> groupRecordConstructorArgList = new ArrayList<>();
@@ -805,13 +806,14 @@ class LangExpressionToPlanTranslator
                 ILogicalExpression groupFieldExpr = langExprToAlgExpression(groupField.first, topOp).first;
                 groupRecordConstructorArgList.add(new MutableObject<>(groupFieldExpr));
             }
-            LogicalVariable groupVar = context.newVarFromExpression(gc.getGroupVar());
-            AssignOperator groupVarAssignOp = new AssignOperator(groupVar,
-                    new MutableObject<>(new ScalarFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR),
-                            groupRecordConstructorArgList)));
-            groupVarAssignOp.getInputs().add(topOp);
-            topOp = new MutableObject<>(groupVarAssignOp);
+            MutableObject<ILogicalExpression> groupRecordConstr = new MutableObject<>(new ScalarFunctionCallExpression(
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR),
+                    groupRecordConstructorArgList));
+
+            groupRecordVar = context.newVar();
+            AssignOperator groupRecordVarAssignOp = new AssignOperator(groupRecordVar, groupRecordConstr);
+            groupRecordVarAssignOp.getInputs().add(topOp);
+            topOp = new MutableObject<>(groupRecordVarAssignOp);
         }
 
         GroupByOperator gOp = new GroupByOperator();
@@ -831,28 +833,44 @@ class LangExpressionToPlanTranslator
         }
 
         gOp.getInputs().add(topOp);
-        for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> listifyInput = langExprToAlgExpression(entry.getKey(),
+
+        if (gc.hasGroupVar()) {
+            VariableExpr groupVar = gc.getGroupVar();
+            LogicalVariable groupLogicalVar = context.newVar();
+            ILogicalPlan nestedPlan = createNestedPlanWithAggregate(groupLogicalVar,
+                    BuiltinFunctions.LISTIFY, new VariableReferenceExpression(groupRecordVar),
                     new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(gOp))));
-            List<Mutable<ILogicalExpression>> flArgs = new ArrayList<>(1);
-            flArgs.add(new MutableObject<>(listifyInput.first));
-            AggregateFunctionCallExpression fListify =
-                    BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.LISTIFY, flArgs);
-            LogicalVariable aggVar = context.newVar();
-            AggregateOperator agg = new AggregateOperator(mkSingletonArrayList(aggVar),
-                    mkSingletonArrayList(new MutableObject<>(fListify)));
-
-            agg.getInputs().add(listifyInput.second);
-
-            ILogicalPlan plan = new ALogicalPlanImpl(new MutableObject<>(agg));
-            gOp.getNestedPlans().add(plan);
-            // Hide the variable that was part of the "with", replacing it with
-            // the one bound by the aggregation op.
-            context.setVar(entry.getValue(), aggVar);
+            gOp.getNestedPlans().add(nestedPlan);
+            context.setVar(groupVar, groupLogicalVar);
         }
+
+        if (gc.hasWithMap()) {
+            for (Entry<Expression, VariableExpr> entry : gc.getWithVarMap().entrySet()) {
+                VariableExpr withVar = entry.getValue();
+                Expression withExpr = entry.getKey();
+                Pair<ILogicalExpression, Mutable<ILogicalOperator>> listifyInput = langExprToAlgExpression(withExpr,
+                        new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(gOp))));
+                LogicalVariable withLogicalVar = context.newVar();
+                ILogicalPlan nestedPlan = createNestedPlanWithAggregate(withLogicalVar,
+                        BuiltinFunctions.LISTIFY, listifyInput.first, listifyInput.second);
+                gOp.getNestedPlans().add(nestedPlan);
+                context.setVar(withVar, withLogicalVar);
+            }
+        }
+
         gOp.setGroupAll(gc.isGroupAll());
         gOp.getAnnotations().put(OperatorAnnotations.USE_HASH_GROUP_BY, gc.hasHashGroupByHint());
         return new Pair<>(gOp, null);
+    }
+
+    private ILogicalPlan createNestedPlanWithAggregate(LogicalVariable aggOutputVar, FunctionIdentifier aggFunc,
+            ILogicalExpression aggFnInput, Mutable<ILogicalOperator> aggOpInput) {
+        AggregateFunctionCallExpression aggFnCall = BuiltinFunctions.makeAggregateFunctionExpression(aggFunc,
+                mkSingletonArrayList(new MutableObject<>(aggFnInput)));
+        AggregateOperator aggOp = new AggregateOperator(mkSingletonArrayList(aggOutputVar),
+                mkSingletonArrayList(new MutableObject<>(aggFnCall)));
+        aggOp.getInputs().add(aggOpInput);
+        return new ALogicalPlanImpl(new MutableObject<>(aggOp));
     }
 
     @Override
@@ -1270,8 +1288,11 @@ class LangExpressionToPlanTranslator
             Mutable<ILogicalOperator> topOpRef) throws CompilationException {
         switch (expr.getKind()) {
             case VARIABLE_EXPRESSION:
-                VariableReferenceExpression ve =
-                        new VariableReferenceExpression(context.getVar(((VariableExpr) expr).getVar().getId()));
+                LogicalVariable var = context.getVar(((VariableExpr) expr).getVar().getId());
+                if (var == null) {
+                    throw new IllegalStateException(String.valueOf(expr));
+                }
+                VariableReferenceExpression ve = new VariableReferenceExpression(var);
                 return new Pair<>(ve, topOpRef);
             case LITERAL_EXPRESSION:
                 LiteralExpr val = (LiteralExpr) expr;

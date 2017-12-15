@@ -48,22 +48,22 @@ tmp2 AS
 
 SELECT s_name, count(t4) AS numwait
 FROM  (
-    SELECT s_name, l_suppkey, t2.l_orderkey, count_suppkey, max_suppkey
+    SELECT t3.s_name, t3.l_suppkey, t2.l_orderkey, t2.count_suppkey, t2.max_suppkey
     FROM  (
-            SELECT s_name, t1.l_orderkey AS l_orderkey, l_suppkey
+            SELECT ns.s_name, t1.l_orderkey AS l_orderkey, l.l_suppkey
             FROM  LineItem l,
                   (
-                        SELECT s_name, s_suppkey
-                        FROM Nation,
-                             Supplier
-                        WHERE s_nationkey = n_nationkey
+                        SELECT s.s_name, s.s_suppkey
+                        FROM Nation n,
+                             Supplier s
+                        WHERE s.s_nationkey = n.n_nationkey
                    ) AS ns,
-                   Orders,
+                   Orders o,
                    tmp1 AS t1
-            WHERE s_suppkey = l_suppkey AND l_receiptdate > l_commitdate
-                  AND o_orderkey = t1.l_orderkey AND l.l_orderkey = t1.l_orderkey
+            WHERE ns.s_suppkey = l.l_suppkey AND l.l_receiptdate > l.l_commitdate
+                  AND o.o_orderkey = t1.l_orderkey AND l.l_orderkey = t1.l_orderkey
           ) AS t3
-     JOIN tmp2 AS t2 ON count_suppkey >= 0 AND t3.l_orderkey = t2.l_orderkey
+     JOIN tmp2 AS t2 ON t2.count_suppkey >= 0 AND t3.l_orderkey = t2.l_orderkey
 ) AS t4
 GROUP BY s_name
 ORDER BY numwait DESC, s_name

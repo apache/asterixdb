@@ -34,21 +34,21 @@ WITH q7_volume_shipping_tmp AS
 SELECT supp_nation, cust_nation, l_year, sum(volume) AS revenue
 FROM
   (
-    SELECT supp_nation, cust_nation,
-      get_year(l_shipdate) AS l_year,
-       l_extendedprice * (1 - l_discount) AS volume
+    SELECT t.supp_nation, t.cust_nation,
+      get_year(l3.l_shipdate) AS l_year,
+       l3.l_extendedprice * (1 - l3.l_discount) AS volume
     FROM
       q7_volume_shipping_tmp t JOIN
-        (SELECT l_shipdate, l_extendedprice, l_discount, c_nationkey, s_nationkey
-         FROM Supplier JOIN
-           (SELECT l_shipdate, l_extendedprice, l_discount, l_suppkey, c_nationkey
-            FROM Customer JOIN
-              (SELECT l_shipdate, l_extendedprice, l_discount, l_suppkey, o_custkey
-               FROM Orders
-               JOIN LineItem ON o_orderkey = l_orderkey AND l_shipdate >= '1992-01-01'
-                    AND l_shipdate <= '1996-12-31'
-               ) l1 ON c_custkey = o_custkey
-            ) l2 ON s_suppkey = l_suppkey
+        (SELECT l2.l_shipdate, l2.l_extendedprice, l2.l_discount, l2.c_nationkey, s.s_nationkey
+         FROM Supplier s JOIN
+           (SELECT l1.l_shipdate, l1.l_extendedprice, l1.l_discount, l1.l_suppkey, c.c_nationkey
+            FROM Customer c JOIN
+              (SELECT l.l_shipdate, l.l_extendedprice, l.l_discount, l.l_suppkey, o.o_custkey
+               FROM Orders o
+               JOIN LineItem l ON o.o_orderkey = l.l_orderkey AND l.l_shipdate >= '1992-01-01'
+                    AND l.l_shipdate <= '1996-12-31'
+               ) l1 ON c.c_custkey = l1.o_custkey
+            ) l2 ON s.s_suppkey = l2.l_suppkey
          ) l3 ON t.c_nationkey = l3.c_nationkey AND t.s_nationkey = l3.s_nationkey
    ) shipping
 GROUP BY supp_nation, cust_nation, l_year

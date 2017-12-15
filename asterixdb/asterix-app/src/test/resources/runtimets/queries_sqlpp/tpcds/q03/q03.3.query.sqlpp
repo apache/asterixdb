@@ -20,10 +20,10 @@
 USE tpcds;
 
 
-SELECT dt.d_year
+SELECT d_year
        ,item.i_brand_id brand_id
        ,item.i_brand brand
-       ,sum(ss_ext_sales_price) sum_agg
+       ,sum(store_sales.ss_ext_sales_price) sum_agg
 FROM date_dim dt
     ,store_sales
     ,item
@@ -34,7 +34,7 @@ AND dt.d_moy=12
 GROUP BY dt.d_year
         ,item.i_brand
         ,item.i_brand_id
-ORDER BY dt.d_year
+ORDER BY d_year
          ,sum_agg desc
          ,brand_id
 LIMIT 100;

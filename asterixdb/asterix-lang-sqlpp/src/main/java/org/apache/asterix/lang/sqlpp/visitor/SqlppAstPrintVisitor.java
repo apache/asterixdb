@@ -20,6 +20,7 @@ package org.apache.asterix.lang.sqlpp.visitor;
 
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -28,6 +29,7 @@ import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.QueryPrintVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -264,15 +266,25 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     public Void visit(GroupbyClause gc, Integer step) throws CompilationException {
         if (gc.isGroupAll()) {
             out.println(skip(step) + "Group All");
-            return null;
-        }
-        out.println(skip(step) + "Groupby");
-        for (GbyVariableExpressionPair pair : gc.getGbyPairList()) {
-            if (pair.getVar() != null) {
-                pair.getVar().accept(this, step + 1);
-                out.println(skip(step + 1) + ":=");
+        } else {
+            out.println(skip(step) + "Groupby");
+            for (GbyVariableExpressionPair pair : gc.getGbyPairList()) {
+                if (pair.getVar() != null) {
+                    pair.getVar().accept(this, step + 1);
+                    out.println(skip(step + 1) + ":=");
+                }
+                pair.getExpr().accept(this, step + 1);
             }
-            pair.getExpr().accept(this, step + 1);
+        }
+        if (gc.hasDecorList()) {
+            out.println(skip(step + 1) + "DECOR");
+            for (GbyVariableExpressionPair pair : gc.getDecorPairList()) {
+                if (pair.getVar() != null) {
+                    pair.getVar().accept(this, step + 1);
+                    out.println(skip(step + 1) + ":=");
+                }
+                pair.getExpr().accept(this, step + 1);
+            }
         }
         if (gc.hasGroupVar()) {
             out.print(skip(step + 1) + "GROUP AS ");
@@ -284,6 +296,14 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
                     field.first.accept(this, 0);
                 }
                 out.println(skip(step + 1) + ")");
+            }
+        }
+        if (gc.hasWithMap()) {
+            out.println(skip(step + 1) + "WITH");
+            for (Map.Entry<Expression, VariableExpr> pair : gc.getWithVarMap().entrySet()) {
+                pair.getValue().accept(this, step + 1);
+                out.println(skip(step + 1) + ":=");
+                pair.getKey().accept(this, step + 1);
             }
         }
         out.println();

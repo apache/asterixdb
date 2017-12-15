@@ -34,3 +34,8 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$t ]
 ]
 Group All
+  GROUP AS Variable [ Name=#1 ]
+  (
+    t:=Variable [ Name=$t ]
+  )
+

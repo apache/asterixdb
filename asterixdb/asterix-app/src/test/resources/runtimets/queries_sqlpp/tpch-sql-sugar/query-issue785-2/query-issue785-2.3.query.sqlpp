@@ -33,19 +33,19 @@ WITH  t AS (
       WHERE nation.n_nationkey = sn.n_nationkey
 ),
 X as (
-      SELECT nation_key, orderdate AS order_date, sum(o_totalprice) AS sum_price
-      FROM  t,
-            Customer,
-            Orders
-      WHERE o_custkey = c_custkey and c_nationkey = n_nationkey
-      GROUP BY o_orderdate AS orderdate, n_nationkey AS nation_key
+      SELECT nation_key, orderdate AS order_date, sum(o.o_totalprice) AS sum_price
+      FROM  t n,
+            Customer c,
+            Orders o
+      WHERE o.o_custkey = c.c_custkey and c.c_nationkey = n.n_nationkey
+      GROUP BY o.o_orderdate AS orderdate, n.n_nationkey AS nation_key
 )
 
 SELECT nation_key,
        (
             SELECT g.X.order_date AS orderdate, g.X.sum_price
             FROM  g // the X here refers to implicit variable X defined in the outer FROM.
-            ORDER BY sum_price desc
+            ORDER BY g.X.sum_price desc
             LIMIT 3
         ) AS sum_price
 FROM  X

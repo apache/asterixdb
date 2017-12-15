@@ -47,10 +47,9 @@ Let Variable [ Name=$grid ]
       FunctionCall asterix.count@1[
         (
           SELECT ELEMENT [
-          FunctionCall asterix.resolve@-1[
-            LiteralExpr [STRING] [o]
+          FunctionCall asterix.field-access-by-name@2[
             Variable [ Name=$g ]
-            Variable [ Name=$c ]
+            LiteralExpr [STRING] [o]
           ]
           ]
           FROM [            Variable [ Name=$g ]

@@ -1,14 +1,7 @@
 DataverseUse TinySocial
 Query:
 SELECT [
-FieldAccessor [
-  FunctionCall asterix.resolve@-1[
-    LiteralExpr [STRING] [employment]
-    Variable [ Name=#1 ]
-    Variable [ Name=$organization-name ]
-  ]
-  Field=organization-name
-]
+Variable [ Name=$organization-name ]
 organization
 FunctionCall asterix.sql-avg@1[
   (
@@ -125,13 +118,6 @@ Groupby
   )
 
 Orderby
-  FieldAccessor [
-    FunctionCall asterix.resolve@-1[
-      LiteralExpr [STRING] [employment]
-      Variable [ Name=#1 ]
-      Variable [ Name=$organization-name ]
-    ]
-    Field=organization-name
-  ]
+  Variable [ Name=$organization-name ]
   ASC
 

@@ -179,18 +179,23 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
         Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
         AggregateOperator aggOp = (AggregateOperator) r0.getValue();
 
+        compileSubplans(inputSchemas[0], gby, opSchema, context);
+
         IPartialAggregationTypeComputer partialAggregationTypeComputer = context.getPartialAggregationTypeComputer();
         List<Object> intermediateTypes = new ArrayList<Object>();
         int n = aggOp.getExpressions().size();
         ISerializedAggregateEvaluatorFactory[] aff = new ISerializedAggregateEvaluatorFactory[n];
         int i = 0;
         IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
-        IVariableTypeEnvironment aggOpInputEnv = context.getTypeEnvironment(aggOp.getInputs().get(0).getValue());
+        ILogicalOperator aggOpInput = aggOp.getInputs().get(0).getValue();
+        IOperatorSchema aggOpInputSchema = context.getSchema(aggOpInput);
+        IOperatorSchema[] aggOpInputSchemas = new IOperatorSchema[] { aggOpInputSchema };
+        IVariableTypeEnvironment aggOpInputEnv = context.getTypeEnvironment(aggOpInput);
         IVariableTypeEnvironment outputEnv = context.getTypeEnvironment(op);
         for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
             AggregateFunctionCallExpression aggFun = (AggregateFunctionCallExpression) exprRef.getValue();
             aff[i++] = expressionRuntimeProvider.createSerializableAggregateFunctionFactory(aggFun, aggOpInputEnv,
-                    inputSchemas, context);
+                    aggOpInputSchemas, context);
             intermediateTypes
                     .add(partialAggregationTypeComputer.getType(aggFun, aggOpInputEnv, context.getMetadataProvider()));
         }
@@ -215,7 +220,6 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
             aggOpInputEnv.setVarType(var, outputEnv.getVarType(var));
         }
 
-        compileSubplans(inputSchemas[0], gby, opSchema, context);
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(gbyCols,
                 aggOpInputEnv, context);

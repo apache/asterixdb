@@ -22,15 +22,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
-import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
@@ -75,22 +72,6 @@ public class SqlppVariableUtil {
             return varName.substring(1);
         }
         return varName;
-    }
-
-    public static Set<VariableExpr> getLiveVariables(Scope scope, boolean includeWithVariables) {
-        Set<VariableExpr> results = new HashSet<>();
-        Set<VariableExpr> liveVars = scope.getLiveVariables();
-        Iterator<VariableExpr> liveVarIter = liveVars.iterator();
-        while (liveVarIter.hasNext()) {
-            VariableExpr liveVar = liveVarIter.next();
-            // Variables defined in WITH clauses are named value access.
-            // TODO(buyingi): remove this if block once we can accurately type
-            // ordered lists with UNION item type. Currently it is typed as [ANY].
-            if (includeWithVariables || !liveVar.getVar().namedValueAccess()) {
-                results.add(liveVar);
-            }
-        }
-        return results;
     }
 
     public static String toInternalVariableName(String varName) {

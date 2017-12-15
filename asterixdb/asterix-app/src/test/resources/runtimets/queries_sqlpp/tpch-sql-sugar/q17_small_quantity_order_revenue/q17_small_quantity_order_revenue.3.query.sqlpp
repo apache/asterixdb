@@ -27,10 +27,10 @@ WITH tmp AS
     GROUP BY l_partkey
 )
 
-SELECT ELEMENT SUM(l_extendedprice) / 7.0
-FROM  tmp,
-      LineItem,
-      Part
-WHERE p_partkey = l_partkey AND p_container = 'MED BOX'
-            AND l_partkey = t_partkey AND l_quantity < t_avg_quantity
+SELECT ELEMENT SUM(l.l_extendedprice) / 7.0
+FROM  tmp t,
+      LineItem l,
+      Part p
+WHERE p.p_partkey = l.l_partkey AND p.p_container = 'MED BOX'
+            AND l.l_partkey = t.t_partkey AND l.l_quantity < t.t_avg_quantity
 ;

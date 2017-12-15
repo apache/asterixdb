@@ -1,28 +1,6 @@
 Query:
 SELECT [
-FunctionCall null.sqrt@1[
-  OperatorExpr [
-    FieldAccessor [
-      FunctionCall asterix.resolve@-1[
-        LiteralExpr [STRING] [t]
-        Variable [ Name=$u ]
-        Variable [ Name=$root ]
-        Variable [ Name=#1 ]
-      ]
-      Field=a
-    ]
-    *
-    FieldAccessor [
-      FunctionCall asterix.resolve@-1[
-        LiteralExpr [STRING] [t]
-        Variable [ Name=$u ]
-        Variable [ Name=$root ]
-        Variable [ Name=#1 ]
-      ]
-      Field=b
-    ]
-  ]
-]
+Variable [ Name=$root ]
 root
 ]
 FROM [  FunctionCall asterix.dataset@1[

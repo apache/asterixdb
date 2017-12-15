@@ -45,10 +45,9 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall asterix.resolve@-1[
-              LiteralExpr [STRING] [o]
+            FunctionCall asterix.field-access-by-name@2[
               Variable [ Name=$g ]
-              Variable [ Name=$l_shipmode ]
+              LiteralExpr [STRING] [o]
             ]
             ]
             FROM [              Variable [ Name=$g ]
@@ -95,10 +94,9 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall asterix.resolve@-1[
-              LiteralExpr [STRING] [o]
+            FunctionCall asterix.field-access-by-name@2[
               Variable [ Name=$g ]
-              Variable [ Name=$l_shipmode ]
+              LiteralExpr [STRING] [o]
             ]
             ]
             FROM [              Variable [ Name=$g ]

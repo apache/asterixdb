@@ -28,10 +28,10 @@ FROM  (
                            (
                             select element o_orderkey
                             from  Orders
-                            where c_custkey = o_custkey and o_comment NOT LIKE '%special%requests%'
+                            where c.c_custkey = o_custkey and o_comment NOT LIKE '%special%requests%'
                            )
                          ) AS o_orderkey_count
-                from  Customer
+                from  Customer c
         ) co
         GROUP BY c_custkey
 ) gco

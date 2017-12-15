@@ -24,7 +24,7 @@ OperatorExpr [
             ]
             *
             OperatorExpr [
-              LiteralExpr [LONG] [1]
+              Variable [ Name=$t ]
               -
               FieldAccessor [
                 Variable [ Name=$i ]
@@ -39,12 +39,9 @@ OperatorExpr [
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall asterix.resolve@-1[
-            LiteralExpr [STRING] [lp]
+          FunctionCall asterix.field-access-by-name@2[
             Variable [ Name=$g ]
-            Variable [ Name=$l ]
-            Variable [ Name=$p ]
-            Variable [ Name=$t ]
+            LiteralExpr [STRING] [lp]
           ]
           ]
           FROM [            Variable [ Name=$g ]
@@ -66,7 +63,7 @@ OperatorExpr [
         ]
         *
         OperatorExpr [
-          LiteralExpr [LONG] [1]
+          Variable [ Name=$t ]
           -
           FieldAccessor [
             Variable [ Name=$i ]
@@ -77,12 +74,9 @@ OperatorExpr [
       ]
       FROM [        (
           SELECT ELEMENT [
-          FunctionCall asterix.resolve@-1[
-            LiteralExpr [STRING] [lp]
+          FunctionCall asterix.field-access-by-name@2[
             Variable [ Name=$g ]
-            Variable [ Name=$l ]
-            Variable [ Name=$p ]
-            Variable [ Name=$t ]
+            LiteralExpr [STRING] [lp]
           ]
           ]
           FROM [            Variable [ Name=$g ]

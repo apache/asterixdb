@@ -89,6 +89,8 @@ Groupby
   GROUP AS Variable [ Name=$g ]
   (
     t:=Variable [ Name=$t ]
+    keywords:=Variable [ Name=$keywords ]
+    region:=Variable [ Name=$region ]
   )
 
 Let Variable [ Name=$num ]
@@ -96,7 +98,10 @@ Let Variable [ Name=$num ]
   FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
-      Variable [ Name=$t ]
+      FunctionCall asterix.field-access-by-name@2[
+        Variable [ Name=$g ]
+        LiteralExpr [STRING] [t]
+      ]
       ]
       FROM [        Variable [ Name=$g ]
         AS Variable [ Name=$g ]

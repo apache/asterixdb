@@ -2,14 +2,14 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 OrderedListConstructor [
-  FieldAccessor [
-    Variable [ Name=$x ]
-    Field=int_m
-  ]
+  Variable [ Name=$int_m ]
   FunctionCall asterix.count@1[
     (
       SELECT ELEMENT [
-      Variable [ Name=$x ]
+      FunctionCall asterix.field-access-by-name@2[
+        Variable [ Name=$g ]
+        LiteralExpr [STRING] [x]
+      ]
       ]
       FROM [        Variable [ Name=$g ]
         AS Variable [ Name=$g ]
@@ -39,12 +39,10 @@ Groupby
   GROUP AS Variable [ Name=$g ]
   (
     x:=Variable [ Name=$x ]
+    id:=Variable [ Name=$id ]
   )
 
 Orderby
-  FieldAccessor [
-    Variable [ Name=$x ]
-    Field=int_m
-  ]
+  Variable [ Name=$int_m ]
   ASC
 

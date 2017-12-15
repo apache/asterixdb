@@ -84,24 +84,16 @@ Let Variable [ Name=$tokensDBLP ]
           (
             paper:=Variable [ Name=$paper ]
             token:=Variable [ Name=$token ]
+            id:=Variable [ Name=$id ]
           )
 
         Orderby
           FunctionCall asterix.sql-count@1[
             (
               SELECT ELEMENT [
-              FunctionCall asterix.resolve@-1[
-                LiteralExpr [STRING] [id]
-                Variable [ Name=$lenDBLP ]
-                Variable [ Name=$token ]
-                Variable [ Name=$tokensUnrankedDBLP ]
-                Variable [ Name=$paper ]
-                Variable [ Name=$tokenGrouped ]
-                Variable [ Name=$paperDBLP ]
-                Variable [ Name=$tokenUnranked ]
-                Variable [ Name=#1 ]
+              FieldAccessor [
                 Variable [ Name=#2 ]
-                Variable [ Name=$idDBLP ]
+                Field=id
               ]
               ]
               FROM [                Variable [ Name=#1 ]

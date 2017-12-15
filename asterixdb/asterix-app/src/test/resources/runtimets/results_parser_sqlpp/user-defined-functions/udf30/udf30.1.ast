@@ -5,7 +5,7 @@ FunctionDecl abc([$y]) {
 Query:
 Let Variable [ Name=$z ]
   :=
-  FunctionCall asterix.resolve@-1[
+  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [y]
   ]
 SELECT ELEMENT [

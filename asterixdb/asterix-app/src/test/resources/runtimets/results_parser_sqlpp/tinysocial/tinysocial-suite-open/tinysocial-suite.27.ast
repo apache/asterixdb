@@ -103,3 +103,9 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$employment ]
 ]
 Group All
+  GROUP AS Variable [ Name=#1 ]
+  (
+    fbu:=Variable [ Name=$fbu ]
+    employment:=Variable [ Name=$employment ]
+  )
+

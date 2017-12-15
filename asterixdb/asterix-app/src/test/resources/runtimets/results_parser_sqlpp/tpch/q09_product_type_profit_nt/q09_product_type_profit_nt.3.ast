@@ -25,11 +25,9 @@ RecordConstructor [
         ]
         FROM [          (
             SELECT ELEMENT [
-            FunctionCall asterix.resolve@-1[
-              LiteralExpr [STRING] [profit]
+            FunctionCall asterix.field-access-by-name@2[
               Variable [ Name=$g ]
-              Variable [ Name=$nation ]
-              Variable [ Name=$o_year ]
+              LiteralExpr [STRING] [profit]
             ]
             ]
             FROM [              Variable [ Name=$g ]

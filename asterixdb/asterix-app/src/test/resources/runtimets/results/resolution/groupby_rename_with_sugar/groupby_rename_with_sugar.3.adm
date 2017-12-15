@@ -1,0 +1,3 @@
+{ "g": [ { "ord": { "oid": 100, "pid": 0, "amount": 1 } }, { "ord": { "oid": 104, "pid": 0, "amount": 6 } } ], "pid": 0, "s": 7 }
+{ "g": [ { "ord": { "oid": 101, "pid": 1, "amount": 2 } }, { "ord": { "oid": 103, "pid": 1, "amount": 4 } } ], "pid": 1, "s": 6 }
+{ "g": [ { "ord": { "oid": 102, "pid": 2, "amount": 3 } } ], "pid": 2, "s": 3 }

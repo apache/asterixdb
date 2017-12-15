@@ -78,6 +78,6 @@ from  (
 ) as t4
 group by t4.s_name as s_name
 group as g
-let  numwait = count(( from g select value t4 ))
+let  numwait = coll_count(( from g select value t4 ))
 order by numwait desc,s_name
 ;

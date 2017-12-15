@@ -2787,7 +2787,7 @@
     <test-case FilePath="global-aggregate">
       <compilation-unit name="q05_error">
         <output-dir compare="Text">q01</output-dir>
-        <expected-error>Cannot find dataset u in dataverse TinySocial nor an alias with name u</expected-error>
+        <expected-error>Type mismatch: function field-access-by-name expects its 1st input parameter to be type object, but the actual input type is array</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="global-aggregate">
@@ -3579,7 +3579,6 @@
     <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-1577">
         <output-dir compare="Text">query-ASTERIXDB-1577</output-dir>
-        <expected-error>Type mismatch: function field-access-by-name expects its 1st input parameter to be type object, but the actual input type is array</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -5403,6 +5402,16 @@
         <output-dir compare="Text">fullyqualified2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="order_1">
+        <output-dir compare="Text">order_1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="groupby_rename_with_sugar">
+        <output-dir compare="Text">groupby_rename_with_sugar</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="scan">
     <test-case FilePath="scan">
@@ -6437,7 +6446,6 @@
     <test-case FilePath="subquery">
       <compilation-unit name="query-ASTERIXDB-1574-3">
         <output-dir compare="Text">query-ASTERIXDB-1574</output-dir>
-        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="subquery">
@@ -9061,12 +9069,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="union">
-      <compilation-unit name="union_negative_2">
-        <output-dir compare="Text">union</output-dir>
-        <expected-error>Cannot find dataset t in dataverse TinySocial nor an alias with name t</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="union">
       <compilation-unit name="union_negative_3">
         <output-dir compare="Text">union</output-dir>
         <expected-error>Operation UNION with set semantics is not supported.</expected-error>
@@ -9090,6 +9092,11 @@
     <test-case FilePath="union">
       <compilation-unit name="union_orderby_4">
         <output-dir compare="Text">union_orderby_3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_orderby_5">
+        <output-dir compare="Text">union_orderby_5</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="union">

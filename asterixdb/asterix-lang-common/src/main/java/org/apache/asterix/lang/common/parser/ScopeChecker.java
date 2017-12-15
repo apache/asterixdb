@@ -60,8 +60,7 @@ public class ScopeChecker {
      * @return new scope
      */
     public final Scope createNewScope() {
-        Scope parent = scopeStack.peek();
-        Scope scope = new Scope(this, parent);// top one as parent
+        Scope scope = extendCurrentScopeNoPush(false);
         scopeStack.push(scope);
         return scope;
     }
@@ -72,20 +71,14 @@ public class ScopeChecker {
      * @return
      */
     public final Scope extendCurrentScope() {
-        return extendCurrentScope(false);
-    }
-
-    public final Scope extendCurrentScope(boolean maskParentScope) {
-        Scope scope = extendCurrentScopeNoPush(maskParentScope);
-        scopeStack.pop();
-        scopeStack.push(scope);
+        Scope scope = extendCurrentScopeNoPush(false);
+        replaceCurrentScope(scope);
         return scope;
     }
 
-    public final Scope extendCurrentScopeNoPush(boolean maskParentScope) {
-        Scope scope = scopeStack.peek();
-        scope = new Scope(this, scope, maskParentScope);
-        return scope;
+    protected final Scope extendCurrentScopeNoPush(boolean maskParentScope) {
+        Scope parent = scopeStack.peek();
+        return new Scope(this, parent, maskParentScope);
     }
 
     public final void replaceCurrentScope(Scope scope) {
@@ -113,6 +106,15 @@ public class ScopeChecker {
      */
     public final Scope getCurrentScope() {
         return scopeStack.peek();
+    }
+
+    /**
+     * get scope preceding the current scope
+     * @return preceding scope or {@code null} if current scope is the top one
+     */
+    public final Scope getPrecedingScope() {
+        int n = scopeStack.size();
+        return n > 1 ? scopeStack.get(n - 2) : null;
     }
 
     /**

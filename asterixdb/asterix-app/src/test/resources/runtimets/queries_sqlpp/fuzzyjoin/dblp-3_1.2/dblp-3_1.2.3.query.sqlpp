@@ -62,7 +62,7 @@ from  (
           sim as fuzzyjoin.`similarity-jaccard-prefix`(lenLeft,tokensLeft,lenRight,tokensRight,prefixTokenLeft,0.500000f)
     where ((prefixTokenLeft = prefixTokenRight) and ((sim >= 0.500000f) and (paperLeft.id < paperRight.id)))
     /* +hash */
-    group by paperLeft.id as idLeft,paperRight.id as idRight
+    group by paperLeft.id as idLeft,paperRight.id as idRight,sim as sim
 ) as ridpair,
       DBLP as paperLeft,
       DBLP as paperRight

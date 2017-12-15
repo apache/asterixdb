@@ -17,14 +17,8 @@
  * under the License.
  */
 
-USE TinySocial;
+use test;
 
-SELECT t.id id
-FROM FacebookUsers AS t
-UNION ALL
-SELECT s.`message-id` id
-FROM FacebookMessages AS s
-UNION ALL
-SELECT t.name id
-FROM FacebookUsers AS t
-ORDER BY t.id; // There is certainly no field called "t" in the union all results.
+select value oid from orders
+where pid in (select value pid from parts)
+order by oid

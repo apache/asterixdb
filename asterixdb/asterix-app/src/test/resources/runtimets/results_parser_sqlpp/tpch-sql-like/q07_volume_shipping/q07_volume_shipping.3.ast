@@ -369,6 +369,7 @@ Groupby
   (
     locs:=Variable [ Name=$locs ]
     t:=Variable [ Name=$t ]
+    l_year0:=Variable [ Name=$l_year0 ]
   )
 
 Let Variable [ Name=$revenue ]

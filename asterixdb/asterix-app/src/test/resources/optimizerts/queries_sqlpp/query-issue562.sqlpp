@@ -92,9 +92,9 @@ with  avg as tpch.coll_avg((
       with  phone_substr as tpch.substring(c.c_phone,1,2)
       where ((c.c_acctbal > 0.0) and ((phone_substr = '13') or (phone_substr = '31') or (phone_substr = '23') or (phone_substr = '29') or (phone_substr = '30') or (phone_substr = '18') or (phone_substr = '17')))
   ))
-select element {'cntrycode':cntrycode,'numcust':tpch.coll_count(ct),'totacctbal':tpch.coll_sum((
-        select element i.c_acctbal
-        from  ct as i
+select element {'cntrycode':cntrycode,'numcust':tpch.coll_count(g),'totacctbal':tpch.coll_sum((
+        select element i.ct.c_acctbal
+        from  g as i
     ))}
 from  tpch.q22_customer_tmp() as ct
 where (tpch.coll_count((
@@ -102,6 +102,6 @@ where (tpch.coll_count((
     from  Orders as o
     where (ct.c_custkey = o.o_custkey)
 )) = 0)
-group by ct.cntrycode as cntrycode
+group by ct.cntrycode as cntrycode group as g
 order by cntrycode
 ;

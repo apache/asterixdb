@@ -38,10 +38,9 @@ RecordConstructor [
           ]
           FROM [            (
               SELECT ELEMENT [
-              FunctionCall asterix.resolve@-1[
-                LiteralExpr [STRING] [t]
+              FunctionCall asterix.field-access-by-name@2[
                 Variable [ Name=$g ]
-                Variable [ Name=$year ]
+                LiteralExpr [STRING] [t]
               ]
               ]
               FROM [                Variable [ Name=$g ]
@@ -63,10 +62,9 @@ RecordConstructor [
           ]
           FROM [            (
               SELECT ELEMENT [
-              FunctionCall asterix.resolve@-1[
-                LiteralExpr [STRING] [t]
+              FunctionCall asterix.field-access-by-name@2[
                 Variable [ Name=$g ]
-                Variable [ Name=$year ]
+                LiteralExpr [STRING] [t]
               ]
               ]
               FROM [                Variable [ Name=$g ]

@@ -662,9 +662,11 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         for (GbyVariableExpressionPair pair : groupbyClause.getGbyPairList()) {
             fieldBindings.add(getFieldBinding(pair.getVar()));
         }
-        if (groupbyClause.hasWithMap() && groupbyClause.hasGroupVar()) {
-            // Makes sure that we add the re-mapped group variable which refers to a collection.
-            fieldBindings.add(getFieldBinding(groupbyClause.getWithVarMap().get(groupbyClause.getGroupVar())));
+        if (groupbyClause.hasGroupVar()) {
+            fieldBindings.add(getFieldBinding(groupbyClause.getGroupVar()));
+        }
+        if (groupbyClause.hasWithMap()) {
+            throw new IllegalStateException(groupbyClause.getWithVarMap().values().toString()); // no WITH in SQLPP
         }
         return fieldBindings;
     }

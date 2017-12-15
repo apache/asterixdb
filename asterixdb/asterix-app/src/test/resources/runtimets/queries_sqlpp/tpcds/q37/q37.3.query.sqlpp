@@ -23,14 +23,14 @@ USE tpcds;
 SELECT  i_item_id
        ,i_item_desc
        ,i_current_price
- FROM item, inventory, date_dim, catalog_sales
- WHERE i_current_price >= 22 AND i_current_price <= 22 + 30
- AND inv_item_sk = i_item_sk
- AND d_date_sk=inv_date_sk
- AND date(d_date) >= date('2001-06-02') AND date(d_date) <= date('2001-08-01')
- AND i_manufact_id in [678,964,918,849]
- AND inv_quantity_on_hand >= 100 AND inv_quantity_on_hand <= 500
- AND cs_item_sk = i_item_sk
- GROUP BY i_item_id,i_item_desc,i_current_price
+ FROM item i, inventory inv, date_dim d, catalog_sales cs
+ WHERE i.i_current_price >= 22 AND i.i_current_price <= 22 + 30
+ AND inv.inv_item_sk = i.i_item_sk
+ AND d.d_date_sk=inv.inv_date_sk
+ AND date(d.d_date) >= date('2001-06-02') AND date(d.d_date) <= date('2001-08-01')
+ AND i.i_manufact_id in [678,964,918,849]
+ AND inv.inv_quantity_on_hand >= 100 AND inv.inv_quantity_on_hand <= 500
+ AND cs.cs_item_sk = i.i_item_sk
+ GROUP BY i.i_item_id,i.i_item_desc,i.i_current_price
  ORDER BY i_item_id
  LIMIT 100;
