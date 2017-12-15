@@ -710,7 +710,6 @@
     <module>asterix-active</module>
     <module>asterix-client-helper</module>
     <module>asterix-license</module>
-    <module>asterix-installer</module>
   </modules>
 
   <dependencyManagement>
