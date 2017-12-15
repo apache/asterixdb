@@ -18,18 +18,17 @@
  */
 package org.apache.hyracks.net.protocols.muxdemux;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.comm.IConnectionWriterState;
 import org.apache.hyracks.api.comm.MuxDemuxCommand;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FullFrameChannelWriteInterface extends AbstractChannelWriteInterface {
 
-    private static final Logger LOGGER = Logger.getLogger(FullFrameChannelWriteInterface.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     FullFrameChannelWriteInterface(IChannelControlBlock ccb) {
         super(ccb);
@@ -77,8 +76,8 @@ public class FullFrameChannelWriteInterface extends AbstractChannelWriteInterfac
         }
         channelWritabilityState = true;
         if (eos) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Received duplicate close() on channel: " + channelId);
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.warn("Received duplicate close() on channel: " + channelId);
             }
             return;
         }

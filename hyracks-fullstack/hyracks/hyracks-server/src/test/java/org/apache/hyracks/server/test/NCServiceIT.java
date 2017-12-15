@@ -22,13 +22,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Iterator;
-import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import junit.framework.Assert;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -37,6 +35,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.server.process.HyracksVirtualCluster;
 import org.apache.hyracks.util.file.FileUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class NCServiceIT {
     private static final String LOG_DIR = FileUtil.joinPath(TARGET_DIR, "failsafe-reports");
     private static final String RESOURCE_DIR = FileUtil.joinPath(TARGET_DIR, "test-classes", "NCServiceIT");
     private static final String APP_HOME = FileUtil.joinPath(TARGET_DIR, "appassembler");
-    private static final Logger LOGGER = Logger.getLogger(NCServiceIT.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static HyracksVirtualCluster cluster = null;
 
@@ -139,7 +139,7 @@ public class NCServiceIT {
             setUp();
         } catch (Exception e) {
             e.printStackTrace();
-            LOGGER.severe("TEST CASE(S) FAILED");
+            LOGGER.error("TEST CASE(S) FAILED");
         } finally {
             tearDown();
         }

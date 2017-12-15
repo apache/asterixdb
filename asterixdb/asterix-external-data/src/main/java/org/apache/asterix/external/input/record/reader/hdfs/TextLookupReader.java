@@ -25,7 +25,8 @@ import org.apache.asterix.external.indexing.RecordId;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TextLookupReader extends AbstractCharRecordLookupReader {
 
@@ -33,7 +34,7 @@ public class TextLookupReader extends AbstractCharRecordLookupReader {
         super(snapshotAccessor, fs, conf);
     }
 
-    private static final Logger LOGGER = Logger.getLogger(TextLookupReader.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private HDFSTextLineReader reader;
 
     @Override

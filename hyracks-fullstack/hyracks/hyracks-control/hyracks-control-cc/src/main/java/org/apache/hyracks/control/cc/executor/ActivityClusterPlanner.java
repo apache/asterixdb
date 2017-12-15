@@ -27,8 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.constraints.expressions.LValueConstraintExpression;
@@ -51,9 +49,11 @@ import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.cc.job.Task;
 import org.apache.hyracks.control.cc.job.TaskCluster;
 import org.apache.hyracks.control.cc.job.TaskClusterId;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 class ActivityClusterPlanner {
-    private static final Logger LOGGER = Logger.getLogger(ActivityClusterPlanner.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final JobExecutor executor;
 
@@ -74,7 +74,7 @@ class ActivityClusterPlanner {
 
         TaskCluster[] taskClusters = computeTaskClusters(ac, jobRun, activityPlanMap);
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Plan for " + ac);
             LOGGER.info("Built " + taskClusters.length + " Task Clusters");
             for (TaskCluster tc : taskClusters) {

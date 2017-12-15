@@ -22,7 +22,6 @@ package org.apache.hyracks.storage.am.btree;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.util.AbstractBTreeTest;
@@ -83,7 +82,7 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
         private void pinRandomPage() {
             int pageId = Math.abs(rnd.nextInt() % maxPages);
 
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(workerId + " PINNING PAGE: " + pageId);
             }
 
@@ -99,7 +98,7 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
                         break;
 
                     case FTA_READONLY: {
-                        if (LOGGER.isLoggable(Level.INFO)) {
+                        if (LOGGER.isInfoEnabled()) {
                             LOGGER.info(workerId + " S LATCHING: " + pageId);
                         }
                         page.acquireReadLatch();
@@ -108,7 +107,7 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
                         break;
 
                     case FTA_WRITEONLY: {
-                        if (LOGGER.isLoggable(Level.INFO)) {
+                        if (LOGGER.isInfoEnabled()) {
                             LOGGER.info(workerId + " X LATCHING: " + pageId);
                         }
                         page.acquireWriteLatch();
@@ -118,13 +117,13 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
 
                     case FTA_MIXED: {
                         if (rnd.nextInt() % 2 == 0) {
-                            if (LOGGER.isLoggable(Level.INFO)) {
+                            if (LOGGER.isInfoEnabled()) {
                                 LOGGER.info(workerId + " S LATCHING: " + pageId);
                             }
                             page.acquireReadLatch();
                             latch = LatchType.LATCH_S;
                         } else {
-                            if (LOGGER.isLoggable(Level.INFO)) {
+                            if (LOGGER.isInfoEnabled()) {
                                 LOGGER.info(workerId + " X LATCHING: " + pageId);
                             }
                             page.acquireWriteLatch();
@@ -149,18 +148,18 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
 
                 if (plPage.latch != null) {
                     if (plPage.latch == LatchType.LATCH_S) {
-                        if (LOGGER.isLoggable(Level.INFO)) {
+                        if (LOGGER.isInfoEnabled()) {
                             LOGGER.info(workerId + " S UNLATCHING: " + plPage.pageId);
                         }
                         plPage.page.releaseReadLatch();
                     } else {
-                        if (LOGGER.isLoggable(Level.INFO)) {
+                        if (LOGGER.isInfoEnabled()) {
                             LOGGER.info(workerId + " X UNLATCHING: " + plPage.pageId);
                         }
                         plPage.page.releaseWriteLatch(true);
                     }
                 }
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(workerId + " UNPINNING PAGE: " + plPage.pageId);
                 }
 
@@ -172,7 +171,7 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
         }
 
         private void openFile() {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(workerId + " OPENING FILE: " + fileId);
             }
             try {
@@ -184,7 +183,7 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
         }
 
         private void closeFile() {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(workerId + " CLOSING FILE: " + fileId);
             }
             try {
@@ -203,7 +202,7 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
             while (loopCount < maxLoopCount) {
                 loopCount++;
 
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(workerId + " LOOP: " + loopCount + "/" + maxLoopCount);
                 }
 

@@ -30,8 +30,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
@@ -64,11 +62,14 @@ import org.apache.hyracks.http.server.StaticResourceServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.http.server.utils.HttpUtil.ContentType;
 import org.apache.hyracks.http.server.utils.HttpUtil.Encoding;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ApiServlet extends AbstractServlet {
-    private static final Logger LOGGER = Logger.getLogger(ApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
 
     private final ICcApplicationContext appCtx;
@@ -129,7 +130,7 @@ public class ApiServlet extends AbstractServlet {
             response.setStatus(HttpResponseStatus.OK);
             HttpUtil.setContentType(response, ContentType.TEXT_HTML, Encoding.UTF8);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failure setting content type", e);
+            LOGGER.log(Level.WARN, "Failure setting content type", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             return;
         }
@@ -174,7 +175,7 @@ public class ApiServlet extends AbstractServlet {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
             ResultUtil.webUIParseExceptionHandler(out, pe, query);
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
             ResultUtil.webUIErrorHandler(out, e);
         }
     }
@@ -188,7 +189,7 @@ public class ApiServlet extends AbstractServlet {
             try {
                 HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Failure setting content type", e);
+                LOGGER.log(Level.WARN, "Failure setting content type", e);
                 response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                 return;
             }
@@ -217,7 +218,7 @@ public class ApiServlet extends AbstractServlet {
                     HttpUtil.Encoding.UTF8);
             writeOutput(response, is, resourcePath);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failure handling request", e);
+            LOGGER.log(Level.WARN, "Failure handling request", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             return;
         }
@@ -230,7 +231,7 @@ public class ApiServlet extends AbstractServlet {
             try {
                 line = br.readLine();
             } catch (NullPointerException e) {
-                LOGGER.log(Level.WARNING,
+                LOGGER.log(Level.WARN,
                         "NPE reading resource " + resourcePath + ", assuming JDK-8080094; returning 404", e);
                 // workaround lame JDK bug where a broken InputStream is returned in case the resourcePath is a
                 // directory; see https://bugs.openjdk.java.net/browse/JDK-8080094

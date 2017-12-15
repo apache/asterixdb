@@ -22,8 +22,6 @@ package org.apache.hyracks.control.cc.work;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
@@ -31,9 +29,12 @@ import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.common.work.IResultCallback;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GetThreadDumpWork extends AbstractWork {
-    private static final Logger LOGGER = Logger.getLogger(GetThreadDumpWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final int TIMEOUT_SECS = 60;
 
     private final ClusterControllerService ccs;
@@ -56,7 +57,7 @@ public class GetThreadDumpWork extends AbstractWork {
             try {
                 callback.setValue(ThreadDumpUtil.takeDumpJSONString());
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Exception taking CC thread dump", e);
+                LOGGER.log(Level.WARN, "Exception taking CC thread dump", e);
                 callback.setException(e);
             }
         } else {
@@ -82,7 +83,7 @@ public class GetThreadDumpWork extends AbstractWork {
                             Thread.sleep(sleepTime);
                         }
                         if (ccs.removeThreadDumpRun(run.getRequestId()) != null) {
-                            LOGGER.log(Level.WARNING, "Timed out thread dump request " + run.getRequestId()
+                            LOGGER.log(Level.WARN, "Timed out thread dump request " + run.getRequestId()
                                     + " for node " + nodeId);
                             callback.setException(new TimeoutException("Thread dump request for node " + nodeId
                                     + " timed out after " + TIMEOUT_SECS + " seconds."));

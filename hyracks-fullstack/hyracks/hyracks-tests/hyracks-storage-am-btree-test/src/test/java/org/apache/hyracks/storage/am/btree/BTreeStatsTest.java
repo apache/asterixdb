@@ -20,7 +20,6 @@ package org.apache.hyracks.storage.am.btree;
 
 import java.io.DataOutput;
 import java.util.Random;
-import java.util.logging.Level;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -110,7 +109,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
         long start = System.currentTimeMillis();
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("INSERTING INTO TREE");
         }
 
@@ -146,7 +145,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
             tuple.reset(accessor, 0);
 
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 if (i % 10000 == 0) {
                     long end = System.currentTimeMillis();
                     LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
@@ -166,7 +165,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager,
                 harness.getFileReference(), btree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("\n" + stats.toString());
         }
 

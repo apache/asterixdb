@@ -19,8 +19,6 @@
 package org.apache.asterix.app.replication.message;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -29,11 +27,14 @@ import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage, INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(TakeoverPartitionsRequestMessage.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Integer[] partitions;
     private final long requestId;
     private final String nodeId;
@@ -81,7 +82,7 @@ public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage, IN
                 IRemoteRecoveryManager remoteRecoeryManager = appContext.getRemoteRecoveryManager();
                 remoteRecoeryManager.takeoverPartitons(partitions);
             } catch (IOException | ACIDException e) {
-                LOGGER.log(Level.SEVERE, "Failure taking over partitions", e);
+                LOGGER.log(Level.ERROR, "Failure taking over partitions", e);
                 hde = HyracksDataException.suppress(hde, e);
             } finally {
                 //send response after takeover is completed
@@ -90,7 +91,7 @@ public class TakeoverPartitionsRequestMessage implements INCLifecycleMessage, IN
                 try {
                     broker.sendMessageToCC(reponse);
                 } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "Failure taking over partitions", e);
+                    LOGGER.log(Level.ERROR, "Failure taking over partitions", e);
                     hde = HyracksDataException.suppress(hde, e);
                 }
             }

@@ -30,8 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.api.http.ctx.StatementExecutorContext;
 import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
@@ -98,10 +96,14 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.WebManager;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 public class CCApplication extends BaseCCApplication {
 
-    private static final Logger LOGGER = Logger.getLogger(CCApplication.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static IAsterixStateProxy proxy;
     protected ICCServiceContext ccServiceCtx;
     protected CCExtensionManager ccExtensionManager;
@@ -130,9 +132,7 @@ public class CCApplication extends BaseCCApplication {
 
         configureLoggingLevel(ccServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
 
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Starting Asterix cluster controller");
-        }
+        LOGGER.info("Starting Asterix cluster controller");
 
         String strIP = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
         int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
@@ -191,7 +191,7 @@ public class CCApplication extends BaseCCApplication {
     protected void configureLoggingLevel(Level level) {
         super.configureLoggingLevel(level);
         LOGGER.info("Setting Asterix log level to " + level);
-        Logger.getLogger("org.apache.asterix").setLevel(level);
+        Configurator.setLevel("org.apache.asterix", level);
     }
 
     protected List<AsterixExtension> getExtensions() {
@@ -206,9 +206,7 @@ public class CCApplication extends BaseCCApplication {
 
     @Override
     public void stop() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Stopping Asterix cluster controller");
-        }
+        LOGGER.info("Stopping Asterix cluster controller");
         appCtx.getClusterStateManager().setState(SHUTTING_DOWN);
         ((ActiveNotificationHandler) appCtx.getActiveNotificationHandler()).stop();
         AsterixStateProxy.unregisterRemoteObject();

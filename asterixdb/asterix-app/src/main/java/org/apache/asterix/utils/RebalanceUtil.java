@@ -26,8 +26,6 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 import org.apache.asterix.active.IActiveEntityEventsListener;
@@ -62,12 +60,15 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A utility class for the rebalance operation.
  */
 public class RebalanceUtil {
-    private static final Logger LOGGER = Logger.getLogger(RebalanceUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private RebalanceUtil() {
 
@@ -173,7 +174,7 @@ public class RebalanceUtil {
                 work.run();
                 done = true;
             } catch (InterruptedException e) {
-                LOGGER.log(Level.WARNING, "Retry with attempt " + (++retryCount), e);
+                LOGGER.log(Level.WARN, "Retry with attempt " + (++retryCount), e);
                 interruptedException = e;
             }
         } while (!done);

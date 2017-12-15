@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.active.ActiveManager;
@@ -106,9 +104,12 @@ import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
 import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NCAppRuntimeContext implements INcApplicationContext {
-    private static final Logger LOGGER = Logger.getLogger(NCAppRuntimeContext.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private ILSMMergePolicyFactory metadataMergePolicyFactory;
     private final INCServiceContext ncServiceContext;
@@ -200,8 +201,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         SystemState systemState = recoveryMgr.getSystemState();
         if (initialRun || systemState == SystemState.PERMANENT_DATA_LOSS) {
             //delete any storage data before the resource factory is initialized
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.log(Level.WARNING,
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.log(Level.WARN,
                         "Deleting the storage dir. initialRun = " + initialRun + ", systemState = " + systemState);
             }
             localResourceRepository.deleteStorageData();
@@ -460,9 +461,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public void initializeMetadata(boolean newUniverse) throws Exception {
         IAsterixStateProxy proxy;
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Bootstrapping metadata");
-        }
+        LOGGER.info("Bootstrapping metadata");
         MetadataNode.INSTANCE.initialize(this, ncExtensionManager.getMetadataTupleTranslatorProvider(),
                 ncExtensionManager.getMetadataExtensions());
 
@@ -478,10 +477,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         MetadataBootstrap.startUniverse(getServiceContext(), newUniverse);
         MetadataBootstrap.startDDLRecovery();
         ncExtensionManager.initializeMetadata(getServiceContext());
-
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Metadata node bound");
-        }
+        LOGGER.info("Metadata node bound");
     }
 
     @Override

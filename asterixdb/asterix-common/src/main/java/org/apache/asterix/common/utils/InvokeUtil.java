@@ -21,12 +21,14 @@ package org.apache.asterix.common.utils;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class InvokeUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(InvokeUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * Executes the passed interruptible, retrying if the operation is interrupted. Once the interruptible
@@ -136,7 +138,7 @@ public class InvokeUtil {
                 }
             } catch (Exception e) {
                 // ignore, retry after delay
-                LOGGER.log(Level.FINE, "Ignoring exception on retryLoop attempt, will retry after delay", e);
+                LOGGER.log(Level.DEBUG, "Ignoring exception on retryLoop attempt, will retry after delay", e);
             }
         }
         return false;

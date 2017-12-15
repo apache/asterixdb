@@ -27,8 +27,6 @@ import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDes
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -36,10 +34,12 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable {
 
-    private static final Logger LOGGER = Logger.getLogger(IndexDropOperatorNodePushable.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final long DROP_ATTEMPT_WAIT_TIME_MILLIS = TimeUnit.SECONDS.toMillis(1);
     private final IIndexDataflowHelper indexHelper;
     private final Set<DropOption> options;
@@ -83,11 +83,11 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
                 return;
             } catch (HyracksDataException e) {
                 if (isIgnorable(e)) {
-                    LOGGER.log(Level.INFO, e, () -> "Ignoring exception on drop");
+                    LOGGER.info("Ignoring exception on drop", e);
                     return;
                 }
                 if (canRetry(e)) {
-                    LOGGER.log(Level.INFO, e, () -> "Retrying drop on exception");
+                    LOGGER.info( "Retrying drop on exception", e);
                     continue;
                 }
                 throw e;

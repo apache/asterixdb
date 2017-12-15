@@ -81,7 +81,7 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
         }
         op.accept(visitor, context);
         if (AlgebricksConfig.DEBUG) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.finest(
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(
                     "Logical properties visitor for " + op + ": " + context.getLogicalPropertiesVector(op) + "\n");
         }
     }

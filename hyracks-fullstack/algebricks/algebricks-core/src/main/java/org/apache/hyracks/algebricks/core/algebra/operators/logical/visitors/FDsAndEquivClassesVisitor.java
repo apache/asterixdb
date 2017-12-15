@@ -315,7 +315,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         }
         if (changed) {
             AlgebricksConfig.ALGEBRICKS_LOGGER
-                    .fine(">>>> Group-by list changed from " + GroupByOperator.veListToString(gByList) + " to "
+                    .debug(">>>> Group-by list changed from " + GroupByOperator.veListToString(gByList) + " to "
                             + GroupByOperator.veListToString(newGbyList) + ".\n");
         }
         gByList.clear();

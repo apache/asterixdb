@@ -32,7 +32,8 @@ import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A {@link FrameSpiller} is used with feeds when "spill.to.disk.on.congestion" is set to true. The spiller spills
@@ -42,7 +43,7 @@ import org.apache.log4j.Logger;
  * "max.spill.size.on.disk"
  */
 public class FrameSpiller {
-    private static final Logger LOGGER = Logger.getLogger(FrameSpiller.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int FRAMES_PER_FILE = 1024;
     public static final double MAX_SPILL_USED_BEFORE_RESUME = 0.8;
 

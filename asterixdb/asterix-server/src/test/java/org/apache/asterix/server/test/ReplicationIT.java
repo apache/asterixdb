@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.test.common.TestExecutor;
@@ -33,7 +32,12 @@ import org.apache.hyracks.server.process.HyracksCCProcess;
 import org.apache.hyracks.server.process.HyracksNCServiceProcess;
 import org.apache.hyracks.server.process.HyracksVirtualCluster;
 import org.apache.hyracks.util.file.FileUtil;
-import org.junit.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -52,7 +56,7 @@ public class ReplicationIT {
     public static final String CONF_DIR = StringUtils.join(new String[] { TARGET_DIR, "test-classes", "ReplicationIT" },
             File.separator);
     private static final String PATH_ACTUAL = FileUtil.joinPath("target", "ittest");
-    private static final Logger LOGGER = Logger.getLogger(ReplicationIT.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static String reportPath = new File(FileUtil.joinPath("target", "failsafe-reports")).getAbsolutePath();
 
     private final TestExecutor testExecutor = new TestExecutor();

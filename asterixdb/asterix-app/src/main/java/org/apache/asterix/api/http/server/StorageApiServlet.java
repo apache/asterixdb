@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -39,6 +37,9 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -48,7 +49,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class StorageApiServlet extends AbstractServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(StorageApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final INcApplicationContext appCtx;
 
     public StorageApiServlet(ConcurrentMap<String, Object> ctx, INcApplicationContext appCtx, String... paths) {

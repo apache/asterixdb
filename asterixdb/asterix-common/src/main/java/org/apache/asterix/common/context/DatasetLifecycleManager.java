@@ -25,8 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.IDatasetMemoryManager;
@@ -54,10 +52,12 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentIdGenerator;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeCycleComponent {
 
-    private static final Logger LOGGER = Logger.getLogger(DatasetLifecycleManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Map<Integer, DatasetResource> datasets = new ConcurrentHashMap<>();
     private final StorageProperties storageProperties;
     private final ILocalResourceRepository resourceRepository;
@@ -141,11 +141,11 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
         PrimaryIndexOperationTracker opTracker = dsr.getOpTracker();
         if (iInfo.getReferenceCount() != 0 || (opTracker != null && opTracker.getNumActiveOperations() != 0)) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
+            if (LOGGER.isErrorEnabled()) {
                 final String logMsg = String.format(
                         "Failed to drop in-use index %s. Ref count (%d), Operation tracker active ops (%d)",
                         resourcePath, iInfo.getReferenceCount(), opTracker.getNumActiveOperations());
-                LOGGER.severe(logMsg);
+                LOGGER.error(logMsg);
             }
             throw HyracksDataException.create(ErrorCode.CANNOT_DROP_IN_USE_INDEX,
                     StoragePathUtil.getIndexNameFromPath(resourcePath));
@@ -366,9 +366,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                             || opTracker.isFlushLogCreated() || opTracker.isFlushOnExit())) {
                         long firstLSN = ioCallback.getFirstLSN();
                         if (firstLSN < targetLSN) {
-                            if (LOGGER.isLoggable(Level.INFO)) {
-                                LOGGER.info("Checkpoint flush dataset " + dsr.getDatasetID());
-                            }
+                            LOGGER.info("Checkpoint flush dataset {}", dsr.getDatasetID());
                             opTracker.setFlushOnExit(true);
                             if (opTracker.getNumActiveOperations() == 0) {
                                 // No Modify operations currently, we need to trigger the flush and we can do so safely

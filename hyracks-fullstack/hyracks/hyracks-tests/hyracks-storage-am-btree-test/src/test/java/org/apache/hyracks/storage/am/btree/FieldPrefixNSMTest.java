@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.btree;
 
 import java.io.DataOutput;
 import java.util.Random;
-import java.util.logging.Level;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -65,7 +64,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
     private ITupleReference createTuple(IHyracksTaskContext ctx, int f0, int f1, int f2, boolean print)
             throws HyracksDataException {
         if (print) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("CREATING: " + f0 + " " + f1 + " " + f2);
             }
         }
@@ -152,7 +151,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
             // insert records with random calls to compact and compress
             for (int i = 0; i < numRecords; i++) {
 
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     if ((i + 1) % 100 == 0) {
                         LOGGER.info("INSERTING " + (i + 1) + " / " + numRecords);
                     }
@@ -192,7 +191,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
 
             // delete records with random calls to compact and compress
             for (int i = 0; i < numRecords; i++) {
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     if ((i + 1) % 100 == 0) {
                         LOGGER.info("DELETING " + (i + 1) + " / " + numRecords);
                     }

@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -71,9 +69,12 @@ import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.util.trace.ITracer;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractLSMIndex implements ILSMIndex {
-    private static final Logger LOGGER = Logger.getLogger(AbstractLSMIndex.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     protected final ILSMHarness lsmHarness;
     protected final IIOManager ioManager;
     protected final ILSMIOOperationScheduler ioScheduler;
@@ -694,7 +695,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         if (opCtx.getOperation() == IndexOperation.DELETE_MEMORY_COMPONENT) {
             return EmptyComponent.INSTANCE;
         } else {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 FlushOperation flushOp = (FlushOperation) operation;
                 LOGGER.log(Level.INFO, "Flushing component with id: " + flushOp.getFlushingComponent().getId());
             }

@@ -18,10 +18,10 @@
  */
 package org.apache.hyracks.control.nc;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.util.ThreadDumpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Shutdown hook that invokes {@link NodeControllerService#stop() stop} method.
@@ -32,7 +32,7 @@ public class NCShutdownHook extends Thread {
 
     public static final int FAILED_TO_STARTUP_EXIT_CODE = 2;
     public static final int FAILED_TO_RECOVER_EXIT_CODE = 3;
-    private static final Logger LOGGER = Logger.getLogger(NCShutdownHook.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final long SHUTDOWN_WAIT_TIME = 10 * 60 * 1000L;
     private final Thread watchDog;
     private final NodeControllerService nodeControllerService;
@@ -73,7 +73,7 @@ public class NCShutdownHook extends Thread {
             LOGGER.log(Level.INFO, () -> "Thread dump at shutdown: " + ThreadDumpUtil.takeDumpString());
             nodeControllerService.stop();
         } catch (Throwable th) { // NOSONAR... This is fine since this is shutdown hook
-            LOGGER.log(Level.WARNING, "Exception in executing shutdown hook", th);
+            LOGGER.log(Level.WARN, "Exception in executing shutdown hook", th);
         }
     }
 }

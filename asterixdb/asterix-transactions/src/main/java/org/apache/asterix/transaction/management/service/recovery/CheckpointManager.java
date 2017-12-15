@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.transaction.management.service.recovery;
 
-import java.util.logging.Logger;
-
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.transactions.CheckpointProperties;
 import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * An implementation of {@link ICheckpointManager} that defines the logic
@@ -32,7 +32,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class CheckpointManager extends AbstractCheckpointManager {
 
-    private static final Logger LOGGER = Logger.getLogger(CheckpointManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public CheckpointManager(ITransactionSubsystem txnSubsystem, CheckpointProperties checkpointProperties) {
         super(txnSubsystem, checkpointProperties);

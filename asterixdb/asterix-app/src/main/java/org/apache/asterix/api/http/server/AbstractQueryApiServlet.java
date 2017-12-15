@@ -24,8 +24,6 @@ import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_DATASE
 import java.io.PrintWriter;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
@@ -36,9 +34,12 @@ import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.client.dataset.HyracksDataset;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AbstractQueryApiServlet extends AbstractServlet {
-    private static final Logger LOGGER = Logger.getLogger(AbstractQueryApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     protected final IApplicationContext appCtx;
 
     public enum ResultFields {
@@ -106,7 +107,7 @@ public class AbstractQueryApiServlet extends AbstractServlet {
         try {
             return doGetHyracksDataset();
         } catch (IPCException e) {
-            LOGGER.log(Level.WARNING, "Failed getting hyracks dataset connection. Resetting hyracks connection.", e);
+            LOGGER.log(Level.WARN, "Failed getting hyracks dataset connection. Resetting hyracks connection.", e);
             ctx.put(HYRACKS_CONNECTION_ATTR, appCtx.getHcc());
             return doGetHyracksDataset();
         }

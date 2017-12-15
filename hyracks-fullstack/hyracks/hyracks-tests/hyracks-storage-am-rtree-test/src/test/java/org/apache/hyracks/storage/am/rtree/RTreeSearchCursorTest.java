@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.rtree;
 
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.logging.Level;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -78,7 +77,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void rangeSearchTest() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("TESTING RANGE SEARCH CURSOR FOR RTREE");
         }
 

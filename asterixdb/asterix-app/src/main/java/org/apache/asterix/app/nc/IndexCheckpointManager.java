@@ -28,19 +28,19 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IndexCheckpoint;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.annotations.ThreadSafe;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @ThreadSafe
 public class IndexCheckpointManager implements IIndexCheckpointManager {
 
-    private static final Logger LOGGER = Logger.getLogger(IndexCheckpointManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int HISTORY_CHECKPOINTS = 1;
     private static final int MAX_CHECKPOINT_WRITE_ATTEMPTS = 5;
     private static final FilenameFilter CHECKPOINT_FILE_FILTER =
@@ -56,7 +56,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     public synchronized void init(long lsn) throws HyracksDataException {
         final List<IndexCheckpoint> checkpoints = getCheckpoints();
         if (!checkpoints.isEmpty()) {
-            LOGGER.warning(() -> "Checkpoints found on initializing: " + indexPath);
+            LOGGER.warn(() -> "Checkpoints found on initializing: " + indexPath);
             delete();
         }
         IndexCheckpoint firstCheckpoint = IndexCheckpoint.first(lsn);
@@ -130,7 +130,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
                 try {
                     checkpoints.add(read(checkpointFile.toPath()));
                 } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, e, () -> "Couldn't read index checkpoint file: " + e);
+                    LOGGER.warn(() -> "Couldn't read index checkpoint file: " + checkpointFile, e);
                 }
             }
         }
@@ -154,7 +154,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
                 if (i == MAX_CHECKPOINT_WRITE_ATTEMPTS) {
                     throw HyracksDataException.create(e);
                 }
-                LOGGER.log(Level.WARNING, e, () -> "Filed to write checkpoint at: " + indexPath);
+                LOGGER.warn(() -> "Filed to write checkpoint at: " + indexPath, e);
                 int nextAttempt = i + 1;
                 LOGGER.info(() -> "Checkpoint write attempt " + nextAttempt + "/" + MAX_CHECKPOINT_WRITE_ATTEMPTS);
             }
@@ -176,7 +176,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
                 }
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e, () -> "Couldn't delete history checkpoints at " + indexPath);
+            LOGGER.warn(() -> "Couldn't delete history checkpoints at " + indexPath, e);
         }
     }
 

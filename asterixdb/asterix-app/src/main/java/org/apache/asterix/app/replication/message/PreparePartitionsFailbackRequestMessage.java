@@ -20,8 +20,6 @@ package org.apache.asterix.app.replication.message;
 
 import java.rmi.RemoteException;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
@@ -29,12 +27,15 @@ import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.runtime.message.AbstractFailbackPlanMessage;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPlanMessage
         implements INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(PreparePartitionsFailbackRequestMessage.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Set<Integer> partitions;
     private boolean releaseMetadataNode = false;
     private final String nodeID;
@@ -86,7 +87,7 @@ public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPla
             try {
                 appContext.unexportMetadataNodeStub();
             } catch (RemoteException e) {
-                LOGGER.log(Level.SEVERE, "Failed unexporting metadata stub", e);
+                LOGGER.log(Level.ERROR, "Failed unexporting metadata stub", e);
                 throw HyracksDataException.create(e);
             }
         } else {
@@ -109,7 +110,7 @@ public class PreparePartitionsFailbackRequestMessage extends AbstractFailbackPla
         try {
             broker.sendMessageToCC(reponse);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed sending message to cc", e);
+            LOGGER.log(Level.ERROR, "Failed sending message to cc", e);
             throw HyracksDataException.create(e);
         }
     }

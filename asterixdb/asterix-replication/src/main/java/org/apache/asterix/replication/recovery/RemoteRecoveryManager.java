@@ -25,8 +25,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
@@ -40,15 +38,16 @@ import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
-import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RemoteRecoveryManager implements IRemoteRecoveryManager {
 
     private final IReplicationManager replicationManager;
-    private static final Logger LOGGER = Logger.getLogger(RemoteRecoveryManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final INcApplicationContext runtimeContext;
     private final ReplicationProperties replicationProperties;
     private Map<String, Set<String>> failbackRecoveryReplicas;
@@ -216,9 +215,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 }
                 break;
             } catch (IOException e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Failed during remote recovery. Attempting again...", e);
-                }
+                LOGGER.warn("Failed during remote recovery. Attempting again...", e);
                 maxRecoveryAttempts--;
             }
         }
@@ -259,9 +256,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
              * in case of failure during failback completion process we need to construct a new plan
              * and get all the files from the start since the remote replicas will change in the new plan.
              */
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.log(Level.WARNING, "Failed during completing failback. Restarting failback process...", e);
-            }
+            LOGGER.warn("Failed during completing failback. Restarting failback process...", e);
             startFailbackProcess();
         }
 
@@ -317,9 +312,7 @@ public class RemoteRecoveryManager implements IRemoteRecoveryManager {
                 logManager.renewLogFilesAndStartFromLSN(maxRemoteLSN);
                 break;
             } catch (IOException e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Failed during remote recovery. Attempting again...", e);
-                }
+                LOGGER.warn("Failed during remote recovery. Attempting again...", e);
                 maxRecoveryAttempts--;
             }
         }

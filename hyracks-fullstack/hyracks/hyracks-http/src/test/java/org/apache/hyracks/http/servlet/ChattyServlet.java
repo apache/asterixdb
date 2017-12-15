@@ -19,18 +19,19 @@
 package org.apache.hyracks.http.servlet;
 
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ChattyServlet extends AbstractServlet {
-    private static final Logger LOGGER = Logger.getLogger(ChattyServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private byte[] bytes;
 
     public ChattyServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
@@ -53,7 +54,7 @@ public class ChattyServlet extends AbstractServlet {
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         response.setStatus(HttpResponseStatus.OK);
         HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
-        LOGGER.log(Level.WARNING, "I am about to flood you... and a single buffer is " + bytes.length + " bytes");
+        LOGGER.log(Level.WARN, "I am about to flood you... and a single buffer is " + bytes.length + " bytes");
         for (int i = 0; i < 100; i++) {
             response.outputStream().write(bytes);
         }

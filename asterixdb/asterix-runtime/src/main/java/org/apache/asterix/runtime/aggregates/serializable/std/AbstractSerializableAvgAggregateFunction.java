@@ -194,7 +194,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
         try {
             if (aggType == ATypeTag.SYSTEM_NULL) {
                 if (GlobalConfig.DEBUG) {
-                    GlobalConfig.ASTERIX_LOGGER.finest("AVG aggregate ran over empty input.");
+                    GlobalConfig.ASTERIX_LOGGER.trace("AVG aggregate ran over empty input.");
                 }
                 result.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
             } else if (aggType == ATypeTag.NULL) {

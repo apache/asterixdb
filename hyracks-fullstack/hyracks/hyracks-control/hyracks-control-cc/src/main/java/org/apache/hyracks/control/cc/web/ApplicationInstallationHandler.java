@@ -24,8 +24,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -35,6 +33,9 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.HttpMethod;
@@ -42,7 +43,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ApplicationInstallationHandler extends AbstractServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(ApplicationInstallationHandler.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private ClusterControllerService ccs;
 
@@ -81,7 +82,7 @@ public class ApplicationInstallationHandler extends AbstractServlet {
                 response.setStatus(HttpResponseStatus.METHOD_NOT_ALLOWED);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Unhandled exception ", e);
+            LOGGER.log(Level.WARN, "Unhandled exception ", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }

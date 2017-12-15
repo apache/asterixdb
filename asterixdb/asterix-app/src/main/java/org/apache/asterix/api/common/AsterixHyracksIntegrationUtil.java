@@ -26,13 +26,10 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.external.ExternalUDFLibrarian;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -52,10 +49,14 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 
 @SuppressWarnings({"squid:ClassVariableVisibilityCheck","squid:S00112"})
 public class AsterixHyracksIntegrationUtil {
+
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
     public static final String DEFAULT_CONF_FILE = joinPath("asterixdb", "asterix-app", "src", "test", "resources",
@@ -91,7 +92,7 @@ public class AsterixHyracksIntegrationUtil {
             integrationUtil.run(Boolean.getBoolean("cleanup.start"), Boolean.getBoolean("cleanup.shutdown"),
                     System.getProperty("external.lib", ""), System.getProperty("conf.path", DEFAULT_CONF_FILE));
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Unexpected exception", e);
+            LOGGER.log(Level.WARN, "Unexpected exception", e);
             System.exit(1);
         }
     }
@@ -141,7 +142,7 @@ public class AsterixHyracksIntegrationUtil {
                     try {
                         nc.start();
                     } catch (Exception e) {
-                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                        LOGGER.log(Level.ERROR, e.getMessage(), e);
                     }
                 }
             };
@@ -313,7 +314,7 @@ public class AsterixHyracksIntegrationUtil {
                 try {
                     deinit(cleanupOnShutdown);
                 } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Unexpected exception on shutdown", e);
+                    LOGGER.log(Level.WARN, "Unexpected exception on shutdown", e);
                 }
             }
         });
@@ -331,7 +332,7 @@ public class AsterixHyracksIntegrationUtil {
                 try {
                     deinit(cleanupOnShutdown);
                 } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Unexpected exception on shutdown", e);
+                    LOGGER.log(Level.WARN, "Unexpected exception on shutdown", e);
                 }
             }
         });
@@ -347,7 +348,7 @@ public class AsterixHyracksIntegrationUtil {
     }
 
     static class LoggerHolder {
-        static final Logger LOGGER = Logger.getLogger(AsterixHyracksIntegrationUtil.class.getName());
+        static final Logger LOGGER = LogManager.getLogger();
 
         private LoggerHolder() {
         }

@@ -25,8 +25,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -46,13 +44,16 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.UnmanagedFileSplit;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LocalFSInputStreamFactory implements IInputStreamFactory {
 
     private static final long serialVersionUID = 1L;
 
     protected static final INodeResolver DEFAULT_NODE_RESOLVER = new NodeResolverFactory().createNodeResolver();
-    protected static final Logger LOGGER = Logger.getLogger(LocalFSInputStreamFactory.class.getName());
+    protected static final Logger LOGGER = LogManager.getLogger();
     protected static INodeResolver nodeResolver;
     protected Map<String, String> configuration;
     protected UnmanagedFileSplit[] inputFileSplits;
@@ -155,8 +156,8 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
                         .createNodeResolver();
 
             } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Unable to create node resolver from the configured classname "
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.log(Level.WARN, "Unable to create node resolver from the configured classname "
                             + configuredNodeResolverFactory + "\n" + e.getMessage());
                 }
                 nodeResolver = DEFAULT_NODE_RESOLVER;

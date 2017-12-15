@@ -25,7 +25,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
-import java.util.logging.Level;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.app.message.CancelQueryRequest;
@@ -50,6 +49,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.logging.log4j.Level;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -155,7 +155,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     protected void handleExecuteStatementException(Throwable t, RequestExecutionState execution) {
         if (t instanceof TimeoutException
                 || (t instanceof HyracksDataException && ExceptionUtils.getRootCause(t) instanceof IPCException)) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, t.toString(), t);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, t.toString(), t);
             execution.setStatus(ResultStatus.FAILED, HttpResponseStatus.SERVICE_UNAVAILABLE);
         } else {
             super.handleExecuteStatementException(t, execution);

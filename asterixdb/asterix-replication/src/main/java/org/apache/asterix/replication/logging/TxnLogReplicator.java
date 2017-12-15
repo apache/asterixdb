@@ -21,14 +21,15 @@ package org.apache.asterix.replication.logging;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * This class is responsible for sending transactions logs to remote replicas.
  */
 public class TxnLogReplicator implements Callable<Boolean> {
-    private static final Logger LOGGER = Logger.getLogger(TxnLogReplicator.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ReplicationLogBuffer POISON_PILL = new ReplicationLogBuffer(null, 0, 0);
     private final LinkedBlockingQueue<ReplicationLogBuffer> emptyQ;
     private final LinkedBlockingQueue<ReplicationLogBuffer> flushQ;
@@ -97,10 +98,7 @@ public class TxnLogReplicator implements Callable<Boolean> {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.log(Level.SEVERE, "TxnLogReplicator is terminating abnormally. Logs Replication Stopped.",
-                            e);
-                }
+                LOGGER.error("TxnLogReplicator is terminating abnormally. Logs Replication Stopped.", e);
                 throw e;
             }
         }

@@ -18,9 +18,6 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
@@ -30,10 +27,13 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent implements ILSMDiskComponent {
 
-    private static final Logger LOGGER = Logger.getLogger(AbstractLSMDiskComponent.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final DiskComponentMetadata metadata;
 
@@ -129,7 +129,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
             // However, we cannot throw an exception here to be compatible with legacy datasets.
             // In this case, the disk component would always get a garbage Id [-1, -1], which makes the
             // component Id-based optimization useless but still correct.
-            LOGGER.warning("Component Id not found from disk component metadata");
+            LOGGER.warn("Component Id not found from disk component metadata");
         }
         return componentId;
     }
@@ -144,7 +144,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
     @Override
     public void markAsValid(boolean persist) throws HyracksDataException {
         ComponentUtils.markAsValid(getMetadataHolder(), persist);
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Marked as valid component with id: " + getId());
         }
     }

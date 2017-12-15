@@ -20,8 +20,6 @@
 package org.apache.hyracks.storage.am.btree;
 
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -35,12 +33,14 @@ import org.apache.hyracks.storage.am.common.IndexMultiThreadTestDriver;
 import org.apache.hyracks.storage.am.common.TestWorkloadConf;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.common.IIndex;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexMultiThreadTest {
 
-    protected final Logger LOGGER = Logger.getLogger(OrderedIndexMultiThreadTest.class.getName());
+    protected final Logger LOGGER = LogManager.getLogger();
 
     // Machine-specific number of threads to use for testing.
     protected final int REGULAR_NUM_THREADS = Runtime.getRuntime().availableProcessors();
@@ -67,7 +67,7 @@ public abstract class OrderedIndexMultiThreadTest {
             String dataMsg) throws InterruptedException, HyracksDataException {
         setUp();
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             String indexTypeName = getIndexTypeName();
             LOGGER.info(indexTypeName + " MultiThread Test:\nData: " + dataMsg + "; Threads: " + numThreads
                     + "; Workload: " + conf.toString() + ".");
@@ -94,7 +94,7 @@ public abstract class OrderedIndexMultiThreadTest {
         index.validate();
         driver.deinit();
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("BTree MultiThread Test Time: " + times[0] + "ms");
         }
 

@@ -35,8 +35,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -49,9 +47,11 @@ import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
 import org.apache.hyracks.control.common.config.ConfigManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class PropertiesAccessor implements IApplicationConfig {
-    private static final Logger LOGGER = Logger.getLogger(PropertiesAccessor.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Map<IApplicationConfig, PropertiesAccessor> instances = new ConcurrentHashMap<>();
     private final Map<String, String[]> stores = new HashMap<>();
@@ -177,8 +177,8 @@ public class PropertiesAccessor implements IApplicationConfig {
         try {
             return value == null ? defaultValue : interpreter.parse(value);
         } catch (IllegalArgumentException e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.severe("Invalid property value '" + value + "' for property '" + property + "'.\n" + "Default = "
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Invalid property value '" + value + "' for property '" + property + "'.\n" + "Default = "
                         + defaultValue);
             }
             throw e;

@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 import org.apache.asterix.active.IActiveEntityEventsListener;
@@ -110,6 +108,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFacto
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,7 +124,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      * Constants
      */
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(Dataset.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     //TODO: Remove Singletons
     private static final BTreeResourceFactoryProvider bTreeResourceFactoryProvider =
             BTreeResourceFactoryProvider.INSTANCE;
@@ -611,7 +612,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         try {
             return mapper.writeValueAsString(toMap());
         } catch (JsonProcessingException e) {
-            LOGGER.log(Level.WARNING, "Unable to convert map to json String", e);
+            LOGGER.log(Level.WARN, "Unable to convert map to json String", e);
             return dataverseName + "." + datasetName;
         }
     }

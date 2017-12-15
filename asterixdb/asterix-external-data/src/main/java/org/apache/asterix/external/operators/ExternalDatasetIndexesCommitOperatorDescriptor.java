@@ -29,12 +29,12 @@ import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
 import org.apache.hyracks.storage.common.IIndex;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExternalDatasetIndexesCommitOperatorDescriptor extends AbstractExternalDatasetIndexesOperatorDescriptor {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER =
-            Logger.getLogger(ExternalDatasetIndexesCommitOperatorDescriptor.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public ExternalDatasetIndexesCommitOperatorDescriptor(IOperatorDescriptorRegistry spec,
             List<IIndexDataflowHelperFactory> indexesDataflowHelperFactories) {

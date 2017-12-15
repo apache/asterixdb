@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveEvent.Kind;
@@ -32,9 +31,11 @@ import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.active.message.ActivePartitionMessage.Event;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TestNodeControllerActor extends Actor {
-    private static final Logger LOGGER = Logger.getLogger(TestNodeControllerActor.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final String id;
     private final TestClusterControllerActor clusterController;
@@ -62,7 +63,7 @@ public class TestNodeControllerActor extends Actor {
         if (registrations.remove(registration)) {
             return registration.deregister();
         } else {
-            LOGGER.warning("Request to stop runtime: " + new ActiveRuntimeId(entityId, "Test", partition)
+            LOGGER.warn("Request to stop runtime: " + new ActiveRuntimeId(entityId, "Test", partition)
                     + " that is not registered. Could be that the runtime completed execution on"
                     + " this node before the cluster controller sent the stop request");
             return new Action() {

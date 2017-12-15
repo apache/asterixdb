@@ -18,10 +18,14 @@
  */
 package org.apache.hyracks.control.common.work;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class SynchronizableWork extends AbstractWork {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private boolean done;
 
     private Exception e;
@@ -38,7 +42,7 @@ public abstract class SynchronizableWork extends AbstractWork {
         try {
             doRun();
         } catch (Exception ex) {
-            Logger.getLogger(getClass().getName()).log(Level.INFO, "Exception thrown from work", ex);
+            LOGGER.log(Level.INFO, "Exception thrown from work", ex);
             this.e = ex;
         } finally {
             synchronized (this) {

@@ -20,8 +20,6 @@ package org.apache.asterix.util;
 
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
@@ -33,10 +31,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FaultToleranceUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(FaultToleranceUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private FaultToleranceUtil() {
         throw new AssertionError();
@@ -63,9 +63,7 @@ public class FaultToleranceUtil {
                 try {
                     messageBroker.sendApplicationMessageToNC(msg, replica);
                 } catch (Exception e) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.log(Level.WARNING, "Failed sending an application message to an NC", e);
-                    }
+                    LOGGER.warn("Failed sending an application message to an NC", e);
                 }
             }
         }

@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveEvent.Kind;
@@ -48,11 +46,14 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.util.SingleThreadEventProcessor;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ActiveNotificationHandler extends SingleThreadEventProcessor<ActiveEvent>
         implements IActiveNotificationHandler, IJobLifecycleListener {
 
-    private static final Logger LOGGER = Logger.getLogger(ActiveNotificationHandler.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Level level = Level.INFO;
     public static final String ACTIVE_ENTITY_PROPERTY_NAME = "ActiveJob";
     private final Map<EntityId, IActiveEntityEventsListener> entityEventListeners;
@@ -83,7 +84,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
                 listener.notify(event);
             }
         } else {
-            LOGGER.log(Level.SEVERE, "Entity not found for received message for job " + event.getJobId());
+            LOGGER.log(Level.ERROR, "Entity not found for received message for job " + event.getJobId());
         }
     }
 
@@ -111,7 +112,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
         LOGGER.log(level, "Job was found to be: " + (found ? "Active" : "Inactive"));
         if (entityEventListeners.containsKey(entityId)) {
             if (jobId2EntityId.containsKey(jobId)) {
-                LOGGER.severe("Job is already being monitored for job: " + jobId);
+                LOGGER.error("Job is already being monitored for job: " + jobId);
                 return;
             }
             LOGGER.log(level, "monitoring started for job id: " + jobId);

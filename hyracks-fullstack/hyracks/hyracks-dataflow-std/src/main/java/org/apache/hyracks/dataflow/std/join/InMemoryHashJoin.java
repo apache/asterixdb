@@ -22,8 +22,6 @@ import java.io.DataOutput;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -43,6 +41,8 @@ import org.apache.hyracks.dataflow.std.buffermanager.TupleInFrameListAccessor;
 import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class InMemoryHashJoin {
 
@@ -64,7 +64,7 @@ public class InMemoryHashJoin {
     ISimpleFrameBufferManager bufferManager;
     private final boolean isTableCapacityNotZero;
 
-    private static final Logger LOGGER = Logger.getLogger(InMemoryHashJoin.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe,
             ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild,
@@ -112,7 +112,7 @@ public class InMemoryHashJoin {
         } else {
             isTableCapacityNotZero = false;
         }
-        LOGGER.fine("InMemoryHashJoin has been created for a table size of " + table.getTableSize() + " for Thread ID "
+        LOGGER.debug("InMemoryHashJoin has been created for a table size of " + table.getTableSize() + " for Thread ID "
                 + Thread.currentThread().getId() + ".");
     }
 
@@ -207,8 +207,8 @@ public class InMemoryHashJoin {
             }
         }
         buffers.clear();
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("InMemoryHashJoin has finished using " + nFrames + " frames for Thread ID "
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("InMemoryHashJoin has finished using " + nFrames + " frames for Thread ID "
                     + Thread.currentThread().getId() + ".");
         }
     }

@@ -31,14 +31,15 @@ import org.apache.asterix.hivecompat.io.RCFile.Reader;
 import org.apache.hadoop.hive.serde2.columnar.BytesRefArrayWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RCLookupReader extends AbstractHDFSLookupRecordReader<BytesRefArrayWritable> {
     public RCLookupReader(ExternalFileIndexAccessor snapshotAccessor, FileSystem fs, Configuration conf) {
         super(snapshotAccessor, fs, conf);
     }
 
-    private static final Logger LOGGER = Logger.getLogger(RCLookupReader.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private Reader reader;
     private LongWritable key = new LongWritable();
     private BytesRefArrayWritable value = new BytesRefArrayWritable();

@@ -13,7 +13,7 @@
     "compiler\.sortmemory" : 327680,
     "default\.dir" : "target/io/dir/asterixdb",
     "instance\.name" : "DEFAULT_INSTANCE",
-    "log\.level" : "WARNING",
+    "log\.level" : "WARN",
     "max\.wait\.active\.cluster" : 60,
     "messaging\.frame\.count" : 512,
     "messaging\.frame\.size" : 4096,

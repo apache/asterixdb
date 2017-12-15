@@ -23,14 +23,15 @@ import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNEC
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -38,7 +39,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ClusterControllerDetailsApiServlet extends ClusterApiServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(ClusterControllerDetailsApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public ClusterControllerDetailsApiServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx,
             String... paths) {

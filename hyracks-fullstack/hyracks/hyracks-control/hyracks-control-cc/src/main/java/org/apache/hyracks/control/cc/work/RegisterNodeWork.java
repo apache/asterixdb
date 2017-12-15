@@ -20,8 +20,6 @@ package org.apache.hyracks.control.cc.work;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
@@ -34,9 +32,12 @@ import org.apache.hyracks.control.common.ipc.CCNCFunctions;
 import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.apache.hyracks.ipc.api.IIPCHandle;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RegisterNodeWork extends SynchronizableWork {
-    private static final Logger LOGGER = Logger.getLogger(RegisterNodeWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ClusterControllerService ccs;
     private final NodeRegistration reg;
@@ -53,7 +54,7 @@ public class RegisterNodeWork extends SynchronizableWork {
         CCNCFunctions.NodeRegistrationResult result;
         Map<IOption, Object> ncConfiguration = new HashMap<>();
         try {
-            LOGGER.log(Level.WARNING, "Registering INodeController: id = " + id);
+            LOGGER.log(Level.WARN, "Registering INodeController: id = " + id);
             NodeControllerRemoteProxy nc =
                     new NodeControllerRemoteProxy(ccs.getClusterIPC(), reg.getNodeControllerAddress());
             NodeControllerState state = new NodeControllerState(nc, reg);
@@ -72,12 +73,12 @@ public class RegisterNodeWork extends SynchronizableWork {
             result = new CCNCFunctions.NodeRegistrationResult(params, null);
             ccs.getJobIdFactory().ensureMinimumId(reg.getMaxJobId() + 1);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Node registration failed", e);
+            LOGGER.log(Level.WARN, "Node registration failed", e);
             result = new CCNCFunctions.NodeRegistrationResult(null, e);
         }
-        LOGGER.warning("sending registration response to node");
+        LOGGER.warn("sending registration response to node");
         ncIPCHandle.send(-1, result, null);
-        LOGGER.warning("notifying node join");
+        LOGGER.warn("notifying node join");
         ccs.getContext().notifyNodeJoin(id, ncConfiguration);
     }
 }

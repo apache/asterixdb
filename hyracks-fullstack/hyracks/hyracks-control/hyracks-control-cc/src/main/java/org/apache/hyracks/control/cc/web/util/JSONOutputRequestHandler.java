@@ -20,13 +20,14 @@ package org.apache.hyracks.control.cc.web.util;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -35,7 +36,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class JSONOutputRequestHandler extends AbstractServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(JSONOutputRequestHandler.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IJSONOutputFunction fn;
 
     public JSONOutputRequestHandler(ConcurrentMap<String, Object> ctx, String[] paths, IJSONOutputFunction fn) {
@@ -63,7 +64,7 @@ public class JSONOutputRequestHandler extends AbstractServlet {
         try {
             return fn.invoke(host, servletPath, parts);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception invoking " + fn.getClass().getName(), e);
+            LOGGER.log(Level.WARN, "Exception invoking " + fn.getClass().getName(), e);
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             response.writer().print(e.getMessage());
         }
@@ -77,7 +78,7 @@ public class JSONOutputRequestHandler extends AbstractServlet {
             om.writer().writeValue(response.writer(), result);
             response.setStatus(HttpResponseStatus.OK);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Exception delivering result in " + getClass().getName(), e);
+            LOGGER.log(Level.WARN, "Exception delivering result in " + getClass().getName(), e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             response.writer().print(e.getMessage());
         }

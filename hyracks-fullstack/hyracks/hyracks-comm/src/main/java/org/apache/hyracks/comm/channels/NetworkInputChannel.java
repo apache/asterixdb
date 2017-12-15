@@ -22,8 +22,6 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Queue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.channels.IInputChannel;
 import org.apache.hyracks.api.channels.IInputChannelMonitor;
@@ -33,9 +31,11 @@ import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.partitions.PartitionId;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NetworkInputChannel implements IInputChannel {
-    private static final Logger LOGGER = Logger.getLogger(NetworkInputChannel.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     static final int INITIAL_MESSAGE_SIZE = 20;
 
@@ -107,8 +107,8 @@ public class NetworkInputChannel implements IInputChannel {
         writeBuffer.putInt(partitionId.getSenderIndex());
         writeBuffer.putInt(partitionId.getReceiverIndex());
         writeBuffer.flip();
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Sending partition request: " + partitionId + " on channel: " + ccb);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Sending partition request: " + partitionId + " on channel: " + ccb);
         }
         ccb.getWriteInterface().getFullBufferAcceptor().accept(writeBuffer);
         ccb.getWriteInterface().getFullBufferAcceptor().close();

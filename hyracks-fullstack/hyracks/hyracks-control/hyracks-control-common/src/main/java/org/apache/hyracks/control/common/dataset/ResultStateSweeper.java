@@ -21,11 +21,11 @@ package org.apache.hyracks.control.common.dataset;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataset.IDatasetManager;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Sweeper to clean up the stale result distribution files and result states.
@@ -59,7 +59,7 @@ public class ResultStateSweeper implements Runnable {
                 Thread.sleep(resultSweepThreshold);
                 sweep();
             } catch (InterruptedException e) {
-                logger.log(Level.WARNING, "Result cleaner thread interrupted, shutting down.");
+                logger.log(Level.WARN, "Result cleaner thread interrupted, shutting down.");
                 break; // the interrupt was explicit from another thread. This thread should shut down...
             }
         }
@@ -78,8 +78,8 @@ public class ResultStateSweeper implements Runnable {
                 datasetManager.deinitState(jobId);
             }
         }
-        if (logger.isLoggable(Level.FINER)) {
-            logger.finer("Result state cleanup instance successfully completed.");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Result state cleanup instance successfully completed.");
         }
     }
 }

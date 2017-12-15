@@ -26,8 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataset.DatasetDirectoryRecord;
@@ -44,6 +42,9 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.control.common.dataset.ResultStateSweeper;
 import org.apache.hyracks.control.common.work.IResultCallback;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * TODO(madhusudancs): The potential perils of this global dataset directory service implementation is that, the jobs
@@ -54,7 +55,7 @@ import org.apache.hyracks.control.common.work.IResultCallback;
  */
 public class DatasetDirectoryService implements IDatasetDirectoryService {
 
-    private static final Logger LOGGER = Logger.getLogger(DatasetDirectoryService.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final long resultTTL;
 
@@ -75,7 +76,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
 
     @Override
     public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info(getClass().getSimpleName() + " notified of new job " + jobId);
         }
         if (jobResultLocations.get(jobId) != null) {

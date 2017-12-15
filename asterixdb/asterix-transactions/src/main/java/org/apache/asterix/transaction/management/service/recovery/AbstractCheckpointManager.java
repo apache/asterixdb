@@ -31,8 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.Checkpoint;
@@ -43,6 +41,9 @@ import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * An abstract implementation of {@link ICheckpointManager}.
@@ -51,7 +52,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public abstract class AbstractCheckpointManager implements ICheckpointManager {
 
-    private static final Logger LOGGER = Logger.getLogger(AbstractCheckpointManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String CHECKPOINT_FILENAME_PREFIX = "checkpoint_";
     public static final long SHARP_CHECKPOINT_LSN = -1;
     private static final FilenameFilter filter = (File dir, String name) -> name.startsWith(CHECKPOINT_FILENAME_PREFIX);
@@ -65,7 +66,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
     public AbstractCheckpointManager(ITransactionSubsystem txnSubsystem, CheckpointProperties checkpointProperties) {
         this.txnSubsystem = txnSubsystem;
         String checkpointDirPath = checkpointProperties.getCheckpointDirPath();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Checkpoint directory = " + checkpointDirPath);
         }
         if (!checkpointDirPath.endsWith(File.separator)) {
@@ -74,7 +75,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         checkpointDir = new File(checkpointDirPath);
         // Create the checkpoint directory if missing
         if (!checkpointDir.exists()) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.log(Level.INFO, "Checkpoint directory " + checkpointDirPath + " didn't exist. Creating one");
             }
             checkpointDir.mkdirs();
@@ -91,38 +92,38 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         LOGGER.log(Level.INFO, "Getting latest checkpoint");
         File[] checkpoints = checkpointDir.listFiles(filter);
         if (checkpoints == null || checkpoints.length == 0) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.log(Level.INFO,
                         "Listing of files in the checkpoint dir returned " + (checkpoints == null ? "null" : "empty"));
             }
             return null;
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Listing of files in the checkpoint dir returned " + Arrays.toString(checkpoints));
         }
         List<Checkpoint> checkpointObjectList = new ArrayList<>();
         for (File file : checkpoints) {
             try {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Reading checkpoint file: " + file.getAbsolutePath());
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.log(Level.WARN, "Reading checkpoint file: " + file.getAbsolutePath());
                 }
                 String jsonString = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
                 checkpointObjectList.add(Checkpoint.fromJson(jsonString));
             } catch (ClosedByInterruptException e) {
                 Thread.currentThread().interrupt();
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Interrupted while reading checkpoint file: " + file.getAbsolutePath(),
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.log(Level.WARN, "Interrupted while reading checkpoint file: " + file.getAbsolutePath(),
                             e);
                 }
                 throw new ACIDException(e);
             } catch (IOException e) {
                 // ignore corrupted checkpoint file
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Failed to read checkpoint file: " + file.getAbsolutePath(), e);
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.log(Level.WARN, "Failed to read checkpoint file: " + file.getAbsolutePath(), e);
                 }
                 file.delete();
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Deleted corrupted checkpoint file: " + file.getAbsolutePath());
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.log(Level.WARN, "Deleted corrupted checkpoint file: " + file.getAbsolutePath());
                 }
             }
         }
@@ -132,7 +133,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
          * This shouldn't happen unless a hardware corruption happens.
          */
         if (checkpointObjectList.isEmpty()) {
-            LOGGER.severe("All checkpoint files are corrupted. Forcing recovery from the beginning of the log");
+            LOGGER.error("All checkpoint files are corrupted. Forcing recovery from the beginning of the log");
             checkpointObjectList.add(forgeForceRecoveryCheckpoint());
         }
 
@@ -195,7 +196,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         // Get checkpoint file path
         Path path = getCheckpointPath(checkpoint.getTimeStamp());
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             File file = path.toFile();
             LOGGER.log(Level.INFO, "Persisting checkpoint file to " + file + " which "
                     + (file.exists() ? "already exists" : "doesn't exist yet"));
@@ -205,10 +206,10 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
             writer.write(checkpoint.asJson());
             writer.flush();
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Failed to write checkpoint to disk", e);
+            LOGGER.log(Level.ERROR, "Failed to write checkpoint to disk", e);
             throw HyracksDataException.create(e);
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             File file = path.toFile();
             LOGGER.log(Level.INFO, "Completed persisting checkpoint file to " + file + " which now "
                     + (file.exists() ? "exists" : " still doesn't exist"));
@@ -220,13 +221,11 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         // Sort the filenames lexicographically to keep the latest checkpoint history files.
         Arrays.sort(checkpointFiles);
         for (int i = 0; i < checkpointFiles.length - historyToKeep; i++) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Deleting checkpoint file at: " + checkpointFiles[i].getAbsolutePath());
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.warn("Deleting checkpoint file at: " + checkpointFiles[i].getAbsolutePath());
             }
-            if (!checkpointFiles[i].delete()) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Could not delete checkpoint file at: " + checkpointFiles[i].getAbsolutePath());
-                }
+            if (!checkpointFiles[i].delete() && LOGGER.isWarnEnabled()) {
+                LOGGER.warn("Could not delete checkpoint file at: " + checkpointFiles[i].getAbsolutePath());
             }
         }
     }

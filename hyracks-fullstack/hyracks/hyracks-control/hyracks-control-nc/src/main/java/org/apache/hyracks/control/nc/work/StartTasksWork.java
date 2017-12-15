@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -70,9 +68,12 @@ import org.apache.hyracks.control.nc.partitions.MaterializingPipelinedPartition;
 import org.apache.hyracks.control.nc.partitions.PipelinedPartition;
 import org.apache.hyracks.control.nc.partitions.ReceiveSideMaterializingCollector;
 import org.apache.hyracks.control.nc.profiling.ProfilingPartitionWriterFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class StartTasksWork extends AbstractWork {
-    private static final Logger LOGGER = Logger.getLogger(StartTasksWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final NodeControllerService ncs;
 
@@ -138,7 +139,7 @@ public class StartTasksWork extends AbstractWork {
                 ActivityId aid = tid.getActivityId();
                 ActivityCluster ac = acg.getActivityMap().get(aid);
                 IActivity han = ac.getActivityMap().get(aid);
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Initializing " + taId + " -> " + han);
                 }
                 final int partition = tid.getPartition();
@@ -152,9 +153,7 @@ public class StartTasksWork extends AbstractWork {
                     for (int i = 0; i < inputs.size(); ++i) {
                         IConnectorDescriptor conn = inputs.get(i);
                         IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
-                        if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("input: " + i + ": " + conn.getConnectorId());
-                        }
+                        LOGGER.info("input: {}: {}", i, conn.getConnectorId());
                         RecordDescriptor recordDesc = ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                         IPartitionCollector collector =
                                 createPartitionCollector(td, partition, task, i, conn, recordDesc, cPolicy);
@@ -171,10 +170,7 @@ public class StartTasksWork extends AbstractWork {
 
                         IPartitionWriterFactory pwFactory =
                                 createPartitionWriterFactory(task, cPolicy, jobId, conn, partition, taId, flags);
-
-                        if (LOGGER.isLoggable(Level.INFO)) {
-                            LOGGER.info("output: " + i + ": " + conn.getConnectorId());
-                        }
+                        LOGGER.info("input: {}: {}", i, conn.getConnectorId());
                         IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition,
                                 td.getPartitionCount(), td.getOutputPartitionCounts()[i]);
                         writer = enforce ? EnforceFrameWriter.enforce(writer) : writer;
@@ -188,7 +184,7 @@ public class StartTasksWork extends AbstractWork {
                 taskIndex++;
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Failure starting a task", e);
+            LOGGER.log(Level.WARN, "Failure starting a task", e);
             // notify cc of start task failure
             List<Exception> exceptions = new ArrayList<>();
             exceptions.add(e);

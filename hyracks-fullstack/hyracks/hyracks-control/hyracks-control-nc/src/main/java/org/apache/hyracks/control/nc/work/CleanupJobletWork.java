@@ -21,8 +21,6 @@ package org.apache.hyracks.control.nc.work;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
@@ -30,9 +28,12 @@ import org.apache.hyracks.api.partitions.IPartition;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CleanupJobletWork extends AbstractWork {
-    private static final Logger LOGGER = Logger.getLogger(CleanupJobletWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final NodeControllerService ncs;
 
@@ -48,7 +49,7 @@ public class CleanupJobletWork extends AbstractWork {
 
     @Override
     public void run() {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
         ncs.removeJobParameterByteStore(jobId);
@@ -62,8 +63,8 @@ public class CleanupJobletWork extends AbstractWork {
                         // Put deallocate in a try block to make sure that every IPartition is de-allocated.
                         p.deallocate();
                     } catch (Exception e) {
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.log(Level.WARNING, e.getMessage(), e);
+                        if (LOGGER.isWarnEnabled()) {
+                            LOGGER.log(Level.WARN, e.getMessage(), e);
                         }
                     }
                 }

@@ -22,19 +22,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class StaticResourceServlet extends AbstractServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(StaticResourceServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public StaticResourceServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
         super(ctx, paths);
@@ -63,7 +64,7 @@ public class StaticResourceServlet extends AbstractServlet {
                 try {
                     IOUtils.copy(is, out);
                 } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failure copying response", e);
+                    LOGGER.log(Level.WARN, "Failure copying response", e);
                 } finally {
                     if (out != null) {
                         IOUtils.closeQuietly(out);

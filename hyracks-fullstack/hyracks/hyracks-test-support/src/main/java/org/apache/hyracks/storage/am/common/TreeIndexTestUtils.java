@@ -28,8 +28,6 @@ import java.io.DataOutput;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -44,10 +42,13 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @SuppressWarnings("rawtypes")
 public abstract class TreeIndexTestUtils {
-    private static final Logger LOGGER = Logger.getLogger(TreeIndexTestUtils.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected abstract CheckTuple createCheckTuple(int numFields, int numKeyFields);
 
@@ -116,7 +117,7 @@ public abstract class TreeIndexTestUtils {
 
     @SuppressWarnings("unchecked")
     public void checkScan(IIndexTestContext ctx) throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Testing Scan.");
         }
         ITreeIndexCursor scanCursor = (ITreeIndexCursor) ctx.getIndexAccessor().createSearchCursor(false);
@@ -128,7 +129,7 @@ public abstract class TreeIndexTestUtils {
 
     public void checkDiskOrderScan(IIndexTestContext ctx) throws Exception {
         try {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Testing Disk-Order Scan.");
             }
             ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) ctx.getIndexAccessor();
@@ -158,19 +159,19 @@ public abstract class TreeIndexTestUtils {
                 try {
                     diskOrderCursor.close();
                 } catch (Exception ex) {
-                    LOGGER.log(Level.WARNING, "Error during scan cursor close", ex);
+                    LOGGER.log(Level.WARN, "Error during scan cursor close", ex);
                 }
             }
         } catch (UnsupportedOperationException e) {
             // Ignore exception because some indexes, e.g. the LSMTrees, don't
             // support disk-order scan.
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Ignoring disk-order scan since it's not supported.");
             }
         } catch (ClassCastException e) {
             // Ignore exception because IIndexAccessor sometimes isn't
             // an ITreeIndexAccessor, e.g., for the LSMBTree.
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Ignoring disk-order scan since it's not supported.");
             }
         }
@@ -199,7 +200,7 @@ public abstract class TreeIndexTestUtils {
             // Set values.
             setIntPayloadFields(fieldValues, numKeyFields, fieldCount);
             TupleUtils.createIntegerTuple(ctx.getTupleBuilder(), ctx.getTuple(), filtered, fieldValues);
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                     LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
                 }
@@ -256,7 +257,7 @@ public abstract class TreeIndexTestUtils {
             // Set values.
             setIntPayloadFields(fieldValues, numKeyFields, fieldCount);
             TupleUtils.createIntegerTuple(ctx.getTupleBuilder(), ctx.getTuple(), fieldValues);
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                     LOGGER.info("Inserting Tuple " + (i + 1) + "/" + numTuples);
                 }
@@ -319,7 +320,7 @@ public abstract class TreeIndexTestUtils {
         IIndexBulkLoader bulkLoader = ctx.getIndex().createBulkLoader(0.7f, false, numTuples, false);
         int c = 1;
         for (CheckTuple checkTuple : checkTuples) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 //if (c % (numTuples / 10) == 0) {
                 LOGGER.info("Bulk Loading Tuple " + c + "/" + numTuples);
                 //}
@@ -347,7 +348,7 @@ public abstract class TreeIndexTestUtils {
         }
 
         for (int i = 0; i < numTuples && numCheckTuples > 0; i++) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                     LOGGER.info("Deleting Tuple " + (i + 1) + "/" + numTuples);
                 }

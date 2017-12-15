@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.comm.IPartitionCollector;
@@ -60,9 +59,11 @@ import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Joblet implements IHyracksJobletContext, ICounterContext {
-    private static final Logger LOGGER = Logger.getLogger(Joblet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final NodeControllerService nodeController;
 
@@ -221,7 +222,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     public void close() {
         long stillAllocated = memoryAllocation.get();
         if (stillAllocated > 0) {
-            LOGGER.warning("Freeing leaked " + stillAllocated + " bytes");
+            LOGGER.warn("Freeing leaked " + stillAllocated + " bytes");
             serviceCtx.getMemoryManager().deallocate(stillAllocated);
         }
         nodeController.getExecutor().execute(new Runnable() {

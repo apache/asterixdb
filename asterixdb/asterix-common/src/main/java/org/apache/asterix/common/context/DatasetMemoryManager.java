@@ -20,17 +20,18 @@ package org.apache.asterix.common.context;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetMemoryManager;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.hyracks.util.annotations.ThreadSafe;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @ThreadSafe
 public class DatasetMemoryManager implements IDatasetMemoryManager {
 
-    private static final Logger LOGGER = Logger.getLogger(DatasetMemoryManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Map<Integer, Long> allocatedMap = new HashMap<>();
     private final Map<Integer, Long> reservedMap = new HashMap<>();
     private long available;

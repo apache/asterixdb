@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,13 +43,15 @@ import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Migrates a legacy storage structure to the current one
  */
 public class MigrateStorageResourcesTask implements INCLifecycleTask {
 
-    private static final Logger LOGGER = Logger.getLogger(MigrateStorageResourcesTask.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     public static final int LEGACY_RESOURCES_TREE_DEPTH_FROM_STORAGE_ROOT = 5;
 

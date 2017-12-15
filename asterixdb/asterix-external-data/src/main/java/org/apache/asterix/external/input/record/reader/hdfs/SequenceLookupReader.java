@@ -30,7 +30,8 @@ import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SequenceLookupReader extends AbstractCharRecordLookupReader {
 
@@ -38,7 +39,7 @@ public class SequenceLookupReader extends AbstractCharRecordLookupReader {
         super(snapshotAccessor, fs, conf);
     }
 
-    private static final Logger LOGGER = Logger.getLogger(SequenceLookupReader.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private Reader reader;
     private Writable key;
 

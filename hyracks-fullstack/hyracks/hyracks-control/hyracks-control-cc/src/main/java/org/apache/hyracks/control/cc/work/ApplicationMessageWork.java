@@ -18,21 +18,21 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * @author rico
  */
 public class ApplicationMessageWork extends AbstractHeartbeatWork {
 
-    private static final Logger LOGGER = Logger.getLogger(ApplicationMessageWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private byte[] message;
     private DeploymentId deploymentId;
     private String nodeId;
@@ -63,7 +63,7 @@ public class ApplicationMessageWork extends AbstractHeartbeatWork {
                 }
             });
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error in stats reporting", e);
+            LOGGER.log(Level.WARN, "Error in stats reporting", e);
             throw new RuntimeException(e);
         }
     }

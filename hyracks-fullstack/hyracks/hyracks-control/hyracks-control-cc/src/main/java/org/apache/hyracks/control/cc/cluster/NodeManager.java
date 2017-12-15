@@ -30,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.client.NodeControllerInfo;
@@ -49,9 +48,11 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.AbortCCJobsFunction;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NodeManager implements INodeManager {
-    private static final Logger LOGGER = Logger.getLogger(NodeManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ClusterControllerService ccs;
     private final CCConfig ccConfig;
@@ -89,13 +90,13 @@ public class NodeManager implements INodeManager {
 
     @Override
     public void addNode(String nodeId, NodeControllerState ncState) throws HyracksException {
-        LOGGER.warning("addNode(" + nodeId + ") called");
+        LOGGER.warn("addNode(" + nodeId + ") called");
         if (nodeId == null || ncState == null) {
             throw HyracksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
         }
         // Updates the node registry.
         if (nodeRegistry.containsKey(nodeId)) {
-            LOGGER.warning(
+            LOGGER.warn(
                     "Node with name " + nodeId + " has already registered; failing the node then re-registering.");
             removeDeadNode(nodeId);
         } else {
@@ -106,7 +107,7 @@ public class NodeManager implements INodeManager {
                 throw HyracksDataException.create(e);
             }
         }
-        LOGGER.warning("adding node to registry");
+        LOGGER.warn("adding node to registry");
         nodeRegistry.put(nodeId, ncState);
         // Updates the IP address to node names map.
         try {
@@ -119,7 +120,7 @@ public class NodeManager implements INodeManager {
             throw e;
         }
         // Updates the cluster capacity.
-        LOGGER.warning("updating cluster capacity");
+        LOGGER.warn("updating cluster capacity");
         resourceManager.update(nodeId, ncState.getCapacity());
     }
 

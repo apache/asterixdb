@@ -20,8 +20,6 @@ package org.apache.asterix.app.replication.message;
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
@@ -29,11 +27,14 @@ import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.runtime.message.AbstractFailbackPlanMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage implements INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(CompleteFailbackRequestMessage.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Set<Integer> partitions;
     private final String nodeId;
 
@@ -69,7 +70,7 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
             IRemoteRecoveryManager remoteRecoeryManager = appContext.getRemoteRecoveryManager();
             remoteRecoeryManager.completeFailbackProcess();
         } catch (IOException | InterruptedException e) {
-            LOGGER.log(Level.SEVERE, "Failure during completion of failback process", e);
+            LOGGER.log(Level.ERROR, "Failure during completion of failback process", e);
             hde = HyracksDataException.create(e);
         } finally {
             CompleteFailbackResponseMessage reponse =
@@ -77,7 +78,7 @@ public class CompleteFailbackRequestMessage extends AbstractFailbackPlanMessage 
             try {
                 broker.sendMessageToCC(reponse);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Failure sending message to CC", e);
+                LOGGER.log(Level.ERROR, "Failure sending message to CC", e);
                 hde = HyracksDataException.suppress(hde, e);
             }
         }

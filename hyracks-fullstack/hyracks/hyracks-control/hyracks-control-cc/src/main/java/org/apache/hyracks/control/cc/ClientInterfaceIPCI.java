@@ -18,9 +18,6 @@
  */
 package org.apache.hyracks.control.cc;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.api.client.HyracksClientInterfaceFunctions;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
@@ -48,10 +45,13 @@ import org.apache.hyracks.control.common.work.IPCResponder;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 class ClientInterfaceIPCI implements IIPCI {
 
-    private static final Logger LOGGER = Logger.getLogger(ClientInterfaceIPCI.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ClusterControllerService ccs;
     private final JobIdFactory jobIdFactory;
     private final DeployedJobSpecIdFactory deployedJobSpecIdFactory;
@@ -70,7 +70,7 @@ class ClientInterfaceIPCI implements IIPCI {
                 try {
                     handle.send(mid, ccs.getClusterControllerInfo(), null);
                 } catch (IPCException e) {
-                    LOGGER.log(Level.WARNING, "Error sending response to GET_CLUSTER_CONTROLLER_INFO request", e);
+                    LOGGER.log(Level.WARN, "Error sending response to GET_CLUSTER_CONTROLLER_INFO request", e);
                 }
                 break;
             case GET_JOB_STATUS:
@@ -146,7 +146,7 @@ class ClientInterfaceIPCI implements IIPCI {
                 try {
                     handle.send(mid, ccs.getCCContext().getClusterTopology(), null);
                 } catch (IPCException e) {
-                    LOGGER.log(Level.WARNING, "Error sending response to GET_CLUSTER_TOPOLOGY request", e);
+                    LOGGER.log(Level.WARN, "Error sending response to GET_CLUSTER_TOPOLOGY request", e);
                 }
                 break;
             case CLI_DEPLOY_BINARY:
@@ -184,7 +184,7 @@ class ClientInterfaceIPCI implements IIPCI {
                 try {
                     handle.send(mid, null, new IllegalArgumentException("Unknown function " + fn.getFunctionId()));
                 } catch (IPCException e) {
-                    LOGGER.log(Level.WARNING, "Error sending Unknown function response", e);
+                    LOGGER.log(Level.WARN, "Error sending Unknown function response", e);
                 }
         }
     }

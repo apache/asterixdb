@@ -24,8 +24,6 @@ import java.io.FileReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
@@ -44,10 +42,12 @@ import org.apache.hyracks.dataflow.common.comm.io.SerializingDataWriter;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.test.support.TestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 public class SerializationDeserializationTest {
-    private static final Logger LOGGER = Logger.getLogger(SerializationDeserializationTest.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String DBLP_FILE = "data" + File.separator + "device1" + File.separator + "data"
             + File.separator + "dblp.txt";
 
@@ -139,7 +139,7 @@ public class SerializationDeserializationTest {
         reader.open();
         Object[] arr;
         while ((arr = reader.readData()) != null) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(arr[0] + " " + arr[1]);
             }
         }

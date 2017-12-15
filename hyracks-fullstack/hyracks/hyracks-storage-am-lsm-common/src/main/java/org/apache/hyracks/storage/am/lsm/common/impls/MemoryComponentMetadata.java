@@ -20,8 +20,6 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -31,9 +29,12 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MemoryComponentMetadata implements IComponentMetadata {
-    private static final Logger LOGGER = Logger.getLogger(MemoryComponentMetadata.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final byte[] empty = new byte[0];
     private final List<org.apache.commons.lang3.tuple.Pair<IValueReference, ArrayBackedValueStorage>> store =
             new ArrayList<>();
@@ -77,7 +78,7 @@ public class MemoryComponentMetadata implements IComponentMetadata {
         LOGGER.log(Level.INFO, "Copying Metadata into a different component");
         ITreeIndexMetadataFrame frame = mdpManager.createMetadataFrame();
         for (Pair<IValueReference, ArrayBackedValueStorage> pair : store) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.log(Level.INFO, "Copying " + pair.getKey() + " : " + pair.getValue().getLength() + " bytes");
             }
             mdpManager.put(frame, pair.getKey(), pair.getValue());

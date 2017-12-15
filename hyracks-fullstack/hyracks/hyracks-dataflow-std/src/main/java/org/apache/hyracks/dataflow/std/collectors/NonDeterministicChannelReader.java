@@ -20,16 +20,16 @@ package org.apache.hyracks.dataflow.std.collectors;
 
 import java.nio.ByteBuffer;
 import java.util.BitSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.channels.IInputChannel;
 import org.apache.hyracks.api.channels.IInputChannelMonitor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.partitions.PartitionId;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NonDeterministicChannelReader implements IInputChannelMonitor, IPartitionAcceptor {
-    private static final Logger LOGGER = Logger.getLogger(NonDeterministicChannelReader.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final int nSenderPartitions;
 
@@ -143,8 +143,8 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
     public synchronized void notifyFailure(IInputChannel channel) {
         PartitionId pid = (PartitionId) channel.getAttachment();
         int senderIndex = pid.getSenderIndex();
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Failure: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Failure: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
                     + pid.getReceiverIndex());
         }
         failSenders.set(senderIndex);
@@ -156,8 +156,8 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
     public synchronized void notifyDataAvailability(IInputChannel channel, int nFrames) {
         PartitionId pid = (PartitionId) channel.getAttachment();
         int senderIndex = pid.getSenderIndex();
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Data available: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Data available: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
                     + pid.getReceiverIndex());
         }
         availableFrameCounts[senderIndex] += nFrames;
@@ -169,8 +169,8 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
     public synchronized void notifyEndOfStream(IInputChannel channel) {
         PartitionId pid = (PartitionId) channel.getAttachment();
         int senderIndex = pid.getSenderIndex();
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("EOS: " + pid);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("EOS: " + pid);
         }
         eosSenders.set(senderIndex);
         notifyAll();

@@ -28,14 +28,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.BaseRequest;
 import org.apache.hyracks.http.server.FormUrlEncodedRequest;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -45,7 +46,7 @@ import io.netty.util.internal.PlatformDependent;
 
 public class HttpUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(HttpUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
     private static long maxMemUsage = 0L;
 
@@ -207,7 +208,7 @@ public class HttpUtil {
             report.append('\n');
             report.append('\n');
         } catch (Throwable th) { // NOSONAR
-            LOGGER.log(Level.WARNING, "Failed to access PlatformDependent.DIRECT_MEMORY_COUNTER", th);
+            LOGGER.log(Level.WARN, "Failed to access PlatformDependent.DIRECT_MEMORY_COUNTER", th);
             return;
         }
         report.append("--------------- PooledByteBufAllocator.DEFAULT ----------------");

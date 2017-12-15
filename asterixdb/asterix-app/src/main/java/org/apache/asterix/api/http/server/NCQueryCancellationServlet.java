@@ -23,8 +23,6 @@ import static org.apache.asterix.app.message.ExecuteStatementRequestMessage.DEFA
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.message.CancelQueryRequest;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
@@ -32,6 +30,9 @@ import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -39,7 +40,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  * The servlet provides a REST API on an NC for cancelling an on-going query.
  */
 public class NCQueryCancellationServlet extends QueryCancellationServlet {
-    private static final Logger LOGGER = Logger.getLogger(NCQueryCancellationServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final INCServiceContext serviceCtx;
     private final INCMessageBroker messageBroker;
 
@@ -65,9 +66,7 @@ public class NCQueryCancellationServlet extends QueryCancellationServlet {
             cancelQueryFuture.get(DEFAULT_NC_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
             response.setStatus(HttpResponseStatus.OK);
         } catch (Exception e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "Unexpected exception while canceling query", e);
-            }
+            LOGGER.log(Level.ERROR, "Unexpected exception while canceling query", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         } finally {
             messageBroker.deregisterMessageFuture(cancelQueryFuture.getFutureId());

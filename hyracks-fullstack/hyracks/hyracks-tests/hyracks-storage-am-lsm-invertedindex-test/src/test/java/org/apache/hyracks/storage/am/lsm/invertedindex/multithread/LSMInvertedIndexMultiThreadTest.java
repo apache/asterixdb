@@ -21,8 +21,6 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.multithread;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.TestOperationSelector.TestOperation;
@@ -34,11 +32,13 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTe
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 public class LSMInvertedIndexMultiThreadTest {
 
-    protected final Logger LOGGER = Logger.getLogger(LSMInvertedIndexMultiThreadTest.class.getName());
+    protected final Logger LOGGER = LogManager.getLogger();
 
     // Machine-specific number of threads to use for testing.
     protected final int REGULAR_NUM_THREADS = Runtime.getRuntime().availableProcessors();
@@ -60,7 +60,7 @@ public class LSMInvertedIndexMultiThreadTest {
 
     protected void runTest(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen, int numThreads,
             TestWorkloadConf conf, String dataMsg) throws InterruptedException, HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("LSMInvertedIndex MultiThread Test:\nData: " + dataMsg + "; Threads: " + numThreads
                     + "; Workload: " + conf.toString() + ".");
         }
@@ -75,7 +75,7 @@ public class LSMInvertedIndexMultiThreadTest {
         testCtx.getIndex().validate();
         driver.deinit();
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("LSMInvertedIndex MultiThread Test Time: " + times[0] + "ms");
         }
     }

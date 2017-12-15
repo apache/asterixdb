@@ -18,14 +18,14 @@
  */
 package org.apache.hyracks.control.nc.task;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ThreadDumpTask implements Runnable {
-    private static final Logger LOGGER = Logger.getLogger(ThreadDumpTask.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final NodeControllerService ncs;
     private final String requestId;
 
@@ -40,14 +40,14 @@ public class ThreadDumpTask implements Runnable {
         try {
             result = ThreadDumpUtil.takeDumpJSONString();
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception taking thread dump", e);
+            LOGGER.log(Level.WARN, "Exception taking thread dump", e);
             result = null;
         }
         try {
             ncs.getClusterController().notifyThreadDump(
                     ncs.getContext().getNodeId(), requestId, result);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception sending thread dump to CC", e);
+            LOGGER.log(Level.WARN, "Exception sending thread dump to CC", e);
         }
     }
 }

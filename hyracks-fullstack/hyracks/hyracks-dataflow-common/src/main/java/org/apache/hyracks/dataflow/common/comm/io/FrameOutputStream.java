@@ -18,16 +18,15 @@
  */
 package org.apache.hyracks.dataflow.common.comm.io;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FrameOutputStream extends ByteArrayAccessibleOutputStream {
-    private static final Logger LOGGER = Logger.getLogger(FrameOutputStream.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final FrameTupleAppender frameTupleAppender;
 
@@ -42,15 +41,15 @@ public class FrameOutputStream extends ByteArrayAccessibleOutputStream {
 
     public int getTupleCount() {
         int tupleCount = frameTupleAppender.getTupleCount();
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("appendTuple(): tuple count: " + tupleCount);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("appendTuple(): tuple count: " + tupleCount);
         }
         return tupleCount;
     }
 
     public boolean appendTuple() throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("appendTuple(): tuple size: " + count);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("appendTuple(): tuple size: " + count);
         }
         boolean appended = frameTupleAppender.append(buf, 0, count);
         count = 0;

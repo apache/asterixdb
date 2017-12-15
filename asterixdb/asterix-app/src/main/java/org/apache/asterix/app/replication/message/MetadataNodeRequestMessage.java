@@ -18,19 +18,19 @@
  */
 package org.apache.asterix.app.replication.message;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MetadataNodeRequestMessage implements INCLifecycleMessage, INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(MetadataNodeRequestMessage.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final boolean export;
 
     public MetadataNodeRequestMessage(boolean export) {
@@ -49,7 +49,7 @@ public class MetadataNodeRequestMessage implements INCLifecycleMessage, INcAddre
                 appContext.unexportMetadataNodeStub();
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
+            LOGGER.log(Level.ERROR, "Failed taking over metadata", e);
             hde = HyracksDataException.create(e);
         } finally {
             MetadataNodeResponseMessage reponse =
@@ -57,7 +57,7 @@ public class MetadataNodeRequestMessage implements INCLifecycleMessage, INcAddre
             try {
                 broker.sendMessageToCC(reponse);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Failed taking over metadata", e);
+                LOGGER.log(Level.ERROR, "Failed taking over metadata", e);
                 hde = HyracksDataException.suppress(hde, e);
             }
         }

@@ -23,16 +23,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.tools.external.data.DataGeneratorForSpatialIndexEvaluation.InitializationInfo;
 import org.apache.asterix.tools.external.data.DataGeneratorForSpatialIndexEvaluation.TweetMessage;
 import org.apache.asterix.tools.external.data.DataGeneratorForSpatialIndexEvaluation.TweetMessageIterator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TweetGeneratorForSpatialIndexEvaluation {
 
-    private static Logger LOGGER = Logger.getLogger(TweetGeneratorForSpatialIndexEvaluation.class.getName());
+    private static Logger LOGGER = LogManager.getLogger();
 
     public static final String KEY_DURATION = "duration";
     public static final String KEY_TPS = "tps";
@@ -116,7 +116,7 @@ public class TweetGeneratorForSpatialIndexEvaluation {
                 numFlushedTweets += frameTweetCount;
                 frameTweetCount = 0;
             }
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Reached end of batch. Tweet Count: [" + partition + "]" + tweetCount);
             }
             return false;

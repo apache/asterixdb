@@ -25,10 +25,11 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.PrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -77,7 +78,7 @@ public class ResultExtractor {
         }
     }
 
-    private static final Logger LOGGER = Logger.getLogger(ResultExtractor.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static InputStream extract(InputStream resultStream) throws Exception {
@@ -109,7 +110,7 @@ public class ResultExtractor {
         final PrettyPrinter singleLine = new SingleLinePrettyPrinter();
         final ObjectNode result = OBJECT_MAPPER.readValue(resultStr, ObjectNode.class);
 
-        LOGGER.fine("+++++++\n" + result + "\n+++++++\n");
+        LOGGER.debug("+++++++\n" + result + "\n+++++++\n");
         // if we have errors field in the results, we will always return it
         checkForErrors(result);
         final StringBuilder resultBuilder = new StringBuilder();

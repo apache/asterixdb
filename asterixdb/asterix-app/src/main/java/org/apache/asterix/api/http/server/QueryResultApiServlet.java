@@ -20,8 +20,6 @@ package org.apache.asterix.api.http.server;
 
 import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
@@ -35,11 +33,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryResultApiServlet extends AbstractQueryApiServlet {
-    private static final Logger LOGGER = Logger.getLogger(QueryResultApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public QueryResultApiServlet(ConcurrentMap<String, Object> ctx, IApplicationContext appCtx, String... paths) {
         super(appCtx, ctx, paths);
@@ -104,13 +105,13 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             }
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             out.println(e.getMessage());
-            LOGGER.log(Level.WARNING, "Error retrieving result for \"" + strHandle + "\"", e);
+            LOGGER.log(Level.WARN, "Error retrieving result for \"" + strHandle + "\"", e);
         } catch (Exception e) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
-            LOGGER.log(Level.WARNING, "Error retrieving result for \"" + strHandle + "\"", e);
+            LOGGER.log(Level.WARN, "Error retrieving result for \"" + strHandle + "\"", e);
         }
         if (out.checkError()) {
-            LOGGER.warning("Error flushing output writer for \"" + strHandle + "\"");
+            LOGGER.warn("Error flushing output writer for \"" + strHandle + "\"");
         }
     }
 

@@ -22,17 +22,18 @@ package org.apache.asterix.metadata.bootstrap;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataNode;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Contains Asterix distributed state such as the AsterixProperties.
  */
 public class AsterixStateProxy implements IAsterixStateProxy {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(AsterixStateProxy.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private IMetadataNode metadataNode;
     private static final IAsterixStateProxy cc = new AsterixStateProxy();

@@ -23,7 +23,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
@@ -50,9 +49,11 @@ import org.apache.hyracks.control.common.ipc.CCNCFunctions.UnDeployBinaryFunctio
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.UndeployJobSpecFunction;
 import org.apache.hyracks.control.common.job.TaskAttemptDescriptor;
 import org.apache.hyracks.ipc.impl.IPCSystem;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NodeControllerRemoteProxy extends ControllerRemoteProxy implements INodeController {
-    private static final Logger LOGGER = Logger.getLogger(NodeControllerRemoteProxy.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public NodeControllerRemoteProxy(IPCSystem ipc, InetSocketAddress inetSocketAddress) {
         super(ipc, inetSocketAddress);

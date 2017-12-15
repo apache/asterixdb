@@ -20,12 +20,14 @@
 package org.apache.asterix.common.exceptions;
 
 import java.io.Serializable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MetadataException extends CompilationException {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(MetadataException.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Deprecated
     /**
@@ -69,7 +71,7 @@ public class MetadataException extends CompilationException {
             return (MetadataException) cause;
         }
         if (cause instanceof InterruptedException && !Thread.currentThread().isInterrupted()) {
-            LOGGER.log(Level.WARNING, "Wrapping an InterruptedException in " + MetadataException.class.getSimpleName()
+            LOGGER.log(Level.WARN, "Wrapping an InterruptedException in " + MetadataException.class.getSimpleName()
                     + " and current thread is not interrupted", cause);
         }
         return new MetadataException(cause);

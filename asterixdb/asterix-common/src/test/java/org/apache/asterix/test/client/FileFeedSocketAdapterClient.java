@@ -25,8 +25,10 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FileFeedSocketAdapterClient implements ITestClient {
     private final int port;
@@ -37,7 +39,7 @@ public class FileFeedSocketAdapterClient implements ITestClient {
     private int batchSize;
     private int maxCount;
     private OutputStream out = null;
-    static final Logger LOGGER = Logger.getLogger(FileFeedSocketAdapterClient.class.getName());
+    static final Logger LOGGER = LogManager.getLogger();
 
     // expected args: url, source-file-path, max-count, batch-size, wait
     public FileFeedSocketAdapterClient(int port, String[] args) throws Exception {
@@ -61,7 +63,7 @@ public class FileFeedSocketAdapterClient implements ITestClient {
         try {
             socket = new Socket(url, port);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Problem in creating socket against host " + url + " on the port " + port, e);
+            LOGGER.log(Level.WARN, "Problem in creating socket against host " + url + " on the port " + port, e);
             throw e;
         }
 
@@ -78,7 +80,7 @@ public class FileFeedSocketAdapterClient implements ITestClient {
                 }
                 out.write(b.array(), 0, b.limit());
                 recordCount++;
-                LOGGER.log(Level.FINE, "One record filed into feed");
+                LOGGER.log(Level.DEBUG, "One record filed into feed");
                 if (recordCount == maxCount) {
                     break;
                 }

@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.HDFSCluster;
@@ -36,6 +34,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.server.process.HyracksCCProcess;
 import org.apache.hyracks.server.process.HyracksNCServiceProcess;
 import org.apache.hyracks.server.process.HyracksVirtualCluster;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -91,7 +92,7 @@ public class NCServiceExecutionIT {
     public static final String ACTUAL_RESULTS_DIR = StringUtils.join(new String[] { TARGET_DIR, "ittest" },
             File.separator);
 
-    private static final Logger LOGGER = Logger.getLogger(NCServiceExecutionIT.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     enum KillCommand {
         CC,
@@ -256,7 +257,7 @@ public class NCServiceExecutionIT {
                 testExecutor.waitForClusterActive(30, TimeUnit.SECONDS);
             } catch (Exception e) {
                 // stop executing the rest of the tests since the cluster is not ACTIVE
-                LOGGER.log(Level.SEVERE, "Cannot continue since cluster is not ACTIVE", e);
+                LOGGER.log(Level.ERROR, "Cannot continue since cluster is not ACTIVE", e);
                 clusterActive = false;
                 Assert.fail("Cluster is not ACTIVE");
             }

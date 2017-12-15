@@ -20,8 +20,6 @@ package org.apache.asterix.external.adapter.factory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -54,11 +52,14 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterFactory {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(GenericAdapterFactory.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private IExternalDataSourceFactory dataSourceFactory;
     private IDataParserFactory dataParserFactory;
     private ARecordType recordType;

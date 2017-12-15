@@ -205,7 +205,7 @@ public class LSMBTreeUpdateInPlaceScanDiskComponentsTest extends OrderedIndexTes
             // keys the cube root of numTuples, etc.
             int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / numKeyFields));
             for (int i = 0; i < numTuples; i++) {
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                         LOGGER.info("Generating Tuple " + (i + 1) + "/" + numTuples);
                     }
@@ -280,7 +280,7 @@ public class LSMBTreeUpdateInPlaceScanDiskComponentsTest extends OrderedIndexTes
             }
 
             for (int i = 0; i < numTuples && numCheckTuples > 0; i++) {
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     if ((i + 1) % (numTuples / Math.min(10, numTuples)) == 0) {
                         LOGGER.info("Deleting Tuple " + (i + 1) + "/" + numTuples);
                     }

@@ -19,8 +19,6 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -41,9 +39,11 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.util.trace.ITracer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExternalIndexHarness extends LSMHarness {
-    private static final Logger LOGGER = Logger.getLogger(ExternalIndexHarness.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public ExternalIndexHarness(ILSMIndex lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             boolean replicationEnabled) {
@@ -230,7 +230,7 @@ public class ExternalIndexHarness extends LSMHarness {
 
     @Override
     public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Started a merge operation for index: " + lsmIndex + " ...");
         }
 
@@ -243,7 +243,7 @@ public class ExternalIndexHarness extends LSMHarness {
             exitComponents(ctx, LSMOperationType.MERGE, newComponent, false);
             operation.getCallback().afterFinalize(LSMIOOperationType.MERGE, newComponent);
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Finished the merge operation for index: " + lsmIndex);
         }
     }

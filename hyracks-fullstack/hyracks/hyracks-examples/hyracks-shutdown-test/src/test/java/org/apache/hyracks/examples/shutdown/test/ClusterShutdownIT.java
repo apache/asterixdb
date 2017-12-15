@@ -19,8 +19,9 @@
 package org.apache.hyracks.examples.shutdown.test;
 
 import java.net.ServerSocket;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -30,7 +31,7 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 
 public class ClusterShutdownIT {
-    private static Logger LOGGER = Logger.getLogger(ClusterShutdownIT.class.getName());
+    private static Logger LOGGER = LogManager.getLogger();
     @Rule
     public ExpectedException closeTwice = ExpectedException.none();
     @Test
@@ -49,7 +50,7 @@ public class ClusterShutdownIT {
             s = new ServerSocket(1099);
             //and we should be able to bind to this too
         } catch (Exception e) {
-            LOGGER.severe(e.getMessage());
+            LOGGER.error(e.getMessage());
             throw e;
         } finally {
             s.close();

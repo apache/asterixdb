@@ -20,8 +20,6 @@
 package org.apache.hyracks.dataflow.std.group;
 
 import java.util.BitSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -48,10 +46,12 @@ import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
 import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 import org.apache.hyracks.dataflow.std.util.FrameTuplePairComparator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class HashSpillableTableFactory implements ISpillableTableFactory {
 
-    private static Logger LOGGER = Logger.getLogger(HashSpillableTableFactory.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final double FUDGE_FACTOR = 1.1;
     private static final long serialVersionUID = 1L;
     private final IBinaryHashFunctionFamily[] hashFunctionFamilies;
@@ -109,8 +109,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
         final int numPartitions = getNumOfPartitions(inputDataBytesSize / ctx.getInitialFrameSize(), memoryBudget);
         final int entriesPerPartition = (int) Math.ceil(1.0 * tableSize / numPartitions);
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine(
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(
                     "created hashtable, table size:" + tableSize + " file size:" + inputDataBytesSize + "  #partitions:"
                     + numPartitions);
         }
@@ -159,8 +159,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 if (hashTableForTuplePointer.isGarbageCollectionNeeded()) {
                     int numberOfFramesReclaimed = hashTableForTuplePointer.collectGarbage(bufferAccessor,
                             tpcIntermediate);
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("Garbage Collection on Hash table is done. Deallocated frames:"
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Garbage Collection on Hash table is done. Deallocated frames:"
                                 + numberOfFramesReclaimed);
                     }
                 }

@@ -22,8 +22,6 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -37,10 +35,12 @@ import org.apache.asterix.testframework.xml.TestSuite;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExecutionTestUtil {
 
-    protected static final Logger LOGGER = Logger.getLogger(ExecutionTestUtil.class.getName());
+    protected static final Logger LOGGER = LogManager.getLogger();
 
     protected static final String PATH_ACTUAL = "rttest" + File.separator;
 
@@ -60,11 +60,11 @@ public class ExecutionTestUtil {
             AsterixHyracksIntegrationUtil alternateIntegrationUtil, boolean startHdfs, List<Pair<IOption, Object>> opts)
             throws Exception {
         System.out.println("Starting setup");
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Starting setup");
         }
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("initializing pseudo cluster");
         }
         integrationUtil = alternateIntegrationUtil;
@@ -75,7 +75,7 @@ public class ExecutionTestUtil {
         }
         integrationUtil.init(cleanup, configFile);
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("initializing HDFS");
         }
 

@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.external.operators;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.ActiveSourceOperatorNodePushable;
 import org.apache.asterix.active.EntityId;
@@ -35,6 +32,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * The runtime for @see{FeedIntakeOperationDescriptor}.
@@ -42,7 +42,7 @@ import org.apache.hyracks.dataflow.common.utils.TaskUtil;
  * The artifacts are lazily activated when a feed receives a subscription request.
  */
 public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePushable {
-    private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorNodePushable.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     // TODO: Make configurable https://issues.apache.org/jira/browse/ASTERIXDB-2065
     public static final int DEFAULT_ABORT_TIMEOUT = 10000;
     private final FeedIntakeOperatorDescriptor opDesc;
@@ -81,7 +81,7 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
             message.getBuffer().flip();
             run();
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Failure during data ingestion", e);
+            LOGGER.log(Level.WARN, "Failure during data ingestion", e);
             throw e;
         } finally {
             writer.close();
@@ -98,7 +98,7 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
             Thread.currentThread().interrupt();
             throw HyracksDataException.create(e);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Unhandled Exception", e);
+            LOGGER.log(Level.WARN, "Unhandled Exception", e);
             throw HyracksDataException.create(e);
         }
     }
@@ -113,7 +113,7 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
             } catch (InterruptedException e) {
                 throw e;
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Exception during feed ingestion ", e);
+                LOGGER.log(Level.WARN, "Exception during feed ingestion ", e);
                 throw HyracksDataException.create(e);
             }
         }
@@ -131,10 +131,10 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
                 }
             } catch (HyracksDataException hde) {
                 if (hde.getComponent() == ErrorCode.HYRACKS && hde.getErrorCode() == ErrorCode.TIMEOUT) {
-                    LOGGER.log(Level.WARNING, runtimeId + " stop adapter timed out. interrupting the thread...", hde);
+                    LOGGER.log(Level.WARN, runtimeId + " stop adapter timed out. interrupting the thread...", hde);
                     taskThread.interrupt();
                 } else {
-                    LOGGER.log(Level.WARNING, "Failure during attempt to stop " + runtimeId, hde);
+                    LOGGER.log(Level.WARN, "Failure during attempt to stop " + runtimeId, hde);
                     throw hde;
                 }
             }

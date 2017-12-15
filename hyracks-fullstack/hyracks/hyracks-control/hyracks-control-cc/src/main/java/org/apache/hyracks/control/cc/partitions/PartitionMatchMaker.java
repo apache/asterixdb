@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
@@ -33,9 +32,11 @@ import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.PartitionDescriptor;
 import org.apache.hyracks.control.common.job.PartitionRequest;
 import org.apache.hyracks.control.common.job.PartitionState;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class PartitionMatchMaker {
-    private static final Logger LOGGER = Logger.getLogger(PartitionMatchMaker.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Map<PartitionId, List<PartitionDescriptor>> partitionDescriptors;
 

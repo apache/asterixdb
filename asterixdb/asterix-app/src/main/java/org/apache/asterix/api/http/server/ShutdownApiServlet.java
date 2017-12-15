@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -37,6 +35,9 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -44,7 +45,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ShutdownApiServlet extends AbstractServlet {
-    private static final Logger LOGGER = Logger.getLogger(ShutdownApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String NODE_ID_KEY = "node_id";
     public static final String NCSERVICE_PID = "ncservice_pid";
     public static final String INI = "ini";
@@ -65,14 +66,14 @@ public class ShutdownApiServlet extends AbstractServlet {
             try {
                 hcc.stopCluster(terminateNCServices);
             } catch (Exception e) {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Exception stopping cluster", e);
+                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, "Exception stopping cluster", e);
             }
         }, "Shutdown Servlet Worker");
 
         try {
             HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failure handling request", e);
+            LOGGER.log(Level.WARN, "Failure handling request", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             return;
         }
@@ -94,7 +95,7 @@ public class ShutdownApiServlet extends AbstractServlet {
                         nc.put(NCSERVICE_PID, details.get(INI).get(NCSERVICE_PID).asInt());
                     }
                 } else {
-                    LOGGER.warning("Unable to get node details for " + node + " from hcc");
+                    LOGGER.warn("Unable to get node details for " + node + " from hcc");
                 }
             }
             jsonObject.set("cluster", clusterState);

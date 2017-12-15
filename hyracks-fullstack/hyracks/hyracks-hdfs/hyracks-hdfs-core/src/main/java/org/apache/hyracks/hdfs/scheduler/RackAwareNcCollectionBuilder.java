@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-import java.util.logging.Logger;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
@@ -33,10 +32,12 @@ import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.hdfs.api.INcCollection;
 import org.apache.hyracks.hdfs.api.INcCollectionBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @SuppressWarnings("deprecation")
 public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
-    private static final Logger LOGGER = Logger.getLogger(RackAwareNcCollectionBuilder.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private ClusterTopology topology;
 
     public RackAwareNcCollectionBuilder(ClusterTopology topology) {

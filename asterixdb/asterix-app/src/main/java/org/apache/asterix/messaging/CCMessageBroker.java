@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -41,10 +39,13 @@ import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CCMessageBroker implements ICCMessageBroker {
 
-    private static final Logger LOGGER = Logger.getLogger(CCMessageBroker.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ClusterControllerService ccs;
     private final Map<Long, MutablePair<MutableInt, MutablePair<ResponseState, Object>>> handles =
             new ConcurrentHashMap<>();
@@ -58,7 +59,7 @@ public class CCMessageBroker implements ICCMessageBroker {
     @Override
     public void receivedMessage(IMessage message, String nodeId) throws Exception {
         ICcAddressedMessage msg = (ICcAddressedMessage) message;
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Received message: " + msg);
         }
         ICcApplicationContext appCtx = (ICcApplicationContext) ccs.getApplicationContext();
@@ -72,8 +73,8 @@ public class CCMessageBroker implements ICCMessageBroker {
         if (state != null) {
             state.getNodeController().sendApplicationMessageToNC(JavaSerializationUtils.serialize(msg), null, nodeId);
         } else {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Couldn't send message to unregistered node (" + nodeId + ")");
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.warn("Couldn't send message to unregistered node (" + nodeId + ")");
             }
         }
     }

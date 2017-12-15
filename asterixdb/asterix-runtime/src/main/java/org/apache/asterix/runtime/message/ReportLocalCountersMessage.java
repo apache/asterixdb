@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.runtime.message;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
@@ -30,10 +27,13 @@ import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.transaction.management.service.transaction.TxnIdFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ReportLocalCountersMessage implements ICcAddressedMessage {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(ReportLocalCountersMessage.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final long maxResourceId;
     private final long maxTxnId;
     private final String src;
@@ -62,7 +62,7 @@ public class ReportLocalCountersMessage implements ICcAddressedMessage {
         try {
             ((INCMessageBroker) ncs.getContext().getMessageBroker()).sendMessageToCC(countersMessage);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Unable to report local counters", e);
+            LOGGER.log(Level.ERROR, "Unable to report local counters", e);
             throw HyracksDataException.create(e);
         }
     }

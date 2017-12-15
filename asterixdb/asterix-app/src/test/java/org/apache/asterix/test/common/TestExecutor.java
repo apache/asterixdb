@@ -53,8 +53,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -91,6 +89,9 @@ import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -105,7 +106,7 @@ public class TestExecutor {
     /*
      * Static variables
      */
-    protected static final Logger LOGGER = Logger.getLogger(TestExecutor.class.getName());
+    protected static final Logger LOGGER = LogManager.getLogger();
     // see
     // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
     private static final long MAX_URL_LENGTH = 2000l;
@@ -444,9 +445,9 @@ public class TestExecutor {
         final File parentDir = actualFile.getParentFile();
         if (!parentDir.isDirectory()) {
             if (parentDir.exists()) {
-                LOGGER.warning("Actual file parent \"" + parentDir + "\" exists but is not a directory");
+                LOGGER.warn("Actual file parent \"" + parentDir + "\" exists but is not a directory");
             } else if (!parentDir.mkdirs()) {
-                LOGGER.warning("Unable to create actual file parent dir: " + parentDir);
+                LOGGER.warn("Unable to create actual file parent dir: " + parentDir);
             }
         }
         try (FileOutputStream out = new FileOutputStream(actualFile)) {
@@ -468,7 +469,7 @@ public class TestExecutor {
         try {
             return client.execute(method, getHttpContext());
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
             e.printStackTrace();
             throw e;
         }
@@ -491,7 +492,7 @@ public class TestExecutor {
                         result.get("stacktrace").asText() };
             } catch (Exception e) {
                 // whoops, not JSON (e.g. 404) - just include the body
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, errorBody);
+                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, errorBody);
                 Exception failure = new Exception("HTTP operation failed:" + "\nSTATUS LINE: "
                         + httpResponse.getStatusLine() + "\nERROR_BODY: " + errorBody);
                 failure.addSuppressed(e);
@@ -1210,7 +1211,7 @@ public class TestExecutor {
         ctx.setType(ctx.getType().substring("poll".length()));
         boolean expectedException = false;
         Exception finalException = null;
-        LOGGER.fine("polling for up to " + timeoutSecs + " seconds w/ " + retryDelaySecs + " second(s) delay");
+        LOGGER.debug("polling for up to " + timeoutSecs + " seconds w/ " + retryDelaySecs + " second(s) delay");
         int responsesReceived = 0;
         final ExecutorService executorService = Executors.newSingleThreadExecutor();
         while (true) {
@@ -1257,7 +1258,7 @@ public class TestExecutor {
                     finalException = e;
                     break;
                 }
-                LOGGER.fine("sleeping " + retryDelaySecs + " second(s) before polling again");
+                LOGGER.debug("sleeping " + retryDelaySecs + " second(s) before polling again");
                 TimeUnit.SECONDS.sleep(retryDelaySecs);
             }
         }
@@ -1504,7 +1505,7 @@ public class TestExecutor {
             path = tokens[1];
         }
         URI uri = new URI("http", null, endpoint.getHostString(), endpoint.getPort(), path, query, null);
-        LOGGER.fine("Created endpoint URI: " + uri);
+        LOGGER.debug("Created endpoint URI: " + uri);
         return uri;
     }
 
@@ -1549,7 +1550,7 @@ public class TestExecutor {
             }
             if (!toBeDropped.isEmpty()) {
                 badtestcases.add(testCase);
-                LOGGER.warning(
+                LOGGER.warn(
                         "Last test left some garbage. Dropping dataverses: " + StringUtils.join(toBeDropped, ','));
                 StringBuilder dropStatement = new StringBuilder();
                 for (String dv : toBeDropped) {

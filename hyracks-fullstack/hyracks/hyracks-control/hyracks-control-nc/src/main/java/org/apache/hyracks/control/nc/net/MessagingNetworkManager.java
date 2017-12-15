@@ -25,8 +25,6 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
@@ -40,10 +38,12 @@ import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemux;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MessagingNetworkManager {
 
-    private static final Logger LOGGER = Logger.getLogger(MessagingNetworkManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int MAX_CONNECTION_ATTEMPTS = 5;
     private final MuxDemux md;
     private NetworkAddress localNetworkAddress;
@@ -193,8 +193,8 @@ public class MessagingNetworkManager {
         @Override
         public void accept(ByteBuffer buffer) {
             String nodeId = readMessagingInitialMessage(buffer);
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Opened messaging channel with node: " + nodeId);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Opened messaging channel with node: " + nodeId);
             }
             // Return the channel's original acceptor
             ICloseableBufferAcceptor originalAcceptor;

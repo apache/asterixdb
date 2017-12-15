@@ -36,8 +36,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -49,10 +47,13 @@ import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
-    private static final Logger LOGGER = Logger.getLogger(BufferCache.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int MAP_FACTOR = 3;
 
     private static final int MIN_CLEANED_COUNT_DIFF = 3;
@@ -76,7 +77,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private final Queue<BufferCacheHeaderHelper> headerPageCache = new ConcurrentLinkedQueue<>();
 
     //DEBUG
-    private Level fileOpsLevel = Level.FINE;
+    private Level fileOpsLevel = Level.DEBUG;
     private ArrayList<CachedPage> confiscatedPages;
     private Lock confiscateLock;
     private HashMap<CachedPage, StackTraceElement[]> confiscatedPagesOwner;
@@ -517,7 +518,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                      */
                     try {
                         Thread.sleep(PERIOD_BETWEEN_READ_ATTEMPTS);
-                        LOGGER.log(Level.WARNING, String.format("Failed to read page. Retrying attempt (%d/%d)", i + 1,
+                        LOGGER.log(Level.WARN, String.format("Failed to read page. Retrying attempt (%d/%d)", i + 1,
                                 MAX_PAGE_READ_ATTEMPTS), readException);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
@@ -705,7 +706,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             try {
                 write(cPage);
             } catch (HyracksDataException e) {
-                LOGGER.log(Level.WARNING, "Unable to write dirty page", e);
+                LOGGER.log(Level.WARN, "Unable to write dirty page", e);
                 cleaned = false;
             }
             if (cleaned) {
@@ -782,8 +783,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                         ioManager.close(value.getFileHandle());
                     }
                 } catch (HyracksDataException e) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.log(Level.WARNING, "Error flushing file id: " + key, e);
+                    if (LOGGER.isWarnEnabled()) {
+                        LOGGER.log(Level.WARN, "Error flushing file id: " + key, e);
                     }
                 }
             });
@@ -793,7 +794,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public int createFile(FileReference fileRef) throws HyracksDataException {
-        if (LOGGER.isLoggable(fileOpsLevel)) {
+        if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Creating file: " + fileRef + " in cache: " + this);
         }
         IoUtil.create(fileRef);
@@ -814,7 +815,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public int openFile(FileReference fileRef) throws HyracksDataException {
-        if (LOGGER.isLoggable(fileOpsLevel)) {
+        if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Opening file: " + fileRef + " in cache: " + this);
         }
         int fileId;
@@ -831,7 +832,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public void openFile(int fileId) throws HyracksDataException {
-        if (LOGGER.isLoggable(fileOpsLevel)) {
+        if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Opening file: " + fileId + " in cache: " + this);
         }
         synchronized (fileInfoMap) {
@@ -929,11 +930,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public void closeFile(int fileId) throws HyracksDataException {
-        if (LOGGER.isLoggable(fileOpsLevel)) {
+        if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Closing file: " + fileId + " in cache: " + this);
         }
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine(dumpState());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(dumpState());
         }
 
         synchronized (fileInfoMap) {
@@ -945,7 +946,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 throw new HyracksDataException("Closed fileId: " + fileId + " more times than it was opened.");
             }
         }
-        if (LOGGER.isLoggable(fileOpsLevel)) {
+        if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Closed file: " + fileId + " in cache: " + this);
         }
     }
@@ -980,7 +981,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public void deleteFile(int fileId) throws HyracksDataException {
-        if (LOGGER.isLoggable(fileOpsLevel)) {
+        if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Deleting file: " + fileId + " in cache: " + this);
         }
         synchronized (fileInfoMap) {
@@ -1306,8 +1307,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 }
             }
         } finally {
-            if (cycleCount > PIN_ATTEMPT_CYCLES_WARNING_THRESHOLD && LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Took " + cycleCount + " cycles to find free page in buffer cache.  (buffer cache "
+            if (cycleCount > PIN_ATTEMPT_CYCLES_WARNING_THRESHOLD && LOGGER.isWarnEnabled()) {
+                LOGGER.warn("Took " + cycleCount + " cycles to find free page in buffer cache.  (buffer cache "
                         + "undersized?)" + (DEBUG
                                 ? " ; " + (masterPinCount.get() - startingPinCount)
                                         + " successful pins since start of cycle"

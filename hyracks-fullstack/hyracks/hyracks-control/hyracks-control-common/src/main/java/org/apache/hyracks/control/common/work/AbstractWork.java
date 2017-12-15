@@ -18,9 +18,10 @@
  */
 package org.apache.hyracks.control.common.work;
 
-import java.util.logging.Level;
+import org.apache.logging.log4j.Level;
 
 public abstract class AbstractWork implements Runnable {
+
     public Level logLevel() {
         return Level.INFO;
     }

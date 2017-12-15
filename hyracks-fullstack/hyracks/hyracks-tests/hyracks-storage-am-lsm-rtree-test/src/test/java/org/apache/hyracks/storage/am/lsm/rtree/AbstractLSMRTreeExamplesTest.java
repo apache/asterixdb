@@ -48,7 +48,7 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
      */
     @Test
     public void additionalFilteringingExample() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Testing LSMRTree or LSMRTreeWithAntiMatterTuples component filters.");
         }
 
@@ -116,7 +116,7 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
         treeIndex.activate();
 
         long start = System.currentTimeMillis();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Inserting into tree...");
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
@@ -143,7 +143,7 @@ public abstract class AbstractLSMRTreeExamplesTest extends AbstractRTreeExamples
             }
         }
         long end = System.currentTimeMillis();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info(numInserts + " inserts in " + (end - start) + "ms");
         }
 

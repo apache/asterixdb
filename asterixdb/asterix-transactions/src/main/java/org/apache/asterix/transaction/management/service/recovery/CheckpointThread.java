@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.transaction.management.service.recovery;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A daemon thread that periodically attempts to perform checkpoints.
@@ -32,7 +32,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class CheckpointThread extends Thread {
 
-    private static final Logger LOGGER = Logger.getLogger(CheckpointThread.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private long lsnThreshold;
     private long checkpointTermInSecs;
 
@@ -71,7 +71,7 @@ public class CheckpointThread extends Thread {
                     //last checkpoint LSN is considered as the min LSN of the current log partition
                     lastCheckpointLSN = logManager.getReadableSmallestLSN();
                 } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Error getting smallest readable LSN", e);
+                    LOGGER.log(Level.WARN, "Error getting smallest readable LSN", e);
                     lastCheckpointLSN = 0;
                 }
             }
@@ -95,7 +95,7 @@ public class CheckpointThread extends Thread {
                         lastCheckpointLSN = currentCheckpointAttemptMinLSN;
                     }
                 } catch (HyracksDataException e) {
-                    LOGGER.log(Level.SEVERE, "Error during checkpoint", e);
+                    LOGGER.log(Level.ERROR, "Error during checkpoint", e);
                 }
             }
         }

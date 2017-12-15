@@ -23,11 +23,12 @@ import static org.apache.hyracks.control.common.controllers.ServiceConstants.NC_
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.control.common.controllers.ServiceConstants.ServiceCommand;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A work which is run at CC shutdown for each NC specified in the configuration file.
@@ -35,7 +36,7 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
  */
 public class ShutdownNCServiceWork extends SynchronizableWork {
 
-    private static final Logger LOGGER = Logger.getLogger(ShutdownNCServiceWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final String ncHost;
     private final int ncPort;
@@ -55,7 +56,7 @@ public class ShutdownNCServiceWork extends SynchronizableWork {
             oos.writeUTF(ServiceCommand.TERMINATE.name());
             oos.close();
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to contact NC service '" + ncId + "' at " + ncHost + ":" + ncPort, e);
+            LOGGER.log(Level.WARN, "Failed to contact NC service '" + ncId + "' at " + ncHost + ":" + ncPort, e);
         }
     }
 }

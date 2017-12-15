@@ -21,10 +21,11 @@ package org.apache.asterix.test.sqlpp;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Logger;
 
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.hyracks.util.file.FileUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,7 +36,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class SmokeParserTest {
 
-    private static final Logger LOGGER = Logger.getLogger(SmokeParserTest.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String EXTENSION_QUERY = "sqlpp";
     private static final String EXTENSION_RESULT = "ast";

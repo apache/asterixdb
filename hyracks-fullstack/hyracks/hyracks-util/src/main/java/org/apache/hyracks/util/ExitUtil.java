@@ -18,12 +18,13 @@
  */
 package org.apache.hyracks.util;
 
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @SuppressWarnings("squid:S1147")
 public class ExitUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(ExitUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ExitThread exitThread = new ExitThread();
 

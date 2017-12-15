@@ -23,7 +23,9 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,7 +36,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class JSONUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(JSONUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String INDENT = "\t";
 
@@ -63,8 +65,8 @@ public class JSONUtil {
         try {
             return appendObj(new StringBuilder(), om.readTree(str), initialIndent).toString();
         } catch (IOException e) {
-            LOGGER.finest(String.valueOf(e));
-            LOGGER.finest("Could not indent JSON string, returning the input string: " + str);
+            LOGGER.trace(String.valueOf(e));
+            LOGGER.trace("Could not indent JSON string, returning the input string: " + str);
             return str;
         }
     }

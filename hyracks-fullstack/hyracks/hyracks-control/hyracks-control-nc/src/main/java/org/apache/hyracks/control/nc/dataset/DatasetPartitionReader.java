@@ -20,15 +20,15 @@ package org.apache.hyracks.control.nc.dataset;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.comm.channels.NetworkOutputChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DatasetPartitionReader {
-    private static final Logger LOGGER = Logger.getLogger(DatasetPartitionReader.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final DatasetPartitionManager datasetPartitionManager;
 
@@ -85,7 +85,7 @@ public class DatasetPartitionReader {
                 } catch (HyracksDataException e) {
                     throw new RuntimeException(e);
                 }
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("result reading successful(" + resultState.getResultSetPartitionId() + ")");
                 }
             }

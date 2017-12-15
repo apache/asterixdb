@@ -38,8 +38,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
@@ -93,13 +91,16 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManage
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * This class is used to receive and process replication requests from remote replicas or replica events from CC
  */
 public class ReplicationChannel extends Thread implements IReplicationChannel {
 
-    private static final Logger LOGGER = Logger.getLogger(ReplicationChannel.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int LOG_REPLICATION_END_HANKSHAKE_LOG_SIZE = 1;
     private final ExecutorService replicationThreads;
     private final String localNodeID;
@@ -190,7 +191,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 replicationThreads.execute(new ReplicationThread(socketChannel));
             }
         } catch (AsynchronousCloseException e) {
-            LOGGER.log(Level.WARNING, "Replication channel closed", e);
+            LOGGER.warn("Replication channel closed", e);
         } catch (IOException e) {
             throw new IllegalStateException(
                     "Could not open replication channel @ IP Address: " + nodeIP + ":" + dataPort, e);
@@ -296,17 +297,13 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     replicationFunction = ReplicationProtocol.getRequestType(socketChannel, inBuffer);
                 }
             } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Unexpected error during replication.", e);
-                }
+                LOGGER.warn("Unexpectedly error during replication.", e);
             } finally {
                 if (socketChannel.isOpen()) {
                     try {
                         socketChannel.close();
                     } catch (IOException e) {
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.log(Level.WARNING, "Filed to close replication socket.", e);
-                        }
+                        LOGGER.warn("Filed to close replication socket.", e);
                     }
                 }
             }
@@ -536,7 +533,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                         }
                         break;
                     default:
-                        LOGGER.severe("Unsupported LogType: " + remoteLog.getLogType());
+                        LOGGER.error("Unsupported LogType: " + remoteLog.getLogType());
                 }
             }
         }
@@ -593,7 +590,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     }
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Failed to checkpoint replica indexes", e);
+                LOGGER.error("Failed to checkpoint replica indexes", e);
             }
         }
 
@@ -639,9 +636,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (IOException e) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.log(Level.WARNING, "Failed to send job replication ACK", e);
-                    }
+                    LOGGER.warn("Failed to send job replication ACK", e);
                 }
             }
         }
@@ -666,9 +661,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
-                    if (LOGGER.isLoggable(Level.SEVERE)) {
-                        LOGGER.log(Level.SEVERE, "Unexpected exception during LSN synchronization", e);
-                    }
+                    LOGGER.error("Unexpected exception during LSN synchronization", e);
                 }
             }
         }

@@ -24,8 +24,6 @@ import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_DATASE
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.translator.QueryTranslator;
@@ -55,6 +53,9 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,7 +64,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public abstract class RestApiServlet extends AbstractServlet {
-    private static final Logger LOGGER = Logger.getLogger(RestApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ICcApplicationContext appCtx;
     private final ILangCompilationProvider compilationProvider;
     private final IParserFactory parserFactory;
@@ -180,7 +181,7 @@ public abstract class RestApiServlet extends AbstractServlet {
             doHandle(response, query, sessionOutput, resultDelivery);
         } catch (Exception e) {
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            LOGGER.log(Level.WARNING, "Failure handling request", e);
+            LOGGER.log(Level.WARN, "Failure handling request", e);
             return;
         }
     }
@@ -212,13 +213,13 @@ public abstract class RestApiServlet extends AbstractServlet {
             translator.compileAndExecute(hcc, null, requestParameters);
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, pe.getMessage(), pe);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, pe.getMessage(), pe);
             String errorMessage = ResultUtil.buildParseExceptionMessage(pe, query);
             ObjectNode errorResp =
                     ResultUtil.getErrorResponse(2, errorMessage, "", ResultUtil.extractFullStackTrace(pe));
             sessionOutput.out().write(OBJECT_MAPPER.writeValueAsString(errorResp));
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             ResultUtil.apiErrorHandler(sessionOutput.out(), e);
         }

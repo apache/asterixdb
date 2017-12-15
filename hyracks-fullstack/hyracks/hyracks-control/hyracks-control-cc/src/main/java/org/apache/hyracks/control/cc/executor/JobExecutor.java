@@ -28,8 +28,6 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.constraints.Constraint;
@@ -68,9 +66,12 @@ import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.hyracks.control.common.job.TaskAttemptDescriptor;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.NoOpCallback;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class JobExecutor {
-    private static final Logger LOGGER = Logger.getLogger(JobExecutor.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ClusterControllerService ccs;
 
@@ -196,7 +197,7 @@ public class JobExecutor {
         Set<TaskCluster> taskClusterRoots = new HashSet<>();
         findRunnableTaskClusterRoots(taskClusterRoots,
                 jobRun.getActivityClusterGraph().getActivityClusterMap().values());
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO,
                     "Runnable TC roots: " + taskClusterRoots + ", inProgressTaskClusters: " + inProgressTaskClusters);
         }
@@ -226,19 +227,19 @@ public class JobExecutor {
                 queue.add(new RankedRunnableTaskCluster(priority, tc));
             }
         }
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Ranked TCs: " + queue);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Ranked TCs: " + queue);
         }
 
         Map<String, List<TaskAttemptDescriptor>> taskAttemptMap = new HashMap<>();
         for (RankedRunnableTaskCluster rrtc : queue) {
             TaskCluster tc = rrtc.getTaskCluster();
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Found runnable TC: " + tc);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Found runnable TC: " + tc);
                 List<TaskClusterAttempt> attempts = tc.getAttempts();
-                LOGGER.fine("Attempts so far:" + attempts.size());
+                LOGGER.debug("Attempts so far:" + attempts.size());
                 for (TaskClusterAttempt tcAttempt : attempts) {
-                    LOGGER.fine("Status: " + tcAttempt.getStatus());
+                    LOGGER.debug("Status: " + tcAttempt.getStatus());
                 }
             }
             assignTaskLocations(tc, taskAttemptMap);
@@ -258,16 +259,16 @@ public class JobExecutor {
      * Runnability(Non-schedulable TaskCluster) = {NOT_RUNNABLE, _}
      */
     private Runnability assignRunnabilityRank(TaskCluster goal, Map<TaskCluster, Runnability> runnabilityMap) {
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Computing runnability: " + goal);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Computing runnability: " + goal);
         }
         if (runnabilityMap.containsKey(goal)) {
             return runnabilityMap.get(goal);
         }
         TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(goal);
         if (lastAttempt != null) {
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Last Attempt Status: " + lastAttempt.getStatus());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Last Attempt Status: " + lastAttempt.getStatus());
             }
             if (lastAttempt.getStatus() == TaskClusterAttempt.TaskClusterStatus.COMPLETED) {
                 Runnability runnability = new Runnability(Runnability.Tag.COMPLETED, Integer.MIN_VALUE);
@@ -284,15 +285,15 @@ public class JobExecutor {
         PartitionMatchMaker pmm = jobRun.getPartitionMatchMaker();
         Runnability aggregateRunnability = new Runnability(Runnability.Tag.RUNNABLE, 0);
         for (PartitionId pid : goal.getRequiredPartitions()) {
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Inspecting required partition: " + pid);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Inspecting required partition: " + pid);
             }
             Runnability runnability;
             ConnectorDescriptorId cdId = pid.getConnectorDescriptorId();
             IConnectorPolicy cPolicy = connectorPolicyMap.get(cdId);
             PartitionState maxState = pmm.getMaximumAvailableState(pid);
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Policy: " + cPolicy + " maxState: " + maxState);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Policy: " + cPolicy + " maxState: " + maxState);
             }
             if (PartitionState.COMMITTED.equals(maxState)) {
                 runnability = new Runnability(Runnability.Tag.RUNNABLE, 0);
@@ -328,8 +329,8 @@ public class JobExecutor {
                 // already not runnable -- cannot get better. bail.
                 break;
             }
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("aggregateRunnability: " + aggregateRunnability);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("aggregateRunnability: " + aggregateRunnability);
             }
         }
         runnabilityMap.put(goal, aggregateRunnability);
@@ -511,8 +512,8 @@ public class JobExecutor {
                 if (node != null) {
                     node.getActiveJobIds().add(jobRun.getJobId());
                     boolean changed = jobRun.getParticipatingNodeIds().add(nodeId);
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("Starting: " + taskDescriptors + " at " + entry.getKey());
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Starting: " + taskDescriptors + " at " + entry.getKey());
                     }
                     byte[] jagBytes = changed ? acgBytes : null;
                     node.getNodeController().startTasks(deploymentId, jobId, jagBytes, taskDescriptors,
@@ -537,14 +538,14 @@ public class JobExecutor {
 
     private void abortTaskCluster(TaskClusterAttempt tcAttempt,
             TaskClusterAttempt.TaskClusterStatus failedOrAbortedStatus) {
-        LOGGER.fine("Aborting task cluster: " + tcAttempt.getAttempt());
+        LOGGER.debug("Aborting task cluster: " + tcAttempt.getAttempt());
         Set<TaskAttemptId> abortTaskIds = new HashSet<>();
         Map<String, List<TaskAttemptId>> abortTaskAttemptMap = new HashMap<>();
         for (TaskAttempt ta : tcAttempt.getTaskAttempts().values()) {
             TaskAttemptId taId = ta.getTaskAttemptId();
             TaskAttempt.TaskStatus status = ta.getStatus();
             abortTaskIds.add(taId);
-            LOGGER.fine("Checking " + taId + ": " + ta.getStatus());
+            LOGGER.debug("Checking " + taId + ": " + ta.getStatus());
             if (status == TaskAttempt.TaskStatus.RUNNING || status == TaskAttempt.TaskStatus.COMPLETED) {
                 ta.setStatus(TaskAttempt.TaskStatus.ABORTED, null);
                 ta.setEndTime(System.currentTimeMillis());
@@ -564,13 +565,13 @@ public class JobExecutor {
         abortTaskAttemptMap.forEach((key, abortTaskAttempts) -> {
             final NodeControllerState node = nodeManager.getNodeControllerState(key);
             if (node != null) {
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Aborting: " + abortTaskAttempts + " at " + key);
                 }
                 try {
                     node.getNodeController().abortTasks(jobId, abortTaskAttempts);
                 } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    LOGGER.log(Level.ERROR, e.getMessage(), e);
                 }
             }
         });
@@ -648,13 +649,13 @@ public class JobExecutor {
             TaskCluster tc = ta.getTask().getTaskCluster();
             TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
             if (lastAttempt == null || taId.getAttempt() != lastAttempt.getAttempt()) {
-                LOGGER.warning(() -> "Ignoring task complete notification: " + taId + " -- Current last attempt = "
+                LOGGER.warn(() -> "Ignoring task complete notification: " + taId + " -- Current last attempt = "
                         + lastAttempt);
                 return;
             }
             TaskAttempt.TaskStatus taStatus = ta.getStatus();
             if (taStatus != TaskAttempt.TaskStatus.RUNNING) {
-                LOGGER.warning(() -> "Spurious task complete notification: " + taId + " Current state = " + taStatus);
+                LOGGER.warn(() -> "Spurious task complete notification: " + taId + " Current state = " + taStatus);
                 return;
             }
             ta.setStatus(TaskAttempt.TaskStatus.COMPLETED, null);
@@ -666,7 +667,7 @@ public class JobExecutor {
                 startRunnableActivityClusters();
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e, () -> "Unexpected failure. Aborting job " + jobRun.getJobId());
+            LOGGER.error(() -> "Unexpected failure. Aborting job " + jobRun.getJobId(), e);
             abortJob(Collections.singletonList(e), NoOpCallback.INSTANCE);
         }
     }
@@ -701,7 +702,7 @@ public class JobExecutor {
                 LOGGER.log(Level.INFO, "We will try to start runnable activity clusters of " + ta.getTaskAttemptId());
                 startRunnableActivityClusters();
             } else {
-                LOGGER.warning(
+                LOGGER.warn(
                         "Ignoring task failure notification: " + taId + " -- Current last attempt = " + lastAttempt);
             }
         } catch (Exception e) {
@@ -729,7 +730,7 @@ public class JobExecutor {
                     ta -> HyracksException.create(ErrorCode.NODE_FAILED, ta.getNodeId()));
             startRunnableActivityClusters();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e, () -> "Unexpected failure. Aborting job " + jobRun.getJobId());
+            LOGGER.error(() -> "Unexpected failure. Aborting job " + jobRun.getJobId(), e);
             abortJob(Collections.singletonList(e), NoOpCallback.INSTANCE);
         }
     }

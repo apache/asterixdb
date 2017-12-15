@@ -53,7 +53,7 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
 
     @Test
     public void singleFieldTest() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("TESTING BLOOM FILTER");
         }
 
@@ -111,7 +111,7 @@ public class BloomFilterTest extends AbstractBloomFilterTest {
 
     @Test
     public void multiFieldTest() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("TESTING BLOOM FILTER");
         }
 

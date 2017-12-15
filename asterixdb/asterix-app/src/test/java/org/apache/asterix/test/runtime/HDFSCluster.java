@@ -31,8 +31,6 @@ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 /**
  * Manages a Mini (local VM) HDFS cluster with a configured number of datanodes.
@@ -73,7 +71,6 @@ public class HDFSCluster {
         conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/mapred-site.xml"));
         conf.addResource(new Path(basePath + PATH_TO_HADOOP_CONF + "/hdfs-site.xml"));
         cleanupLocal();
-        setLoggingLevel(Level.WARN);
         conf.set(MiniDFSCluster.HDFS_MINIDFS_BASEDIR, MINIDFS_BASEDIR);
         MiniDFSCluster.Builder build = new MiniDFSCluster.Builder(conf);
         build.nameNodePort(nameNodePort);
@@ -82,11 +79,6 @@ public class HDFSCluster {
         dfsCluster = build.build();
         dfs = FileSystem.get(conf);
         loadData(basePath);
-    }
-
-    private void setLoggingLevel(Level level) {
-        Logger rootLogger = Logger.getRootLogger();
-        rootLogger.setLevel(level);
     }
 
     private void loadData(String localDataRoot) throws IOException {

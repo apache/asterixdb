@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -40,11 +39,13 @@ import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LogBuffer implements ILogBuffer {
 
     public static final boolean IS_DEBUG_MODE = false;//true
-    private static final Logger LOGGER = Logger.getLogger(LogBuffer.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ITransactionSubsystem txnSubsystem;
     private final LogBufferTailReader logBufferTailReader;
     private final int logPageSize;

@@ -19,8 +19,6 @@
 package org.apache.hyracks.dataflow.std.group.external;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -35,11 +33,13 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePu
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.ISpillableTable;
 import org.apache.hyracks.dataflow.std.group.ISpillableTableFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSinkOperatorNodePushable
         implements IRunFileWriterGenerator {
 
-    private static Logger LOGGER = Logger.getLogger("ExternalGroupBuildPhase");
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IHyracksTaskContext ctx;
     private final Object stateId;
     private final int[] keyFields;
@@ -115,7 +115,7 @@ public class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSi
         } else {
             externalGroupBy.flushSpilledPartitions();
             ctx.setStateObject(state);
-            if (LOGGER.isLoggable(Level.FINE)) {
+            if (LOGGER.isDebugEnabled()) {
                 int numOfPartition = state.getSpillableTable().getNumPartitions();
                 int numOfSpilledPart = 0;
                 for (int i = 0; i < numOfPartition; i++) {
@@ -123,7 +123,7 @@ public class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSi
                         numOfSpilledPart++;
                     }
                 }
-                LOGGER.fine("level 0:" + "build with " + numOfPartition + " partitions" + ", spilled "
+                LOGGER.debug("level 0:" + "build with " + numOfPartition + " partitions" + ", spilled "
                         + numOfSpilledPart + " partitions");
             }
         }

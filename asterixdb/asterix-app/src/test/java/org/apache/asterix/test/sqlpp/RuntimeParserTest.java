@@ -21,11 +21,12 @@ package org.apache.asterix.test.sqlpp;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Logger;
 
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -40,7 +41,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class RuntimeParserTest {
 
-    protected static final Logger LOGGER = Logger.getLogger(RuntimeParserTest.class.getName());
+    protected static final Logger LOGGER = LogManager.getLogger();
 
     protected static final String PATH_ACTUAL = "target" + File.separator + "runtime_parserts" + File.separator;
     protected static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },

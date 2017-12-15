@@ -24,8 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.dataflow.ActivityId;
@@ -35,9 +33,11 @@ import org.apache.hyracks.api.job.ActivityCluster;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.ActivityClusterId;
 import org.apache.hyracks.api.job.JobActivityGraph;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ActivityClusterGraphBuilder {
-    private static final Logger LOGGER = Logger.getLogger(ActivityClusterGraphBuilder.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public ActivityClusterGraphBuilder() {
     }
@@ -146,8 +146,8 @@ public class ActivityClusterGraphBuilder {
         }
         acg.addActivityClusters(acList);
 
-        if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine(acg.toJSON().asText());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(acg.toJSON().asText());
         }
         return acg;
     }

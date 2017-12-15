@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -52,7 +51,6 @@ import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 
 public class LSMRTreeTestHarness {
-    protected static final Logger LOGGER = Logger.getLogger(LSMRTreeTestHarness.class.getName());
 
     private static final long RANDOM_SEED = 50;
 

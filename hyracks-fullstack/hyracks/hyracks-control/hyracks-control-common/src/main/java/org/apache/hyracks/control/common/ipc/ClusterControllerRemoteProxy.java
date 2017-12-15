@@ -20,7 +20,6 @@ package org.apache.hyracks.control.common.ipc;
 
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
@@ -55,9 +54,11 @@ import org.apache.hyracks.control.common.job.PartitionRequest;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.ipc.impl.IPCSystem;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implements IClusterController {
-    private static final Logger LOGGER = Logger.getLogger(ClusterControllerRemoteProxy.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final int clusterConnectRetries;
 

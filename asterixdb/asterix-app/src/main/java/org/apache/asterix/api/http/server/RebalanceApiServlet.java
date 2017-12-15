@@ -33,8 +33,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IMetadataLockManager;
@@ -52,6 +50,9 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -64,7 +65,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  * - rebalance all non-metadata datasets.
  */
 public class RebalanceApiServlet extends AbstractServlet {
-    private static final Logger LOGGER = Logger.getLogger(RebalanceApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String METADATA = "Metadata";
     private final ICcApplicationContext appCtx;
 
@@ -266,9 +267,9 @@ public class RebalanceApiServlet extends AbstractServlet {
     private void sendResponse(IServletResponse response, HttpResponseStatus status, String message, Exception e) {
         if (status != HttpResponseStatus.OK) {
             if (e != null) {
-                LOGGER.log(Level.WARNING, message, e);
+                LOGGER.log(Level.WARN, message, e);
             } else {
-                LOGGER.log(Level.WARNING, message);
+                LOGGER.log(Level.WARN, message);
             }
         }
         PrintWriter out = response.writer();

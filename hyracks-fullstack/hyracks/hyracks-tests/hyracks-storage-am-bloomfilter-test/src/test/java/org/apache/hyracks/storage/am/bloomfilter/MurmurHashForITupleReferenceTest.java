@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.bloomfilter;
 
 import java.nio.ByteBuffer;
 import java.util.Random;
-import java.util.logging.Level;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -50,7 +49,7 @@ public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {
 
     @Test
     public void murmurhashONEIntegerFieldTest() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("TESTING MURMUR HASH ONE INTEGER FIELD");
         }
 
@@ -77,7 +76,7 @@ public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {
 
     @Test
     public void murmurhashTwoIntegerFieldsTest() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("TESTING MURMUR HASH TWO INTEGER FIELDS");
         }
 
@@ -104,7 +103,7 @@ public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {
 
     @Test
     public void murmurhashOneStringFieldTest() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("TESTING MURMUR HASH ONE STRING FIELD");
         }
 
@@ -132,7 +131,7 @@ public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {
 
     @Test
     public void murmurhashThreeStringFieldsTest() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("TESTING MURMUR HASH THREE STRING FIELDS");
         }
 

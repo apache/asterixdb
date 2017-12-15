@@ -30,7 +30,8 @@ import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.FeedLogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.rometools.fetcher.FeedFetcher;
 import com.rometools.fetcher.FetcherEvent;
@@ -45,7 +46,7 @@ import com.rometools.rome.io.FeedException;
 
 public class RSSRecordReader implements IRecordReader<SyndEntry> {
 
-    private static final Logger LOGGER = Logger.getLogger(RSSRecordReader.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private boolean modified = false;
     private Queue<SyndEntry> rssFeedBuffer = new LinkedList<>();
     private FeedFetcherCache feedInfoCache;

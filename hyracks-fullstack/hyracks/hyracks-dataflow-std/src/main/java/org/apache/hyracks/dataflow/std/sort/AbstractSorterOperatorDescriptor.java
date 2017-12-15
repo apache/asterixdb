@@ -21,8 +21,6 @@ package org.apache.hyracks.dataflow.std.sort;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -45,10 +43,12 @@ import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorDescriptor {
 
-    private static final Logger LOGGER = Logger.getLogger(AbstractSorterOperatorDescriptor.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final long serialVersionUID = 1L;
 
@@ -132,7 +132,7 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                     runGen.close();
                     state.generatedRunFileReaders = runGen.getRuns();
                     state.sorter = runGen.getSorter();
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.info("InitialNumberOfRuns:" + runGen.getRuns().size());
                     }
                     ctx.setStateObject(state);

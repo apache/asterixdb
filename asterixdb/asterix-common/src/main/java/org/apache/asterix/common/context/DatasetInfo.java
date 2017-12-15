@@ -22,14 +22,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
-    private static final Logger LOGGER = Logger.getLogger(DatasetInfo.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Map<Long, IndexInfo> indexes;
     private final int datasetID;
     private int numActiveIOOps;
@@ -205,8 +205,8 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
             }
         }
         if (numActiveIOOps < 0) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.severe("Number of IO operations cannot be negative for dataset: " + this);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("Number of IO operations cannot be negative for dataset: " + this);
             }
             throw new IllegalStateException("Number of IO operations cannot be negative");
         }

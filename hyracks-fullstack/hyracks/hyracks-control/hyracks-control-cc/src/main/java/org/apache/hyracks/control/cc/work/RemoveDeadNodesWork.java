@@ -19,8 +19,6 @@
 package org.apache.hyracks.control.cc.work;
 
 import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -30,9 +28,12 @@ import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.AbstractWork;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RemoveDeadNodesWork extends AbstractWork {
-    private static Logger LOGGER = Logger.getLogger(RemoveDeadNodesWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ClusterControllerService ccs;
 
@@ -49,7 +50,7 @@ public class RemoveDeadNodesWork extends AbstractWork {
             Collection<JobId> affectedJobIds = result.getRight();
             int size = affectedJobIds.size();
             if (size > 0) {
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Number of affected jobs: " + size);
                 }
                 IJobManager jobManager = ccs.getJobManager();
@@ -64,12 +65,12 @@ public class RemoveDeadNodesWork extends AbstractWork {
                 ccs.getContext().notifyNodeFailure(deadNodes);
             }
         } catch (HyracksException e) {
-            LOGGER.log(Level.WARNING, "Uncaught exception on notifyNodeFailure", e);
+            LOGGER.log(Level.WARN, "Uncaught exception on notifyNodeFailure", e);
         }
     }
 
     @Override
     public Level logLevel() {
-        return Level.FINE;
+        return Level.DEBUG;
     }
 }

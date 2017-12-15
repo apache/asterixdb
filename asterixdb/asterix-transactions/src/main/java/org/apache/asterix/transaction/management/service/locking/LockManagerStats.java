@@ -20,8 +20,9 @@
 package org.apache.asterix.transaction.management.service.locking;
 
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 final class LockManagerStats {
     private final int loggingPeriod;
@@ -67,7 +68,7 @@ final class LockManagerStats {
     }
 
     final void logCounters(final Logger logger, final Level lvl, boolean always) {
-        if (logger.isLoggable(lvl)
+        if (logger.isEnabled(lvl)
             && (always || requestSum()  % loggingPeriod == 0)) {
             logger.log(lvl, toString());
         }

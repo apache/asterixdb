@@ -35,8 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
@@ -66,9 +64,12 @@ import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.ipc.api.IPayloadSerializerDeserializer;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CCNCFunctions {
-    private static final Logger LOGGER = Logger.getLogger(CCNCFunctions.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int FID_CODE_SIZE = 1;
 
@@ -1350,7 +1351,7 @@ public class CCNCFunctions {
             try {
                 serialize(baos, object, fid);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Error serializing " + object, e);
+                LOGGER.log(Level.ERROR, "Error serializing " + object, e);
                 throw e;
             }
             baos.close();

@@ -20,8 +20,6 @@
 package org.apache.hyracks.storage.am.rtree;
 
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -53,6 +51,8 @@ import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 @SuppressWarnings("rawtypes")
@@ -64,7 +64,7 @@ public abstract class AbstractRTreeExamplesTest {
         RTREE
     };
 
-    protected static final Logger LOGGER = Logger.getLogger(AbstractRTreeExamplesTest.class.getName());
+    protected static final Logger LOGGER = LogManager.getLogger();
     protected final Random rnd = new Random(50);
     protected RTreeType rTreeType;
 
@@ -82,7 +82,7 @@ public abstract class AbstractRTreeExamplesTest {
      */
     @Test
     public void twoDimensionsExample() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Fixed-Length Key,Value Example.");
         }
 
@@ -145,7 +145,7 @@ public abstract class AbstractRTreeExamplesTest {
         treeIndex.activate();
 
         long start = System.currentTimeMillis();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Inserting into tree...");
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
@@ -172,7 +172,7 @@ public abstract class AbstractRTreeExamplesTest {
             }
         }
         long end = System.currentTimeMillis();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info(numInserts + " inserts in " + (end - start) + "ms");
         }
 
@@ -198,7 +198,7 @@ public abstract class AbstractRTreeExamplesTest {
      */
     @Test
     public void rTreePageSplitTestExample() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("RTree page split test.");
         }
 
@@ -339,7 +339,7 @@ public abstract class AbstractRTreeExamplesTest {
      */
     @Test
     public void rStarTreePageSplitTestExample() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("R*Tree page split test.");
         }
 
@@ -482,7 +482,7 @@ public abstract class AbstractRTreeExamplesTest {
      */
     @Test
     public void threeDimensionsExample() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Fixed-Length Key,Value Example.");
         }
 
@@ -549,7 +549,7 @@ public abstract class AbstractRTreeExamplesTest {
         treeIndex.activate();
 
         long start = System.currentTimeMillis();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Inserting into tree...");
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
@@ -577,7 +577,7 @@ public abstract class AbstractRTreeExamplesTest {
             }
         }
         long end = System.currentTimeMillis();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info(numInserts + " inserts in " + (end - start) + "ms");
         }
 
@@ -603,7 +603,7 @@ public abstract class AbstractRTreeExamplesTest {
      */
     @Test
     public void deleteExample() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Deletion Example");
         }
 
@@ -663,7 +663,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         int runs = 3;
         for (int run = 0; run < runs; run++) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Deletion example run: " + (run + 1) + "/" + runs);
                 LOGGER.info("Inserting into tree...");
             }
@@ -702,7 +702,7 @@ public abstract class AbstractRTreeExamplesTest {
                 insDoneCmp[i] = insDone;
             }
 
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Deleting from tree...");
             }
             int delDone = 0;
@@ -717,7 +717,7 @@ public abstract class AbstractRTreeExamplesTest {
                     }
                 }
                 if (insDoneCmp[i] != delDone) {
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.info("INCONSISTENT STATE, ERROR IN DELETION EXAMPLE.");
                         LOGGER.info("INSDONECMP: " + insDoneCmp[i] + " " + delDone);
                     }
@@ -725,7 +725,7 @@ public abstract class AbstractRTreeExamplesTest {
                 }
             }
             if (insDone != delDone) {
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("ERROR! INSDONE: " + insDone + " DELDONE: " + delDone);
                 }
                 break;
@@ -740,7 +740,7 @@ public abstract class AbstractRTreeExamplesTest {
      */
     @Test
     public void bulkLoadExample() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Bulk load example");
         }
         // Declare fields.
@@ -801,7 +801,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         // Load records.
         int numInserts = 10000;
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Bulk loading " + numInserts + " tuples");
         }
         long start = System.currentTimeMillis();
@@ -824,7 +824,7 @@ public abstract class AbstractRTreeExamplesTest {
 
         bulkLoader.end();
         long end = System.currentTimeMillis();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info(numInserts + " tuples loaded in " + (end - start) + "ms");
         }
 
@@ -842,7 +842,7 @@ public abstract class AbstractRTreeExamplesTest {
     }
 
     protected void scan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Scan:");
         }
         ITreeIndexCursor scanCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
@@ -853,7 +853,7 @@ public abstract class AbstractRTreeExamplesTest {
                 scanCursor.next();
                 ITupleReference frameTuple = scanCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(rec);
                 }
             }
@@ -864,7 +864,7 @@ public abstract class AbstractRTreeExamplesTest {
 
     protected void diskOrderScan(IIndexAccessor indexAccessor, ISerializerDeserializer[] fieldSerdes) throws Exception {
         try {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Disk-Order Scan:");
             }
             ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) indexAccessor;
@@ -876,7 +876,7 @@ public abstract class AbstractRTreeExamplesTest {
                     diskOrderCursor.next();
                     ITupleReference frameTuple = diskOrderCursor.getTuple();
                     String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.info(rec);
                     }
                 }
@@ -886,13 +886,13 @@ public abstract class AbstractRTreeExamplesTest {
         } catch (UnsupportedOperationException e) {
             // Ignore exception because some indexes, e.g. the LSMRTree, don't
             // support disk-order scan.
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Ignoring disk-order scan since it's not supported.");
             }
         } catch (ClassCastException e) {
             // Ignore exception because IIndexAccessor sometimes isn't
             // an ITreeIndexAccessor, e.g., for the LSMRTree.
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Ignoring disk-order scan since it's not supported.");
             }
         }
@@ -901,7 +901,7 @@ public abstract class AbstractRTreeExamplesTest {
     protected void rangeSearch(IBinaryComparatorFactory[] cmpFactories, IIndexAccessor indexAccessor,
             ISerializerDeserializer[] fieldSerdes, ITupleReference key, ITupleReference minFilterTuple,
             ITupleReference maxFilterTuple) throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             String kString = TupleUtils.printTuple(key, fieldSerdes);
             LOGGER.info("Range-Search using key: " + kString);
         }
@@ -921,7 +921,7 @@ public abstract class AbstractRTreeExamplesTest {
                 rangeCursor.next();
                 ITupleReference frameTuple = rangeCursor.getTuple();
                 String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(rec);
                 }
             }

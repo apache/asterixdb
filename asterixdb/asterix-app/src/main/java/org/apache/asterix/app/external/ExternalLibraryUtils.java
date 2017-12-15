@@ -27,8 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
@@ -50,10 +48,13 @@ import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExternalLibraryUtils {
 
-    private static final Logger LOGGER = Logger.getLogger(ExternalLibraryUtils.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final FilenameFilter nonHiddenFileNameFilter = (dir, name) -> !name.startsWith(".");
 
     private ExternalLibraryUtils() {
@@ -210,7 +211,7 @@ public class ExternalLibraryUtils {
 
             // Add library
             MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new Library(dataverse, libraryName));
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Added library " + libraryName + " to Metadata");
             }
 
@@ -249,13 +250,13 @@ public class ExternalLibraryUtils {
                             args, function.getReturnType().trim(), function.getDefinition().trim(),
                             library.getLanguage().trim(), function.getFunctionType().trim());
                     MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.info("Installed function: " + libraryName + "#" + function.getName().trim());
                     }
                 }
             }
 
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Installed functions in library :" + libraryName);
             }
 
@@ -268,19 +269,19 @@ public class ExternalLibraryUtils {
                     DatasourceAdapter dsa =
                             new DatasourceAdapter(aid, adapterFactoryClass, IDataSourceAdapter.AdapterType.EXTERNAL);
                     MetadataManager.INSTANCE.addAdapter(mdTxnCtx, dsa);
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.info("Installed adapter: " + adapterName);
                     }
                 }
             }
 
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Installed adapters in library :" + libraryName);
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "Exception in installing library " + libraryName, e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.log(Level.ERROR, "Exception in installing library " + libraryName, e);
             }
             MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
         }
@@ -326,7 +327,7 @@ public class ExternalLibraryUtils {
     private static ClassLoader getLibraryClassLoader(String dataverse, String libraryName) throws Exception {
         // Get a reference to the library directory
         File installDir = getLibraryInstallDir();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Installing lirbary " + libraryName + " in dataverse " + dataverse + "."
                     + " Install Directory: " + installDir.getAbsolutePath());
         }
@@ -374,7 +375,7 @@ public class ExternalLibraryUtils {
             }
         }
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             StringBuilder logMesg = new StringBuilder("Classpath for library " + libraryName + "\n");
             for (URL url : urls) {
                 logMesg.append(url.getFile() + "\n");

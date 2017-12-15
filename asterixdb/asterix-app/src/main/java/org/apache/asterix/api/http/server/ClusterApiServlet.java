@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.config.IOption;
@@ -38,6 +36,9 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -47,7 +48,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ClusterApiServlet extends AbstractServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(ClusterApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     protected static final String NODE_ID_KEY = "node_id";
     protected static final String CONFIG_URI_KEY = "configUri";
     protected static final String STATS_URI_KEY = "statsUri";

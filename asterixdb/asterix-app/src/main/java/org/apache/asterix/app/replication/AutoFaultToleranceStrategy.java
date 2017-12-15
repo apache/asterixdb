@@ -26,8 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.app.nc.task.BindMetadataNodeTask;
@@ -54,7 +52,6 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
-import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -66,14 +63,16 @@ import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.util.FaultToleranceUtil;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
 
-    private static final Logger LOGGER = Logger.getLogger(AutoFaultToleranceStrategy.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private long clusterRequestId = 0;
 
     private Set<String> failedNodes = new HashSet<>();
@@ -159,7 +158,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
 
             if (partitionRecoveryPlan.size() == 0) {
                 //no active replicas were found for the failed node
-                LOGGER.severe("Could not find active replicas for the partitions " + lostPartitions);
+                LOGGER.error("Could not find active replicas for the partitions " + lostPartitions);
                 return;
             } else {
                 LOGGER.info("Partitions to recover: " + lostPartitions);
@@ -179,7 +178,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
                      * has failed. When the failure notification arrives, we will send any pending request
                      * that belongs to the failed NC to a different active replica.
                      */
-                    LOGGER.log(Level.WARNING, "Failed to send takeover request: " + takeoverRequest, e);
+                    LOGGER.log(Level.WARN, "Failed to send takeover request: " + takeoverRequest, e);
                 }
             });
         }
@@ -224,7 +223,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
             }
         }
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Prepared Failback plan: " + plan.toString());
         }
 
@@ -291,7 +290,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
                 messageBroker.sendApplicationMessageToNC(request, request.getNodeID());
                 plan.addPendingRequest(request);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Failed to send failback request to: " + request.getNodeID(), e);
+                LOGGER.log(Level.WARN, "Failed to send failback request to: " + request.getNodeID(), e);
                 plan.notifyNodeFailure(request.getNodeID());
                 revertFailedFailbackPlanEffects();
                 break;
@@ -374,7 +373,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
             try {
                 messageBroker.sendApplicationMessageToNC(request, request.getNodeId());
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Failed to send complete failback request to: " + request.getNodeId(), e);
+                LOGGER.log(Level.WARN, "Failed to send complete failback request to: " + request.getNodeId(), e);
                 notifyFailbackPlansNodeFailure(request.getNodeId());
                 revertFailedFailbackPlanEffects();
             }
@@ -417,7 +416,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
              * has failed. When the failure notification arrives, a new NC will be assigned to
              * the metadata partition and a new metadata node takeover request will be sent to it.
              */
-            LOGGER.log(Level.WARNING,
+            LOGGER.log(Level.WARN,
                     "Failed to send metadata node takeover request to: " + metadataPartiton.getActiveNodeId(), e);
         }
     }
@@ -477,7 +476,7 @@ public class AutoFaultToleranceStrategy implements IFaultToleranceStrategy {
             }
             clusterManager.refreshState();
         } else {
-            LOGGER.log(Level.SEVERE, msg.getNodeId() + " failed to complete startup. ", msg.getException());
+            LOGGER.log(Level.ERROR, msg.getNodeId() + " failed to complete startup. ", msg.getException());
         }
     }
 

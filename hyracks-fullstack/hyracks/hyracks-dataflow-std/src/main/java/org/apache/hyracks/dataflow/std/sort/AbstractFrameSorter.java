@@ -20,8 +20,6 @@
 package org.apache.hyracks.dataflow.std.sort;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAppender;
@@ -41,10 +39,12 @@ import org.apache.hyracks.dataflow.std.buffermanager.BufferInfo;
 import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
 import org.apache.hyracks.util.IntSerDeUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractFrameSorter implements IFrameSorter {
 
-    protected Logger LOGGER = Logger.getLogger(AbstractFrameSorter.class.getName());
+    protected Logger LOGGER = LogManager.getLogger();
     protected static final int ID_FRAME_ID = 0;
     protected static final int ID_TUPLE_START = 1;
     protected static final int ID_TUPLE_END = 2;
@@ -233,8 +233,8 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         }
         maxFrameSize = Math.max(maxFrameSize, outputFrame.getFrameSize());
         outputAppender.write(writer, true);
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine(
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(
                     "Flushed records:" + limit + " out of " + tupleCount + "; Flushed through " + (io + 1) + " frames");
         }
         return maxFrameSize;

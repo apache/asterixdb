@@ -58,11 +58,11 @@ public class AQLTestCase extends TestCase {
         try {
             parser.parse();
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.warning("Failed while testing file " + reader);
+            GlobalConfig.ASTERIX_LOGGER.warn("Failed while testing file " + reader);
             StringWriter sw = new StringWriter();
             PrintWriter writer = new PrintWriter(sw);
             e.printStackTrace(writer);
-            GlobalConfig.ASTERIX_LOGGER.warning(sw.toString());
+            GlobalConfig.ASTERIX_LOGGER.warn(sw.toString());
             throw new ParseException("Parsing " + queryFile.toString());
         }
 

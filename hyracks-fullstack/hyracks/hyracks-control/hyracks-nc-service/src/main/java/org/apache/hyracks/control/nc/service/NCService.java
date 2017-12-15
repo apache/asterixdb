@@ -34,8 +34,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.hyracks.control.common.config.ConfigUtils;
@@ -43,6 +41,9 @@ import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.controllers.ServiceConstants;
 import org.apache.hyracks.control.common.controllers.ServiceConstants.ServiceCommand;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ini4j.Ini;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -52,7 +53,7 @@ import org.kohsuke.args4j.CmdLineParser;
  */
 public class NCService {
 
-    private static final Logger LOGGER = Logger.getLogger(NCService.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /**
      * The .ini read from the CC (*not* the ncservice.ini file)
@@ -159,7 +160,7 @@ public class NCService {
             // QQQ inheriting probably isn't right
             pb.inheritIO();
 
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Launching NCDriver process");
             }
 
@@ -178,7 +179,7 @@ public class NCService {
                     writer.write("---------------------\n");
                 }
                 pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logfile));
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Logging to " + logfile.getCanonicalPath());
                 }
             }
@@ -200,13 +201,13 @@ public class NCService {
             }
             return retval == 0;
         } catch (Exception e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
+            if (LOGGER.isErrorEnabled()) {
                 StringWriter sw = new StringWriter();
                 try {
                     ini.store(sw);
-                    LOGGER.log(Level.SEVERE, "Configuration from CC broken: \n" + sw.toString(), e);
+                    LOGGER.log(Level.ERROR, "Configuration from CC broken: \n" + sw.toString(), e);
                 } catch (IOException e1) {
-                    LOGGER.log(Level.SEVERE, "Configuration from CC broken, failed to serialize", e1);
+                    LOGGER.log(Level.ERROR, "Configuration from CC broken, failed to serialize", e1);
                 }
             }
             return false;
@@ -225,7 +226,7 @@ public class NCService {
             ObjectInputStream ois = new ObjectInputStream(is);
             String magic = ois.readUTF();
             if (!ServiceConstants.NC_SERVICE_MAGIC_COOKIE.equals(magic)) {
-                LOGGER.severe("Connection used incorrect magic cookie");
+                LOGGER.error("Connection used incorrect magic cookie");
                 return false;
             }
             switch (ServiceCommand.valueOf(ois.readUTF())) {
@@ -241,7 +242,7 @@ public class NCService {
                     break;
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error decoding connection from server", e);
+            LOGGER.log(Level.ERROR, "Error decoding connection from server", e);
         }
         return false;
     }

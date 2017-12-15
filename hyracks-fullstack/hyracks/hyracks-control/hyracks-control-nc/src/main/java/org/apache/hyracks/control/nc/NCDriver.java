@@ -20,18 +20,19 @@ package org.apache.hyracks.control.nc;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 
 @SuppressWarnings("InfiniteLoopStatement")
 public class NCDriver {
-    private static final Logger LOGGER = Logger.getLogger(NCDriver.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private NCDriver() {
     }
@@ -49,10 +50,10 @@ public class NCDriver {
                 Thread.sleep(10000);
             }
         } catch (CmdLineException e) {
-            LOGGER.log(Level.FINE, "Exception parsing command line: " + Arrays.toString(args), e);
+            LOGGER.log(Level.DEBUG, "Exception parsing command line: " + Arrays.toString(args), e);
             System.exit(2);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exiting NCDriver due to exception", e);
+            LOGGER.log(Level.DEBUG, "Exiting NCDriver due to exception", e);
             System.exit(1);
         }
     }

@@ -20,8 +20,6 @@ package org.apache.hyracks.control.cc.work;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
@@ -30,9 +28,11 @@ import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.common.work.IResultCallback;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class JobCleanupWork extends AbstractWork {
-    private static final Logger LOGGER = Logger.getLogger(JobCleanupWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private IJobManager jobManager;
     private JobId jobId;
@@ -51,7 +51,7 @@ public class JobCleanupWork extends AbstractWork {
 
     @Override
     public void run() {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Cleanup for JobRun with id: " + jobId);
         }
         try {

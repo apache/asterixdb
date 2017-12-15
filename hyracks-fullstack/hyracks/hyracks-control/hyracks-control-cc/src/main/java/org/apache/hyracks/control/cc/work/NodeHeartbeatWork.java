@@ -18,10 +18,9 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import java.util.logging.Level;
-
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
+import org.apache.logging.log4j.Level;
 
 public class NodeHeartbeatWork extends AbstractHeartbeatWork {
 
@@ -36,6 +35,6 @@ public class NodeHeartbeatWork extends AbstractHeartbeatWork {
 
     @Override
     public Level logLevel() {
-        return Level.FINEST;
+        return Level.TRACE;
     }
 }

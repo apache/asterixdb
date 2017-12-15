@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -51,9 +50,11 @@ import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LSMBTreeTestHarness {
-    protected static final Logger LOGGER = Logger.getLogger(LSMBTreeTestHarness.class.getName());
+    protected static final Logger LOGGER = LogManager.getLogger();
 
     public static final BTreeLeafFrameType[] LEAF_FRAMES_TO_TEST =
             new BTreeLeafFrameType[] { BTreeLeafFrameType.REGULAR_NSM };

@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.tests.integration;
 
-import java.util.logging.Logger;
-
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -35,7 +33,6 @@ class WaitingOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor
     public static final MutableBoolean CONTINUE_RUNNING = new MutableBoolean(false);
 
     private static final long serialVersionUID = 1L;
-    private static Logger LOGGER = Logger.getLogger(WaitingOperatorDescriptor.class.getName());
 
     public WaitingOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity) {
         super(spec, inputArity, outputArity);

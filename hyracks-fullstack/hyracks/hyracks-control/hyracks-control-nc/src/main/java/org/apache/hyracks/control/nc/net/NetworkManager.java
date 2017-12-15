@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
@@ -41,9 +39,11 @@ import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemux;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NetworkManager implements IChannelConnectionFactory {
-    private static final Logger LOGGER = Logger.getLogger(NetworkManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int MAX_CONNECTION_ATTEMPTS = 5;
 
@@ -125,8 +125,8 @@ public class NetworkManager implements IChannelConnectionFactory {
         @Override
         public void accept(ByteBuffer buffer) {
             PartitionId pid = readInitialMessage(buffer);
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Received initial partition request: " + pid + " on channel: " + ccb);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Received initial partition request: " + pid + " on channel: " + ccb);
             }
             noc = new NetworkOutputChannel(ccb, nBuffers);
             try {

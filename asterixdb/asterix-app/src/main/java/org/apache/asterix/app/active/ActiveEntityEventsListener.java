@@ -25,8 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveEvent.Kind;
@@ -57,10 +55,13 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class ActiveEntityEventsListener implements IActiveEntityController {
 
-    private static final Logger LOGGER = Logger.getLogger(ActiveEntityEventsListener.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Level level = Level.INFO;
     private static final ActiveEvent STATE_CHANGED = new ActiveEvent(null, Kind.STATE_CHANGED, null, null);
     private static final EnumSet<ActivityState> TRANSITION_STATES = EnumSet.of(ActivityState.RESUMING,
@@ -153,12 +154,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                     handle((ActivePartitionMessage) event.getEventObject());
                     break;
                 default:
-                    LOGGER.log(Level.FINE, "Unhandled feed event notification: " + event);
+                    LOGGER.log(Level.DEBUG, "Unhandled feed event notification: " + event);
                     break;
             }
             notifySubscribers(event);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Unhandled Exception", e);
+            LOGGER.log(Level.ERROR, "Unhandled Exception", e);
         }
     }
 
@@ -181,7 +182,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     protected void finish(ActiveEvent event) throws HyracksDataException {
         LOGGER.log(level, "the job " + jobId + " finished");
         if (numRegistered != numDeRegistered) {
-            LOGGER.log(Level.WARNING, "the job " + jobId + " finished with reported runtime registrations = "
+            LOGGER.log(Level.WARN, "the job " + jobId + " finished with reported runtime registrations = "
                     + numRegistered + " and deregistrations = " + numDeRegistered + " on node controllers");
         }
         jobId = null;
@@ -317,7 +318,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                 try {
                     subscriber.notify(event);
                 } catch (HyracksDataException e) {
-                    LOGGER.log(Level.WARNING, "Failed to notify subscriber", e);
+                    LOGGER.log(Level.WARN, "Failed to notify subscriber", e);
                 }
                 if (subscriber.isDone()) {
                     it.remove();
@@ -379,7 +380,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             setRunning(metadataProvider, true);
         } catch (Exception e) {
             setState(ActivityState.PERMANENTLY_FAILED);
-            LOGGER.log(Level.SEVERE, "Failed to start the entity " + entityId, e);
+            LOGGER.log(Level.ERROR, "Failed to start the entity " + entityId, e);
             throw HyracksDataException.create(e);
         }
     }
@@ -411,7 +412,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             try {
                 setRunning(metadataProvider, false);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Failed to set the entity state as not running " + entityId, e);
+                LOGGER.log(Level.ERROR, "Failed to set the entity state as not running " + entityId, e);
                 throw HyracksDataException.create(e);
             }
         } else if (state == ActivityState.RUNNING) {
@@ -421,7 +422,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                 setRunning(metadataProvider, false);
             } catch (Exception e) {
                 setState(ActivityState.PERMANENTLY_FAILED);
-                LOGGER.log(Level.SEVERE, "Failed to stop the entity " + entityId, e);
+                LOGGER.log(Level.ERROR, "Failed to stop the entity " + entityId, e);
                 throw HyracksDataException.create(e);
             }
         } else {
@@ -470,7 +471,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             subscriber.sync();
         } catch (Exception e) {
             synchronized (this) {
-                LOGGER.log(Level.SEVERE, "Failure while waiting for " + entityId + " to become suspended", e);
+                LOGGER.log(Level.ERROR, "Failure while waiting for " + entityId + " to become suspended", e);
                 // failed to suspend
                 if (state == ActivityState.SUSPENDING) {
                     if (jobId != null) {
@@ -506,7 +507,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             try {
                 rt.resumeOrRecover(metadataProvider);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Failure while attempting to resume " + entityId, e);
+                LOGGER.log(Level.WARN, "Failure while attempting to resume " + entityId, e);
             }
         } finally {
             suspended = false;

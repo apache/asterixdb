@@ -20,8 +20,6 @@ package org.apache.asterix.messaging;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
@@ -36,10 +34,13 @@ import org.apache.hyracks.api.comm.IChannelWriteInterface;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MessagingChannelInterfaceFactory implements IChannelInterfaceFactory {
 
-    private static final Logger LOGGER = Logger.getLogger(MessagingChannelInterfaceFactory.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final NCMessageBroker messageBroker;
     private final ConcurrentFramePool messagingFramePool;
@@ -113,8 +114,8 @@ public class MessagingChannelInterfaceFactory implements IChannelInterfaceFactor
                 // Queue the received message and free the network IO thread
                 messageBroker.queueReceivedMessage(receivedMsg);
             } catch (ClassNotFoundException | IOException e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, e.getMessage(), e);
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.log(Level.WARN, e.getMessage(), e);
                 }
             } finally {
                 recycle.accept(buffer);
@@ -143,8 +144,8 @@ public class MessagingChannelInterfaceFactory implements IChannelInterfaceFactor
             try {
                 messagingFramePool.release(buffer);
             } catch (HyracksDataException e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, e.getMessage(), e);
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.log(Level.WARN, e.getMessage(), e);
                 }
             }
         }

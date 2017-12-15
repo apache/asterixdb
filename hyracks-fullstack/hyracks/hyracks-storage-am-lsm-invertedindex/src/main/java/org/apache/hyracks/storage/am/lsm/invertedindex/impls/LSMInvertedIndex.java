@@ -20,8 +20,6 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -77,9 +75,12 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.util.trace.ITracer;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex {
-    private static final Logger LOGGER = Logger.getLogger(LSMInvertedIndex.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected final IBinaryTokenizerFactory tokenizerFactory;
 
@@ -178,7 +179,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 } catch (HyracksDataException e) {
                     if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
                         // Key has already been deleted.
-                        LOGGER.log(Level.WARNING, "Failure during index delete operation", e);
+                        LOGGER.log(Level.WARN, "Failure during index delete operation", e);
                         throw e;
                     }
                 }

@@ -24,14 +24,15 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DiskUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(DiskUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private DiskUtil() {
         throw new AssertionError("Util class should not be initialized.");
@@ -119,7 +120,7 @@ public class DiskUtil {
                     LOGGER.info(line);
                 }
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, e.getMessage(), e);
+                LOGGER.log(Level.WARN, e.getMessage(), e);
             }
         }).start();
     }

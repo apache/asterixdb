@@ -19,12 +19,12 @@
 package org.apache.hyracks.control.common.ipc;
 
 import java.net.InetSocketAddress;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.ipc.impl.IPCSystem;
+import org.apache.logging.log4j.Logger;
 
 public abstract class ControllerRemoteProxy {
     protected final IPCSystem ipc;
@@ -55,14 +55,14 @@ public abstract class ControllerRemoteProxy {
         try {
             final boolean first = ipcHandle == null;
             if (!first) {
-                getLogger().warning("ipcHandle " + ipcHandle + " disconnected; retrying connection");
+                getLogger().warn("ipcHandle " + ipcHandle + " disconnected; retrying connection");
                 eventListener.ipcHandleDisconnected(ipcHandle);
             }
             ipcHandle = ipc.getHandle(inetSocketAddress, maxRetries);
             if (first) {
                 eventListener.ipcHandleConnected(ipcHandle);
             } else {
-                getLogger().warning("ipcHandle " + ipcHandle + " restored");
+                getLogger().warn("ipcHandle " + ipcHandle + " restored");
                 eventListener.ipcHandleRestored(ipcHandle);
             }
         } catch (IPCException e) {

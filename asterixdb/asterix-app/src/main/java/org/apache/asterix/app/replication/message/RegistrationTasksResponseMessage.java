@@ -19,8 +19,6 @@
 package org.apache.asterix.app.replication.message;
 
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -31,10 +29,13 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NCShutdownHook;
 import org.apache.hyracks.util.ExitUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RegistrationTasksResponseMessage implements INCLifecycleMessage, INcAddressedMessage {
 
-    private static final Logger LOGGER = Logger.getLogger(RegistrationTasksResponseMessage.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final String nodeId;
     private final List<INCLifecycleTask> tasks;
@@ -53,16 +54,16 @@ public class RegistrationTasksResponseMessage implements INCLifecycleMessage, IN
             Throwable exception = null;
             try {
                 for (INCLifecycleTask task : tasks) {
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.log(Level.INFO, "Starting startup task: " + task);
                     }
                     task.perform(cs);
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.log(Level.INFO, "Completed startup task: " + task);
                     }
                 }
             } catch (Throwable e) { //NOSONAR all startup failures should be reported to CC
-                LOGGER.log(Level.SEVERE, "Failed during startup task", e);
+                LOGGER.log(Level.ERROR, "Failed during startup task", e);
                 success = false;
                 exception = e;
             }
@@ -72,7 +73,7 @@ public class RegistrationTasksResponseMessage implements INCLifecycleMessage, IN
                 broker.sendMessageToCC(result);
             } catch (Exception e) {
                 success = false;
-                LOGGER.log(Level.SEVERE, "Failed sending message to cc", e);
+                LOGGER.log(Level.ERROR, "Failed sending message to cc", e);
             }
         } finally {
             if (!success) {

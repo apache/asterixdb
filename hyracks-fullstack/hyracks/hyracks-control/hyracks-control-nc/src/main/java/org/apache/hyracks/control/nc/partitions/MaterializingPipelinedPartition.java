@@ -20,8 +20,6 @@ package org.apache.hyracks.control.nc.partitions;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -33,9 +31,12 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.partitions.IPartition;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.PartitionState;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MaterializingPipelinedPartition implements IFrameWriter, IPartition {
-    private static final Logger LOGGER = Logger.getLogger(MaterializingPipelinedPartition.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final IHyracksTaskContext ctx;
     private final Executor executor;
@@ -50,7 +51,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
     private boolean failed;
     protected boolean flushRequest;
     private boolean deallocated;
-    private Level openCloseLevel = Level.FINE;
+    private Level openCloseLevel = Level.DEBUG;
     private Thread dataConsumerThread;
 
     public MaterializingPipelinedPartition(IHyracksTaskContext ctx, PartitionManager manager, PartitionId pid,
@@ -164,7 +165,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                         }
                     }
                 } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    LOGGER.log(Level.ERROR, e.getMessage(), e);
                 } finally {
                     thread.setName(oldName);
                     setDataConsumerThread(null); // Sets back the data consumer thread to null.
@@ -180,7 +181,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     @Override
     public void open() throws HyracksDataException {
-        if (LOGGER.isLoggable(openCloseLevel)) {
+        if (LOGGER.isEnabled(openCloseLevel)) {
             LOGGER.log(openCloseLevel, "open(" + pid + " by " + taId);
         }
         size = 0;
@@ -213,7 +214,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     @Override
     public void close() throws HyracksDataException {
-        if (LOGGER.isLoggable(openCloseLevel)) {
+        if (LOGGER.isEnabled(openCloseLevel)) {
             LOGGER.log(openCloseLevel, "close(" + pid + " by " + taId);
         }
         if (writeHandle != null) {

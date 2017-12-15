@@ -29,8 +29,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -48,6 +46,9 @@ import org.apache.hyracks.control.cc.scheduler.IJobQueue;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.NoOpCallback;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -55,7 +56,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 // Job manager manages all jobs that haven been submitted to the cluster.
 public class JobManager implements IJobManager {
 
-    private static final Logger LOGGER = Logger.getLogger(JobManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ClusterControllerService ccs;
     private final Map<JobId, JobRun> activeRunMap;
@@ -74,8 +75,8 @@ public class JobManager implements IJobManager {
             jobQueue = (IJobQueue) jobQueueConstructor.newInstance(this, this.jobCapacityController);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException
                 | InvocationTargetException e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.log(Level.WARNING, "class " + ccConfig.getJobQueueClass() + " could not be used: ", e);
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.log(Level.WARN, "class " + ccConfig.getJobQueueClass() + " could not be used: ", e);
             }
             // Falls back to the default implementation if the user-provided class name is not valid.
             jobQueue = new FIFOJobQueue(this, jobCapacityController);
@@ -158,7 +159,7 @@ public class JobManager implements IJobManager {
             return;
         }
         if (run.getPendingStatus() != null) {
-            LOGGER.warning("Ignoring duplicate cleanup for JobRun with id: " + jobId);
+            LOGGER.warn("Ignoring duplicate cleanup for JobRun with id: " + jobId);
             return;
         }
         Set<String> targetNodes = run.getParticipatingNodeIds();
@@ -179,7 +180,7 @@ public class JobManager implements IJobManager {
                         ncs.getNodeController().cleanUpJoblet(jobId, status);
                     }
                 } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    LOGGER.log(Level.ERROR, e.getMessage(), e);
                     if (caughtException == null) {
                         caughtException = HyracksException.create(e);
                     } else {
@@ -212,7 +213,7 @@ public class JobManager implements IJobManager {
             try {
                 serviceCtx.notifyJobFinish(jobId, run.getPendingStatus(), run.getPendingExceptions());
             } catch (HyracksException e) {
-                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                LOGGER.log(Level.ERROR, e.getMessage(), e);
                 caughtException = e;
             }
         }
@@ -229,7 +230,7 @@ public class JobManager implements IJobManager {
             try {
                 ccs.getJobLogFile().log(createJobLogObject(run));
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                LOGGER.log(Level.ERROR, e.getMessage(), e);
                 if (caughtException == null) {
                     caughtException = new HyracksException(e);
                 } else {
@@ -320,7 +321,7 @@ public class JobManager implements IJobManager {
         try {
             run.getExecutor().startJob();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Aborting " + run.getJobId() + " due to failure during job start", e);
+            LOGGER.log(Level.ERROR, "Aborting " + run.getJobId() + " due to failure during job start", e);
             final List<Exception> exceptions = Collections.singletonList(e);
             // fail the job then abort it
             run.setStatus(JobStatus.FAILURE, exceptions);

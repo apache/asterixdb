@@ -19,8 +19,6 @@
 package org.apache.hyracks.control.cc;
 
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -31,9 +29,13 @@ import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 public class BaseCCApplication implements ICCApplication {
-    private static final Logger LOGGER = Logger.getLogger(BaseCCApplication.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final ICCApplication INSTANCE = new BaseCCApplication();
     private IConfigManager configManager;
 
@@ -83,7 +85,7 @@ public class BaseCCApplication implements ICCApplication {
 
     protected void configureLoggingLevel(Level level) {
         LOGGER.info("Setting Hyracks log level to " + level);
-        Logger.getLogger("org.apache.hyracks").setLevel(level);
+        Configurator.setLevel("org.apache.hyracks", level);
     }
 
     @Override

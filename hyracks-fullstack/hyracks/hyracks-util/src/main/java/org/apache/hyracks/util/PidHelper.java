@@ -22,12 +22,14 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class PidHelper {
 
-    private static final Logger LOGGER = Logger.getLogger(PidHelper.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private PidHelper() {
     }

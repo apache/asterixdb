@@ -19,8 +19,6 @@
 package org.apache.hyracks.control.nc.work;
 
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
@@ -28,9 +26,12 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.Task;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NotifyTaskFailureWork extends AbstractWork {
-    private static final Logger LOGGER = Logger.getLogger(NotifyTaskFailureWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final NodeControllerService ncs;
     private final Task task;
     private final JobId jobId;
@@ -48,7 +49,7 @@ public class NotifyTaskFailureWork extends AbstractWork {
 
     @Override
     public void run() {
-        LOGGER.log(Level.WARNING, ncs.getId() + " is sending a notification to cc that task " + taskId + " has failed",
+        LOGGER.log(Level.WARN, ncs.getId() + " is sending a notification to cc that task " + taskId + " has failed",
                 exceptions.get(0));
         try {
             IDatasetPartitionManager dpm = ncs.getDatasetPartitionManager();
@@ -57,7 +58,7 @@ public class NotifyTaskFailureWork extends AbstractWork {
             }
             ncs.getClusterController().notifyTaskFailure(jobId, taskId, ncs.getId(), exceptions);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failure reporting task failure to cluster controller", e);
+            LOGGER.log(Level.ERROR, "Failure reporting task failure to cluster controller", e);
         }
         if (task != null) {
             task.getJoblet().removeTask(task);

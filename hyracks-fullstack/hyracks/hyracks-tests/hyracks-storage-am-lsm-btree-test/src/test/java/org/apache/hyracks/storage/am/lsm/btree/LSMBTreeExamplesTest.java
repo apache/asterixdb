@@ -73,7 +73,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
      */
     @Test
     public void additionalFilteringingExample() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Testing LSMBTree component filters.");
         }
 
@@ -106,7 +106,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
         treeIndex.activate();
 
         long start = System.currentTimeMillis();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Inserting into tree...");
         }
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
@@ -119,7 +119,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
             int f0 = rnd.nextInt() % numInserts;
             int f1 = i;
             TupleUtils.createIntegerTuple(tb, tuple, f0, f1);
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 if (i % 1000 == 0) {
                     LOGGER.info("Inserting " + i + " : " + f0 + " " + f1);
                 }
@@ -127,7 +127,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
             indexAccessor.insert(tuple);
         }
         long end = System.currentTimeMillis();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info(numInserts + " inserts in " + (end - start) + "ms");
         }
 

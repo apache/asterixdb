@@ -22,7 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -36,9 +35,11 @@ import org.apache.hyracks.control.common.dataset.ResultStateSweeper;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DatasetPartitionManager implements IDatasetPartitionManager {
-    private static final Logger LOGGER = Logger.getLogger(DatasetPartitionManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final NodeControllerService ncs;
 
@@ -82,7 +83,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
             resultStates[partition] = dpw.getResultState();
         }
 
-        LOGGER.fine("Initialized partition writer: JobId: " + jobId + ":partition: " + partition);
+        LOGGER.debug("Initialized partition writer: JobId: " + jobId + ":partition: " + partition);
         return dpw;
     }
 
@@ -101,7 +102,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
     @Override
     public void reportPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
         try {
-            LOGGER.fine("Reporting partition write completion: JobId: " + jobId + ": ResultSetId: " + rsId
+            LOGGER.debug("Reporting partition write completion: JobId: " + jobId + ": ResultSetId: " + rsId
                     + ":partition: " + partition);
             ncs.getClusterController().reportResultPartitionWriteCompletion(jobId, rsId, partition);
         } catch (Exception e) {
@@ -115,7 +116,7 @@ public class DatasetPartitionManager implements IDatasetPartitionManager {
         ResultState resultState = getResultState(jobId, resultSetId, partition);
         DatasetPartitionReader dpr = new DatasetPartitionReader(this, datasetMemoryManager, executor, resultState);
         dpr.writeTo(writer);
-        LOGGER.fine("Initialized partition reader: JobId: " + jobId + ":ResultSetId: " + resultSetId + ":partition: "
+        LOGGER.debug("Initialized partition reader: JobId: " + jobId + ":ResultSetId: " + resultSetId + ":partition: "
                 + partition);
     }
 

@@ -66,7 +66,7 @@ public abstract class AbstractRuleController {
     }
 
     private String getPlanString(Mutable<ILogicalOperator> opRef) throws AlgebricksException {
-        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(Level.FINE) && context != null) {
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled() && context != null) {
             LogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
             pvisitor.reset(new AlgebricksAppendable());
             PlanPrettyPrinter.printOperator((AbstractLogicalOperator) opRef.getValue(), pvisitor, 0);
@@ -77,10 +77,10 @@ public abstract class AbstractRuleController {
 
     private void printRuleApplication(IAlgebraicRewriteRule rule, String beforePlan, String afterPlan)
             throws AlgebricksException {
-        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(Level.FINE)) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Rule " + rule.getClass() + " fired.\n");
-            AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Before plan\n" + beforePlan + "\n");
-            AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> After plan\n" + afterPlan + "\n");
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled()) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.debug(">>>> Rule " + rule.getClass() + " fired.\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.debug(">>>> Before plan\n" + beforePlan + "\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.debug(">>>> After plan\n" + afterPlan + "\n");
         }
     }
 

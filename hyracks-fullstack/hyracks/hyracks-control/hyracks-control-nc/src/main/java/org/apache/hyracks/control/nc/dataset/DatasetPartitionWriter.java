@@ -19,8 +19,6 @@
 package org.apache.hyracks.control.nc.dataset;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -31,9 +29,11 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.ResultSetPartitionId;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DatasetPartitionWriter implements IFrameWriter {
-    private static final Logger LOGGER = Logger.getLogger(DatasetPartitionWriter.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final IDatasetPartitionManager manager;
 
@@ -79,7 +79,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
     @Override
     public void open() {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("open(" + partition + ")");
         }
         partitionRegistered = false;
@@ -105,7 +105,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
     @Override
     public void close() throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("close(" + partition + ")");
         }
         try {

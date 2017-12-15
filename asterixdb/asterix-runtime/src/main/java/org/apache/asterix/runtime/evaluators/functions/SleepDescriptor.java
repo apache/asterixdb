@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -33,12 +30,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SleepDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOGGER = Logger.getLogger(SleepDescriptor.class.getSimpleName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final IFunctionDescriptorFactory FACTORY = SleepDescriptor::new;
 
@@ -65,14 +65,14 @@ public class SleepDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         final long time = ATypeHierarchy.getLongValue(getIdentifier().getName(), 1, bytes, offset);
 
                         try {
-                            if (LOGGER.isLoggable(Level.INFO)) {
+                            if (LOGGER.isInfoEnabled()) {
                                 LOGGER.log(Level.INFO, ctx.getTaskAttemptId() + " sleeping for " + time + " ms");
                             }
                             Thread.sleep(time);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                         } finally {
-                            if (LOGGER.isLoggable(Level.INFO)) {
+                            if (LOGGER.isInfoEnabled()) {
                                 LOGGER.log(Level.INFO, ctx.getTaskAttemptId() + " done sleeping for " + time + " ms");
                             }
                         }

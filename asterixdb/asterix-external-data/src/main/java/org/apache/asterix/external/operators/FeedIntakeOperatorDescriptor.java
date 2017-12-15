@@ -19,7 +19,6 @@
 package org.apache.asterix.external.operators;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -37,6 +36,8 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * An operator responsible for establishing connection with external data source and parsing,
@@ -48,7 +49,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOGGER = Logger.getLogger(FeedIntakeOperatorDescriptor.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /** The unique identifier of the feed that is being ingested. **/
     private final EntityId feedId;
@@ -117,7 +118,7 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             RuntimeDataException err = new RuntimeDataException(
                     ErrorCode.OPERATORS_FEED_INTAKE_OPERATOR_DESCRIPTOR_CLASSLOADER_NOT_CONFIGURED, adaptorLibraryName,
                     feedId.getDataverse());
-            LOGGER.severe(err.getMessage());
+            LOGGER.error(err.getMessage());
             throw err;
         }
         return adapterFactory;

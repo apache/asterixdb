@@ -19,8 +19,6 @@
 package org.apache.hyracks.control.cc.work;
 
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.job.JobId;
@@ -28,9 +26,12 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.cc.job.TaskAttempt;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TaskFailureWork extends AbstractTaskLifecycleWork {
-    private static final Logger LOGGER = Logger.getLogger(TaskFailureWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final List<Exception> exceptions;
 
     public TaskFailureWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId,
@@ -41,7 +42,7 @@ public class TaskFailureWork extends AbstractTaskLifecycleWork {
 
     @Override
     protected void performEvent(TaskAttempt ta) {
-        LOGGER.log(Level.WARNING, "Executing task failure work for " + this, exceptions.get(0));
+        LOGGER.log(Level.WARN, "Executing task failure work for " + this, exceptions.get(0));
         IJobManager jobManager = ccs.getJobManager();
         JobRun run = jobManager.get(jobId);
         ccs.getDatasetDirectoryService().reportJobFailure(jobId, exceptions);

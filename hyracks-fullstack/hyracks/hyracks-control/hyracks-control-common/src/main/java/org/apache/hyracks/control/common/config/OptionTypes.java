@@ -19,11 +19,11 @@
 package org.apache.hyracks.control.common.config;
 
 import java.net.MalformedURLException;
-import java.util.logging.Level;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.logging.log4j.Level;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -169,7 +169,14 @@ public class OptionTypes {
     public static final IOptionType<Level> LEVEL = new IOptionType<Level>() {
         @Override
         public Level parse(String s) {
-            return s == null ? null : Level.parse(s);
+            if (s == null) {
+                throw new IllegalArgumentException("Logging level cannot be null");
+            }
+            final Level level = Level.getLevel(s);
+            if (level == null) {
+                throw new IllegalArgumentException("Unrecognized logging level: " + s);
+            }
+            return level;
         }
 
         @Override
@@ -179,12 +186,12 @@ public class OptionTypes {
 
         @Override
         public String serializeToJSON(Object value) {
-            return value == null ? null : ((Level)value).getName();
+            return value == null ? null : ((Level)value).name();
         }
 
         @Override
         public String serializeToIni(Object value) {
-            return ((Level)value).getName();
+            return ((Level)value).name();
         }
 
         @Override

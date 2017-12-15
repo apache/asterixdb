@@ -53,7 +53,7 @@ class ResourceGroup {
         try {
             return latch.writeLock().tryLock(timeout, unit);
         } catch (InterruptedException e) {
-            ConcurrentLockManager.LOGGER.finer("interrupted while wating on ResourceGroup");
+            ConcurrentLockManager.LOGGER.trace("interrupted while wating on ResourceGroup");
             throw e;
         }
     }
@@ -72,7 +72,7 @@ class ResourceGroup {
         try {
             condition.await();
         } catch (InterruptedException e) {
-            ConcurrentLockManager.LOGGER.finer("interrupted while waiting on ResourceGroup");
+            ConcurrentLockManager.LOGGER.trace("interrupted while waiting on ResourceGroup");
             throw e;
         }
     }
@@ -83,7 +83,7 @@ class ResourceGroup {
     }
 
     void log(String s) {
-        if (ConcurrentLockManager.LOGGER.isLoggable(ConcurrentLockManager.LVL)) {
+        if (ConcurrentLockManager.LOGGER.isEnabled(ConcurrentLockManager.LVL)) {
             ConcurrentLockManager.LOGGER.log(ConcurrentLockManager.LVL, s + " " + toString());
         }
     }

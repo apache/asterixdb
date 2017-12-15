@@ -25,8 +25,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
@@ -75,9 +73,11 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExternalIndexingOperations {
-    private static final Logger LOGGER = Logger.getLogger(ExternalIndexingOperations.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final List<List<String>> FILE_INDEX_FIELD_NAMES =
             Collections.unmodifiableList(Collections.singletonList(Collections.singletonList("")));
     public static final List<IAType> FILE_INDEX_FIELD_TYPES =
@@ -141,7 +141,7 @@ public class ExternalIndexingOperations {
             }
             return files;
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception while trying to get snapshot from external system", e);
+            LOGGER.warn("Exception while trying to get snapshot from external system", e);
             throw new AlgebricksException("Unable to get list of HDFS files " + e);
         }
     }

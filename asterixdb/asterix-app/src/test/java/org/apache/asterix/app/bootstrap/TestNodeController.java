@@ -25,8 +25,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.external.ExternalUDFLibrarian;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
@@ -67,7 +65,6 @@ import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModifi
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.runtime.CommitRuntime;
 import org.apache.asterix.transaction.management.service.logging.LogReader;
-import org.apache.avro.generic.GenericData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
@@ -112,10 +109,12 @@ import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.test.support.TestUtils;
 import org.apache.hyracks.util.file.FileUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.mockito.Mockito;
 
 public class TestNodeController {
-    protected static final Logger LOGGER = Logger.getLogger(TestNodeController.class.getName());
+    protected static final Logger LOGGER = LogManager.getLogger();
 
     protected static final String PATH_ACTUAL = "unittest" + File.separator;
     protected static final String PATH_BASE = FileUtil.joinPath("src", "test", "resources", "nodetests");

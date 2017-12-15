@@ -24,8 +24,6 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.server.ResultUtil;
@@ -55,10 +53,13 @@ import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class ExecuteStatementRequestMessage implements ICcAddressedMessage {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(ExecuteStatementRequestMessage.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2062
     public static final long DEFAULT_NC_TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(5);
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2063
@@ -130,16 +131,16 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         } catch (AlgebricksException | HyracksException | TokenMgrError
                 | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             // we trust that "our" exceptions are serializable and have a comprehensible error message
-            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, pe.getMessage(), pe);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, pe.getMessage(), pe);
             responseMsg.setError(pe);
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, "Unexpected exception", e);
             responseMsg.setError(new Exception(e.toString()));
         }
         try {
             messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.toString(), e);
+            LOGGER.log(Level.WARN, e.toString(), e);
         }
     }
 
@@ -162,7 +163,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         try {
             messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.toString(), e);
+            LOGGER.log(Level.WARN, e.toString(), e);
         }
     }
 

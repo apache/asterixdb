@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ITransactionContext;
@@ -37,11 +35,14 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.util.annotations.ThreadSafe;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @ThreadSafe
 public class TransactionManager implements ITransactionManager, ILifeCycleComponent {
 
-    private static final Logger LOGGER = Logger.getLogger(TransactionManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ITransactionSubsystem txnSubsystem;
     private final Map<TxnId, ITransactionContext> txnCtxRepository = new ConcurrentHashMap<>();
     private final AtomicLong maxTxnId = new AtomicLong(0);
@@ -83,8 +84,8 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
                 txnCtx.setTxnState(ITransactionManager.COMMITTED);
             }
         } catch (Exception e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.severe(" caused exception in commit !" + txnCtx.getTxnId());
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error(" caused exception in commit !" + txnCtx.getTxnId());
             }
             throw e;
         } finally {
@@ -107,8 +108,8 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             }
         } catch (ACIDException e) {
             String msg = "Could not complete rollback! System is in an inconsistent state";
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, msg, e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.log(Level.ERROR, msg, e);
             }
             throw new ACIDException(msg, e);
         } finally {
@@ -172,7 +173,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             sb.append("\n>>dump_end\t>>----- [ConfVars] -----\n");
             os.write(sb.toString().getBytes());
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "exception while dumping state", e);
+            LOGGER.log(Level.WARN, "exception while dumping state", e);
         }
     }
 }

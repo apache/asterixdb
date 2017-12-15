@@ -19,7 +19,6 @@
 package org.apache.hyracks.control.cc;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.control.cc.work.ApplicationMessageWork;
@@ -48,9 +47,11 @@ import org.apache.hyracks.control.common.work.IPCResponder;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 class ClusterControllerIPCI implements IIPCI {
-    private static final Logger LOGGER = Logger.getLogger(ClusterControllerIPCI.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ClusterControllerService ccs;
 
     ClusterControllerIPCI(ClusterControllerService ccs) {
@@ -161,7 +162,7 @@ class ClusterControllerIPCI implements IIPCI {
                         .schedule(new NotifyThreadDumpResponse(ccs, tdrf.getRequestId(), tdrf.getThreadDumpJSON()));
                 break;
             default:
-                LOGGER.warning("Unknown function: " + fn.getFunctionId());
+                LOGGER.warn("Unknown function: " + fn.getFunctionId());
         }
     }
 }

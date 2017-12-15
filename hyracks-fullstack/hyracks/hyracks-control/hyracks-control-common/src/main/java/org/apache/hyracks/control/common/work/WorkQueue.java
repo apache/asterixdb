@@ -23,13 +23,14 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class WorkQueue {
-    private static final Logger LOGGER = Logger.getLogger(WorkQueue.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     //to be fixed when application vs. hyracks log level issues are sorted
     private static final boolean DEBUG = false;
 
@@ -80,10 +81,10 @@ public class WorkQueue {
 
     public void schedule(AbstractWork event) {
         if (DEBUG) {
-            LOGGER.log(Level.FINEST, "Enqueue (" + hashCode() + "): " + enqueueCount.incrementAndGet());
+            LOGGER.log(Level.DEBUG, "Enqueue (" + hashCode() + "): " + enqueueCount.incrementAndGet());
         }
-        if (LOGGER.isLoggable(Level.FINER)) {
-            LOGGER.finer("Scheduling: " + event);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Scheduling: " + event);
         }
         queue.offer(event);
     }
@@ -115,18 +116,18 @@ public class WorkQueue {
                     break;
                 }
                 if (DEBUG) {
-                    LOGGER.log(Level.FINEST,
+                    LOGGER.log(Level.TRACE,
                             "Dequeue (" + WorkQueue.this.hashCode() + "): " + dequeueCount.incrementAndGet() + "/"
                                     + enqueueCount);
                 }
-                if (LOGGER.isLoggable(r.logLevel())) {
+                if (LOGGER.isEnabled(r.logLevel())) {
                     LOGGER.log(r.logLevel(), "Executing: " + r);
                 }
                 ThreadInfo before = threadMXBean.getThreadInfo(thread.getId());
                 try {
                     r.run();
                 } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Exception while executing " + r, e);
+                    LOGGER.log(Level.WARN, "Exception while executing " + r, e);
                 } finally {
                     auditWaitsAndBlocks(r, before);
                 }
@@ -138,7 +139,7 @@ public class WorkQueue {
             final long waitedDelta = after.getWaitedCount() - before.getWaitedCount();
             final long blockedDelta = after.getBlockedCount() - before.getBlockedCount();
             if (waitedDelta > 0 || blockedDelta > 0) {
-                LOGGER.warning("Work " + r + " waited " + waitedDelta + " times (~"
+                LOGGER.warn("Work " + r + " waited " + waitedDelta + " times (~"
                         + (after.getWaitedTime() - before.getWaitedTime()) + "ms), blocked " + blockedDelta
                         + " times (~" + (after.getBlockedTime() - before.getBlockedTime()) + "ms)"
                 );

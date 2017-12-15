@@ -28,7 +28,8 @@ import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.couchbase.client.core.message.dcp.DCPRequest;
 import com.couchbase.client.core.message.dcp.MutationMessage;
@@ -39,7 +40,7 @@ import com.couchbase.client.deps.io.netty.buffer.ByteBufAllocator;
 public class KVTestReader implements IRecordReader<DCPRequest> {
 
     private final GenericRecord<DCPRequest> record;
-    private static final Logger LOGGER = Logger.getLogger(KVTestReader.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     // Test variables
     private final String bucket;
     private final ArrayList<Short> assigned;

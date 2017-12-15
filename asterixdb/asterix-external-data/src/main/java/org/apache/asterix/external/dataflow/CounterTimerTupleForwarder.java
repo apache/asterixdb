@@ -21,8 +21,6 @@ package org.apache.asterix.external.dataflow;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -35,13 +33,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CounterTimerTupleForwarder implements ITupleForwarder {
 
     public static final String BATCH_SIZE = "batch-size";
     public static final String BATCH_INTERVAL = "batch-interval";
 
-    private static final Logger LOGGER = Logger.getLogger(CounterTimerTupleForwarder.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private FrameTupleAppender appender;
     private IFrame frame;
@@ -105,7 +105,7 @@ public class CounterTimerTupleForwarder implements ITupleForwarder {
     private void addTupleToFrame(ArrayTupleBuilder tb) throws HyracksDataException {
         if (tuplesInFrame == batchSize
                 || !appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("flushing frame containg (" + tuplesInFrame + ") tuples");
             }
             FrameUtils.flushFrame(frame.getBuffer(), writer);
@@ -148,7 +148,7 @@ public class CounterTimerTupleForwarder implements ITupleForwarder {
         public void run() {
             try {
                 if (tuplesInFrame > 0) {
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.info("TTL expired flushing frame (" + tuplesInFrame + ")");
                     }
                     synchronized (lock) {

@@ -26,11 +26,12 @@ import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.parser.ParseException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExpressionToVariableUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(ExpressionToVariableUtil.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private ExpressionToVariableUtil() {
     }

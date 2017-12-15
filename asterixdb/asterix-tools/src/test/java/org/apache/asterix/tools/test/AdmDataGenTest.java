@@ -24,8 +24,9 @@ import java.io.FileFilter;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -40,7 +41,7 @@ import org.apache.asterix.tools.datagen.AdmDataGen;
 @RunWith(Parameterized.class)
 public class AdmDataGenTest {
 
-    private static final Logger LOGGER = Logger.getLogger(AdmDataGenTest.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String SEPARATOR = File.separator;
     private static final String EXTENSION_QUERY = "adg";

@@ -24,20 +24,21 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.transaction.management.service.transaction.TxnIdFactory;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Provides functionality for running DeployedJobSpecs
  */
 public class DeployedJobService {
 
-    private static final Logger LOGGER = Logger.getLogger(DeployedJobService.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     //To enable new Asterix TxnId for separate deployed job spec invocations
     private static final byte[] TRANSACTION_ID_PARAMETER_NAME = "TxnIdParameter".getBytes();
@@ -57,7 +58,7 @@ public class DeployedJobService {
                         scheduledExecutorService.shutdown();
                     }
                 } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "Job Failed to run for " + entityId.getExtensionName() + " "
+                    LOGGER.log(Level.ERROR, "Job Failed to run for " + entityId.getExtensionName() + " "
                             + entityId.getDataverse() + "." + entityId.getEntityName() + ".", e);
                 }
             }
@@ -68,8 +69,8 @@ public class DeployedJobService {
     public static boolean runRepetitiveDeployedJobSpec(DeployedJobSpecId distributedId, IHyracksClientConnection hcc,
             Map<byte[], byte[]> jobParameters, long duration, EntityId entityId) throws Exception {
         long executionMilliseconds = runDeployedJobSpec(distributedId, hcc, jobParameters, entityId);
-        if (executionMilliseconds > duration && LOGGER.isLoggable(Level.SEVERE)) {
-            LOGGER.log(Level.SEVERE,
+        if (executionMilliseconds > duration && LOGGER.isErrorEnabled()) {
+            LOGGER.log(Level.ERROR,
                     "Periodic job for " + entityId.getExtensionName() + " " + entityId.getDataverse() + "."
                             + entityId.getEntityName() + " was unable to meet the required period of " + duration
                             + " milliseconds. Actually took " + executionMilliseconds + " execution will shutdown"

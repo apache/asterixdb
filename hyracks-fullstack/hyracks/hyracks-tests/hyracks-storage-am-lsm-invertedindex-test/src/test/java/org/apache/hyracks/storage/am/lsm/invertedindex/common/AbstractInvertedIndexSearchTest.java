@@ -22,8 +22,6 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.common;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
@@ -35,11 +33,13 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTest
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIndexTest {
 
-    protected final Logger LOGGER = Logger.getLogger(AbstractInvertedIndexSearchTest.class.getName());
+    protected final Logger LOGGER = LogManager.getLogger();
 
     protected int NUM_DOC_QUERIES = AccessMethodTestsConfig.LSM_INVINDEX_NUM_DOC_QUERIES;
     protected int NUM_RANDOM_QUERIES = AccessMethodTestsConfig.LSM_INVINDEX_NUM_RANDOM_QUERIES;
@@ -70,7 +70,7 @@ public abstract class AbstractInvertedIndexSearchTest extends AbstractInvertedIn
         invIndex.validate();
 
         for (IInvertedIndexSearchModifier searchModifier : searchModifiers) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Running searches with: " + searchModifier.toString());
             }
             LSMInvertedIndexTestUtils.testIndexSearch(testCtx, tupleGen, harness.getRandom(), NUM_DOC_QUERIES,

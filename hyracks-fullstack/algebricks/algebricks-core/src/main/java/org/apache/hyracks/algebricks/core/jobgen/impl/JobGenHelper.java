@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.core.jobgen.impl;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -42,10 +41,12 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class JobGenHelper {
 
-    private static final Logger LOGGER = Logger.getLogger(JobGenHelper.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @SuppressWarnings("rawtypes")
     public static RecordDescriptor mkRecordDescriptor(IVariableTypeEnvironment env, IOperatorSchema opSchema,
@@ -58,7 +59,7 @@ public final class JobGenHelper {
         for (LogicalVariable var : opSchema) {
             Object t = env.getVarType(var);
             if (t == null) {
-                LOGGER.warning("No type for variable " + var);
+                LOGGER.warn("No type for variable " + var);
             }
             fields[i] = sdp.getSerializerDeserializer(t);
             typeTraits[i] = ttp.getTypeTrait(t);

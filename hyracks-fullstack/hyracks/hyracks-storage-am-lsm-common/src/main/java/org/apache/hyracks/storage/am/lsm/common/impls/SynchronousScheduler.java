@@ -18,15 +18,15 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SynchronousScheduler implements ILSMIOOperationScheduler {
-    private static final Logger LOGGER = Logger.getLogger(SynchronousScheduler.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final SynchronousScheduler INSTANCE = new SynchronousScheduler();
 
     private SynchronousScheduler() {
@@ -37,7 +37,7 @@ public class SynchronousScheduler implements ILSMIOOperationScheduler {
         try {
             operation.call();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "IO Operation failed", e);
+            LOGGER.log(Level.ERROR, "IO Operation failed", e);
             throw HyracksDataException.create(e);
         }
     }

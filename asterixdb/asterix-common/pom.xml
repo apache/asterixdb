@@ -240,10 +240,6 @@
       <artifactId>hyracks-storage-am-lsm-rtree</artifactId>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.rometools</groupId>
       <artifactId>rome</artifactId>
       <scope>test</scope>
@@ -290,6 +286,10 @@
     <dependency>
       <groupId>args4j</groupId>
       <artifactId>args4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
     </dependency>
   </dependencies>
 </project>

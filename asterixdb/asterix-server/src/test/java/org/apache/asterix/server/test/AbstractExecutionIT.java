@@ -23,7 +23,8 @@ import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hyracks.util.file.FileUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -38,8 +39,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
@@ -49,7 +48,7 @@ import static org.apache.hyracks.util.file.FileUtil.joinPath;
 @RunWith(Parameterized.class)
 public abstract class AbstractExecutionIT {
 
-    protected static final Logger LOGGER = Logger.getLogger(AbstractExecutionIT.class.getName());
+    protected static final Logger LOGGER = LogManager.getLogger();
 
     protected static final String PATH_ACTUAL = joinPath("target", "ittest");
     protected static final String PATH_BASE = joinPath("..", "asterix-app", "src", "test", "resources", "runtimets");
@@ -70,7 +69,7 @@ public abstract class AbstractExecutionIT {
     @BeforeClass
     public static void setUp() throws Exception {
         System.out.println("Starting setup");
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Starting setup");
         }
         File outdir = new File(PATH_ACTUAL);

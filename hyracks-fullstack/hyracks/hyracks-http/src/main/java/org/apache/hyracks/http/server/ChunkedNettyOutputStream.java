@@ -20,8 +20,10 @@ package org.apache.hyracks.http.server;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -31,7 +33,7 @@ import io.netty.util.internal.OutOfDirectMemoryError;
 
 public class ChunkedNettyOutputStream extends OutputStream {
 
-    private static final Logger LOGGER = Logger.getLogger(ChunkedNettyOutputStream.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ChannelHandlerContext ctx;
     private final ChunkedResponse response;
     private ByteBuf buffer;
@@ -132,7 +134,7 @@ public class ChunkedNettyOutputStream extends OutputStream {
                 wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                LOGGER.log(Level.WARNING, "Interupted while waiting for channel to be writable", e);
+                LOGGER.log(Level.WARN, "Interupted while waiting for channel to be writable", e);
                 throw new IOException(e);
             }
         }

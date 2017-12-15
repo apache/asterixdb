@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
@@ -40,9 +38,11 @@ import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemux;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DatasetNetworkManager implements IChannelConnectionFactory {
-    private static final Logger LOGGER = Logger.getLogger(DatasetNetworkManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int MAX_CONNECTION_ATTEMPTS = 5;
 
@@ -137,8 +137,8 @@ public class DatasetNetworkManager implements IChannelConnectionFactory {
             JobId jobId = new JobId(buffer.getLong());
             ResultSetId rsId = new ResultSetId(buffer.getLong());
             int partition = buffer.getInt();
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.fine("Received initial dataset partition read request for JobId: " + jobId + " partition: "
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Received initial dataset partition read request for JobId: " + jobId + " partition: "
                         + partition + " on channel: " + ccb);
             }
             noc = new NetworkOutputChannel(ccb, nBuffers);

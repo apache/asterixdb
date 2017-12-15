@@ -19,7 +19,6 @@
 package org.apache.hyracks.algebricks.core.rewriter.base;
 
 import java.util.List;
-import java.util.logging.Level;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -34,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendab
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
+import org.apache.logging.log4j.Level;
 
 public class HeuristicOptimizer {
 
@@ -75,18 +75,18 @@ public class HeuristicOptimizer {
             return;
         }
         if (AlgebricksConfig.DEBUG) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Starting logical optimizations.\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.debug("Starting logical optimizations.\n");
         }
 
-        logPlanAt("Logical Plan", Level.FINE);
+        logPlanAt("Logical Plan", Level.DEBUG);
         runOptimizationSets(plan, logicalRewrites);
         computeSchemaBottomUpForPlan(plan);
         runPhysicalOptimizations(plan, physicalRewrites);
-        logPlanAt("Optimized Plan", Level.FINE);
+        logPlanAt("Optimized Plan", Level.DEBUG);
     }
 
     private void logPlanAt(String name, Level lvl) throws AlgebricksException {
-        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isLoggable(lvl)) {
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isEnabled(lvl)) {
             final LogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
             pvisitor.reset(new AlgebricksAppendable());
             PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
@@ -127,7 +127,7 @@ public class HeuristicOptimizer {
             List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites)
             throws AlgebricksException {
         if (AlgebricksConfig.DEBUG) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Starting physical optimizations.\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.debug("Starting physical optimizations.\n");
         }
         // PhysicalOptimizationsUtil.computeFDsAndEquivalenceClasses(plan);
         runOptimizationSets(plan, physicalRewrites);

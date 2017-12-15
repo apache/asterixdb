@@ -23,12 +23,13 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -43,7 +44,7 @@ public class DmlRecoveryIT {
 
     // variable to indicate whether this test will be executed
 
-    private static final Logger LOGGER = Logger.getLogger(RecoveryIT.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
 
     private static final String TESTSUITE_PATH_BASE = "../asterix-app/src/test/resources/runtimets/";

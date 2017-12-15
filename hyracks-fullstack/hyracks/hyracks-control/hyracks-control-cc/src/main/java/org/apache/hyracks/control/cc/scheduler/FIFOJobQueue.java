@@ -26,8 +26,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -39,6 +37,9 @@ import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 import org.apache.hyracks.util.annotations.ThreadSafetyGuaranteedBy;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * An implementation of IJobQueue that gives more priority to jobs that are submitted earlier.
@@ -47,7 +48,7 @@ import org.apache.hyracks.util.annotations.ThreadSafetyGuaranteedBy;
 @ThreadSafetyGuaranteedBy("JobManager")
 public class FIFOJobQueue implements IJobQueue {
 
-    private static final Logger LOGGER = Logger.getLogger(FIFOJobQueue.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Map<JobId, JobRun> jobListMap = new LinkedHashMap<>();
     private final IJobManager jobManager;
@@ -104,7 +105,7 @@ public class FIFOJobQueue implements IJobQueue {
                     // Fails the job.
                     jobManager.prepareComplete(run, JobStatus.FAILURE_BEFORE_EXECUTION, exceptions);
                 } catch (HyracksException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    LOGGER.log(Level.ERROR, e.getMessage(), e);
                 }
             }
         }

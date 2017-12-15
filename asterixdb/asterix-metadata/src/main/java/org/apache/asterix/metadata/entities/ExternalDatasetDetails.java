@@ -23,8 +23,6 @@ import java.io.DataOutput;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
@@ -44,6 +42,9 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,7 +52,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ExternalDatasetDetails implements IDatasetDetails {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(ExternalDatasetDetails.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final String adapter;
     private final Map<String, String> properties;
     private Date lastRefreshTime;
@@ -152,7 +153,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         try {
             return mapper.writeValueAsString(toMap());
         } catch (JsonProcessingException e) {
-            LOGGER.log(Level.WARNING, "Unable to convert map to json String", e);
+            LOGGER.log(Level.WARN, "Unable to convert map to json String", e);
             return getClass().getSimpleName();
         }
     }

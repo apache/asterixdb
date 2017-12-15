@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 
 import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.utils.Servlets;
@@ -39,6 +38,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.logging.log4j.Level;
 import org.junit.Assert;
 
 public class RebalanceCancellationTestExecutor extends TestExecutor {
@@ -84,7 +84,7 @@ public class RebalanceCancellationTestExecutor extends TestExecutor {
                         if (errorMsg == null || !errorMsg.contains("reference count = 1")) {
                             return e2;
                         }
-                        LOGGER.log(Level.WARNING, e2.toString(), e2);
+                        LOGGER.log(Level.WARN, e2.toString(), e2);
                     }
                 } while (!done);
             }

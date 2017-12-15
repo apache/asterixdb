@@ -19,9 +19,6 @@
 
 package org.apache.hyracks.storage.am.common.dataflow;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -33,10 +30,13 @@ import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IndexDataflowHelper implements IIndexDataflowHelper {
 
-    private static final Logger LOGGER = Logger.getLogger(IndexDataflowHelper.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final INCServiceContext ctx;
     private final IResourceLifecycleManager<IIndex> lcManager;
     private final ILocalResourceRepository localResourceRepository;

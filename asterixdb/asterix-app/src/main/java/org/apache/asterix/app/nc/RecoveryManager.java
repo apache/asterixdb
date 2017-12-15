@@ -39,8 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -77,6 +75,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 /**
  * This is the Recovery Manager and is responsible for rolling back a
@@ -85,7 +85,7 @@ import org.apache.hyracks.storage.common.LocalResource;
 public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;
-    private static final Logger LOGGER = Logger.getLogger(RecoveryManager.class.getName());
+    private static final Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger();
     private final ITransactionSubsystem txnSubsystem;
     private final LogManager logMgr;
     private final boolean replicationEnabled;
@@ -126,9 +126,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             //The checkpoint file doesn't exist => Failure happened during NC initialization.
             //Retry to initialize the NC by setting the state to PERMANENT_DATA_LOSS
             state = SystemState.PERMANENT_DATA_LOSS;
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("The checkpoint file doesn't exist: systemState = PERMANENT_DATA_LOSS");
-            }
+            LOGGER.info("The checkpoint file doesn't exist: systemState = PERMANENT_DATA_LOSS");
             return state;
         }
 
@@ -147,7 +145,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             long readableSmallestLSN = logMgr.getReadableSmallestLSN();
             if (logMgr.getAppendLSN() == readableSmallestLSN) {
                 if (checkpointObject.getMinMCTFirstLsn() != AbstractCheckpointManager.SHARP_CHECKPOINT_LSN) {
-                    LOGGER.warning("Some(or all) of transaction log files are lost.");
+                    LOGGER.warn("Some(or all) of transaction log files are lost.");
                     //No choice but continuing when the log files are lost.
                 }
                 state = SystemState.HEALTHY;
@@ -164,9 +162,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     @Override
     public void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException {
         state = SystemState.RECOVERING;
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("starting recovery ...");
-        }
+        LOGGER.info("starting recovery ...");
 
         long readableSmallestLSN = logMgr.getReadableSmallestLSN();
         Checkpoint checkpointObject = checkpointManager.getLatest();
@@ -344,7 +340,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                  * log record.
                                  *******************************************************************/
                                 if (localResource == null) {
-                                    LOGGER.log(Level.WARNING, "resource was not found for resource id " + resourceId);
+                                    LOGGER.log(Level.WARN, "resource was not found for resource id " + resourceId);
                                     logRecord = logReader.next();
                                     continue;
                                 }
@@ -514,19 +510,19 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             throw new ACIDException(e);
         }
         long lastLSN = txnContext.getLastLSN();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("rollbacking transaction log records from " + firstLSN + " to " + lastLSN);
         }
         // check if the transaction actually wrote some logs.
         if (firstLSN == TransactionManagementConstants.LogManagerConstants.TERMINAL_LSN || firstLSN > lastLSN) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("no need to roll back as there were no operations by the txn " + txnContext.getTxnId());
             }
             return;
         }
 
         // While reading log records from firstLsn to lastLsn, collect uncommitted txn's Lsns
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("collecting loser transaction's LSNs from " + firstLSN + " to " + lastLSN);
         }
 
@@ -636,7 +632,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 }
             }
 
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("undone loser transaction's effect");
                 LOGGER.info("[RecoveryManager's rollback log count] update/entityCommit/undo:" + updateLogCount + "/"
                         + entityCommitLogCount + "/" + undoCount);

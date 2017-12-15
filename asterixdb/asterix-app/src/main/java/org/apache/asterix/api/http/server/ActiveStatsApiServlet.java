@@ -20,8 +20,6 @@ package org.apache.asterix.api.http.server;
 
 import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
@@ -30,6 +28,9 @@ import org.apache.asterix.external.feed.watch.StatsSubscriber;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +39,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class ActiveStatsApiServlet extends AbstractServlet {
 
-    private static final Logger LOGGER = Logger.getLogger(ActiveStatsApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int DEFAULT_EXPIRE_TIME = 2000;
     private final ActiveNotificationHandler activeNotificationHandler;
 

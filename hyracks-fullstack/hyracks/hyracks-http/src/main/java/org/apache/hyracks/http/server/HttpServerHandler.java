@@ -20,12 +20,13 @@ package org.apache.hyracks.http.server;
 
 import java.io.IOException;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -37,7 +38,7 @@ import io.netty.handler.codec.http.HttpVersion;
 
 public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboundHandler<Object> {
 
-    private static final Logger LOGGER = Logger.getLogger(HttpServerHandler.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     protected final T server;
     protected final int chunkSize;
     protected HttpRequestHandler handler;
@@ -71,7 +72,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
                 submit(ctx, servlet, request);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failure Submitting HTTP Request", e);
+            LOGGER.log(Level.ERROR, "Failure Submitting HTTP Request", e);
             respond(ctx, request.protocolVersion(), new HttpResponseStatus(500, e.getMessage()));
         }
     }
@@ -86,7 +87,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
         try {
             servletRequest = HttpUtil.toServletRequest(request);
         } catch (IllegalArgumentException e) {
-            LOGGER.log(Level.WARNING, "Failure Decoding Request", e);
+            LOGGER.log(Level.WARN, "Failure Decoding Request", e);
             respond(ctx, request.protocolVersion(), HttpResponseStatus.BAD_REQUEST);
             return;
         }
@@ -98,21 +99,21 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
         try {
             server.getExecutor(handler).submit(handler);
         } catch (RejectedExecutionException e) { // NOSONAR
-            LOGGER.log(Level.WARNING, "Request rejected by server executor service. " + e.getMessage());
+            LOGGER.log(Level.WARN, "Request rejected by server executor service. " + e.getMessage());
             handler.reject();
         }
     }
 
     protected void handleServletNotFound(ChannelHandlerContext ctx, FullHttpRequest request) {
-        if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning("No servlet for " + request.uri());
+        if (LOGGER.isWarnEnabled()) {
+            LOGGER.warn("No servlet for " + request.uri());
         }
         respond(ctx, request.protocolVersion(), HttpResponseStatus.NOT_FOUND);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        LOGGER.log(Level.SEVERE, "Failure handling HTTP Request", cause);
+        LOGGER.log(Level.ERROR, "Failure handling HTTP Request", cause);
         ctx.close();
     }
 }

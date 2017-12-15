@@ -182,7 +182,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
             // Double check that count 0 is accounted
             if (aggType == ATypeTag.SYSTEM_NULL) {
                 if (GlobalConfig.DEBUG) {
-                    GlobalConfig.ASTERIX_LOGGER.finest("AVG aggregate ran over empty input.");
+                    GlobalConfig.ASTERIX_LOGGER.trace("AVG aggregate ran over empty input.");
                 }
                 resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
                 result.set(resultStorage);

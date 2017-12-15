@@ -25,10 +25,11 @@ import java.net.Socket;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SocketServerInputStream extends AsterixInputStream {
-    private static final Logger LOGGER = Logger.getLogger(SocketServerInputStream.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private ServerSocket server;
     private Socket socket;
     private InputStream connectionStream;

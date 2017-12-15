@@ -20,17 +20,18 @@ package org.apache.asterix.utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.nc.task.MigrateStorageResourcesTask;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CompatibilityUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(CompatibilityUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int MIN_COMPATIBLE_VERSION = 1;
 
     private CompatibilityUtil() {

@@ -26,7 +26,6 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Logger;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
@@ -34,7 +33,6 @@ import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
@@ -47,6 +45,8 @@ import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
@@ -59,7 +59,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class OptimizerTest {
 
-    private static final Logger LOGGER = Logger.getLogger(OptimizerTest.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String SEPARATOR = File.separator;
     private static final String EXTENSION_AQL = "aql";
@@ -230,7 +230,7 @@ public class OptimizerTest {
             }
         } catch (Exception e) {
             if (!(e instanceof AssumptionViolatedException)) {
-                LOGGER.severe("Test \"" + queryFile.getPath() + "\" FAILED!");
+                LOGGER.error("Test \"" + queryFile.getPath() + "\" FAILED!");
                 throw new Exception("Test \"" + queryFile.getPath() + "\" FAILED!", e);
             } else {
                 throw e;

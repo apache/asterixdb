@@ -25,16 +25,15 @@ import java.io.PipedOutputStream;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.generator.TweetGenerator;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TwitterFirehoseInputStream extends AsterixInputStream {
 
-    private static final Logger LOGGER = Logger.getLogger(TwitterFirehoseInputStream.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ExecutorService executorService;
     private final PipedOutputStream outputStream;
     private final PipedInputStream inputStream;
@@ -144,7 +143,7 @@ public class TwitterFirehoseInputStream extends AsterixInputStream {
                     os.close();
                     break;
                 } catch (Exception e) {
-                    LOGGER.warning("Exception in adapter " + e.getMessage());
+                    LOGGER.warn("Exception in adapter " + e.getMessage());
                 }
             }
         }

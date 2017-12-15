@@ -20,15 +20,16 @@
 package org.apache.hyracks.storage.am.bloomfilter.util;
 
 import java.util.Random;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractBloomFilterTest {
-    protected final Logger LOGGER = Logger.getLogger(BloomFilterTestHarness.class.getName());
+    protected final Logger LOGGER = LogManager.getLogger();
 
     protected final BloomFilterTestHarness harness;
 

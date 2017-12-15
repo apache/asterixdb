@@ -40,8 +40,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,6 +52,9 @@ import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ini4j.Ini;
 import org.ini4j.Profile;
 import org.kohsuke.args4j.CmdLineException;
@@ -64,7 +65,7 @@ import org.kohsuke.args4j.OptionHandlerFilter;
 public class ConfigManager implements IConfigManager, Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(ConfigManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private HashSet<IOption> registeredOptions = new HashSet<>();
     private HashMap<IOption, Object> definedMap = new HashMap<>();
@@ -143,7 +144,7 @@ public class ConfigManager implements IConfigManager, Serializable {
             if (configured) {
                 throw new IllegalStateException("configuration already processed");
             }
-            LOGGER.fine("registering option: " + option.toIniString());
+            LOGGER.debug("registering option: " + option.toIniString());
             Map<String, IOption> optionMap = sectionMap.computeIfAbsent(option.section(), section -> new HashMap<>());
             IOption prev = optionMap.put(option.ini(), option);
             if (prev != null) {
@@ -157,9 +158,9 @@ public class ConfigManager implements IConfigManager, Serializable {
                         (node, value,
                                 isDefault) -> correctedMap(option.section() == Section.NC ? node : null, isDefault)
                                         .put(option, value));
-                if (LOGGER.isLoggable(Level.FINE)) {
+                if (LOGGER.isDebugEnabled()) {
                     optionSetters.put(option, (node, value, isDefault) -> LOGGER
-                            .fine((isDefault ? "defaulting" : "setting ") + option.toIniString() + " to " + value));
+                            .debug((isDefault ? "defaulting" : "setting ") + option.toIniString() + " to " + value));
                 }
             }
         }
@@ -171,12 +172,12 @@ public class ConfigManager implements IConfigManager, Serializable {
     }
 
     public void ensureNode(String nodeId) {
-        LOGGER.fine("ensureNode: " + nodeId);
+        LOGGER.debug("ensureNode: " + nodeId);
         nodeSpecificMap.computeIfAbsent(nodeId, this::createNodeSpecificMap);
     }
 
     private Map<IOption, Object> createNodeSpecificMap(String nodeId) {
-        LOGGER.fine("createNodeSpecificMap: " + nodeId);
+        LOGGER.debug("createNodeSpecificMap: " + nodeId);
         return Collections.synchronizedMap(new HashMap<>());
     }
 
@@ -259,7 +260,7 @@ public class ConfigManager implements IConfigManager, Serializable {
             cmdLineParser.addArgument(new Args4jSetter(o -> appArgs.add(String.valueOf(o)), true, String.class),
                     new Args4jArgument());
         }
-        LOGGER.fine("parsing cmdline: " + Arrays.toString(args));
+        LOGGER.debug("parsing cmdline: " + Arrays.toString(args));
         if (args == null || args.length == 0) {
             LOGGER.info("no command line args supplied");
             return appArgs;
@@ -271,7 +272,7 @@ public class ConfigManager implements IConfigManager, Serializable {
                 ConfigUtils.printUsage(e, usageFilter, System.err);
                 throw e;
             } else {
-                LOGGER.log(Level.FINE, "Ignoring parse exception due to -help", e);
+                LOGGER.log(Level.DEBUG, "Ignoring parse exception due to -help", e);
             }
         }
         if (bean.help) {
@@ -325,7 +326,7 @@ public class ConfigManager implements IConfigManager, Serializable {
                     return;
                 }
                 final String value = iniOption.getValue();
-                LOGGER.fine("setting " + option.toIniString() + " to " + value);
+                LOGGER.debug("setting " + option.toIniString() + " to " + value);
                 final Object parsed = option.type().parse(value);
                 invokeSetters(option, parsed, node);
             }
@@ -348,7 +349,7 @@ public class ConfigManager implements IConfigManager, Serializable {
     }
 
     private void applyDefaults() {
-        LOGGER.fine("applying defaults");
+        LOGGER.debug("applying defaults");
         sectionMap.forEach((key, value) -> {
             if (key == Section.NC) {
                 value.values().forEach(option -> getNodeNames()
@@ -487,7 +488,7 @@ public class ConfigManager implements IConfigManager, Serializable {
             throw new IllegalStateException("Option not registered with ConfigManager: " + option.toIniString() + "("
                     + option.getClass() + "." + option + ")");
         } else if (option.section() == Section.NC) {
-            LOGGER.warning("NC option " + option.toIniString() + " being accessed outside of NC-scoped configuration.");
+            LOGGER.warn("NC option " + option.toIniString() + " being accessed outside of NC-scoped configuration.");
         }
         return getOrDefault(configurationMap, option, null);
     }
@@ -511,7 +512,7 @@ public class ConfigManager implements IConfigManager, Serializable {
         if (description != null && !"".equals(description)) {
             usage.append(description).append(" ");
         } else {
-            LOGGER.warning("missing description for option: "
+            LOGGER.warn("missing description for option: "
                     + option.getClass().getName().substring(option.getClass().getName().lastIndexOf(".") + 1) + "."
                     + option.name());
         }

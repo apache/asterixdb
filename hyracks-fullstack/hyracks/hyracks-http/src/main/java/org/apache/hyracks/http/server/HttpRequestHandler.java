@@ -20,12 +20,13 @@ package org.apache.hyracks.http.server;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -34,7 +35,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 
 public class HttpRequestHandler implements Callable<Void> {
-    private static final Logger LOGGER = Logger.getLogger(HttpRequestHandler.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ChannelHandlerContext ctx;
     private final IServlet servlet;
     private final IServletRequest request;
@@ -57,7 +58,7 @@ public class HttpRequestHandler implements Callable<Void> {
                 lastContentFuture.addListener(ChannelFutureListener.CLOSE);
             }
         } catch (Throwable th) { //NOSONAR
-            LOGGER.log(Level.SEVERE, "Failure handling HTTP Request", th);
+            LOGGER.log(Level.ERROR, "Failure handling HTTP Request", th);
             ctx.close();
         } finally {
             request.getHttpRequest().release();
@@ -69,7 +70,7 @@ public class HttpRequestHandler implements Callable<Void> {
         try {
             servlet.handle(request, response);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Failure during handling of an IServletRequest", e);
+            LOGGER.log(Level.WARN, "Failure during handling of an IServletRequest", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         } finally {
             response.close();

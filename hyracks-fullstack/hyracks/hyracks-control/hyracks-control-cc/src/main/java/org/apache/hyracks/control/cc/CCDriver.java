@@ -22,17 +22,18 @@ import static org.apache.hyracks.control.common.controllers.CCConfig.Option.APP_
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.CCConfig;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 
 public class CCDriver {
-    private static final Logger LOGGER = Logger.getLogger(CCDriver.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private CCDriver() {
     }
@@ -49,10 +50,10 @@ public class CCDriver {
                 Thread.sleep(100000);
             }
         } catch (CmdLineException e) {
-            LOGGER.log(Level.FINE, "Exception parsing command line: " + Arrays.toString(args), e);
+            LOGGER.log(Level.DEBUG, "Exception parsing command line: " + Arrays.toString(args), e);
             System.exit(2);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Exiting CCDriver due to exception", e);
+            LOGGER.log(Level.ERROR, "Exiting CCDriver due to exception", e);
             System.exit(1);
         }
     }

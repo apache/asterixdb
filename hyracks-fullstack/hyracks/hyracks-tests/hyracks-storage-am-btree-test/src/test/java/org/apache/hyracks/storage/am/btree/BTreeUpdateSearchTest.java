@@ -19,7 +19,6 @@
 package org.apache.hyracks.storage.am.btree;
 
 import java.util.Random;
-import java.util.logging.Level;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -93,7 +92,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
 
         long start = System.currentTimeMillis();
 
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("INSERTING INTO TREE");
         }
 
@@ -108,7 +107,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
             int f0 = rnd.nextInt() % 10000;
             int f1 = 5;
             TupleUtils.createIntegerTuple(tb, insertTuple, f0, f1);
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 if (i % 10000 == 0) {
                     long end = System.currentTimeMillis();
                     LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
@@ -126,12 +125,12 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         }
         long end = System.currentTimeMillis();
         long duration = end - start;
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("DURATION: " + duration);
         }
 
         // Update scan.
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("UPDATE SCAN:");
         }
         // Set the cursor to X latch nodes.
@@ -152,7 +151,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         }
 
         // Ordered scan to verify the values.
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("ORDERED SCAN:");
         }
         // Set the cursor to X latch nodes.
@@ -163,7 +162,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
                 scanCursor.next();
                 ITupleReference tuple = scanCursor.getTuple();
                 String rec = TupleUtils.printTuple(tuple, recDescSers);
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info(rec);
                 }
             }

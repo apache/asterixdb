@@ -20,16 +20,12 @@
 package org.apache.asterix.test.jsonplan;
 
 import java.io.File;
-import java.util.logging.Logger;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class JsonOptimizedLogicalPlanTest extends JsonLogicalPlanTest {
-
-    private static final Logger LOGGER =
-            Logger.getLogger(org.apache.asterix.test.jsonplan.JsonOptimizedLogicalPlanTest.class.getName());
 
     public JsonOptimizedLogicalPlanTest(File queryFile, File actualFile) {
         super(queryFile, actualFile);

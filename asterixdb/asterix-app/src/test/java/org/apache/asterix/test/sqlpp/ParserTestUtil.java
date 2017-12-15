@@ -21,11 +21,11 @@ package org.apache.asterix.test.sqlpp;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.hyracks.util.file.FileUtil;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assume;
 import org.junit.internal.AssumptionViolatedException;
 
@@ -74,7 +74,7 @@ class ParserTestUtil {
         } catch (Exception e) {
             if (!(e instanceof AssumptionViolatedException)) {
                 final String msg = "Test \"" + queryFile.getPath() + "\" FAILED!";
-                logger.severe(msg);
+                logger.error(msg);
                 throw new Exception(msg, e);
             } else {
                 throw e;

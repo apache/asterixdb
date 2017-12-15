@@ -18,14 +18,14 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.util;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IOOperationUtils {
-    private static final Logger LOGGER = Logger.getLogger(IOOperationUtils.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private IOOperationUtils() {
     }
@@ -35,7 +35,7 @@ public class IOOperationUtils {
         try {
             ioCallback.waitForIO();
         } catch (InterruptedException e) {
-            LOGGER.log(Level.WARNING, "Operation has been interrupted. returning");
+            LOGGER.log(Level.WARN, "Operation has been interrupted. returning");
             Thread.currentThread().interrupt();
             throw HyracksDataException.create(e);
         }

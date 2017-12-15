@@ -38,12 +38,12 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FileSystemWatcher {
 
-    private static final Logger LOGGER = Logger.getLogger(FileSystemWatcher.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private WatchService watcher;
     private final HashMap<WatchKey, Path> keys;
     private final LinkedList<File> files = new LinkedList<File>();
@@ -148,18 +148,14 @@ public class FileSystemWatcher {
         Path dir = keys.get(key);
         if (dir == null) {
             // This should never happen
-            if (LOGGER.isEnabledFor(Level.WARN)) {
-                LOGGER.warn("WatchKey not recognized!!");
-            }
+            LOGGER.warn("WatchKey not recognized!!");
             return;
         }
         for (WatchEvent<?> event : key.pollEvents()) {
             Kind<?> kind = event.kind();
             // An overflow event means that some events were dropped
             if (kind == StandardWatchEventKinds.OVERFLOW) {
-                if (LOGGER.isEnabledFor(Level.WARN)) {
-                    LOGGER.warn("Overflow event. Some events might have been missed");
-                }
+                LOGGER.warn("Overflow event. Some events might have been missed");
                 // need to read and validate all files.
                 init();
                 return;
@@ -179,9 +175,7 @@ public class FileSystemWatcher {
                         LocalFileSystemUtils.validateAndAdd(child, expression, files);
                     }
                 } catch (IOException e) {
-                    if (LOGGER.isEnabledFor(Level.ERROR)) {
-                        LOGGER.error(e);
-                    }
+                    LOGGER.error(e);
                 }
             }
         }
@@ -241,17 +235,13 @@ public class FileSystemWatcher {
             try {
                 key = watcher.take();
             } catch (InterruptedException x) {
-                if (LOGGER.isEnabledFor(Level.WARN)) {
-                    LOGGER.warn("Feed Closed");
-                }
+                LOGGER.warn("Feed Closed");
                 if (watcher == null) {
                     return null;
                 }
                 continue;
             } catch (ClosedWatchServiceException e) {
-                if (LOGGER.isEnabledFor(Level.WARN)) {
-                    LOGGER.warn("The watcher has exited");
-                }
+                LOGGER.warn("The watcher has exited");
                 if (watcher == null) {
                     return null;
                 }

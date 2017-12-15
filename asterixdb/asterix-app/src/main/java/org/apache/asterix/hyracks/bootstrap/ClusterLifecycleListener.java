@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWorkResponse;
@@ -41,10 +39,12 @@ import org.apache.asterix.metadata.cluster.RemoveNodeWorkResponse;
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
-    private static final Logger LOGGER = Logger.getLogger(ClusterLifecycleListener.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ICcApplicationContext appCtx;
     private final LinkedBlockingQueue<Set<IClusterManagementWork>> workRequestQueue = new LinkedBlockingQueue<>();
     private final ClusterWorkExecutor eventHandler;
@@ -54,15 +54,13 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
         this.appCtx = appCtx;
         eventHandler = new ClusterWorkExecutor(workRequestQueue);
         Thread t = new Thread(eventHandler);
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Starting cluster event handler");
-        }
+        LOGGER.info("Starting cluster event handler");
         t.start();
     }
 
     @Override
     public void notifyNodeJoin(String nodeId, Map<IOption, Object> ncConfiguration) throws HyracksException {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("NC: " + nodeId + " joined");
         }
         IClusterStateManager csm = appCtx.getClusterStateManager();
@@ -81,7 +79,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
     @Override
     public void notifyNodeFailure(Collection<String> deadNodeIds) throws HyracksException {
         for (String deadNode : deadNodeIds) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("NC: " + deadNode + " left");
             }
             IClusterStateManager csm = appCtx.getClusterStateManager();
@@ -158,7 +156,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
                 nodesToBeAddedForWork.add(addedNodes.get(i));
             }
             if (nodesToBeAddedForWork.isEmpty()) {
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Unable to satisfy request by " + w);
                 }
                 AddNodeWorkResponse response = new AddNodeWorkResponse(w, nodesToBeAddedForWork);

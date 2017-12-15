@@ -19,8 +19,6 @@
 package org.apache.hyracks.dataflow.std.group.external;
 
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -39,10 +37,12 @@ import org.apache.hyracks.dataflow.std.group.AggregateType;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.ISpillableTable;
 import org.apache.hyracks.dataflow.std.group.ISpillableTableFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable
         implements IRunFileWriterGenerator {
-    private static Logger LOGGER = Logger.getLogger("ExternalGroupbyWrite");
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IHyracksTaskContext ctx;
     private final Object stateId;
     private final ISpillableTableFactory spillableTableFactory;
@@ -138,14 +138,14 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
                     }
                 }
 
-                if (LOGGER.isLoggable(Level.FINE)) {
+                if (LOGGER.isDebugEnabled()) {
                     int numOfSpilledPart = 0;
                     for (int x = 0; x < numOfTuples.length; x++) {
                         if (numOfTuples[x] > 0) {
                             numOfSpilledPart++;
                         }
                     }
-                    LOGGER.fine("level " + level + ":" + "build with " + numOfTuples.length + " partitions"
+                    LOGGER.debug("level " + level + ":" + "build with " + numOfTuples.length + " partitions"
                             + ", spilled " + numOfSpilledPart + " partitions");
                 }
                 doPass(partitionTable, runFileWriters, sizeInTuplesNextLevel, writer, level + 1);

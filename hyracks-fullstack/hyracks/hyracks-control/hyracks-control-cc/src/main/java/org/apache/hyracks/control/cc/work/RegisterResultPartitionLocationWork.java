@@ -20,8 +20,6 @@ package org.apache.hyracks.control.cc.work;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataset.ResultSetId;
@@ -31,10 +29,13 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.common.work.NoOpCallback;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RegisterResultPartitionLocationWork extends AbstractWork {
 
-    private static final Logger LOGGER = Logger.getLogger(RegisterResultPartitionLocationWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ClusterControllerService ccs;
 
@@ -70,7 +71,7 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
             ccs.getDatasetDirectoryService().registerResultPartitionLocation(jobId, rsId, orderedResult, emptyResult,
                     partition, nPartitions, networkAddress);
         } catch (HyracksDataException e) {
-            LOGGER.log(Level.WARNING, "Failed to register partition location", e);
+            LOGGER.log(Level.WARN, "Failed to register partition location", e);
             // Should fail the job if exists on cc, otherwise, do nothing
             JobRun jobRun = ccs.getJobManager().get(jobId);
             if (jobRun != null) {

@@ -23,8 +23,6 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.cluster.ClusterPartition;
@@ -90,6 +88,9 @@ import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Initializes the remote metadata storage facilities ("universe") using a
@@ -102,7 +103,7 @@ import org.apache.hyracks.storage.common.LocalResource;
  */
 public class MetadataBootstrap {
     public static final boolean IS_DEBUG_MODE = false;
-    private static final Logger LOGGER = Logger.getLogger(MetadataBootstrap.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static INcApplicationContext appContext;
     private static ILocalResourceRepository localResourceRepository;
     private static IIOManager ioManager;
@@ -151,7 +152,7 @@ public class MetadataBootstrap {
             for (int i = 0; i < PRIMARY_INDEXES.length; i++) {
                 enlistMetadataDataset(ncServiceContext, PRIMARY_INDEXES[i]);
             }
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(
                         "Finished enlistment of metadata B-trees in " + (isNewUniverse ? "new" : "old") + " universe");
             }
@@ -164,7 +165,7 @@ public class MetadataBootstrap {
                 insertInitialAdapters(mdTxnCtx);
                 BuiltinFeedPolicies.insertInitialFeedPolicies(mdTxnCtx);
                 insertInitialCompactionPolicies(mdTxnCtx);
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Finished creating metadata B-trees.");
                 }
             }
@@ -174,7 +175,7 @@ public class MetadataBootstrap {
         } catch (Exception e) {
             try {
                 if (IS_DEBUG_MODE) {
-                    LOGGER.log(Level.SEVERE, "Failure during metadata bootstrap", e);
+                    LOGGER.log(Level.ERROR, "Failure during metadata bootstrap", e);
                 }
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             } catch (Exception e2) {
@@ -214,7 +215,7 @@ public class MetadataBootstrap {
                             GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, id, new HashMap<String, String>(),
                             DatasetType.INTERNAL, indexes[i].getDatasetId().getId(), MetadataUtil.PENDING_NO_OP));
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Finished inserting initial datasets.");
         }
     }
@@ -234,7 +235,7 @@ public class MetadataBootstrap {
                     types.get(i).getTypeName(), types.get(i), false));
         }
         MetadataManager.INSTANCE.addDatatype(mdTxnCtx, MetadataBuiltinEntities.ANY_OBJECT_DATATYPE);
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Finished inserting initial datatypes.");
         }
     }
@@ -259,7 +260,7 @@ public class MetadataBootstrap {
             adapter = getAdapter(adapterClassName);
             MetadataManager.INSTANCE.addAdapter(mdTxnCtx, adapter);
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Finished inserting built-in adapters.");
         }
     }
@@ -379,7 +380,7 @@ public class MetadataBootstrap {
         // to INDEX_DATASET.
         MetadataTransactionContext mdTxnCtx = null;
         MetadataManager.INSTANCE.acquireWriteLatch();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Starting DDL recovery ...");
         }
 
@@ -392,13 +393,13 @@ public class MetadataBootstrap {
             // the commit wasn't there before. yet, everything was working
             // correctly!!!!!!!!!!!
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Completed DDL recovery.");
             }
         } catch (Exception e) {
             try {
                 if (IS_DEBUG_MODE) {
-                    LOGGER.log(Level.SEVERE, "Failure during DDL recovery", e);
+                    LOGGER.log(Level.ERROR, "Failure during DDL recovery", e);
                 }
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             } catch (Exception e2) {
@@ -415,7 +416,7 @@ public class MetadataBootstrap {
         if (dataverse.getPendingOp() != MetadataUtil.PENDING_NO_OP) {
             // drop pending dataverse
             MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, dataverse.getDataverseName());
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Dropped a pending dataverse: " + dataverse.getDataverseName());
             }
         } else {
@@ -432,7 +433,7 @@ public class MetadataBootstrap {
         if (dataset.getPendingOp() != MetadataUtil.PENDING_NO_OP) {
             // drop pending dataset
             MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataset.getDataverseName(), dataset.getDatasetName());
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(
                         "Dropped a pending dataset: " + dataset.getDataverseName() + "." + dataset.getDatasetName());
             }
@@ -444,7 +445,7 @@ public class MetadataBootstrap {
                     // drop pending index
                     MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataset.getDataverseName(), dataset.getDatasetName(),
                             index.getIndexName());
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.info("Dropped a pending index: " + dataset.getDataverseName() + "."
                                 + dataset.getDatasetName() + "." + index.getIndexName());
                     }
@@ -459,7 +460,7 @@ public class MetadataBootstrap {
                 List<ExternalFile> files = MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx, dataset);
                 for (ExternalFile file : files) {
                     MetadataManager.INSTANCE.dropExternalFile(mdTxnCtx, file);
-                    if (LOGGER.isLoggable(Level.INFO)) {
+                    if (LOGGER.isInfoEnabled()) {
                         LOGGER.info("Dropped an external file: " + dataset.getDataverseName() + "."
                                 + dataset.getDatasetName() + "." + file.getFileNumber());
                     }

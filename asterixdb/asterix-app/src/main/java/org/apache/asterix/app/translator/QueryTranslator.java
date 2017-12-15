@@ -40,8 +40,6 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
@@ -210,6 +208,9 @@ import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /*
  * Provides functionality for executing a batch of Query statements (queries included)
@@ -217,7 +218,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
  */
 public class QueryTranslator extends AbstractLangTranslator implements IStatementExecutor {
 
-    private static final Logger LOGGER = Logger.getLogger(QueryTranslator.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final boolean IS_DEBUG_MODE = false;// true
     protected final List<Statement> statements;
@@ -2061,7 +2062,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 MetadataManager.INSTANCE.getFeed(mdTxnCtx, feedId.getDataverse(), feedId.getEntityName()));
         runJob(hcc, spec);
         MetadataManager.INSTANCE.dropFeed(mdTxnCtx, feed.getDataverseName(), feed.getFeedName());
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Removed feed " + feedId);
         }
     }
@@ -2458,7 +2459,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 ResultUtil.printStatus(sessionOutput, AbstractQueryApiServlet.ResultStatus.FAILED);
                 ResultUtil.printError(sessionOutput.out(), e);
             } else {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE,
+                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR,
                         resultDelivery.name() + " job with id " + jobId.getValue() + " " + "failed", e);
             }
         } finally {
@@ -2887,7 +2888,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     toDataset.getHints(), toDataset.getDatasetType(), idd, withRecord, false);
             this.handleCreateDatasetStatement(metadataProvider, createToDataset, hcc, null);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            LOGGER.log(Level.WARN, e.getMessage(), e);
             throw new AlgebricksException("Error cleaning the result dataset. This should not happen.");
         }
 
@@ -2941,7 +2942,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             while ((line = in.readLine()) != null) {
                 LOGGER.info(line);
                 if (line.contains("Exception") || line.contains("Error")) {
-                    LOGGER.severe(line);
+                    LOGGER.error(line);
                     if (line.contains("Connection refused")) {
                         throw new AlgebricksException(
                                 "The connection to your Pregelix cluster was refused. Is it running? "
@@ -3045,7 +3046,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     public static void abort(Exception rootE, Exception parentE, MetadataTransactionContext mdTxnCtx) {
         try {
             if (IS_DEBUG_MODE) {
-                LOGGER.log(Level.SEVERE, rootE.getMessage(), rootE);
+                LOGGER.log(Level.ERROR, rootE.getMessage(), rootE);
             }
             if (mdTxnCtx != null) {
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);

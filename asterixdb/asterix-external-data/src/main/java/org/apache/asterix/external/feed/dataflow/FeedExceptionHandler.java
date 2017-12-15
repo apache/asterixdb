@@ -19,8 +19,6 @@
 package org.apache.asterix.external.feed.dataflow;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.IExceptionHandler;
 import org.apache.asterix.external.util.FeedFrameUtil;
@@ -28,10 +26,13 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FeedExceptionHandler implements IExceptionHandler {
 
-    private static Logger LOGGER = Logger.getLogger(FeedExceptionHandler.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     // TODO: Enable logging
     private final IHyracksTaskContext ctx;
@@ -53,8 +54,8 @@ public class FeedExceptionHandler implements IExceptionHandler {
                     logExceptionCausingTuple(tupleIndex, th);
                 } catch (Exception ex) {
                     ex.addSuppressed(th);
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.warning("Unable to log exception causing tuple due to..." + ex.getMessage());
+                    if (LOGGER.isWarnEnabled()) {
+                        LOGGER.warn("Unable to log exception causing tuple due to..." + ex.getMessage());
                     }
                 }
                 // TODO: Improve removeBadTuple. Right now, it creates lots of objects
@@ -64,8 +65,8 @@ public class FeedExceptionHandler implements IExceptionHandler {
             }
         } catch (Exception exception) {
             exception.printStackTrace();
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Unable to handle exception " + exception.getMessage());
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.warn("Unable to handle exception " + exception.getMessage());
             }
             return null;
         }
@@ -73,6 +74,6 @@ public class FeedExceptionHandler implements IExceptionHandler {
 
     // TODO: Fix logging of exceptions
     private void logExceptionCausingTuple(int tupleIndex, Throwable e) throws HyracksDataException {
-        LOGGER.log(Level.WARNING, e.getMessage(), e);
+        LOGGER.log(Level.WARN, e.getMessage(), e);
     }
 }

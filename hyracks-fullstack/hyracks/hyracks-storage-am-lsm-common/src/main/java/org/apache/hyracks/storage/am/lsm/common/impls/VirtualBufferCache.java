@@ -25,8 +25,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -42,9 +40,12 @@ import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.util.JSONUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class VirtualBufferCache implements IVirtualBufferCache {
-    private static final Logger LOGGER = Logger.getLogger(VirtualBufferCache.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ICacheMemoryAllocator allocator;
     private final IFileMapManager fileMapManager;
@@ -125,7 +126,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     private void logStats() {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Free (allocated) pages = " + freePages.size() + ". Budget = " + pageBudget
                     + ". Large pages = " + largePages.get() + ". Overall usage = " + used.get());
         }
@@ -187,7 +188,7 @@ public class VirtualBufferCache implements IVirtualBufferCache {
                 bucket.bucketLock.unlock();
             }
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Reclaimed pages = " + reclaimedPages);
         }
         logStats();

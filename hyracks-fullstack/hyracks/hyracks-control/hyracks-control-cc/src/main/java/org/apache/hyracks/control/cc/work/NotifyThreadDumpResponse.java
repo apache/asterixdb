@@ -18,13 +18,13 @@
  */
 package org.apache.hyracks.control.cc.work;
 
-import java.util.logging.Logger;
-
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.work.AbstractWork;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NotifyThreadDumpResponse extends AbstractWork {
-    private static final Logger LOGGER = Logger.getLogger(NotifyThreadDumpResponse.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ClusterControllerService ccs;
 
@@ -39,10 +39,10 @@ public class NotifyThreadDumpResponse extends AbstractWork {
 
     @Override
     public void run() {
-        LOGGER.fine("Delivering thread dump response: " + requestId);
+        LOGGER.debug("Delivering thread dump response: " + requestId);
         final GetThreadDumpWork.ThreadDumpRun threadDumpRun = ccs.removeThreadDumpRun(requestId);
         if (threadDumpRun == null) {
-            LOGGER.warning("Thread dump run " + requestId + " not found; discarding reply: " + threadDumpJSON);
+            LOGGER.warn("Thread dump run " + requestId + " not found; discarding reply: " + threadDumpJSON);
         } else {
             threadDumpRun.notifyThreadDumpReceived(threadDumpJSON);
         }

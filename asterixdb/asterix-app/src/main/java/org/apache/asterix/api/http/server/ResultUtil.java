@@ -45,14 +45,15 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendab
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.util.JSONUtil;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ResultUtil {
-    private static final Logger LOGGER = Logger.getLogger(ResultUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final List<Pair<Character, String>> HTML_ENTITIES = Collections.unmodifiableList(
             Arrays.asList(Pair.of('&', "&amp;"), Pair.of('"', "&quot;"), Pair.of('<', "&lt;"), Pair.of('>', "&gt;"),
                     Pair.of('\'', "&apos;")));

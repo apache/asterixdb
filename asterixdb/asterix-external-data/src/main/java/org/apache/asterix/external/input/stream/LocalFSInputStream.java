@@ -21,8 +21,6 @@ package org.apache.asterix.external.input.stream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
@@ -32,10 +30,13 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FileSystemWatcher;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LocalFSInputStream extends AsterixInputStream {
 
-    private static final Logger LOGGER = Logger.getLogger(LocalFSInputStream.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final FileSystemWatcher watcher;
     private FileInputStream in;
     private byte lastByte;
@@ -163,18 +164,18 @@ public class LocalFSInputStream extends AsterixInputStream {
                 try {
                     logManager.logRecord(currentFile.getAbsolutePath(), "Corrupted input file");
                 } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Filed to write to feed log file", e);
+                    LOGGER.log(Level.WARN, "Filed to write to feed log file", e);
                 }
-                LOGGER.log(Level.WARNING, "Corrupted input file: " + currentFile.getAbsolutePath());
+                LOGGER.log(Level.WARN, "Corrupted input file: " + currentFile.getAbsolutePath());
             }
             try {
                 advance();
                 return true;
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "An exception was thrown while trying to skip a file", e);
+                LOGGER.log(Level.WARN, "An exception was thrown while trying to skip a file", e);
             }
         }
-        LOGGER.log(Level.WARNING, "Failed to recover from failure", th);
+        LOGGER.log(Level.WARN, "Failed to recover from failure", th);
         return false;
     }
 }

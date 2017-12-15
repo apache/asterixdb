@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
@@ -52,10 +50,6 @@ public class LockManagerUnitTest {
     static int INITIAL_TIMESTAMP = 0;
     static long COORDINATOR_SLEEP = 20;
     static int TIMEOUT_MS = 100;
-
-    static {
-        Logger.getLogger(ConcurrentLockManager.class.getName()).addHandler(new ConsoleHandler());
-    }
 
     Map<Integer, ITransactionContext> jobId2TxnCtxMap;
     ILockManager lockMgr;

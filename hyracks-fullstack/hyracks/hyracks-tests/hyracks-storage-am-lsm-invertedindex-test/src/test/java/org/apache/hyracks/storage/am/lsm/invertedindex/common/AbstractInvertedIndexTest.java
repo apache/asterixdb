@@ -20,8 +20,6 @@
 package org.apache.hyracks.storage.am.lsm.invertedindex.common;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
@@ -33,11 +31,13 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTest
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 
 public abstract class AbstractInvertedIndexTest {
-    protected final Logger LOGGER = Logger.getLogger(AbstractInvertedIndexTest.class.getName());
+    protected final Logger LOGGER = LogManager.getLogger();
 
     protected final LSMInvertedIndexTestHarness harness = new LSMInvertedIndexTestHarness();
 
@@ -74,7 +74,7 @@ public abstract class AbstractInvertedIndexTest {
      */
     protected void validateAndCheckIndex(LSMInvertedIndexTestContext testCtx) throws HyracksDataException {
         IIndex invIndex = testCtx.getIndex();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Validating index: " + invIndex);
         }
         // Validate index and compare against expected index.
@@ -92,7 +92,7 @@ public abstract class AbstractInvertedIndexTest {
     protected void runTinySearchWorkload(LSMInvertedIndexTestContext testCtx, TupleGenerator tupleGen)
             throws IOException {
         for (IInvertedIndexSearchModifier searchModifier : TEST_SEARCH_MODIFIERS) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Running test workload with: " + searchModifier.toString());
             }
             LSMInvertedIndexTestUtils.testIndexSearch(testCtx, tupleGen, harness.getRandom(),

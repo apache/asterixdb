@@ -24,8 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -58,9 +56,12 @@ import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LSMHarness implements ILSMHarness {
-    private static final Logger LOGGER = Logger.getLogger(LSMHarness.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected final ILSMIndex lsmIndex;
     protected final ComponentReplacementContext componentReplacementCtx;
@@ -195,8 +196,8 @@ public class LSMHarness implements ILSMHarness {
             }
             entranceSuccessful = numEntered == components.size();
         } catch (Throwable e) { // NOSONAR: Log and re-throw
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, opType.name() + " failed to enter components on " + lsmIndex, e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.log(Level.ERROR, opType.name() + " failed to enter components on " + lsmIndex, e);
             }
             throw e;
         } finally {
@@ -270,8 +271,8 @@ public class LSMHarness implements ILSMHarness {
                     ctx.setAccessingComponents(false);
                     exitOperation(ctx, opType, newComponent, failedOperation);
                 } catch (Throwable e) { // NOSONAR: Log and re-throw
-                    if (LOGGER.isLoggable(Level.SEVERE)) {
-                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    if (LOGGER.isErrorEnabled()) {
+                        LOGGER.log(Level.ERROR, e.getMessage(), e);
                     }
                     throw e;
                 } finally {
@@ -324,8 +325,8 @@ public class LSMHarness implements ILSMHarness {
                         c.deactivateAndDestroy();
                     }
                 } catch (Throwable e) { // NOSONAR Log and re-throw
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.log(Level.WARNING, "Failure scheduling replication or destroying merged component", e);
+                    if (LOGGER.isWarnEnabled()) {
+                        LOGGER.log(Level.WARN, "Failure scheduling replication or destroying merged component", e);
                     }
                     throw e; // NOSONAR: The last call in the finally clause
                 }
@@ -557,7 +558,7 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Started a flush operation for index: " + lsmIndex + " ...");
         }
         try {
@@ -569,8 +570,8 @@ public class LSMHarness implements ILSMHarness {
                 newComponent.markAsValid(lsmIndex.isDurable());
             } catch (Throwable e) { // NOSONAR Log and re-throw
                 failedOperation = true;
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.log(Level.SEVERE, "Flush failed on " + lsmIndex, e);
+                if (LOGGER.isErrorEnabled()) {
+                    LOGGER.log(Level.ERROR, "Flush failed on " + lsmIndex, e);
                 }
                 throw e;
             } finally {
@@ -586,7 +587,7 @@ public class LSMHarness implements ILSMHarness {
             opTracker.completeOperation(lsmIndex, LSMOperationType.FLUSH, ctx.getSearchOperationCallback(),
                     ctx.getModificationCallback());
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Finished the flush operation for index: " + lsmIndex);
         }
     }
@@ -618,7 +619,7 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Started a merge operation for index: " + lsmIndex + " ...");
         }
         try {
@@ -631,8 +632,8 @@ public class LSMHarness implements ILSMHarness {
                 newComponent.markAsValid(lsmIndex.isDurable());
             } catch (Throwable e) { // NOSONAR: Log and re-throw
                 failedOperation = true;
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.log(Level.SEVERE, "Failed merge operation on " + lsmIndex, e);
+                if (LOGGER.isErrorEnabled()) {
+                    LOGGER.log(Level.ERROR, "Failed merge operation on " + lsmIndex, e);
                 }
                 throw e;
             } finally {
@@ -658,7 +659,7 @@ public class LSMHarness implements ILSMHarness {
             opTracker.completeOperation(lsmIndex, LSMOperationType.MERGE, ctx.getSearchOperationCallback(),
                     ctx.getModificationCallback());
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Finished the merge operation for index: " + lsmIndex);
         }
     }
@@ -751,8 +752,8 @@ public class LSMHarness implements ILSMHarness {
                 processor.finish();
             }
         } catch (HyracksDataException e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "Failed to process frame", e);
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.log(Level.ERROR, "Failed to process frame", e);
             }
             throw e;
         } finally {
@@ -806,8 +807,8 @@ public class LSMHarness implements ILSMHarness {
                     opTracker.wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.log(Level.WARNING, "Ignoring interrupt while waiting for lagging merge on " + lsmIndex,
+                    if (LOGGER.isWarnEnabled()) {
+                        LOGGER.log(Level.WARN, "Ignoring interrupt while waiting for lagging merge on " + lsmIndex,
                                 e);
                     }
                 }
@@ -891,7 +892,7 @@ public class LSMHarness implements ILSMHarness {
             try {
                 opTracker.wait(); // NOSONAR: OpTracker is always synchronized here
             } catch (InterruptedException e) {
-                LOGGER.log(Level.WARNING, "Interrupted while attempting component level delete", e);
+                LOGGER.log(Level.WARN, "Interrupted while attempting component level delete", e);
                 Thread.currentThread().interrupt();
                 throw HyracksDataException.create(e);
             }

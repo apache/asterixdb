@@ -21,16 +21,16 @@ package org.apache.asterix.hyracks.bootstrap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.metadata.cluster.AddNodeWork;
 import org.apache.asterix.metadata.cluster.RemoveNodeWork;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ClusterWorkExecutor implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(ClusterWorkExecutor.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final LinkedBlockingQueue<Set<IClusterManagementWork>> inbox;
 
@@ -63,13 +63,13 @@ public class ClusterWorkExecutor implements Runnable {
                 }
 
             } catch (InterruptedException e) {
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe("interruped" + e.getMessage());
+                if (LOGGER.isErrorEnabled()) {
+                    LOGGER.error("interruped" + e.getMessage());
                 }
                 throw new IllegalStateException(e);
             } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.SEVERE)) {
-                    LOGGER.severe("Unexpected exception in handling cluster event" + e.getMessage());
+                if (LOGGER.isErrorEnabled()) {
+                    LOGGER.error("Unexpected exception in handling cluster event" + e.getMessage());
                 }
             }
 

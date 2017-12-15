@@ -24,8 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.dataflow.ActivityId;
@@ -37,9 +35,11 @@ import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.job.JobActivityGraph;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class JobActivityGraphBuilder implements IActivityGraphBuilder {
-    private static final Logger LOGGER = Logger.getLogger(JobActivityGraphBuilder.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Map<ActivityId, IOperatorDescriptor> activityOperatorMap;
 
@@ -71,8 +71,8 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
 
     @Override
     public void addSourceEdge(int operatorInputIndex, IActivity task, int taskInputIndex) {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("Adding source edge: " + task.getActivityId() + ":" + operatorInputIndex + " -> "
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Adding source edge: " + task.getActivityId() + ":" + operatorInputIndex + " -> "
                     + task.getActivityId() + ":" + taskInputIndex);
         }
         IOperatorDescriptor op = activityOperatorMap.get(task.getActivityId());
@@ -83,8 +83,8 @@ public class JobActivityGraphBuilder implements IActivityGraphBuilder {
 
     @Override
     public void addTargetEdge(int operatorOutputIndex, IActivity task, int taskOutputIndex) {
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("Adding target edge: " + task.getActivityId() + ":" + operatorOutputIndex + " -> "
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Adding target edge: " + task.getActivityId() + ":" + operatorOutputIndex + " -> "
                     + task.getActivityId() + ":" + taskOutputIndex);
         }
         IOperatorDescriptor op = activityOperatorMap.get(task.getActivityId());

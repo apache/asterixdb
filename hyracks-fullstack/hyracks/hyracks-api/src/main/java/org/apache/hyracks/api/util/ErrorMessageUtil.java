@@ -26,12 +26,14 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ErrorMessageUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(ErrorMessageUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String NONE = "";
     private static final String COMMA = ",";
 
@@ -99,7 +101,7 @@ public class ErrorMessageUtil {
             return fmt.out().toString();
         } catch (Exception e) {
             // Do not throw further exceptions during exception processing.
-            LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
+            LOGGER.log(Level.WARN, e.getLocalizedMessage(), e);
             return e.getMessage();
         }
     }

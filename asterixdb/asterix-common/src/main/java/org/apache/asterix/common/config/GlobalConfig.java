@@ -20,14 +20,16 @@ package org.apache.asterix.common.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GlobalConfig {
     public static final boolean DEBUG = true;
 
     public static final String ASTERIX_LOGGER_NAME = "org.apache.asterix";
 
-    public static final Logger ASTERIX_LOGGER = Logger.getLogger(ASTERIX_LOGGER_NAME);
+    public static final Logger ASTERIX_LOGGER = LogManager.getLogger(ASTERIX_LOGGER_NAME);
 
     public static final String DEFAULT_CONFIG_FILE_NAME = "asterix-configuration.xml";
 
@@ -60,7 +62,7 @@ public class GlobalConfig {
             try {
                 fz = Integer.parseInt(frameSizeStr);
             } catch (NumberFormatException nfe) {
-                GlobalConfig.ASTERIX_LOGGER.warning("Wrong frame size size argument. Picking default value ("
+                GlobalConfig.ASTERIX_LOGGER.warn("Wrong frame size size argument. Picking default value ("
                         + GlobalConfig.DEFAULT_FRAME_SIZE + ") instead.\n");
             }
             if (fz >= 0) {

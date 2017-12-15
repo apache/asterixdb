@@ -20,8 +20,6 @@
 package org.apache.hyracks.dataflow.std.sort;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -34,9 +32,11 @@ import org.apache.hyracks.dataflow.std.buffermanager.EnumFreeSlotPolicy;
 import org.apache.hyracks.dataflow.std.buffermanager.FrameFreeSlotPolicyFactory;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableFrameMemoryManager;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
-    private static final Logger LOG = Logger.getLogger(HybridTopKSortRunGenerator.class.getName());
+    private static final Logger LOG = LogManager.getLogger();
 
     private static final int SWITCH_TO_FRAME_SORTER_THRESHOLD = 2;
     private IFrameSorter frameSorter = null;
@@ -90,8 +90,8 @@ public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
                     }
                     tupleSorter.close();
                     tupleSorter = null;
-                    if (LOG.isLoggable(Level.FINE)) {
-                        LOG.fine("clear tupleSorter");
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("clear tupleSorter");
                     }
                 }
             }
@@ -103,8 +103,8 @@ public class HybridTopKSortRunGenerator extends HeapSortRunGenerator {
                                 frameLimit - 1));
                 frameSorter = new FrameSorterMergeSort(ctx, bufferManager, frameLimit - 1, sortFields, nmkFactories,
                         comparatorFactories, recordDescriptor, topK);
-                if (LOG.isLoggable(Level.FINE)) {
-                    LOG.fine("create frameSorter");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("create frameSorter");
                 }
             }
             if (!frameSorter.insertFrame(buffer)) {

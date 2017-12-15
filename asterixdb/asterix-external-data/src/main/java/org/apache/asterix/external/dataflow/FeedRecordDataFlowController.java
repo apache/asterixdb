@@ -20,8 +20,6 @@ package org.apache.asterix.external.dataflow;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -34,6 +32,9 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowController {
     public static final String INCOMING_RECORDS_COUNT_FIELD_NAME = "incoming-records-count";
@@ -45,7 +46,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         STOPPED
     }
 
-    private static final Logger LOGGER = Logger.getLogger(FeedRecordDataFlowController.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IRecordDataParser<T> dataParser;
     private final IRecordReader<T> recordReader;
     protected final AtomicBoolean closed = new AtomicBoolean(false);
@@ -90,7 +91,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 }
             }
         } catch (HyracksDataException e) {
-            LOGGER.log(Level.WARNING, "Exception during ingestion", e);
+            LOGGER.log(Level.WARN, "Exception during ingestion", e);
             //if interrupted while waiting for a new record, then it is safe to not fail forward
             if (e.getComponent() == ErrorCode.ASTERIX
                     && (e.getErrorCode() == ErrorCode.FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD)) {
@@ -113,7 +114,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         } catch (Exception e) {
             failure = e;
             tupleForwarder.fail();
-            LOGGER.log(Level.WARNING, "Failure while operating a feed source", e);
+            LOGGER.log(Level.WARN, "Failure while operating a feed source", e);
         } finally {
             failure = finish(failure);
         }
@@ -178,7 +179,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         try {
             recordReader.close();
         } catch (Exception th) {
-            LOGGER.log(Level.WARNING, "Failure during while operating a feed source", th);
+            LOGGER.log(Level.WARN, "Failure during while operating a feed source", th);
             hde = HyracksDataException.suppress(hde, th);
         }
         try {
@@ -203,7 +204,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         try {
             dataParser.parse(record, tb.getDataOutput());
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, ExternalDataConstants.ERROR_PARSE_RECORD, e);
+            LOGGER.log(Level.WARN, ExternalDataConstants.ERROR_PARSE_RECORD, e);
             feedLogManager.logRecord(record.toString(), ExternalDataConstants.ERROR_PARSE_RECORD);
             // continue the outer loop
             return false;

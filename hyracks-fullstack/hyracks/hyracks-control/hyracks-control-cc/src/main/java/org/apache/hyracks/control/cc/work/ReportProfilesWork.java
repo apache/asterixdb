@@ -20,12 +20,12 @@
 package org.apache.hyracks.control.cc.work;
 
 import java.util.List;
-import java.util.logging.Level;
 
 import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.work.AbstractWork;
+import org.apache.logging.log4j.Level;
 
 public class ReportProfilesWork extends AbstractWork {
     private final IJobManager jobManager;
@@ -49,6 +49,6 @@ public class ReportProfilesWork extends AbstractWork {
 
     @Override
     public Level logLevel() {
-        return Level.FINEST;
+        return Level.TRACE;
     }
 }

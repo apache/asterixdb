@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -68,8 +67,6 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
-
-    static final Logger LOGGER = Logger.getLogger(IntroduceLSMComponentFilterRule.class.getName());
 
     protected IVariableTypeEnvironment typeEnvironment = null;
 

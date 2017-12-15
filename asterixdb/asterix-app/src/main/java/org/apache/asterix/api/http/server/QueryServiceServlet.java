@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.common.api.Duration;
@@ -56,6 +54,9 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -68,7 +69,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
-    protected static final Logger LOGGER = Logger.getLogger(QueryServiceServlet.class.getName());
+    protected static final Logger LOGGER = LogManager.getLogger();
     protected final ILangExtension.Language queryLanguage;
     private final ILangCompilationProvider compilationProvider;
     private final IStatementExecutorFactory statementExecutorFactory;
@@ -98,10 +99,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         } catch (IOException e) {
             // Servlet methods should not throw exceptions
             // http://cwe.mitre.org/data/definitions/600.html
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
         } catch (Throwable th) {// NOSONAR: Logging and re-throwing
             try {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, th.getMessage(), th);
+                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, th.getMessage(), th);
             } catch (Throwable ignored) { // NOSONAR: Logging failure
             }
             throw th;
@@ -363,7 +364,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 param.timeout = getOptText(jsonRequest, Parameter.TIMEOUT.str());
             } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
-                GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
             }
         } else {
             param.statement = request.getParameter(Parameter.STATEMENT.str());
@@ -472,7 +473,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         sessionOutput.out().print("}\n");
         sessionOutput.out().flush();
         if (sessionOutput.out().checkError()) {
-            LOGGER.warning("Error flushing output writer");
+            LOGGER.warn("Error flushing output writer");
         }
     }
 
@@ -504,14 +505,14 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, t.getMessage(), t);
             execution.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
         } else if (t instanceof HyracksException) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, t.getMessage(), t);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, t.getMessage(), t);
             if (((HyracksException) t).getErrorCode() == ErrorCode.QUERY_TIMEOUT) {
                 execution.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
             } else {
                 execution.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.SEVERE, "Unexpected exception", t);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, "Unexpected exception", t);
             execution.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }

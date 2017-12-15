@@ -19,15 +19,16 @@
 package org.apache.hyracks.api.util;
 
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class SingleThreadEventProcessor<T> implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(SingleThreadEventProcessor.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final String name;
     private final LinkedBlockingQueue<T> eventInbox;
     private volatile Thread executorThread;
@@ -50,10 +51,10 @@ public abstract class SingleThreadEventProcessor<T> implements Runnable {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Error handling an event", e);
+                LOGGER.log(Level.ERROR, "Error handling an event", e);
             }
         }
-        LOGGER.log(Level.WARNING, "Stopped " + Thread.currentThread().getName());
+        LOGGER.log(Level.WARN, "Stopped " + Thread.currentThread().getName());
     }
 
     protected abstract void handle(T event) throws Exception; //NOSONAR
@@ -71,7 +72,7 @@ public abstract class SingleThreadEventProcessor<T> implements Runnable {
         int attempt = 0;
         while (executorThread.isAlive()) {
             attempt++;
-            LOGGER.log(Level.WARNING,
+            LOGGER.log(Level.WARN,
                     "Failed to stop event processor after " + attempt + " attempts. Interrupted exception swallowed?");
             if (attempt == 10) {
                 throw HyracksDataException.create(ErrorCode.FAILED_TO_SHUTDOWN_EVENT_PROCESSOR, name);

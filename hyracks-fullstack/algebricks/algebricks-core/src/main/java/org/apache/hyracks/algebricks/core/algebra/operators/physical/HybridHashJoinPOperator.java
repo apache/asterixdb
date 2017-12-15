@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -58,6 +57,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.std.join.HybridHashJoinOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.join.OptimizedHybridHashJoinOperatorDescriptor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
 
@@ -67,7 +68,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
     private final int aveRecordsPerFrame;
     private final double fudgeFactor;
 
-    private static final Logger LOGGER = Logger.getLogger(HybridHashJoinPOperator.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public HybridHashJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
             List<LogicalVariable> sideLeftOfEqualities, List<LogicalVariable> sideRightOfEqualities,
@@ -78,7 +79,7 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
         this.aveRecordsPerFrame = aveRecordsPerFrame;
         this.fudgeFactor = fudgeFactor;
 
-        LOGGER.fine("HybridHashJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
+        LOGGER.debug("HybridHashJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
                 + partitioningType + ", List<LogicalVariable>=" + sideLeftOfEqualities + ", List<LogicalVariable>="
                 + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames + ", int maxInputSize0InFrames="
                 + maxInputSizeInFrames + ", int aveRecordsPerFrame=" + aveRecordsPerFrame + ", double fudgeFactor="

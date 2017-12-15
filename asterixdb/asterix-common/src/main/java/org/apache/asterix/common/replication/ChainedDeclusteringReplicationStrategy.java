@@ -21,18 +21,18 @@ package org.apache.asterix.common.replication;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ChainedDeclusteringReplicationStrategy implements IReplicationStrategy {
 
-    private static final Logger LOGGER = Logger.getLogger(ChainedDeclusteringReplicationStrategy.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private int replicationFactor;
     private ReplicationProperties repProp;
     private ConfigManager configManager;
@@ -49,8 +49,8 @@ public class ChainedDeclusteringReplicationStrategy implements IReplicationStrat
         int nodeIndex = repProp.getNodeIds().indexOf(nodeId);
 
         if (nodeIndex == -1) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.warning("Could not find node " + nodeId + " in cluster configurations");
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.warn("Could not find node " + nodeId + " in cluster configurations");
             }
             return Collections.emptySet();
         }

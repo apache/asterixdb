@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
@@ -50,10 +48,13 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.control.nc.NCShutdownHook;
 import org.apache.hyracks.util.ExitUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GlobalRecoveryManager implements IGlobalRecoveryManager {
 
-    private static final Logger LOGGER = Logger.getLogger(GlobalRecoveryManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     protected final IStorageComponentProvider componentProvider;
     protected final ICCServiceContext serviceCtx;
     protected IHyracksClientConnection hcc;
@@ -97,7 +98,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                         try {
                             recover(appCtx);
                         } catch (HyracksDataException e) {
-                            LOGGER.log(Level.SEVERE, "Global recovery failed. Shutting down...", e);
+                            LOGGER.log(Level.ERROR, "Global recovery failed. Shutting down...", e);
                             ExitUtil.exit(NCShutdownHook.FAILED_TO_RECOVER_EXIT_CODE);
                         }
                     });

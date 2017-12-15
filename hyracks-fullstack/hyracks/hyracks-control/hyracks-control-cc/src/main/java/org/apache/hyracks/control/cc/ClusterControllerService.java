@@ -36,8 +36,6 @@ import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.ICCApplication;
@@ -87,10 +85,13 @@ import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 import org.apache.hyracks.util.ExitUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xml.sax.InputSource;
 
 public class ClusterControllerService implements IControllerService {
-    private static final Logger LOGGER = Logger.getLogger(ClusterControllerService.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final CCConfig ccConfig;
 
@@ -243,8 +244,8 @@ public class ClusterControllerService implements IControllerService {
             jobManager = (IJobManager) jobManagerConstructor.newInstance(ccConfig, this, jobCapacityController);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException
                 | InvocationTargetException e) {
-            if (LOGGER.isLoggable(Level.WARNING)) {
-                LOGGER.log(Level.WARNING, "class " + ccConfig.getJobManagerClass() + " could not be used: ", e);
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.log(Level.WARN, "class " + ccConfig.getJobManagerClass() + " could not be used: ", e);
             }
             // Falls back to the default implementation if the user-provided class name is not valid.
             jobManager = new JobManager(ccConfig, this, jobCapacityController);
@@ -278,12 +279,12 @@ public class ClusterControllerService implements IControllerService {
             @Override
             public void notifyNodeJoin(String nodeId, Map<IOption, Object> ncConfiguration) throws HyracksException {
                 // no-op, we don't care
-                LOGGER.log(Level.WARNING, "Getting notified that node: " + nodeId + " has joined. and we don't care");
+                LOGGER.log(Level.WARN, "Getting notified that node: " + nodeId + " has joined. and we don't care");
             }
 
             @Override
             public void notifyNodeFailure(Collection<String> deadNodeIds) throws HyracksException {
-                LOGGER.log(Level.WARNING, "Getting notified that nodes: " + deadNodeIds + " has failed");
+                LOGGER.log(Level.WARN, "Getting notified that nodes: " + deadNodeIds + " has failed");
             }
         });
     }

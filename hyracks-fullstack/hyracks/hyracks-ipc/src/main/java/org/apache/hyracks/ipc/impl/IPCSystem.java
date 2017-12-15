@@ -21,17 +21,18 @@ package org.apache.hyracks.ipc.impl;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.api.IPCPerformanceCounters;
 import org.apache.hyracks.ipc.api.IPayloadSerializerDeserializer;
 import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IPCSystem {
-    private static final Logger LOGGER = Logger.getLogger(IPCSystem.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final IPCConnectionManager cMgr;
 

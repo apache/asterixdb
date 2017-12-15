@@ -93,7 +93,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                     @Override
                     public JobSpecification createJob(Object appContext,
                             IJobletEventListenerFactory jobEventListenerFactory) throws AlgebricksException {
-                        AlgebricksConfig.ALGEBRICKS_LOGGER.fine("Starting Job Generation.\n");
+                        AlgebricksConfig.ALGEBRICKS_LOGGER.debug("Starting Job Generation.\n");
                         JobGenContext context = new JobGenContext(null, metadata, appContext,
                                 serializerDeserializerProvider, hashFunctionFactoryProvider, hashFunctionFamilyProvider,
                                 comparatorFactoryProvider, typeTraitProvider, binaryBooleanInspectorFactory,

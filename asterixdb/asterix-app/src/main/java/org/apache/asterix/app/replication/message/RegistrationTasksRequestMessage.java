@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.app.replication.message;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
@@ -29,10 +26,13 @@ import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICcAddressedMessage {
 
-    private static final Logger LOGGER = Logger.getLogger(RegistrationTasksRequestMessage.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final SystemState state;
     private final String nodeId;
@@ -51,7 +51,7 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
                     systemState);
             ((INCMessageBroker) cs.getContext().getMessageBroker()).sendMessageToCC(msg);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Unable to send RegistrationTasksRequestMessage to CC", e);
+            LOGGER.log(Level.ERROR, "Unable to send RegistrationTasksRequestMessage to CC", e);
             throw HyracksDataException.create(e);
         }
     }

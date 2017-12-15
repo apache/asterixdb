@@ -18,9 +18,6 @@
  */
 package org.apache.hyracks.dataflow.common.comm.io;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -28,9 +25,11 @@ import org.apache.hyracks.api.dataflow.IOpenableDataWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
-    private static final Logger LOGGER = Logger.getLogger(SerializingDataWriter.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ArrayTupleBuilder tb;
 
@@ -82,8 +81,8 @@ public class SerializingDataWriter implements IOpenableDataWriter<Object[]> {
         tb.reset();
         for (int i = 0; i < data.length; ++i) {
             Object instance = data[i];
-            if (LOGGER.isLoggable(Level.FINEST)) {
-                LOGGER.finest(i + " " + instance);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(i + " " + instance);
             }
             tb.addField(recordDescriptor.getFields()[i], instance);
         }

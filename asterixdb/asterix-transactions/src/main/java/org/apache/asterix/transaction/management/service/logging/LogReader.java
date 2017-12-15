@@ -20,7 +20,6 @@ package org.apache.asterix.transaction.management.service.logging;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ILogManager;
@@ -31,11 +30,13 @@ import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.asterix.common.transactions.TxnLogFile;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @NotThreadSafe
 public class LogReader implements ILogReader {
 
-    private static final Logger LOGGER = Logger.getLogger(LogReader.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ILogManager logMgr;
     private final long logFileSize;
     private final int logPageSize;
@@ -88,7 +89,7 @@ public class LogReader implements ILogReader {
         if (readBuffer.position() == readBuffer.limit()) {
             boolean hasRemaining = refillLogReadBuffer();
             if (!hasRemaining && isRecoveryMode && readLSN < flushLSN.get()) {
-                LOGGER.severe("Transaction log ends before expected. Log files may be missing.");
+                LOGGER.error("Transaction log ends before expected. Log files may be missing.");
                 return null;
             }
         }
@@ -119,7 +120,7 @@ public class LogReader implements ILogReader {
                     continue;
                 }
                 case BAD_CHKSUM: {
-                    LOGGER.severe(
+                    LOGGER.error(
                             "Transaction log contains corrupt log records (perhaps due to medium error). Stopping recovery early.");
                     return null;
                 }

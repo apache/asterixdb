@@ -21,16 +21,16 @@ package org.apache.hyracks.dataflow.common.comm.io;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.FrameConstants;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FrameDeserializer {
-    private static final Logger LOGGER = Logger.getLogger(FrameDeserializer.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ByteBufferInputStream bbis;
 
@@ -70,8 +70,8 @@ public class FrameDeserializer {
         Object[] record = new Object[recordDescriptor.getFieldCount()];
         for (int i = 0; i < record.length; ++i) {
             Object instance = recordDescriptor.getFields()[i].deserialize(di);
-            if (LOGGER.isLoggable(Level.FINEST)) {
-                LOGGER.finest(i + " " + instance);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace(i + " " + instance);
             }
             record[i] = instance;
             if (FrameConstants.DEBUG_FRAME_IO) {
@@ -84,8 +84,8 @@ public class FrameDeserializer {
                 }
             }
         }
-        if (LOGGER.isLoggable(Level.FINEST)) {
-            LOGGER.finest("Read Record tIndex = " + tIndex + ", tupleCount = " + tupleCount);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Read Record tIndex = " + tIndex + ", tupleCount = " + tupleCount);
         }
         ++tIndex;
         return record;

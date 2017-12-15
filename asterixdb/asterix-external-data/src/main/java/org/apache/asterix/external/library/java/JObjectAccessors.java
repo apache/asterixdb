@@ -23,8 +23,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -93,10 +91,13 @@ import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.string.UTF8StringReader;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class JObjectAccessors {
 
-    private static final Logger LOGGER = Logger.getLogger(JObjectAccessors.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private JObjectAccessors() {
     }
@@ -543,7 +544,7 @@ public class JObjectAccessors {
                 }
 
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Failure while accessing a java record", e);
+                LOGGER.log(Level.WARN, "Failure while accessing a java record", e);
                 throw HyracksDataException.create(e);
             }
             return jRecord;

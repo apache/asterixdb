@@ -21,8 +21,6 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -37,9 +35,12 @@ import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ComponentReplacementContext implements ILSMIndexOperationContext {
-    private static final Logger LOGGER = Logger.getLogger(ComponentReplacementContext.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final List<ILSMComponent> components;
     private final List<ILSMComponent> diskComponents;
     private final List<ILSMComponentId> replacedComponentIds;
@@ -166,7 +167,7 @@ public class ComponentReplacementContext implements ILSMIndexOperationContext {
             }
             if (!found) {
                 // component has been merged?
-                LOGGER.log(Level.WARNING, "Memory Component with id = " + replacedComponentIds.get(i)
+                LOGGER.log(Level.WARN, "Memory Component with id = " + replacedComponentIds.get(i)
                         + " was flushed and merged before search cursor replaces it");
                 return false;
             }
@@ -198,7 +199,7 @@ public class ComponentReplacementContext implements ILSMIndexOperationContext {
                 ctx.getComponentHolder().add(swapIndexes[i], diskComponents.get(i));
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Failure replacing memory components with disk components", e);
+            LOGGER.log(Level.WARN, "Failure replacing memory components with disk components", e);
             throw e;
         }
     }

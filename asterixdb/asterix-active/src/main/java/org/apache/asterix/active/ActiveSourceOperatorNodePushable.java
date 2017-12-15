@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.active;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.active.message.ActivePartitionMessage.Event;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -29,11 +26,14 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable
         implements IActiveRuntime {
 
-    private static final Logger LOGGER = Logger.getLogger(ActiveSourceOperatorNodePushable.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     protected final IHyracksTaskContext ctx;
     protected final ActiveManager activeManager;
     /** A unique identifier for the runtime **/

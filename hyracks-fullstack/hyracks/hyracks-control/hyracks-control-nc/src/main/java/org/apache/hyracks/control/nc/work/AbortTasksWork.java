@@ -20,8 +20,6 @@ package org.apache.hyracks.control.nc.work;
 
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
@@ -30,9 +28,12 @@ import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.Task;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AbortTasksWork extends AbstractWork {
-    private static final Logger LOGGER = Logger.getLogger(AbortTasksWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final NodeControllerService ncs;
 
@@ -48,7 +49,7 @@ public class AbortTasksWork extends AbstractWork {
 
     @Override
     public void run() {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Aborting Tasks: " + jobId + ":" + tasks);
         }
         IDatasetPartitionManager dpm = ncs.getDatasetPartitionManager();
@@ -65,7 +66,7 @@ public class AbortTasksWork extends AbstractWork {
                 }
             }
         } else {
-            LOGGER.log(Level.WARNING,
+            LOGGER.log(Level.WARN,
                     "Joblet couldn't be found. Tasks of job " + jobId + " have all either completed or failed");
         }
     }

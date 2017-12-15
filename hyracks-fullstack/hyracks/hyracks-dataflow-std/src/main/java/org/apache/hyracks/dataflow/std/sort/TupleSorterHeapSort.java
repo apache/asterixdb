@@ -21,8 +21,6 @@ package org.apache.hyracks.dataflow.std.sort;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
@@ -42,10 +40,12 @@ import org.apache.hyracks.dataflow.std.structures.IResetableComparable;
 import org.apache.hyracks.dataflow.std.structures.IResetableComparableFactory;
 import org.apache.hyracks.dataflow.std.structures.MaxHeap;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TupleSorterHeapSort implements ITupleSorter {
 
-    private static final Logger LOGGER = Logger.getLogger(TupleSorterHeapSort.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     class HeapEntryFactory implements IResetableComparableFactory<HeapEntry> {
         @Override
@@ -304,7 +304,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
         }
         maxFrameSize = Math.max(maxFrameSize, outputFrame.getFrameSize());
         outputAppender.write(writer, true);
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Flushed records:" + numEntries + "; Flushed through " + (io + 1) + " frames");
         }
         return maxFrameSize;

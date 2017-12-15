@@ -152,7 +152,7 @@ public class ParserTestExecutor extends TestExecutor {
             runScriptAndCompareWithResult(queryFile, new PrintWriter(System.err), expectedFile, actualResultFile,
                     ComparisonEnum.TEXT);
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.warning("Failed while testing file " + queryFile);
+            GlobalConfig.ASTERIX_LOGGER.warn("Failed while testing file " + queryFile);
             throw e;
         } finally {
             writer.close();

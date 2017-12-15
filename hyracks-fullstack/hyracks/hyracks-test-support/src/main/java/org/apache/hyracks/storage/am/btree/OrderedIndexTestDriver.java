@@ -20,9 +20,9 @@
 package org.apache.hyracks.storage.am.btree;
 
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -35,7 +35,7 @@ import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 
 @SuppressWarnings("rawtypes")
 public abstract class OrderedIndexTestDriver {
-    protected final Logger LOGGER = Logger.getLogger(OrderedIndexTestDriver.class.getName());
+    protected final Logger LOGGER = LogManager.getLogger();
 
     protected static final int numTuplesToInsert = AccessMethodTestsConfig.BTREE_NUM_TUPLES_TO_INSERT;
 
@@ -58,7 +58,7 @@ public abstract class OrderedIndexTestDriver {
 
     @Test
     public void oneIntKeyAndValue() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("BTree " + getTestOpName() + " Test With One Int Key And Value.");
         }
 
@@ -75,7 +75,7 @@ public abstract class OrderedIndexTestDriver {
 
     @Test
     public void twoIntKeys() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys.");
         }
 
@@ -97,7 +97,7 @@ public abstract class OrderedIndexTestDriver {
 
     @Test
     public void twoIntKeysAndValues() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two Int Keys And Values.");
         }
 
@@ -120,7 +120,7 @@ public abstract class OrderedIndexTestDriver {
 
     @Test
     public void oneStringKeyAndValue() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("BTree " + getTestOpName() + " Test With One String Key And Value.");
         }
 
@@ -138,7 +138,7 @@ public abstract class OrderedIndexTestDriver {
 
     @Test
     public void twoStringKeys() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys.");
         }
 
@@ -160,7 +160,7 @@ public abstract class OrderedIndexTestDriver {
 
     @Test
     public void twoStringKeysAndValues() throws Exception {
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("BTree " + getTestOpName() + " Test With Two String Keys And Values.");
         }
 

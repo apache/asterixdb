@@ -25,13 +25,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
 
 import com.rometools.rome.feed.synd.SyndContent;
 import com.rometools.rome.feed.synd.SyndContentImpl;
@@ -71,7 +71,7 @@ public class RSSFeedServlet extends AbstractServlet {
             SyndFeedOutput output = new SyndFeedOutput();
             output.output(feed, res.writer());
         } catch (FeedException | ParseException ex) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.WARNING, ex.getMessage(), ex);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, ex.getMessage(), ex);
             String msg = COULD_NOT_GENERATE_FEED_ERROR;
             res.writer().print(msg);
             res.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);

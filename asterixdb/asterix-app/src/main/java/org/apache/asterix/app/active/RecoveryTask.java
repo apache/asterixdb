@@ -19,8 +19,6 @@
 package org.apache.asterix.app.active;
 
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.IRetryPolicy;
@@ -36,10 +34,13 @@ import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataLockUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RecoveryTask {
 
-    private static final Logger LOGGER = Logger.getLogger(RecoveryTask.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Level level = Level.INFO;
     private final ActiveEntityEventsListener listener;
     private volatile boolean cancelRecovery = false;
@@ -86,7 +87,7 @@ public class RecoveryTask {
                 listener.setState(ActivityState.RUNNING);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Attempt to resume " + listener.getEntityId() + " Failed", e);
+            LOGGER.log(Level.WARN, "Attempt to resume " + listener.getEntityId() + " Failed", e);
             synchronized (listener) {
                 if (listener.getState() == ActivityState.RESUMING) {
                     // This will be the case if compilation failure
@@ -102,7 +103,7 @@ public class RecoveryTask {
                     }
                 }
             } else {
-                LOGGER.log(Level.WARNING, "Submitting recovery task for " + listener.getEntityId());
+                LOGGER.log(Level.WARN, "Submitting recovery task for " + listener.getEntityId());
                 metadataProvider.getApplicationContext().getServiceContext().getControllerService().getExecutor()
                         .submit(() -> doRecover(retryPolicyFactory.create(listener)));
             }

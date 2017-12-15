@@ -49,8 +49,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
@@ -95,13 +93,16 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * This class is used to process replication jobs and maintain remote replicas states
  */
 public class ReplicationManager implements IReplicationManager {
 
-    private static final Logger LOGGER = Logger.getLogger(ReplicationManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int INITIAL_REPLICATION_FACTOR = 1;
     private static final int MAX_JOB_COMMIT_ACK_WAIT = 10000;
     private final String nodeId;
@@ -158,7 +159,7 @@ public class ReplicationManager implements IReplicationManager {
             replicationStrategy = ReplicationStrategyFactory.create(replicationProperties.getReplicationStrategy(),
                     replicationProperties, ncConfig.getConfigManager());
         } catch (HyracksDataException e) {
-            LOGGER.log(Level.WARNING, "Couldn't initialize replication strategy", e);
+            LOGGER.log(Level.WARN, "Couldn't initialize replication strategy", e);
         }
         this.replicaResourcesManager = (ReplicaResourcesManager) remoteResoucesManager;
         this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
@@ -333,7 +334,7 @@ public class ReplicationManager implements IReplicationManager {
                         remainingFiles--;
                         Path path = Paths.get(filePath);
                         if (Files.notExists(path)) {
-                            LOGGER.log(Level.SEVERE, "File deleted before replication: " + filePath);
+                            LOGGER.log(Level.ERROR, "File deleted before replication: " + filePath);
                             continue;
                         }
 
@@ -528,16 +529,14 @@ public class ReplicationManager implements IReplicationManager {
     }
 
     private void handleReplicationFailure(SocketChannel socketChannel, Throwable t) {
-        if (LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.log(Level.WARNING, "Could not complete replication request.", t);
+        if (LOGGER.isWarnEnabled()) {
+            LOGGER.log(Level.WARN, "Could not complete replication request.", t);
         }
         if (socketChannel.isOpen()) {
             try {
                 socketChannel.close();
             } catch (IOException e) {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING, "Could not close socket.", e);
-                }
+                LOGGER.log(Level.WARN, "Could not close socket.", e);
             }
         }
         reportFailedReplica(getReplicaIdBySocket(socketChannel));
@@ -547,21 +546,14 @@ public class ReplicationManager implements IReplicationManager {
      * Stops TxnLogReplicator and closes the sockets used to replicate logs.
      */
     private void endTxnLogReplicationHandshake() {
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("Terminating TxnLogReplicator thread ...");
-        }
+        LOGGER.info("Terminating TxnLogReplicator thread ...");
         txnlogReplicator.terminate();
         try {
             txnLogReplicatorTask.get();
         } catch (ExecutionException | InterruptedException e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "TxnLogReplicator thread terminated abnormally", e);
-            }
+            LOGGER.error("TxnLogReplicator thread terminated abnormally", e);
         }
-
-        if (LOGGER.isLoggable(Level.INFO)) {
-            LOGGER.info("TxnLogReplicator thread was terminated.");
-        }
+        LOGGER.info("TxnLogReplicator thread was terminated.");
 
         /*
          * End log replication handshake (by sending a dummy log with a single byte)
@@ -587,16 +579,14 @@ public class ReplicationManager implements IReplicationManager {
                         txnCommitAcks.wait(1000);
                         long waitDuration = System.currentTimeMillis() - waitStartTime;
                         if (waitDuration > MAX_JOB_COMMIT_ACK_WAIT) {
-                            LOGGER.log(Level.SEVERE,
+                            LOGGER.log(Level.ERROR,
                                     "Timeout before receving all job ACKs from replicas. Pending txns ("
                                             + txnCommitAcks.keySet().toString() + ")");
                             break;
                         }
                     }
                 } catch (InterruptedException e) {
-                    if (LOGGER.isLoggable(Level.SEVERE)) {
-                        LOGGER.log(Level.SEVERE, "Interrupted while waiting for jobs ACK", e);
-                    }
+                    LOGGER.error("Interrupted while waiting for jobs ACK", e);
                     Thread.currentThread().interrupt();
                 }
             }
@@ -764,8 +754,10 @@ public class ReplicationManager implements IReplicationManager {
             replicationFactor--;
         }
 
-        LOGGER.log(Level.WARNING, "Replica " + replicaId + " state changed to: " + newState.name()
-                + ". Replication factor changed to: " + replicationFactor);
+        if (LOGGER.isWarnEnabled()) {
+            LOGGER.warn("Replica " + replicaId + " state changed to: " + newState.name()
+                    + ". Replication factor changed to: " + replicationFactor);
+        }
 
         if (suspendReplication) {
             startReplicationThreads();
@@ -786,8 +778,8 @@ public class ReplicationManager implements IReplicationManager {
                 Set<String> replicaIds = txnCommitAcks.get(txnId);
                 replicaIds.add(replicaId);
             } else {
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.warning("Invalid job replication ACK received for txnId(" + txnId + ")");
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.warn("Invalid job replication ACK received for txnId(" + txnId + ")");
                 }
                 return;
             }
@@ -838,8 +830,8 @@ public class ReplicationManager implements IReplicationManager {
                     SocketChannel sc = getReplicaSocket(replica.getId());
                     replicaNodesSockets.put(replica.getId(), sc);
                 } catch (IOException e) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.log(Level.WARNING, "Could not get replica socket", e);
+                    if (LOGGER.isWarnEnabled()) {
+                        LOGGER.log(Level.WARN, "Could not get replica socket", e);
                     }
                     reportFailedReplica(replica.getId());
                 }
@@ -1301,9 +1293,7 @@ public class ReplicationManager implements IReplicationManager {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (IOException e) {
-                    if (LOGGER.isLoggable(Level.WARNING)) {
-                        LOGGER.log(Level.WARNING, "Couldn't complete processing replication job", e);
-                    }
+                    LOGGER.warn("Couldn't complete processing replication job", e);
                 }
             }
 
@@ -1353,7 +1343,7 @@ public class ReplicationManager implements IReplicationManager {
                     addAckToJob(jobId, ackFrom);
                 }
             } catch (AsynchronousCloseException e) {
-                if (LOGGER.isLoggable(Level.INFO)) {
+                if (LOGGER.isInfoEnabled()) {
                     LOGGER.log(Level.INFO, "Replication listener stopped for remote replica: " + replicaId, e);
                 }
             } catch (IOException e) {

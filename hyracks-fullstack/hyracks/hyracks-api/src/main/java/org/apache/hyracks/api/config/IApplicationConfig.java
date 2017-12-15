@@ -22,7 +22,8 @@ import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.logging.Level;
+
+import org.apache.logging.log4j.Level;
 
 /**
  * Accessor for the data contained in the global application configuration file.

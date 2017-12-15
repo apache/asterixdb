@@ -19,15 +19,15 @@
 
 package org.apache.hyracks.storage.am.btree.util;
 
-import java.util.logging.Logger;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AbstractBTreeTest {
-    protected final Logger LOGGER = Logger.getLogger(BTreeTestHarness.class.getName());
+    protected final Logger LOGGER = LogManager.getLogger();
 
     protected final BTreeTestHarness harness;
 

@@ -25,8 +25,6 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.metadata.MetadataManager;
@@ -42,6 +40,9 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -56,7 +57,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  * in parallel from existing AsterixDB datasets.
  */
 public class ConnectorApiServlet extends AbstractServlet {
-    private static final Logger LOGGER = Logger.getLogger(ConnectorApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private ICcApplicationContext appCtx;
 
     public ConnectorApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx) {
@@ -70,7 +71,7 @@ public class ConnectorApiServlet extends AbstractServlet {
         try {
             HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failure setting content type", e);
+            LOGGER.log(Level.WARN, "Failure setting content type", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             response.writer().write(e.toString());
             return;
@@ -128,7 +129,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                 metadataProvider.getLocks().unlock();
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Failure handling a request", e);
+            LOGGER.log(Level.WARN, "Failure handling a request", e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             out.write(e.toString());
         } finally {

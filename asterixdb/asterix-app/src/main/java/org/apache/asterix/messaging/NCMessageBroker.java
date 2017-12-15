@@ -22,8 +22,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.MessagingProperties;
@@ -37,12 +35,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.util.collection.LongObjectHashMap;
 import io.netty.util.collection.LongObjectMap;
 
 public class NCMessageBroker implements INCMessageBroker {
-    private static final Logger LOGGER = Logger.getLogger(NCMessageBroker.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final NodeControllerService ncs;
     private final INcApplicationContext appContext;
@@ -86,7 +87,7 @@ public class NCMessageBroker implements INCMessageBroker {
     @Override
     public void receivedMessage(IMessage message, String nodeId) throws Exception {
         INcAddressedMessage absMessage = (INcAddressedMessage) message;
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Received message: " + absMessage);
         }
         absMessage.handle(appContext);
@@ -153,12 +154,12 @@ public class NCMessageBroker implements INCMessageBroker {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
-                    if (LOGGER.isLoggable(Level.WARNING) && msg != null) {
-                        LOGGER.log(Level.WARNING, "Could not process message : "
+                    if (LOGGER.isWarnEnabled() && msg != null) {
+                        LOGGER.log(Level.WARN, "Could not process message : "
                                 + msg, e);
                     } else {
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.log(Level.WARNING, "Could not process message", e);
+                        if (LOGGER.isWarnEnabled()) {
+                            LOGGER.log(Level.WARN, "Could not process message", e);
                         }
                     }
                 }

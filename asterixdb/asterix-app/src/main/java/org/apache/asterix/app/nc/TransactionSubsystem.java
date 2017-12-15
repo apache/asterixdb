@@ -19,8 +19,6 @@
 package org.apache.asterix.app.nc;
 
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.TransactionProperties;
@@ -34,20 +32,21 @@ import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
-import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.transaction.management.service.locking.ConcurrentLockManager;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.logging.LogManagerWithReplication;
 import org.apache.asterix.transaction.management.service.recovery.CheckpointManagerFactory;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManager;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Provider for all the sub-systems (transaction/lock/log/recovery) managers.
  * Users of transaction sub-systems must obtain them from the provider.
  */
 public class TransactionSubsystem implements ITransactionSubsystem {
-    private static final Logger LOGGER = Logger.getLogger(TransactionSubsystem.class.getName());
+    private static final Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger();
     private final String id;
     private final ILogManager logManager;
     private final ILockManager lockManager;
@@ -74,7 +73,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         final boolean replicationEnabled = repProperties.isReplicationEnabled();
 
         final CheckpointProperties checkpointProperties = new CheckpointProperties(txnProperties, id);
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Checkpoint Properties: " + checkpointProperties);
         }
         checkpointManager = CheckpointManagerFactory.create(this, checkpointProperties, replicationEnabled);
@@ -144,7 +143,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
      * However, the thread doesn't start reporting the count until the entityCommitCount > 0.
      */
     static class EntityCommitProfiler implements Callable<Boolean> {
-        private static final Logger LOGGER = Logger.getLogger(EntityCommitProfiler.class.getName());
+        private static final Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger();
         private final long reportIntervalInMillisec;
         private long lastEntityCommitCount;
         private int reportIntervalInSeconds;
@@ -179,7 +178,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
             long currentTimeStamp = System.currentTimeMillis();
             long currentEntityCommitCount = txnSubsystem.profilerEntityCommitLogCount;
 
-            LOGGER.severe("EntityCommitProfiler ReportRound[" + reportRound + "], AbsoluteTimeStamp[" + currentTimeStamp
+            LOGGER.error("EntityCommitProfiler ReportRound[" + reportRound + "], AbsoluteTimeStamp[" + currentTimeStamp
                     + "], ActualRelativeTimeStamp[" + (currentTimeStamp - startTimeStamp)
                     + "], ExpectedRelativeTimeStamp[" + (reportIntervalInSeconds * reportRound) + "], IIPS["
                     + ((currentEntityCommitCount - lastEntityCommitCount) / reportIntervalInSeconds) + "], IPS["

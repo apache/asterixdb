@@ -22,8 +22,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.StorageApiServlet;
@@ -61,9 +59,13 @@ import org.apache.hyracks.control.nc.BaseNCApplication;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.WebManager;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 public class NCApplication extends BaseNCApplication {
-    private static final Logger LOGGER = Logger.getLogger(NCApplication.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected INCServiceContext ncServiceCtx;
     private INcApplicationContext runtimeContext;
@@ -91,7 +93,7 @@ public class NCApplication extends BaseNCApplication {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
         nodeId = this.ncServiceCtx.getNodeId();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Starting Asterix node controller: " + nodeId);
         }
         configureLoggingLevel(ncServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
@@ -105,7 +107,7 @@ public class NCApplication extends BaseNCApplication {
         runtimeContext = new NCAppRuntimeContext(ncServiceCtx, getExtensions());
         MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(this.ncServiceCtx.getNodeId())) {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Substitute node joining : " + this.ncServiceCtx.getNodeId());
             }
             updateOnNodeJoin();
@@ -121,7 +123,7 @@ public class NCApplication extends BaseNCApplication {
         if (latestCheckpoint != null) {
             CompatibilityUtil.ensureCompatibility(controllerService, latestCheckpoint.getStorageVersion());
         }
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
             LOGGER.info("System state: " + recoveryMgr.getSystemState());
             LOGGER.info("Node ID: " + nodeId);
@@ -134,7 +136,7 @@ public class NCApplication extends BaseNCApplication {
     @Override
     protected void configureLoggingLevel(Level level) {
         super.configureLoggingLevel(level);
-        Logger.getLogger("org.apache.asterix").setLevel(level);
+        Configurator.setLevel("org.apache.asterix", level);
     }
 
     protected void configureServers() throws Exception {
@@ -154,7 +156,7 @@ public class NCApplication extends BaseNCApplication {
         if (!stopInitiated) {
             runtimeContext.setShuttingdown(true);
             stopInitiated = true;
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Stopping Asterix node controller: " + nodeId);
             }
 
@@ -167,7 +169,7 @@ public class NCApplication extends BaseNCApplication {
             ncServiceCtx.getLifeCycleComponentManager().stopAll(false);
             runtimeContext.deinitialize();
         } else {
-            if (LOGGER.isLoggable(Level.INFO)) {
+            if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Duplicate attempt to stop ignored: " + nodeId);
             }
         }

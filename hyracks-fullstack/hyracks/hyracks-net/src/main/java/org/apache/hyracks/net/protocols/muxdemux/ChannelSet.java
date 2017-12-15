@@ -20,15 +20,15 @@ package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.comm.MuxDemuxCommand;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ChannelSet {
-    private static final Logger LOGGER = Logger.getLogger(ChannelSet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int INITIAL_SIZE = 16;
 
@@ -82,8 +82,8 @@ public class ChannelSet {
             ChannelControlBlock ccb = ccbArray[i];
             if (ccb != null) {
                 if (ccb.completelyClosed()) {
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("Cleaning free channel: " + ccb);
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Cleaning free channel: " + ccb);
                     }
                     freeChannel(ccb);
                 }
@@ -218,8 +218,8 @@ public class ChannelSet {
         if (ccbArray[idx] != null) {
             assert ccbArray[idx].completelyClosed() : ccbArray[idx].toString();
             if (ccbArray[idx].completelyClosed()) {
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("Cleaning free channel: " + ccbArray[idx]);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Cleaning free channel: " + ccbArray[idx]);
                 }
                 freeChannel(ccbArray[idx]);
             }

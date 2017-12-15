@@ -25,8 +25,6 @@ import static org.mockito.Mockito.verify;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.client.HyracksConnection;
@@ -40,6 +38,8 @@ import org.apache.hyracks.control.cc.cluster.NodeManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -47,7 +47,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class DeployedJobSpecsTest {
-    private static final Logger LOGGER = Logger.getLogger(DeployedJobSpecsTest.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String NC1_ID = "nc1";
     private static final String NC2_ID = "nc2";
@@ -111,7 +111,7 @@ public class DeployedJobSpecsTest {
         nc2.start();
 
         hcc = new HyracksConnection(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort());
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Starting CC in " + ccRoot.getAbsolutePath());
         }
     }

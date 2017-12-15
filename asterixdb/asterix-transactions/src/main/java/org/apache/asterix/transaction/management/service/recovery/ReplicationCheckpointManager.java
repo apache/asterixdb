@@ -21,7 +21,6 @@ package org.apache.asterix.transaction.management.service.recovery;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
@@ -34,6 +33,8 @@ import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * An implementation of {@link ICheckpointManager} that defines the logic
@@ -41,7 +42,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class ReplicationCheckpointManager extends AbstractCheckpointManager {
 
-    private static final Logger LOGGER = Logger.getLogger(ReplicationCheckpointManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public ReplicationCheckpointManager(ITransactionSubsystem txnSubsystem, CheckpointProperties checkpointProperties) {
         super(txnSubsystem, checkpointProperties);

@@ -25,8 +25,6 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.channels.IInputChannel;
 import org.apache.hyracks.api.comm.FrameHelper;
@@ -45,10 +43,13 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.client.net.ClientNetworkManager;
 import org.apache.hyracks.comm.channels.DatasetNetworkInputChannel;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 // TODO(madhusudancs): Should this implementation be moved to org.apache.hyracks.client?
 public class HyracksDatasetReader implements IHyracksDatasetReader {
-    private static final Logger LOGGER = Logger.getLogger(HyracksDatasetReader.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final IHyracksDatasetDirectoryServiceConnection datasetDirectoryServiceConnection;
 
@@ -94,10 +95,10 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
             return datasetDirectoryServiceConnection.getDatasetResultStatus(jobId, resultSetId);
         } catch (HyracksDataException e) {
             if (e.getErrorCode() != ErrorCode.NO_RESULT_SET) {
-                LOGGER.log(Level.WARNING, "Exception retrieving result set for job " + jobId, e);
+                LOGGER.log(Level.WARN, "Exception retrieving result set for job " + jobId, e);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Exception retrieving result set for job " + jobId, e);
+            LOGGER.log(Level.WARN, "Exception retrieving result set for job " + jobId, e);
         }
         return null;
     }

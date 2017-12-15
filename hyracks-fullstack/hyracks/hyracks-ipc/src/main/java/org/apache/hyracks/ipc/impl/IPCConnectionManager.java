@@ -39,13 +39,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IPCConnectionManager {
-    private static final Logger LOGGER = Logger.getLogger(IPCConnectionManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     // TODO(mblow): the next two could be config parameters
     private static final int INITIAL_RETRY_DELAY_MILLIS = 100;
@@ -120,7 +121,7 @@ public class IPCConnectionManager {
                 return handle;
             }
             if (maxRetries < 0 || retries++ < maxRetries) {
-                LOGGER.warning("Connection to " + remoteAddress + " failed; retrying" + (maxRetries <= 0 ? ""
+                LOGGER.warn("Connection to " + remoteAddress + " failed; retrying" + (maxRetries <= 0 ? ""
                         : " (retry attempt " + retries + " of " + maxRetries + ") after " + delay + "ms"));
                 Thread.sleep(delay);
                 delay = Math.min(MAX_RETRY_DELAY_MILLIS, (int) (delay * 1.5));
@@ -136,8 +137,8 @@ public class IPCConnectionManager {
     }
 
     synchronized void write(Message msg) {
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Enqueued message: " + msg);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Enqueued message: " + msg);
         }
         sendList.add(msg);
         networkThread.selector.wakeup();
@@ -209,8 +210,8 @@ public class IPCConnectionManager {
             int failingLoops = 0;
             while (!stopped) {
                 try {
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.fine("Starting Select");
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Starting Select");
                     }
                     int n = selector.select();
                     collectOutstandingWork();
@@ -238,9 +239,7 @@ public class IPCConnectionManager {
                         int len = workingSendList.size();
                         for (int i = 0; i < len; ++i) {
                             Message msg = workingSendList.get(i);
-                            if (LOGGER.isLoggable(Level.FINE)) {
-                                LOGGER.fine("Processing send of message: " + msg);
-                            }
+                            LOGGER.debug(() -> "Processing send of message: " + msg);
                             IPCHandle handle = msg.getIPCHandle();
                             if (handle.getState() != HandleState.CLOSED) {
                                 if (!handle.full()) {
@@ -340,7 +339,7 @@ public class IPCConnectionManager {
                     failingLoops = 0;
                 } catch (Exception e) {
                     int sleepSecs = (int)Math.pow(2, Math.min(11, failingLoops++));
-                    LOGGER.log(Level.SEVERE, "Exception processing message; sleeping " + sleepSecs
+                    LOGGER.log(Level.ERROR, "Exception processing message; sleeping " + sleepSecs
                             + " seconds", e);
                     try {
                         Thread.sleep(TimeUnit.SECONDS.toMillis(sleepSecs));
@@ -364,10 +363,10 @@ public class IPCConnectionManager {
             try {
                 connectFinished = channel.finishConnect();
                 if (!connectFinished) {
-                    LOGGER.log(Level.WARNING, "Channel connect did not finish");
+                    LOGGER.log(Level.WARN, "Channel connect did not finish");
                 }
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Exception finishing channel connect", e);
+                LOGGER.log(Level.WARN, "Exception finishing channel connect", e);
             }
             return connectFinished;
         }

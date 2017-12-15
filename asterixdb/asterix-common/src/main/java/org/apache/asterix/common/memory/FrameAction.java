@@ -19,11 +19,13 @@
 package org.apache.asterix.common.memory;
 
 import java.nio.ByteBuffer;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FrameAction {
     private static final boolean DEBUG = false;
-    private static final Logger LOGGER = Logger.getLogger(FrameAction.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private ByteBuffer allocated;
     private ByteBuffer frame;
 

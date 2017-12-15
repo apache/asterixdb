@@ -24,14 +24,15 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.StringWriter;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.common.controllers.ServiceConstants.ServiceCommand;
 import org.apache.hyracks.control.common.work.AbstractWork;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ini4j.Ini;
 
 /**
@@ -40,7 +41,7 @@ import org.ini4j.Ini;
  */
 public class TriggerNCWork extends AbstractWork {
 
-    private static final Logger LOGGER = Logger.getLogger(TriggerNCWork.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ClusterControllerService ccs;
     private final String ncHost;
@@ -67,7 +68,7 @@ public class TriggerNCWork extends AbstractWork {
                     return;
                     // QQQ Should probably have an ACK here
                 } catch (IOException e) {
-                    LOGGER.log(Level.WARNING, "Failed to contact NC service at " + ncHost + ":" + ncPort
+                    LOGGER.log(Level.WARN, "Failed to contact NC service at " + ncHost + ":" + ncPort
                             + "; will retry", e);
                 }
                 try {
@@ -93,8 +94,8 @@ public class TriggerNCWork extends AbstractWork {
         // entry point so that NCs can determine where all their config is.
         ccini.put(Section.LOCALNC.sectionName(), NCConfig.Option.NODE_ID.ini(), ncId);
         ccini.store(iniString);
-        if (LOGGER.isLoggable(Level.FINE)) {
-            LOGGER.fine("Returning Ini file:\n" + iniString.toString());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Returning Ini file:\n" + iniString.toString());
         }
         return iniString.toString();
     }

@@ -40,8 +40,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -95,10 +93,13 @@ import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.PidHelper;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.Tracer;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 
 public class NodeControllerService implements IControllerService {
-    private static final Logger LOGGER = Logger.getLogger(NodeControllerService.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final double MEMORY_FUDGE_FACTOR = 0.8;
     private static final long ONE_SECOND_NANOS = TimeUnit.SECONDS.toNanos(1);
@@ -196,7 +197,7 @@ public class NodeControllerService implements IControllerService {
             throw new HyracksException("id not set");
         }
         lccm = new LifeCycleComponentManager();
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Setting uncaught exception handler " + getLifeCycleComponentManager());
         }
         // Set shutdown hook before so it doesn't have the same uncaught exception handler
@@ -305,7 +306,7 @@ public class NodeControllerService implements IControllerService {
                         try {
                             registerNode();
                         } catch (Exception e) {
-                            LOGGER.log(Level.WARNING, "Failed Registering with cc", e);
+                            LOGGER.log(Level.WARN, "Failed Registering with cc", e);
                             throw new IPCException(e);
                         }
                     }
@@ -361,7 +362,7 @@ public class NodeControllerService implements IControllerService {
             }
         }
         if (registrationException != null) {
-            LOGGER.log(Level.WARNING, "Registering with Cluster Controller failed with exception",
+            LOGGER.log(Level.WARN, "Registering with Cluster Controller failed with exception",
                     registrationException);
             throw registrationException;
         }
@@ -390,7 +391,7 @@ public class NodeControllerService implements IControllerService {
             application.preStop();
             executor.shutdownNow();
             if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
-                LOGGER.log(Level.SEVERE, "Some jobs failed to exit, continuing with abnormal shutdown");
+                LOGGER.log(Level.ERROR, "Some jobs failed to exit, continuing with abnormal shutdown");
             }
             partitionManager.close();
             datasetPartitionManager.close();
@@ -412,13 +413,13 @@ public class NodeControllerService implements IControllerService {
             try {
                 ccs.notifyShutdown(id);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Exception notifying CC of shutdown", e);
+                LOGGER.log(Level.WARN, "Exception notifying CC of shutdown", e);
             }
             ipc.stop();
 
             LOGGER.log(Level.INFO, "Stopped NodeControllerService");
         } else {
-            LOGGER.log(Level.SEVERE, "Duplicate shutdown call; original: " + Arrays.toString(shutdownCallStack),
+            LOGGER.log(Level.ERROR, "Duplicate shutdown call; original: " + Arrays.toString(shutdownCallStack),
                     new Exception("Duplicate shutdown call"));
         }
     }
@@ -540,7 +541,7 @@ public class NodeControllerService implements IControllerService {
             if (delayNanos > 0) {
                 delayBlock.tryAcquire(delayNanos, TimeUnit.NANOSECONDS); //NOSONAR - ignore result of tryAcquire
             } else {
-                LOGGER.warning("After sending heartbeat, next one is already late by "
+                LOGGER.warn("After sending heartbeat, next one is already late by "
                         + TimeUnit.NANOSECONDS.toMillis(-delayNanos) + "ms; sending without delay");
             }
         }
@@ -591,15 +592,15 @@ public class NodeControllerService implements IControllerService {
 
             try {
                 cc.nodeHeartbeat(id, hbData);
-                LOGGER.log(Level.FINE, "Successfully sent heartbeat");
+                LOGGER.log(Level.DEBUG, "Successfully sent heartbeat");
                 return true;
             } catch (InterruptedException e) {
                 throw e;
             } catch (Exception e) {
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.log(Level.FINE, "Exception sending heartbeat; will retry after 1s", e);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.log(Level.DEBUG, "Exception sending heartbeat; will retry after 1s", e);
                 } else {
-                    LOGGER.log(Level.SEVERE, "Exception sending heartbeat; will retry after 1s: " + e.toString());
+                    LOGGER.log(Level.ERROR, "Exception sending heartbeat; will retry after 1s: " + e.toString());
                 }
                 return false;
             }
@@ -624,7 +625,7 @@ public class NodeControllerService implements IControllerService {
                     cc.reportProfile(id, profiles);
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Exception reporting profile", e);
+                LOGGER.log(Level.WARN, "Exception reporting profile", e);
             }
         }
     }
@@ -644,7 +645,7 @@ public class NodeControllerService implements IControllerService {
             try {
                 tracer.instant("CurrentTime", traceCategory, Tracer.Scope.p, Tracer.dateTimeStamp());
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Exception tracing current time", e);
+                LOGGER.log(Level.WARN, "Exception tracing current time", e);
             }
         }
     }

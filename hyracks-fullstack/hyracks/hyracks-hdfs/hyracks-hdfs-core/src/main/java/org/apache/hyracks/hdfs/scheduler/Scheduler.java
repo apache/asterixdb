@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Random;
-import java.util.logging.Logger;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.InputSplit;
@@ -42,13 +41,15 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.hdfs.api.INcCollection;
 import org.apache.hyracks.hdfs.api.INcCollectionBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * The scheduler conduct data-local scheduling for data reading on HDFS. This
  * class works for Hadoop old API.
  */
 public class Scheduler {
-    private static final Logger LOGGER = Logger.getLogger(Scheduler.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /** a list of NCs */
     private String[] NCs;

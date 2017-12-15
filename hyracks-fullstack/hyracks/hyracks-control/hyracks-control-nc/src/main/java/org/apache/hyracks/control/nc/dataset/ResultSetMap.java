@@ -21,16 +21,17 @@ package org.apache.hyracks.control.nc.dataset;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.dataset.IDatasetStateRecord;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 class ResultSetMap implements IDatasetStateRecord, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOGGER = Logger.getLogger(DatasetPartitionManager.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final long timestamp;
     private final HashMap<ResultSetId, ResultState[]> resultStateMap;
@@ -70,7 +71,7 @@ class ResultSetMap implements IDatasetStateRecord, Serializable {
             final ResultState state = resultStates[partition];
             if (state != null) {
                 state.closeAndDelete();
-                LOGGER.fine("Removing partition: " + partition + " for JobId: " + jobId);
+                LOGGER.debug("Removing partition: " + partition + " for JobId: " + jobId);
             }
             resultStates[partition] = null;
             boolean stateEmpty = true;
@@ -95,7 +96,7 @@ class ResultSetMap implements IDatasetStateRecord, Serializable {
     void closeAndDeleteAll() {
         applyToAllStates((rsId, state, i) -> {
             state.closeAndDelete();
-            LOGGER.fine("Removing partition: " + i + " for result set " + rsId);
+            LOGGER.debug("Removing partition: " + i + " for result set " + rsId);
         });
     }
 

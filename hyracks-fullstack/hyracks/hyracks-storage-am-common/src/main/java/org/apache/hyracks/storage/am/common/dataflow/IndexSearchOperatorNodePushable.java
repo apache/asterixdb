@@ -21,8 +21,6 @@ package org.apache.hyracks.storage.am.common.dataflow;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -50,10 +48,13 @@ import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-    static final Logger LOGGER = Logger.getLogger(IndexSearchOperatorNodePushable.class.getName());
+    static final Logger LOGGER = LogManager.getLogger();
     protected final IHyracksTaskContext ctx;
     protected final IIndexDataflowHelper indexHelper;
     protected FrameTupleAccessor accessor;
@@ -299,7 +300,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             try {
                 nonMatchWriter.writeMissing(out);
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, e.getMessage(), e);
+                LOGGER.log(Level.WARN, e.getMessage(), e);
             }
             nullTuple.addFieldEndOffset();
         }

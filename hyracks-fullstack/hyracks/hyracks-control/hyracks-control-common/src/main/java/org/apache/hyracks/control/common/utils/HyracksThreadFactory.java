@@ -21,14 +21,16 @@ package org.apache.hyracks.control.common.utils;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class HyracksThreadFactory implements ThreadFactory {
     private final String identifier;
     private final AtomicInteger threadId = new AtomicInteger();
 
-    private static final Logger LOGGER = Logger.getLogger(HyracksThreadFactory.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public HyracksThreadFactory(String identifier) {
         this.identifier = identifier;
@@ -41,7 +43,7 @@ public class HyracksThreadFactory implements ThreadFactory {
         t.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
-                LOGGER.log(Level.SEVERE, "Uncaught exception by " + t.getName(), e);
+                LOGGER.log(Level.ERROR, "Uncaught exception by " + t.getName(), e);
             }
         });
         return t;

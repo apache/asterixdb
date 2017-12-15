@@ -25,13 +25,13 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 class CastTypeLaxEvaluator extends CastTypeEvaluator {
 
-    private static final Logger LOGGER = Logger.getLogger(CastTypeLaxEvaluator.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
 
@@ -49,8 +49,8 @@ class CastTypeLaxEvaluator extends CastTypeEvaluator {
         try {
             super.cast(result);
         } catch (HyracksDataException e) {
-            if (LOGGER.isLoggable(Level.FINEST)) {
-                LOGGER.log(Level.FINEST, e.toString(), e);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.log(Level.TRACE, e.toString(), e);
             }
             result.set(MISSING_BYTES, 0, MISSING_BYTES.length);
         }

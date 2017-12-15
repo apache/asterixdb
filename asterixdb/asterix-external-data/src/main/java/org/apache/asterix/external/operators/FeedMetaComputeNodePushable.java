@@ -20,8 +20,6 @@ package org.apache.asterix.external.operators;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.active.ActiveRuntimeId;
@@ -42,13 +40,16 @@ import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /*
  * This IFrameWriter doesn't follow the contract
  */
 public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
 
-    private static final Logger LOGGER = Logger.getLogger(FeedMetaComputeNodePushable.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     /** Runtime node pushable corresponding to the core feed operator **/
     private AbstractUnaryInputUnaryOutputOperatorNodePushable coreOperator;
@@ -142,7 +143,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
             FeedUtils.processFeedMessage(buffer, message, fta);
             writer.nextFrame(buffer);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            LOGGER.log(Level.WARN, e.getMessage(), e);
             throw new HyracksDataException(e);
         }
     }

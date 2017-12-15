@@ -25,8 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.app.nc.task.BindMetadataNodeTask;
@@ -61,10 +59,13 @@ import org.apache.asterix.util.FaultToleranceUtil;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IClusterLifecycleListener.ClusterEventType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrategy {
 
-    private static final Logger LOGGER = Logger.getLogger(MetadataNodeFaultToleranceStrategy.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private IClusterStateManager clusterManager;
     private String metadataNodeId;
     private IReplicationStrategy replicationStrategy;
@@ -106,7 +107,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
                 try {
                     messageBroker.sendApplicationMessageToNC(msg, replica.getId());
                 } catch (Exception e) {
-                    LOGGER.log(Level.WARNING, "Failed sending an application message to an NC", e);
+                    LOGGER.log(Level.WARN, "Failed sending an application message to an NC", e);
                     continue;
                 }
             }
@@ -170,7 +171,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
 
     private synchronized void process(ReplayPartitionLogsResponseMessage msg) {
         hotStandbyMetadataReplica.add(msg.getNodeId());
-        if (LOGGER.isLoggable(Level.INFO)) {
+        if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Hot Standby Metadata Replicas: " + hotStandbyMetadataReplica);
         }
     }
@@ -211,7 +212,7 @@ public class MetadataNodeFaultToleranceStrategy implements IFaultToleranceStrate
             }
             clusterManager.refreshState();
         } else {
-            LOGGER.log(Level.SEVERE, msg.getNodeId() + " failed to complete startup. ", msg.getException());
+            LOGGER.log(Level.ERROR, msg.getNodeId() + " failed to complete startup. ", msg.getException());
         }
     }
 

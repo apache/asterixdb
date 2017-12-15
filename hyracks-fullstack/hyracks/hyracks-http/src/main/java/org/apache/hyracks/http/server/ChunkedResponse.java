@@ -21,10 +21,11 @@ package org.apache.hyracks.http.server;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
@@ -60,7 +61,7 @@ import io.netty.handler.codec.http.LastHttpContent;
  */
 public class ChunkedResponse implements IServletResponse {
 
-    private static final Logger LOGGER = Logger.getLogger(ChunkedResponse.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ChannelHandlerContext ctx;
     private final ChunkedNettyOutputStream outputStream;
     private final PrintWriter writer;
@@ -112,7 +113,7 @@ public class ChunkedResponse implements IServletResponse {
         } else {
             // There was an error
             if (headerSent) {
-                LOGGER.log(Level.WARNING, "Error after header write of chunked response");
+                LOGGER.log(Level.WARN, "Error after header write of chunked response");
                 if (error != null) {
                     error.release();
                 }

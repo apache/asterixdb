@@ -24,8 +24,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
@@ -35,11 +33,14 @@ import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryStatusApiServlet extends AbstractQueryApiServlet {
-    private static final Logger LOGGER = Logger.getLogger(QueryStatusApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public QueryStatusApiServlet(ConcurrentMap<String, Object> ctx, IApplicationContext appCtx, String... paths) {
         super(appCtx, ctx, paths);
@@ -91,7 +92,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         response.setStatus(httpStatus);
         response.writer().print(result);
         if (response.writer().checkError()) {
-            LOGGER.warning("Error flushing output writer");
+            LOGGER.warn("Error flushing output writer");
         }
     }
 

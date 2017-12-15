@@ -31,8 +31,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -41,6 +39,9 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -49,7 +50,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
-    private static final Logger LOGGER = Logger.getLogger(DiagnosticsApiServlet.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     protected final IHyracksClientConnection hcc;
     protected final ExecutorService executor;
 
@@ -138,7 +139,7 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
             try {
                 outputMap.put(entry.getKey(), entry.getValue().get());
             } catch (ExecutionException e) {
-                LOGGER.log(Level.WARNING, "unexpected exception obtaining value for " + entry.getKey(), e);
+                LOGGER.log(Level.WARN, "unexpected exception obtaining value for " + entry.getKey(), e);
                 errorMap.put(entry.getKey(), new TextNode(String.valueOf(e)));
             }
         }

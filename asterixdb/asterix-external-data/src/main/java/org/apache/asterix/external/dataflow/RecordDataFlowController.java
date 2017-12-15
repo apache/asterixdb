@@ -26,11 +26,9 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.log4j.Logger;
 
 public class RecordDataFlowController<T> extends AbstractDataFlowController {
 
-    private static final Logger LOGGER = Logger.getLogger(RecordDataFlowController.class.getName());
     protected final IRecordDataParser<T> dataParser;
     protected final IRecordReader<? extends T> recordReader;
     protected final int numOfTupleFields;
