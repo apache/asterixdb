@@ -134,7 +134,7 @@ public class BuiltinFunctions {
     private static final Map<IFunctionInfo, IResultTypeComputer> funTypeComputer = new HashMap<>();
 
     private static final Set<IFunctionInfo> builtinAggregateFunctions = new HashSet<>();
-    private static final Set<IFunctionInfo> datasetFunctions = new HashSet<>();
+    private static final Map<IFunctionInfo, IFunctionToDataSourceRewriter> datasourceFunctions = new HashMap<>();
     private static final Set<IFunctionInfo> similarityFunctions = new HashSet<>();
     private static final Set<IFunctionInfo> globalAggregateFunctions = new HashSet<>();
     private static final Map<IFunctionInfo, IFunctionInfo> aggregateToLocalAggregate = new HashMap<>();
@@ -1280,13 +1280,6 @@ public class BuiltinFunctions {
         // unnesting function
         addPrivateFunction(SCAN_COLLECTION, CollectionMemberResultType.INSTANCE, true);
 
-        String metadataFunctionLoaderClassName = "org.apache.asterix.metadata.functions.MetadataBuiltinFunctions";
-        try {
-            Class.forName(metadataFunctionLoaderClassName);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
     }
 
     static {
@@ -1527,27 +1520,17 @@ public class BuiltinFunctions {
     }
 
     static {
-        datasetFunctions.add(getAsterixFunctionInfo(DATASET));
-        datasetFunctions.add(getAsterixFunctionInfo(FEED_COLLECT));
-        datasetFunctions.add(getAsterixFunctionInfo(FEED_INTERCEPT));
-        datasetFunctions.add(getAsterixFunctionInfo(INDEX_SEARCH));
-    }
-
-    static {
-        addUnnestFun(DATASET, false);
-        addUnnestFun(FEED_COLLECT, false);
-        addUnnestFun(FEED_INTERCEPT, false);
         addUnnestFun(RANGE, true);
         addUnnestFun(SCAN_COLLECTION, false);
         addUnnestFun(SUBSET_COLLECTION, false);
     }
 
-    public static void addDatasetFunction(FunctionIdentifier fi) {
-        datasetFunctions.add(getAsterixFunctionInfo(fi));
+    public static void addDatasourceFunction(FunctionIdentifier fi, IFunctionToDataSourceRewriter transformer) {
+        datasourceFunctions.put(getAsterixFunctionInfo(fi), transformer);
     }
 
-    public static boolean isDatasetFunction(FunctionIdentifier fi) {
-        return datasetFunctions.contains(getAsterixFunctionInfo(fi));
+    public static IFunctionToDataSourceRewriter getDatasourceTransformer(FunctionIdentifier fi) {
+        return datasourceFunctions.getOrDefault(getAsterixFunctionInfo(fi), IFunctionToDataSourceRewriter.NOOP);
     }
 
     public static boolean isBuiltinCompilerFunction(FunctionSignature signature, boolean includePrivateFunctions) {

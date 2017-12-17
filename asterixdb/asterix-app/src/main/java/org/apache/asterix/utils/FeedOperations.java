@@ -54,7 +54,6 @@ import org.apache.asterix.external.operators.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.operators.FeedMetaOperatorDescriptor;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.external.util.FeedConstants;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.external.util.FeedUtils.FeedRuntimeType;
 import org.apache.asterix.file.StorageComponentProvider;
@@ -87,6 +86,7 @@ import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.feeds.LocationConstraint;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.job.listener.MultiTransactionJobletEventListenerFactory;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
@@ -202,7 +202,7 @@ public class FeedOperations {
                 addArgs(feedConnection.getDataverseName(), feedConnection.getFeedId().getEntityName(),
                         feedConnection.getFeedId().getEntityName(), FeedRuntimeType.INTAKE.toString(),
                         feedConnection.getDatasetName(), feedConnection.getOutputType());
-        CallExpr datasrouceCallFunction = new CallExpr(new FunctionSignature(FeedConstants.FEED_COLLECT_FUN), exprList);
+        CallExpr datasrouceCallFunction = new CallExpr(new FunctionSignature(BuiltinFunctions.FEED_COLLECT), exprList);
         FromTerm fromterm = new FromTerm(datasrouceCallFunction, fromTermLeftExpr, null, null);
         FromClause fromClause = new FromClause(Arrays.asList(fromterm));
         // TODO: This can be the place to add select predicate for ingestion

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.adapter.factory;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,7 @@ import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.dataset.adapter.GenericAdapter;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.parser.factory.ADMDataParserFactory;
 import org.apache.asterix.external.provider.DataflowControllerProvider;
 import org.apache.asterix.external.provider.DatasourceFactoryProvider;
 import org.apache.asterix.external.provider.ParserFactoryProvider;
@@ -45,6 +47,7 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -202,5 +205,21 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, IAdapterF
      */
     public IExternalDataSourceFactory getDataSourceFactory() {
         return dataSourceFactory;
+    }
+
+    /**
+     * Use pre-configured datasource factory
+     * For function datasources
+     *
+     * @param dataSourceFactory
+     *            the function datasource factory
+     * @throws AlgebricksException
+     */
+    public void configure(IExternalDataSourceFactory dataSourceFactory) throws AlgebricksException {
+        this.dataSourceFactory = dataSourceFactory;
+        dataParserFactory = new ADMDataParserFactory();
+        dataParserFactory.setRecordType(RecordUtil.FULLY_OPEN_RECORD_TYPE);
+        dataParserFactory.configure(Collections.emptyMap());
+        configuration = Collections.emptyMap();
     }
 }

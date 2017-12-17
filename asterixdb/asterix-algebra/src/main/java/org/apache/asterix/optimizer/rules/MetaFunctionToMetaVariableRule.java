@@ -87,7 +87,8 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
             // https://issues.apache.org/jira/browse/ASTERIXDB-1618
             if (dataSource.getDatasourceType() != DataSource.Type.EXTERNAL_DATASET
                     && dataSource.getDatasourceType() != DataSource.Type.INTERNAL_DATASET
-                    && dataSource.getDatasourceType() != DataSource.Type.LOADABLE) {
+                    && dataSource.getDatasourceType() != DataSource.Type.LOADABLE
+                    && dataSource.getDatasourceType() != DataSource.Type.FUNCTION) {
                 IMutationDataSource mds = (IMutationDataSource) dataSource;
                 if (mds.isChange()) {
                     transformers = new ArrayList<>();

@@ -29,7 +29,7 @@ public class RecordUtil {
      * A fully open record type which has the name OpenRecord
      */
     public static final ARecordType FULLY_OPEN_RECORD_TYPE =
-            new ARecordType("OpenRecord", new String[0], new IAType[0], true);
+            new ARecordType("AnyObject", new String[0], new IAType[0], true);
 
     private RecordUtil() {
     }
@@ -73,6 +73,7 @@ public class RecordUtil {
      */
     public static int computeNullBitmapSize(ARecordType recordType) {
         return NonTaggedFormatUtil.hasOptionalField(recordType)
-                ? (int) Math.ceil(recordType.getFieldNames().length / 4.0) : 0;
+                ? (int) Math.ceil(recordType.getFieldNames().length / 4.0)
+                : 0;
     }
 }

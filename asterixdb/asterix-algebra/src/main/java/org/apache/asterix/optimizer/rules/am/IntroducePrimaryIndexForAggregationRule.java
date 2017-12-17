@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig;
+import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -261,7 +262,12 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
         Dataset dataset;
         // case 1: dataset scan
         if (scanOperator.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-            dataset = ((DatasetDataSource)((DataSourceScanOperator)scanOperator).getDataSource()).getDataset();
+            DataSourceScanOperator dss = (DataSourceScanOperator) scanOperator;
+            DataSource ds = (DataSource) dss.getDataSource();
+            if (ds.getDatasourceType() != DataSource.Type.INTERNAL_DATASET) {
+                return null;
+            }
+            dataset = ((DatasetDataSource) ds).getDataset();
         } else {
             // case 2: dataset range search
             AbstractFunctionCallExpression primaryIndexFunctionCall =
