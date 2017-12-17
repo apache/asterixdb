@@ -30,8 +30,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -45,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -70,7 +69,6 @@ import org.apache.asterix.testframework.xml.ComparisonEnum;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestCase.CompilationUnit.Parameter;
 import org.apache.asterix.testframework.xml.TestGroup;
-import org.apache.avro.generic.GenericData;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -121,6 +119,7 @@ public class TestExecutor {
     private static final Pattern HANDLE_VARIABLE_PATTERN = Pattern.compile("handlevariable=(\\w+)");
     private static final Pattern VARIABLE_REF_PATTERN = Pattern.compile("\\$(\\w+)");
     private static final Pattern HTTP_PARAM_PATTERN = Pattern.compile("param (\\w+)=(.*)", Pattern.MULTILINE);
+    private static final Pattern HTTP_BODY_PATTERN = Pattern.compile("body=(.*)", Pattern.MULTILINE);
     private static final Pattern HTTP_STATUSCODE_PATTERN = Pattern.compile("statuscode (.*)", Pattern.MULTILINE);
 
     public static final int TRUNCATE_THRESHOLD = 16384;
@@ -611,18 +610,22 @@ public class TestExecutor {
         return builder.build();
     }
 
-    private HttpUriRequest buildRequest(String method, URI uri, List<Parameter> params) {
+    private HttpUriRequest buildRequest(String method, URI uri, List<Parameter> params, Optional<String> body) {
         RequestBuilder builder = RequestBuilder.create(method);
         builder.setUri(uri);
         for (Parameter param : params) {
             builder.addParameter(param.getName(), param.getValue());
         }
         builder.setCharset(StandardCharsets.UTF_8);
+        if (body.isPresent()) {
+            builder.setEntity(new StringEntity(body.get(), StandardCharsets.UTF_8));
+        }
         return builder.build();
     }
 
-    private HttpUriRequest buildRequest(String method, URI uri, OutputFormat fmt, List<Parameter> params) {
-        HttpUriRequest request = buildRequest(method, uri, params);
+    private HttpUriRequest buildRequest(String method, URI uri, OutputFormat fmt, List<Parameter> params,
+            Optional<String> body) {
+        HttpUriRequest request = buildRequest(method, uri, params, body);
         // Set accepted output response type
         request.setHeader("Accept", fmt.mimeType());
         return request;
@@ -693,21 +696,21 @@ public class TestExecutor {
 
     public InputStream executeJSONGet(OutputFormat fmt, URI uri, List<Parameter> params,
             Predicate<Integer> responseCodeValidator) throws Exception {
-        return executeJSON(fmt, "GET", uri, params, responseCodeValidator);
+        return executeJSON(fmt, "GET", uri, params, responseCodeValidator, Optional.empty());
     }
 
     public InputStream executeJSON(OutputFormat fmt, String method, URI uri, List<Parameter> params) throws Exception {
-        return executeJSON(fmt, method, uri, params, code -> code == HttpStatus.SC_OK);
+        return executeJSON(fmt, method, uri, params, code -> code == HttpStatus.SC_OK, Optional.empty());
     }
 
     public InputStream executeJSON(OutputFormat fmt, String method, URI uri, Predicate<Integer> responseCodeValidator)
             throws Exception {
-        return executeJSON(fmt, method, uri, Collections.emptyList(), responseCodeValidator);
+        return executeJSON(fmt, method, uri, Collections.emptyList(), responseCodeValidator, Optional.empty());
     }
 
     public InputStream executeJSON(OutputFormat fmt, String method, URI uri, List<Parameter> params,
-            Predicate<Integer> responseCodeValidator) throws Exception {
-        HttpUriRequest request = buildRequest(method, uri, fmt, params);
+            Predicate<Integer> responseCodeValidator, Optional<String> body) throws Exception {
+        HttpUriRequest request = buildRequest(method, uri, fmt, params, body);
         HttpResponse response = executeAndCheckHttpRequest(request, responseCodeValidator);
         return response.getEntity().getContent();
     }
@@ -954,6 +957,7 @@ public class TestExecutor {
             case "get":
             case "post":
             case "put":
+            case "delete":
                 expectedResultFile = (queryCount.intValue() >= expectedResultFileCtxs.size()) ? null
                         : expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                 actualResultFile = expectedResultFile == null ? null
@@ -1121,12 +1125,13 @@ public class TestExecutor {
         final String trimmedPathAndQuery = stripAllComments(statement).trim();
         final String variablesReplaced = replaceVarRef(trimmedPathAndQuery, variableCtx);
         final List<Parameter> params = extractParameters(statement);
+        final Optional<String> body = extractBody(statement);
         final Predicate<Integer> statusCodePredicate = extractStatusCodePredicate(statement);
         InputStream resultStream;
         if ("http".equals(extension)) {
-            resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate);
+            resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body);
         } else if ("uri".equals(extension)) {
-            resultStream = executeURI(reqType, URI.create(variablesReplaced), fmt, params, statusCodePredicate);
+            resultStream = executeURI(reqType, URI.create(variablesReplaced), fmt, params, statusCodePredicate, body);
         } else {
             throw new IllegalArgumentException("Unexpected format for method " + reqType + ": " + extension);
         }
@@ -1317,6 +1322,14 @@ public class TestExecutor {
         return tmpStmt;
     }
 
+    protected static Optional<String> extractBody(String statement) {
+        final Matcher m = HTTP_BODY_PATTERN.matcher(statement);
+        while (m.find()) {
+            return Optional.of(m.group(1));
+        }
+        return Optional.empty();
+    }
+
     protected static List<Parameter> extractParameters(String statement) {
         List<Parameter> params = new ArrayList<>();
         final Matcher m = HTTP_PARAM_PATTERN.matcher(statement);
@@ -1343,10 +1356,10 @@ public class TestExecutor {
     }
 
     protected InputStream executeHttp(String ctxType, String endpoint, OutputFormat fmt, List<Parameter> params,
-            Predicate<Integer> statusCodePredicate) throws Exception {
+            Predicate<Integer> statusCodePredicate, Optional<String> body) throws Exception {
         String[] split = endpoint.split("\\?");
         URI uri = createEndpointURI(split[0], split.length > 1 ? split[1] : null);
-        return executeURI(ctxType, uri, fmt, params, statusCodePredicate);
+        return executeURI(ctxType, uri, fmt, params, statusCodePredicate, body);
     }
 
     private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt, List<Parameter> params) throws Exception {
@@ -1354,8 +1367,8 @@ public class TestExecutor {
     }
 
     private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt, List<Parameter> params,
-            Predicate<Integer> responseCodeValidator) throws Exception {
-        return executeJSON(fmt, ctxType.toUpperCase(), uri, params, responseCodeValidator);
+            Predicate<Integer> responseCodeValidator, Optional<String> body) throws Exception {
+        return executeJSON(fmt, ctxType.toUpperCase(), uri, params, responseCodeValidator, body);
     }
 
     public void killNC(String nodeId, CompilationUnit cUnit) throws Exception {
