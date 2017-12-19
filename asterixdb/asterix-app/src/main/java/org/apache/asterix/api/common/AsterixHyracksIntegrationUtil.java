@@ -24,8 +24,14 @@ import static org.apache.hyracks.util.file.FileUtil.joinPath;
 import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiPredicate;
+import java.util.stream.Stream;
 
 import org.apache.asterix.app.external.ExternalUDFLibrarian;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
@@ -54,15 +60,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.args4j.CmdLineException;
 
-@SuppressWarnings({"squid:ClassVariableVisibilityCheck","squid:S00112"})
+@SuppressWarnings({ "squid:ClassVariableVisibilityCheck", "squid:S00112" })
 public class AsterixHyracksIntegrationUtil {
 
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
-    public static final String DEFAULT_CONF_FILE = joinPath("asterixdb", "asterix-app", "src", "test", "resources",
+    public static final String DEFAULT_CONF_FILE = joinPath(getProjectPath().toString(), "src", "test", "resources",
             "cc.conf");
     private static final String DEFAULT_STORAGE_PATH = joinPath("target", "io", "dir");
     private static String storagePath = DEFAULT_STORAGE_PATH;
+
+    static {
+        System.setProperty("java.util.logging.manager", org.apache.logging.log4j.jul.LogManager.class.getName());
+    }
+
     public ClusterControllerService cc;
     public NodeControllerService[] ncs = new NodeControllerService[2];
     public IHyracksClientConnection hcc;
@@ -83,8 +94,7 @@ public class AsterixHyracksIntegrationUtil {
      * main method to run a simple 2 node cluster in-process
      * suggested VM arguments: <code>-enableassertions -Xmx2048m -Dfile.encoding=UTF-8</code>
      *
-     * @param args
-     *            unused
+     * @param args unused
      */
     public static void main(String[] args) throws Exception {
         AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
@@ -125,9 +135,9 @@ public class AsterixHyracksIntegrationUtil {
                 ncConfigManager = new ConfigManager(new String[] { "-config-file", confFile });
             }
             ncApplication.registerConfig(ncConfigManager);
-            nodeControllers.add(
-                    new NodeControllerService(fixupIODevices(createNCConfig(nodeId, ncConfigManager)), ncApplication));
-        } ;
+            nodeControllers.add(new NodeControllerService(fixupIODevices(createNCConfig(nodeId, ncConfigManager)),
+                    ncApplication));
+        }
 
         opts.stream().forEach(opt -> configManager.set(opt.getLeft(), opt.getRight()));
         cc.start();
@@ -345,6 +355,21 @@ public class AsterixHyracksIntegrationUtil {
 
     public void addOption(IOption name, Object value) {
         opts.add(Pair.of(name, value));
+    }
+
+    /**
+     * @return the asterix-app absolute path if found, otherwise the default user path.
+     */
+    private static Path getProjectPath() {
+        final String targetDir = "asterix-app";
+        final BiPredicate<Path, BasicFileAttributes> matcher =
+                (path, attributes) -> path.getFileName().toString().equals(targetDir) && path.toFile().isDirectory();
+        final Path currentPath = Paths.get(System.getProperty("user.dir"));
+        try (Stream<Path> pathStream = Files.find(currentPath, 10, matcher)) {
+            return pathStream.findFirst().orElse(currentPath);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     static class LoggerHolder {
