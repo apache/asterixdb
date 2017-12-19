@@ -125,50 +125,57 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
             return spec;
         } else {
-            // Create dummy key provider for feeding the primary index scan.
-            IOperatorDescriptor keyProviderOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset,
-                    metadataProvider);
+            // job spec:
+            // key provider -> primary idx -> (cast assign)? -> assign -> (select)? -> (sort)? -> bulk load -> sink
             IndexUtil.bindJobEventListener(spec, metadataProvider);
 
-            // Create primary index scan op.
-            IOperatorDescriptor primaryScanOp = DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset);
+            // dummy key provider ----> primary index scan
+            IOperatorDescriptor sourceOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
+            IOperatorDescriptor targetOp = DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset);
+            spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
-            // Assign op.
-            IOperatorDescriptor sourceOp = primaryScanOp;
+            sourceOp = targetOp;
             if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
-                sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
-                spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
+                // primary index scan ----> cast assign
+                targetOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
+                spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+                sourceOp = targetOp;
             }
-            AlgebricksMetaOperatorDescriptor asterixAssignOp =
-                    createAssignOp(spec, index.getKeyFieldNames().size(), secondaryRecDesc);
+            // primary index OR cast assign ----> assign op
+            targetOp = createAssignOp(spec, index.getKeyFieldNames().size(), secondaryRecDesc);
+            spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
-            // If any of the secondary fields are nullable, then add a select op that filters nulls.
-            AlgebricksMetaOperatorDescriptor selectOp = null;
+            sourceOp = targetOp;
             if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
-                selectOp = createFilterNullsSelectOp(spec, index.getKeyFieldNames().size(), secondaryRecDesc);
+                // if any of the secondary fields are nullable, then add a select op that filters nulls.
+                // assign op ----> select op
+                targetOp = createFilterNullsSelectOp(spec, index.getKeyFieldNames().size(), secondaryRecDesc);
+                spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+                sourceOp = targetOp;
             }
 
-            // Sort by secondary keys.
-            ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc);
-            // Create secondary BTree bulk load op.
-            TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec, fieldPermutation,
-                    dataflowHelperFactory, GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
+            // no need to sort if the index is secondary primary index
+            if (!index.getKeyFieldNames().isEmpty()) {
+                // sort by secondary keys.
+                // assign op OR select op ----> sort op
+                targetOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc);
+                spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+                sourceOp = targetOp;
+            }
 
-            AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
+            // assign op OR select op OR sort op ----> bulk load op
+            targetOp = createTreeIndexBulkLoadOp(spec, fieldPermutation, dataflowHelperFactory,
+                    GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
+            spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+
+            // bulk load op ----> sink op
+            sourceOp = targetOp;
+            targetOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
                     new IPushRuntimeFactory[] { new SinkRuntimeFactory() },
                     new RecordDescriptor[] { secondaryRecDesc });
-            // Connect the operators.
-            spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
-            spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
-            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
-                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
-                spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
-            } else {
-                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, sortOp, 0);
-            }
-            spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
-            spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
-            spec.addRoot(metaOp);
+            spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+
+            spec.addRoot(targetOp);
             spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
             return spec;
         }
