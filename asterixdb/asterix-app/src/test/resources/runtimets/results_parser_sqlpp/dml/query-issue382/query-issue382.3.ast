@@ -7,7 +7,7 @@ FunctionCall asterix.count@1[
     Variable [ Name=$h ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [HandbookUsers]
+        LiteralExpr [STRING] [SocialNetworkData.HandbookUsers]
       ]
       AS Variable [ Name=$h ]
     ]

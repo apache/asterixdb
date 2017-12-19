@@ -16,12 +16,12 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLP]
+    LiteralExpr [STRING] [fuzzyjoin.DBLP]
   ]
   AS Variable [ Name=$dblp ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [CSX]
+    LiteralExpr [STRING] [fuzzyjoin.CSX]
   ]
   AS Variable [ Name=$csx ]
 ]

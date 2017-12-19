@@ -10,7 +10,7 @@ Variable [ Name=$r ]
 reading
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [sensors]
+    LiteralExpr [STRING] [test.sensors]
   ]
   AS Variable [ Name=$s ]
 ,

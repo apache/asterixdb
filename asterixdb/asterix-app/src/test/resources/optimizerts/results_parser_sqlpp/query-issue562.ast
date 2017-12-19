@@ -145,7 +145,7 @@ Let Variable [ Name=$avg ]
       ]
       ]
       FROM [        FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [Customer]
+          LiteralExpr [STRING] [tpch.Customer]
         ]
         AS Variable [ Name=$c ]
       ]
@@ -264,7 +264,7 @@ Where
         Variable [ Name=$o ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [Orders]
+            LiteralExpr [STRING] [tpch.Orders]
           ]
           AS Variable [ Name=$o ]
         ]

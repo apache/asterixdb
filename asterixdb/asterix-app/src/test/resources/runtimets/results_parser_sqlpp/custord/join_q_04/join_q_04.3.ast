@@ -21,7 +21,7 @@ RecordConstructor [
       ]
       ]
       FROM [        FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [Orders]
+          LiteralExpr [STRING] [test.Orders]
         ]
         AS Variable [ Name=$o ]
       ]
@@ -49,7 +49,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Customers]
+    LiteralExpr [STRING] [test.Customers]
   ]
   AS Variable [ Name=$c ]
 ]

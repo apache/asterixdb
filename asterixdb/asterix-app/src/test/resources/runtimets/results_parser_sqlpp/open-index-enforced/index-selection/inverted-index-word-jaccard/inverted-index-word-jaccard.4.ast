@@ -45,7 +45,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLPOpen]
+    LiteralExpr [STRING] [test.DBLPOpen]
   ]
   AS Variable [ Name=$o ]
 ]

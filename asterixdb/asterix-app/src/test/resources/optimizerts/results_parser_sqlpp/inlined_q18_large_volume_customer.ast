@@ -88,7 +88,7 @@ RecordConstructor [
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [l]
+            LiteralExpr [STRING] [inlined_q18_large_volume_customer.l]
           ]
           AS Variable [ Name=$j ]
         ]
@@ -98,12 +98,12 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Customers]
+    LiteralExpr [STRING] [inlined_q18_large_volume_customer.Customers]
   ]
   AS Variable [ Name=$c ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Orders]
+    LiteralExpr [STRING] [inlined_q18_large_volume_customer.Orders]
   ]
   AS Variable [ Name=$o ]
 ,
@@ -127,7 +127,7 @@ FROM [  FunctionCall asterix.dataset@1[
             ]
             ]
             FROM [              FunctionCall asterix.dataset@1[
-                LiteralExpr [STRING] [l]
+                LiteralExpr [STRING] [inlined_q18_large_volume_customer.l]
               ]
               AS Variable [ Name=$i ]
             ]
@@ -137,7 +137,7 @@ FROM [  FunctionCall asterix.dataset@1[
     ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [LineItems]
+        LiteralExpr [STRING] [inlined_q18_large_volume_customer.LineItems]
       ]
       AS Variable [ Name=$l ]
     ]
@@ -157,7 +157,7 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$t ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [LineItems]
+    LiteralExpr [STRING] [inlined_q18_large_volume_customer.LineItems]
   ]
   AS Variable [ Name=$l ]
 ]

@@ -30,7 +30,7 @@ FROM [  (
     Variable [ Name=$fb ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [FacebookUsers]
+        LiteralExpr [STRING] [test.FacebookUsers]
       ]
       AS Variable [ Name=$fb ]
     ]

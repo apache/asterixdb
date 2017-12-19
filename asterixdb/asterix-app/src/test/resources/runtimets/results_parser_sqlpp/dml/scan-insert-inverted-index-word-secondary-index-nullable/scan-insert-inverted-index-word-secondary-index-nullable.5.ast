@@ -4,7 +4,7 @@ SELECT ELEMENT [
 Variable [ Name=$o ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLP1]
+    LiteralExpr [STRING] [test.DBLP1]
   ]
   AS Variable [ Name=$o ]
 ]

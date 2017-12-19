@@ -13,7 +13,7 @@ SELECT ELEMENT [
 Variable [ Name=$emp ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [testdst]
+    LiteralExpr [STRING] [test.testdst]
   ]
   AS Variable [ Name=$emp ]
 ]

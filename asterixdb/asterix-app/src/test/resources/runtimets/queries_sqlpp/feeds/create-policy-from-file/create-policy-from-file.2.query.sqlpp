@@ -22,5 +22,5 @@
  * Date         : 25th Jul 2016
  */
 
-select element x from `Metadata.FeedPolicy` as x
+select element x from `Metadata`.`FeedPolicy` as x
 where x.DataverseName = 'experiments';

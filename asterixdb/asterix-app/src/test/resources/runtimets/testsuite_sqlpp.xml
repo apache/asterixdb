@@ -5417,6 +5417,11 @@
         <output-dir compare="Text">groupby_rename_with_sugar</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="resolution">
+      <compilation-unit name="function_dataverse">
+        <output-dir compare="Text">function_dataverse</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="scan">
     <test-case FilePath="scan">

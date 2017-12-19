@@ -51,7 +51,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [LineItem]
+    LiteralExpr [STRING] [tpch.LineItem]
   ]
   AS Variable [ Name=$l ]
 ]

@@ -28,4 +28,4 @@
 use test;
 
 select element count(*)
-from  `test.employee`;
+from  `test`.`employee`;

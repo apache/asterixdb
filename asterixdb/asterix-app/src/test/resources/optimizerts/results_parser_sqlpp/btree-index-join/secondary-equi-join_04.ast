@@ -13,12 +13,12 @@ SELECT [
 *
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [testdst]
+    LiteralExpr [STRING] [test.testdst]
   ]
   AS Variable [ Name=$a ]
   INNER JOIN
     FunctionCall asterix.dataset@1[
-      LiteralExpr [STRING] [testdst2]
+      LiteralExpr [STRING] [test.testdst2]
     ]
     AS Variable [ Name=$b ]
     ON
@@ -35,7 +35,7 @@ FROM [  FunctionCall asterix.dataset@1[
     ]
   INNER JOIN
     FunctionCall asterix.dataset@1[
-      LiteralExpr [STRING] [testdst3]
+      LiteralExpr [STRING] [test.testdst3]
     ]
     AS Variable [ Name=$c ]
     ON

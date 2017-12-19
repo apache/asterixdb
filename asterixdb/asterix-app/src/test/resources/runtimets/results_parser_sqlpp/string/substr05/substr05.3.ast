@@ -20,7 +20,7 @@ FunctionCall test.substring@3[
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [testdst]
+    LiteralExpr [STRING] [test.testdst]
   ]
   AS Variable [ Name=$a ]
 ]

@@ -10,7 +10,7 @@ FunctionCall asterix.sum@1[
     ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [tdst]
+        LiteralExpr [STRING] [test.tdst]
       ]
       AS Variable [ Name=$l ]
     ]

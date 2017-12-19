@@ -30,7 +30,7 @@ FunctionCall asterix.sql-sum@1[
 revenue
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [LineItem]
+    LiteralExpr [STRING] [tpch.LineItem]
   ]
   AS Variable [ Name=$l ]
 ]

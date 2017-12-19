@@ -49,7 +49,7 @@ RecordConstructor [
       ]
       ]
       FROM [        FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [TweetMessages]
+          LiteralExpr [STRING] [test.TweetMessages]
         ]
         AS Variable [ Name=$t2 ]
       ]
@@ -97,7 +97,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [TweetMessagesTmp]
+    LiteralExpr [STRING] [test.TweetMessagesTmp]
   ]
   AS Variable [ Name=$t1 ]
 ]

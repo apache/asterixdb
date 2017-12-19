@@ -13,7 +13,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [TwitterData]
+    LiteralExpr [STRING] [test.TwitterData]
   ]
   AS Variable [ Name=$t ]
 ]

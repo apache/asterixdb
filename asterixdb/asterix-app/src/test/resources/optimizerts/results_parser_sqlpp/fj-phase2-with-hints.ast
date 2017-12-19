@@ -29,7 +29,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLP_fuzzyjoin_078]
+    LiteralExpr [STRING] [fuzzyjoin_078.DBLP_fuzzyjoin_078]
   ]
   AS Variable [ Name=$paperDBLP ]
 ]
@@ -55,7 +55,7 @@ Let Variable [ Name=$tokensDBLP ]
         Variable [ Name=$tokenGroupped ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [DBLP_fuzzyjoin_078]
+            LiteralExpr [STRING] [fuzzyjoin_078.DBLP_fuzzyjoin_078]
           ]
           AS Variable [ Name=$paper ]
 ,

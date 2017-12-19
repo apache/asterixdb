@@ -24,7 +24,7 @@ load  dataset Customers using localfs ((`path`=`asterix_nc1://data/semistructure
 
 insert into test.CustomersOpen
 select element {'cid':x.cid,'name':x.name,'age':x.age,'address':x.address,'interests':x.interests,'children':x.children}
-from  `test.Customers` as x
+from  `test`.`Customers` as x
 ;
 
 delete from CustomersOpen

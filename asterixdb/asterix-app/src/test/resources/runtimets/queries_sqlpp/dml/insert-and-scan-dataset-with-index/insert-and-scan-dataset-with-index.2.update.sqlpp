@@ -31,5 +31,5 @@ load  dataset test.employee using localfs ((`path`=`asterix_nc1://data/names.adm
 
 insert into test.employee
 select element {'id':(x.id + 10000),'fname':x.fname,'lname':x.lname,'age':x.age,'dept':x.dept}
-from  `test.employee` as x
+from  `test`.`employee` as x
 ;

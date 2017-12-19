@@ -4,7 +4,7 @@ SELECT ELEMENT [
 Variable [ Name=$paper ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLPsplits]
+    LiteralExpr [STRING] [test.DBLPsplits]
   ]
   AS Variable [ Name=$paper ]
 ]

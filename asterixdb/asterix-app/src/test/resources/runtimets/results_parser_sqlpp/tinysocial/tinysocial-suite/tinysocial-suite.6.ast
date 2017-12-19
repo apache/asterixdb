@@ -4,7 +4,7 @@ SELECT ELEMENT [
 Variable [ Name=$user ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [FacebookUsers]
+    LiteralExpr [STRING] [TinySocial.FacebookUsers]
   ]
   AS Variable [ Name=$user ]
 ]

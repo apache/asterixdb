@@ -69,7 +69,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Orders]
+    LiteralExpr [STRING] [orders-aggreg.Orders]
   ]
   AS Variable [ Name=$o ]
 ]

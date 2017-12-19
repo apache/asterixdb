@@ -13,7 +13,7 @@ RecordConstructor [
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [LineItem]
+            LiteralExpr [STRING] [tpch.LineItem]
           ]
           AS Variable [ Name=$i ]
         ]
@@ -41,7 +41,7 @@ RecordConstructor [
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [LineItem]
+            LiteralExpr [STRING] [tpch.LineItem]
           ]
           AS Variable [ Name=$i ]
         ]
@@ -71,7 +71,7 @@ RecordConstructor [
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [LineItem]
+            LiteralExpr [STRING] [tpch.LineItem]
           ]
           AS Variable [ Name=$i ]
         ]
@@ -110,7 +110,7 @@ RecordConstructor [
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [LineItem]
+            LiteralExpr [STRING] [tpch.LineItem]
           ]
           AS Variable [ Name=$i ]
         ]
@@ -129,7 +129,7 @@ RecordConstructor [
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [LineItem]
+            LiteralExpr [STRING] [tpch.LineItem]
           ]
           AS Variable [ Name=$i ]
         ]
@@ -157,7 +157,7 @@ RecordConstructor [
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [LineItem]
+            LiteralExpr [STRING] [tpch.LineItem]
           ]
           AS Variable [ Name=$i ]
         ]
@@ -176,7 +176,7 @@ RecordConstructor [
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [LineItem]
+            LiteralExpr [STRING] [tpch.LineItem]
           ]
           AS Variable [ Name=$i ]
         ]
@@ -192,7 +192,7 @@ RecordConstructor [
         Variable [ Name=$l ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [LineItem]
+            LiteralExpr [STRING] [tpch.LineItem]
           ]
           AS Variable [ Name=$l ]
         ]

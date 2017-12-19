@@ -136,7 +136,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Supplier]
+    LiteralExpr [STRING] [q08_group_by.Supplier]
   ]
   AS Variable [ Name=$s ]
 ,
@@ -223,7 +223,7 @@ FROM [  FunctionCall asterix.dataset@1[
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [LineItem]
+            LiteralExpr [STRING] [q08_group_by.LineItem]
           ]
           AS Variable [ Name=$l ]
 ,
@@ -249,7 +249,7 @@ FROM [  FunctionCall asterix.dataset@1[
             ]
             ]
             FROM [              FunctionCall asterix.dataset@1[
-                LiteralExpr [STRING] [Orders]
+                LiteralExpr [STRING] [q08_group_by.Orders]
               ]
               AS Variable [ Name=$o ]
 ,
@@ -267,7 +267,7 @@ FROM [  FunctionCall asterix.dataset@1[
                 ]
                 ]
                 FROM [                  FunctionCall asterix.dataset@1[
-                    LiteralExpr [STRING] [Customer]
+                    LiteralExpr [STRING] [q08_group_by.Customer]
                   ]
                   AS Variable [ Name=$c ]
 ,
@@ -285,12 +285,12 @@ FROM [  FunctionCall asterix.dataset@1[
                     ]
                     ]
                     FROM [                      FunctionCall asterix.dataset@1[
-                        LiteralExpr [STRING] [Nation]
+                        LiteralExpr [STRING] [q08_group_by.Nation]
                       ]
                       AS Variable [ Name=$n1 ]
 ,
                       FunctionCall asterix.dataset@1[
-                        LiteralExpr [STRING] [Region]
+                        LiteralExpr [STRING] [q08_group_by.Region]
                       ]
                       AS Variable [ Name=$r1 ]
                     ]
@@ -386,7 +386,7 @@ FROM [  FunctionCall asterix.dataset@1[
       AS Variable [ Name=$lnrco ]
 ,
       FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [Part]
+        LiteralExpr [STRING] [q08_group_by.Part]
       ]
       AS Variable [ Name=$p ]
     ]

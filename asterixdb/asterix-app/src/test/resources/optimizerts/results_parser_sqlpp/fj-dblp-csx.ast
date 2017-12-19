@@ -36,22 +36,22 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLP]
+    LiteralExpr [STRING] [fj-dblp-csx.DBLP]
   ]
   AS Variable [ Name=$paperDBLP ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [tokensDBLP]
+    LiteralExpr [STRING] [fj-dblp-csx.tokensDBLP]
   ]
   AS Variable [ Name=$prefixTokenDBLP ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [CSX]
+    LiteralExpr [STRING] [fj-dblp-csx.CSX]
   ]
   AS Variable [ Name=$paperCSX ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [tokensCSX]
+    LiteralExpr [STRING] [fj-dblp-csx.tokensCSX]
   ]
   AS Variable [ Name=$prefixTokenCSX ]
 ]
@@ -86,7 +86,7 @@ Let Variable [ Name=$tokensDBLP ]
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [DBLP]
+            LiteralExpr [STRING] [fj-dblp-csx.DBLP]
           ]
           AS Variable [ Name=$paper ]
         ]
@@ -137,7 +137,7 @@ Let Variable [ Name=$tokensCSX ]
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [DBLP]
+            LiteralExpr [STRING] [fj-dblp-csx.DBLP]
           ]
           AS Variable [ Name=$paper ]
         ]

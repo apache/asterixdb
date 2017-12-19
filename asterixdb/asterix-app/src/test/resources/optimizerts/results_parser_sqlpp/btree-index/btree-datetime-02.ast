@@ -13,7 +13,7 @@ SELECT ELEMENT [
 Variable [ Name=$emergency ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [CHPReports]
+    LiteralExpr [STRING] [emergencyTest.CHPReports]
   ]
   AS Variable [ Name=$emergency ]
 ]

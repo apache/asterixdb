@@ -7,17 +7,17 @@ FieldAccessor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [TwitterUsers]
+    LiteralExpr [STRING] [test.TwitterUsers]
   ]
   AS Variable [ Name=$tu ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [TweetMessages]
+    LiteralExpr [STRING] [test.TweetMessages]
   ]
   AS Variable [ Name=$tm ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [results]
+    LiteralExpr [STRING] [test.results]
   ]
   AS Variable [ Name=$r ]
 ]

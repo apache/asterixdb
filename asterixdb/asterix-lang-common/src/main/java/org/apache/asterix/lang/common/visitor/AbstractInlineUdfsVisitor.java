@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
@@ -56,6 +57,8 @@ import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionVisitor<Boolean, List<FunctionDecl>> {
@@ -274,7 +277,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         } else {
             // Rewrite the function body itself (without setting unbounded variables to dataset access).
             // TODO(buyingyi): throw an exception for recursive function definition or limit the stack depth.
-            implem.setFuncBody(rewriteFunctionBody(implem.getFuncBody(), implem.getParamList()));
+            implem.setFuncBody(rewriteFunctionBody(implem));
             // it's one of the functions we want to inline
             List<LetClause> clauses = new ArrayList<>();
             Iterator<VarIdentifier> paramIter = implem.getParamList().iterator();
@@ -321,16 +324,34 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         return new Pair<>(changed, newList);
     }
 
-    protected Expression rewriteFunctionBody(Expression expr, List<VarIdentifier> paramList)
-            throws CompilationException {
+    private Expression rewriteFunctionBody(FunctionDecl fnDecl) throws CompilationException {
         Query wrappedQuery = new Query(false);
-        wrappedQuery.setBody(expr);
+        wrappedQuery.setBody(fnDecl.getFuncBody());
         wrappedQuery.setTopLevel(false);
-        wrappedQuery.setExternalVars(paramList);
+        wrappedQuery.setExternalVars(fnDecl.getParamList());
 
-        IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
-        queryRewriter.rewrite(declaredFunctions, wrappedQuery, metadataProvider, context);
-        return wrappedQuery.getBody();
+        String fnNamespace = fnDecl.getSignature().getNamespace();
+        Dataverse defaultDataverse = metadataProvider.getDefaultDataverse();
+
+        Dataverse fnDataverse;
+        if (fnNamespace == null || fnNamespace.equals(defaultDataverse.getDataverseName())) {
+            fnDataverse = defaultDataverse;
+        } else {
+            try {
+                fnDataverse = metadataProvider.findDataverse(fnNamespace);
+            } catch (AlgebricksException e) {
+                throw new CompilationException(ErrorCode.NO_DATAVERSE_WITH_NAME, e, fnNamespace);
+            }
+        }
+
+        metadataProvider.setDefaultDataverse(fnDataverse);
+        try {
+            IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
+            queryRewriter.rewrite(declaredFunctions, wrappedQuery, metadataProvider, context);
+            return wrappedQuery.getBody();
+        } finally {
+            metadataProvider.setDefaultDataverse(defaultDataverse);
+        }
     }
 
     protected static FunctionDecl findFuncDeclaration(FunctionSignature fid, List<FunctionDecl> sequence) {

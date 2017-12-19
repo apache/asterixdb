@@ -37,7 +37,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Users]
+    LiteralExpr [STRING] [rares03.Users]
   ]
   AS Variable [ Name=$user ]
 ]
@@ -58,7 +58,7 @@ Let Variable [ Name=$tokens ]
         Variable [ Name=$item ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [Users]
+            LiteralExpr [STRING] [rares03.Users]
           ]
           AS Variable [ Name=$user ]
 ,

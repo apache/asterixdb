@@ -144,10 +144,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final IStorageComponentProvider storageComponentProvider;
     private final StorageProperties storageProperties;
     private final IFunctionManager functionManager;
-    private final Dataverse defaultDataverse;
     private final LockList locks;
     private final Map<String, String> config;
 
+    private Dataverse defaultDataverse;
     private MetadataTransactionContext mdTxnCtx;
     private boolean isWriteTransaction;
     private IAWriterFactory writerFactory;
@@ -161,7 +161,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public MetadataProvider(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
         this.appCtx = appCtx;
-        this.defaultDataverse = defaultDataverse == null ? MetadataBuiltinEntities.DEFAULT_DATAVERSE : defaultDataverse;
+        setDefaultDataverse(defaultDataverse);
         this.storageComponentProvider = appCtx.getStorageComponentProvider();
         storageProperties = appCtx.getStorageProperties();
         functionManager = ((IFunctionExtensionManager) appCtx.getExtensionManager()).getFunctionManager();
@@ -190,12 +190,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.txnId = txnId;
     }
 
+    public void setDefaultDataverse(Dataverse defaultDataverse) {
+        this.defaultDataverse = defaultDataverse == null ? MetadataBuiltinEntities.DEFAULT_DATAVERSE : defaultDataverse;
+    }
+
     public Dataverse getDefaultDataverse() {
         return defaultDataverse;
     }
 
     public String getDefaultDataverseName() {
-        return defaultDataverse == null ? null : defaultDataverse.getDataverseName();
+        return defaultDataverse.getDataverseName();
     }
 
     public void setWriteTransaction(boolean writeTransaction) {

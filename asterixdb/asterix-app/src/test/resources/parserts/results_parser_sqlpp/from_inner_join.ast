@@ -18,12 +18,12 @@ FieldAccessor [
 location
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [sensors]
+    LiteralExpr [STRING] [test.sensors]
   ]
   AS Variable [ Name=$s ]
   INNER JOIN
     FunctionCall asterix.dataset@1[
-      LiteralExpr [STRING] [sensorMeta]
+      LiteralExpr [STRING] [test.sensorMeta]
     ]
     AS Variable [ Name=$m ]
     ON

@@ -86,7 +86,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
 
     @Override
     public Expression visit(VariableExpr varExpr, ILangExpression parent) throws CompilationException {
-        return resolve(varExpr, null /* Resolves within the default dataverse. */,
+        return resolve(varExpr, metadataProvider.getDefaultDataverseName(),
                 SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue(), varExpr, parent);
     }
 

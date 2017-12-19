@@ -1,0 +1,2 @@
+{ "TwitterUsers": { "screen_name": "john_01", "friends_count": 1, "name": "John", "followers_count": 2 } }
+{ "TwitterUsers": { "screen_name": "marry_02", "friends_count": 4, "name": "Marry", "followers_count": 5 } }

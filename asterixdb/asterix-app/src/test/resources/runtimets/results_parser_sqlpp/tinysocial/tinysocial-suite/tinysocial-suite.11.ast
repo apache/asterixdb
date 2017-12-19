@@ -45,7 +45,7 @@ RecordConstructor [
       ]
       ]
       FROM [        FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [TweetMessages]
+          LiteralExpr [STRING] [TinySocial.TweetMessages]
         ]
         AS Variable [ Name=$t ]
       ]
@@ -72,7 +72,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [FacebookUsers]
+    LiteralExpr [STRING] [TinySocial.FacebookUsers]
   ]
   AS Variable [ Name=$fbu ]
 ]

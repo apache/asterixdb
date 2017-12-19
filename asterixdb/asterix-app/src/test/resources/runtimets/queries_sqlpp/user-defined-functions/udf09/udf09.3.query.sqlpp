@@ -27,6 +27,6 @@ use test;
 
 select element test.readDataset((
     select element a
-    from  `test.t1` as a
+    from  `test`.`t1` as a
     order by a.id
 ));

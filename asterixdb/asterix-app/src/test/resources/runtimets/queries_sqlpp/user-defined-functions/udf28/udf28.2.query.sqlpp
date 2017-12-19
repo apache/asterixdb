@@ -29,6 +29,6 @@ select element {
 'ReturnType': l.ReturnType,
 'Definition': l.`Definition`
 }
-from  `Metadata.Function` as l
+from  `Metadata`.`Function` as l
 where (l.DataverseName = 'test')
 ;

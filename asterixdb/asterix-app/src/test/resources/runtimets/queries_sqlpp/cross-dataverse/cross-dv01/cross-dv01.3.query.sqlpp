@@ -25,8 +25,8 @@
  */
 
 select element {'ug-student':s,'prof':p,'grd-student':a,'postdoc':b}
-from  `student.ugdstd` as s,
-      `teacher.prof` as p,
-      `student.gdstd` as a,
-      `teacher.pstdoc` as b
+from  `student`.`ugdstd` as s,
+      `teacher`.`prof` as p,
+      `student`.`gdstd` as a,
+      `teacher`.`pstdoc` as b
 ;

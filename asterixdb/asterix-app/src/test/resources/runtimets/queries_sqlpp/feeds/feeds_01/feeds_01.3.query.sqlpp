@@ -23,6 +23,6 @@
  */
 
 select element x
-from  `Metadata.Feed` as x
+from  `Metadata`.`Feed` as x
 where ((x.DataverseName = 'feeds') and (x.FeedName = 'TweetFeed'))
 ;

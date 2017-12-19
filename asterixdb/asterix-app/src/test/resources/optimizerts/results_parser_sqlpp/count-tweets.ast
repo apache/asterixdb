@@ -38,12 +38,12 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [TwitterData]
+    LiteralExpr [STRING] [twitter.TwitterData]
   ]
   AS Variable [ Name=$t ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [tokens]
+    LiteralExpr [STRING] [twitter.tokens]
   ]
   AS Variable [ Name=$token ]
 ]

@@ -22,7 +22,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Line]
+    LiteralExpr [STRING] [test.Line]
   ]
   AS Variable [ Name=$i ]
 ]

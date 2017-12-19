@@ -74,17 +74,17 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Customers]
+    LiteralExpr [STRING] [q3_shipping_priority.Customers]
   ]
   AS Variable [ Name=$c ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Orders]
+    LiteralExpr [STRING] [q3_shipping_priority.Orders]
   ]
   AS Variable [ Name=$o ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [LineItems]
+    LiteralExpr [STRING] [q3_shipping_priority.LineItems]
   ]
   AS Variable [ Name=$l ]
 ]
@@ -193,7 +193,7 @@ Let Variable [ Name=$revenue ]
       ]
       ]
       FROM [        FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [l]
+          LiteralExpr [STRING] [q3_shipping_priority.l]
         ]
         AS Variable [ Name=$i ]
       ]

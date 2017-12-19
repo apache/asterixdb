@@ -16,7 +16,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [MyMiniData]
+    LiteralExpr [STRING] [test.MyMiniData]
   ]
   AS Variable [ Name=$o ]
 ]

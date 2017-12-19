@@ -15,7 +15,7 @@ FieldAccessor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [TOKENSRANKEDADM]
+    LiteralExpr [STRING] [fuzzyjoin.TOKENSRANKEDADM]
   ]
   AS Variable [ Name=$token1 ]
 ,
@@ -24,7 +24,7 @@ FROM [  FunctionCall asterix.dataset@1[
     Variable [ Name=$tokenRanked ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [TOKENSRANKEDADM]
+        LiteralExpr [STRING] [fuzzyjoin.TOKENSRANKEDADM]
       ]
       AS Variable [ Name=$tokenRanked ]
     ]

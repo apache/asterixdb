@@ -39,7 +39,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [User]
+    LiteralExpr [STRING] [events.User]
   ]
   AS Variable [ Name=$user ]
 ]

@@ -21,6 +21,6 @@ use test2;
 
 
 select element c
-from  `test2.Customers` as c
+from  `test2`.`Customers` as c
 order by c.cid
 ;

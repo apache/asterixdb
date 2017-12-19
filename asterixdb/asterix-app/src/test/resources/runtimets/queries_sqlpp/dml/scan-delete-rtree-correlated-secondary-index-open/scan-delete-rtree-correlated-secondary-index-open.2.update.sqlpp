@@ -23,7 +23,7 @@ load  dataset MyData using localfs ((`path`=`asterix_nc1://data/spatial/spatialD
 
 insert into test.MyDataOpen
 select element x
-from  `test.MyData` as x
+from  `test`.`MyData` as x
 ;
 
 delete from MyDataOpen

@@ -12,7 +12,7 @@ FunctionCall asterix.avg@1[
     ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [FacebookMessages]
+        LiteralExpr [STRING] [TinySocial.FacebookMessages]
       ]
       AS Variable [ Name=$message ]
     ]

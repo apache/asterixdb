@@ -141,7 +141,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Supplier]
+    LiteralExpr [STRING] [tpch.Supplier]
   ]
   AS Variable [ Name=$s ]
 ,

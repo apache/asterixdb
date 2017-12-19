@@ -40,12 +40,12 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Users]
+    LiteralExpr [STRING] [colocated.Users]
   ]
   AS Variable [ Name=$user ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Visitors]
+    LiteralExpr [STRING] [colocated.Visitors]
   ]
   AS Variable [ Name=$visitor ]
 ]

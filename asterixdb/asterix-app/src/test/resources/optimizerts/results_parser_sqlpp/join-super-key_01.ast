@@ -77,12 +77,12 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [LineItems]
+    LiteralExpr [STRING] [join-super-key_1.LineItems]
   ]
   AS Variable [ Name=$li ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [PartSupp]
+    LiteralExpr [STRING] [join-super-key_1.PartSupp]
   ]
   AS Variable [ Name=$ps ]
 ]

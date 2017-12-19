@@ -29,5 +29,5 @@ use test;
 
 insert into test.employee
 select element {'id':(x.id + 20000),'fname':x.fname,'lname':x.lname,'age':x.age,'dept':x.dept}
-from  `test.employee` as x
+from  `test`.`employee` as x
 ;

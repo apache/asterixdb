@@ -29,12 +29,12 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLP]
+    LiteralExpr [STRING] [test.DBLP]
   ]
   AS Variable [ Name=$a ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLP]
+    LiteralExpr [STRING] [test.DBLP]
   ]
   AS Variable [ Name=$b ]
 ]

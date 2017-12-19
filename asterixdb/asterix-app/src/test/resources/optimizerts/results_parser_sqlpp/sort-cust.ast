@@ -43,7 +43,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [Customers]
+    LiteralExpr [STRING] [custlimit.Customers]
   ]
   AS Variable [ Name=$c ]
 ]

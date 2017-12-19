@@ -139,6 +139,7 @@ public class ErrorCode {
     public static final int WITH_FIELD_MUST_BE_OF_TYPE = 1060;
     public static final int WITH_FIELD_MUST_CONTAIN_SUB_FIELD = 1061;
     public static final int MERGE_POLICY_PARAMETER_INVALID_TYPE = 1062;
+    public static final int NO_DATAVERSE_WITH_NAME = 1063;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

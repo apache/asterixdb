@@ -13,7 +13,7 @@ FieldAccessor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [doublenests]
+    LiteralExpr [STRING] [twitter.doublenests]
   ]
   AS Variable [ Name=$test ]
 ]

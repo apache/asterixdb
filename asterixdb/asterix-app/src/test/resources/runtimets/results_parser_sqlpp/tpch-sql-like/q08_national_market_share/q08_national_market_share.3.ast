@@ -148,7 +148,7 @@ FROM [  (
         ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [Supplier]
+            LiteralExpr [STRING] [tpch.Supplier]
           ]
           AS Variable [ Name=$s ]
 ,
@@ -235,7 +235,7 @@ FROM [  (
                 ]
                 ]
                 FROM [                  FunctionCall asterix.dataset@1[
-                    LiteralExpr [STRING] [LineItem]
+                    LiteralExpr [STRING] [tpch.LineItem]
                   ]
                   AS Variable [ Name=$l ]
 ,
@@ -261,7 +261,7 @@ FROM [  (
                     ]
                     ]
                     FROM [                      FunctionCall asterix.dataset@1[
-                        LiteralExpr [STRING] [Orders]
+                        LiteralExpr [STRING] [tpch.Orders]
                       ]
                       AS Variable [ Name=$o ]
 ,
@@ -279,7 +279,7 @@ FROM [  (
                         ]
                         ]
                         FROM [                          FunctionCall asterix.dataset@1[
-                            LiteralExpr [STRING] [Customer]
+                            LiteralExpr [STRING] [tpch.Customer]
                           ]
                           AS Variable [ Name=$c ]
 ,
@@ -297,12 +297,12 @@ FROM [  (
                             ]
                             ]
                             FROM [                              FunctionCall asterix.dataset@1[
-                                LiteralExpr [STRING] [Nation]
+                                LiteralExpr [STRING] [tpch.Nation]
                               ]
                               AS Variable [ Name=$n1 ]
 ,
                               FunctionCall asterix.dataset@1[
-                                LiteralExpr [STRING] [Region]
+                                LiteralExpr [STRING] [tpch.Region]
                               ]
                               AS Variable [ Name=$r1 ]
                             ]
@@ -398,7 +398,7 @@ FROM [  (
               AS Variable [ Name=$lnrco ]
 ,
               FunctionCall asterix.dataset@1[
-                LiteralExpr [STRING] [Part]
+                LiteralExpr [STRING] [tpch.Part]
               ]
               AS Variable [ Name=$p ]
             ]
@@ -444,7 +444,7 @@ FROM [  (
       AS Variable [ Name=$slnrcop ]
 ,
       FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [Nation]
+        LiteralExpr [STRING] [tpch.Nation]
       ]
       AS Variable [ Name=$n2 ]
     ]

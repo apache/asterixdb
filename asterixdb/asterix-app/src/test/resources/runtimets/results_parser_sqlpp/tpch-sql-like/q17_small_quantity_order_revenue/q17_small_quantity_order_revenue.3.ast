@@ -69,12 +69,12 @@ OperatorExpr [
         AS Variable [ Name=$t ]
 ,
         FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [LineItem]
+          LiteralExpr [STRING] [tpch.LineItem]
         ]
         AS Variable [ Name=$l ]
 ,
         FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [Part]
+          LiteralExpr [STRING] [tpch.Part]
         ]
         AS Variable [ Name=$p ]
       ]

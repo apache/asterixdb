@@ -24,19 +24,19 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLP]
+    LiteralExpr [STRING] [fuzzyjoin.DBLP]
   ]
   AS Variable [ Name=$paperDBLP ]
 ,
   FunctionCall fuzzyjoin.subset-collection@3[
     FunctionCall asterix.dataset@1[
-      LiteralExpr [STRING] [tokensDBLP]
+      LiteralExpr [STRING] [fuzzyjoin.tokensDBLP]
     ]
     LiteralExpr [LONG] [0]
     FunctionCall fuzzyjoin.prefix-len-jaccard@2[
       FunctionCall fuzzyjoin.len@1[
         FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [tokensDBLP]
+          LiteralExpr [STRING] [fuzzyjoin.tokensDBLP]
         ]
       ]
       LiteralExpr [FLOAT] [0.5]
@@ -45,19 +45,19 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$prefixTokenDBLP ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [CSX]
+    LiteralExpr [STRING] [fuzzyjoin.CSX]
   ]
   AS Variable [ Name=$paperCSX ]
 ,
   FunctionCall fuzzyjoin.subset-collection@3[
     FunctionCall asterix.dataset@1[
-      LiteralExpr [STRING] [tokensCSX]
+      LiteralExpr [STRING] [fuzzyjoin.tokensCSX]
     ]
     LiteralExpr [LONG] [0]
     FunctionCall fuzzyjoin.prefix-len-jaccard@2[
       FunctionCall fuzzyjoin.len@1[
         FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [tokensCSX]
+          LiteralExpr [STRING] [fuzzyjoin.tokensCSX]
         ]
       ]
       LiteralExpr [FLOAT] [0.5]
@@ -84,7 +84,7 @@ Let Variable [ Name=$tokensDBLP ]
         Variable [ Name=$tokenGroupped ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [DBLP]
+            LiteralExpr [STRING] [fuzzyjoin.DBLP]
           ]
           AS Variable [ Name=$paper ]
 ,
@@ -159,7 +159,7 @@ Let Variable [ Name=$tokensCSX ]
         Variable [ Name=$tokenGroupped ]
         ]
         FROM [          FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [DBLP]
+            LiteralExpr [STRING] [fuzzyjoin.DBLP]
           ]
           AS Variable [ Name=$paper ]
 ,

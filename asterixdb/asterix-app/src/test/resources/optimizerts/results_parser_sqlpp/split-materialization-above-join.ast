@@ -34,12 +34,12 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLP]
+    LiteralExpr [STRING] [fuzzyjoin.DBLP]
   ]
   AS Variable [ Name=$paperLeft ]
 ,
   FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [DBLP]
+    LiteralExpr [STRING] [fuzzyjoin.DBLP]
   ]
   AS Variable [ Name=$paperRight ]
 ,
@@ -73,18 +73,18 @@ FROM [  FunctionCall asterix.dataset@1[
     ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [DBLP]
+        LiteralExpr [STRING] [fuzzyjoin.DBLP]
       ]
       AS Variable [ Name=$paperLeft ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
         FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [tokensLeft]
+          LiteralExpr [STRING] [fuzzyjoin.tokensLeft]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
           FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [lenLeft]
+            LiteralExpr [STRING] [fuzzyjoin.lenLeft]
           ]
           LiteralExpr [FLOAT] [0.5]
         ]
@@ -92,18 +92,18 @@ FROM [  FunctionCall asterix.dataset@1[
       AS Variable [ Name=$prefixTokenLeft ]
 ,
       FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [DBLP]
+        LiteralExpr [STRING] [fuzzyjoin.DBLP]
       ]
       AS Variable [ Name=$paperRight ]
 ,
       FunctionCall fuzzyjoin.subset-collection@3[
         FunctionCall asterix.dataset@1[
-          LiteralExpr [STRING] [tokensRight]
+          LiteralExpr [STRING] [fuzzyjoin.tokensRight]
         ]
         LiteralExpr [LONG] [0]
         FunctionCall fuzzyjoin.prefix-len-jaccard@2[
           FunctionCall asterix.dataset@1[
-            LiteralExpr [STRING] [lenRight]
+            LiteralExpr [STRING] [fuzzyjoin.lenRight]
           ]
           LiteralExpr [FLOAT] [0.5]
         ]
@@ -139,7 +139,7 @@ FROM [  FunctionCall asterix.dataset@1[
             Variable [ Name=$tokenGroupped ]
             ]
             FROM [              FunctionCall asterix.dataset@1[
-                LiteralExpr [STRING] [DBLP]
+                LiteralExpr [STRING] [fuzzyjoin.DBLP]
               ]
               AS Variable [ Name=$paper ]
 ,
@@ -224,7 +224,7 @@ Variable [ Name=$i ]
             Variable [ Name=$tokenGroupped ]
             ]
             FROM [              FunctionCall asterix.dataset@1[
-                LiteralExpr [STRING] [DBLP]
+                LiteralExpr [STRING] [fuzzyjoin.DBLP]
               ]
               AS Variable [ Name=$paper ]
 ,

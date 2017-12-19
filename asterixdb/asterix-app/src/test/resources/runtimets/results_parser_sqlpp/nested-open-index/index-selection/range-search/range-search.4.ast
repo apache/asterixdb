@@ -7,7 +7,7 @@ FieldAccessor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [LineItem]
+    LiteralExpr [STRING] [test.LineItem]
   ]
   AS Variable [ Name=$c ]
 ]

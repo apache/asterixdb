@@ -7,7 +7,7 @@ FieldAccessor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [CustomerSomeSat02]
+    LiteralExpr [STRING] [test.CustomerSomeSat02]
   ]
   AS Variable [ Name=$x ]
 ]
@@ -16,7 +16,7 @@ Where
     [Variable [ Name=$y ]
     In
       FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [OrdersSomeSat02]
+        LiteralExpr [STRING] [test.OrdersSomeSat02]
       ]
     ]
     Satifies [

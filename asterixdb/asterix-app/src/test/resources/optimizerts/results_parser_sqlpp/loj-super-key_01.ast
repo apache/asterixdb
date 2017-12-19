@@ -79,7 +79,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [LineItems]
+    LiteralExpr [STRING] [loj-super-key_01.LineItems]
   ]
   AS Variable [ Name=$li ]
 ]
@@ -90,7 +90,7 @@ Let Variable [ Name=$partsupp ]
     Variable [ Name=$ps ]
     ]
     FROM [      FunctionCall asterix.dataset@1[
-        LiteralExpr [STRING] [PartSupp]
+        LiteralExpr [STRING] [loj-super-key_01.PartSupp]
       ]
       AS Variable [ Name=$ps ]
     ]
