@@ -71,4 +71,9 @@ public interface IApplicationContext {
      *             if connection couldn't be established to cluster controller
      */
     IHyracksClientConnection getHcc() throws HyracksDataException;
+
+    /**
+     * @return the cluster coordination service.
+     */
+    ICoordinationService getCoordinationService();
 }

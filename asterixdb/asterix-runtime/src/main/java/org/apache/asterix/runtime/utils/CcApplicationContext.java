@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.utils;
 import java.io.IOException;
 import java.util.function.Supplier;
 
+import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.cluster.IClusterStateManager;
@@ -106,7 +107,6 @@ public class CcApplicationContext implements ICcApplicationContext {
         extensionProperties = new ExtensionProperties(propertiesAccessor);
         replicationProperties = new ReplicationProperties(propertiesAccessor);
         this.ftStrategy = ftStrategy;
-        this.hcc = hcc;
         this.buildProperties = new BuildProperties(propertiesAccessor);
         this.messagingProperties = new MessagingProperties(propertiesAccessor);
         this.nodeProperties = new NodeProperties(propertiesAccessor);
@@ -259,5 +259,10 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public INodeJobTracker getNodeJobTracker() {
         return nodeJobTracker;
+    }
+
+    @Override
+    public ICoordinationService getCoordinationService() {
+        return NoOpCoordinationService.INSTANCE;
     }
 }

@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.api.common.AppRuntimeContextProviderForRecovery;
+import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.IDatasetMemoryManager;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -76,6 +77,7 @@ import org.apache.asterix.replication.management.ReplicationManager;
 import org.apache.asterix.replication.recovery.RemoteRecoveryManager;
 import org.apache.asterix.replication.storage.ReplicaResourcesManager;
 import org.apache.asterix.runtime.transaction.GlobalResourceIdFactoryProvider;
+import org.apache.asterix.runtime.utils.NoOpCoordinationService;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepositoryFactory;
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -537,5 +539,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IIndexCheckpointManagerProvider getIndexCheckpointManagerProvider() {
         return indexCheckpointManagerProvider;
+    }
+
+    @Override
+    public ICoordinationService getCoordinationService() {
+        return NoOpCoordinationService.INSTANCE;
     }
 }
