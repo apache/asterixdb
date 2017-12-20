@@ -118,8 +118,8 @@ public class NCApplication extends BaseNCApplication {
         MessagingProperties messagingProperties = runtimeContext.getMessagingProperties();
         IMessageBroker messageBroker = new NCMessageBroker(controllerService, messagingProperties);
         this.ncServiceCtx.setMessageBroker(messageBroker);
-        MessagingChannelInterfaceFactory interfaceFactory = new MessagingChannelInterfaceFactory(
-                (NCMessageBroker) messageBroker, messagingProperties);
+        MessagingChannelInterfaceFactory interfaceFactory =
+                new MessagingChannelInterfaceFactory((NCMessageBroker) messageBroker, messagingProperties);
         this.ncServiceCtx.setMessagingChannelInterfaceFactory(interfaceFactory);
         final Checkpoint latestCheckpoint = runtimeContext.getTransactionSubsystem().getCheckpointManager().getLatest();
         if (latestCheckpoint != null) {
@@ -221,6 +221,12 @@ public class NCApplication extends BaseNCApplication {
         // and deducts one core for processing heartbeats.
         long memorySize = Runtime.getRuntime().maxMemory() - storageProperties.getBufferCacheSize()
                 - storageProperties.getMemoryComponentGlobalBudget();
+        if (memorySize <= 0) {
+            throw new IllegalStateException("Invalid node memory configuration, more memory budgeted than available "
+                    + "in JVM. Runtime max memory: " + Runtime.getRuntime().maxMemory() + " Buffer cache size: "
+                    + storageProperties.getBufferCacheSize() + " Memory component global budget: "
+                    + storageProperties.getMemoryComponentGlobalBudget());
+        }
         int allCores = Runtime.getRuntime().availableProcessors();
         int maximumCoresForComputation = allCores > 1 ? allCores - 1 : allCores;
         return new NodeCapacity(memorySize, maximumCoresForComputation);
