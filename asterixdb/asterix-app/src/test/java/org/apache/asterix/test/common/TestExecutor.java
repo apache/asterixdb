@@ -127,7 +127,9 @@ public class TestExecutor {
     public static final String DELIVERY_ASYNC = "async";
     public static final String DELIVERY_DEFERRED = "deferred";
     public static final String DELIVERY_IMMEDIATE = "immediate";
+    public static final String DIAGNOSE = "diagnose";
     private static final String METRICS_QUERY_TYPE = "metrics";
+
 
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
     private static Map<String, InetSocketAddress> ncEndPoints;
@@ -213,7 +215,7 @@ public class TestExecutor {
                     if (lineExpected.isEmpty()) {
                         continue;
                     }
-                    throw createLineChangedException(scriptFile, lineExpected, "<EOF> after " + num + " lines", num);
+                    throw createLineChangedException(scriptFile, lineExpected, "<EOF>", num);
                 }
 
                 // Comparing result equality but ignore "Time"-prefixed fields. (for metadata tests.)
@@ -248,7 +250,7 @@ public class TestExecutor {
             }
             lineActual = readerActual.readLine();
             if (lineActual != null) {
-                throw createLineChangedException(scriptFile, "expected <EOF>", lineActual, num);
+                throw createLineChangedException(scriptFile, "<EOF>", lineActual, num);
             }
         } catch (Exception e) {
             System.err.println("Actual results file: " + actualFile.toString());
@@ -262,8 +264,8 @@ public class TestExecutor {
 
     private ComparisonException createLineChangedException(File scriptFile, String lineExpected, String lineActual,
             int num) {
-        return new ComparisonException("Result for " + scriptFile + " changed at line " + num + ":\n< "
-                + truncateIfLong(lineExpected) + "\n> " + truncateIfLong(lineActual));
+        return new ComparisonException("Result for " + scriptFile + " changed at line " + num + ":\nexpected < "
+                + truncateIfLong(lineExpected) + "\nactual   > " + truncateIfLong(lineActual));
     }
 
     private String truncateIfLong(String string) {
@@ -888,8 +890,9 @@ public class TestExecutor {
                     executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
                             + File.separator + "stop_and_start.sh");
                 }
-                expectedResultFile = (queryCount.intValue() >= expectedResultFileCtxs.size()) ? null
-                        : expectedResultFileCtxs.get(queryCount.intValue()).getFile();
+                expectedResultFile =
+                        (queryCount.intValue() < 0 || queryCount.intValue() >= expectedResultFileCtxs.size()) ? null
+                                : expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                 File actualResultFile = expectedResultFile == null ? null
                         : testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
                 executeQuery(OutputFormat.forCompilationUnit(cUnit), statement, variableCtx, ctx.getType(), testFile,
@@ -958,7 +961,8 @@ public class TestExecutor {
             case "post":
             case "put":
             case "delete":
-                expectedResultFile = (queryCount.intValue() >= expectedResultFileCtxs.size()) ? null
+                expectedResultFile =
+                        (queryCount.intValue() < 0 || queryCount.intValue() >= expectedResultFileCtxs.size()) ? null
                         : expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                 actualResultFile = expectedResultFile == null ? null
                         : testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
@@ -1144,12 +1148,19 @@ public class TestExecutor {
             }
         } else {
             if (expectedResultFile == null) {
-                Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
-                        + ", filectxs.size: " + numResultFiles);
+                if (testFile.getName().startsWith(DIAGNOSE)) {
+                    System.err.println("Diagnostic Output:");
+                    IOUtils.copy(resultStream, System.err);
+                    System.err.println();
+                } else {
+                    Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
+                            + ", filectxs.size: " + numResultFiles);
+                }
+            } else {
+                writeOutputToFile(actualResultFile, resultStream);
+                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
+                        actualResultFile, compare);
             }
-            writeOutputToFile(actualResultFile, resultStream);
-            runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile, actualResultFile,
-                    compare);
         }
         queryCount.increment();
     }
@@ -1190,18 +1201,27 @@ public class TestExecutor {
                 variableCtx.put(handleVar, handle);
             }
         }
-        writeOutputToFile(actualResultFile, resultStream);
-        if (expectedResultFile == null) {
-            Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
-                    + ", filectxs.size: " + numResultFiles);
+        if (actualResultFile == null) {
+            if (testFile.getName().startsWith(DIAGNOSE)) {
+                System.err.println("Diagnostic Output:");
+                IOUtils.copy(resultStream, System.err);
+                System.err.println();
+            } else {
+                Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
+                        + ", filectxs.size: " + numResultFiles);
+            }
+        } else {
+            writeOutputToFile(actualResultFile, resultStream);
+            if (expectedResultFile == null) {
+                Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
+                        + ", filectxs.size: " + numResultFiles);
+            }
+            runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile, actualResultFile,
+                    compare);
+            queryCount.increment();
+            // Deletes the matched result file.
+            actualResultFile.getParentFile().delete();
         }
-
-        runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile, actualResultFile,
-                compare);
-        queryCount.increment();
-
-        // Deletes the matched result file.
-        actualResultFile.getParentFile().delete();
     }
 
     private void poll(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
@@ -1434,8 +1454,10 @@ public class TestExecutor {
                 final File testFile = ctx.getFile();
                 final String statement = readTestFile(testFile);
                 try {
-                    executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
-                            expectedResultFileCtxs, testFile, actualPath);
+                    if (!testFile.getName().startsWith(DIAGNOSE)) {
+                        executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
+                                queryCount, expectedResultFileCtxs, testFile, actualPath);
+                    }
                 } catch (TestLoop loop) {
                     // rewind the iterator until we find our target
                     while (!ctx.getFile().getName().equals(loop.getTarget())) {
@@ -1455,7 +1477,7 @@ public class TestExecutor {
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
                         }
-                        fail(testCaseCtx, pb, testFile, e);
+                        fail(true, testCaseCtx, cUnit, testFileCtxs, pb, testFile, e);
                     }
                 } finally {
                     if (numOfFiles == testFileCtxs.size()) {
@@ -1474,7 +1496,26 @@ public class TestExecutor {
         }
     }
 
-    protected void fail(TestCaseContext testCaseCtx, ProcessBuilder pb, File testFile, Exception e) throws Exception {
+    protected void fail(boolean runDiagnostics, TestCaseContext testCaseCtx, CompilationUnit cUnit,
+            List<TestFileContext> testFileCtxs, ProcessBuilder pb, File testFile, Exception e) throws Exception {
+        if (runDiagnostics) {
+            try {
+                // execute diagnostic files
+                Map<String, Object> variableCtx = new HashMap<>();
+                for (ListIterator<TestFileContext> iter = testFileCtxs.listIterator(); iter.hasNext();) {
+                    TestFileContext ctx = iter.next();
+                    if (ctx.getFile().getName().startsWith(TestExecutor.DIAGNOSE)) {
+                        // execute the file
+                        final File file = ctx.getFile();
+                        final String statement = readTestFile(file);
+                        executeTestFile(testCaseCtx, ctx, variableCtx, statement, false, pb, cUnit, new MutableInt(-1),
+                                Collections.emptyList(), file, null);
+                    }
+                }
+            } catch (Exception diagnosticFailure) {
+                LOGGER.log(Level.WARN, "Failure during running diagnostics", diagnosticFailure);
+            }
+        }
         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
     }
 
