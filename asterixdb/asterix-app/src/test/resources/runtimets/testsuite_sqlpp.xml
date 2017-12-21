@@ -9330,4 +9330,16 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="composite-key">
+    <test-case FilePath="composite-key">
+      <compilation-unit name="query-ASTERIXDB-920">
+        <output-dir compare="Text">query-ASTERIXDB-920</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="composite-key">
+      <compilation-unit name="composite-low-high">
+        <output-dir compare="Text">composite-low-high</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>
