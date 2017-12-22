@@ -194,16 +194,18 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
         return filter == null ? null : filter.getMaxTuple();
     }
 
-    protected boolean pushIntoQueueFromCursorAndReplaceThisElement(PriorityQueueElement e) throws HyracksDataException {
+    protected void pushIntoQueueFromCursorAndReplaceThisElement(PriorityQueueElement e) throws HyracksDataException {
         int cursorIndex = e.getCursorIndex();
         if (rangeCursors[cursorIndex].hasNext()) {
             rangeCursors[cursorIndex].next();
             e.reset(rangeCursors[cursorIndex].getTuple());
             outputPriorityQueue.offer(e);
-            return true;
+            return;
         }
         rangeCursors[cursorIndex].close();
-        return false;
+        if (cursorIndex == 0) {
+            includeMutableComponent = false;
+        }
     }
 
     protected boolean isDeleted(PriorityQueueElement checkElement) throws HyracksDataException {
@@ -324,5 +326,4 @@ public abstract class LSMIndexSearchCursor implements ITreeIndexCursor {
             throws HyracksDataException {
         return cmp.compare(tupleA, tupleB);
     }
-
 }
