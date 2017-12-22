@@ -21,6 +21,7 @@ package org.apache.asterix.common;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.Map;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
@@ -56,6 +57,42 @@ public class TestDataUtil {
     public static void createIdOnlyDataset(String dataset) throws Exception {
         TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE TYPE KeyType IF NOT EXISTS AS { id: int };", OUTPUT_FORMAT);
         TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE DATASET " + dataset + "(KeyType) PRIMARY KEY id;", OUTPUT_FORMAT);
+    }
+
+    /**
+     * Creates a dataset with multiple fields
+     * @param dataset The name of the dataset
+     * @param fields The fields of the dataset
+     * @param PKName The primary key field name
+     * @throws Exception
+     */
+    public static void createDataset(String dataset, Map<String, String> fields, String PKName) throws Exception {
+        StringBuilder stringBuilder = new StringBuilder("");
+        fields.forEach((fName, fType) -> stringBuilder.append(fName).append(":").append(fType).append(","));
+        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE TYPE dsType AS {" + stringBuilder + "};", OUTPUT_FORMAT);
+        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE DATASET " + dataset + "(dsType) PRIMARY KEY " + PKName + ";", OUTPUT_FORMAT);
+    }
+
+    /**
+     * Creates a secondary primary index
+     * @param dataset the name of the dataset
+     * @param indexName the name of the index
+     * @throws Exception
+     */
+    public static void createPrimaryIndex(String dataset, String indexName) throws Exception {
+        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE PRIMARY INDEX " + indexName + " ON " + dataset + ";", OUTPUT_FORMAT);
+    }
+
+    /**
+     * Creates a secondary BTree index
+     * @param dataset the name of the dataset
+     * @param indexName the name of the index
+     * @param SKName the name of the field
+     * @throws Exception
+     */
+    public static void createSecondaryBTreeIndex(String dataset, String indexName, String SKName) throws Exception {
+        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE INDEX " + indexName + " ON " + dataset + "(" + SKName + ");", OUTPUT_FORMAT);
     }
 
     /**
