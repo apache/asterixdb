@@ -5671,12 +5671,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="cross-dataverse">
-      <compilation-unit name="cross-dv13">
-        <output-dir compare="AST">cross-dv13</output-dir>
-        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv14">
         <output-dir compare="AST">cross-dv14</output-dir>
       </compilation-unit>
@@ -5684,12 +5678,6 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv15">
         <output-dir compare="AST">cross-dv15</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="cross-dataverse">
-      <compilation-unit name="cross-dv16">
-        <output-dir compare="AST">cross-dv16</output-dir>
-        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
     <!--NotImplementedException: No binary comparator factory implemented for type RECORD.
@@ -5892,12 +5880,6 @@
           </compilation-unit>
         </test-case>
         -->
-    <test-case FilePath="user-defined-functions">
-      <compilation-unit name="udf26">
-        <output-dir compare="AST">udf26</output-dir>
-        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
-      </compilation-unit>
-    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf27">
         <output-dir compare="AST">udf27</output-dir>

@@ -725,7 +725,7 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       removeCurrentScope();
-      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
+      return new CreateFunctionStatement(signature, paramList, functionBody, functionBodyExpr, ifNotExists);
     }
 }
 

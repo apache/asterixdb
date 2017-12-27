@@ -7821,12 +7821,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="cross-dataverse">
-      <compilation-unit name="cross-dv13">
-        <output-dir compare="Text">cross-dv13</output-dir>
-        <expected-error>Recursive invocation testdv2.fun03@0</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv14">
         <output-dir compare="Text">cross-dv14</output-dir>
       </compilation-unit>
@@ -7834,12 +7828,6 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="cross-dv15">
         <output-dir compare="Text">cross-dv15</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="cross-dataverse">
-      <compilation-unit name="cross-dv16">
-        <output-dir compare="Text">cross-dv16</output-dir>
-        <expected-error>Recursive invocation testdv1.fun04@0</expected-error>
       </compilation-unit>
     </test-case>
     <!--NotImplementedException: No binary comparator factory implemented for type OBJECT.
@@ -7878,6 +7866,66 @@
     </test-case>
   </test-group>
   <test-group name="user-defined-functions">
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-1">
+        <output-dir compare="Text">bad-function-ddl-1</output-dir>
+        <expected-error>Cannot find dataset TweetMessages in dataverse experiments nor an alias with name TweetMessages!</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-2">
+        <output-dir compare="Text">bad-function-ddl-2</output-dir>
+        <expected-error>Cannot find dataset TweetMessages in dataverse experiments2 nor an alias with name TweetMessages!</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-3">
+        <output-dir compare="Text">bad-function-ddl-3</output-dir>
+        <expected-error>Cannot find dataset TweetMessages in dataverse experiments nor an alias with name TweetMessages!</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-4">
+        <output-dir compare="Text">bad-function-ddl-4</output-dir>
+        <expected-error>Cannot find dataset TweetMessages in dataverse experients nor an alias with name TweetMessages!</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-5">
+        <output-dir compare="Text">bad-function-ddl-5</output-dir>
+        <expected-error>function experiments.function_that_does_not_exist@0 is not defined</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-6">
+        <output-dir compare="Text">bad-function-ddl-6</output-dir>
+        <expected-error>function experiments.function_that_does_not_exist@2 is not defined</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-7">
+        <output-dir compare="Text">bad-function-ddl-7</output-dir>
+        <expected-error>Cannot find dataset TweetMessaes in dataverse experiments nor an alias with name TweetMessaes!</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-8">
+        <output-dir compare="Text">bad-function-ddl-8</output-dir>
+        <expected-error>Cannot find dataset TweetMessaes in dataverse experiments nor an alias with name TweetMessaes!</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-9">
+        <output-dir compare="Text">bad-function-ddl-9</output-dir>
+        <expected-error>function experiments.good_function@1 depends upon function experiments.function_that_does_not_exist@0 which is undefined</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="bad-function-ddl-10">
+        <output-dir compare="Text">bad-function-ddl-10</output-dir>
+        <expected-error>function experiments.f0@2 is not defined</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="single-line-definition">
         <output-dir compare="Text">single-line-definition</output-dir>
@@ -8063,12 +8111,6 @@
           </compilation-unit>
         </test-case>
         -->
-    <test-case FilePath="user-defined-functions">
-      <compilation-unit name="udf26">
-        <output-dir compare="Text">udf26</output-dir>
-        <expected-error>function test.needs_f1@1 depends upon function test.f1@0 which is undefined</expected-error>
-      </compilation-unit>
-    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf27">
         <output-dir compare="Text">udf27</output-dir>

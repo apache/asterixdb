@@ -1,7 +1,0 @@
-DataverseUse test
-Query:
-SELECT ELEMENT [
-FunctionCall test.needs_f1@1[
-  LiteralExpr [LONG] [12345]
-]
-]

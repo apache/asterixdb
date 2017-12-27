@@ -29,10 +29,10 @@ create dataverse test;
 
 use test;
 
-create function test.parent(){
-test.child()
-};
-
 create function test.child() {
 'This data is from the child function'
+};
+
+create function test.parent(){
+test.child()
 };

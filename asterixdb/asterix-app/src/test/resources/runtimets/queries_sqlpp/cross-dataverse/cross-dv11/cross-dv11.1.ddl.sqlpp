@@ -28,10 +28,10 @@ drop dataverse testdv2 if exists;
 create dataverse testdv1;
 create dataverse testdv2;
 
-create function testdv1.fun01(){
-testdv2.fun02()
-};
-
 create function testdv2.fun02(){
 'function 02'
+};
+
+create function testdv1.fun01(){
+testdv2.fun02()
 };

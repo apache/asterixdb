@@ -754,11 +754,15 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   Token beginPos;
   Token endPos;
   FunctionName fctName = null;
+  String currentDataverse = defaultDataverse;
 
   createNewScope();
 }
 {
   <FUNCTION> fctName = FunctionName()
+  {
+     defaultDataverse = fctName.dataverse;
+  }
   ifNotExists = IfNotExists()
   paramList = ParameterList()
   <LEFTBRACE>
@@ -773,7 +777,8 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
       signature = new FunctionSignature(fctName.dataverse, fctName.function, paramList.size());
       getCurrentScope().addFunctionDescriptor(signature, false);
       removeCurrentScope();
-      return new CreateFunctionStatement(signature, paramList, functionBody, ifNotExists);
+      defaultDataverse = currentDataverse;
+      return new CreateFunctionStatement(signature, paramList, functionBody, functionBodyExpr, ifNotExists);
     }
 }
 

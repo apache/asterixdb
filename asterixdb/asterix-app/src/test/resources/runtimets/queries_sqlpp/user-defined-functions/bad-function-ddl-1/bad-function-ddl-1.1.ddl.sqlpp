@@ -16,13 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 /*
- * Description  : Create UDF and define with missing references.
- * Expected Res : Failure
- * Date         : Sep 6th 2012
+ * Description  : Declare a UDF on a dataset that does not exist
+ * Expected Res : Error
  */
 
-use test;
+drop dataverse experiments if exists;
+create dataverse experiments;
+use experiments;
 
-
-select element test.needs_f1(12345);
+create function bad_function(place, text) {
+  (select m.message_text
+  from TweetMessages m
+  where contains(m.message_text,text)
+  and spatial_intersect(m.sender_location, place))
+};
