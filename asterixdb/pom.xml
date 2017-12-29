@@ -422,6 +422,9 @@
           <groupId>org.apache.hyracks</groupId>
           <artifactId>license-automation-plugin</artifactId>
           <version>${hyracks.version}</version>
+          <configuration>
+            <argLine>-Xmx2048m</argLine>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

@@ -1,0 +1,169 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+$results-spacing-unit: 5px;
+
+.sql-results-card {
+  display: flex;
+	flex-flow: column;
+  padding: 0;
+  height: 600px;
+  width: 100%; // 1350px;
+	margin: ($results-spacing-unit * 2);
+	min-height: 150px; 
+}
+
+.toolbar-icon {
+  padding: 0 14px 0 0;
+  margin: 0;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.results-selector {
+	max-height: 42px;
+  min-height: 42px;
+  justify-content: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 0.80rem;
+  font-weight: 500;
+  background-color: white;
+  border: 1px solid rgba(54, 147, 209, 0.87);
+  overflow-wrap: break-word;
+	word-break: break-all;
+}
+
+.content-area {
+  position: relative;
+  color: hsla(0,0%,0%,.87);
+  height: 500px;
+  padding: 0;
+  margin: 0;
+  overflow: auto;
+  font-size: 0.80rem;
+  font-weight: 500;
+  font-family: "Roboto", monospace;
+}
+
+.root-closed {
+  list-style-type:none;
+}
+
+.root-open {
+  list-style-type:none;
+}
+
+.leaf-list-open {
+  list-style-type:none;
+  // padding-top: ($results-spacing-unit) * 2;
+  padding-left: 25px;
+  color: red;
+}
+
+.leaf-list-open.div
+//.leaf-list-open.ul
+.leaf-list-open.li {
+  margin-left: ($results-spacing-unit * 10) !important;
+  color: green;
+}
+
+.leaf {
+  color: blue;
+}
+
+.leaf-list-closed {
+  list-style-type:none;
+  display: none;
+}
+
+ul > .root-closed::before {
+  content:'+'
+}
+
+ul > .root-open::before {
+  content:'-'
+}
+
+.queryErrorMessage {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(209, 54, 54, 0.87);
+  padding: $results-spacing-unit;
+  padding-left: ($results-spacing-unit * 2);
+}
+
+.metrics {
+  display: flex;
+  color: rgba(54, 147, 209, 0.87);
+  font-size: 0.80rem;
+  font-weight: 500;
+}
+
+.span-results {
+  padding-top: ($results-spacing-unit * 2);
+  padding-left: ($results-spacing-unit * 2);
+}
+
+.actions {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(54, 147, 209, 0.87);
+  margin: 0;
+}
+
+//someID\:review-table
+th {
+  text-align: left !important;
+}
+
+.datatable-header {
+  color: red !important;
+  background-color: blue;
+}
+
+.data-viewer-container {
+  padding: ($results-spacing-unit * 4);
+  padding-bottom: ($results-spacing-unit * 8);
+  height: 100%;
+  overflow: hidden;
+}
+
+.output-group {
+  margin-right: ($results-spacing-unit * 4);
+}
+
+.menu-export {
+  font-size: 0.80rem !important;
+  font-weight: 500 !important;
+}
+
+.button-export {
+  margin-right: ($results-spacing-unit * 4);
+  color: rgba(54, 147, 209, 0.87);
+}
+
+.button-expand {
+  margin-right: ($results-spacing-unit * 4);
+  color: rgba(54, 147, 209, 0.87);
+}
+
+.ui-datatable-data> tr> td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  color: red;
+}
+

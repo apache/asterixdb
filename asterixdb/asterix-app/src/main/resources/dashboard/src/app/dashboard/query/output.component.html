@@ -1,0 +1,68 @@
+<!--/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -->
+<mat-card class="sql-results-card">
+	<mat-toolbar color="primary" class="results-selector">
+		<mat-icon class="toolbar-icon">menu</mat-icon>
+	    <span class="output-query-string">OUTPUT{{outputQueryString}}</span>
+		<span class="spacer"></span>
+	</mat-toolbar>
+  	<mat-card-content class="content-area">
+		<div *ngIf="loaded$ | async as ld">
+			<div *ngIf="selectedOutputView=='TABLE'">				
+				<p-dataTable [style]="{'width':'100%', 'overflow':'hidden'}" id='review-table' [responsive]="true" [hidden]="loading" [value]="data" [rows]="20" [paginator]="true" [pageLinks]="3" [rowsPerPageOptions]="[5,10,20, 30, 40, 50]" >
+					<p-column [style]="{'text-align':'left',
+					'text-overflow': 'ellipsis', 'word-wrap': 'break-word', 'word-break': 'break-all'}"
+					
+					[footerStyle]="{'color':'blue'}" [headerStyleClass]="datatable-header" *ngFor="let node of dataColumns;" [field]="node.field" 
+					[header]="node.header" [sortable]="true">
+					</p-column>
+				</p-dataTable>
+			</div>
+		</div>
+		<div *ngIf="loaded$ | async as ld">	
+			<div *ngIf="ld.sqlQueryError.metrics" class="queryErrorMessage">
+				<span>ERROR:</span>
+				<span>{{queryMessage}}</span>
+			</div>	
+			 <div [hidden]="selectedOutputView!='TREE'" class="data-viewer-container">
+				<button mat-button class="button-expand" (click)="expandTree()">{{toogleExpand}}</button>
+				<p-tree [style]="{'width':'100%', 'border': 'none', 'font-family': 'Roboto Mono', 'font-size': '0.80rem',
+					'font-weight': '500'}" [value]="treeData"></p-tree>
+			</div>
+			<div *ngIf="loaded$ | async as ld">	
+				<div *ngIf="selectedOutputView=='JSON'" class="data-viewer-container">
+					<button mat-button class="button-export" (click)="exportToText()">EXPORT</button>
+					<pre class="json-output">{{jsonOutput}}</pre>
+				</div>
+			</div>
+		</div>
+	</mat-card-content>
+	<mat-card-actions class="actions">
+		<div *ngIf="loaded$ | async as ld">
+			<span *ngIf="ld.sqlQueryResult.metrics" class="metrics">
+				<span class="span-results">SUCCESS:</span>
+				<span class="span-results">Count: {{ld.sqlQueryResult.metrics.resultCount}}</span>
+				<span class="span-results">Size: {{ld.sqlQueryResult.metrics.resultSize}}</span>
+				<span class="span-results">Elapsed time: {{ld.sqlQueryResult.metrics.elapsedTime}}</span>
+				<span class="span-results">Execution time: {{ld.sqlQueryResult.metrics.executionTime}}</span>
+				<span class="spacer"></span>
+				<mat-button-toggle-group #group="matButtonToggleGroup" class="output-group" value={{selectedOutput}} (change)="onSelect(group.value)">
+					<mat-button-toggle mat-button  value="TABLE">TABLE</mat-button-toggle>
+					<mat-button-toggle mat-button  value="TREE">TREE</mat-button-toggle>
+					<mat-button-toggle mat-button  value="JSON">JSON</mat-button-toggle>
+				</mat-button-toggle-group>
+			</span>
+		</div>
+	</mat-card-actions>
+</mat-card>

@@ -1,0 +1,77 @@
+<!--/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -->
+<div class="container" (click)="onClick()">
+  <div class="master">
+    <mat-card class="dataverses-card">
+      <mat-toolbar color="primary" class="dataverses-selector">
+          <mat-icon class="icon">menu</mat-icon>
+          <span>DATAVERSES - METADATA</span>
+          <span class="spacer"></span>
+      </mat-toolbar>
+      <mat-card-content class="dataverses-content">
+        <mat-table #table [dataSource]="dataSource" class="dataverses-table" *ngIf="loaded$ | async as ld">
+            <!-- Dataverse Name Column -->
+            <ng-container matColumnDef="DataverseName">
+              <mat-header-cell *matHeaderCellDef class="header-name-cell">Dataverse Name</mat-header-cell>
+              <mat-cell *matCellDef="let element" class="dataverse-name-cell">{{element.DataverseName}}</mat-cell>
+            </ng-container>
+
+            <!-- Data Format Column -->
+            <ng-container matColumnDef="DataFormat">
+              <mat-header-cell *matHeaderCellDef class="header-dataformat-cell">Data Format</mat-header-cell>
+              <mat-cell *matCellDef="let element" class="dataverse-dataformat-cell">{{element.DataFormat}}</mat-cell>
+            </ng-container>
+
+            <!-- Pending Ops -->
+            <ng-container matColumnDef="PendingOp">
+              <mat-header-cell *matHeaderCellDef class="header-pendingop-cell">Pending Ops</mat-header-cell>
+              <mat-cell *matCellDef="let element" class="dataverse-pendingop-cell">{{element.PendingOp}}</mat-cell>
+            </ng-container>
+
+            <!-- Timestamp Column -->
+            <ng-container matColumnDef="Timestamp">
+              <mat-header-cell *matHeaderCellDef class="header-timestamp-cell">Timestamp</mat-header-cell>
+              <mat-cell *matCellDef="let element" class="dataverse-timestamp-cell">{{element.Timestamp}}</mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="['DataverseName',  'DataFormat', 'Timestamp']"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: ['DataverseName', 'DataFormat', 'Timestamp'];"
+              [ngClass]="{'highlight': selectedRowIndex == row.id}"
+              (click)="highlight(row)">
+            </mat-row>
+        </mat-table>
+      </mat-card-content>
+      <mat-card-actions class="actions">
+          <button class="refresh-button" mat-button (click)="openCreateDataverseDialog()">CREATE</button>
+          <button class="refresh-button" mat-button (click)="openDropDataverseDialog()">DROP</button>
+          <span class="error-message">{{errorMessage}}</span>
+          <span class="spacer"></span>
+          <button class="refresh-button" mat-button (click)="getDataverse()">REFRESH</button>
+      </mat-card-actions>
+    </mat-card>
+  <awc-query-metadata #querymetadata class="query"></awc-query-metadata>  
+  </div>
+  <div class="detail">
+      <mat-card class="dataverses-details-card">
+          <mat-toolbar color="primary" class="dataverses-selector">
+              <mat-icon class="icon">menu</mat-icon>
+              <span>DATAVERSE - METADATA - DETAILS</span>
+              <span class="spacer"></span>
+          </mat-toolbar>
+          <mat-card-content class="dataverses-content output">
+            <span><pre>{{output}}</pre></span>
+          </mat-card-content>
+        </mat-card>
+  </div>
+</div>

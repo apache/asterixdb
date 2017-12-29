@@ -50,7 +50,8 @@ public class QueryWebInterfaceServlet extends StaticResourceServlet {
         String requestURI = request.getHttpRequest().uri();
         if ("/".equals(requestURI)) {
             HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML);
-            deliverResource("/queryui/queryui.html", response);
+            // Dashboard Administration Console
+            deliverResource("/dashboard/static/index.html", response);
         } else {
             deliverResource(requestURI, response);
         }

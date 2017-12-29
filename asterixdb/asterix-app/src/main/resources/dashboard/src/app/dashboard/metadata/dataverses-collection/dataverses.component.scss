@@ -1,0 +1,259 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+$dataverses-spacing-unit: 8px;
+
+.container {
+  display: flex;
+	flex-flow: row;
+	padding: 0;
+  margin: 0;
+}
+
+.master {
+  width: 60%;
+}
+
+.detail {
+  width: 40%;
+}
+
+.dataverses-card {
+  display: flex;
+	flex-flow: column;
+  padding: 0;
+  margin:0 auto;
+  margin-top: ($dataverses-spacing-unit * 2);
+  min-height: 450px;
+  max-height: 450px;
+  //min-width: 98%; //(100vw / 2);
+  //max-width: 98%; // (100vw / 2);
+  width: 95%; // 98%;
+  overflow: hidden;
+}
+
+.dataverses-details-card {
+	display: flex;
+	flex-flow: column;
+  padding: 0;
+  margin:0 auto;
+  margin: ($dataverses-spacing-unit * 2);
+  min-height: 716px;
+  max-height: 716px;
+  //min-width: 95%; //(100vw / 2);
+  //max-width: 95%; // (100vw / 2);
+  overflow: hidden;
+}
+
+.icon {
+	padding: 0 14px 0 0;
+	margin: 0;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.dataverses-selector {
+	min-height: 42px;
+	max-height: 42px;
+	justify-content: center;
+	font-size: 0.80rem;
+  font-weight: 500;
+  background-color: white;
+	border: 1px solid rgba(54, 147, 209, 0.87);
+}
+
+//.metadata-content-area {
+//	padding: ($dataverses-spacing-unit * 2);
+//	margin: 0;
+//	overflow: auto;
+//}
+
+
+.dataverses-content {
+  position:relative;
+  top: 0;
+  left: 0;
+  margin: 0px;
+  padding: 0px;
+  overflow: auto;
+}
+
+.dataverses-table {
+  margin: $dataverses-spacing-unit !important;
+  height: 330px;
+  overflow: auto;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.example-header {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  padding-left: 24px;
+  font-size: 20px;
+}
+
+.mat-table {
+  overflow: auto;
+}
+
+.customWidthClass{
+   flex: 0 0 75px;
+}
+
+.mat-column-DataverseName {
+  text-align: left;
+}
+
+.mat-header-cell.mat-column-DataverseName {
+  text-align: left;
+}
+
+.mat-cell.mat-column-DataverseName {
+  text-align: left;
+}
+
+.header-name-cell {
+  border: none;
+  font-size: 12px;
+  letter-spacing: 1px;
+  line-height: $dataverses-spacing-unit * 3;
+  font-weight: 400;
+  margin: 0;
+  padding: 0 ($dataverses-spacing-unit * 2);
+  text-align: left;
+  color: hsla(0,0%,0%,.87);
+  flex: 0 0 150px;
+  text-transform: uppercase;
+}
+
+.header-dataformat-cell {
+  border: none;
+  font-size: 12px;
+  letter-spacing: 1px;
+  line-height: $dataverses-spacing-unit * 3;
+  font-weight: 400;
+  margin: 0;
+  padding: 0 ($dataverses-spacing-unit * 2);
+  text-align: left;
+  color: hsla(0,0%,0%,.87);
+  flex: 0 0 400px;
+  text-transform: uppercase;
+}
+
+.header-timestamp-cell {
+  border: none;
+  font-size: 12px;
+  letter-spacing: 1px;
+  line-height: $dataverses-spacing-unit * 3;
+  font-weight: 400;
+  margin: 0;
+  padding: 0 ($dataverses-spacing-unit * 2);
+  text-align: left;
+  color: hsla(0,0%,0%,.87);
+  flex: 0 0 250px;
+  text-transform: uppercase;
+}
+
+.dataverse-name-cell {
+  border: none;
+  font-size: 12px;
+  letter-spacing: 1px;
+  line-height: $dataverses-spacing-unit * 3;
+  font-weight: 400;
+  margin: 0;
+  padding: 0 ($dataverses-spacing-unit * 2);
+  text-align: left;
+  color: hsla(0,0%,0%,.87);
+  flex: 0 0 150px;
+}
+
+.dataverse-dataformat-cell {
+  border: none;
+  font-size: 12px;
+  letter-spacing: 1px;
+  line-height: $dataverses-spacing-unit * 3;
+  font-weight: 400;
+  margin: 0;
+  padding: 0 ($dataverses-spacing-unit * 2);
+  text-align: left;
+  color: hsla(0,0%,0%,.87);
+  flex: 0 0 400px;
+}
+
+.dataverse-timestamp-cell {
+  border: none;
+  font-size: 12px;
+  letter-spacing: 1px;
+  line-height: $dataverses-spacing-unit * 3;
+  font-weight: 400;
+  margin: 0;
+  padding: 0 ($dataverses-spacing-unit * 2);
+  text-align: left;
+  color: hsla(0,0%,0%,.87);
+  flex: 0 0 250px;
+}
+
+.example-header {
+  min-height: 56px;
+  max-height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 8px 24px 0;
+  font-size: 20px;
+  justify-content: space-between;
+  border-bottom: 1px solid transparent;
+}
+
+.mat-form-field {
+  font-size: 14px;
+  flex-grow: 1;
+  margin-top: 8px;
+}
+
+.example-no-results {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(54, 147, 209, 0.87);
+  padding: $dataverses-spacing-unit;
+  margin: 0;
+}
+
+.error-message {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(209, 54, 54, 0.87);
+  padding-top: 10px;  
+  padding-left: 20px;
+  text-overflow: ellipsis;
+}
+
+.highlight{
+  background: #42A948; /* green */
+}
+
+.output {
+  padding-left: ($dataverses-spacing-unit * 2);
+}

@@ -1,0 +1,97 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+$metadata-spacing-unit: 5px;
+
+.metadata-card {
+	display: flex;
+	flex-flow: column;
+	padding: 0;
+	margin: 0 auto; //($metadata-spacing-unit * 2);
+	margin-top: ($metadata-spacing-unit * 2);
+	margin-bottom: ($metadata-spacing-unit * 2);
+	min-height: 150px;
+	box-shadow: none !important;
+	width: 92%;
+	overflow: hidden;
+}
+
+.example-icon {
+	padding: 0 14px 0 0;
+	margin: 0;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.metadata-selector {
+	min-height: 42px;
+	max-height: 42px;
+	justify-content: center;
+	//align-items: center;
+	font-size: 0.80rem;
+	font-weight: 500;
+	background-color: white;
+	border: 1px solid rgba(54, 147, 209, 0.87);
+}
+
+.metadata-content-area {
+	padding: ($metadata-spacing-unit * 2);
+	margin: 0;
+}
+
+.metadata-tree {
+	min-height: 30px;
+	font-size: 0.80rem;
+	font-weight: 500;
+}
+
+.metadata-datasets {
+	margin-top: ($metadata-spacing-unit * 2);
+	margin-bottom: ($metadata-spacing-unit * 2);
+}
+
+.metadata-datatypes {
+	margin-top: ($metadata-spacing-unit * 2);
+	margin-bottom: ($metadata-spacing-unit * 2);
+}
+
+.metadata-dataindexes {
+	margin-top: ($metadata-spacing-unit * 2);
+	margin-bottom: ($metadata-spacing-unit * 2);
+}
+
+
+.metadata-tree.ui-tree {
+	//width: 260px !important;
+	font-size: 0.80rem;
+	font-weight: 500;
+	border: none !important;
+	background-color: red;
+}
+
+.refresh-button {
+	float: left;
+	margin-top: $metadata-spacing-unit;
+}
+
+.actions {
+	border-top: 1px solid rgba(0, 0, 0, 0.1);
+	color: rgba(54, 147, 209, 0.87);
+	padding: $metadata-spacing-unit;
+	margin: 0;
+}
+
+
+

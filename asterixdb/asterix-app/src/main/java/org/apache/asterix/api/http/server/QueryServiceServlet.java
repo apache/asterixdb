@@ -20,6 +20,9 @@ package org.apache.asterix.api.http.server;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
@@ -50,6 +53,7 @@ import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -77,6 +81,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     private final IStatementExecutorContext queryCtx;
     protected final IServiceContext serviceCtx;
     protected final Function<IServletRequest, Map<String, String>> optionalParamProvider;
+    protected String hostName;
 
     public QueryServiceServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
             ILangExtension.Language queryLanguage, ILangCompilationProvider compilationProvider,
@@ -90,6 +95,14 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         this.queryCtx = (IStatementExecutorContext) ctx.get(ServletConstants.RUNNING_QUERIES_ATTR);
         this.serviceCtx = (IServiceContext) ctx.get(ServletConstants.SERVICE_CONTEXT_ATTR);
         this.optionalParamProvider = optionalParamProvider;
+        try {
+            this.hostName =
+                    InetAddress.getByName(serviceCtx.getAppConfig().getString(CCConfig.Option.CLUSTER_PUBLIC_ADDRESS))
+                            .getHostName();
+        } catch (UnknownHostException e) {
+            LOGGER.warn("Reverse DNS not properly configured, CORS defaulting to localhost", e);
+            this.hostName = "localhost";
+        }
     }
 
     @Override
@@ -107,6 +120,14 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             }
             throw th;
         }
+    }
+
+    @Override
+    protected void options(IServletRequest request, IServletResponse response) throws Exception {
+        response.setHeader("Access-Control-Allow-Origin",
+            "http://" + hostName + ":" + appCtx.getExternalProperties().getQueryWebInterfacePort());
+        response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        response.setStatus(HttpResponseStatus.OK);
     }
 
     public enum Parameter {
@@ -452,6 +473,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (optionalParamProvider != null) {
                 optionalParams = optionalParamProvider.apply(request);
             }
+            // CORS
+            response.setHeader("Access-Control-Allow-Origin",
+                    "http://" + hostName + ":" + appCtx.getExternalProperties().getQueryWebInterfacePort());
+            response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
             response.setStatus(execution.getHttpStatus());
             executeStatement(statementsText, sessionOutput, delivery, stats, param, execution, optionalParams);
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {

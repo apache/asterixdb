@@ -1,0 +1,82 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+$query-spacing-unit: 5px;
+
+.input-card {
+	display: flex;
+	flex-flow: column;
+	padding: 0;
+	margin: ($query-spacing-unit * 2);
+	height: 200px;
+	width: 100%;
+	min-height: 150px; 
+
+	//background-color: orange;
+}
+  
+.toolbar-icon {
+	padding: 0 14px 0 0;	
+	margin: 0;
+}
+
+.spacer {
+	flex: 1 1 auto;
+}
+  
+.input-selector {
+	max-height: 42px;
+	min-height: 42px;
+	justify-content: center;
+	//align-items: center;
+	font-size: 0.80rem;
+	font-weight: 500;
+	background-color: white;
+	border: 1px solid rgba(54, 147, 209, 0.87);
+}
+
+.content-area {
+	//position: relative;
+	color: hsla(0,0%,0%,.87);
+	//height: 102px;
+	padding: 0;
+	margin: 0;
+	overflow: none;
+  }
+
+.codemirror-container {
+	width: 95%;
+	height: 98%;
+	padding: 0; // ($query-spacing-unit * 2);
+	margin: 0 auto;
+	font-size: 14px;
+	//letter-spacing: 3px;
+	line-height: 1.8;
+	background-color: red;
+}
+
+//.code {
+//	width: 100%;
+//	height: 100%;
+//	padding: 0;
+//	margin: 0; 
+//	overflow-wrap: break-word;
+//	word-break: break-all;
+//}
+
+.actions {
+	border-top: 1px solid rgba(0, 0, 0, 0.1);
+	color: rgba(54, 147, 209, 0.87);
+	padding-left: $query-spacing-unit;
+	margin: 0;
+}
