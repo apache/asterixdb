@@ -19,11 +19,14 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.util.ExpressionUtils;
+import org.apache.asterix.lang.common.util.MergePolicyUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.hadoop.io.compress.bzip2.CBZip2InputStream;
+import org.apache.asterix.object.base.AdmObjectNode;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 import java.util.Map;
@@ -36,15 +39,13 @@ public class CreateFeedStatement implements Statement {
 
     private final Pair<Identifier, Identifier> qName;
     private final boolean ifNotExists;
-    private final String adaptorName;
-    private final Map<String, String> adaptorConfiguration;
+    private final AdmObjectNode withObjectNode;
 
-    public CreateFeedStatement(Pair<Identifier, Identifier> qName, String adaptorName,
-            Map<String, String> adaptorConfiguration, boolean ifNotExists) {
+    public CreateFeedStatement(Pair<Identifier, Identifier> qName, RecordConstructor withRecord, boolean ifNotExists)
+            throws AlgebricksException {
         this.qName = qName;
         this.ifNotExists = ifNotExists;
-        this.adaptorName = adaptorName;
-        this.adaptorConfiguration = adaptorConfiguration;
+        this.withObjectNode = withRecord == null ? null : ExpressionUtils.toNode(withRecord);
     }
 
     public Identifier getDataverseName() {
@@ -57,14 +58,6 @@ public class CreateFeedStatement implements Statement {
 
     public boolean getIfNotExists() {
         return this.ifNotExists;
-    }
-
-    public String getAdaptorName() {
-        return adaptorName;
-    }
-
-    public Map<String, String> getAdaptorConfiguration() {
-        return adaptorConfiguration;
     }
 
     @Override
@@ -80,5 +73,13 @@ public class CreateFeedStatement implements Statement {
     @Override
     public byte getCategory() {
         return Category.DDL;
+    }
+
+    public Map<String, String> getConfiguration() throws CompilationException {
+        return MergePolicyUtils.toProperties(withObjectNode);
+    }
+
+    public AdmObjectNode getWithObjectNode() {
+        return withObjectNode;
     }
 }

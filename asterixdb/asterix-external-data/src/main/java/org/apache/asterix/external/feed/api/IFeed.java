@@ -24,26 +24,12 @@ import org.apache.asterix.active.EntityId;
 
 public interface IFeed extends Serializable {
 
-    public enum FeedType {
-        /**
-         * A feed that derives its data from an external source.
-         */
-        PRIMARY,
-
-        /**
-         * A feed that derives its data from another primary or secondary feed.
-         */
-        SECONDARY
-    }
-
     public String getFeedName();
 
     public String getDataverseName();
 
     public EntityId getFeedId();
 
-    public Map<String, String> getAdapterConfiguration();
-
-    public String getAdapterName();
+    public Map<String, String> getConfiguration();
 
 }

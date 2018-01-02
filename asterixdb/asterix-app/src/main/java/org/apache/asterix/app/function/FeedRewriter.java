@@ -123,7 +123,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
         ARecordType metaType = null;
         // Does dataset have meta?
         if (dataset.hasMetaPart()) {
-            String metaTypeName = FeedUtils.getFeedMetaTypeName(sourceFeed.getAdapterConfiguration());
+            String metaTypeName = FeedUtils.getFeedMetaTypeName(sourceFeed.getConfiguration());
             if (metaTypeName == null) {
                 throw new AlgebricksException("Feed to a dataset with metadata doesn't have meta type specified");
             }
@@ -140,7 +140,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
         List<Integer> keySourceIndicator = null;
 
         List<ScalarFunctionCallExpression> keyAccessScalarFunctionCallExpression;
-        if (ExternalDataUtils.isChangeFeed(sourceFeed.getAdapterConfiguration())) {
+        if (ExternalDataUtils.isChangeFeed(sourceFeed.getConfiguration())) {
             List<Mutable<ILogicalExpression>> keyAccessExpression = new ArrayList<>();
             keyAccessScalarFunctionCallExpression = new ArrayList<>();
             pkTypes = ((InternalDatasetDetails) dataset.getDatasetDetails()).getPrimaryKeyType();

@@ -654,6 +654,7 @@ public class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
+        ctx.dropAdapter(dataverseName, name);
     }
 
     @Override

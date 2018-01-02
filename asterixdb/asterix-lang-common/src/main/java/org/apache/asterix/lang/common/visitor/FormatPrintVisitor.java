@@ -754,8 +754,10 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
         out.print(skip(step) + "create " + FEED);
         out.print(generateFullName(cfs.getDataverseName(), cfs.getFeedName()));
         out.print(generateIfNotExists(cfs.getIfNotExists()));
-        out.print(" using " + cfs.getAdaptorName() + " ");
-        printConfiguration(cfs.getAdaptorConfiguration());
+        if (cfs.getWithObjectNode() != null) {
+            out.print(" with ");
+            out.print(cfs.getWithObjectNode().toString());
+        }
         out.println(SEMICOLON);
         return null;
     }

@@ -25,12 +25,13 @@
 
 use dataverse twitter;
 drop feed TweetFeed if exists;
-create feed TweetFeed using localfs
-(
-    ("path"="localhost://../../../../../target/tweets.json"),
-    ("format"="adm"),
-    ("type-name"="typeTweet")
-);
+create feed TweetFeed with {
+ "adapter-name" : "localfs",
+ "path" : "localhost://../../../../../target/tweets.json",
+ "format" : "adm",
+ "type-name" : "typeTweet"
+};
+
 set wait-for-completion-feed "true";
 connect feed TweetFeed to dataset ds_tweet;
 start feed TweetFeed;

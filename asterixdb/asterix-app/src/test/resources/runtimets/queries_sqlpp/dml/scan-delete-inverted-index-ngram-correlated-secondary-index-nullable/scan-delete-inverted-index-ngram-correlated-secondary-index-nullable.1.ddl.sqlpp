@@ -47,10 +47,11 @@ with {
   }
 };
 
-create feed DBLPFeed
-using localfs
-((`path`=`asterix_nc1://data/dblp-small/dblp-small-nulls.adm`),
-(`format`=`adm`),
-(`delimiter`=`:`),
-(`type-name`=`DBLPType`),
-(`tuple-interval`=`10`));
+create feed DBLPFeed with {
+ "adapter-name" : "localfs",
+ "path":"asterix_nc1://data/dblp-small/dblp-small-nulls.adm",
+ "format":"adm",
+ "delimiter":":",
+ "type-name":"DBLPType",
+ "tuple-interval":"10"
+};

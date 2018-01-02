@@ -109,7 +109,7 @@ public class MetadataTransactionContext extends MetadataCache {
     }
 
     public void addAdapter(DatasourceAdapter adapter) {
-        droppedCache.dropAdapter(adapter);
+        droppedCache.dropAdapterIfExists(adapter);
         logAndApply(new MetadataLogicalOperation(adapter, true));
     }
 
@@ -228,13 +228,11 @@ public class MetadataTransactionContext extends MetadataCache {
     }
 
     public void addFeed(Feed feed) {
-        droppedCache.dropFeed(feed);
+        droppedCache.dropFeedIfExists(feed);
         logAndApply(new MetadataLogicalOperation(feed, true));
     }
 
-    public void dropFeed(String dataverseName, String feedName) {
-        Feed feed = null;
-        feed = new Feed(dataverseName, feedName, null, null);
+    public void dropFeed(Feed feed) {
         droppedCache.addFeedIfNotExists(feed);
         logAndApply(new MetadataLogicalOperation(feed, false));
     }

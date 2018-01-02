@@ -475,7 +475,7 @@ public class MetadataCache {
         }
     }
 
-    public DatasourceAdapter dropAdapter(DatasourceAdapter adapter) {
+    public DatasourceAdapter dropAdapterIfExists(DatasourceAdapter adapter) {
         synchronized (adapters) {
             Map<String, DatasourceAdapter> adaptersInDataverse =
                     adapters.get(adapter.getAdapterIdentifier().getNamespace());
@@ -544,7 +544,7 @@ public class MetadataCache {
         }
     }
 
-    public Feed dropFeed(Feed feed) {
+    public Feed dropFeedIfExists(Feed feed) {
         synchronized (feeds) {
             Map<String, Feed> feedsInDataverse = feeds.get(feed.getDataverseName());
             if (feedsInDataverse != null) {

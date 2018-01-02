@@ -4,7 +4,7 @@
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
+ * "License"; you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
  *   http://www.apache.org/licenses/LICENSE-2.0
@@ -32,30 +32,31 @@
  id:int
  }
 
- create dataset TestDS(TestType) with meta(MetaType) primary key meta().id;
- create index TestIdx on TestDS(test);
- drop feed TestFeed if exists;
- create feed TestFeed using localfs
- (
-     ("parser"="record-with-metadata"),
-     ("reader"="localfs"),
-     ("path"="asterix_nc1://target/data/csv/change_feed.csv"),
-     //type of the record
-     ("type-name"="TestType"),
-     //type of the meta record
-     ("meta-type-name"="MetaType"),
-     //format of the record
-     ("record-format"="adm"),
-     // format of the meta record
-     ("format"="csv"),
-     ("delimiter"=","),
-     // index of the primary key the record (meta or orig)
-     ("key-indexes"="0"),
-     // indicates that PK originates from meta
-     ("key-indicators"="1"),
-     //index of the record in the meta record
-     ("record-index"="1"),
-     ("change-feed"="true"),
-     // whether CSV header is present in the input
-     ("header"="false")
- );
+create dataset TestDS(TestType) with meta(MetaType) primary key meta().id;
+create index TestIdx on TestDS(test);
+drop feed TestFeed if exists;
+
+create feed TestFeed with {
+  "adapter-name" : "localfs",
+  "parser" : "record-with-metadata",
+  "reader" : "localfs",
+  "path" : "asterix_nc1://target/data/csv/change_feed.csv",
+  //type of the record
+  "type-name" : "TestType",
+  //type of the meta record
+  "meta-type-name" : "MetaType",
+  //format of the record
+  "record-format" : "adm",
+  // format of the meta record
+  "format" : "csv",
+  "delimiter" : ",",
+  // index of the primary key the record (meta or orig)
+  "key-indexes" : "0",
+  // indicates that PK originates from meta
+  "key-indicators" : "1",
+  //index of the record in the meta record
+  "record-index" : "1",
+  "change-feed" : "true",
+  // whether CSV header is present in the input
+  "header" : "false"
+};

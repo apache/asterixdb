@@ -89,8 +89,6 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
         AUnorderedList feedConfig =
                 (AUnorderedList) feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_ADAPTOR_CONFIG_INDEX);
-        String adapterName = ((AString) feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_ADAPTOR_NAME_INDEX))
-                .getStringValue();
 
         IACursor cursor = feedConfig.getCursor();
 
@@ -104,7 +102,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
             value = ((AString) field.getValueByPos(MetadataRecordTypes.PROPERTIES_VALUE_FIELD_INDEX)).getStringValue();
             adaptorConfiguration.put(key, value);
         }
-        feed = new Feed(dataverseName, feedName, adapterName, adaptorConfiguration);
+        feed = new Feed(dataverseName, feedName, adaptorConfiguration);
         return feed;
     }
 
@@ -134,12 +132,6 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_FEED_NAME_FIELD_INDEX, fieldValue);
 
-        // adaptor name
-        fieldValue.reset();
-        aString.setValue(feed.getAdapterName());
-        stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_ADAPTOR_NAME_INDEX, fieldValue);
-
         // write adaptor configuration
         fieldValue.reset();
         writeFeedAdaptorField(recordBuilder, feed, fieldValue);
@@ -165,7 +157,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
         listBuilder.reset((AUnorderedListType) MetadataRecordTypes.FEED_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.FEED_ARECORD_ADAPTOR_CONFIG_INDEX]);
-        for (Map.Entry<String, String> property : feed.getAdapterConfiguration().entrySet()) {
+        for (Map.Entry<String, String> property : feed.getConfiguration().entrySet()) {
             String name = property.getKey();
             String value = property.getValue();
             listEleBuffer.reset();

@@ -31,13 +31,14 @@ create type FeedRecordType as closed {
 }
 
 create dataset FeedDataset(FeedRecordType) primary key id;
-create feed ChangeFeed using test_change_feed(
-    ("type-name"="FeedRecordType"),
-    ("record-format"="adm"),
-    ("format"="test-csv"),
-    ("delimiter"=","),
-    ("key-indexes"="0"),
-    ("reader"="org.apache.asterix.external.input.record.reader.RecordWithPKTestReaderFactory"),
-    ("parser"="org.apache.asterix.external.parser.factory.TestRecordWithPKParserFactory"),
-    ("change-feed"="true")
-);
+create feed ChangeFeed with {
+  "adapter-name" : "test_change_feed",
+  "type-name" : "FeedRecordType",
+  "record-format" : "adm",
+  "format" : "test-csv",
+  "delimiter" : ",",
+  "key-indexes" : "0",
+  "reader" : "org.apache.asterix.external.input.record.reader.RecordWithPKTestReaderFactory",
+  "parser" : "org.apache.asterix.external.parser.factory.TestRecordWithPKParserFactory",
+  "change-feed" : "true"
+};

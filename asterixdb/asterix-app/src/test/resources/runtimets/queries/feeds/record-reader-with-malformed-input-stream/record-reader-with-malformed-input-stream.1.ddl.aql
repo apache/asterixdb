@@ -26,7 +26,9 @@ create type RestaurantsType as open {
 
 create dataset Restaurants(RestaurantsType) primary key restr_id;
 
-create feed RFeed using localfs
-(("type-name"="RestaurantsType"),
-("path"="asterix_nc1://data/restaurants/"), /* This test case reply on restaurants.adm implicitly*/
-("format"="adm"));
+create feed RFeed with {
+  "adapter-name" : "localfs",
+  "type-name" : "RestaurantsType",
+  "path" : "asterix_nc1://data/restaurants/", /* This test case reply on restaurants.adm implicitly*/
+  "format" : "adm"
+};

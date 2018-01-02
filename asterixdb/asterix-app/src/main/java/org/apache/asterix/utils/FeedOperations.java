@@ -449,7 +449,7 @@ public class FeedOperations {
         Pair<JobSpecification, IAdapterFactory> intakeInfo = buildFeedIntakeJobSpec(feed, metadataProvider, fpa);
         List<JobSpecification> jobsList = new ArrayList<>();
         // TODO: Figure out a better way to handle insert/upsert per conn instead of per feed
-        Boolean insertFeed = ExternalDataUtils.isInsertFeed(feed.getAdapterConfiguration());
+        Boolean insertFeed = ExternalDataUtils.isInsertFeed(feed.getConfiguration());
         // Construct the ingestion Job
         JobSpecification intakeJob = intakeInfo.getLeft();
         IAdapterFactory ingestionAdaptorFactory = intakeInfo.getRight();

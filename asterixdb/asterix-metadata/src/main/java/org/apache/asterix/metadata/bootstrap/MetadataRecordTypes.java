@@ -356,17 +356,16 @@ public final class MetadataRecordTypes {
     public static final String RECORD_NAME_FEED = "FeedRecordType";
     public static final int FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
     public static final int FEED_ARECORD_FEED_NAME_FIELD_INDEX = 1;
-    public static final int FEED_ARECORD_ADAPTOR_NAME_INDEX = 2;
-    public static final int FEED_ARECORD_ADAPTOR_CONFIG_INDEX = 3;
-    public static final int FEED_ARECORD_TIMESTAMP_FIELD_INDEX = 4;
+    public static final int FEED_ARECORD_ADAPTOR_CONFIG_INDEX = 2;
+    public static final int FEED_ARECORD_TIMESTAMP_FIELD_INDEX = 3;
     public static final ARecordType FEED_RECORDTYPE = createRecordType(
             // RecordTypeName
             RECORD_NAME_FEED,
             // FieldNames
-            new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FEED_NAME, FIELD_NAME_ADAPTER_NAME,
-                    FIELD_NAME_ADAPTER_CONFIGURATION, FIELD_NAME_TIMESTAMP },
+            new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FEED_NAME, FIELD_NAME_ADAPTER_CONFIGURATION,
+                    FIELD_NAME_TIMESTAMP },
             // FieldTypes
-            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
                     new AUnorderedListType(FEED_ADAPTER_CONFIGURATION_RECORDTYPE, null), BuiltinType.ASTRING },
             //IsOpen?
             true);

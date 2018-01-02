@@ -401,10 +401,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     public Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, IAdapterFactory> buildFeedIntakeRuntime(
             JobSpecification jobSpec, Feed feed, FeedPolicyAccessor policyAccessor) throws Exception {
         Triple<IAdapterFactory, RecordDescriptor, IDataSourceAdapter.AdapterType> factoryOutput;
-        factoryOutput = FeedMetadataUtil.getPrimaryFeedFactoryAndOutput(feed, policyAccessor, mdTxnCtx,
+        factoryOutput = FeedMetadataUtil.getFeedFactoryAndOutput(feed, policyAccessor, mdTxnCtx,
                 getApplicationContext());
-        ARecordType recordType = FeedMetadataUtil.getOutputType(feed, feed.getAdapterConfiguration(),
-                ExternalDataConstants.KEY_TYPE_NAME);
+        ARecordType recordType = FeedMetadataUtil.getOutputType(feed,
+                feed.getConfiguration().get(ExternalDataConstants.KEY_TYPE_NAME));
         IAdapterFactory adapterFactory = factoryOutput.first;
         FeedIntakeOperatorDescriptor feedIngestor = null;
         switch (factoryOutput.third) {
@@ -413,7 +413,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         policyAccessor, factoryOutput.second);
                 break;
             case EXTERNAL:
-                String libraryName = feed.getAdapterName().trim()
+                String libraryName = feed.getConfiguration().get(ExternalDataConstants.KEY_ADAPTER_NAME).trim()
                         .split(FeedConstants.NamingConstants.LIBRARY_NAME_SEPARATOR)[0];
                 feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, libraryName,
                         adapterFactory.getClass().getName(), recordType, policyAccessor, factoryOutput.second);

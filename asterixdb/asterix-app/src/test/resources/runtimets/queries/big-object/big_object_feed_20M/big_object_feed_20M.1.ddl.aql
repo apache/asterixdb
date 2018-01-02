@@ -36,9 +36,10 @@ create type testtype as closed {
 create dataset testds(testtype) primary key id;
 
 
-create feed BigFeed
-using localfs
-(("path"="asterix_nc1://target/data/big-object/big_object_20M.adm"),
-("format"="adm"),
-("type-name"="testtype"),
-("tuple-interval"="2"));
+create feed BigFeed with {
+  "adapter-name" : "localfs",
+  "path" : "asterix_nc1://target/data/big-object/big_object_20M.adm",
+  "format" : "adm",
+  "type-name" : "testtype",
+  "tuple-interval" : "2"
+};

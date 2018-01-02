@@ -170,6 +170,7 @@ import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -790,13 +791,18 @@ CreateFeedStatement FeedSpecification() throws ParseException:
   Map<String,String> properties = null;
   CreateFeedStatement cfs = null;
   Pair<Identifier,Identifier> sourceNameComponents = null;
+  RecordConstructor withRecord = null;
 }
 {
   <FEED> nameComponents = QualifiedName() ifNotExists = IfNotExists()
-  <USING> adapterName = AdapterName() properties = Configuration()
+  <WITH> withRecord = RecordConstructor()
   {
-    cfs = new CreateFeedStatement(nameComponents, adapterName, properties, ifNotExists);
-    return cfs;
+    try {
+      cfs = new CreateFeedStatement(nameComponents, withRecord, ifNotExists);
+      return cfs;
+    } catch (AlgebricksException e) {
+      throw new ParseException(e.getMessage());
+    }
   }
 }
 

@@ -57,13 +57,14 @@ primary key id;
 
 create index ngram_index on SyntheticTweets(message_text) type ngram(3);
 
-create feed  SyntheticTweetFeed
-using stream
-(("duration"="5"),
-("stream-source"="org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamFactory"),
-("tps"="50"),
-("type-name"="TweetMessageType"),
-("tput-duration"="5"),
-("dataverse-dataset"="feeds:SyntheticTweets"),
-("format"="adm"),
-("mode"="controlled"));
+create  feed SyntheticTweetFeed with {
+ "adapter-name" : "stream",
+ "duration" : "5",
+ "tps" : "50",
+ "stream-source" : "org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamFactory",
+ "type-name" : "TweetMessageType",
+ "tput-duration" : "5",
+ "dataverse-dataset" : "feeds:SyntheticTweets",
+ "format" : "adm",
+ "mode" : "controlled"
+};

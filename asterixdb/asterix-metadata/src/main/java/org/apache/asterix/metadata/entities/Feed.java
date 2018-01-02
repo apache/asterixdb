@@ -37,16 +37,13 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     private EntityId feedId;
     /** A string representation of the instance **/
     private String displayName;
-    /** A string representation of the adapter name **/
-    private String adapterName;
-    /** Adapter configuration */
-    private Map<String, String> adapterConfiguration;
+    /** Feed configurations */
+    private Map<String, String> feedConfiguration;
 
-    public Feed(String dataverseName, String feedName,String adapterName, Map<String, String> configuration) {
+    public Feed(String dataverseName, String feedName, Map<String, String> feedConfiguration) {
         this.feedId = new EntityId(EXTENSION_NAME, dataverseName, feedName);
         this.displayName = "(" + feedId + ")";
-        this.adapterName = adapterName;
-        this.adapterConfiguration = configuration;
+        this.feedConfiguration = feedConfiguration;
     }
 
     @Override
@@ -93,16 +90,11 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
 
     @Override
     public Feed dropFromCache(MetadataCache cache) {
-        return cache.dropFeed(this);
+        return cache.dropFeedIfExists(this);
     }
 
     @Override
-    public String getAdapterName() {
-        return adapterName;
-    }
-
-    @Override
-    public Map<String, String> getAdapterConfiguration() {
-        return adapterConfiguration;
+    public Map<String, String> getConfiguration() {
+        return feedConfiguration;
     }
 }

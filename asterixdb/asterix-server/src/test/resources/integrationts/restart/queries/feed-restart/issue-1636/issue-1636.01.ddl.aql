@@ -75,7 +75,10 @@ create type typeTweet if not exists as open{
 
 create dataset ds_tweet(typeTweet) if not exists primary key id with filter on create_at;
 create index text_idx if not exists on ds_tweet("text") type keyword;
-create feed MessageFeed using localfs(
-("path"="localhost://../../../../../src/test/resources/integrationts/restart/828.h1w.adm"),
-("format"="adm"),
-("type-name"="typeTweet"));
+
+create feed MessageFeed with {
+  "adapter-name" : "localfs",
+  "path" : "localhost://../../../../../src/test/resources/integrationts/restart/828.h1w.adm",
+  "format" : "adm",
+  "type-name" : "typeTweet"
+};

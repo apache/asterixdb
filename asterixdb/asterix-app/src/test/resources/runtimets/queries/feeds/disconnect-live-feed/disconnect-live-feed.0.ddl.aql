@@ -29,13 +29,13 @@ create type TweetMessageType as closed {
 create dataset Tweets1(TweetMessageType) primary key tweetid;
 create dataset Tweets2(TweetMessageType) primary key tweetid;
 
-create feed TweetFeed using socket_adapter
-(
- ("sockets"="127.0.0.1:10001"),
- ("address-type"="IP"),
- ("type-name"="TweetMessageType"),
- ("format"="adm")
-);
+create feed TweetFeed with {
+  "adapter-name" : "socket_adapter",
+  "sockets" : "127.0.0.1:10001",
+  "address-type" : "IP",
+  "type-name" : "TweetMessageType",
+  "format" : "adm"
+};
 
 connect feed TweetFeed to dataset Tweets1;
 connect feed TweetFeed to dataset Tweets2;

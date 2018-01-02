@@ -95,6 +95,7 @@ public class ExternalDataConstants {
     // a string representing the format of the record (for adapters which produces records with additional information like pk or metadata)
     public static final String KEY_RECORD_FORMAT = "record-format";
     public static final String KEY_META_TYPE_NAME = "meta-type-name";
+    public static final String KEY_ADAPTER_NAME = "adapter-name";
     public static final String READER_STREAM = "stream";
     public static final String KEY_HTTP_PROXY_HOST = "http-proxy-host";
     public static final String KEY_HTTP_PROXY_PORT = "http-proxy-port";

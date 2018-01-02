@@ -93,10 +93,10 @@ with {
 create index text_idx if not exists on Tweet(`text`) type btree;
 create index state_idx if not exists on Tweet(geo_tag.stateID) type btree;
 
-create feed TweetFeed using socket_adapter
-(
-    ("sockets"="127.0.0.1:10001"),
-    ("address-type"="IP"),
-    ("type-name"="typeTweet"),
-    ("format"="adm")
-);
+create feed TweetFeed with {
+  "adapter-name" : "socket_adapter",
+  "sockets" : "127.0.0.1:10001",
+  "address-type" : "IP",
+  "type-name" : "typeTweet",
+  "format" : "adm"
+};

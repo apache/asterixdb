@@ -41,15 +41,16 @@ dtype:int32
 
 create dataset KVStore(DocumentType) with meta(KVMetaType)primary key meta().id;
 
-create feed KVStream using adapter(
- ("reader"="localfs"),
- ("parser"="record-with-metadata"),
- ("type-name"="DocumentType"),
- ("meta-type-name"="KVMetaType"),
- ("path"="asterix_nc1://target/data/csv/openbeerdb/beer.csv"),
- ("format"="csv"),
- ("delimiter"=","),
- ("record-format"="adm"),
- ("record-index"="4"),
- ("header"="true")
-);
+create feed KVStream with {
+ "adapter-name" : "adapter",
+ "reader" : "localfs",
+ "parser" : "record-with-metadata",
+ "type-name" : "DocumentType",
+ "meta-type-name" : "KVMetaType",
+ "path" : "asterix_nc1://target/data/csv/openbeerdb/beer.csv",
+ "format" : "csv",
+ "delimiter" : ",",
+ "record-format" : "adm",
+ "record-index" : "4",
+ "header" : "true"
+};

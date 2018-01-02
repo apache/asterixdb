@@ -41,9 +41,10 @@ create type TweetType as closed {
 create dataset Tweets(TweetType)
 primary key id;
 
-create feed TweetFeed
-using localfs
-(("path"="asterix_nc1://data/twitter/obamatweets_duplicate.adm"),
-("format"="adm"),
-("type-name"="TweetType"),
-("tuple-interval"="10"));
+create feed TweetFeed with {
+  "adapter-name" : "localfs",
+  "path":"asterix_nc1://data/twitter/obamatweets_duplicate.adm",
+  "format":"adm",
+  "type-name":"TweetType",
+  "tuple-interval":"10"
+};

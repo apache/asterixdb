@@ -78,14 +78,14 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
         this.outRecDescs[0] = rDesc;
     }
 
-    public FeedIntakeOperatorDescriptor(JobSpecification spec, IFeed primaryFeed, String adapterLibraryName,
+    public FeedIntakeOperatorDescriptor(JobSpecification spec, IFeed feed, String adapterLibraryName,
             String adapterFactoryClassName, ARecordType adapterOutputType, FeedPolicyAccessor policyAccessor,
             RecordDescriptor rDesc) {
         super(spec, 0, 1);
-        this.feedId = new EntityId(FEED_EXTENSION_NAME, primaryFeed.getDataverseName(), primaryFeed.getFeedName());
+        this.feedId = new EntityId(FEED_EXTENSION_NAME, feed.getDataverseName(), feed.getFeedName());
         this.adaptorFactoryClassName = adapterFactoryClassName;
         this.adaptorLibraryName = adapterLibraryName;
-        this.adaptorConfiguration = primaryFeed.getAdapterConfiguration();
+        this.adaptorConfiguration = feed.getConfiguration();
         this.adapterOutputType = adapterOutputType;
         this.policyAccessor = policyAccessor;
         this.outRecDescs[0] = rDesc;

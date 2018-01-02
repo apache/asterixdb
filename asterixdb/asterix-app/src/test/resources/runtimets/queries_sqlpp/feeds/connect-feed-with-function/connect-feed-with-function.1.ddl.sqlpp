@@ -45,11 +45,11 @@ create function test_func1(anyname) {
     object_merge((case (anyname.popularity = "Good!") when true then {"true_popularity":"Indeed Good!"} else {"true_popularity":"Indeed Bad!"} end), anyname)
 };
 
-create feed UserFeed using socket_adapter
-(
-    ("sockets"="127.0.0.1:10001"),
-    ("address-type"="IP"),
-    ("type-name"="TwitterUser"),
-    ("format"="adm"),
-    ("upsert-feed"="true")
-);
+create feed UserFeed with {
+    "adapter-name" : "socket_adapter",
+    "sockets" : "127.0.0.1:10001",
+    "address-type" : "IP",
+    "type-name" : "TwitterUser",
+    "format" : "adm",
+    "upsert-feed" : "true"
+};

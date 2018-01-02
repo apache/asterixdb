@@ -35,11 +35,11 @@ create type TwitterUser if not exists as open{
 
 create dataset TwitterUsers(TwitterUser) primary key screen-name;
 
-create feed UserFeed using socket_adapter
-(
-    ("sockets"="127.0.0.1:10001"),
-    ("address-type"="IP"),
-    ("type-name"="TwitterUser"),
-    ("format"="adm"),
-    ("insert-feed"="true")
-);
+create feed UserFeed with {
+ "adapter-name" : "socket_adapter",
+  "sockets" : "127.0.0.1:10001",
+  "address-type" : "IP",
+  "type-name" : "TwitterUser",
+  "format" : "adm",
+  "insert-feed" : "true"
+};

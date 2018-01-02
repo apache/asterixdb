@@ -27,5 +27,8 @@
  */
 
 use dataverse externallibtest;
-create feed TestTypedAdapterFeed
-using "testlib#test_typed_adapter" (("num_output_records"="5"),("type-name"="TestTypedAdapterOutputType"));
+create feed TestTypedAdapterFeed with {
+  "adapter-name" : "testlib#test_typed_adapter",
+  "num_output_records" : "5",
+  "type-name" : "TestTypedAdapterOutputType"
+};

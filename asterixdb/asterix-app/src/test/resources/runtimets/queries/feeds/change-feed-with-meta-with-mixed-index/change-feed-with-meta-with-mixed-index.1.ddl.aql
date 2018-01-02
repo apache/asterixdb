@@ -44,17 +44,18 @@ lockTime:int32
 
 create dataset KVStore(DocumentType) with meta(KVMetaType)primary key meta()."key";
 
-create feed KVChangeStream using adapter(
-    ("type-name"="DocumentType"),
-    ("meta-type-name"="KVMetaType"),
-    ("reader"="org.apache.asterix.external.input.record.reader.kv.KVTestReaderFactory"),
-    ("parser"="record-with-metadata"),
-    ("format"="dcp"),
-    ("record-format"="json"),
-    ("change-feed"="true"),
-    ("key-indexes"="0"),
-    ("key-indicators"="1"),
-    ("num-of-records"="1000")
-);
+create feed KVChangeStream with {
+  "adapter-name" : "adapter",
+  "type-name" : "DocumentType",
+  "meta-type-name" : "KVMetaType",
+  "reader" : "org.apache.asterix.external.input.record.reader.kv.KVTestReaderFactory",
+  "parser" : "record-with-metadata",
+  "format" : "dcp",
+  "record-format" : "json",
+  "change-feed" : "true",
+  "key-indexes" : "0",
+  "key-indicators" : "1",
+  "num-of-records" : "1000"
+};
 
 create index MixedIndex on KVStore(meta().vbucket,id);

@@ -47,9 +47,11 @@ create type Tweet as open
 create dataset Tweets (Tweet)
 primary key id;
 
-create feed TwitterFeed using push_twitter(
-("type-name"="Tweet"),
-("format"="twitter-status"),//
-("consumer.key"="************"),
-("access.token"="************"),
-("access.token.secret"="************"));
+create feed TwitterFeed with {
+  "adapter-name" : "push_twitter",
+  "type-name" : "Tweet",
+  "format" : "twitter-status",//
+  "consumer.key" : "************",
+  "access.token" : "************",
+  "access.token.secret" : "************"
+};

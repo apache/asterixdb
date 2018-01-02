@@ -52,12 +52,14 @@ create type ProcessedTweet if not exists as open {
 
 create dataset SyntheticTweets(Tweet) primary key id;
 
-create feed  SyntheticTweetFeed using stream
-(("duration"="1"),
-("stream-source"="org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamFactory"),
-("tps"="50"),
-("type-name"="Tweet"),
-("tput-duration"="1"),
-("dataverse-dataset"="feeds:SyntheticTweets"),
-("format"="adm"),
-("mode"="controlled"));
+create feed  SyntheticTweetFeed with {
+  "adapter-name" : "stream",
+  "duration" : "1",
+  "stream-source" : "org.apache.asterix.external.input.stream.factory.TwitterFirehoseStreamFactory",
+  "tps" : "50",
+  "type-name" : "Tweet",
+  "tput-duration" : "1",
+  "dataverse-dataset" : "feeds:SyntheticTweets",
+  "format" : "adm",
+  "mode" : "controlled"
+};

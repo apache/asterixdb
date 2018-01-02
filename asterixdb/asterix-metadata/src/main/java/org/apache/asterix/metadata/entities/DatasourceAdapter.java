@@ -44,7 +44,7 @@ public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
 
     @Override
     public DatasourceAdapter dropFromCache(MetadataCache cache) {
-        return cache.dropAdapter(this);
+        return cache.dropAdapterIfExists(this);
     }
 
     public AdapterIdentifier getAdapterIdentifier() {

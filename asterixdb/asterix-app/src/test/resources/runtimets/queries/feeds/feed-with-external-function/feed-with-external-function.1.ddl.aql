@@ -47,11 +47,12 @@ create type TweetOutputType as closed {
   topics : {{string}}
 }
 
-create feed TweetFeed
-using localfs
-(("type-name"="TweetInputType"),
-("path"="asterix_nc1://data/twitter/obamatweets.adm"),
-("format"="adm"));
+create feed TweetFeed with {
+  "adapter-name" : "localfs",
+  "type-name" : "TweetInputType",
+  "path" : "asterix_nc1://data/twitter/obamatweets.adm",
+  "format" : "adm"
+};
 
 create dataset TweetsFeedIngest(TweetOutputType)
 primary key id;

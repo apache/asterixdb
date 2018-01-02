@@ -37,10 +37,10 @@ primary key id;
 create dataset Tweets3 (Tweet)
 primary key id;
 
-create feed TwitterFeed using socket_adapter
-(
-    ("sockets"="127.0.0.1:10001"),
-    ("address-type"="IP"),
-    ("type-name"="Tweet"),
-    ("format"="adm")
-);
+create feed TwitterFeed with {
+ "adapter-name" : "socket_adapter",
+ "sockets" : "127.0.0.1:10001",
+ "address-type" : "IP",
+ "type-name" : "Tweet",
+ "format" : "adm"
+};
