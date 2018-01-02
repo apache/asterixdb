@@ -18,14 +18,10 @@
  */
 package org.apache.hyracks.util.trace;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.logging.Formatter;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-import java.util.logging.StreamHandler;
+import java.util.List;
 
+import org.apache.hyracks.util.Log4j2Monitor;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,18 +32,6 @@ public class TraceTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final String name = "test";
-
-    private StreamHandler redirectTraceLog(OutputStream os) throws IOException {
-        final Logger logger = Logger.getLogger(Tracer.class.getName() + "@" + name);
-        final StreamHandler handler = new StreamHandler(os, new Formatter() {
-            @Override
-            public String format(LogRecord record) {
-                return record.getMessage() + "\n";
-            }
-        });
-        logger.addHandler(handler);
-        return handler;
-    }
 
     public JsonNode validate(String line) throws IOException {
         final JsonNode traceRecord = mapper.readTree(line);
@@ -68,9 +52,6 @@ public class TraceTest {
 
     @Test
     public void testInstant() throws IOException {
-        final ByteArrayOutputStream os = new ByteArrayOutputStream();
-        final StreamHandler handler = redirectTraceLog(os);
-
         // test with initial categories
 
         TraceCategoryRegistry registry = new TraceCategoryRegistry();
@@ -79,13 +60,12 @@ public class TraceTest {
         long cat3 = registry.get("CAT3");
 
         ITracer tracer = new Tracer(name, new String[] { "CAT1", "CAT2" }, registry);
+        Log4j2Monitor.start();
         tracer.instant("test1", cat1, ITracer.Scope.p, null);
         tracer.instant("test2", cat2, ITracer.Scope.p, null);
         tracer.instant("test3", cat3, ITracer.Scope.p, null);
 
-        handler.flush();
-
-        String[] lines = os.toString().split("\n");
+        List<String> lines = Log4j2Monitor.getLogs();
         for (String line : lines) {
             final JsonNode traceRecord = validate(line);
             Assert.assertEquals("i", traceRecord.get("ph").asText());
@@ -93,17 +73,14 @@ public class TraceTest {
         }
 
         // test with modified categories
-
         tracer.setCategories("CAT1", "CAT3");
-        os.reset();
+        Log4j2Monitor.reset();
 
         tracer.instant("test1", cat1, ITracer.Scope.p, null);
         tracer.instant("test2", cat2, ITracer.Scope.p, null);
         tracer.instant("test3", cat3, ITracer.Scope.p, null);
 
-        handler.flush();
-
-        lines = os.toString().split("\n");
+        lines = Log4j2Monitor.getLogs();
         for (String line : lines) {
             final JsonNode traceRecord = validate(line);
             Assert.assertEquals("i", traceRecord.get("ph").asText());

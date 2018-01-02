@@ -23,13 +23,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * This util class takes care of creation and deletion of files and directories
@@ -38,7 +38,7 @@ import org.apache.hyracks.api.io.FileReference;
 public class IoUtil {
 
     public static final String FILE_NOT_FOUND_MSG = "Deleting non-existing file!";
-    private static final Logger LOGGER = Logger.getLogger(IoUtil.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private IoUtil() {
     }
@@ -71,7 +71,7 @@ public class IoUtil {
                 Files.delete(file.toPath());
             }
         } catch (NoSuchFileException | FileNotFoundException e) {
-            LOGGER.log(Level.WARNING, FILE_NOT_FOUND_MSG + ": " + e.getMessage(), e);
+            LOGGER.warn(() -> FILE_NOT_FOUND_MSG + ": " + e.getMessage(), e);
         } catch (IOException e) {
             throw HyracksDataException.create(ErrorCode.CANNOT_DELETE_FILE, e, file.getAbsolutePath());
         }

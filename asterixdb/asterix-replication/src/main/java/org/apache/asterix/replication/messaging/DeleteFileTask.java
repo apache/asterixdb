@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
@@ -33,13 +32,15 @@ import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.functions.ReplicationProtocol;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A task to delete a file on a replica if exists
  */
 public class DeleteFileTask implements IReplicaTask {
 
-    private static final Logger LOGGER = Logger.getLogger(DeleteFileTask.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final String file;
 
     public DeleteFileTask(String file) {
@@ -55,7 +56,7 @@ public class DeleteFileTask implements IReplicaTask {
                 Files.delete(localFile.toPath());
                 LOGGER.info(() -> "Deleted file: " + localFile.getAbsolutePath());
             } else {
-                LOGGER.warning(() -> "Requested to delete a non-existing file: " + localFile.getAbsolutePath());
+                LOGGER.warn(() -> "Requested to delete a non-existing file: " + localFile.getAbsolutePath());
             }
             ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
         } catch (IOException e) {

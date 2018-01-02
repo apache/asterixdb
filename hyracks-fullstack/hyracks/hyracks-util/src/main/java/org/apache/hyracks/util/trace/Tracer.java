@@ -23,17 +23,18 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.hyracks.util.PidHelper;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/edit
  */
 public class Tracer implements ITracer {
 
-    public static final Logger LOGGER = Logger.getLogger(Tracer.class.getName());
+    public static final Logger LOGGER = LogManager.getLogger();
 
     protected static final Level TRACE_LOG_LEVEL = Level.INFO;
     protected static final String CAT = "Tracer";
@@ -48,7 +49,7 @@ public class Tracer implements ITracer {
     public Tracer(String name, long categories, TraceCategoryRegistry registry) {
         final String traceLoggerName = Tracer.class.getName() + "@" + name;
         LOGGER.info("Initialize Tracer " + traceLoggerName);
-        this.traceLog = Logger.getLogger(traceLoggerName);
+        this.traceLog = LogManager.getLogger(traceLoggerName);
         this.categories = categories;
         this.registry = registry;
         final long traceCategory = getRegistry().get(CAT);

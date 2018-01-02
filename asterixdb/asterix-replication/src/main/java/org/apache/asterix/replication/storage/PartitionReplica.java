@@ -25,8 +25,6 @@ import static org.apache.asterix.common.replication.IPartitionReplica.PartitionR
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
@@ -37,6 +35,8 @@ import org.apache.asterix.replication.recovery.ReplicaSynchronizer;
 import org.apache.hyracks.util.JSONUtil;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.annotations.ThreadSafe;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -46,7 +46,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @ThreadSafe
 public class PartitionReplica implements IPartitionReplica {
 
-    private static final Logger LOGGER = Logger.getLogger(PartitionReplica.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final int INITIAL_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(4, StorageUtil.StorageUnit.KILOBYTE);
     private final INcApplicationContext appCtx;
@@ -80,7 +80,7 @@ public class PartitionReplica implements IPartitionReplica {
                 new ReplicaSynchronizer(appCtx, this).sync();
                 setStatus(IN_SYNC);
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, e, () -> "Failed to sync replica " + this);
+                LOGGER.error(() -> "Failed to sync replica " + this, e);
                 setStatus(DISCONNECTED);
             } finally {
                 close();

@@ -18,16 +18,13 @@
  */
 package org.apache.hyracks.storage.am.common;
 
-import java.nio.file.NoSuchFileException;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.common.IIndex;
-import org.apache.hyracks.util.RuntimeLogsMonitor;
+import org.apache.hyracks.util.Log4j2Monitor;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -49,12 +46,8 @@ public abstract class AbstractIndexLifecycleTest {
 
     @BeforeClass
     public static void startLogsMonitor() {
-        RuntimeLogsMonitor.monitor("org.apache.hyracks");
-    }
-
-    @AfterClass
-    public static void afterClass() {
-        RuntimeLogsMonitor.stop();
+        Configurator.setLevel("org.apache.hyracks", Level.INFO);
+        Log4j2Monitor.start();
     }
 
     @Before
@@ -65,7 +58,7 @@ public abstract class AbstractIndexLifecycleTest {
 
     @Test
     public void validSequenceTest() throws Exception {
-        RuntimeLogsMonitor.reset();
+        Log4j2Monitor.reset();
         // Double create is invalid
         index.create();
         Assert.assertTrue(persistentStateExists());
@@ -104,8 +97,7 @@ public abstract class AbstractIndexLifecycleTest {
         index.destroy();
         Assert.assertFalse(persistentStateExists());
         index.destroy();
-        final LogRecord fileNotFoundWarnLog = new LogRecord(Level.WARNING, IoUtil.FILE_NOT_FOUND_MSG);
-        Assert.assertTrue(RuntimeLogsMonitor.count(fileNotFoundWarnLog) > 0);
+        Assert.assertTrue(Log4j2Monitor.count(IoUtil.FILE_NOT_FOUND_MSG) > 0);
         Assert.assertFalse(persistentStateExists());
     }
 

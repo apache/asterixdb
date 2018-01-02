@@ -27,7 +27,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
@@ -39,13 +38,15 @@ import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A task to replicate a file from a master replica
  */
 public class ReplicateFileTask implements IReplicaTask {
 
-    private static final Logger LOGGER = Logger.getLogger(DeleteFileTask.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final String file;
     private final long size;
 

@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import org.apache.asterix.test.base.RetainLogsRule;
 import org.apache.asterix.test.common.TestExecutor;
@@ -34,6 +33,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.server.process.HyracksCCProcess;
 import org.apache.hyracks.server.process.HyracksNCServiceProcess;
 import org.apache.hyracks.server.process.HyracksVirtualCluster;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -88,7 +89,7 @@ public class MetadataReplicationIT {
             .get("src", "test", "resources", "integrationts", "metadata_only_replication").toString() + File.separator;
     private static final String PATH_ACTUAL = "target" + File.separator + "ittest" + File.separator;
 
-    private static final Logger LOGGER = Logger.getLogger(MetadataReplicationIT.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private static String reportPath = new File(
             StringUtils.join(new String[] { "target", "failsafe-reports" }, File.separator)).getAbsolutePath();
 
