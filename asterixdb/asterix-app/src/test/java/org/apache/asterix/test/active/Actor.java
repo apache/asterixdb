@@ -34,4 +34,9 @@ public class Actor extends SingleThreadEventProcessor<Action> {
     protected void handle(Action action) throws Exception {
         action.execute(actorMdProvider);
     }
+
+    @Override
+    public String toString() {
+        return "{\"name\":\"" + name + "\"}";
+    }
 }

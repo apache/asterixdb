@@ -346,6 +346,27 @@ public class ActiveEventsListenerTest {
         Assert.assertEquals(ActivityState.RUNNING, listener.getState());
     }
 
+    @Test
+    public void testStopFromRunningAndJobFails() throws Exception {
+        testStartWhenStartSucceed();
+        Assert.assertEquals(ActivityState.RUNNING, listener.getState());
+        listener.onStop(Behavior.STEP_SUCCEED);
+        Action stopping = users[1].stopActivity(listener);
+        // wait for notification from listener
+        synchronized (listener) {
+            listener.wait();
+        }
+        clusterController.jobFinish(listener.getJobId(), JobStatus.FAILURE,
+                Collections.singletonList(new HyracksDataException("Runtime Failure")));
+        Assert.assertNull(listener.getRecoveryTask());
+        listener.allowStep();
+        stopping.sync();
+        Assert.assertFalse(stopping.hasFailed());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+        Assert.assertNull(listener.getRecoveryTask());
+
+    }
+
     @SuppressWarnings("deprecation")
     @Test
     public void testRecovery() throws Exception {

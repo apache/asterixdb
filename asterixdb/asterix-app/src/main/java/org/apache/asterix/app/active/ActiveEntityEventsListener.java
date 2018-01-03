@@ -193,9 +193,9 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         if (jobStatus.equals(JobStatus.FAILURE)) {
             jobFailure = exceptions.isEmpty() ? new RuntimeDataException(ErrorCode.UNREPORTED_TASK_FAILURE_EXCEPTION)
                     : exceptions.get(0);
-            setState(ActivityState.TEMPORARILY_FAILED);
+            setState((state == ActivityState.STOPPING) ? ActivityState.STOPPED : ActivityState.TEMPORARILY_FAILED);
             if (prevState != ActivityState.SUSPENDING && prevState != ActivityState.RECOVERING
-                    && prevState != ActivityState.RESUMING) {
+                    && prevState != ActivityState.RESUMING && prevState != ActivityState.STOPPING) {
                 recover();
             }
         } else {
@@ -550,5 +550,11 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @Override
     public String getDisplayName() throws HyracksDataException {
         return this.getEntityId().toString();
+    }
+
+    @Override
+    public String toString() {
+        return "{\"class\":\"" + getClass().getSimpleName() + "\"" + "\"entityId\":\"" + entityId + "\""
+                + "\"state\":\"" + state + "\"" + "}";
     }
 }

@@ -145,13 +145,14 @@ public class TestEventsListener extends ActiveEntityEventsListener {
     @SuppressWarnings("deprecation")
     @Override
     protected Void doStop(MetadataProvider metadataProvider) throws HyracksDataException {
+        ActivityState intention = state;
         step(onStop);
         failCompile(onStop);
         try {
             Set<ActivityState> waitFor;
-            if (state == ActivityState.STOPPING) {
+            if (intention == ActivityState.STOPPING) {
                 waitFor = EnumSet.of(ActivityState.STOPPED, ActivityState.PERMANENTLY_FAILED);
-            } else if (state == ActivityState.SUSPENDING) {
+            } else if (intention == ActivityState.SUSPENDING) {
                 waitFor = EnumSet.of(ActivityState.SUSPENDED, ActivityState.TEMPORARILY_FAILED);
             } else {
                 throw new IllegalStateException("stop with what intention??");

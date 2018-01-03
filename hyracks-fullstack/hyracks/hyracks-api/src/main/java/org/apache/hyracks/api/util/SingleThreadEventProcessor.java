@@ -29,7 +29,7 @@ import org.apache.logging.log4j.Logger;
 public abstract class SingleThreadEventProcessor<T> implements Runnable {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final String name;
+    protected final String name;
     private final LinkedBlockingQueue<T> eventInbox;
     private volatile Thread executorThread;
     private volatile boolean stopped = false;
