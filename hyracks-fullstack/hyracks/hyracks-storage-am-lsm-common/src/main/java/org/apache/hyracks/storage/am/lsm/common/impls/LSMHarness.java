@@ -342,7 +342,7 @@ public class LSMHarness implements ILSMHarness {
                 // newComponent is null if the flush op. was not performed.
                 if (!failedOperation && newComponent != null) {
                     lsmIndex.addDiskComponent(newComponent);
-                    if (replicationEnabled) {
+                    if (replicationEnabled && newComponent != EmptyComponent.INSTANCE) {
                         componentsToBeReplicated.clear();
                         componentsToBeReplicated.add(newComponent);
                         triggerReplication(componentsToBeReplicated, false, opType);
@@ -354,7 +354,7 @@ public class LSMHarness implements ILSMHarness {
                 // newComponent is null if the merge op. was not performed.
                 if (!failedOperation && newComponent != null) {
                     lsmIndex.subsumeMergedComponents(newComponent, ctx.getComponentHolder());
-                    if (replicationEnabled) {
+                    if (replicationEnabled && newComponent != EmptyComponent.INSTANCE) {
                         componentsToBeReplicated.clear();
                         componentsToBeReplicated.add(newComponent);
                         triggerReplication(componentsToBeReplicated, false, opType);
