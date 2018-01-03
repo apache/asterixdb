@@ -3059,6 +3059,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      * @param mdTxnCtx
      */
     public static void abort(Exception rootE, Exception parentE, MetadataTransactionContext mdTxnCtx) {
+        boolean interrupted = Thread.interrupted();
         try {
             if (IS_DEBUG_MODE) {
                 LOGGER.log(Level.ERROR, rootE.getMessage(), rootE);
@@ -3069,6 +3070,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } catch (Exception e2) {
             parentE.addSuppressed(e2);
             throw new IllegalStateException(rootE);
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

@@ -19,6 +19,7 @@
 package org.apache.asterix.common;
 
 import java.io.InputStream;
+import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -28,11 +29,18 @@ import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.utils.Servlets;
+import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.rebalance.NoOpDatasetRebalanceCallback;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.utils.RebalanceUtil;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.io.FileSplit;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -156,6 +164,54 @@ public class TestDataUtil {
             }
         } finally {
             metadataProvider.getLocks().unlock();
+        }
+    }
+
+    /**
+     * Gets the reference of dataset {@code dataset} from metadata
+     *
+     * @param integrationUtil
+     * @param datasetName
+     * @return the dataset reference if found. Otherwise null.
+     * @throws AlgebricksException
+     * @throws RemoteException
+     */
+    public static Dataset getDataset(AsterixHyracksIntegrationUtil integrationUtil, String datasetName)
+            throws AlgebricksException, RemoteException {
+        final ICcApplicationContext appCtx =
+                (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
+        final MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
+        final MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        Dataset dataset;
+        try {
+            dataset = metadataProvider.findDataset(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName);
+        } finally {
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            metadataProvider.getLocks().unlock();
+        }
+        return dataset;
+    }
+
+    /**
+     * Gets the file splits of {@code dataset}
+     *
+     * @param integrationUtil
+     * @param dataset
+     * @return the file splits of the dataset
+     * @throws RemoteException
+     * @throws AlgebricksException
+     */
+    public static FileSplit[] getDatasetSplits(AsterixHyracksIntegrationUtil integrationUtil, Dataset dataset)
+            throws RemoteException, AlgebricksException {
+        final ICcApplicationContext ccAppCtx =
+                (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
+        final MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        try {
+            return SplitsAndConstraintsUtil
+                    .getIndexSplits(dataset, dataset.getDatasetName(), mdTxnCtx, ccAppCtx.getClusterStateManager());
+        } finally {
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         }
     }
 }

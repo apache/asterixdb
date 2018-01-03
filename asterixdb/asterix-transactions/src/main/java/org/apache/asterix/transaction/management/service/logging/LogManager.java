@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,6 +49,7 @@ import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogManagerProperties;
+import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.asterix.common.transactions.TxnLogFile;
@@ -75,9 +79,9 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final String nodeId;
     private final FlushLogsLogger flushLogsLogger;
     private final HashMap<Long, Integer> txnLogFileId2ReaderCount = new HashMap<>();
-    protected final long logFileSize;
-    protected final int logPageSize;
-    protected final AtomicLong appendLSN;
+    private final long logFileSize;
+    private final int logPageSize;
+    private final AtomicLong appendLSN;
     /*
      * Mutables
      */
@@ -85,7 +89,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private LinkedBlockingQueue<ILogBuffer> flushQ;
     private LinkedBlockingQueue<ILogBuffer> stashQ;
     private FileChannel appendChannel;
-    protected ILogBuffer appendPage;
+    private ILogBuffer appendPage;
     private LogFlusher logFlusher;
     private Future<? extends Object> futureLogFlusher;
     protected LinkedBlockingQueue<ILogRecord> flushLogsQ;
@@ -112,15 +116,19 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         flushQ = new LinkedBlockingQueue<>(numLogPages);
         stashQ = new LinkedBlockingQueue<>(numLogPages);
         for (int i = 0; i < numLogPages; i++) {
-            emptyQ.offer(new LogBuffer(txnSubsystem, logPageSize, flushLSN));
+            emptyQ.add(new LogBuffer(txnSubsystem, logPageSize, flushLSN));
         }
         appendLSN.set(initializeLogAnchor(nextLogFileId));
         flushLSN.set(appendLSN.get());
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("LogManager starts logging in LSN: " + appendLSN);
         }
-        appendChannel = getFileChannel(appendLSN.get(), false);
-        getAndInitNewPage(INITIAL_LOG_SIZE);
+        try {
+            setLogPosition(appendLSN.get());
+        } catch (IOException e) {
+            throw new ACIDException(e);
+        }
+        initNewPage(INITIAL_LOG_SIZE);
         logFlusher = new LogFlusher(this, emptyQ, flushQ, stashQ);
         futureLogFlusher = txnSubsystem.getAsterixAppRuntimeContextProvider().getThreadExecutor().submit(logFlusher);
         if (!flushLogsLogger.isAlive()) {
@@ -129,55 +137,43 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     @Override
-    public void log(ILogRecord logRecord) throws ACIDException {
+    public void log(ILogRecord logRecord) {
         if (logRecord.getLogType() == LogType.FLUSH) {
-            flushLogsQ.offer(logRecord);
+            flushLogsQ.add(logRecord);
             return;
         }
         appendToLogTail(logRecord);
     }
 
-    protected void appendToLogTail(ILogRecord logRecord) throws ACIDException {
+    protected void appendToLogTail(ILogRecord logRecord) {
         syncAppendToLogTail(logRecord);
-
-        if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
-                || logRecord.getLogType() == LogType.WAIT) && !logRecord.isFlushed()) {
-            synchronized (logRecord) {
-                while (!logRecord.isFlushed()) {
-                    try {
+        if (waitForFlush(logRecord) && !logRecord.isFlushed()) {
+            InvokeUtil.doUninterruptibly(() -> {
+                synchronized (logRecord) {
+                    while (!logRecord.isFlushed()) {
                         logRecord.wait();
-                    } catch (InterruptedException e) {
-                        //ignore
                     }
                 }
-            }
+            });
         }
     }
 
-    protected synchronized void syncAppendToLogTail(ILogRecord logRecord) throws ACIDException {
-        if (logRecord.getLogType() != LogType.FLUSH) {
+    protected static boolean waitForFlush(ILogRecord logRecord) {
+        final byte logType = logRecord.getLogType();
+        return logType == LogType.JOB_COMMIT || logType == LogType.ABORT || logType == LogType.WAIT;
+    }
+
+    synchronized void syncAppendToLogTail(ILogRecord logRecord) {
+        if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.FLUSH) {
             ITransactionContext txnCtx = logRecord.getTxnCtx();
             if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
                 throw new ACIDException(
                         "Aborted txn(" + txnCtx.getTxnId() + ") tried to write non-abort type log record.");
             }
         }
-
-        /*
-         * To eliminate the case where the modulo of the next appendLSN = 0 (the next
-         * appendLSN = the first LSN of the next log file), we do not allow a log to be
-         * written at the last offset of the current file.
-         */
         final int logSize = logRecord.getLogSize();
-        // Make sure the log will not exceed the log file size
-        if (getLogFileOffset(appendLSN.get()) + logSize >= logFileSize) {
-            prepareNextLogFile();
-            prepareNextPage(logSize);
-        } else if (!appendPage.hasSpace(logSize)) {
-            prepareNextPage(logSize);
-        }
+        ensureSpace(logSize);
         appendPage.append(logRecord, appendLSN.get());
-
         if (logRecord.getLogType() == LogType.FLUSH) {
             logRecord.setLSN(appendLSN.get());
         }
@@ -187,70 +183,98 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         appendLSN.addAndGet(logSize);
     }
 
-    protected void prepareNextPage(int logSize) {
-        appendPage.setFull();
-        getAndInitNewPage(logSize);
-    }
-
-    protected void getAndInitNewPage(int logSize) {
-        if (logSize > logPageSize) {
-            // before creating a new page, we need to stash a normal sized page since our queues have fixed capacity
-            appendPage = null;
-            while (appendPage == null) {
-                try {
-                    appendPage = emptyQ.take();
-                    stashQ.add(appendPage);
-                } catch (InterruptedException e) {
-                    //ignore
-                }
-            }
-            // for now, alloc a new buffer for each large page
-            // TODO: pool large pages??
-            appendPage = new LogBuffer(txnSubsystem, logSize, flushLSN);
-            appendPage.setFileChannel(appendChannel);
-            flushQ.offer(appendPage);
-        } else {
-            appendPage = null;
-            while (appendPage == null) {
-                try {
-                    appendPage = emptyQ.take();
-                } catch (InterruptedException e) {
-                    //ignore
-                }
-            }
-            appendPage.reset();
-            appendPage.setFileChannel(appendChannel);
-            flushQ.offer(appendPage);
+    private void ensureSpace(int logSize) {
+        if (!fileHasSpace(logSize)) {
+            ensureLastPageFlushed();
+            prepareNextLogFile();
+        }
+        if (!appendPage.hasSpace(logSize)) {
+            prepareNextPage(logSize);
         }
     }
 
-    protected void prepareNextLogFile() {
+    private boolean fileHasSpace(int logSize) {
+        /*
+         * To eliminate the case where the modulo of the next appendLSN = 0 (the next
+         * appendLSN = the first LSN of the next log file), we do not allow a log to be
+         * written at the last offset of the current file.
+         */
+        return getLogFileOffset(appendLSN.get()) + logSize < logFileSize;
+    }
+
+    private void prepareNextPage(int logSize) {
+        appendPage.setFull();
+        initNewPage(logSize);
+    }
+
+    private void initNewPage(int logSize) {
+        boolean largePage = logSize > logPageSize;
+        // if a new large page will be allocated, we need to stash a normal sized page
+        // since our queues have fixed capacity
+        ensureAvailablePage(largePage);
+        if (largePage) {
+            // for now, alloc a new buffer for each large page
+            // TODO: pool large pages??
+            appendPage = new LogBuffer(txnSubsystem, logSize, flushLSN);
+        } else {
+            appendPage.reset();
+        }
+        appendPage.setFileChannel(appendChannel);
+        flushQ.add(appendPage);
+    }
+
+    private void ensureAvailablePage(boolean stash) {
+        final ILogBuffer currentPage = appendPage;
+        appendPage = null;
+        try {
+            appendPage = emptyQ.take();
+            if (stash) {
+                stashQ.add(appendPage);
+            }
+        } catch (InterruptedException e) {
+            appendPage = currentPage;
+            Thread.currentThread().interrupt();
+            throw new ACIDException(e);
+        }
+    }
+
+    private void prepareNextLogFile() {
+        final long nextFileBeginLsn = getNextFileFirstLsn();
+        try {
+            createNextLogFile();
+            setLogPosition(nextFileBeginLsn);
+        } catch (IOException e) {
+            throw new ACIDException(e);
+        }
+        // move appendLSN and flushLSN to the first LSN of the next log file
+        // only after the file was created and the channel was positioned successfully
+        appendLSN.set(nextFileBeginLsn);
+        flushLSN.set(nextFileBeginLsn);
+        LOGGER.info("Created new txn log file with id({}) starting with LSN = {}", getLogFileId(nextFileBeginLsn),
+                nextFileBeginLsn);
+    }
+
+    private long getNextFileFirstLsn() {
+        // add the remaining space in the current file
+        return appendLSN.get() + (logFileSize - getLogFileOffset(appendLSN.get()));
+    }
+
+    private void ensureLastPageFlushed() {
         // Mark the page as the last page so that it will close the output file channel.
         appendPage.setLastPage();
         // Make sure to flush whatever left in the log tail.
         appendPage.setFull();
-        //wait until all log records have been flushed in the current file
         synchronized (flushLSN) {
-            try {
-                while (flushLSN.get() != appendLSN.get()) {
-                    //notification will come from LogBuffer.internalFlush(.)
+            while (flushLSN.get() != appendLSN.get()) {
+                // notification will come from LogBuffer.internalFlush(.)
+                try {
                     flushLSN.wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new ACIDException(e);
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
         }
-        //move appendLSN and flushLSN to the first LSN of the next log file
-        appendLSN.addAndGet(logFileSize - getLogFileOffset(appendLSN.get()));
-        flushLSN.set(appendLSN.get());
-        appendChannel = getFileChannel(appendLSN.get(), true);
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Created new txn log file with id(" + getLogFileId(appendLSN.get()) + ") starting with LSN = "
-                    + appendLSN.get());
-        }
-        //[Notice]
-        //the current log file channel is closed if
-        //LogBuffer.flush() completely flush the last page of the file.
     }
 
     @Override
@@ -386,8 +410,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
                      * The log file which contains the checkpointLSN has been reached.
                      * The oldest log file being accessed by a LogReader has been reached.
                      */
-                    if (id >= checkpointLSNLogFileID
-                            || (txnLogFileId2ReaderCount.containsKey(id) && txnLogFileId2ReaderCount.get(id) > 0)) {
+                    if (id >= checkpointLSNLogFileID || (txnLogFileId2ReaderCount.containsKey(id)
+                            && txnLogFileId2ReaderCount.get(id) > 0)) {
                         break;
                     }
 
@@ -475,11 +499,11 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return logFileIds;
     }
 
-    public String getLogFilePath(long fileId) {
+    private String getLogFilePath(long fileId) {
         return logDir + File.separator + logFilePrefix + "_" + fileId;
     }
 
-    public long getLogFileOffset(long lsn) {
+    private long getLogFileOffset(long lsn) {
         return lsn % logFileSize;
     }
 
@@ -500,28 +524,24 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return (new File(path)).mkdir();
     }
 
-    private FileChannel getFileChannel(long lsn, boolean create) {
-        FileChannel newFileChannel = null;
-        try {
-            long fileId = getLogFileId(lsn);
-            String logFilePath = getLogFilePath(fileId);
-            File file = new File(logFilePath);
-            if (create) {
-                if (!file.createNewFile()) {
-                    throw new IllegalStateException();
-                }
-            } else {
-                if (!file.exists()) {
-                    throw new IllegalStateException();
-                }
-            }
-            RandomAccessFile raf = new RandomAccessFile(new File(logFilePath), "rw");
-            newFileChannel = raf.getChannel();
-            newFileChannel.position(getLogFileOffset(lsn));
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+    private void createNextLogFile() throws IOException {
+        final long nextFileBeginLsn = getNextFileFirstLsn();
+        final long fileId = getLogFileId(nextFileBeginLsn);
+        final Path nextFilePath = Paths.get(getLogFilePath(fileId));
+        if (nextFilePath.toFile().exists()) {
+            LOGGER.warn("Ignored create log file {} since file already exists", nextFilePath.toString());
+            return;
         }
-        return newFileChannel;
+        Files.createFile(nextFilePath);
+    }
+
+    private void setLogPosition(long lsn) throws IOException {
+        final long fileId = getLogFileId(lsn);
+        final Path targetFilePath = Paths.get(getLogFilePath(fileId));
+        final long targetPosition = getLogFileOffset(lsn);
+        final RandomAccessFile raf = new RandomAccessFile(targetFilePath.toFile(), "rw"); // NOSONAR closed by LogBuffer
+        appendChannel = raf.getChannel();
+        appendChannel.position(targetPosition);
     }
 
     @Override

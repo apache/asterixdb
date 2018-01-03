@@ -27,5 +27,11 @@
     <Logger name="org.apache.asterix.test" level="WARN">
       <AppenderRef ref="Console"/>
     </Logger>
+    <Logger name="org.apache.asterix.transaction.management.service.logging.LogFlusher" level="INFO">
+      <AppenderRef ref="Console"/>
+    </Logger>
+    <Logger name="org.apache.asterix.utils.RebalanceUtil" level="INFO">
+      <AppenderRef ref="Console"/>
+    </Logger>
   </Loggers>
 </Configuration>

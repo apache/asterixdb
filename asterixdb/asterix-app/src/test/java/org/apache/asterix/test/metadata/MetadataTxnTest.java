@@ -22,9 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -210,6 +207,38 @@ public class MetadataTxnTest {
                 final PrimaryIndexOperationTracker opTracker = datasetLifecycleManager.getOperationTracker(i);
                 Assert.assertEquals(0, opTracker.getNumActiveOperations());
             }
+        }
+    }
+
+    @Test
+    public void surviveInterruptOnMetadataTxnCommit() throws Exception {
+        ICcApplicationContext appCtx =
+                (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
+        final MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
+        final MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxn);
+        final String nodeGroupName = "ng";
+        Thread transactor = new Thread(() -> {
+            final List<String> ngNodes = Arrays.asList("asterix_nc1");
+            try {
+                MetadataManager.INSTANCE.addNodegroup(mdTxn, new NodeGroup(nodeGroupName, ngNodes));
+                Thread.currentThread().interrupt();
+                MetadataManager.INSTANCE.commitTransaction(mdTxn);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        transactor.start();
+        transactor.join();
+        // ensure that the node group was added
+        final MetadataTransactionContext readMdTxn = MetadataManager.INSTANCE.beginTransaction();
+        try {
+            final NodeGroup nodegroup = MetadataManager.INSTANCE.getNodegroup(readMdTxn, nodeGroupName);
+            if (nodegroup == null) {
+                throw new AssertionError("nodegroup was found after metadata txn was aborted");
+            }
+        } finally {
+            MetadataManager.INSTANCE.commitTransaction(readMdTxn);
         }
     }
 

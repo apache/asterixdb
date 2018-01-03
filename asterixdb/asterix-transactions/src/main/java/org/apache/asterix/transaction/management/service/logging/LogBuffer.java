@@ -125,14 +125,6 @@ public class LogBuffer implements ILogBuffer {
         this.fileChannel = fileChannel;
     }
 
-    public void setInitialFlushOffset(long offset) {
-        try {
-            fileChannel.position(offset);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
     @Override
     public synchronized void setFull() {
         this.full.set(true);
@@ -146,7 +138,7 @@ public class LogBuffer implements ILogBuffer {
 
     @Override
     public boolean hasSpace(int logSize) {
-        return appendOffset + logSize <= logPageSize;
+        return appendOffset + logSize <= logPageSize && !full.get();
     }
 
     @Override

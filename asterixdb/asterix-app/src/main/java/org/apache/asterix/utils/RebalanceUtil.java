@@ -32,6 +32,7 @@ import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
@@ -173,9 +174,16 @@ public class RebalanceUtil {
             try {
                 work.run();
                 done = true;
-            } catch (InterruptedException e) {
-                LOGGER.log(Level.WARN, "Retry with attempt " + (++retryCount), e);
-                interruptedException = e;
+            } catch (Exception e) {
+                Throwable rootCause = ExceptionUtils.getRootCause(e);
+                if (rootCause instanceof java.lang.InterruptedException) {
+                    interruptedException = (InterruptedException) rootCause;
+                    // clear the interrupted state from the thread
+                    Thread.interrupted();
+                    LOGGER.log(Level.WARN, "Retry with attempt " + (++retryCount), e);
+                    continue;
+                }
+                throw e;
             }
         } while (!done);
 

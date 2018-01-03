@@ -25,11 +25,10 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.transactions.ILogRecord;
-import org.apache.asterix.common.transactions.ITransactionContext;
-import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
+import org.apache.asterix.common.utils.InvokeUtil;
 
 public class LogManagerWithReplication extends LogManager {
 
@@ -42,7 +41,7 @@ public class LogManagerWithReplication extends LogManager {
     }
 
     @Override
-    public void log(ILogRecord logRecord) throws ACIDException {
+    public void log(ILogRecord logRecord) {
         boolean shouldReplicate = logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.WAIT;
         if (shouldReplicate) {
             switch (logRecord.getLogType()) {
@@ -66,7 +65,7 @@ public class LogManagerWithReplication extends LogManager {
 
         //Remote flush logs do not need to be flushed separately since they may not trigger local flush
         if (logRecord.getLogType() == LogType.FLUSH && logRecord.getLogSource() == LogSource.LOCAL) {
-            flushLogsQ.offer(logRecord);
+            flushLogsQ.add(logRecord);
             return;
         }
 
@@ -74,7 +73,7 @@ public class LogManagerWithReplication extends LogManager {
     }
 
     @Override
-    protected void appendToLogTail(ILogRecord logRecord) throws ACIDException {
+    protected void appendToLogTail(ILogRecord logRecord) {
         syncAppendToLogTail(logRecord);
 
         if (logRecord.isReplicated()) {
@@ -82,62 +81,26 @@ public class LogManagerWithReplication extends LogManager {
                 replicationManager.replicateLog(logRecord);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                throw new ACIDException(e);
             }
         }
 
-        if (logRecord.getLogSource() == LogSource.LOCAL) {
-            if ((logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
-                    || logRecord.getLogType() == LogType.WAIT) && !logRecord.isFlushed()) {
+        if (logRecord.getLogSource() == LogSource.LOCAL && waitForFlush(logRecord) && !logRecord.isFlushed()) {
+            InvokeUtil.doUninterruptibly(() -> {
                 synchronized (logRecord) {
                     while (!logRecord.isFlushed()) {
-                        try {
-                            logRecord.wait();
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
+                        logRecord.wait();
                     }
-
                     //wait for job Commit/Abort ACK from replicas
                     if (logRecord.isReplicated() && (logRecord.getLogType() == LogType.JOB_COMMIT
                             || logRecord.getLogType() == LogType.ABORT)) {
                         while (!replicationManager.hasBeenReplicated(logRecord)) {
-                            try {
-                                logRecord.wait();
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                            }
+                            logRecord.wait();
                         }
                     }
                 }
-            }
+            });
         }
-    }
-
-    @Override
-    protected synchronized void syncAppendToLogTail(ILogRecord logRecord) throws ACIDException {
-        if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.FLUSH) {
-            ITransactionContext txnCtx = logRecord.getTxnCtx();
-            if (txnCtx.getTxnState() == ITransactionManager.ABORTED && logRecord.getLogType() != LogType.ABORT) {
-                throw new ACIDException(
-                        "Aborted txn(" + txnCtx.getTxnId() + ") tried to write non-abort type log record.");
-            }
-        }
-
-        final int logRecordSize = logRecord.getLogSize();
-        // Make sure the log will not exceed the log file size
-        if (getLogFileOffset(appendLSN.get()) + logRecordSize >= logFileSize) {
-            prepareNextLogFile();
-            prepareNextPage(logRecordSize);
-        } else if (!appendPage.hasSpace(logRecordSize)) {
-            prepareNextPage(logRecordSize);
-        }
-        appendPage.append(logRecord, appendLSN.get());
-
-        if (logRecord.getLogType() == LogType.FLUSH) {
-            logRecord.setLSN(appendLSN.get());
-        }
-
-        appendLSN.addAndGet(logRecordSize);
     }
 
     @Override
@@ -145,5 +108,4 @@ public class LogManagerWithReplication extends LogManager {
         this.replicationManager = replicationManager;
         this.replicationStrategy = replicationManager.getReplicationStrategy();
     }
-
 }
