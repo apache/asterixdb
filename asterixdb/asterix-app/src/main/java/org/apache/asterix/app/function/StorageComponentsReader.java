@@ -40,7 +40,7 @@ public class StorageComponentsReader extends FunctionReader {
     private final Iterator<String> it;
     private final CharArrayRecord record;
 
-    public StorageComponentsReader(DatasetResource dsr) throws HyracksDataException {
+    public StorageComponentsReader(String nodeId, DatasetResource dsr) throws HyracksDataException {
         components = new ArrayList<>();
         if (dsr != null && dsr.isOpen()) {
             Map<Long, IndexInfo> indexes = dsr.getIndexes();
@@ -51,7 +51,9 @@ public class StorageComponentsReader extends FunctionReader {
                 ILSMIndex index = value.getIndex();
                 String path = value.getLocalResource().getPath();
                 strBuilder.append('{');
-                strBuilder.append("\"path\":\"");
+                strBuilder.append("\"node\":\"");
+                strBuilder.append(nodeId);
+                strBuilder.append("\", \"path\":\"");
                 strBuilder.append(path);
                 strBuilder.append("\", \"components\":[");
                 // syncronize over the opTracker

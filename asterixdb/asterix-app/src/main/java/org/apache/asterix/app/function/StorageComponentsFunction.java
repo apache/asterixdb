@@ -45,7 +45,7 @@ public class StorageComponentsFunction extends AbstractDatasourceFunction {
         INcApplicationContext appCtx = (INcApplicationContext) serviceCtx.getApplicationContext();
         DatasetLifecycleManager dsLifecycleMgr = (DatasetLifecycleManager) appCtx.getDatasetLifecycleManager();
         DatasetResource dsr = dsLifecycleMgr.getDatasetLifecycle(datasetId);
-        return new StorageComponentsReader(dsr);
+        return new StorageComponentsReader(ctx.getJobletContext().getServiceContext().getNodeId(), dsr);
     }
 
 }

@@ -99,8 +99,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
     @SuppressWarnings("unchecked")
     private boolean isAccessToIndexedField(AssignOperator assign, IOptimizationContext context)
             throws AlgebricksException {
-        AbstractFunctionCallExpression accessFun = (AbstractFunctionCallExpression) assign.getExpressions().get(0)
-                .getValue();
+        AbstractFunctionCallExpression accessFun =
+                (AbstractFunctionCallExpression) assign.getExpressions().get(0).getValue();
         ILogicalExpression e0 = accessFun.getArguments().get(0).getValue();
         if (e0.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
             return false;
@@ -161,8 +161,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         if (op2.getOperatorTag() != LogicalOperatorTag.SELECT) {
             return false;
         }
-        ILogicalExpression e1 = (ILogicalExpression) access.getAnnotations()
-                .get(OperatorAnnotation.FIELD_ACCESS);
+        ILogicalExpression e1 = (ILogicalExpression) access.getAnnotations().get(OperatorAnnotation.FIELD_ACCESS);
         if (e1 == null) {
             return false;
         }
@@ -215,8 +214,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             pushItDown = true;
         } else if (op2.getOperatorTag() == LogicalOperatorTag.GROUP) {
             GroupByOperator g = (GroupByOperator) op2;
-            List<Pair<LogicalVariable, LogicalVariable>> varMappings =
-                    new ArrayList<>();
+            List<Pair<LogicalVariable, LogicalVariable>> varMappings = new ArrayList<>();
             for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : g.getDecorList()) {
                 ILogicalExpression e = p.second.getValue();
                 if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
@@ -249,8 +247,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         }
         if (pushItDown) {
             if (op2.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
-                Mutable<ILogicalOperator> childOfSubplan = ((NestedTupleSourceOperator) op2).getDataSourceReference()
-                        .getValue().getInputs().get(0);
+                Mutable<ILogicalOperator> childOfSubplan =
+                        ((NestedTupleSourceOperator) op2).getDataSourceReference().getValue().getInputs().get(0);
                 pushAccessDown(opRef, op2, childOfSubplan, context, finalAnnot);
                 return true;
             }
@@ -289,8 +287,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 DataSourceScanOperator scan = (DataSourceScanOperator) op2;
                 int n = scan.getVariables().size();
                 LogicalVariable scanRecordVar = scan.getVariables().get(n - 1);
-                AbstractFunctionCallExpression accessFun = (AbstractFunctionCallExpression) access.getExpressions()
-                        .get(0).getValue();
+                AbstractFunctionCallExpression accessFun =
+                        (AbstractFunctionCallExpression) access.getExpressions().get(0).getValue();
                 ILogicalExpression e0 = accessFun.getArguments().get(0).getValue();
                 LogicalExpressionTag tag = e0.getExpressionTag();
                 if (tag == LogicalExpressionTag.VARIABLE) {
@@ -300,7 +298,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                         if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                             IDataSource<DataSourceId> dataSource = (IDataSource<DataSourceId>) scan.getDataSource();
                             byte dsType = ((DataSource) dataSource).getDatasourceType();
-                            if (dsType == DataSource.Type.FEED || dsType == DataSource.Type.LOADABLE) {
+                            if (dsType == DataSource.Type.FEED || dsType == DataSource.Type.LOADABLE
+                                    || dsType == DataSource.Type.FUNCTION) {
                                 return false;
                             }
                             DataSourceId asid = dataSource.getId();
@@ -375,7 +374,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         fldAccessOpRef.setValue(op2);
         List<Mutable<ILogicalOperator>> faInpList = fieldAccessOp.getInputs();
         faInpList.clear();
-        faInpList.add(new MutableObject<ILogicalOperator>(inputOfOp2.getValue()));
+        faInpList.add(new MutableObject<>(inputOfOp2.getValue()));
         inputOfOp2.setValue(fieldAccessOp);
         // typing
         context.computeAndSetTypeEnvironmentForOperator(fieldAccessOp);

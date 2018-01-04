@@ -3445,6 +3445,11 @@
   </test-group>
   <test-group name="misc">
     <test-case FilePath="misc">
+      <compilation-unit name="validate-expected">
+        <output-dir compare="Text">validate-expected</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="dataset-resources">
         <output-dir compare="Text">dataset-resources</output-dir>
       </compilation-unit>
