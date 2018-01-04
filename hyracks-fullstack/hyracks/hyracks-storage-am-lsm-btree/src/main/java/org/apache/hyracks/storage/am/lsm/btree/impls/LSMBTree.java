@@ -35,7 +35,6 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
@@ -189,14 +188,14 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                     if (!lsmbtreeTuple.isAntimatter()) {
                         throw HyracksDataException.create(ErrorCode.DUPLICATE_KEY);
                     } else {
-                        memCursor.close();
+                        memCursor.destroy();
                         ctx.getCurrentMutableBTreeAccessor().upsertIfConditionElseInsert(tuple,
                                 AntimatterAwareTupleAcceptor.INSTANCE);
                         return true;
                     }
                 }
             } finally {
-                memCursor.close();
+                memCursor.destroy();
             }
 
             // TODO: Can we just remove the above code that search the mutable
@@ -214,7 +213,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                     throw HyracksDataException.create(ErrorCode.DUPLICATE_KEY);
                 }
             } finally {
-                searchCursor.close();
+                searchCursor.destroy();
                 // Add the current active mutable component back
                 ctx.getComponentHolder().add(0, firstComponent);
             }
@@ -264,7 +263,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                     numElements = IntegerPointable.getInteger(countTuple.getFieldData(0), countTuple.getFieldStart(0));
                 }
             } finally {
-                countingCursor.close();
+                countingCursor.destroy();
             }
         }
 
@@ -287,7 +286,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 componentBulkLoader.add(scanCursor.getTuple());
             }
         } finally {
-            scanCursor.close();
+            scanCursor.destroy();
         }
 
         if (component.getLSMComponentFilter() != null) {
@@ -337,7 +336,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 componentBulkLoader.add(frameTuple);
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
         if (mergedComponent.getLSMComponentFilter() != null) {
             List<ITupleReference> filterTuples = new ArrayList<>();
@@ -442,7 +441,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         if (mergingComponents.get(mergingComponents.size() - 1) != diskComponents.get(diskComponents.size() - 1)) {
             returnDeletedTuples = true;
         }
-        ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples);
+        LSMBTreeRangeSearchCursor cursor = new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples);
         return new LSMBTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(),
                 mergeFileRefs.getBloomFilterFileReference(), callback, fileManager.getBaseDir().getAbsolutePath());
     }

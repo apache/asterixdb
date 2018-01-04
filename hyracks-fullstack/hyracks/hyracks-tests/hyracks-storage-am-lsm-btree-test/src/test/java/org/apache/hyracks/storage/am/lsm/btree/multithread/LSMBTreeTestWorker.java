@@ -101,7 +101,7 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
                 break;
 
             case POINT_SEARCH:
-                searchCursor.reset();
+                searchCursor.close();
                 rangePred.setLowKey(tuple, true);
                 rangePred.setHighKey(tuple, true);
                 accessor.search(searchCursor, rangePred);
@@ -109,7 +109,7 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
                 break;
 
             case SCAN:
-                searchCursor.reset();
+                searchCursor.close();
                 rangePred.setLowKey(null, true);
                 rangePred.setHighKey(null, true);
                 accessor.search(searchCursor, rangePred);

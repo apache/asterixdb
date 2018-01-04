@@ -91,8 +91,8 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
         tokenTuple.reset(tokenTupleBuilder.getFieldEndOffsets(), tokenTupleBuilder.getByteArray());
         btreeSearchTuple.reset();
         btreeSearchTuple.addTuple(tokenTuple);
-        btreeCursor.reset();
-        countingCursor.reset();
+        btreeCursor.close();
+        countingCursor.close();
     }
 
     @Override
@@ -113,7 +113,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     @Override
     public void unpinPages() throws HyracksDataException {
         if (cursorNeedsClose) {
-            btreeCursor.close();
+            btreeCursor.destroy();
             cursorNeedsClose = false;
         }
     }
@@ -154,7 +154,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
                 e.printStackTrace();
             } finally {
                 try {
-                    countingCursor.close();
+                    countingCursor.destroy();
                 } catch (HyracksDataException e) {
                     e.printStackTrace();
                 }
@@ -197,8 +197,8 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
         try {
             containsKey = btreeCursor.hasNext();
         } finally {
+            btreeCursor.destroy();
             btreeCursor.close();
-            btreeCursor.reset();
             btreeSearchTuple.removeLastTuple();
         }
         return containsKey;
@@ -219,8 +219,8 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
                 strBuilder.append(o.toString() + " ");
             }
         } finally {
+            btreeCursor.destroy();
             btreeCursor.close();
-            btreeCursor.reset();
         }
         btreeAccessor.search(btreeCursor, btreePred);
         return strBuilder.toString();

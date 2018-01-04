@@ -205,8 +205,8 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
                 listCursor.reset(0, 0, 0, 0);
             }
         } finally {
+            ctx.getBtreeCursor().destroy();
             ctx.getBtreeCursor().close();
-            ctx.getBtreeCursor().reset();
         }
     }
 
@@ -589,7 +589,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
                 }
             }
         } finally {
-            btreeCursor.close();
+            btreeCursor.destroy();
         }
     }
 

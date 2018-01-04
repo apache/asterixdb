@@ -133,7 +133,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
 
     private void searchNextCursor() throws HyracksDataException {
         if (currentCursor < numMutableComponents) {
-            mutableRTreeCursors[currentCursor].reset();
+            mutableRTreeCursors[currentCursor].close();
             mutableRTreeAccessors[currentCursor].search(mutableRTreeCursors[currentCursor], rtreeSearchPredicate);
         }
     }
@@ -161,7 +161,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
                         return true;
                     }
                 }
-                mutableRTreeCursors[currentCursor].close();
+                mutableRTreeCursors[currentCursor].destroy();
                 currentCursor++;
                 searchNextCursor();
             }
@@ -216,7 +216,6 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
         return filter == null ? null : filter.getMaxTuple();
     }
 
-
     @Override
     public void next() throws HyracksDataException {
         foundNext = false;
@@ -228,7 +227,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
     }
 
     @Override
-    public void reset() throws HyracksDataException {
+    public void close() throws HyracksDataException {
         if (!open) {
             return;
         }
@@ -236,27 +235,27 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
         foundNext = false;
         if (includeMutableComponent) {
             for (int i = 0; i < numMutableComponents; i++) {
-                mutableRTreeCursors[i].reset();
-                btreeCursors[i].reset();
+                mutableRTreeCursors[i].close();
+                btreeCursors[i].close();
             }
         }
-        super.reset();
+        super.close();
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         if (!open) {
             return;
         }
         if (includeMutableComponent) {
             for (int i = 0; i < numMutableComponents; i++) {
-                mutableRTreeCursors[i].close();
-                btreeCursors[i].close();
+                mutableRTreeCursors[i].destroy();
+                btreeCursors[i].destroy();
             }
         }
         currentCursor = 0;
         open = false;
-        super.close();
+        super.destroy();
     }
 
     @Override
@@ -267,7 +266,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
 
     private boolean searchMemBTrees(ITupleReference tuple, int lastBTreeToSearch) throws HyracksDataException {
         for (int i = 0; i < lastBTreeToSearch; i++) {
-            btreeCursors[i].reset();
+            btreeCursors[i].close();
             btreeRangePredicate.setHighKey(tuple, true);
             btreeRangePredicate.setLowKey(tuple, true);
             btreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
@@ -276,7 +275,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
                     return false;
                 }
             } finally {
-                btreeCursors[i].close();
+                btreeCursors[i].destroy();
             }
         }
         return true;

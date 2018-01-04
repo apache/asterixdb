@@ -142,7 +142,7 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 // consume tuples [152, 300]
                 consumeIntTupleRange(152, 300, false, -1);
 
-                cursor.close();
+                cursor.destroy();
             } finally {
                 lock.unlock();
             }

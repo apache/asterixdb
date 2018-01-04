@@ -91,7 +91,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
             }
 
             case POINT_SEARCH: {
-                searchCursor.reset();
+                searchCursor.close();
                 searchPred.setQueryTuple(tuple);
                 searchPred.setQueryFieldIndex(0);
                 try {
@@ -107,7 +107,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
             }
 
             case SCAN: {
-                rangeSearchCursor.reset();
+                rangeSearchCursor.close();
                 accessor.rangeSearch(rangeSearchCursor, rangePred);
                 consumeCursorTuples(rangeSearchCursor);
                 break;

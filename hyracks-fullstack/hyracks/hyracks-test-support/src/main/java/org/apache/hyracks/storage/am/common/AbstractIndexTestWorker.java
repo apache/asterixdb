@@ -73,7 +73,7 @@ public abstract class AbstractIndexTestWorker extends Thread implements ITreeInd
                 cursor.next();
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
     }
 }

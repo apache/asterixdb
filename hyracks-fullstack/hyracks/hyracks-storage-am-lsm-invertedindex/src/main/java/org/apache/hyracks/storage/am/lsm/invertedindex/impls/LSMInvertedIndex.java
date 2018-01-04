@@ -294,7 +294,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 numBTreeTuples = IntegerPointable.getInteger(countTuple.getFieldData(0), countTuple.getFieldStart(0));
             }
         } finally {
-            btreeCountingCursor.close();
+            btreeCountingCursor.destroy();
         }
 
         ILSMDiskComponentBulkLoader componentBulkLoader =
@@ -310,7 +310,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 componentBulkLoader.delete(deletedKeysScanCursor.getTuple());
             }
         } finally {
-            deletedKeysScanCursor.close();
+            deletedKeysScanCursor.destroy();
         }
 
         // Scan the in-memory inverted index
@@ -327,7 +327,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 componentBulkLoader.add(scanCursor.getTuple());
             }
         } finally {
-            scanCursor.close();
+            scanCursor.destroy();
         }
         if (component.getLSMComponentFilter() != null) {
             List<ITupleReference> filterTuples = new ArrayList<>();
@@ -383,7 +383,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                     componentBulkLoader.delete(tuple);
                 }
             } finally {
-                btreeCursor.close();
+                btreeCursor.destroy();
             }
         } else {
             componentBulkLoader = component.createBulkLoader(1.0f, false, 0L, false, false, false);
@@ -396,7 +396,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 componentBulkLoader.add(tuple);
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
         if (component.getLSMComponentFilter() != null) {
             List<ITupleReference> filterTuples = new ArrayList<>();

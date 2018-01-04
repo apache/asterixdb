@@ -127,7 +127,7 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
                 // consume tuples [153, 300]
                 consumeIntTupleRange(153, 300, false, -1);
 
-                cursor.close();
+                cursor.destroy();
             } finally {
                 lock.unlock();
             }

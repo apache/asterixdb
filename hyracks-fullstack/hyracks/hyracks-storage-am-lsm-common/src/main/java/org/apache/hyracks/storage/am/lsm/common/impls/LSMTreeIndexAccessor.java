@@ -27,7 +27,6 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameTupleProcessor;
@@ -45,7 +44,7 @@ import org.apache.hyracks.storage.common.ISearchPredicate;
 public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     @FunctionalInterface
     public interface ICursorFactory {
-        ITreeIndexCursor create(ILSMIndexOperationContext ctx);
+        IIndexCursor create(ILSMIndexOperationContext ctx);
     }
 
     protected final ILSMHarness lsmHarness;
@@ -201,7 +200,7 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     }
 
     @Override
-    public ITreeIndexCursor createSearchCursor(boolean exclusive) {
+    public IIndexCursor createSearchCursor(boolean exclusive) {
         return cursorFactory.create(ctx);
     }
 

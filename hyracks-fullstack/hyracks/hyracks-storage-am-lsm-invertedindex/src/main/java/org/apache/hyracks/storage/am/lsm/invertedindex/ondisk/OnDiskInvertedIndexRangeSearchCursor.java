@@ -109,21 +109,21 @@ public class OnDiskInvertedIndexRangeSearchCursor implements IIndexCursor {
     }
 
     @Override
+    public void destroy() throws HyracksDataException {
+        if (unpinNeeded) {
+            invListCursor.unpinPages();
+            unpinNeeded = false;
+        }
+        btreeCursor.destroy();
+    }
+
+    @Override
     public void close() throws HyracksDataException {
         if (unpinNeeded) {
             invListCursor.unpinPages();
             unpinNeeded = false;
         }
-        btreeCursor.close();
-    }
-
-    @Override
-    public void reset() throws HyracksDataException {
-        if (unpinNeeded) {
-            invListCursor.unpinPages();
-            unpinNeeded = false;
-        }
-        btreeCursor.close();
+        btreeCursor.destroy();
     }
 
     @Override

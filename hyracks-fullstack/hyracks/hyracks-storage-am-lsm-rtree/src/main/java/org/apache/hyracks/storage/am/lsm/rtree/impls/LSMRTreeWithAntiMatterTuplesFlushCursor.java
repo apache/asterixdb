@@ -22,13 +22,12 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
+import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMRTreeWithAntiMatterTuplesFlushCursor implements ITreeIndexCursor {
+public class LSMRTreeWithAntiMatterTuplesFlushCursor implements IIndexCursor {
     private final TreeTupleSorter rTreeTupleSorter;
     private final TreeTupleSorter bTreeTupleSorter;
     private final int[] comparatorFields;
@@ -130,11 +129,11 @@ public class LSMRTreeWithAntiMatterTuplesFlushCursor implements ITreeIndexCursor
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
     }
 
     @Override
-    public void reset() throws HyracksDataException {
+    public void close() throws HyracksDataException {
 
     }
 
@@ -153,18 +152,4 @@ public class LSMRTreeWithAntiMatterTuplesFlushCursor implements ITreeIndexCursor
         return null;
     }
 
-    @Override
-    public void setBufferCache(IBufferCache bufferCache) {
-
-    }
-
-    @Override
-    public void setFileId(int fileId) {
-
-    }
-
-    @Override
-    public boolean isExclusiveLatchNodes() {
-        return false;
-    }
 }

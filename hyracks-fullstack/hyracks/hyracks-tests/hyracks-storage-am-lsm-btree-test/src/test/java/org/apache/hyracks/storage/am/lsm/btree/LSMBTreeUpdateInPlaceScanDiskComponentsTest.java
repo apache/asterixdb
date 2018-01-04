@@ -377,7 +377,7 @@ public class LSMBTreeUpdateInPlaceScanDiskComponentsTest extends OrderedIndexTes
             }
             Assert.assertFalse(cursor.hasNext());
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
     }
 

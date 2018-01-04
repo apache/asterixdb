@@ -45,7 +45,6 @@ import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.CheckTuple;
 import org.apache.hyracks.storage.am.common.IIndexTestContext;
 import org.apache.hyracks.storage.am.common.TreeIndexTestUtils;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -137,7 +136,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
                         + "\nActual  : " + actualCount);
             }
         } finally {
-            searchCursor.close();
+            searchCursor.destroy();
         }
     }
 
@@ -180,7 +179,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
                     fail("Point search returned more than one answer.");
                 }
             } finally {
-                searchCursor.close();
+                searchCursor.destroy();
             }
         }
     }
@@ -477,7 +476,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    public void checkExpectedResults(ITreeIndexCursor cursor, Collection checkTuples,
+    public void checkExpectedResults(IIndexCursor cursor, Collection checkTuples,
             ISerializerDeserializer[] fieldSerdes, int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception {
         int actualCount = 0;
         try {
@@ -496,7 +495,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
                         + "\nActual  : " + actualCount);
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
 
     }

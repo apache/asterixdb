@@ -41,7 +41,6 @@ import org.apache.hyracks.storage.am.common.TestOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
@@ -50,6 +49,7 @@ import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -845,7 +845,7 @@ public abstract class AbstractRTreeExamplesTest {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Scan:");
         }
-        ITreeIndexCursor scanCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
+        IIndexCursor scanCursor = indexAccessor.createSearchCursor(false);
         SearchPredicate nullPred = new SearchPredicate(null, null);
         indexAccessor.search(scanCursor, nullPred);
         try {
@@ -858,7 +858,7 @@ public abstract class AbstractRTreeExamplesTest {
                 }
             }
         } finally {
-            scanCursor.close();
+            scanCursor.destroy();
         }
     }
 
@@ -881,7 +881,7 @@ public abstract class AbstractRTreeExamplesTest {
                     }
                 }
             } finally {
-                diskOrderCursor.close();
+                diskOrderCursor.destroy();
             }
         } catch (UnsupportedOperationException e) {
             // Ignore exception because some indexes, e.g. the LSMRTree, don't
@@ -905,7 +905,7 @@ public abstract class AbstractRTreeExamplesTest {
             String kString = TupleUtils.printTuple(key, fieldSerdes);
             LOGGER.info("Range-Search using key: " + kString);
         }
-        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
+        IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
         MultiComparator cmp = RTreeUtils.getSearchMultiComparator(cmpFactories, key);
 
         SearchPredicate rangePred;
@@ -926,7 +926,7 @@ public abstract class AbstractRTreeExamplesTest {
                 }
             }
         } finally {
-            rangeCursor.close();
+            rangeCursor.destroy();
         }
     }
 }

@@ -39,7 +39,7 @@ public class LSMBTreeWithBuddySortedCursor extends LSMBTreeWithBuddyAbstractCurs
             throws HyracksDataException {
         super(opCtx);
         this.buddyBtreeTuple = new PermutingTupleReference(buddyBTreeFields);
-        reset();
+        close();
     }
 
     public ILSMIndexOperationContext getOpCtx() {
@@ -47,12 +47,12 @@ public class LSMBTreeWithBuddySortedCursor extends LSMBTreeWithBuddyAbstractCurs
     }
 
     @Override
-    public void reset() throws HyracksDataException {
+    public void close() throws HyracksDataException {
         depletedBtreeCursors = new boolean[numberOfTrees];
         foundNext = false;
         try {
             for (int i = 0; i < numberOfTrees; i++) {
-                btreeCursors[i].reset();
+                btreeCursors[i].close();
                 btreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
                 if (btreeCursors[i].hasNext()) {
                     btreeCursors[i].next();
@@ -127,7 +127,7 @@ public class LSMBTreeWithBuddySortedCursor extends LSMBTreeWithBuddyAbstractCurs
             boolean killed = false;
             buddyBtreeTuple.reset(frameTuple);
             for (int i = 0; i < foundIn; i++) {
-                buddyBtreeCursors[i].reset();
+                buddyBtreeCursors[i].close();
                 buddyBtreeRangePredicate.setHighKey(buddyBtreeTuple, true);
                 btreeRangePredicate.setLowKey(buddyBtreeTuple, true);
                 btreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
@@ -137,7 +137,7 @@ public class LSMBTreeWithBuddySortedCursor extends LSMBTreeWithBuddyAbstractCurs
                         break;
                     }
                 } finally {
-                    btreeCursors[i].close();
+                    btreeCursors[i].destroy();
                 }
             }
             if (!killed) {
@@ -160,7 +160,7 @@ public class LSMBTreeWithBuddySortedCursor extends LSMBTreeWithBuddyAbstractCurs
         depletedBtreeCursors = new boolean[numberOfTrees];
         foundNext = false;
         for (int i = 0; i < numberOfTrees; i++) {
-            btreeCursors[i].reset();
+            btreeCursors[i].close();
             btreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
             if (btreeCursors[i].hasNext()) {
                 btreeCursors[i].next();

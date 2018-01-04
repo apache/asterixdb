@@ -31,7 +31,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -188,7 +187,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
                 returnDeletedTuples = true;
             }
         }
-        ITreeIndexCursor cursor = new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples);
+        LSMBTreeRangeSearchCursor cursor = new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples);
         BTree firstBTree = ((LSMBTreeDiskComponent) mergingComponents.get(0)).getIndex();
         BTree lastBTree = ((LSMBTreeDiskComponent) mergingComponents.get(mergingComponents.size() - 1)).getIndex();
         FileReference firstFile = firstBTree.getFileReference();

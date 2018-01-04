@@ -22,13 +22,12 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ICursorInitialState;
+import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class LSMBTreeSearchCursor implements ITreeIndexCursor {
+public class LSMBTreeSearchCursor implements IIndexCursor {
 
     public enum LSMBTreeSearchType {
         POINT,
@@ -38,7 +37,7 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
     private final LSMBTreePointSearchCursor pointCursor;
     private final LSMBTreeRangeSearchCursor rangeCursor;
     private final LSMBTreeDiskComponentScanCursor scanCursor;
-    private ITreeIndexCursor currentCursor;
+    private IIndexCursor currentCursor;
 
     public LSMBTreeSearchCursor(ILSMIndexOperationContext opCtx) {
         pointCursor = new LSMBTreePointSearchCursor(opCtx);
@@ -72,17 +71,17 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         if (currentCursor != null) {
-            currentCursor.close();
+            currentCursor.destroy();
         }
         currentCursor = null;
     }
 
     @Override
-    public void reset() throws HyracksDataException {
+    public void close() throws HyracksDataException {
         if (currentCursor != null) {
-            currentCursor.reset();
+            currentCursor.close();
         }
         currentCursor = null;
     }
@@ -101,21 +100,4 @@ public class LSMBTreeSearchCursor implements ITreeIndexCursor {
     public ITupleReference getFilterMaxTuple() {
         return currentCursor.getFilterMaxTuple();
     }
-
-    @Override
-    public void setBufferCache(IBufferCache bufferCache) {
-        currentCursor.setBufferCache(bufferCache);
-    }
-
-    @Override
-    public void setFileId(int fileId) {
-        currentCursor.setFileId(fileId);
-
-    }
-
-    @Override
-    public boolean isExclusiveLatchNodes() {
-        return currentCursor.isExclusiveLatchNodes();
-    }
-
 }

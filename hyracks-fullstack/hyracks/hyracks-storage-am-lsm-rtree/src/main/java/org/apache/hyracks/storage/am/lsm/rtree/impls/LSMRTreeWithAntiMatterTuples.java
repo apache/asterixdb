@@ -30,7 +30,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
@@ -116,7 +115,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 rTreeTupleSorter.insertTupleEntry(rtreeScanCursor.getPageId(), rtreeScanCursor.getTupleOffset());
             }
         } finally {
-            rtreeScanCursor.close();
+            rtreeScanCursor.destroy();
         }
         if (!isEmpty) {
             rTreeTupleSorter.sort();
@@ -140,7 +139,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 bTreeTupleSorter.insertTupleEntry(btreeScanCursor.getPageId(), btreeScanCursor.getTupleOffset());
             }
         } finally {
-            btreeScanCursor.close();
+            btreeScanCursor.destroy();
         }
         if (!isEmpty) {
             bTreeTupleSorter.sort();
@@ -158,7 +157,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 componentBulkLoader.add(frameTuple);
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
 
         if (component.getLSMComponentFilter() != null) {
@@ -194,7 +193,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 componentBulkLoader.add(frameTuple);
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
         if (component.getLSMComponentFilter() != null) {
             List<ITupleReference> filterTuples = new ArrayList<>();
@@ -234,7 +233,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         if (mergingComponents.get(mergingComponents.size() - 1) != diskComponents.get(diskComponents.size() - 1)) {
             returnDeletedTuples = true;
         }
-        ITreeIndexCursor cursor = new LSMRTreeWithAntiMatterTuplesSearchCursor(opCtx, returnDeletedTuples);
+        LSMRTreeWithAntiMatterTuplesSearchCursor cursor =
+                new LSMRTreeWithAntiMatterTuplesSearchCursor(opCtx, returnDeletedTuples);
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
         return new LSMRTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(), null, null,
                 callback, fileManager.getBaseDir().getAbsolutePath());

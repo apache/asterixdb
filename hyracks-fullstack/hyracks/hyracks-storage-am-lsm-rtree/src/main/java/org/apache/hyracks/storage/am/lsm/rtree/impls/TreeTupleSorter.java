@@ -62,7 +62,7 @@ public class TreeTupleSorter implements ITreeIndexCursor {
     }
 
     @Override
-    public void reset() {
+    public void close() {
         numTuples = 0;
         currentTupleIndex = 0;
     }
@@ -217,7 +217,7 @@ public class TreeTupleSorter implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         // do nothing
     }
 

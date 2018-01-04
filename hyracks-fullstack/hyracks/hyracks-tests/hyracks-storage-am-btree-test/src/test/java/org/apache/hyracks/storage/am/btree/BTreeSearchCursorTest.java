@@ -378,7 +378,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
-                    rangeCursor.close();
+                    rangeCursor.destroy();
                 }
 
                 getExpectedResults(expectedResults, keys, lowKey, highKey, lowKeyInclusive, highKeyInclusive);

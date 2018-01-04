@@ -107,7 +107,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
                 break;
 
             case POINT_SEARCH:
-                searchCursor.reset();
+                searchCursor.close();
                 rangePred.setLowKey(tuple, true);
                 rangePred.setHighKey(tuple, true);
                 accessor.search(searchCursor, rangePred);
@@ -115,7 +115,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
                 break;
 
             case SCAN:
-                searchCursor.reset();
+                searchCursor.close();
                 rangePred.setLowKey(null, true);
                 rangePred.setHighKey(null, true);
                 accessor.search(searchCursor, rangePred);
@@ -123,7 +123,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
                 break;
 
             case DISKORDER_SCAN:
-                diskOrderScanCursor.reset();
+                diskOrderScanCursor.close();
                 accessor.diskOrderScan(diskOrderScanCursor);
                 consumeCursorTuples(diskOrderScanCursor);
                 break;
@@ -139,7 +139,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
                 cursor.next();
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
     }
 }

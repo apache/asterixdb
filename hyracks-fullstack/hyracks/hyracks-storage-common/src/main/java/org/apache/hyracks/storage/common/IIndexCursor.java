@@ -22,6 +22,33 @@ package org.apache.hyracks.storage.common;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
+/**
+ * Represents an index cursor. The expected use
+ * cursor = new cursor();
+ * while (more predicates){
+ * -cursor.open(predicate);
+ * -while (cursor.hasNext()){
+ * --cursor.next()
+ * -}
+ * -cursor.close();
+ * }
+ * cursor.destroy();
+ * Each created cursor must have destroy called
+ * Each successfully opened cursor must have close called
+ *
+ * A cursor is a state machine that works as follows:
+ * The states are:
+ * <ul>
+ * <li>CLOSED</li>
+ * <li>OPENED</li>
+ * <li>DESTROYED</li>
+ * </ul>
+ * When a cursor object is created, it is in the CLOSED state.
+ * CLOSED: The only legal calls are open() --> OPENED, or destroy() --> DESTROYED
+ * OPENED: The only legal calls are hasNext(), next(), or close() --> CLOSED.
+ * DESTROYED: All calls are illegal.
+ * Cursors must enforce the cursor state machine
+ */
 public interface IIndexCursor {
     /**
      * Opens the cursor
@@ -49,19 +76,19 @@ public interface IIndexCursor {
     void next() throws HyracksDataException;
 
     /**
-     * Closes the cursor
+     * Destroys the cursor allowing for release of resources.
+     * The cursor can't be used anymore after this call.
+     *
+     * @throws HyracksDataException
+     */
+    void destroy() throws HyracksDataException;
+
+    /**
+     * Close the cursor when done with it after a successful open
      *
      * @throws HyracksDataException
      */
     void close() throws HyracksDataException;
-
-    /**
-     * Reset the cursor to be reused
-     *
-     * @throws HyracksDataException
-     * @throws IndexException
-     */
-    void reset() throws HyracksDataException;
 
     /**
      * @return the tuple pointed to by the cursor

@@ -95,7 +95,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
                 throw new HyracksDataException(th);
             } finally {
                 try {
-                    cursor.close();
+                    cursor.destroy();
                 } catch (Exception cursorCloseException) {
                     throw new IllegalStateException(cursorCloseException);
                 } finally {

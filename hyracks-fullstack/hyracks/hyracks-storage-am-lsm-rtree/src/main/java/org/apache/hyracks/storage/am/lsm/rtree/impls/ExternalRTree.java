@@ -32,7 +32,6 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -67,8 +66,6 @@ import org.apache.hyracks.util.trace.ITracer;
  * This is an lsm r-tree that does not have memory component and is modified
  * only by bulk loading and addition of disk components as of this point, it is
  * intended for use with external dataset indexes only.
- *
- * @author alamouda
  */
 public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
@@ -301,7 +298,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
                     builder.add(tuple);
                 }
             } finally {
-                btreeCursor.close();
+                btreeCursor.destroy();
                 builder.end();
             }
             btreeBulkLoader.end();
@@ -315,7 +312,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
                 bulkLoader.add(frameTuple);
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
         bulkLoader.end();
         return mergedComponent;
@@ -584,7 +581,7 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         ILSMIndexOperationContext rctx = createOpContext(NoOpOperationCallback.INSTANCE, -1);
         rctx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
-        ITreeIndexCursor cursor = new LSMRTreeSortedCursor(rctx, linearizer, buddyBTreeFields);
+        LSMRTreeSortedCursor cursor = new LSMRTreeSortedCursor(rctx, linearizer, buddyBTreeFields);
         LSMComponentFileReferences relMergeFileRefs =
                 getMergeFileReferences((ILSMDiskComponent) mergingComponents.get(0),
                         (ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1));

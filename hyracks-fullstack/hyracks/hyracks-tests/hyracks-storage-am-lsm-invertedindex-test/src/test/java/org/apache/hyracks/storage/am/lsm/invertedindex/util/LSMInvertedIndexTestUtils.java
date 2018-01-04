@@ -298,7 +298,7 @@ public class LSMInvertedIndexTestUtils {
                 fail("Indexes do not match. Actual index contains too many entries.");
             }
         } finally {
-            invIndexCursor.close();
+            invIndexCursor.destroy();
         }
     }
 
@@ -574,7 +574,7 @@ public class LSMInvertedIndexTestUtils {
                     }
                 }
             } finally {
-                resultCursor.close();
+                resultCursor.destroy();
             }
         }
     }

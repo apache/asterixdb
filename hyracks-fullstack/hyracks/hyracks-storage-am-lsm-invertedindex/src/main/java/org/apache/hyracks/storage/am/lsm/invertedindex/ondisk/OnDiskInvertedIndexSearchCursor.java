@@ -104,7 +104,7 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
     }
 
     @Override
-    public void reset() {
+    public void close() {
         currentBufferIndex = 0;
         tupleIndex = 0;
         invIndexSearcher.reset();
@@ -113,7 +113,7 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         currentBufferIndex = 0;
         tupleIndex = 0;
         resultBuffers = null;

@@ -102,7 +102,7 @@ public class ExternalFileIndexAccessor {
         searchKeyTupleBuilder.reset();
         searchKeyTupleBuilder.addField(intSerde, currentFileNumber);
         searchKey.reset(searchKeyTupleBuilder.getFieldEndOffsets(), searchKeyTupleBuilder.getByteArray());
-        fileIndexSearchCursor.reset();
+        fileIndexSearchCursor.close();
 
         // Perform search
         fileIndexAccessor.search(fileIndexSearchCursor, searchPredicate);
@@ -137,7 +137,7 @@ public class ExternalFileIndexAccessor {
     public void close() throws HyracksDataException {
         if (index != null) {
             try {
-                fileIndexSearchCursor.close();
+                fileIndexSearchCursor.destroy();
             } finally {
                 indexDataflowHelper.close();
             }

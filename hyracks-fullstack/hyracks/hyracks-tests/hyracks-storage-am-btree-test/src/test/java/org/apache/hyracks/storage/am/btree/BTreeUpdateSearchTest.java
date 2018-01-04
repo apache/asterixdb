@@ -147,7 +147,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            updateScanCursor.close();
+            updateScanCursor.destroy();
         }
 
         // Ordered scan to verify the values.
@@ -169,7 +169,7 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            scanCursor.close();
+            scanCursor.destroy();
         }
         btree.deactivate();
         btree.destroy();

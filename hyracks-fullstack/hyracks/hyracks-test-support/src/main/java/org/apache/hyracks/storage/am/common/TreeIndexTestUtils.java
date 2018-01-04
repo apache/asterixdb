@@ -31,7 +31,8 @@ import java.util.Random;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.hyracks.api.dataflow.value.*;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -41,6 +42,7 @@ import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -54,7 +56,7 @@ public abstract class TreeIndexTestUtils {
 
     protected abstract ISearchPredicate createNullSearchPredicate();
 
-    public abstract void checkExpectedResults(ITreeIndexCursor cursor, Collection checkTuples,
+    public abstract void checkExpectedResults(IIndexCursor cursor, Collection checkTuples,
             ISerializerDeserializer[] fieldSerdes, int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception;
 
     protected abstract CheckTuple createIntCheckTuple(int[] fieldValues, int numKeyFields);
@@ -120,7 +122,7 @@ public abstract class TreeIndexTestUtils {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Testing Scan.");
         }
-        ITreeIndexCursor scanCursor = (ITreeIndexCursor) ctx.getIndexAccessor().createSearchCursor(false);
+        IIndexCursor scanCursor = ctx.getIndexAccessor().createSearchCursor(false);
         ISearchPredicate nullPred = createNullSearchPredicate();
         ctx.getIndexAccessor().search(scanCursor, nullPred);
         Iterator<CheckTuple> checkIter = ctx.getCheckTuples().iterator();
@@ -157,7 +159,7 @@ public abstract class TreeIndexTestUtils {
                 }
             } finally {
                 try {
-                    diskOrderCursor.close();
+                    diskOrderCursor.destroy();
                 } catch (Exception ex) {
                     LOGGER.log(Level.WARN, "Error during scan cursor close", ex);
                 }

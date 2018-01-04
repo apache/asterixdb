@@ -19,15 +19,12 @@
 
 package org.apache.asterix.metadata;
 
-import static org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
-
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -40,6 +37,7 @@ import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionContext;
+import org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.ImmutableDatasetId;
 import org.apache.asterix.common.transactions.TransactionOptions;
@@ -111,7 +109,6 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -1182,7 +1179,7 @@ public class MetadataNode implements IMetadataNode {
             IIndex indexInstance = datasetLifecycleManager.get(resourceName);
             datasetLifecycleManager.open(resourceName);
             IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
+            IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
 
             RangePredicate rangePred = null;
             rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -1194,7 +1191,7 @@ public class MetadataNode implements IMetadataNode {
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING) }));
                 }
             } finally {
-                rangeCursor.close();
+                rangeCursor.destroy();
             }
             datasetLifecycleManager.close(resourceName);
 
@@ -1202,7 +1199,7 @@ public class MetadataNode implements IMetadataNode {
             indexInstance = datasetLifecycleManager.get(resourceName);
             datasetLifecycleManager.open(resourceName);
             indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
+            rangeCursor = indexAccessor.createSearchCursor(false);
 
             rangePred = null;
             rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -1215,7 +1212,7 @@ public class MetadataNode implements IMetadataNode {
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING) }));
                 }
             } finally {
-                rangeCursor.close();
+                rangeCursor.destroy();
             }
             datasetLifecycleManager.close(resourceName);
 
@@ -1223,7 +1220,7 @@ public class MetadataNode implements IMetadataNode {
             indexInstance = datasetLifecycleManager.get(resourceName);
             datasetLifecycleManager.open(resourceName);
             indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
+            rangeCursor = indexAccessor.createSearchCursor(false);
 
             rangePred = null;
             rangePred = new RangePredicate(null, null, true, true, null, null);
@@ -1237,7 +1234,7 @@ public class MetadataNode implements IMetadataNode {
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING) }));
                 }
             } finally {
-                rangeCursor.close();
+                rangeCursor.destroy();
             }
             datasetLifecycleManager.close(resourceName);
         } catch (Exception e) {
@@ -1258,7 +1255,7 @@ public class MetadataNode implements IMetadataNode {
         IIndex indexInstance = datasetLifecycleManager.get(resourceName);
         datasetLifecycleManager.open(resourceName);
         IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
+        IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
 
         IBinaryComparator[] searchCmps = null;
         MultiComparator searchCmp = null;
@@ -1282,7 +1279,7 @@ public class MetadataNode implements IMetadataNode {
                 }
             }
         } finally {
-            rangeCursor.close();
+            rangeCursor.destroy();
         }
         datasetLifecycleManager.close(resourceName);
     }
@@ -1316,7 +1313,7 @@ public class MetadataNode implements IMetadataNode {
                         }
                     }
                 } finally {
-                    rangeCursor.close();
+                    rangeCursor.destroy();
                 }
             } finally {
                 datasetLifecycleManager.close(resourceName);

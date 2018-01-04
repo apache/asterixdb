@@ -48,7 +48,7 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         page.releaseReadLatch();
         bufferCache.unpin(page);
         page = null;
@@ -130,7 +130,7 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void reset() {
+    public void close() {
         tupleIndex = 0;
         currentPageId = -1;
         maxPageId = -1;

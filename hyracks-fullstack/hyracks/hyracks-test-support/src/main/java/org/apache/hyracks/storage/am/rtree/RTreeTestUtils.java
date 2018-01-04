@@ -34,10 +34,10 @@ import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.CheckTuple;
 import org.apache.hyracks.storage.am.common.IIndexTestContext;
 import org.apache.hyracks.storage.am.common.TreeIndexTestUtils;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.util.HashMultiSet;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
+import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.logging.log4j.LogManager;
@@ -71,7 +71,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         AbstractRTreeTestContext ctx = (AbstractRTreeTestContext) ictx;
         MultiComparator cmp = RTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), key);
 
-        ITreeIndexCursor searchCursor = (ITreeIndexCursor) ctx.getIndexAccessor().createSearchCursor(false);
+        IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor(false);
         SearchPredicate searchPred = new SearchPredicate(key, cmp);
         ctx.getIndexAccessor().search(searchCursor, searchPred);
 
@@ -173,7 +173,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    public void checkExpectedResults(ITreeIndexCursor cursor, Collection checkTuples,
+    public void checkExpectedResults(IIndexCursor cursor, Collection checkTuples,
             ISerializerDeserializer[] fieldSerdes, int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception {
         int actualCount = 0;
         try {
@@ -196,7 +196,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
                         + "\nActual  : " + actualCount);
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
     }
 

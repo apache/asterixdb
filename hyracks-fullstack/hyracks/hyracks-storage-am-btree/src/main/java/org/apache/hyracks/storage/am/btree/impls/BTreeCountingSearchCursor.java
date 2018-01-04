@@ -207,7 +207,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         if (page != null) {
             releasePage();
         }
@@ -220,9 +220,9 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void reset() {
+    public void close() {
         try {
-            close();
+            destroy();
         } catch (Exception e) {
             e.printStackTrace();
         }

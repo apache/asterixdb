@@ -33,7 +33,6 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -273,7 +272,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         ILSMIndexOperationContext bctx = createOpContext(NoOpOperationCallback.INSTANCE, 0);
         bctx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
-        ITreeIndexCursor cursor = new LSMBTreeWithBuddySortedCursor(bctx, buddyBTreeFields);
+        LSMBTreeWithBuddySortedCursor cursor = new LSMBTreeWithBuddySortedCursor(bctx, buddyBTreeFields);
         LSMComponentFileReferences relMergeFileRefs = getMergeTargetFileName(mergingComponents);
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), bctx,
                 opCtx -> new LSMBTreeWithBuddySearchCursor(opCtx, buddyBTreeFields));
@@ -342,7 +341,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                     componentBulkLoader.delete(tuple);
                 }
             } finally {
-                buddyBtreeCursor.close();
+                buddyBtreeCursor.destroy();
             }
         } else {
             componentBulkLoader = mergedComponent.createBulkLoader(1.0f, false, 0L, false, false, false);
@@ -355,7 +354,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 componentBulkLoader.add(frameTuple);
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
         componentBulkLoader.end();
         return mergedComponent;

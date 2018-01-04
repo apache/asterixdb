@@ -33,6 +33,7 @@ import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeAccessor;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeOpContext;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
@@ -53,7 +54,7 @@ public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
     @Override
     public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException {
         LSMRTreeAccessor accessor = (LSMRTreeAccessor) indexAccessor;
-        ITreeIndexCursor searchCursor = accessor.createSearchCursor(false);
+        IIndexCursor searchCursor = accessor.createSearchCursor(false);
         LSMRTreeOpContext concreteCtx = (LSMRTreeOpContext) accessor.getCtx();
         MultiComparator cmp = concreteCtx.getCurrentRTreeOpContext().getCmp();
         SearchPredicate rangePred = new SearchPredicate(tuple, cmp);
@@ -70,7 +71,7 @@ public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
                 break;
 
             case SCAN:
-                searchCursor.reset();
+                searchCursor.close();
                 rangePred.setSearchKey(null);
                 accessor.search(searchCursor, rangePred);
                 consumeCursorTuples(searchCursor);
@@ -122,7 +123,7 @@ public class LSMRTreeTestWorker extends AbstractIndexTestWorker {
                 cursor.next();
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
     }
 }

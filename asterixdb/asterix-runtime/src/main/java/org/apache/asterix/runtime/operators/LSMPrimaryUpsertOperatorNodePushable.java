@@ -25,7 +25,6 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
@@ -143,7 +142,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                         if (cursor.hasNext()) {
                             cursor.next();
                             prevTuple = cursor.getTuple();
-                            cursor.reset(); // end the search
+                            cursor.close(); // end the search
                             appendFilterToPrevTuple();
                             appendPrevRecord();
                             appendPreviousMeta();
@@ -318,7 +317,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         if (isFiltered) {
             writeMissingField();
         }
-        cursor.reset();
+        cursor.close();
     }
 
     /**
@@ -361,7 +360,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     public void close() throws HyracksDataException {
         try {
             try {
-                cursor.close();
+                cursor.destroy();
             } finally {
                 writer.close();
             }

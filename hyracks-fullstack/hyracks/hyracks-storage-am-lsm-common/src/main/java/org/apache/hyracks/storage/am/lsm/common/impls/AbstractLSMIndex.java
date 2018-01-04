@@ -293,7 +293,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
 
     @Override
     public void getOperationalComponents(ILSMIndexOperationContext ctx) throws HyracksDataException {
-        List<ILSMDiskComponent> immutableComponents = diskComponents;
         List<ILSMComponent> operationalComponents = ctx.getComponentHolder();
         int cmc = currentMutableComponentId.get();
         ctx.setCurrentMutableComponentId(cmc);
@@ -309,14 +308,15 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
                 break;
             case INSERT:
                 addOperationalMutableComponents(operationalComponents, true);
-                operationalComponents.addAll(immutableComponents);
+                operationalComponents.addAll(diskComponents);
                 break;
             case SEARCH:
                 if (memoryComponentsAllocated) {
                     addOperationalMutableComponents(operationalComponents, false);
                 }
                 if (filterManager != null) {
-                    for (ILSMComponent c : immutableComponents) {
+                    for (int i = 0; i < diskComponents.size(); i++) {
+                        ILSMComponent c = diskComponents.get(i);
                         if (c.getLSMComponentFilter().satisfy(
                                 ((AbstractSearchPredicate) ctx.getSearchPredicate()).getMinFilterTuple(),
                                 ((AbstractSearchPredicate) ctx.getSearchPredicate()).getMaxFilterTuple(),
@@ -325,7 +325,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
                         }
                     }
                 } else {
-                    operationalComponents.addAll(immutableComponents);
+                    operationalComponents.addAll(diskComponents);
                 }
 
                 break;
@@ -334,13 +334,13 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
                 operationalComponents.addAll(ctx.getComponentsToBeMerged());
                 break;
             case FULL_MERGE:
-                operationalComponents.addAll(immutableComponents);
+                operationalComponents.addAll(diskComponents);
                 break;
             case REPLICATE:
                 operationalComponents.addAll(ctx.getComponentsToBeReplicated());
                 break;
             case DISK_COMPONENT_SCAN:
-                operationalComponents.addAll(immutableComponents);
+                operationalComponents.addAll(diskComponents);
                 break;
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");

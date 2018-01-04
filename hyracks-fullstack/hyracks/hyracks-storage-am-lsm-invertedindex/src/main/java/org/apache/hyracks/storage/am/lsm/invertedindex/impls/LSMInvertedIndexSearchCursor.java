@@ -98,7 +98,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         keySearchPred.setLowKey(key, true);
         keySearchPred.setHighKey(key, true);
         for (int i = 0; i < accessorIndex; i++) {
-            deletedKeysBTreeCursors[i].reset();
+            deletedKeysBTreeCursors[i].close();
             if (deletedKeysBTreeBloomFilters[i] != null && !deletedKeysBTreeBloomFilters[i].contains(key, hashes)) {
                 continue;
             }
@@ -108,7 +108,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
                     return true;
                 }
             } finally {
-                deletedKeysBTreeCursors[i].close();
+                deletedKeysBTreeCursors[i].destroy();
             }
         }
         return false;
@@ -147,7 +147,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
             if (nextValidTuple()) {
                 return true;
             }
-            currentCursor.close();
+            currentCursor.destroy();
             accessorIndex++;
         }
         while (accessorIndex < indexAccessors.size()) {
@@ -159,7 +159,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
                 return true;
             }
             // Close as we go to release resources.
-            currentCursor.close();
+            currentCursor.destroy();
             accessorIndex++;
         }
         return false;
@@ -172,15 +172,15 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
-        reset();
+    public void destroy() throws HyracksDataException {
+        close();
     }
 
     @Override
-    public void reset() throws HyracksDataException {
+    public void close() throws HyracksDataException {
         try {
             if (currentCursor != null) {
-                currentCursor.close();
+                currentCursor.destroy();
                 currentCursor = null;
             }
             accessorIndex = 0;

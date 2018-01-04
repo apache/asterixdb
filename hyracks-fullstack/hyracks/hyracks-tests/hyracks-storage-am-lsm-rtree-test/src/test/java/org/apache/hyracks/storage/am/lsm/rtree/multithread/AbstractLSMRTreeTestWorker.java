@@ -83,7 +83,7 @@ public abstract class AbstractLSMRTreeTestWorker extends AbstractIndexTestWorker
                 cursor.next();
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
     }
 }

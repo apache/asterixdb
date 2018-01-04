@@ -201,7 +201,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         try {
             for (int i = 0; i < tupleCount; i++) {
                 resetSearchPredicate(i);
-                cursor.reset();
+                cursor.close();
                 indexAccessor.search(cursor, searchPred);
                 writeSearchResults(i);
             }
@@ -232,7 +232,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             }
 
             try {
-                cursor.close();
+                cursor.destroy();
             } catch (Throwable th) {
                 if (closeException == null) {
                     closeException = HyracksDataException.create(th);

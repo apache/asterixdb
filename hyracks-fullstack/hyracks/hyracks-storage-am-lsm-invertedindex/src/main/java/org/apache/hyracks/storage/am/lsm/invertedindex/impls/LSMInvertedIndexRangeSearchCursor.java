@@ -106,14 +106,14 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
             if (bloomFilters[i] != null && bloomFilters[i].contains(keysOnlyTuple, hashes)) {
                 continue;
             }
-            deletedKeysBTreeCursors[i].reset();
+            deletedKeysBTreeCursors[i].close();
             try {
                 deletedKeysBTreeAccessors.get(i).search(deletedKeysBTreeCursors[i], keySearchPred);
                 if (deletedKeysBTreeCursors[i].hasNext()) {
                     return true;
                 }
             } finally {
-                deletedKeysBTreeCursors[i].close();
+                deletedKeysBTreeCursors[i].destroy();
             }
         }
         return false;

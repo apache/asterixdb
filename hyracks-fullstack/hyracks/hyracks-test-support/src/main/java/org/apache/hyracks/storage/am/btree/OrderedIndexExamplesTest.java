@@ -42,7 +42,6 @@ import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.TestOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.common.IIndexAccessor;
@@ -773,7 +772,7 @@ public abstract class OrderedIndexExamplesTest {
                 }
             }
         } finally {
-            scanCursor.close();
+            scanCursor.destroy();
         }
     }
 
@@ -796,7 +795,7 @@ public abstract class OrderedIndexExamplesTest {
                     }
                 }
             } finally {
-                diskOrderCursor.close();
+                diskOrderCursor.destroy();
             }
         } catch (UnsupportedOperationException e) {
             // Ignore exception because some indexes, e.g. the LSMBTree, don't
@@ -821,7 +820,7 @@ public abstract class OrderedIndexExamplesTest {
             String highKeyString = TupleUtils.printTuple(highKey, fieldSerdes);
             LOGGER.info("Range-Search in: [ " + lowKeyString + ", " + highKeyString + "]");
         }
-        ITreeIndexCursor rangeCursor = (ITreeIndexCursor) indexAccessor.createSearchCursor(false);
+        IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
         MultiComparator lowKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, lowKey);
         MultiComparator highKeySearchCmp = BTreeUtils.getSearchMultiComparator(cmpFactories, highKey);
         RangePredicate rangePred;
@@ -842,7 +841,7 @@ public abstract class OrderedIndexExamplesTest {
                 }
             }
         } finally {
-            rangeCursor.close();
+            rangeCursor.destroy();
         }
     }
 

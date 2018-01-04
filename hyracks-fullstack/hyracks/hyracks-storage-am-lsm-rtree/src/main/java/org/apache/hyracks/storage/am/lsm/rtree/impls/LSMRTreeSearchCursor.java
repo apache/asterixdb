@@ -39,13 +39,13 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
-        super.close();
+    public void destroy() throws HyracksDataException {
+        super.destroy();
         currentCursor = 0;
     }
 
     @Override
-    public void reset() throws HyracksDataException {
+    public void close() throws HyracksDataException {
         if (!open) {
             return;
         }
@@ -54,8 +54,8 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
         foundNext = false;
         try {
             for (int i = 0; i < numberOfTrees; i++) {
-                rtreeCursors[i].close();
-                btreeCursors[i].close();
+                rtreeCursors[i].destroy();
+                btreeCursors[i].destroy();
             }
             rtreeCursors = null;
             btreeCursors = null;
@@ -82,7 +82,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
 
     private void searchNextCursor() throws HyracksDataException {
         if (currentCursor < numberOfTrees) {
-            rtreeCursors[currentCursor].reset();
+            rtreeCursors[currentCursor].close();
             rtreeAccessors[currentCursor].search(rtreeCursors[currentCursor], rtreeSearchPredicate);
         }
     }
@@ -102,7 +102,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                     if (bloomFilters[i] != null && bloomFilters[i].contains(btreeTuple, hashes)) {
                         continue;
                     }
-                    btreeCursors[i].reset();
+                    btreeCursors[i].close();
                     btreeRangePredicate.setHighKey(btreeTuple, true);
                     btreeRangePredicate.setLowKey(btreeTuple, true);
                     btreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
@@ -111,7 +111,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                             killerTupleFound = true;
                         }
                     } finally {
-                        btreeCursors[i].close();
+                        btreeCursors[i].destroy();
                     }
                 }
                 if (!killerTupleFound) {
@@ -120,7 +120,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                     return true;
                 }
             }
-            rtreeCursors[currentCursor].close();
+            rtreeCursors[currentCursor].destroy();
             currentCursor++;
             searchNextCursor();
         }

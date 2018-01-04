@@ -176,11 +176,11 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         if (lsmHarness != null) {
             try {
                 for (int i = 0; i < rangeCursors.length; i++) {
-                    rangeCursors[i].close();
+                    rangeCursors[i].destroy();
                 }
                 rangeCursors = null;
             } finally {

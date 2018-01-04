@@ -140,7 +140,7 @@ public class LSMRTree extends AbstractLSMRTree {
                 numBTreeTuples = IntegerPointable.getInteger(countTuple.getFieldData(0), countTuple.getFieldStart(0));
             }
         } finally {
-            btreeCountingCursor.close();
+            btreeCountingCursor.destroy();
         }
 
         ILSMDiskComponentBulkLoader componentBulkLoader =
@@ -163,7 +163,7 @@ public class LSMRTree extends AbstractLSMRTree {
                 rTreeTupleSorter.insertTupleEntry(rtreeScanCursor.getPageId(), rtreeScanCursor.getTupleOffset());
             }
         } finally {
-            rtreeScanCursor.close();
+            rtreeScanCursor.destroy();
         }
         rTreeTupleSorter.sort();
 
@@ -177,7 +177,7 @@ public class LSMRTree extends AbstractLSMRTree {
                     componentBulkLoader.add(frameTuple);
                 }
             } finally {
-                cursor.close();
+                cursor.destroy();
             }
         }
 
@@ -191,7 +191,7 @@ public class LSMRTree extends AbstractLSMRTree {
                 componentBulkLoader.delete(frameTuple);
             }
         } finally {
-            btreeScanCursor.close();
+            btreeScanCursor.destroy();
         }
 
         if (component.getLSMComponentFilter() != null) {
@@ -241,7 +241,7 @@ public class LSMRTree extends AbstractLSMRTree {
                     componentBulkLoader.delete(tuple);
                 }
             } finally {
-                btreeCursor.close();
+                btreeCursor.destroy();
             }
         } else {
             //no buddy-btree needed
@@ -256,7 +256,7 @@ public class LSMRTree extends AbstractLSMRTree {
                 componentBulkLoader.add(frameTuple);
             }
         } finally {
-            cursor.close();
+            cursor.destroy();
         }
 
         if (mergedComponent.getLSMComponentFilter() != null) {
@@ -331,7 +331,7 @@ public class LSMRTree extends AbstractLSMRTree {
     @Override
     protected ILSMIOOperation createMergeOperation(AbstractLSMIndexOperationContext opCtx,
             LSMComponentFileReferences mergeFileRefs, ILSMIOOperationCallback callback) throws HyracksDataException {
-        ITreeIndexCursor cursor = new LSMRTreeSortedCursor(opCtx, linearizer, buddyBTreeFields);
+        LSMRTreeSortedCursor cursor = new LSMRTreeSortedCursor(opCtx, linearizer, buddyBTreeFields);
         ILSMIndexAccessor accessor = new LSMRTreeAccessor(getHarness(), opCtx, buddyBTreeFields);
         return new LSMRTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(),
                 mergeFileRefs.getDeleteIndexFileReference(), mergeFileRefs.getBloomFilterFileReference(), callback,

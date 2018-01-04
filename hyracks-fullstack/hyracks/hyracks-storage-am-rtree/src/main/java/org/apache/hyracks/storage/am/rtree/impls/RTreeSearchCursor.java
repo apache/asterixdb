@@ -62,7 +62,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         if (readLatched) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
@@ -249,8 +249,8 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void reset() throws HyracksDataException {
-        close();
+    public void close() throws HyracksDataException {
+        destroy();
     }
 
     @Override

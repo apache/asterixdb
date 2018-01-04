@@ -390,7 +390,7 @@ public class FramewriterTest {
             cursor = Mockito.mock(IIndexCursor.class);
             Mockito.when(cursor.hasNext()).thenReturn(true, true, false);
             Mockito.when(cursor.getTuple()).thenReturn(tuples[i]);
-            Mockito.doThrow(new HyracksDataException("Failed to close cursor")).when(cursor).close();
+            Mockito.doThrow(new HyracksDataException("Failed to close cursor")).when(cursor).destroy();
             cursors[j] = cursor;
             j++;
         }

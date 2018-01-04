@@ -69,14 +69,14 @@ public class RTreeTestWorker extends AbstractIndexTestWorker {
                 break;
 
             case SCAN:
-                searchCursor.reset();
+                searchCursor.close();
                 rangePred.setSearchKey(null);
                 accessor.search(searchCursor, rangePred);
                 consumeCursorTuples(searchCursor);
                 break;
 
             case DISKORDER_SCAN:
-                diskOrderScanCursor.reset();
+                diskOrderScanCursor.close();
                 accessor.diskOrderScan(diskOrderScanCursor);
                 consumeCursorTuples(diskOrderScanCursor);
                 break;

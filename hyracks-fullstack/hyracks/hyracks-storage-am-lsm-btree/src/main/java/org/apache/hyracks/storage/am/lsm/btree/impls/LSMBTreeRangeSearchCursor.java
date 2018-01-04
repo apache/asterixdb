@@ -66,8 +66,8 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void reset() throws HyracksDataException {
-        super.reset();
+    public void close() throws HyracksDataException {
+        super.close();
         canCallProceed = true;
     }
 
@@ -117,7 +117,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                         TupleUtils.copyTuple(tupleBuilder, queueHead.getTuple(), cmp.getKeyFieldCount());
                         copyTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
                         // Unlatches/unpins the leaf page of the index.
-                        rangeCursors[0].reset();
+                        rangeCursors[0].close();
                         // Reconcile.
                         searchCallback.reconcile(copyTuple);
                         // Re-traverses the index.
@@ -220,7 +220,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                     copyTuple.reset(switchComponentTupleBuilders[i].getFieldEndOffsets(),
                             switchComponentTupleBuilders[i].getByteArray());
                     reusablePred.setLowKey(copyTuple, true);
-                    rangeCursors[i].reset();
+                    rangeCursors[i].close();
                     btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                     btreeAccessors[i].search(rangeCursors[i], reusablePred);
                     pushIntoQueueFromCursorAndReplaceThisElement(switchedElements[i]);
@@ -268,8 +268,8 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                     }
                     TupleUtils.copyTuple(switchComponentTupleBuilders[i], element.getTuple(), cmp.getKeyFieldCount());
                 }
-                rangeCursors[i].reset();
                 rangeCursors[i].close();
+                rangeCursors[i].destroy();
                 switchRequest[i] = true;
                 switchedElements[i] = element;
             }
@@ -296,7 +296,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                 TupleUtils.copyTuple(tupleBuilder, mutableElement.getTuple(), cmp.getKeyFieldCount());
                 copyTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
                 // Unlatches/unpins the leaf page of the index.
-                rangeCursors[0].reset();
+                rangeCursors[0].close();
                 // Re-traverses the index.
                 reusablePred.setLowKey(copyTuple, true);
                 btreeAccessors[0].search(rangeCursors[0], reusablePred);
@@ -347,7 +347,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                 rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
             } else {
                 // re-use
-                rangeCursors[i].reset();
+                rangeCursors[i].close();
             }
 
             if (component.getType() == LSMComponentType.MEMORY) {

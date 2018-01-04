@@ -36,11 +36,11 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentTy
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ICursorInitialState;
+import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
-import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public abstract class LSMBTreeWithBuddyAbstractCursor implements ITreeIndexCursor {
+public abstract class LSMBTreeWithBuddyAbstractCursor implements IIndexCursor {
 
     protected boolean open;
     protected BTreeRangeSearchCursor[] btreeCursors;
@@ -107,7 +107,7 @@ public abstract class LSMBTreeWithBuddyAbstractCursor implements ITreeIndexCurso
                     buddyBtreeCursors[i] = new BTreeRangeSearchCursor(
                             (IBTreeLeafFrame) lsmInitialState.getBuddyBTreeLeafFrameFactory().createFrame(), false);
                 } else {
-                    buddyBtreeCursors[i].reset();
+                    buddyBtreeCursors[i].close();
                 }
                 btree = ((LSMBTreeWithBuddyMemoryComponent) component).getIndex();
                 buddyBtree = ((LSMBTreeWithBuddyMemoryComponent) component).getBuddyIndex();
@@ -117,7 +117,7 @@ public abstract class LSMBTreeWithBuddyAbstractCursor implements ITreeIndexCurso
                     buddyBtreeCursors[i] = new BTreeRangeSearchCursor(
                             (IBTreeLeafFrame) lsmInitialState.getBuddyBTreeLeafFrameFactory().createFrame(), false);
                 } else {
-                    buddyBtreeCursors[i].reset();
+                    buddyBtreeCursors[i].close();
                 }
                 btree = ((LSMBTreeWithBuddyDiskComponent) component).getIndex();
                 buddyBtree = ((LSMBTreeWithBuddyDiskComponent) component).getBuddyIndex();
@@ -129,7 +129,7 @@ public abstract class LSMBTreeWithBuddyAbstractCursor implements ITreeIndexCurso
                 btreeAccessors[i] = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
                 buddyBtreeAccessors[i] = buddyBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             } else {
-                btreeCursors[i].reset();
+                btreeCursors[i].close();
                 btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                 buddyBtreeAccessors[i].reset(buddyBtree, NoOpOperationCallback.INSTANCE,
                         NoOpOperationCallback.INSTANCE);
@@ -141,15 +141,15 @@ public abstract class LSMBTreeWithBuddyAbstractCursor implements ITreeIndexCurso
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void destroy() throws HyracksDataException {
         if (!open) {
             return;
         }
         try {
             if (btreeCursors != null && buddyBtreeCursors != null) {
                 for (int i = 0; i < numberOfTrees; i++) {
-                    btreeCursors[i].close();
-                    buddyBtreeCursors[i].close();
+                    btreeCursors[i].destroy();
+                    buddyBtreeCursors[i].destroy();
                 }
             }
             btreeCursors = null;
@@ -165,20 +165,4 @@ public abstract class LSMBTreeWithBuddyAbstractCursor implements ITreeIndexCurso
     public ITupleReference getTuple() {
         return frameTuple;
     }
-
-    @Override
-    public void setBufferCache(IBufferCache bufferCache) {
-        // Do nothing
-    }
-
-    @Override
-    public void setFileId(int fileId) {
-        // Do nothing
-    }
-
-    @Override
-    public boolean isExclusiveLatchNodes() {
-        return false;
-    }
-
 }

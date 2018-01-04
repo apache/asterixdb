@@ -102,8 +102,8 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
                 tokenExists = true;
             }
         } finally {
+            ctx.getBtreeCursor().destroy();
             ctx.getBtreeCursor().close();
-            ctx.getBtreeCursor().reset();
         }
         return tokenExists;
     }
