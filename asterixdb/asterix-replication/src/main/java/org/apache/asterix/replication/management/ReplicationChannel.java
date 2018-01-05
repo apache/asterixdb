@@ -107,7 +107,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         @Override
         public void run() {
             final String oldName = Thread.currentThread().getName();
-            Thread.currentThread().setName("Replication Workerً");
+            Thread.currentThread().setName("Replication Worker");
             try {
                 ReplicationRequestType requestType = ReplicationProtocol.getRequestType(socketChannel, inBuffer);
                 while (requestType != ReplicationRequestType.GOODBYE) {
