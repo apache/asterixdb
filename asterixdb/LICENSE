@@ -273,184 +273,6 @@
    Bootstrap-based projects, I would certainly appreciate any form of support,
    even a nice Tweet is enough. Of course if you want, you can say thank you and
    support me by buying more icons on GLYPHICONS.com.
----
-   Portions of the AsterixDB QueryUI
-       located at:
-         asterix-app/src/main/resources/queryui/js/json-formatter.min.js,
-       and
-         asterix-app/src/main/resources/queryui/css/json-formatter.min.css
-
-   are available under the following license:
----
-   Copyright 2014 Mohsen Azimi
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
----
-   Portions of the AsterixDB QueryUI
-       located at:
-         asterix-app/src/main/resources/queryui/js/bootstrap.min.js,
-         asterix-app/src/main/resources/queryui/css/bootstrap.min.css,
-         asterix-app/src/main/resources/queryui/css/bootstrap-theme.min.css,
-         asterix-app/src/main/resources/queryui/css/bootstrap-theme.min.css,
-         asterix-app/src/main/resources/queryui/fonts/glyphicons-halflings-regular.eot,
-         asterix-app/src/main/resources/queryui/fonts/glyphicons-halflings-regular.svg,
-         asterix-app/src/main/resources/queryui/fonts/glyphicons-halflings-regular.ttf,
-         asterix-app/src/main/resources/queryui/fonts/glyphicons-halflings-regular.woff,
-       and
-         asterix-app/src/main/resources/queryui/fonts/glyphicons-halflings-regular.woff2
-
-   are available under the following license:
----
-   The MIT License (MIT)
-
-   Copyright (c) 2011-2015 Twitter, Inc
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-   THE SOFTWARE.
-
-   queryui/css/bootstrap.min.css also contains normalize.css v3.0.3
-   (http://github.com/necolas/normalize.css), having the following copyright:
-   --
-   Copyright © Nicolas Gallagher and Jonathan Neal
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy of
-   this software and associated documentation files (the "Software"), to deal in
-   the Software without restriction, including without limitation the rights to
-   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-   the Software, and to permit persons to whom the Software is furnished to do so,
-   subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in all
-   copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-   FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-   COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-   IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-   --
-   Credit for font files: queryui/fonts/glyphicons-halflings-regular.eot,
-                          queryui/fonts/glyphicons-halflings-regular.svg,
-                          queryui/fonts/glyphicons-halflings-regular.ttf,
-                          queryui/fonts/glyphicons-halflings-regular.woff,
-                        and
-                          queryui/fonts/glyphicons-halflings-regular.woff2
-
-   GLYPHICONS Halflings font is also released as an extension of a Bootstrap
-   (www.getbootstrap.com) for free and it is released under the same license as
-   Bootstrap. While you are not required to include attribution on your
-   Bootstrap-based projects, I would certainly appreciate any form of support,
-   even a nice Tweet is enough. Of course if you want, you can say thank you and
-   support me by buying more icons on GLYPHICONS.com.
----
-
-   Portions of the AsterixDB QueryUI
-       located at:
-         asterix-app/src/main/resources/queryui/js/angular.min.js
-
-   are available under The MIT License:
----
-   Copyright (c) 2010-2016 Google, Inc. http://angularjs.org
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-   THE SOFTWARE.
----
-   Portions of the AsterixDB QueryUI
-       located at:
-         asterix-app/src/main/resources/queryui/js/codemirror.js,
-         asterix-app/src/main/resources/queryui/js/javascript.js,
-       and
-         asterix-app/src/main/resources/queryui/css/codemirror.css
-
-   are available under The MIT License:
----
-   Copyright (C) 2016 by Marijn Haverbeke <marijnh@gmail.com> and others
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-   THE SOFTWARE.
----
-   Portions of the AsterixDB QueryUI
-       located at:
-         asterix-app/src/main/resources/queryui/js/ui-codemirror.js
-
-   are available under The MIT License:
----
-   Copyright (c) 2012 the AngularUI Team, http://angular-ui.github.com
-
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-   THE SOFTWARE.
----
    Portions of the AsterixDB runtime
        located at:
          asterix-hivecompat/src/main/java/org/apache/asterix/hivecompat/io/*
@@ -851,3 +673,357 @@
    such warranty or additional liability.
    END OF TERMS AND CONDITIONS
 ---
+File Saver Portions of the AsterixDB Dashboard located at:
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/output.component.ts
+ asterix-app/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js
+ asterix-app/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle
+ asterix-app/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js
+ asterix-app/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js
+ asterix-app/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js
+ asterix-app/src/main/resources/dashboard/static/index.html
+
+  are available under The MIT License:
+---
+The MIT License
+
+Copyright © 2016 Eli Grey.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+---
+ReactiveX/rxjs located at:
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/datasets-collection/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/datatypes-collection/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/dataverses-collection/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/
+ asterix-app/src/main/resources/dashboard/src/app/
+ asterix-app/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js
+ asterix-app/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle
+ asterix-app/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js
+ asterix-app/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js
+ asterix-app/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js
+ asterix-app/src/main/resources/dashboard/static/index.html
+is licensed under the Apache License 2.0
+---
+PrimeNG Portions of the AsterixDB Dashboard located at:
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/output.component.ts
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/output.component.html
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/output.component.scss
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.ts
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.html
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.scss
+ asterix-app/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js
+ asterix-app/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle
+ asterix-app/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js
+ asterix-app/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js
+ asterix-app/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js
+ asterix-app/src/main/resources/dashboard/static/index.html
+
+are available under The MIT License:
+---
+The MIT License (MIT)
+
+Copyright (c) 2016-2017 PrimeTek
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+---
+
+NGRX Portions of the AsterixDB Dashboard located at:
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/datasets-collection/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/datatypes-collection/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/dataverses-collection/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/
+ asterix-app/src/main/resources/dashboard/src/app/
+ asterix-app/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js
+ asterix-app/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle
+ asterix-app/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js
+ asterix-app/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js
+ asterix-app/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js
+ asterix-app/src/main/resources/dashboard/static/index.html
+
+are available under The MIT License:
+---
+The MIT License (MIT)
+
+Copyright (c) 2017 Brandon Roberts, Mike Ryan, Victor Savkin, Rob Wormald
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+---
+Codemirror Portions of the AsterixDB Dashboard located at:
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/input.component.ts
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/input.component.html
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/input.component.scss
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/codemirror.component.ts
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/query/codemirror.component.scss
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.ts
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.html
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.scss
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/codemirror-metadata.component.ts
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/metadata/codemirror-metadata.component.scss
+ asterix-app/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js
+ asterix-app/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle
+ asterix-app/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js
+ asterix-app/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js
+ asterix-app/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js
+ asterix-app/src/main/resources/dashboard/static/index.html
+
+   are available under The MIT License:
+---
+   MIT License
+
+Copyright (C) 2017 by Marijn Haverbeke <marijnh@gmail.com> and others
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+---
+Angular Portions of the AsterixDB Dashboard located at:
+ asterix-app/src/main/resources/dashboard/src/
+ asterix-app/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js
+ asterix-app/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle
+ asterix-app/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js
+ asterix-app/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js
+ asterix-app/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js
+ asterix-app/src/main/resources/dashboard/static/index.html
+
+   are available under The MIT License:
+---
+The MIT License
+
+Copyright (c) 2014-2017 Google, Inc. http://angular.io
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+---
+Angular Material, hammerjs Portions of the AsterixDB Dashboard located at:
+ asterix-app/src/main/resources/dashboard/src/app/dashboard/
+ asterix-app/src/main/resources/dashboard/src/app/material.module.ts
+ asterix-app/src/main/resources/dashboard/src/main.ts
+ asterix-app/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js
+ asterix-app/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle
+ asterix-app/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js
+ asterix-app/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js
+ asterix-app/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js
+ asterix-app/src/main/resources/dashboard/static/index.html
+
+   are available under The MIT License:
+---
+   The MIT License
+
+Copyright (c) 2017 Google LLC.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+
+---
+Core JS Material Portions of the AsterixDB Dashboard located at:
+ asterix-app/src/main/resources/dashboard/src/
+ asterix-app/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js
+ asterix-app/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle
+ asterix-app/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js
+ asterix-app/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js
+ asterix-app/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js
+ asterix-app/src/main/resources/dashboard/static/index.html
+
+   are available under following License:
+   https://github.com/zloirock/core-js/blob/master/LICENSE
+---
+
+Copyright (c) 2014-2017 Denis Pushkarev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+---
+Roboto Font Portions of the AsterixDB Dashboard located at:
+ asterix-app/src/main/resources/dashboard/src/index.html
+ asterix-app/src/main/resources/dashboard/static/roboto-v15-latin-regular.3d3a53586bd78d1069ae.svg
+ asterix-app/src/main/resources/dashboard/static/roboto-v15-latin-regular.7e367be02cd17a96d513.woff2
+ asterix-app/src/main/resources/dashboard/static/roboto-v15-latin-regular.9f916e330c478bbfa2a0.eot
+ asterix-app/src/main/resources/dashboard/static/roboto-v15-latin-regular.16e1d930cf13fb7a9563.woff
+ asterix-app/src/main/resources/dashboard/static/roboto-v15-latin-regular.38861cba61c66739c145.ttf
+ asterix-app/src/main/resources/dashboard/static/index.html
+   are available under following License: Apache2.0
+   https://github.com/google/roboto/blob/master/LICENSE
+---
+Font Awesome Portions of the AsterixDB Dashboard, used in primeng components located at:
+ asterix-app/src/main/resources/dashboard/src/index.html
+ asterix-app/src/main/resources/dashboard/static/index.html
+
+    http://fontawesome.io/license/ Applies to all CSS and LESS files in the
+    following directories if exist: font-awesome/css/, font-awesome/less/, and
+    font-awesome/scss/.  and downloaded from CDN network services and loaded in
+    index.html License: MIT License URL:
+    http://opensource.org/licenses/mit-license.html
+---
+webpack@3.8.1 portions of the AsterixDB Dashboard
+       located at:
+        asterix-app/src/main/resources/dashboard/
+   are available under The MIT License:
+---
+MIT
+Copyright JS Foundation and other contributors
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+---
+zone.js@0.8.18 Portions of the AsterixDB Dashboard located at:
+ asterix-app/src/main/resources/dashboard/src/
+ asterix-app/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js
+ asterix-app/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle
+ asterix-app/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js
+ asterix-app/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js
+ asterix-app/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js
+ asterix-app/src/main/resources/dashboard/static/index.html
+   are available under The MIT License:
+---
+MIT
+The MIT License
+
+Copyright (c) 2016 Google, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
