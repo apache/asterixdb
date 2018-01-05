@@ -44,4 +44,11 @@ public interface IPartitionReplica {
      * @return The identifier
      */
     ReplicaIdentifier getIdentifier();
+
+    /**
+     * Notifies that failure {@code failure} occurred on this replica
+     *
+     * @param failure
+     */
+    void notifyFailure(Exception failure);
 }

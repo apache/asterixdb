@@ -18,42 +18,10 @@
  */
 package org.apache.asterix.common.replication;
 
-import java.util.Collections;
-import java.util.Set;
-
-import org.apache.asterix.common.config.ReplicationProperties;
-import org.apache.hyracks.api.config.IConfigManager;
-import org.apache.hyracks.control.common.config.ConfigManager;
-import org.apache.hyracks.control.common.controllers.NCConfig;
-
 public class NoReplicationStrategy implements IReplicationStrategy {
 
     @Override
     public boolean isMatch(int datasetId) {
         return false;
-    }
-
-    @Override
-    public boolean isParticipant(String nodeId) {
-        return false;
-    }
-
-    @Override
-    public Set<Replica> getRemotePrimaryReplicas(String nodeId) {
-        return Collections.emptySet();
-    }
-
-    @Override
-    public Set<Replica> getRemoteReplicas(String node) {
-        return Collections.emptySet();
-    }
-
-    public Set<Replica> getRemoteReplicasAndSelf(String nodeId) {
-        return Collections.emptySet();
-    }
-
-    @Override
-    public NoReplicationStrategy from(ReplicationProperties p, IConfigManager configManager) {
-        return new NoReplicationStrategy();
     }
 }

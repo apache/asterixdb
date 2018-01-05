@@ -18,43 +18,34 @@
  */
 package org.apache.asterix.common.config;
 
-import java.util.List;
-import org.apache.hyracks.api.config.IApplicationConfig;
+import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
+import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+
+import java.util.concurrent.TimeUnit;
+
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.StorageUtil.StorageUnit;
 
-import static org.apache.hyracks.control.common.config.OptionTypes.*;
-
 public class ReplicationProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS(
-                INTEGER,
-                5,
-                "The maximum number of times to attempt to recover from a replica on failure before giving up"),
-        REPLICATION_LOG_BUFFER_PAGESIZE(
-                INTEGER_BYTE_UNIT,
-                StorageUtil.getIntSizeInBytes(128, StorageUnit.KILOBYTE),
+        REPLICATION_LOG_BUFFER_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, StorageUnit.KILOBYTE),
                 "The size in bytes of each log buffer page"),
         REPLICATION_LOG_BUFFER_NUMPAGES(INTEGER, 8, "The number of log buffer pages"),
-        REPLICATION_LOG_BATCHSIZE(
-                INTEGER_BYTE_UNIT,
-                StorageUtil.getIntSizeInBytes(4, StorageUnit.KILOBYTE),
+        REPLICATION_LOG_BATCHSIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, StorageUnit.KILOBYTE),
                 "The size in bytes to replicate in each batch"),
-        REPLICATION_TIMEOUT(
-                INTEGER,
-                REPLICATION_TIME_OUT_DEFAULT,
-                "The time in seconds to timeout when trying to contact a replica, before assuming it is dead"),
-
+        REPLICATION_TIMEOUT(LONG, TimeUnit.SECONDS.toSeconds(30),
+                "The time in seconds to timeout waiting for master or replica to ack"),
         REPLICATION_ENABLED(BOOLEAN, false, "Whether or not data replication is enabled"),
-        REPLICATION_FACTOR(INTEGER, 3, "Number of node controller faults to tolerate with replication"),
-        REPLICATION_STRATEGY(STRING, "chained_declustering", "Replication strategy to choose"),
-        REPLICATION_PORT(INTEGER, 2000, "port on which to run replication related communications"),;
+        REPLICATION_FACTOR(INTEGER, 2, "Number of replicas (backups) to maintain per master replica"),
+        REPLICATION_STRATEGY(STRING, "none", "Replication strategy to choose");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -85,38 +76,14 @@ public class ReplicationProperties extends AbstractProperties {
         public Object defaultValue() {
             return defaultValue;
         }
-
-        @Override
-        public Object get(IApplicationConfig config) {
-            switch (this) {
-                case REPLICATION_TIMEOUT:
-                    return REPLICATION_TIME_OUT_DEFAULT;
-                default:
-                    return config.getStatic(this);
-            }
-        }
     }
 
     public boolean isReplicationEnabled() {
         return accessor.getBoolean(Option.REPLICATION_ENABLED);
     }
 
-    private static final int REPLICATION_TIME_OUT_DEFAULT = 15;
-
-    public ReplicationProperties(PropertiesAccessor accessor) throws HyracksDataException {
+    public ReplicationProperties(PropertiesAccessor accessor) {
         super(accessor);
-    }
-
-    public int getMaxRemoteRecoveryAttempts() {
-        return accessor.getInt(Option.REPLICATION_MAX_REMOTE_RECOVERY_ATTEMPTS);
-    }
-
-    public int getReplicationFactor() {
-        return accessor.getInt(Option.REPLICATION_FACTOR);
-    }
-
-    public List<String> getNodeIds() {
-        return accessor.getNCNames();
     }
 
     public int getLogBufferPageSize() {
@@ -131,20 +98,23 @@ public class ReplicationProperties extends AbstractProperties {
         return accessor.getInt(Option.REPLICATION_LOG_BATCHSIZE);
     }
 
-    public String getNodeIpFromId(String id) {
-        return accessor.getNCEffectiveConfig(id).getString(NCConfig.Option.PUBLIC_ADDRESS);
+    public String getReplicationAddress() {
+        return accessor.getString(NCConfig.Option.REPLICATION_LISTEN_ADDRESS);
+    }
+
+    public int getReplicationPort() {
+        return accessor.getInt(NCConfig.Option.REPLICATION_LISTEN_PORT);
     }
 
     public String getReplicationStrategy() {
         return accessor.getString(Option.REPLICATION_STRATEGY);
     }
 
-    public int getReplicationTimeOut() {
-        return accessor.getInt(Option.REPLICATION_TIMEOUT);
+    public long getReplicationTimeOut() {
+        return accessor.getLong(Option.REPLICATION_TIMEOUT);
     }
 
-    public MetadataProperties getMetadataProperties() {
-        return new MetadataProperties(accessor);
+    public int getReplicationFactor() {
+        return accessor.getInt(Option.REPLICATION_FACTOR);
     }
-
 }

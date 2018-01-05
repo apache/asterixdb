@@ -19,7 +19,6 @@
 package org.apache.asterix.replication.api;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.replication.IReplicationThread;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IReplicaTask extends IReplicationMessage {
@@ -31,5 +30,5 @@ public interface IReplicaTask extends IReplicationMessage {
      * @param worker
      * @throws HyracksDataException
      */
-    void perform(INcApplicationContext appCtx, IReplicationThread worker) throws HyracksDataException;
+    void perform(INcApplicationContext appCtx, IReplicationWorker worker) throws HyracksDataException;
 }

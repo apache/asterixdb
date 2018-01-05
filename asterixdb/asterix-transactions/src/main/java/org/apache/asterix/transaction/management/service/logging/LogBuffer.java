@@ -26,10 +26,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.replication.IReplicationThread;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILogBuffer;
 import org.apache.asterix.common.transactions.ILogRecord;
+import org.apache.asterix.common.transactions.ILogRequester;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogRecord;
@@ -318,10 +318,9 @@ public class LogBuffer implements ILogBuffer {
             }
         }
         logRecord.isFlushed(true);
-        IReplicationThread replicationThread = logRecord.getReplicationThread();
-
-        if (replicationThread != null) {
-            replicationThread.notifyLogReplicationRequester(logRecord);
+        final ILogRequester logRequester = logRecord.getRequester();
+        if (logRequester != null) {
+            logRequester.notifyFlushed(logRecord);
         }
     }
 

@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -46,7 +47,6 @@ import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
-import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.transactions.Checkpoint;
@@ -96,16 +96,17 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private final ICheckpointManager checkpointManager;
     private SystemState state;
     private final INCServiceContext serviceCtx;
+    private final INcApplicationContext appCtx;
+
 
     public RecoveryManager(ITransactionSubsystem txnSubsystem, INCServiceContext serviceCtx) {
         this.serviceCtx = serviceCtx;
         this.txnSubsystem = txnSubsystem;
+        this.appCtx = txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext();
         logMgr = (LogManager) txnSubsystem.getLogManager();
-        ReplicationProperties repProperties = txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext()
-                .getReplicationProperties();
+        ReplicationProperties repProperties = appCtx.getReplicationProperties();
         replicationEnabled = repProperties.isReplicationEnabled();
-        localResourceRepository = (PersistentLocalResourceRepository) txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getLocalResourceRepository();
+        localResourceRepository = (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         cachedEntityCommitsPerJobSize = txnSubsystem.getTransactionProperties().getJobRecoveryMemorySize();
         checkpointManager = txnSubsystem.getCheckpointManager();
     }
@@ -129,32 +130,18 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             LOGGER.info("The checkpoint file doesn't exist: systemState = PERMANENT_DATA_LOSS");
             return state;
         }
-
-        if (replicationEnabled) {
-            if (checkpointObject.getMinMCTFirstLsn() == AbstractCheckpointManager.SHARP_CHECKPOINT_LSN) {
-                //no logs exist
-                state = SystemState.HEALTHY;
-            } else if (checkpointObject.getCheckpointLsn() == logMgr.getAppendLSN() && checkpointObject.isSharp()) {
-                //only remote logs exist
-                state = SystemState.HEALTHY;
-            } else {
-                //need to perform remote recovery
-                state = SystemState.CORRUPTED;
+        long readableSmallestLSN = logMgr.getReadableSmallestLSN();
+        if (logMgr.getAppendLSN() == readableSmallestLSN) {
+            if (checkpointObject.getMinMCTFirstLsn() != AbstractCheckpointManager.SHARP_CHECKPOINT_LSN) {
+                LOGGER.warn("Some(or all) of transaction log files are lost.");
+                //No choice but continuing when the log files are lost.
             }
+            state = SystemState.HEALTHY;
+        } else if (checkpointObject.getCheckpointLsn() == logMgr.getAppendLSN()
+                && checkpointObject.getMinMCTFirstLsn() == AbstractCheckpointManager.SHARP_CHECKPOINT_LSN) {
+            state = SystemState.HEALTHY;
         } else {
-            long readableSmallestLSN = logMgr.getReadableSmallestLSN();
-            if (logMgr.getAppendLSN() == readableSmallestLSN) {
-                if (checkpointObject.getMinMCTFirstLsn() != AbstractCheckpointManager.SHARP_CHECKPOINT_LSN) {
-                    LOGGER.warn("Some(or all) of transaction log files are lost.");
-                    //No choice but continuing when the log files are lost.
-                }
-                state = SystemState.HEALTHY;
-            } else if (checkpointObject.getCheckpointLsn() == logMgr.getAppendLSN()
-                    && checkpointObject.getMinMCTFirstLsn() == AbstractCheckpointManager.SHARP_CHECKPOINT_LSN) {
-                state = SystemState.HEALTHY;
-            } else {
-                state = SystemState.CORRUPTED;
-            }
+            state = SystemState.CORRUPTED;
         }
         return state;
     }
@@ -442,9 +429,47 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     private long getRemoteMinFirstLSN() throws HyracksDataException {
-        IReplicaResourcesManager remoteResourcesManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getAppContext().getReplicaResourcesManager();
-        return remoteResourcesManager.getPartitionsMinLSN(localResourceRepository.getInactivePartitions());
+        // find the min first lsn of partitions that are replicated on this node
+        final Set<Integer> allPartitions = localResourceRepository.getAllPartitions();
+        final INcApplicationContext appContext = txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext();
+        final Set<Integer> masterPartitions = appContext.getReplicaManager().getPartitions();
+        allPartitions.removeAll(masterPartitions);
+        return getPartitionsMinLSN(allPartitions);
+    }
+
+    private long getPartitionsMinLSN(Set<Integer> partitions) throws HyracksDataException {
+        final IIndexCheckpointManagerProvider idxCheckpointMgrProvider = appCtx.getIndexCheckpointManagerProvider();
+        long minRemoteLSN = Long.MAX_VALUE;
+        for (Integer partition : partitions) {
+            final List<DatasetResourceReference> partitionResources = localResourceRepository.getResources(resource -> {
+                DatasetLocalResource dsResource = (DatasetLocalResource) resource.getResource();
+                return dsResource.getPartition() == partition;
+            }).values().stream().map(DatasetResourceReference::of).collect(Collectors.toList());
+            for (DatasetResourceReference indexRef : partitionResources) {
+                long remoteIndexMaxLSN = idxCheckpointMgrProvider.get(indexRef).getLowWatermark();
+                minRemoteLSN = Math.min(minRemoteLSN, remoteIndexMaxLSN);
+            }
+        }
+        return minRemoteLSN;
+    }
+
+    @Override
+    public void replayReplicaPartitionLogs(Set<Integer> partitions, boolean flush) throws HyracksDataException {
+        long minLSN = getPartitionsMinLSN(partitions);
+        long readableSmallestLSN = logMgr.getReadableSmallestLSN();
+        if (minLSN < readableSmallestLSN) {
+            minLSN = readableSmallestLSN;
+        }
+
+        //replay logs > minLSN that belong to these partitions
+        try {
+            replayPartitionsLogs(partitions, logMgr.getLogReader(true), minLSN);
+            if (flush) {
+                appCtx.getDatasetLifecycleManager().flushAllDatasets();
+            }
+        } catch (IOException | ACIDException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     @Override
@@ -535,7 +560,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         TxnEntityId loserEntity;
         List<Long> undoLSNSet = null;
         //get active partitions on this node
-        Set<Integer> activePartitions = localResourceRepository.getActivePartitions();
+        Set<Integer> activePartitions = appCtx.getReplicaManager().getPartitions();
         ILogReader logReader = logMgr.getLogReader(false);
         try {
             logReader.setPosition(firstLSN);

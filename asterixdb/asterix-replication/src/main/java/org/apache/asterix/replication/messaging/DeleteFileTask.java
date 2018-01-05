@@ -27,9 +27,8 @@ import java.nio.file.Files;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
-import org.apache.asterix.common.replication.IReplicationThread;
+import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.replication.api.IReplicaTask;
-import org.apache.asterix.replication.functions.ReplicationProtocol;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.logging.log4j.LogManager;
@@ -48,7 +47,7 @@ public class DeleteFileTask implements IReplicaTask {
     }
 
     @Override
-    public void perform(INcApplicationContext appCtx, IReplicationThread worker) {
+    public void perform(INcApplicationContext appCtx, IReplicationWorker worker) {
         try {
             final IIOManager ioManager = appCtx.getIoManager();
             final File localFile = ioManager.resolve(file).getFile();

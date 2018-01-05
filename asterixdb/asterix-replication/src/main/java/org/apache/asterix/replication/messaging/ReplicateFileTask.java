@@ -30,10 +30,12 @@ import java.nio.file.Paths;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
-import org.apache.asterix.common.replication.IReplicationThread;
+import org.apache.asterix.replication.api.IReplicationWorker;
+import org.apache.asterix.common.storage.IIndexCheckpointManager;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.replication.api.IReplicaTask;
-import org.apache.asterix.replication.functions.ReplicationProtocol;
 import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -49,14 +51,16 @@ public class ReplicateFileTask implements IReplicaTask {
     private static final Logger LOGGER = LogManager.getLogger();
     private final String file;
     private final long size;
+    private final boolean indexMetadata;
 
-    public ReplicateFileTask(String file, long size) {
+    public ReplicateFileTask(String file, long size, boolean indexMetadata) {
         this.file = file;
         this.size = size;
+        this.indexMetadata = indexMetadata;
     }
 
     @Override
-    public void perform(INcApplicationContext appCtx, IReplicationThread worker) throws HyracksDataException {
+    public void perform(INcApplicationContext appCtx, IReplicationWorker worker) {
         try {
             final IIOManager ioManager = appCtx.getIoManager();
             // resolve path
@@ -76,6 +80,9 @@ public class ReplicateFileTask implements IReplicaTask {
                 NetworkingUtil.downloadFile(fileChannel, worker.getChannel());
                 fileChannel.force(true);
             }
+            if (indexMetadata) {
+                initIndexCheckpoint(appCtx);
+            }
             //delete mask
             Files.delete(maskPath);
             LOGGER.info(() -> "Replicated file: " + localPath);
@@ -83,6 +90,16 @@ public class ReplicateFileTask implements IReplicaTask {
         } catch (IOException e) {
             throw new ReplicationException(e);
         }
+    }
+
+    private void initIndexCheckpoint(INcApplicationContext appCtx) throws HyracksDataException {
+        final ResourceReference indexRef = ResourceReference.of(file);
+        final IIndexCheckpointManagerProvider checkpointManagerProvider = appCtx.getIndexCheckpointManagerProvider();
+        final IIndexCheckpointManager indexCheckpointManager = checkpointManagerProvider.get(indexRef);
+        final long currentLSN = appCtx.getTransactionSubsystem().getLogManager().getAppendLSN();
+        indexCheckpointManager.delete();
+        indexCheckpointManager.init(currentLSN);
+        LOGGER.info(() -> "Checkpoint index: " + indexRef);
     }
 
     @Override
@@ -96,6 +113,7 @@ public class ReplicateFileTask implements IReplicaTask {
             DataOutputStream dos = new DataOutputStream(out);
             dos.writeUTF(file);
             dos.writeLong(size);
+            dos.writeBoolean(indexMetadata);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -104,6 +122,7 @@ public class ReplicateFileTask implements IReplicaTask {
     public static ReplicateFileTask create(DataInput input) throws IOException {
         final String s = input.readUTF();
         final long i = input.readLong();
-        return new ReplicateFileTask(s, i);
+        final boolean isMetadata = input.readBoolean();
+        return new ReplicateFileTask(s, i, isMetadata);
     }
 }

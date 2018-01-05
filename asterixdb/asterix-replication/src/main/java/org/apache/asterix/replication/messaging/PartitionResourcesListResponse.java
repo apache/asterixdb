@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.replication.api.IReplicationMessage;
-import org.apache.asterix.replication.functions.ReplicationProtocol;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class PartitionResourcesListResponse implements IReplicationMessage {

@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.app.replication;
 
-import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
-import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.hyracks.api.application.ICCServiceContext;
 
 public class FaultToleranceStrategyFactory {
@@ -29,20 +27,10 @@ public class FaultToleranceStrategyFactory {
         throw new AssertionError();
     }
 
-    public static final String STRATEGY_NAME = "metadata_only";
-
-    public static IFaultToleranceStrategy create(ICCServiceContext serviceCtx, ReplicationProperties repProp,
-            IReplicationStrategy strategy) {
-        Class<? extends IFaultToleranceStrategy> clazz;
-        if (!repProp.isReplicationEnabled()) {
-            clazz = NoFaultToleranceStrategy.class;
-        } else if (STRATEGY_NAME.equals(repProp.getReplicationStrategy())) {
-            clazz = MetadataNodeFaultToleranceStrategy.class;
-        } else {
-            clazz = AutoFaultToleranceStrategy.class;
-        }
+    public static IFaultToleranceStrategy create(ICCServiceContext serviceCtx, boolean replicationEnabled) {
+        Class<? extends IFaultToleranceStrategy> clazz = NoFaultToleranceStrategy.class;
         try {
-            return clazz.newInstance().from(serviceCtx, strategy);
+            return clazz.newInstance().from(serviceCtx, replicationEnabled);
         } catch (InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException(e);
         }

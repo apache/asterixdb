@@ -21,39 +21,31 @@ package org.apache.asterix.common.replication;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.config.ReplicationProperties;
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.hyracks.api.config.IConfigManager;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
 public class ReplicationStrategyFactory {
 
     private static final Map<String, Class<? extends IReplicationStrategy>> BUILT_IN_REPLICATION_STRATEGY =
             new HashMap<>();
 
     static {
-        BUILT_IN_REPLICATION_STRATEGY.put("no_replication", NoReplicationStrategy.class);
-        BUILT_IN_REPLICATION_STRATEGY.put("chained_declustering", ChainedDeclusteringReplicationStrategy.class);
-        BUILT_IN_REPLICATION_STRATEGY.put("metadata_only", MetadataOnlyReplicationStrategy.class);
+        BUILT_IN_REPLICATION_STRATEGY.put("none", NoReplicationStrategy.class);
+        BUILT_IN_REPLICATION_STRATEGY.put("all", AllDatasetsReplicationStrategy.class);
+        BUILT_IN_REPLICATION_STRATEGY.put("metadata", MetadataOnlyReplicationStrategy.class);
     }
 
     private ReplicationStrategyFactory() {
         throw new AssertionError();
     }
 
-    public static IReplicationStrategy create(String name, ReplicationProperties repProp, IConfigManager ncConfig)
-            throws HyracksDataException {
+    public static IReplicationStrategy create(String name) {
         String strategyName = name.toLowerCase();
         if (!BUILT_IN_REPLICATION_STRATEGY.containsKey(strategyName)) {
-            throw new RuntimeDataException(ErrorCode.UNSUPPORTED_REPLICATION_STRATEGY, String.format(
-                    "%s. Available strategies: %s", strategyName, BUILT_IN_REPLICATION_STRATEGY.keySet().toString()));
+            throw new IllegalStateException("Couldn't find strategy with name: " + name);
         }
         Class<? extends IReplicationStrategy> clazz = BUILT_IN_REPLICATION_STRATEGY.get(strategyName);
         try {
-            return clazz.newInstance().from(repProp, ncConfig);
+            return clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            throw new RuntimeDataException(ErrorCode.INSTANTIATION_ERROR, e, clazz.getName());
+            throw new IllegalStateException("Couldn't instantiated replication strategy: " + name, e);
         }
     }
 }

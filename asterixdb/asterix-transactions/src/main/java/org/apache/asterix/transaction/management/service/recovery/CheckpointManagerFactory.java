@@ -29,11 +29,7 @@ public class CheckpointManagerFactory {
     }
 
     public static ICheckpointManager create(ITransactionSubsystem txnSubsystem,
-            CheckpointProperties checkpointProperties, boolean replicationEnabled) {
-        if (!replicationEnabled) {
-            return new CheckpointManager(txnSubsystem, checkpointProperties);
-        } else {
-            return new ReplicationCheckpointManager(txnSubsystem, checkpointProperties);
-        }
+            CheckpointProperties checkpointProperties) {
+        return new CheckpointManager(txnSubsystem, checkpointProperties);
     }
 }

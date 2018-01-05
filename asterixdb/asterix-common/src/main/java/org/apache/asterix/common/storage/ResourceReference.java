@@ -91,6 +91,10 @@ public class ResourceReference {
         ref.root = tokens[--offset];
     }
 
+    public int getPartitionNum() {
+        return Integer.parseInt(partition.substring(StorageConstants.PARTITION_DIR_PREFIX.length()));
+    }
+
     protected static void parseLegacyPath(ResourceReference ref, String path) {
         // old format: root/partition/dataverse/datasetName_idx_IndexName/fileName
         final String[] tokens = path.split(File.separator);

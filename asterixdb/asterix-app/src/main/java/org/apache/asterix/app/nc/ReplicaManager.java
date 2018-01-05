@@ -29,10 +29,10 @@ import java.util.stream.Stream;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.replication.IPartitionReplica;
-import org.apache.asterix.common.replication.IRemoteRecoveryManager;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
-import org.apache.asterix.replication.storage.PartitionReplica;
+import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ReplicaManager implements IReplicaManager {
@@ -67,7 +67,9 @@ public class ReplicaManager implements IReplicaManager {
         if (!replicas.containsKey(id)) {
             throw new IllegalStateException("replica with id(" + id + ") does not exist");
         }
-        replicas.remove(id);
+        PartitionReplica replica = replicas.remove(id);
+        appCtx.getReplicationManager().unregister(replica);
+
     }
 
     @Override
@@ -83,8 +85,8 @@ public class ReplicaManager implements IReplicaManager {
 
     @Override
     public synchronized void promote(int partition) throws HyracksDataException {
-        final IRemoteRecoveryManager remoteRecoveryManager = appCtx.getRemoteRecoveryManager();
-        remoteRecoveryManager.replayReplicaPartitionLogs(Stream.of(partition).collect(Collectors.toSet()), true);
+        final IRecoveryManager recoveryManager = appCtx.getTransactionSubsystem().getRecoveryManager();
+        recoveryManager.replayReplicaPartitionLogs(Stream.of(partition).collect(Collectors.toSet()), true);
         partitions.add(partition);
     }
 }

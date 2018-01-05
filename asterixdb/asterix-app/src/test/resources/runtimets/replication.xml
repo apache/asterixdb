@@ -29,5 +29,20 @@
         <output-dir compare="Text">metadata_failover</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="replication">
+      <compilation-unit name="bulkload">
+        <output-dir compare="Text">bulkload</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="replication">
+      <compilation-unit name="mem_component_recovery">
+        <output-dir compare="Text">mem_component_recovery</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="replication">
+      <compilation-unit name="flushed_component">
+        <output-dir compare="Text">flushed_component</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

@@ -19,25 +19,8 @@
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries" QueryFileExtension=".aql">
   <test-group name="failover">
     <test-case FilePath="failover">
-      <compilation-unit name="bulkload">
-        <output-dir compare="Text">bulkload</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failover">
-      <compilation-unit name="mem_component_recovery">
-        <output-dir compare="Text">mem_component_recovery</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="failover">
-      <compilation-unit name="metadata_node">
-        <output-dir compare="Text">metadata_node</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="failback">
-    <test-case FilePath="failback">
-      <compilation-unit name="node_failback">
-        <output-dir compare="Text">node_failback</output-dir>
+      <compilation-unit name="resync_failed_replica">
+        <output-dir compare="Text">resync_failed_replica</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.replication.IReplicationThread;
+import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.replication.api.IReplicaTask;
-import org.apache.asterix.replication.functions.ReplicationProtocol;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -44,11 +44,12 @@ public class PartitionResourcesListTask implements IReplicaTask {
     }
 
     @Override
-    public void perform(INcApplicationContext appCtx, IReplicationThread worker) throws HyracksDataException {
+    public void perform(INcApplicationContext appCtx, IReplicationWorker worker) throws HyracksDataException {
         //TODO delete any invalid files with masks
-        final List<String> partitionResources =
-                appCtx.getReplicaResourcesManager().getPartitionIndexesFiles(partition, false).stream()
-                        .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toList());
+        final PersistentLocalResourceRepository localResourceRepository =
+                (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
+        final List<String> partitionResources = localResourceRepository.getPartitionIndexesFiles(partition).stream()
+                .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toList());
         final PartitionResourcesListResponse response =
                 new PartitionResourcesListResponse(partition, partitionResources);
         ReplicationProtocol.sendTo(worker.getChannel(), response, worker.getReusableBuffer());

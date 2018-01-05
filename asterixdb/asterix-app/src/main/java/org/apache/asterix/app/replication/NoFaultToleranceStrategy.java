@@ -32,6 +32,9 @@ import org.apache.asterix.app.nc.task.LocalRecoveryTask;
 import org.apache.asterix.app.nc.task.MetadataBootstrapTask;
 import org.apache.asterix.app.nc.task.ReportLocalCountersTask;
 import org.apache.asterix.app.nc.task.StartLifecycleComponentsTask;
+import org.apache.asterix.app.nc.task.StartReplicationServiceTask;
+import org.apache.asterix.app.replication.message.MetadataNodeRequestMessage;
+import org.apache.asterix.app.replication.message.MetadataNodeResponseMessage;
 import org.apache.asterix.app.replication.message.NCLifecycleTaskReportMessage;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.app.replication.message.RegistrationTasksResponseMessage;
@@ -43,8 +46,8 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
-import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
+import org.apache.asterix.metadata.MetadataManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -59,6 +62,7 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
     private String metadataNodeId;
     private Set<String> pendingStartupCompletionNodes = new HashSet<>();
     private ICCMessageBroker messageBroker;
+    private boolean replicationEnabled;
 
     @Override
     public void notifyNodeJoin(String nodeId) throws HyracksDataException {
@@ -84,15 +88,19 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
             case REGISTRATION_TASKS_RESULT:
                 process((NCLifecycleTaskReportMessage) message);
                 break;
+            case METADATA_NODE_RESPONSE:
+                process((MetadataNodeResponseMessage) message);
+                break;
             default:
                 throw new RuntimeDataException(ErrorCode.UNSUPPORTED_MESSAGE_TYPE, message.getType().name());
         }
     }
 
     @Override
-    public IFaultToleranceStrategy from(ICCServiceContext serviceCtx, IReplicationStrategy replicationStrategy) {
+    public IFaultToleranceStrategy from(ICCServiceContext serviceCtx, boolean replicationEnabled) {
         NoFaultToleranceStrategy ft = new NoFaultToleranceStrategy();
         ft.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
+        ft.replicationEnabled = replicationEnabled;
         return ft;
     }
 
@@ -141,9 +149,13 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
         if (state == SystemState.CORRUPTED) {
             //need to perform local recovery for node partitions
-            LocalRecoveryTask rt = new LocalRecoveryTask(Arrays.asList(clusterManager.getNodePartitions(nodeId))
-                    .stream().map(ClusterPartition::getPartitionId).collect(Collectors.toSet()));
+            LocalRecoveryTask rt = new LocalRecoveryTask(
+                    Arrays.asList(clusterManager.getNodePartitions(nodeId)).stream()
+                            .map(ClusterPartition::getPartitionId).collect(Collectors.toSet()));
             tasks.add(rt);
+        }
+        if (replicationEnabled) {
+            tasks.add(new StartReplicationServiceTask());
         }
         if (isMetadataNode) {
             tasks.add(new MetadataBootstrapTask());
@@ -167,5 +179,43 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
         }
         tasks.add(new ReportLocalCountersTask());
         return tasks;
+    }
+
+    @Override
+    public void notifyMetadataNodeChange(String node) throws HyracksDataException {
+        if (metadataNodeId.equals(node)) {
+            return;
+        }
+        // if current metadata node is active, we need to unbind its metadata proxy object
+        if (clusterManager.isMetadataNodeActive()) {
+            MetadataNodeRequestMessage msg = new MetadataNodeRequestMessage(false);
+            try {
+                messageBroker.sendApplicationMessageToNC(msg, metadataNodeId);
+                // when the current node responses, we will bind to the new one
+                metadataNodeId = node;
+            } catch (Exception e) {
+                throw HyracksDataException.create(e);
+            }
+        } else {
+            requestMetadataNodeTakeover(node);
+        }
+    }
+
+    private void process(MetadataNodeResponseMessage response) throws HyracksDataException {
+        // rebind metadata node since it might be changing
+        MetadataManager.INSTANCE.rebindMetadataNode();
+        clusterManager.updateMetadataNode(response.getNodeId(), response.isExported());
+        if (!response.isExported()) {
+            requestMetadataNodeTakeover(metadataNodeId);
+        }
+    }
+
+    private void requestMetadataNodeTakeover(String node) throws HyracksDataException {
+        MetadataNodeRequestMessage msg = new MetadataNodeRequestMessage(true);
+        try {
+            messageBroker.sendApplicationMessageToNC(msg, node);
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
     }
 }

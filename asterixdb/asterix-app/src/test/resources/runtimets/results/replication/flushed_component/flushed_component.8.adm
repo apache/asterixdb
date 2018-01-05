@@ -1,0 +1,38 @@
+{
+  "metadata_node" : "asterix_nc2",
+  "partitions" : {
+    "0" : {
+      "active" : true,
+      "activeNodeId" : "asterix_nc2",
+      "iodeviceNum" : 0,
+      "nodeId" : "asterix_nc1",
+      "partitionId" : 0,
+      "pendingActivation" : false
+    },
+    "1" : {
+      "active" : true,
+      "activeNodeId" : "asterix_nc1",
+      "iodeviceNum" : 1,
+      "nodeId" : "asterix_nc1",
+      "partitionId" : 1,
+      "pendingActivation" : false
+    },
+    "2" : {
+      "active" : true,
+      "activeNodeId" : "asterix_nc2",
+      "iodeviceNum" : 0,
+      "nodeId" : "asterix_nc2",
+      "partitionId" : 2,
+      "pendingActivation" : false
+    },
+    "3" : {
+      "active" : true,
+      "activeNodeId" : "asterix_nc2",
+      "iodeviceNum" : 1,
+      "nodeId" : "asterix_nc2",
+      "partitionId" : 3,
+      "pendingActivation" : false
+    }
+  },
+  "state" : "ACTIVE"
+}

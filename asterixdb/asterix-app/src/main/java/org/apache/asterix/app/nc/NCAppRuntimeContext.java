@@ -54,11 +54,8 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.replication.IRemoteRecoveryManager;
-import org.apache.asterix.common.replication.IReplicaResourcesManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
-import org.apache.asterix.common.replication.Replica;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
@@ -72,10 +69,8 @@ import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
-import org.apache.asterix.replication.management.ReplicationChannel;
 import org.apache.asterix.replication.management.ReplicationManager;
-import org.apache.asterix.replication.recovery.RemoteRecoveryManager;
-import org.apache.asterix.replication.storage.ReplicaResourcesManager;
+import org.apache.asterix.replication.management.ReplicationChannel;
 import org.apache.asterix.runtime.transaction.GlobalResourceIdFactoryProvider;
 import org.apache.asterix.runtime.utils.NoOpCoordinationService;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
@@ -139,8 +134,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private ActiveManager activeManager;
     private IReplicationChannel replicationChannel;
     private IReplicationManager replicationManager;
-    private IRemoteRecoveryManager remoteRecoveryManager;
-    private IReplicaResourcesManager replicaResourcesManager;
     private final ILibraryManager libraryManager;
     private final NCExtensionManager ncExtensionManager;
     private final IStorageComponentProvider componentProvider;
@@ -190,8 +183,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         indexCheckpointManagerProvider = new IndexCheckpointManagerProvider(ioManager);
 
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory =
-                new PersistentLocalResourceRepositoryFactory(ioManager, getServiceContext().getNodeId(),
-                        metadataProperties, indexCheckpointManagerProvider);
+                new PersistentLocalResourceRepositoryFactory(ioManager, indexCheckpointManagerProvider);
 
         localResourceRepository =
                 (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory.createRepository();
@@ -224,47 +216,21 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 this.ncServiceContext);
 
         if (replicationProperties.isReplicationEnabled()) {
+            replicationManager = new ReplicationManager(this, replicationProperties);
 
-            replicaResourcesManager = new ReplicaResourcesManager(localResourceRepository, metadataProperties,
-                    indexCheckpointManagerProvider);
+            //pass replication manager to replication required object
+            //LogManager to replicate logs
+            txnSubsystem.getLogManager().setReplicationManager(replicationManager);
 
-            replicationManager = new ReplicationManager(nodeId, replicationProperties, replicaResourcesManager,
-                    txnSubsystem.getLogManager(), asterixAppRuntimeContextProvider, ncServiceContext);
+            //PersistentLocalResourceRepository to replicate metadata files and delete backups on drop index
+            localResourceRepository.setReplicationManager(replicationManager);
 
-            if (replicationManager.getReplicationStrategy().isParticipant(getServiceContext().getNodeId())) {
+            //initialize replication channel
+            replicationChannel = new ReplicationChannel(this);
 
-                //pass replication manager to replication required object
-                //LogManager to replicate logs
-                txnSubsystem.getLogManager().setReplicationManager(replicationManager);
-
-                //PersistentLocalResourceRepository to replicate metadata files and delete backups on drop index
-                localResourceRepository.setReplicationManager(replicationManager);
-
-                /*
-                 * add the partitions that will be replicated in this node as inactive partitions
-                 */
-                //get nodes which replicate to this node
-                Set<String> remotePrimaryReplicas = replicationManager.getReplicationStrategy()
-                        .getRemotePrimaryReplicas(nodeId).stream().map(Replica::getId).collect(Collectors.toSet());
-                for (String clientId : remotePrimaryReplicas) {
-                    //get the partitions of each client
-                    ClusterPartition[] clientPartitions = metadataProperties.getNodePartitions().get(clientId);
-                    for (ClusterPartition partition : clientPartitions) {
-                        localResourceRepository.addInactivePartition(partition.getPartitionId());
-                    }
-                }
-
-                //initialize replication channel
-                replicationChannel = new ReplicationChannel(nodeId, replicationProperties, txnSubsystem.getLogManager(),
-                        replicaResourcesManager, replicationManager, getServiceContext(),
-                        asterixAppRuntimeContextProvider, replicationManager.getReplicationStrategy());
-
-                remoteRecoveryManager = new RemoteRecoveryManager(replicationManager, this, replicationProperties);
-
-                bufferCache = new BufferCache(ioManager, prs, pcp, new FileMapManager(),
-                        storageProperties.getBufferCacheMaxOpenFiles(), getServiceContext().getThreadFactory(),
-                        replicationManager);
-            }
+            bufferCache = new BufferCache(ioManager, prs, pcp, new FileMapManager(),
+                    storageProperties.getBufferCacheMaxOpenFiles(), getServiceContext().getThreadFactory(),
+                    replicationManager);
         } else {
             bufferCache = new BufferCache(ioManager, prs, pcp, new FileMapManager(),
                     storageProperties.getBufferCacheMaxOpenFiles(), getServiceContext().getThreadFactory());
@@ -438,16 +404,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IReplicationChannel getReplicationChannel() {
         return replicationChannel;
-    }
-
-    @Override
-    public IReplicaResourcesManager getReplicaResourcesManager() {
-        return replicaResourcesManager;
-    }
-
-    @Override
-    public IRemoteRecoveryManager getRemoteRecoveryManager() {
-        return remoteRecoveryManager;
     }
 
     @Override

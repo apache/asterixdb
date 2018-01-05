@@ -25,12 +25,11 @@ import java.io.OutputStream;
 import java.util.Collection;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.replication.IReplicationThread;
+import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.replication.api.IReplicaTask;
-import org.apache.asterix.replication.functions.ReplicationProtocol;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.LocalResource;
@@ -47,7 +46,7 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
     }
 
     @Override
-    public void perform(INcApplicationContext appCtx, IReplicationThread worker) throws HyracksDataException {
+    public void perform(INcApplicationContext appCtx, IReplicationWorker worker) throws HyracksDataException {
         final IIndexCheckpointManagerProvider indexCheckpointManagerProvider =
                 appCtx.getIndexCheckpointManagerProvider();
         PersistentLocalResourceRepository resRepo =

@@ -1,0 +1,7 @@
+[ {
+  "partition" : 3,
+  "replicas" : [ {
+    "location" : "127.0.0.1:2001",
+    "status" : "IN_SYNC"
+  } ]
+} ]

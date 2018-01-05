@@ -119,4 +119,15 @@ public interface IRecoveryManager {
      * @throws ACIDException
      */
     void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException;
+
+    /**
+     * Replay the commited transactions' logs belonging to {@code partitions}. if {@code flush} is true,
+     * all datasets are flushed after the logs are replayed.
+     *
+     * @param partitions
+     * @param flush
+     * @throws HyracksDataException
+     */
+    void replayReplicaPartitionLogs(Set<Integer> partitions, boolean flush) throws HyracksDataException;
+
 }

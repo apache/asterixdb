@@ -76,7 +76,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Checkpoint Properties: " + checkpointProperties);
         }
-        checkpointManager = CheckpointManagerFactory.create(this, checkpointProperties, replicationEnabled);
+        checkpointManager = CheckpointManagerFactory.create(this, checkpointProperties);
         final Checkpoint latestCheckpoint = checkpointManager.getLatest();
         if (latestCheckpoint != null) {
             transactionManager.ensureMaxTxnId(latestCheckpoint.getMaxTxnId());

@@ -22,9 +22,10 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.asterix.common.transactions.ILogRecord;
-import org.apache.asterix.replication.management.ReplicationManager;
+import org.apache.asterix.replication.management.LogReplicationManager;
 
 public class ReplicationLogBuffer {
+
     private final int logBufferSize;
     private final AtomicBoolean full;
     private int appendOffset;
@@ -32,10 +33,10 @@ public class ReplicationLogBuffer {
     private final ByteBuffer appendBuffer;
     private final ByteBuffer replicationBuffer;
     private boolean stop;
-    private ReplicationManager replicationManager;
+    private final LogReplicationManager replicationManager;
     private final int batchSize;
 
-    public ReplicationLogBuffer(ReplicationManager replicationManager, int logBufferSize, int batchSize) {
+    public ReplicationLogBuffer(LogReplicationManager replicationManager, int logBufferSize, int batchSize) {
         this.replicationManager = replicationManager;
         this.logBufferSize = logBufferSize;
         this.batchSize = batchSize;
@@ -116,7 +117,7 @@ public class ReplicationLogBuffer {
     private void transferBuffer(ByteBuffer buffer) {
         if (buffer.remaining() <= batchSize) {
             //the current batch can be sent as it is
-            replicationManager.replicateTxnLogBatch(buffer);
+            replicationManager.transferBatch(buffer);
             return;
         }
         /**
@@ -141,7 +142,7 @@ public class ReplicationLogBuffer {
                 //return to the beginning of the batch position
                 buffer.reset();
             }
-            replicationManager.replicateTxnLogBatch(buffer);
+            replicationManager.transferBatch(buffer);
             //return the original limit to check the new remaining size
             buffer.limit(totalTransferLimit);
         }
@@ -159,7 +160,7 @@ public class ReplicationLogBuffer {
         return logBufferSize;
     }
 
-    public ReplicationManager getReplicationManager() {
+    public LogReplicationManager getReplicationManager() {
         return replicationManager;
     }
 }

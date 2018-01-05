@@ -61,7 +61,7 @@ public class LogManagerWithReplication extends LogManager {
                     shouldReplicate = false;
             }
         }
-        logRecord.setReplicated(shouldReplicate);
+        logRecord.setReplicate(shouldReplicate);
 
         //Remote flush logs do not need to be flushed separately since they may not trigger local flush
         if (logRecord.getLogType() == LogType.FLUSH && logRecord.getLogSource() == LogSource.LOCAL) {
@@ -76,9 +76,9 @@ public class LogManagerWithReplication extends LogManager {
     protected void appendToLogTail(ILogRecord logRecord) {
         syncAppendToLogTail(logRecord);
 
-        if (logRecord.isReplicated()) {
+        if (logRecord.isReplicate()) {
             try {
-                replicationManager.replicateLog(logRecord);
+                replicationManager.replicate(logRecord);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new ACIDException(e);
@@ -92,9 +92,9 @@ public class LogManagerWithReplication extends LogManager {
                         logRecord.wait();
                     }
                     //wait for job Commit/Abort ACK from replicas
-                    if (logRecord.isReplicated() && (logRecord.getLogType() == LogType.JOB_COMMIT
+                    if (logRecord.isReplicate() && (logRecord.getLogType() == LogType.JOB_COMMIT
                             || logRecord.getLogType() == LogType.ABORT)) {
-                        while (!replicationManager.hasBeenReplicated(logRecord)) {
+                        while (!logRecord.isReplicated()) {
                             logRecord.wait();
                         }
                     }

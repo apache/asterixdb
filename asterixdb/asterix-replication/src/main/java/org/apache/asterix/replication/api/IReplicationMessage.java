@@ -20,7 +20,7 @@ package org.apache.asterix.replication.api;
 
 import java.io.OutputStream;
 
-import org.apache.asterix.replication.functions.ReplicationProtocol;
+import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IReplicationMessage {

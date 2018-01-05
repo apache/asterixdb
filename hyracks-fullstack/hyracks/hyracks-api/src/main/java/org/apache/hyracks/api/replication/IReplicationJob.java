@@ -45,4 +45,8 @@ public interface IReplicationJob {
 
     public Set<String> getJobFiles();
 
+    default String getAnyFile() {
+        return getJobFiles().stream().findAny()
+                .orElseThrow(() -> new IllegalStateException("Replication job without any files"));
+    }
 }

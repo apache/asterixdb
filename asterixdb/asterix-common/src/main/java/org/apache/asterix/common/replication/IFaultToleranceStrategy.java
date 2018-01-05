@@ -58,11 +58,11 @@ public interface IFaultToleranceStrategy {
     /**
      * Constructs a fault tolerance strategy.
      *
-     * @param replicationStrategy
-     * @param messageBroker
-     * @return
+     * @param serviceCtx
+     * @param replicationEnabled
+     * @return the fault tolerance strategy
      */
-    IFaultToleranceStrategy from(ICCServiceContext serviceCtx, IReplicationStrategy replicationStrategy);
+    IFaultToleranceStrategy from(ICCServiceContext serviceCtx, boolean replicationEnabled);
 
     /**
      * Performs the required steps to change the metadata node to {@code node}
