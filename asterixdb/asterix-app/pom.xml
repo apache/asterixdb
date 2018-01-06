@@ -328,6 +328,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-dashboard</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
       <artifactId>asterix-common</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>

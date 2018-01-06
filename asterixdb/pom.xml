@@ -695,6 +695,7 @@
     <module>asterix-lang-sqlpp</module>
     <module>asterix-algebra</module>
     <module>asterix-app</module>
+    <module>asterix-dashboard</module>
     <module>asterix-tools</module>
     <module>asterix-transactions</module>
     <module>asterix-runtime</module>
