@@ -49,6 +49,7 @@ import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
@@ -62,8 +63,11 @@ import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -71,8 +75,11 @@ import com.google.common.cache.CacheBuilder;
 public class PersistentLocalResourceRepository implements ILocalResourceRepository {
 
     public static final Predicate<Path> INDEX_COMPONENTS = path -> !path.endsWith(StorageConstants.METADATA_FILE_NAME);
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final FilenameFilter LSM_INDEX_FILES_FILTER =
             (dir, name) -> !name.startsWith(INDEX_CHECKPOINT_FILE_PREFIX);
+    private static final FilenameFilter MASK_FILES_FILTER =
+            (dir, name) -> name.startsWith(StorageConstants.MASK_FILE_PREFIX);
     private static final int MAX_CACHED_RESOURCES = 1000;
     private static final IOFileFilter METADATA_FILES_FILTER = new IOFileFilter() {
         @Override
@@ -348,5 +355,61 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 throw new IllegalStateException("Failed to create storage root directory at " + root, e);
             }
         }
+    }
+
+    public void cleanup(int partition) throws HyracksDataException {
+        final Set<File> partitionIndexes = getPartitionIndexes(partition);
+        // find masks
+        for (File index : partitionIndexes) {
+            File[] masks = index.listFiles(MASK_FILES_FILTER);
+            if (masks != null) {
+                try {
+                    for (File mask : masks) {
+                        deleteIndexMaskedFiles(index, mask);
+                        // delete the mask itself
+                        Files.delete(mask.toPath());
+                    }
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                }
+            }
+        }
+    }
+
+    private void deleteIndexMaskedFiles(File index, File mask) throws IOException {
+        if (!mask.getName().startsWith(StorageConstants.MASK_FILE_PREFIX)) {
+            throw new IllegalArgumentException("Unrecognized mask file: " + mask);
+        }
+        File[] maskedFiles;
+        if (isComponentMask(mask)) {
+            final String componentId = mask.getName().substring(StorageConstants.COMPONENT_MASK_FILE_PREFIX.length());
+            maskedFiles = index.listFiles((dir, name) -> name.startsWith(componentId));
+        } else {
+            final String maskedFileName = mask.getName().substring(StorageConstants.MASK_FILE_PREFIX.length());
+            maskedFiles = index.listFiles((dir, name) -> name.equals(maskedFileName));
+        }
+        if (maskedFiles != null) {
+            for (File maskedFile : maskedFiles) {
+                LOGGER.info(() -> "deleting masked file: " + maskedFile.getAbsolutePath());
+                Files.delete(maskedFile.toPath());
+            }
+        }
+    }
+
+    /**
+     * Gets a component id based on its unique timestamp.
+     * e.g. a component file 2018-01-08-01-08-50-439_2018-01-08-01-08-50-439_b
+     * will return a component id 2018-01-08-01-08-50-439_2018-01-08-01-08-50-439
+     *
+     * @param componentFile any component file
+     * @return The component id
+     */
+    public static String getComponentId(String componentFile) {
+        final ResourceReference ref = ResourceReference.of(componentFile);
+        return ref.getName().substring(0, ref.getName().lastIndexOf(AbstractLSMIndexFileManager.DELIMITER));
+    }
+
+    private static boolean isComponentMask(File mask) {
+        return mask.getName().startsWith(StorageConstants.COMPONENT_MASK_FILE_PREFIX);
     }
 }

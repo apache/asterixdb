@@ -45,9 +45,9 @@ public class PartitionResourcesListTask implements IReplicaTask {
 
     @Override
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) throws HyracksDataException {
-        //TODO delete any invalid files with masks
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
+        localResourceRepository.cleanup(partition);
         final List<String> partitionResources = localResourceRepository.getPartitionIndexesFiles(partition).stream()
                 .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toList());
         final PartitionResourcesListResponse response =

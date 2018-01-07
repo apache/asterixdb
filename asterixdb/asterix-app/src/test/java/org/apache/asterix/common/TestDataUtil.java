@@ -23,6 +23,7 @@ import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
@@ -213,5 +214,14 @@ public class TestDataUtil {
         } finally {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         }
+    }
+
+    public static String getIndexPath(AsterixHyracksIntegrationUtil integrationUtil, Dataset dataset, String nodeId)
+            throws Exception {
+        final FileSplit[] datasetSplits = TestDataUtil.getDatasetSplits(integrationUtil, dataset);
+        final Optional<FileSplit> nodeFileSplit =
+                Arrays.stream(datasetSplits).filter(s -> s.getNodeName().equals(nodeId)).findFirst();
+        Assert.assertTrue(nodeFileSplit.isPresent());
+        return nodeFileSplit.get().getPath();
     }
 }

@@ -28,9 +28,10 @@ import java.nio.file.Paths;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
-import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.replication.api.IReplicaTask;
+import org.apache.asterix.replication.api.IReplicationWorker;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
@@ -40,13 +41,10 @@ import org.apache.hyracks.api.io.IIOManager;
  */
 public class ComponentMaskTask implements IReplicaTask {
 
-    private static final String COMPONENT_MASK_FILE_PREFIX = StorageConstants.MASK_FILE_PREFIX + "C_";
     private final String file;
-    private final String componentId;
 
-    public ComponentMaskTask(String file, String componentId) {
+    public ComponentMaskTask(String file) {
         this.file = file;
-        this.componentId = componentId;
     }
 
     @Override
@@ -61,11 +59,12 @@ public class ComponentMaskTask implements IReplicaTask {
         }
     }
 
-    public static Path getComponentMaskPath(INcApplicationContext appCtx, String file) throws IOException {
+    public static Path getComponentMaskPath(INcApplicationContext appCtx, String componentFile) throws IOException {
         final IIOManager ioManager = appCtx.getIoManager();
-        final FileReference localPath = ioManager.resolve(file);
+        final FileReference localPath = ioManager.resolve(componentFile);
         final Path resourceDir = Files.createDirectories(localPath.getFile().getParentFile().toPath());
-        return Paths.get(resourceDir.toString(), COMPONENT_MASK_FILE_PREFIX + localPath.getFile().getName());
+        final String componentId = PersistentLocalResourceRepository.getComponentId(componentFile);
+        return Paths.get(resourceDir.toString(), StorageConstants.COMPONENT_MASK_FILE_PREFIX + componentId);
     }
 
     @Override
@@ -78,7 +77,6 @@ public class ComponentMaskTask implements IReplicaTask {
         try {
             final DataOutputStream dos = new DataOutputStream(out);
             dos.writeUTF(file);
-            dos.writeUTF(componentId);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -86,7 +84,6 @@ public class ComponentMaskTask implements IReplicaTask {
 
     public static ComponentMaskTask create(DataInput input) throws IOException {
         String indexFile = input.readUTF();
-        String componentId = input.readUTF();
-        return new ComponentMaskTask(indexFile, componentId);
+        return new ComponentMaskTask(indexFile);
     }
 }

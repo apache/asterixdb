@@ -79,7 +79,7 @@ public class LogManagerTest {
         final String datasetName = "ds";
         TestDataUtil.createIdOnlyDataset(datasetName);
         final Dataset dataset = TestDataUtil.getDataset(integrationUtil, datasetName);
-        final String indexPath = getIndexPath(dataset, nodeId);
+        final String indexPath = TestDataUtil.getIndexPath(integrationUtil, dataset, nodeId);
         final IDatasetLifecycleManager dclm = ncAppCtx.getDatasetLifecycleManager();
         dclm.open(indexPath);
         final ILSMIndex index = (ILSMIndex) dclm.get(indexPath);
@@ -183,14 +183,6 @@ public class LogManagerTest {
 
         // make sure we can still log to the new file
         interruptedLogPageSwitch();
-    }
-
-    private static String getIndexPath(Dataset dataset, String nodeId) throws Exception {
-        final FileSplit[] datasetSplits = TestDataUtil.getDatasetSplits(integrationUtil, dataset);
-        final Optional<FileSplit> nodeFileSplit =
-                Arrays.stream(datasetSplits).filter(s -> s.getNodeName().equals(nodeId)).findFirst();
-        Assert.assertTrue(nodeFileSplit.isPresent());
-        return nodeFileSplit.get().getPath();
     }
 
     private static ITransactionContext beingTransaction(INcApplicationContext ncAppCtx, ILSMIndex index,

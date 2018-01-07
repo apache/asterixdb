@@ -22,11 +22,9 @@ import static org.apache.hyracks.api.replication.IReplicationJob.ReplicationOper
 import static org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation.REPLICATE;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
-import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.replication.messaging.ComponentMaskTask;
@@ -39,7 +37,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -86,9 +83,8 @@ public class IndexSynchronizer {
     private void replicateComponent(PartitionReplica replica) throws IOException {
         // send component header
         final String anyFile = job.getAnyFile();
-        final String lsmComponentID = getComponentId(anyFile);
         final String indexFile = StoragePathUtil.getFileRelativePath(anyFile);
-        final ComponentMaskTask maskTask = new ComponentMaskTask(indexFile, lsmComponentID);
+        final ComponentMaskTask maskTask = new ComponentMaskTask(indexFile);
         ReplicationProtocol.sendTo(replica, maskTask);
         ReplicationProtocol.waitForAck(replica);
         // send component files
@@ -129,12 +125,5 @@ public class IndexSynchronizer {
         final ILSMIndexOperationContext ctx = indexReplJob.getLSMIndexOperationContext();
         return ((AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback())
                 .getComponentLSN(ctx.getComponentsToBeReplicated());
-    }
-
-    private static String getComponentId(String filePath) {
-        final ResourceReference ref = ResourceReference.of(filePath);
-        final String fileUniqueTimestamp =
-                ref.getName().substring(0, ref.getName().lastIndexOf(AbstractLSMIndexFileManager.DELIMITER));
-        return Paths.get(ref.getRelativePath().toString(), fileUniqueTimestamp).toString();
     }
 }
