@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.transactions;
 
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.TransactionProperties;
 
 /**
@@ -34,7 +35,7 @@ public interface ITransactionSubsystem {
 
     IRecoveryManager getRecoveryManager();
 
-    IAppRuntimeContextProvider getAsterixAppRuntimeContextProvider();
+    INcApplicationContext getApplicationContext();
 
     String getId();
 

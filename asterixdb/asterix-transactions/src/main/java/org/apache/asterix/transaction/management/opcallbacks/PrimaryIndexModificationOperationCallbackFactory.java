@@ -59,7 +59,7 @@ public class PrimaryIndexModificationOperationCallbackFactory extends AbstractOp
             IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable) throws HyracksDataException {
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         IResourceLifecycleManager<IIndex> indexLifeCycleManager =
-                txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
+                txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
         ILSMIndex index = (ILSMIndex) indexLifeCycleManager.get(resource.getPath());
         if (index == null) {
             throw new HyracksDataException("Index(id:" + resource.getId() + ") is not registered.");

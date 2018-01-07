@@ -50,7 +50,6 @@ import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.transactions.Checkpoint;
-import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ILogReader;
 import org.apache.asterix.common.transactions.ILogRecord;
@@ -102,7 +101,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     public RecoveryManager(ITransactionSubsystem txnSubsystem, INCServiceContext serviceCtx) {
         this.serviceCtx = serviceCtx;
         this.txnSubsystem = txnSubsystem;
-        this.appCtx = txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext();
+        this.appCtx = txnSubsystem.getApplicationContext();
         logMgr = (LogManager) txnSubsystem.getLogManager();
         ReplicationProperties repProperties = appCtx.getReplicationProperties();
         replicationEnabled = repProperties.isReplicationEnabled();
@@ -277,8 +276,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         boolean foundWinner = false;
         JobEntityCommits jobEntityWinners = null;
 
-        IAppRuntimeContextProvider appRuntimeContext = txnSubsystem.getAsterixAppRuntimeContextProvider();
-        IDatasetLifecycleManager datasetLifecycleManager = appRuntimeContext.getDatasetLifecycleManager();
+        IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
         final IIndexCheckpointManagerProvider indexCheckpointManagerProvider =
                 ((INcApplicationContext) (serviceCtx.getApplicationContext())).getIndexCheckpointManagerProvider();
 
@@ -409,8 +407,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     @Override
     public long getLocalMinFirstLSN() throws HyracksDataException {
-        IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                .getDatasetLifecycleManager();
+        final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
         List<IIndex> openIndexList = datasetLifecycleManager.getOpenResources();
         long firstLSN;
         //the min first lsn can only be the current append or smaller
@@ -431,8 +428,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private long getRemoteMinFirstLSN() throws HyracksDataException {
         // find the min first lsn of partitions that are replicated on this node
         final Set<Integer> allPartitions = localResourceRepository.getAllPartitions();
-        final INcApplicationContext appContext = txnSubsystem.getAsterixAppRuntimeContextProvider().getAppContext();
-        final Set<Integer> masterPartitions = appContext.getReplicaManager().getPartitions();
+        final Set<Integer> masterPartitions = appCtx.getReplicaManager().getPartitions();
         allPartitions.removeAll(masterPartitions);
         return getPartitionsMinLSN(allPartitions);
     }
@@ -632,8 +628,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             //undo loserTxn's effect
             LOGGER.log(Level.INFO, "undoing loser transaction's effect");
 
-            IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getAsterixAppRuntimeContextProvider()
-                    .getDatasetLifecycleManager();
+            final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
             //TODO sort loser entities by smallest LSN to undo in one pass.
             Iterator<Entry<TxnEntityId, List<Long>>> iter = jobLoserEntity2LSNsMap.entrySet().iterator();
             int undoCount = 0;

@@ -19,13 +19,13 @@
 package org.apache.asterix.app.nc;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.config.TransactionProperties;
-import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.CheckpointProperties;
-import org.apache.asterix.common.transactions.IAppRuntimeContextProvider;
 import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ILogManager;
@@ -37,7 +37,6 @@ import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.logging.LogManagerWithReplication;
 import org.apache.asterix.transaction.management.service.recovery.CheckpointManagerFactory;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManager;
-import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
@@ -52,26 +51,22 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private final ILockManager lockManager;
     private final ITransactionManager transactionManager;
     private final IRecoveryManager recoveryManager;
-    private final IAppRuntimeContextProvider asterixAppRuntimeContextProvider;
     private final TransactionProperties txnProperties;
     private final ICheckpointManager checkpointManager;
+    private final INcApplicationContext appCtx;
 
     //for profiling purpose
     private long profilerEntityCommitLogCount = 0;
     private EntityCommitProfiler ecp;
 
-    public TransactionSubsystem(INCServiceContext serviceCtx, String id,
-            IAppRuntimeContextProvider asterixAppRuntimeContextProvider, TransactionProperties txnProperties)
-            throws ACIDException {
-        this.asterixAppRuntimeContextProvider = asterixAppRuntimeContextProvider;
-        this.id = id;
-        this.txnProperties = txnProperties;
+    public TransactionSubsystem(INcApplicationContext appCtx) {
+        this.appCtx = appCtx;
+        this.id = appCtx.getServiceContext().getNodeId();
+        this.txnProperties = appCtx.getTransactionProperties();
         this.transactionManager = new TransactionManager(this);
         this.lockManager = new ConcurrentLockManager(txnProperties.getLockManagerShrinkTimer());
-        ReplicationProperties repProperties =
-                asterixAppRuntimeContextProvider.getAppContext().getReplicationProperties();
+        final ReplicationProperties repProperties = appCtx.getReplicationProperties();
         final boolean replicationEnabled = repProperties.isReplicationEnabled();
-
         final CheckpointProperties checkpointProperties = new CheckpointProperties(txnProperties, id);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Checkpoint Properties: " + checkpointProperties);
@@ -83,10 +78,10 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         }
 
         this.logManager = replicationEnabled ? new LogManagerWithReplication(this) : new LogManager(this);
-        this.recoveryManager = new RecoveryManager(this, serviceCtx);
-        if (this.txnProperties.isCommitProfilerEnabled()) {
+        this.recoveryManager = new RecoveryManager(this, appCtx.getServiceContext());
+        if (txnProperties.isCommitProfilerEnabled()) {
             ecp = new EntityCommitProfiler(this, this.txnProperties.getCommitProfilerReportInterval());
-            getAsterixAppRuntimeContextProvider().getThreadExecutor().submit(ecp);
+            ((ExecutorService) appCtx.getThreadExecutor()).submit(ecp);
         }
     }
 
@@ -111,8 +106,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     }
 
     @Override
-    public IAppRuntimeContextProvider getAsterixAppRuntimeContextProvider() {
-        return asterixAppRuntimeContextProvider;
+    public INcApplicationContext getApplicationContext() {
+        return appCtx;
     }
 
     @Override

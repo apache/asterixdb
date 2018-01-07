@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -77,7 +78,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final String logFilePrefix;
     private final MutableLong flushLSN;
     private final String nodeId;
-    private final FlushLogsLogger flushLogsLogger;
     private final HashMap<Long, Integer> txnLogFileId2ReaderCount = new HashMap<>();
     private final long logFileSize;
     private final int logPageSize;
@@ -107,7 +107,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         appendLSN = new AtomicLong();
         nodeId = txnSubsystem.getId();
         flushLogsQ = new LinkedBlockingQueue<>();
-        flushLogsLogger = new FlushLogsLogger();
+        txnSubsystem.getApplicationContext().getThreadExecutor().execute(new FlushLogsLogger());
         initializeLogManager(SMALLEST_LOG_FILE_ID);
     }
 
@@ -130,10 +130,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
         initNewPage(INITIAL_LOG_SIZE);
         logFlusher = new LogFlusher(this, emptyQ, flushQ, stashQ);
-        futureLogFlusher = txnSubsystem.getAsterixAppRuntimeContextProvider().getThreadExecutor().submit(logFlusher);
-        if (!flushLogsLogger.isAlive()) {
-            txnSubsystem.getAsterixAppRuntimeContextProvider().getThreadExecutor().execute(flushLogsLogger);
-        }
+        futureLogFlusher =
+                ((ExecutorService) txnSubsystem.getApplicationContext().getThreadExecutor()).submit(logFlusher);
     }
 
     @Override
@@ -633,20 +631,20 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     /**
      * This class is used to log FLUSH logs.
-     * FLUSH logs are flushed on a different thread to avoid a possible deadlock in LogBuffer batchUnlock which calls PrimaryIndexOpeartionTracker.completeOperation
-     * The deadlock happens when PrimaryIndexOpeartionTracker.completeOperation results in generating a FLUSH log and there are no empty log buffers available to log it.
+     * FLUSH logs are flushed on a different thread to avoid a possible deadlock in {@link LogBuffer} batchUnlock
+     * which calls {@link org.apache.asterix.common.context.PrimaryIndexOperationTracker} completeOperation. The
+     * deadlock happens when completeOperation generates a FLUSH log and there are no empty log buffers available
+     * to log it.
      */
-    private class FlushLogsLogger extends Thread {
+    private class FlushLogsLogger implements Runnable {
         @Override
         public void run() {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    ILogRecord logRecord = flushLogsQ.take();
+                    final ILogRecord logRecord = flushLogsQ.take();
                     appendToLogTail(logRecord);
-                } catch (ACIDException e) {
-                    e.printStackTrace();
                 } catch (InterruptedException e) {
-                    //ignore
+                    Thread.currentThread().interrupt();
                 }
             }
         }

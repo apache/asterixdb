@@ -55,7 +55,7 @@ public class UpsertOperationCallbackFactory extends AbstractOperationCallbackFac
         DatasetLocalResource aResource = (DatasetLocalResource) resource.getResource();
         ITransactionSubsystem txnSubsystem = txnSubsystemProvider.getTransactionSubsystem(ctx);
         IResourceLifecycleManager indexLifeCycleManager =
-                txnSubsystem.getAsterixAppRuntimeContextProvider().getDatasetLifecycleManager();
+                txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
         ILSMIndex index = (ILSMIndex) indexLifeCycleManager.get(resource.getPath());
         if (index == null) {
             throw new HyracksDataException("Index(id:" + resource.getId() + ") is not registered.");
