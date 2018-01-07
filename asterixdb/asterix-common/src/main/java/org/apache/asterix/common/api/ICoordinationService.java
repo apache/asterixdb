@@ -42,4 +42,12 @@ public interface ICoordinationService {
      * @throws HyracksDataException
      */
     Optional<byte[]> get(String key) throws HyracksDataException;
+
+    /**
+     * Deletes the property with name {@code key} if exists.
+     *
+     * @param key
+     * @throws HyracksDataException
+     */
+    void delete(String key) throws HyracksDataException;
 }

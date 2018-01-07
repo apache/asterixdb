@@ -38,4 +38,9 @@ public class NoOpCoordinationService implements ICoordinationService {
     public Optional<byte[]> get(String key) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public void delete(String key) {
+        throw new UnsupportedOperationException();
+    }
 }
