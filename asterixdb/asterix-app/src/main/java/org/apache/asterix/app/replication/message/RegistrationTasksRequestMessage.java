@@ -58,7 +58,7 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        appCtx.getFaultToleranceStrategy().process(this);
+        appCtx.getNcLifecycleCoordinator().process(this);
     }
 
     public SystemState getState() {

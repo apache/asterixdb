@@ -24,7 +24,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.asterix.app.replication.NoFaultToleranceStrategy;
+import org.apache.asterix.app.replication.NcLifecycleCoordinator;
 import org.apache.asterix.app.replication.message.NCLifecycleTaskReportMessage;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
@@ -196,7 +196,7 @@ public class ClusterStateManagerTest {
             throws HyracksDataException {
         NCLifecycleTaskReportMessage msg = new NCLifecycleTaskReportMessage(nodeId, true);
         applicationContext.getResourceIdManager().report(nodeId, 0);
-        applicationContext.getFaultToleranceStrategy().process(msg);
+        applicationContext.getNcLifecycleCoordinator().process(msg);
     }
 
     private CcApplicationContext ccAppContext(ClusterStateManager csm) throws HyracksDataException {
@@ -207,9 +207,9 @@ public class ClusterStateManagerTest {
         Mockito.when(iccServiceContext.getAppConfig()).thenReturn(applicationConfig);
         Mockito.when(ccApplicationContext.getServiceContext()).thenReturn(iccServiceContext);
 
-        NoFaultToleranceStrategy fts = new NoFaultToleranceStrategy();
-        fts.bindTo(csm);
-        Mockito.when(ccApplicationContext.getFaultToleranceStrategy()).thenReturn(fts);
+        NcLifecycleCoordinator coordinator = new NcLifecycleCoordinator(ccApplicationContext.getServiceContext(), false);
+        coordinator.bindTo(csm);
+        Mockito.when(ccApplicationContext.getNcLifecycleCoordinator()).thenReturn(coordinator);
 
         MetadataProperties metadataProperties = mockMetadataProperties();
         Mockito.when(ccApplicationContext.getMetadataProperties()).thenReturn(metadataProperties);

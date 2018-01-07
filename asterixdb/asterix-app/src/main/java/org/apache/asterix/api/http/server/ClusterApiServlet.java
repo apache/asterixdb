@@ -169,7 +169,7 @@ public class ClusterApiServlet extends AbstractServlet {
 
     private void processMetadataNode(IServletRequest request, IServletResponse response) throws HyracksDataException {
         final String node = request.getParameter("node");
-        appCtx.getFaultToleranceStrategy().notifyMetadataNodeChange(node);
+        appCtx.getNcLifecycleCoordinator().notifyMetadataNodeChange(node);
         response.setStatus(HttpResponseStatus.OK);
     }
 }

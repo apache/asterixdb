@@ -37,7 +37,7 @@ public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAdd
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        appCtx.getFaultToleranceStrategy().process(this);
+        appCtx.getNcLifecycleCoordinator().process(this);
     }
 
     public String getNodeId() {

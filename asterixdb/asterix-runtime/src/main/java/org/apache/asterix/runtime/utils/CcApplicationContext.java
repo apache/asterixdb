@@ -42,7 +42,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
-import org.apache.asterix.common.replication.IFaultToleranceStrategy;
+import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.runtime.job.listener.NodeJobTracker;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
@@ -80,7 +80,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private Supplier<IMetadataBootstrap> metadataBootstrapSupplier;
     private IHyracksClientConnection hcc;
     private Object extensionManager;
-    private IFaultToleranceStrategy ftStrategy;
+    private INcLifecycleCoordinator ftStrategy;
     private IJobLifecycleListener activeLifeCycleListener;
     private IMetadataLockManager mdLockManager;
     private IClusterStateManager clusterStateManager;
@@ -88,7 +88,7 @@ public class CcApplicationContext implements ICcApplicationContext {
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
-            IGlobalRecoveryManager globalRecoveryManager, IFaultToleranceStrategy ftStrategy,
+            IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator ftStrategy,
             IJobLifecycleListener activeLifeCycleListener, IStorageComponentProvider storageComponentProvider,
             IMetadataLockManager mdLockManager) throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
@@ -232,7 +232,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     }
 
     @Override
-    public IFaultToleranceStrategy getFaultToleranceStrategy() {
+    public INcLifecycleCoordinator getNcLifecycleCoordinator() {
         return ftStrategy;
     }
 

@@ -19,13 +19,12 @@
 package org.apache.asterix.common.replication;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
-import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IFaultToleranceStrategy {
+public interface INcLifecycleCoordinator {
 
     /**
-     * Defines the logic of a {@link IFaultToleranceStrategy} when a node joins the cluster.
+     * Defines the logic of a {@link INcLifecycleCoordinator} when a node joins the cluster.
      *
      * @param nodeId
      * @throws HyracksDataException
@@ -33,7 +32,7 @@ public interface IFaultToleranceStrategy {
     void notifyNodeJoin(String nodeId) throws HyracksDataException;
 
     /**
-     * Defines the logic of a {@link IFaultToleranceStrategy} when a node leaves the cluster.
+     * Defines the logic of a {@link INcLifecycleCoordinator} when a node leaves the cluster.
      *
      * @param nodeId
      * @throws HyracksDataException
@@ -41,7 +40,7 @@ public interface IFaultToleranceStrategy {
     void notifyNodeFailure(String nodeId) throws HyracksDataException;
 
     /**
-     * Binds the fault tolerance strategy to {@code cluserManager}.
+     * Binds the coordinator to {@code cluserManager}.
      *
      * @param clusterManager
      */
@@ -56,20 +55,9 @@ public interface IFaultToleranceStrategy {
     void process(INCLifecycleMessage message) throws HyracksDataException;
 
     /**
-     * Constructs a fault tolerance strategy.
-     *
-     * @param serviceCtx
-     * @param replicationEnabled
-     * @return the fault tolerance strategy
-     */
-    IFaultToleranceStrategy from(ICCServiceContext serviceCtx, boolean replicationEnabled);
-
-    /**
      * Performs the required steps to change the metadata node to {@code node}
      *
      * @param node
      */
-    default void notifyMetadataNodeChange(String node) throws HyracksDataException {
-        throw new UnsupportedOperationException(getClass() + " does not support metadata node change");
-    }
+    void notifyMetadataNodeChange(String node) throws HyracksDataException;
 }

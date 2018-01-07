@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -35,7 +34,7 @@ import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.replication.IFaultToleranceStrategy;
+import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -60,11 +59,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 
 public class ClusterStateManager implements IClusterStateManager {
-    /*
-     * TODO: currently after instance restarts we require all nodes to join again,
-     * otherwise the cluster wont be ACTIVE. we may overcome this by storing the cluster state before the instance
-     * shutdown and using it on startup to identify the nodes that are expected the join.
-     */
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final Map<String, Map<IOption, Object>> ncConfigMap = new HashMap<>();
@@ -77,7 +71,7 @@ public class ClusterStateManager implements IClusterStateManager {
     private boolean metadataNodeActive = false;
     private Set<String> failedNodes = new HashSet<>();
     private Set<String> participantNodes = new HashSet<>();
-    private IFaultToleranceStrategy ftStrategy;
+    private INcLifecycleCoordinator lifecycleCoordinator;
     private ICcApplicationContext appCtx;
 
     @Override
@@ -86,8 +80,8 @@ public class ClusterStateManager implements IClusterStateManager {
         node2PartitionsMap = appCtx.getMetadataProperties().getNodePartitions();
         clusterPartitions = appCtx.getMetadataProperties().getClusterPartitions();
         currentMetadataNode = appCtx.getMetadataProperties().getMetadataNodeName();
-        ftStrategy = appCtx.getFaultToleranceStrategy();
-        ftStrategy.bindTo(this);
+        lifecycleCoordinator = appCtx.getNcLifecycleCoordinator();
+        lifecycleCoordinator.bindTo(this);
     }
 
     @Override
@@ -98,7 +92,7 @@ public class ClusterStateManager implements IClusterStateManager {
         failedNodes.add(nodeId);
         ncConfigMap.remove(nodeId);
         pendingRemoval.remove(nodeId);
-        ftStrategy.notifyNodeFailure(nodeId);
+        lifecycleCoordinator.notifyNodeFailure(nodeId);
     }
 
     @Override
@@ -109,7 +103,7 @@ public class ClusterStateManager implements IClusterStateManager {
         failedNodes.remove(nodeId);
         ncConfigMap.put(nodeId, configuration);
         updateNodeConfig(nodeId, configuration);
-        ftStrategy.notifyNodeJoin(nodeId);
+        lifecycleCoordinator.notifyNodeJoin(nodeId);
     }
 
     @Override

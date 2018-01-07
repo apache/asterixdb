@@ -55,7 +55,7 @@ import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
-import org.apache.asterix.app.replication.FaultToleranceStrategyFactory;
+import org.apache.asterix.app.replication.NcLifecycleCoordinator;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.INodeJobTracker;
@@ -67,9 +67,7 @@ import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.replication.IFaultToleranceStrategy;
-import org.apache.asterix.common.replication.IReplicationStrategy;
-import org.apache.asterix.common.replication.ReplicationStrategyFactory;
+import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.file.StorageComponentProvider;
@@ -142,13 +140,12 @@ public class CCApplication extends BaseCCApplication {
         ILibraryManager libraryManager = new ExternalLibraryManager();
         ReplicationProperties repProp = new ReplicationProperties(
                 PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig()));
-        IFaultToleranceStrategy ftStrategy =
-                FaultToleranceStrategyFactory.create(ccServiceCtx, repProp.isReplicationEnabled());
+        INcLifecycleCoordinator lifecycleCoordinator = createNcLifeCycleCoordinator(repProp.isReplicationEnabled());
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
         componentProvider = new StorageComponentProvider();
         GlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
         statementExecutorCtx = new StatementExecutorContext();
-        appCtx = createApplicationContext(libraryManager, globalRecoveryManager, ftStrategy);
+        appCtx = createApplicationContext(libraryManager, globalRecoveryManager, lifecycleCoordinator);
         List<AsterixExtension> extensions = new ArrayList<>();
         extensions.addAll(this.getExtensions());
         ccExtensionManager = new CCExtensionManager(extensions);
@@ -177,15 +174,19 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected ICcApplicationContext createApplicationContext(ILibraryManager libraryManager,
-            GlobalRecoveryManager globalRecoveryManager, IFaultToleranceStrategy ftStrategy)
+            GlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator lifecycleCoordinator)
             throws AlgebricksException, IOException {
         return new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, () -> MetadataManager.INSTANCE,
-                globalRecoveryManager, ftStrategy, new ActiveNotificationHandler(), componentProvider,
+                globalRecoveryManager, lifecycleCoordinator, new ActiveNotificationHandler(), componentProvider,
                 new MetadataLockManager());
     }
 
     protected GlobalRecoveryManager createGlobalRecoveryManager() throws Exception {
         return new GlobalRecoveryManager(ccServiceCtx, getHcc(), componentProvider);
+    }
+
+    protected INcLifecycleCoordinator createNcLifeCycleCoordinator(boolean replicationEnabled) {
+        return new NcLifecycleCoordinator(ccServiceCtx, replicationEnabled);
     }
 
     @Override

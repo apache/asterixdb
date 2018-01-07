@@ -44,8 +44,8 @@ import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
-import org.apache.asterix.common.replication.IFaultToleranceStrategy;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
+import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -55,17 +55,22 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
+public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private IClusterStateManager clusterManager;
-    private String metadataNodeId;
-    private Set<String> pendingStartupCompletionNodes = new HashSet<>();
-    private ICCMessageBroker messageBroker;
-    private boolean replicationEnabled;
+    protected IClusterStateManager clusterManager;
+    protected String metadataNodeId;
+    protected Set<String> pendingStartupCompletionNodes = new HashSet<>();
+    protected final ICCMessageBroker messageBroker;
+    private final boolean replicationEnabled;
+
+    public NcLifecycleCoordinator(ICCServiceContext serviceCtx, boolean replicationEnabled) {
+        this.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
+        this.replicationEnabled = replicationEnabled;
+    }
 
     @Override
-    public void notifyNodeJoin(String nodeId) throws HyracksDataException {
+    public void notifyNodeJoin(String nodeId) {
         pendingStartupCompletionNodes.add(nodeId);
     }
 
@@ -94,14 +99,6 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
             default:
                 throw new RuntimeDataException(ErrorCode.UNSUPPORTED_MESSAGE_TYPE, message.getType().name());
         }
-    }
-
-    @Override
-    public IFaultToleranceStrategy from(ICCServiceContext serviceCtx, boolean replicationEnabled) {
-        NoFaultToleranceStrategy ft = new NoFaultToleranceStrategy();
-        ft.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
-        ft.replicationEnabled = replicationEnabled;
-        return ft;
     }
 
     @Override
@@ -136,7 +133,7 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
         }
     }
 
-    private List<INCLifecycleTask> buildNCRegTasks(String nodeId, NodeStatus nodeStatus, SystemState state) {
+    protected List<INCLifecycleTask> buildNCRegTasks(String nodeId, NodeStatus nodeStatus, SystemState state) {
         LOGGER.log(Level.INFO, () -> "Building registration tasks for node: " + nodeId + " with state: " + state);
         final boolean isMetadataNode = nodeId.equals(metadataNodeId);
         if (nodeStatus == NodeStatus.ACTIVE) {
@@ -170,7 +167,7 @@ public class NoFaultToleranceStrategy implements IFaultToleranceStrategy {
         return tasks;
     }
 
-    private List<INCLifecycleTask> buildActiveNCRegTasks(boolean metadataNode) {
+    protected List<INCLifecycleTask> buildActiveNCRegTasks(boolean metadataNode) {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
         if (metadataNode) {
             // need to unbind from old distributed state then rebind to new one

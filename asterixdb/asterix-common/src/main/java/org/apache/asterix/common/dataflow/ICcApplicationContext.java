@@ -26,7 +26,7 @@ import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
-import org.apache.asterix.common.replication.IFaultToleranceStrategy;
+import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
@@ -62,9 +62,9 @@ public interface ICcApplicationContext extends IApplicationContext {
     IGlobalRecoveryManager getGlobalRecoveryManager();
 
     /**
-     * @return the fault tolerance strategy in use for the cluster
+     * @return the NC lifecycle coordinator in use for the cluster
      */
-    IFaultToleranceStrategy getFaultToleranceStrategy();
+    INcLifecycleCoordinator getNcLifecycleCoordinator();
 
     /**
      * @return the active notification handler at Cluster controller

@@ -41,7 +41,7 @@ public class MetadataNodeResponseMessage implements INCLifecycleMessage, ICcAddr
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        ((CcApplicationContext) appCtx).getFaultToleranceStrategy().process(this);
+        ((CcApplicationContext) appCtx).getNcLifecycleCoordinator().process(this);
     }
 
     @Override
