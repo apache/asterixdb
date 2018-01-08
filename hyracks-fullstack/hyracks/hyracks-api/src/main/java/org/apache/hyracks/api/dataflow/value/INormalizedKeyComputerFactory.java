@@ -23,20 +23,5 @@ import java.io.Serializable;
 public interface INormalizedKeyComputerFactory extends Serializable {
     public INormalizedKeyComputer createNormalizedKeyComputer();
 
-    /**
-     *
-     * @return The length of the normalized key in terms of integers
-     */
-    default int getNormalizedKeyLength() {
-        return 1;
-    }
-
-    /**
-     *
-     * @return Whether we can solely rely on this normalized key to complete comparison,
-     *         even when two normalized keys are equal
-     */
-    default boolean isDecisive() {
-        return false;
-    }
+    public INormalizedKeyProperties getNormalizedKeyProperties();
 }

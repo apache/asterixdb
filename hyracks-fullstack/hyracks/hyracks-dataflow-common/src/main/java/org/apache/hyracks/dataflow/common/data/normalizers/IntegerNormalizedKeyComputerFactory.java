@@ -20,24 +20,44 @@ package org.apache.hyracks.dataflow.common.data.normalizers;
 
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyProperties;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 
 public class IntegerNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
     private static final long serialVersionUID = 1L;
 
+    public static final INormalizedKeyProperties PROPERTIES = new INormalizedKeyProperties() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public int getNormalizedKeyLength() {
+            return 1;
+        }
+
+        @Override
+        public boolean isDecisive() {
+            return true;
+        }
+    };
+
     @Override
     public INormalizedKeyComputer createNormalizedKeyComputer() {
         return new INormalizedKeyComputer() {
             @Override
-            public int normalize(byte[] bytes, int start, int length) {
+            public void normalize(byte[] bytes, int start, int length, int[] normalizedKeys, int keyStart) {
                 int value = IntegerPointable.getInteger(bytes, start);
-                return value ^ Integer.MIN_VALUE;
+                normalizedKeys[keyStart] = value ^ Integer.MIN_VALUE;
+            }
+
+            @Override
+            public INormalizedKeyProperties getNormalizedKeyProperties() {
+                return PROPERTIES;
             }
         };
     }
 
     @Override
-    public boolean isDecisive() {
-        return true;
+    public INormalizedKeyProperties getNormalizedKeyProperties() {
+        return PROPERTIES;
     }
 }

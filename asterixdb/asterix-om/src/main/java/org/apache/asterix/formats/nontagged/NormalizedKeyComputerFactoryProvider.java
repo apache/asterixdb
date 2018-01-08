@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.formats.nontagged;
 
+import org.apache.asterix.dataflow.data.nontagged.keynormalizers.AUUIDNormalizedKeyComputerFactory;
 import org.apache.asterix.dataflow.data.nontagged.keynormalizers.AWrappedAscNormalizedKeyComputerFactory;
 import org.apache.asterix.dataflow.data.nontagged.keynormalizers.AWrappedDescNormalizedKeyComputerFactory;
 import org.apache.asterix.om.types.IAType;
@@ -59,6 +60,8 @@ public class NormalizedKeyComputerFactoryProvider implements INormalizedKeyCompu
                     return new AWrappedAscNormalizedKeyComputerFactory(new UTF8StringNormalizedKeyComputerFactory());
                 case BINARY:
                     return new AWrappedAscNormalizedKeyComputerFactory(new ByteArrayNormalizedKeyComputerFactory());
+                case UUID:
+                    return new AWrappedAscNormalizedKeyComputerFactory(new AUUIDNormalizedKeyComputerFactory());
                 default:
                     return null;
             }
@@ -81,6 +84,8 @@ public class NormalizedKeyComputerFactoryProvider implements INormalizedKeyCompu
                     return new AWrappedDescNormalizedKeyComputerFactory(new UTF8StringNormalizedKeyComputerFactory());
                 case BINARY:
                     return new AWrappedDescNormalizedKeyComputerFactory(new ByteArrayNormalizedKeyComputerFactory());
+                case UUID:
+                    return new AWrappedDescNormalizedKeyComputerFactory(new AUUIDNormalizedKeyComputerFactory());
                 default:
                     return null;
             }

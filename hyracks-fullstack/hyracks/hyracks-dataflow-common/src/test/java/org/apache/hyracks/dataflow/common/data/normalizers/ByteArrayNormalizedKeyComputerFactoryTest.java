@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.dataflow.common.data.normalizers;
 
-import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.*;
 
 import java.util.Random;
 
@@ -36,10 +36,10 @@ public class ByteArrayNormalizedKeyComputerFactoryTest {
     @Test
     public void testRandomNormalizedKey() {
         for (int i = 0; i < 10; ++i) {
-            ByteArrayPointable pointable1 = generateRandomByteArrayPointableWithFixLength(
-                    Math.abs(random.nextInt((i + 1) * 10)), random);
-            ByteArrayPointable pointable2 = generateRandomByteArrayPointableWithFixLength(
-                    Math.abs(random.nextInt((i + 1) * 10)), random);
+            ByteArrayPointable pointable1 =
+                    generateRandomByteArrayPointableWithFixLength(Math.abs(random.nextInt((i + 1) * 10)), random);
+            ByteArrayPointable pointable2 =
+                    generateRandomByteArrayPointableWithFixLength(Math.abs(random.nextInt((i + 1) * 10)), random);
             assertNormalizeValue(pointable1, pointable2, computer);
         }
     }
@@ -52,11 +52,13 @@ public class ByteArrayNormalizedKeyComputerFactoryTest {
 
     public static void assertNormalizeValue(ByteArrayPointable pointable1, ByteArrayPointable pointable2,
             INormalizedKeyComputer computer) {
-        int n1 = computer.normalize(pointable1.getByteArray(), pointable1.getStartOffset(), pointable1.getLength());
-        int n2 = computer.normalize(pointable2.getByteArray(), pointable2.getStartOffset(), pointable2.getLength());
-        if (n1 < n2) {
+        int[] key1 = new int[ByteArrayNormalizedKeyComputerFactory.PROPERTIES.getNormalizedKeyLength()];
+        int[] key2 = new int[ByteArrayNormalizedKeyComputerFactory.PROPERTIES.getNormalizedKeyLength()];
+        computer.normalize(pointable1.getByteArray(), pointable1.getStartOffset(), pointable1.getLength(), key1, 0);
+        computer.normalize(pointable2.getByteArray(), pointable2.getStartOffset(), pointable2.getLength(), key2, 0);
+        if (key1[0] < key2[0]) {
             assertTrue(pointable1.compareTo(pointable2) < 0);
-        } else if (n1 > n2) {
+        } else if (key1[0] > key2[0]) {
             assertTrue(pointable1.compareTo(pointable2) > 0);
         }
     }
@@ -70,12 +72,15 @@ public class ByteArrayNormalizedKeyComputerFactoryTest {
         }
 
         ByteArrayPointable ptr1 = ByteArrayPointable.generatePointableFromPureBytes(new byte[] { 0, 25, 34, 42 });
-        ByteArrayPointable ptr2 = ByteArrayPointable.generatePointableFromPureBytes(
-                new byte[] { (byte) 130, 25, 34, 42 });
+        ByteArrayPointable ptr2 =
+                ByteArrayPointable.generatePointableFromPureBytes(new byte[] { (byte) 130, 25, 34, 42 });
 
-        int n1 = computer.normalize(ptr1.getByteArray(), ptr1.getStartOffset(), ptr1.getLength());
-        int n2 = computer.normalize(ptr2.getByteArray(), ptr2.getStartOffset(), ptr2.getLength());
-        assertTrue(n1 < n2);
+        int[] key1 = new int[ByteArrayNormalizedKeyComputerFactory.PROPERTIES.getNormalizedKeyLength()];
+        int[] key2 = new int[ByteArrayNormalizedKeyComputerFactory.PROPERTIES.getNormalizedKeyLength()];
+        computer.normalize(ptr1.getByteArray(), ptr1.getStartOffset(), ptr1.getLength(), key1, 0);
+        computer.normalize(ptr2.getByteArray(), ptr2.getStartOffset(), ptr2.getLength(), key2, 0);
+
+        assertTrue(key1[0] < key2[0]);
 
     }
 }

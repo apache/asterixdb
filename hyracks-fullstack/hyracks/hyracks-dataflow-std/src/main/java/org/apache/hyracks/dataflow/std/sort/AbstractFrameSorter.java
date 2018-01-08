@@ -35,6 +35,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.utils.NormalizedKeyUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.BufferInfo;
 import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.VariableFramePool;
@@ -100,7 +101,7 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
         int runningNormalizedKeyTotalLength = 0;
 
         if (normalizedKeyComputerFactories != null) {
-            int decisivePrefixLength = getDecisivePrefixLength(normalizedKeyComputerFactories);
+            int decisivePrefixLength = NormalizedKeyUtils.getDecisivePrefixLength(normalizedKeyComputerFactories);
 
             // we only take a prefix of the decisive normalized keys, plus at most indecisive normalized keys
             // ideally, the caller should prepare normalizers in this way, but we just guard here to avoid
@@ -112,7 +113,8 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
 
             for (int i = 0; i < normalizedKeys; i++) {
                 this.nkcs[i] = normalizedKeyComputerFactories[i].createNormalizedKeyComputer();
-                this.normalizedKeyLength[i] = normalizedKeyComputerFactories[i].getNormalizedKeyLength();
+                this.normalizedKeyLength[i] =
+                        normalizedKeyComputerFactories[i].getNormalizedKeyProperties().getNormalizedKeyLength();
                 runningNormalizedKeyTotalLength += this.normalizedKeyLength[i];
             }
             this.normalizedKeysDecisive = decisivePrefixLength == comparatorFactories.length;
@@ -246,8 +248,9 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
 
     protected final int compare(int[] tPointers1, int tp1, int[] tPointers2, int tp2) throws HyracksDataException {
         if (nkcs != null) {
-            int cmpNormalizedKey = compareNormalizeKeys(tPointers1, tp1 * ptrSize + ID_NORMALIZED_KEY, tPointers2,
-                    tp2 * ptrSize + ID_NORMALIZED_KEY, normalizedKeyTotalLength);
+            int cmpNormalizedKey =
+                    NormalizedKeyUtils.compareNormalizeKeys(tPointers1, tp1 * ptrSize + ID_NORMALIZED_KEY, tPointers2,
+                            tp2 * ptrSize + ID_NORMALIZED_KEY, normalizedKeyTotalLength);
             if (cmpNormalizedKey != 0 || normalizedKeysDecisive) {
                 return cmpNormalizedKey;
             }
@@ -281,29 +284,6 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
             }
         }
         return 0;
-    }
-
-    public static int compareNormalizeKeys(int[] keys1, int start1, int[] keys2, int start2, int length) {
-        for (int i = 0; i < length; i++) {
-            int key1 = keys1[start1 + i];
-            int key2 = keys2[start2 + i];
-            if (key1 != key2) {
-                return (((key1) & 0xffffffffL) < ((key2) & 0xffffffffL)) ? -1 : 1;
-            }
-        }
-        return 0;
-    }
-
-    public static int getDecisivePrefixLength(INormalizedKeyComputerFactory[] keyNormalizerFactories) {
-        if (keyNormalizerFactories == null) {
-            return 0;
-        }
-        for (int i = 0; i < keyNormalizerFactories.length; i++) {
-            if (!keyNormalizerFactories[i].isDecisive()) {
-                return i;
-            }
-        }
-        return keyNormalizerFactories.length;
     }
 
     protected void swap(int pointers1[], int pos1, int pointers2[], int pos2) {

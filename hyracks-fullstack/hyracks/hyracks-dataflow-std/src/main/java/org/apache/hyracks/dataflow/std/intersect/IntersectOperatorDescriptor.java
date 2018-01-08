@@ -42,6 +42,7 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.utils.NormalizedKeyUtils;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputOperatorNodePushable;
@@ -61,12 +62,17 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
 
     /**
      * @param spec
-     * @param nInputs                   Number of inputs
-     * @param compareFields             The compare field list of each input.
-     *                                  All the fields order should be the same with the comparatorFactories
-     * @param extraFields               Extra field that
-     * @param firstKeyNormalizerFactory Normalizer for the first comparison key.
-     * @param comparatorFactories       A list of comparators for each field
+     * @param nInputs
+     *            Number of inputs
+     * @param compareFields
+     *            The compare field list of each input.
+     *            All the fields order should be the same with the comparatorFactories
+     * @param extraFields
+     *            Extra field that
+     * @param firstKeyNormalizerFactory
+     *            Normalizer for the first comparison key.
+     * @param comparatorFactories
+     *            A list of comparators for each field
      * @param recordDescriptor
      * @throws HyracksException
      */
@@ -147,7 +153,10 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
 
     public static class IntersectOperatorNodePushable extends AbstractUnaryOutputOperatorNodePushable {
 
-        private enum ACTION {FAILED, CLOSE}
+        private enum ACTION {
+            FAILED,
+            CLOSE
+        }
 
         private final int inputArity;
         private final int[][] compareFields;
@@ -158,6 +167,7 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
         private final FrameTupleAppender appender;
 
         private final INormalizedKeyComputer firstKeyNormalizerComputer;
+        private final boolean normalizedKeyDecisive;
         private final IBinaryComparator[] comparators;
 
         private boolean done = false;
@@ -186,8 +196,12 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
             }
             this.allProjectFields = projectedFields;
             this.firstKeyNormalizerComputer =
-                    firstKeyNormalizerFactory == null ? null : firstKeyNormalizerFactory.createNormalizedKeyComputer();
-
+                    firstKeyNormalizerFactory != null ? firstKeyNormalizerFactory.createNormalizedKeyComputer() : null;
+            this.normalizedKeyDecisive =
+                    firstKeyNormalizerFactory != null
+                            ? firstKeyNormalizerFactory.getNormalizedKeyProperties().isDecisive()
+                                    && compareFields[0].length == 1
+                            : false;
             comparators = new IBinaryComparator[compareFields[0].length];
             for (int i = 0; i < comparators.length; i++) {
                 comparators[i] = comparatorFactory[i].createBinaryComparator();
@@ -213,6 +227,11 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IFrameWriter getInputFrameWriter(final int index) {
             return new IFrameWriter() {
+                private final int[] normalizedKey1 =
+                        NormalizedKeyUtils.createNormalizedKeyArray(firstKeyNormalizerComputer);
+                private final int[] normalizedKey2 =
+                        NormalizedKeyUtils.createNormalizedKeyArray(firstKeyNormalizerComputer);
+
                 @Override
                 public void open() throws HyracksDataException {
                     if (index == 0) {
@@ -273,9 +292,8 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
                                 continue;
                             }
                             while (tupleIndexMarker[i] < refAccessor[i].getTupleCount()) {
-                                int cmp =
-                                        compare(i, refAccessor[i], tupleIndexMarker[i], maxInput, refAccessor[maxInput],
-                                                tupleIndexMarker[maxInput]);
+                                int cmp = compare(i, refAccessor[i], tupleIndexMarker[i], maxInput,
+                                        refAccessor[maxInput], tupleIndexMarker[maxInput]);
                                 if (cmp == 0) {
                                     match++;
                                     break;
@@ -313,13 +331,14 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 private int compare(int input1, FrameTupleAccessor frameTupleAccessor1, int tid1, int input2,
                         FrameTupleAccessor frameTupleAccessor2, int tid2) throws HyracksDataException {
-                    int firstNorm1 = getFirstNorm(input1, frameTupleAccessor1, tid1);
-                    int firstNorm2 = getFirstNorm(input2, frameTupleAccessor2, tid2);
-
-                    if (firstNorm1 < firstNorm2) {
-                        return -1;
-                    } else if (firstNorm1 > firstNorm2) {
-                        return 1;
+                    if (firstKeyNormalizerComputer != null) {
+                        getFirstNorm(input1, frameTupleAccessor1, tid1, normalizedKey1);
+                        getFirstNorm(input2, frameTupleAccessor2, tid2, normalizedKey2);
+                        int cmp = NormalizedKeyUtils.compareNormalizeKeys(normalizedKey1, 0, normalizedKey2, 0,
+                                normalizedKey1.length);
+                        if (cmp != 0 || normalizedKeyDecisive) {
+                            return cmp;
+                        }
                     }
 
                     for (int i = 0; i < comparators.length; i++) {
@@ -337,12 +356,12 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
                     return 0;
                 }
 
-                private int getFirstNorm(int inputId1, FrameTupleAccessor frameTupleAccessor1, int tid1) {
-                    return firstKeyNormalizerComputer == null ?
-                            0 :
-                            firstKeyNormalizerComputer.normalize(frameTupleAccessor1.getBuffer().array(),
-                                    frameTupleAccessor1.getAbsoluteFieldStartOffset(tid1, compareFields[inputId1][0]),
-                                    frameTupleAccessor1.getFieldLength(tid1, compareFields[inputId1][0]));
+                private void getFirstNorm(int inputId1, FrameTupleAccessor frameTupleAccessor1, int tid1, int[] keys) {
+                    if (firstKeyNormalizerComputer != null) {
+                        firstKeyNormalizerComputer.normalize(frameTupleAccessor1.getBuffer().array(),
+                                frameTupleAccessor1.getAbsoluteFieldStartOffset(tid1, compareFields[inputId1][0]),
+                                frameTupleAccessor1.getFieldLength(tid1, compareFields[inputId1][0]), keys, 0);
+                    }
                 }
 
                 private int findMaxInput() throws HyracksDataException {

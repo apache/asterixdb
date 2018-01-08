@@ -20,28 +20,53 @@ package org.apache.hyracks.dataflow.common.data.normalizers;
 
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyProperties;
+import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.dataflow.common.utils.NormalizedKeyUtils;
 
 public class DoubleNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
 
     private static final long serialVersionUID = 1L;
+
+    public static final INormalizedKeyProperties PROPERTIES = new INormalizedKeyProperties() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public int getNormalizedKeyLength() {
+            return 2;
+        }
+
+        @Override
+        public boolean isDecisive() {
+            return true;
+        }
+    };
 
     @Override
     public INormalizedKeyComputer createNormalizedKeyComputer() {
         return new INormalizedKeyComputer() {
 
             @Override
-            public int normalize(byte[] bytes, int start, int length) {
-                int prefix = IntegerPointable.getInteger(bytes, start);
-                if (prefix >= 0) {
-                    return prefix ^ Integer.MIN_VALUE;
+            public void normalize(byte[] bytes, int start, int length, int[] normalizedKeys, int keyStart) {
+                long value = LongPointable.getLong(bytes, start);
+                if (value >= 0) {
+                    value = value ^ Long.MIN_VALUE;
                 } else {
-                    return (int) ((long) 0xffffffff - (long) prefix);
+                    value = ~value;
                 }
+                NormalizedKeyUtils.putLongIntoNormalizedKeys(normalizedKeys, keyStart, value);
+            }
+
+            @Override
+            public INormalizedKeyProperties getNormalizedKeyProperties() {
+                return PROPERTIES;
             }
 
         };
     }
 
+    @Override
+    public INormalizedKeyProperties getNormalizedKeyProperties() {
+        return PROPERTIES;
+    }
 }

@@ -26,14 +26,17 @@ public class ReferenceEntry {
     private final int runid;
     private IFrameTupleAccessor acccessor;
     private int tupleIndex;
-    private int[] tPointers;
+    private final int[] tPointers;
+    private final int normalizedKeyLength;
 
     public ReferenceEntry(int runid, FrameTupleAccessor fta, int tupleIndex, int[] keyFields,
             INormalizedKeyComputer nmkComputer) {
         super();
         this.runid = runid;
         this.acccessor = fta;
-        this.tPointers = new int[1 + 2 * keyFields.length];
+        this.normalizedKeyLength =
+                nmkComputer != null ? nmkComputer.getNormalizedKeyProperties().getNormalizedKeyLength() : 0;
+        this.tPointers = new int[normalizedKeyLength + 2 * keyFields.length];
         if (fta != null) {
             initTPointer(fta, tupleIndex, keyFields, nmkComputer);
         }
@@ -59,10 +62,6 @@ public class ReferenceEntry {
         return tupleIndex;
     }
 
-    public int getNormalizedKey() {
-        return tPointers[0];
-    }
-
     public void setTupleIndex(int tupleIndex, int[] keyFields, INormalizedKeyComputer nmkComputer) {
         initTPointer(acccessor, tupleIndex, keyFields, nmkComputer);
     }
@@ -73,14 +72,11 @@ public class ReferenceEntry {
         byte[] b1 = fta.getBuffer().array();
         for (int f = 0; f < keyFields.length; ++f) {
             int fIdx = keyFields[f];
-            tPointers[2 * f + 1] = fta.getAbsoluteFieldStartOffset(tupleIndex, fIdx);
-            tPointers[2 * f + 2] = fta.getFieldLength(tupleIndex, fIdx);
-            if (f == 0) {
-                if (nmkComputer != null) {
-                    tPointers[0] = nmkComputer.normalize(b1, tPointers[1], tPointers[2]);
-                } else {
-                    tPointers[0] = 0;
-                }
+            tPointers[2 * f + normalizedKeyLength] = fta.getAbsoluteFieldStartOffset(tupleIndex, fIdx);
+            tPointers[2 * f + normalizedKeyLength + 1] = fta.getFieldLength(tupleIndex, fIdx);
+            if (f == 0 && nmkComputer != null) {
+                nmkComputer.normalize(b1, tPointers[normalizedKeyLength], tPointers[normalizedKeyLength + 1], tPointers,
+                        0);
             }
         }
     }

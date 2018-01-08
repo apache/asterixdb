@@ -34,6 +34,7 @@ import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.utils.NormalizedKeyUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.IDeletableTupleBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.ITuplePointerAccessor;
 import org.apache.hyracks.dataflow.std.structures.IResetableComparable;
@@ -65,7 +66,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
 
         @Override
         public int compareTo(HeapEntry o) {
-            int cmpNormalizedKey = AbstractFrameSorter.compareNormalizeKeys(nmk, 0, o.nmk, 0, normalizedKeyTotalLength);
+            int cmpNormalizedKey = NormalizedKeyUtils.compareNormalizeKeys(nmk, 0, o.nmk, 0, normalizedKeyTotalLength);
             if (cmpNormalizedKey != 0 || normalizedKeyDecisive) {
                 return cmpNormalizedKey;
             }
@@ -141,7 +142,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
 
         int runningNormalizedKeyTotalLength = 0;
         if (keyNormalizerFactories != null) {
-            int decisivePrefixLength = AbstractFrameSorter.getDecisivePrefixLength(keyNormalizerFactories);
+            int decisivePrefixLength = NormalizedKeyUtils.getDecisivePrefixLength(keyNormalizerFactories);
 
             // we only take a prefix of the decisive normalized keys, plus at most indecisive normalized keys
             // ideally, the caller should prepare normalizers in this way, but we just guard here to avoid
@@ -153,7 +154,8 @@ public class TupleSorterHeapSort implements ITupleSorter {
 
             for (int i = 0; i < normalizedKeys; i++) {
                 this.nkcs[i] = keyNormalizerFactories[i].createNormalizedKeyComputer();
-                this.normalizedKeyLength[i] = keyNormalizerFactories[i].getNormalizedKeyLength();
+                this.normalizedKeyLength[i] =
+                        keyNormalizerFactories[i].getNormalizedKeyProperties().getNormalizedKeyLength();
                 runningNormalizedKeyTotalLength += this.normalizedKeyLength[i];
             }
             this.normalizedKeyDecisive = decisivePrefixLength == comparatorFactories.length;
@@ -225,7 +227,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
     private int compareTuple(IFrameTupleAccessor frameTupleAccessor, int tid, int[] nmkey, HeapEntry maxEntry)
             throws HyracksDataException {
         int cmpNormalizedKey =
-                AbstractFrameSorter.compareNormalizeKeys(nmkey, 0, maxEntry.nmk, 0, normalizedKeyTotalLength);
+                NormalizedKeyUtils.compareNormalizeKeys(nmkey, 0, maxEntry.nmk, 0, normalizedKeyTotalLength);
         if (cmpNormalizedKey != 0 || normalizedKeyDecisive) {
             return cmpNormalizedKey;
         }

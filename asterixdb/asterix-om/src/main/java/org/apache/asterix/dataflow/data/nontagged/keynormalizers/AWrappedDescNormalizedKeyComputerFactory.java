@@ -21,6 +21,7 @@ package org.apache.asterix.dataflow.data.nontagged.keynormalizers;
 
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyProperties;
 
 /**
  * This class uses a decorator pattern to wrap an ASC ordered INomralizedKeyComputerFactory implementation
@@ -30,9 +31,11 @@ public class AWrappedDescNormalizedKeyComputerFactory implements INormalizedKeyC
 
     private static final long serialVersionUID = 1L;
     private final INormalizedKeyComputerFactory nkcf;
+    private final int normalizedKeyLength;
 
     public AWrappedDescNormalizedKeyComputerFactory(INormalizedKeyComputerFactory nkcf) {
         this.nkcf = nkcf;
+        this.normalizedKeyLength = nkcf.getNormalizedKeyProperties().getNormalizedKeyLength();
     }
 
     @Override
@@ -41,11 +44,24 @@ public class AWrappedDescNormalizedKeyComputerFactory implements INormalizedKeyC
         return new INormalizedKeyComputer() {
 
             @Override
-            public int normalize(byte[] bytes, int start, int length) {
-                int key = nkc.normalize(bytes, start + 1, length - 1);
-                return (int) ((long) 0xffffffff - (long) key);
+            public void normalize(byte[] bytes, int start, int length, int[] normalizedKeys, int keyStart) {
+                nkc.normalize(bytes, start + 1, length - 1, normalizedKeys, keyStart);
+                for (int i = 0; i < normalizedKeyLength; i++) {
+                    int key = normalizedKeys[keyStart + i];
+                    normalizedKeys[keyStart + i] = ~key;
+                }
+            }
+
+            @Override
+            public INormalizedKeyProperties getNormalizedKeyProperties() {
+                return nkc.getNormalizedKeyProperties();
             }
         };
+    }
+
+    @Override
+    public INormalizedKeyProperties getNormalizedKeyProperties() {
+        return nkcf.getNormalizedKeyProperties();
     }
 
 }

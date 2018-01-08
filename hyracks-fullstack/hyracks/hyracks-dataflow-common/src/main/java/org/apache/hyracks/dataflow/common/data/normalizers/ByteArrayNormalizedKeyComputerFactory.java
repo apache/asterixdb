@@ -21,18 +21,45 @@ package org.apache.hyracks.dataflow.common.data.normalizers;
 
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyProperties;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 
 public class ByteArrayNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
+    private static final long serialVersionUID = 1L;
+
+    public static final INormalizedKeyProperties PROPERTIES = new INormalizedKeyProperties() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public int getNormalizedKeyLength() {
+            return 1;
+        }
+
+        @Override
+        public boolean isDecisive() {
+            return false;
+        }
+    };
+
     public static ByteArrayNormalizedKeyComputerFactory INSTANCE = new ByteArrayNormalizedKeyComputerFactory();
 
     @Override
     public INormalizedKeyComputer createNormalizedKeyComputer() {
         return new INormalizedKeyComputer() {
             @Override
-            public int normalize(byte[] bytes, int start, int length) {
-                return ByteArrayPointable.normalize(bytes, start);
+            public void normalize(byte[] bytes, int start, int length, int[] normalizedKeys, int keyStart) {
+                normalizedKeys[keyStart] = ByteArrayPointable.normalize(bytes, start);
+            }
+
+            @Override
+            public INormalizedKeyProperties getNormalizedKeyProperties() {
+                return PROPERTIES;
             }
         };
+    }
+
+    @Override
+    public INormalizedKeyProperties getNormalizedKeyProperties() {
+        return PROPERTIES;
     }
 }

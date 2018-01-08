@@ -21,6 +21,7 @@ package org.apache.asterix.dataflow.data.nontagged.keynormalizers;
 
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyProperties;
 
 /**
  * This class uses a decorator pattern to wrap an ASC ordered INomralizedKeyComputerFactory implementation to
@@ -41,11 +42,22 @@ public class AWrappedAscNormalizedKeyComputerFactory implements INormalizedKeyCo
         return new INormalizedKeyComputer() {
 
             @Override
-            public int normalize(byte[] bytes, int start, int length) {
+            public void normalize(byte[] bytes, int start, int length, int[] normalizedKeys, int keyStart) {
                 // start +1, length -1 is because in ASTERIX data format, there is always a type tag before the value
-                return nkc.normalize(bytes, start + 1, length - 1);
+                nkc.normalize(bytes, start + 1, length - 1, normalizedKeys, keyStart);
+            }
+
+            @Override
+            public INormalizedKeyProperties getNormalizedKeyProperties() {
+                return nkc.getNormalizedKeyProperties();
             }
         };
+
+    }
+
+    @Override
+    public INormalizedKeyProperties getNormalizedKeyProperties() {
+        return nkcf.getNormalizedKeyProperties();
     }
 
 }

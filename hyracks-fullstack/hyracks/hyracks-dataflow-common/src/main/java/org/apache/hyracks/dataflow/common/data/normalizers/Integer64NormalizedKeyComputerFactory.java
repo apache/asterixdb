@@ -20,55 +20,47 @@ package org.apache.hyracks.dataflow.common.data.normalizers;
 
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
+import org.apache.hyracks.api.dataflow.value.INormalizedKeyProperties;
 import org.apache.hyracks.data.std.primitive.LongPointable;
-import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
+import org.apache.hyracks.dataflow.common.utils.NormalizedKeyUtils;
 
 public class Integer64NormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
 
-    private static final long serialVersionUID = 8735044913496854551L;
+    private static final long serialVersionUID = 1L;
+
+    public static final INormalizedKeyProperties PROPERTIES = new INormalizedKeyProperties() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public int getNormalizedKeyLength() {
+            return 2;
+        }
+
+        @Override
+        public boolean isDecisive() {
+            return true;
+        }
+    };
 
     @Override
     public INormalizedKeyComputer createNormalizedKeyComputer() {
         return new INormalizedKeyComputer() {
-            private static final int POSTIVE_LONG_MASK = (3 << 30);
-            private static final int NON_NEGATIVE_INT_MASK = (2 << 30);
-            private static final int NEGATIVE_LONG_MASK = (0 << 30);
+            @Override
+            public void normalize(byte[] bytes, int start, int length, int[] normalizedKeys, int keyStart) {
+                long value = LongPointable.getLong(bytes, start);
+                value = value ^ Long.MIN_VALUE;
+                NormalizedKeyUtils.putLongIntoNormalizedKeys(normalizedKeys, keyStart, value);
+            }
 
             @Override
-            public int normalize(byte[] bytes, int start, int length) {
-                long value = LongPointable.getLong(bytes, start);
-                int highValue = (int) (value >> 32);
-                if (value > Integer.MAX_VALUE) {
-                    /**
-                     * larger than Integer.MAX
-                     */
-                    int highNmk = getKey(highValue);
-                    highNmk >>= 2;
-                    highNmk |= POSTIVE_LONG_MASK;
-                    return highNmk;
-                } else if (value >=0 && value <= Integer.MAX_VALUE) {
-                    /**
-                     * smaller than Integer.MAX but >=0
-                     */
-                    int lowNmk = (int) value;
-                    lowNmk >>= 2;
-                    lowNmk |= NON_NEGATIVE_INT_MASK;
-                    return lowNmk;
-                } else {
-                    /**
-                     * less than 0: have not optimized for that
-                     */
-                    int highNmk = getKey(highValue);
-                    highNmk >>= 2;
-                    highNmk |= NEGATIVE_LONG_MASK;
-                    return highNmk;
-                }
+            public INormalizedKeyProperties getNormalizedKeyProperties() {
+                return PROPERTIES;
             }
-
-            private int getKey(int value) {
-                return value ^ Integer.MIN_VALUE;
-            }
-
         };
+    }
+
+    @Override
+    public INormalizedKeyProperties getNormalizedKeyProperties() {
+        return PROPERTIES;
     }
 }

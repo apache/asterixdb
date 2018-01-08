@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.dataflow.common.data.normalizers;
+
+package org.apache.asterix.dataflow.data.nontagged.keynormalizers;
 
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyProperties;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.dataflow.common.data.normalizers.Integer64NormalizedKeyComputerFactory;
 
-public class FloatNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
-
+public class AUUIDNormalizedKeyComputerFactory implements INormalizedKeyComputerFactory {
     private static final long serialVersionUID = 1L;
 
     public static final INormalizedKeyProperties PROPERTIES = new INormalizedKeyProperties() {
@@ -32,7 +32,7 @@ public class FloatNormalizedKeyComputerFactory implements INormalizedKeyComputer
 
         @Override
         public int getNormalizedKeyLength() {
-            return 1;
+            return 4;
         }
 
         @Override
@@ -41,18 +41,26 @@ public class FloatNormalizedKeyComputerFactory implements INormalizedKeyComputer
         }
     };
 
+    private final INormalizedKeyComputerFactory int64NormalizerFactory;
+    private final int int64NormalizedKeyLength;
+
+    public AUUIDNormalizedKeyComputerFactory() {
+        int64NormalizerFactory = new Integer64NormalizedKeyComputerFactory();
+        int64NormalizedKeyLength = int64NormalizerFactory.getNormalizedKeyProperties().getNormalizedKeyLength();
+    }
+
     @Override
     public INormalizedKeyComputer createNormalizedKeyComputer() {
+        final INormalizedKeyComputer nkc = int64NormalizerFactory.createNormalizedKeyComputer();
         return new INormalizedKeyComputer() {
+
             @Override
             public void normalize(byte[] bytes, int start, int length, int[] normalizedKeys, int keyStart) {
-                int value = IntegerPointable.getInteger(bytes, start);
-                if (value >= 0) {
-                    normalizedKeys[keyStart] = value ^ Integer.MIN_VALUE;
-                } else {
-                    // invert the key
-                    normalizedKeys[keyStart] = ~value;
-                }
+                // normalize msb
+                nkc.normalize(bytes, start, length, normalizedKeys, keyStart);
+                // normalize lsb
+                nkc.normalize(bytes, start + Long.BYTES, length - Long.BYTES, normalizedKeys,
+                        keyStart + int64NormalizedKeyLength);
             }
 
             @Override
@@ -60,6 +68,7 @@ public class FloatNormalizedKeyComputerFactory implements INormalizedKeyComputer
                 return PROPERTIES;
             }
         };
+
     }
 
     @Override

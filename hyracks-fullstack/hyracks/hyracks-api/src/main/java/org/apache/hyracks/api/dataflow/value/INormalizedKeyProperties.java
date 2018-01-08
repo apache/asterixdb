@@ -18,8 +18,19 @@
  */
 package org.apache.hyracks.api.dataflow.value;
 
-public interface INormalizedKeyComputer {
-    void normalize(byte[] bytes, int start, int length, int[] normalizedKeys, int keyStart);
+import java.io.Serializable;
 
-    INormalizedKeyProperties getNormalizedKeyProperties();
+public interface INormalizedKeyProperties extends Serializable {
+    /**
+     *
+     * @return The length of the normalized key in terms of integers
+     */
+    public int getNormalizedKeyLength();
+
+    /**
+     *
+     * @return Whether we can solely rely on this normalized key to complete comparison,
+     *         even when two normalized keys are equal
+     */
+    public boolean isDecisive();
 }

@@ -30,6 +30,7 @@ import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
+import org.apache.hyracks.dataflow.common.utils.NormalizedKeyUtils;
 import org.apache.hyracks.dataflow.std.sort.util.GroupFrameAccessor;
 import org.apache.hyracks.dataflow.std.util.ReferenceEntry;
 import org.apache.hyracks.dataflow.std.util.ReferencedPriorityQueue;
@@ -41,6 +42,8 @@ public class RunMergingFrameReader implements IFrameReader {
     private final int[] sortFields;
     private final IBinaryComparator[] comparators;
     private final INormalizedKeyComputer nmkComputer;
+    private final int normalizedKeyLength;
+    private final boolean normalizedKeyDecisive;
     private final RecordDescriptor recordDesc;
     private final int topK;
     private int tupleCount;
@@ -64,6 +67,14 @@ public class RunMergingFrameReader implements IFrameReader {
         this.sortFields = sortFields;
         this.comparators = comparators;
         this.nmkComputer = nmkComputer;
+        this.normalizedKeyLength =
+                nmkComputer != null ? nmkComputer.getNormalizedKeyProperties().getNormalizedKeyLength() : 0;
+        // right now we didn't take multiple key normalizers for frame merger, since during this step it won't be
+        // too many cache misses (merging multiple runs sequentially).
+        // but still, we can apply a special optimization if there is only 1 sort field
+        this.normalizedKeyDecisive =
+                nmkComputer != null ? nmkComputer.getNormalizedKeyProperties().isDecisive() && comparators.length == 1
+                        : false;
         this.recordDesc = recordDesc;
         this.topK = topK;
     }
@@ -153,8 +164,7 @@ public class RunMergingFrameReader implements IFrameReader {
     }
 
     private static void closeRun(int index, List<? extends IFrameReader> runCursors,
-            IFrameTupleAccessor[] tupleAccessors)
-            throws HyracksDataException {
+            IFrameTupleAccessor[] tupleAccessors) throws HyracksDataException {
         if (runCursors.get(index) != null) {
             runCursors.get(index).close();
             runCursors.set(index, null);
@@ -164,32 +174,39 @@ public class RunMergingFrameReader implements IFrameReader {
 
     private Comparator<ReferenceEntry> createEntryComparator(final IBinaryComparator[] comparators) {
         return new Comparator<ReferenceEntry>() {
+            @Override
             public int compare(ReferenceEntry tp1, ReferenceEntry tp2) {
-                int nmk1 = tp1.getNormalizedKey();
-                int nmk2 = tp2.getNormalizedKey();
-                if (nmk1 != nmk2) {
-                    return ((((long) nmk1) & 0xffffffffL) < (((long) nmk2) & 0xffffffffL)) ? -1 : 1;
+                int[] tPointers1 = tp1.getTPointers();
+                int[] tPointers2 = tp2.getTPointers();
+                int cmp = NormalizedKeyUtils.compareNormalizeKeys(tPointers1, 0, tPointers2, 0, normalizedKeyLength);
+                if (cmp != 0) {
+                    return cmp;
+                } else if (normalizedKeyDecisive) {
+                    // we further compare the run id
+                    return compareRun(tp1, tp2);
                 }
                 IFrameTupleAccessor fta1 = tp1.getAccessor();
                 IFrameTupleAccessor fta2 = tp2.getAccessor();
                 byte[] b1 = fta1.getBuffer().array();
                 byte[] b2 = fta2.getBuffer().array();
-                int[] tPointers1 = tp1.getTPointers();
-                int[] tPointers2 = tp2.getTPointers();
 
                 for (int f = 0; f < sortFields.length; ++f) {
                     int c;
                     try {
-                        c = comparators[f].compare(b1, tPointers1[2 * f + 1], tPointers1[2 * f + 2], b2,
-                                tPointers2[2 * f + 1], tPointers2[2 * f + 2]);
+                        c = comparators[f].compare(b1, tPointers1[2 * f + normalizedKeyLength],
+                                tPointers1[2 * f + normalizedKeyLength + 1], b2,
+                                tPointers2[2 * f + normalizedKeyLength], tPointers2[2 * f + normalizedKeyLength + 1]);
                         if (c != 0) {
                             return c;
                         }
                     } catch (HyracksDataException e) {
                         throw new IllegalArgumentException(e);
                     }
-
                 }
+                return compareRun(tp1, tp2);
+            }
+
+            private int compareRun(ReferenceEntry tp1, ReferenceEntry tp2) {
                 int runid1 = tp1.getRunid();
                 int runid2 = tp2.getRunid();
                 return runid1 < runid2 ? -1 : (runid1 == runid2 ? 0 : 1);
