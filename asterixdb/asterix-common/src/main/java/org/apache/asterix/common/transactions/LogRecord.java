@@ -98,8 +98,6 @@ public class LogRecord implements ILogRecord {
      * The fields (numOfFlushedIndexes and nodeId) are used for remote flush logs only
      * to indicate the source of the log and how many indexes were flushed using its LSN.
      */
-    private int numOfFlushedIndexes;
-    private String nodeId;
     private final AtomicBoolean replicated;
     private boolean replicate = false;
     private ILogRequester requester;
@@ -180,9 +178,6 @@ public class LogRecord implements ILogRecord {
         doWriteLogRecord(buffer);
         if (logType == LogType.FLUSH) {
             buffer.putLong(LSN);
-            buffer.putInt(numOfFlushedIndexes);
-            buffer.putInt(nodeId.length());
-            buffer.put(nodeId.getBytes());
         }
     }
 
@@ -359,12 +354,6 @@ public class LogRecord implements ILogRecord {
 
         if (logType == LogType.FLUSH) {
             LSN = buffer.getLong();
-            numOfFlushedIndexes = buffer.getInt();
-            //read serialized node id
-            int nodeIdLength = buffer.getInt();
-            byte[] nodeIdBytes = new byte[nodeIdLength];
-            buffer.get(nodeIdBytes);
-            nodeId = new String(nodeIdBytes);
         }
     }
 
@@ -545,10 +534,6 @@ public class LogRecord implements ILogRecord {
         if (logType == LogType.FLUSH) {
             //LSN
             remoteLogSize += Long.BYTES;
-            //num of indexes
-            remoteLogSize += Integer.BYTES;
-            //serialized node id String
-            remoteLogSize += Integer.BYTES + nodeId.length();
         }
         remoteLogSize -= CHKSUM_LEN;
         return remoteLogSize;
@@ -631,16 +616,6 @@ public class LogRecord implements ILogRecord {
     }
 
     @Override
-    public String getNodeId() {
-        return nodeId;
-    }
-
-    @Override
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    @Override
     public void setLogSource(byte logSource) {
         this.logSource = logSource;
     }
@@ -648,14 +623,6 @@ public class LogRecord implements ILogRecord {
     @Override
     public byte getLogSource() {
         return logSource;
-    }
-
-    public int getNumOfFlushedIndexes() {
-        return numOfFlushedIndexes;
-    }
-
-    public void setNumOfFlushedIndexes(int numOfFlushedIndexes) {
-        this.numOfFlushedIndexes = numOfFlushedIndexes;
     }
 
     public void setPKFieldCnt(int pKFieldCnt) {

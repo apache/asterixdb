@@ -400,8 +400,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
         if (dsInfo.isDurable()) {
             synchronized (logRecord) {
-                TransactionUtil.formFlushLogRecord(logRecord, dsInfo.getDatasetID(), null, logManager.getNodeId(),
-                        dsInfo.getIndexes().size());
+                TransactionUtil.formFlushLogRecord(logRecord, dsInfo.getDatasetID(), null);
                 try {
                     logManager.log(logRecord);
                 } catch (ACIDException e) {

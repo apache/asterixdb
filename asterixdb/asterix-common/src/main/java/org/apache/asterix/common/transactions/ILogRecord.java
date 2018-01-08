@@ -128,8 +128,6 @@ public interface ILogRecord {
 
     public void setPKValue(ITupleReference PKValue);
 
-    public String getNodeId();
-
     public void readRemoteLog(ByteBuffer buffer);
 
     public void setLogSource(byte logSource);
@@ -137,8 +135,6 @@ public interface ILogRecord {
     public byte getLogSource();
 
     public int getRemoteLogSize();
-
-    public void setNodeId(String nodeId);
 
     public int getResourcePartition();
 

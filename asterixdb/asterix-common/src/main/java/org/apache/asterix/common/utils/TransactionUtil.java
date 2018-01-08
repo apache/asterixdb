@@ -45,14 +45,11 @@ public class TransactionUtil {
         logRecord.computeAndSetLogSize();
     }
 
-    public static void formFlushLogRecord(LogRecord logRecord, int datasetId, PrimaryIndexOperationTracker opTracker,
-            String nodeId, int numberOfIndexes) {
+    public static void formFlushLogRecord(LogRecord logRecord, int datasetId, PrimaryIndexOperationTracker opTracker) {
         logRecord.setLogType(LogType.FLUSH);
         logRecord.setTxnId(-1);
         logRecord.setDatasetId(datasetId);
         logRecord.setOpTracker(opTracker);
-        logRecord.setNumOfFlushedIndexes(numberOfIndexes);
-        logRecord.setNodeId(nodeId);
         logRecord.computeAndSetLogSize();
     }
 

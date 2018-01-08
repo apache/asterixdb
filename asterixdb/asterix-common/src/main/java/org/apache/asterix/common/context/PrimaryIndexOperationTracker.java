@@ -129,8 +129,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                  * Generate a FLUSH log.
                  * Flush will be triggered when the log is written to disk by LogFlusher.
                  */
-                TransactionUtil.formFlushLogRecord(logRecord, datasetID, this, logManager.getNodeId(),
-                        dsInfo.getDatasetIndexes().size());
+                TransactionUtil.formFlushLogRecord(logRecord, datasetID, this);
                 try {
                     logManager.log(logRecord);
                 } catch (ACIDException e) {
