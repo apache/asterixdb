@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IndexCheckpoint;
@@ -91,12 +92,12 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public synchronized long getLowWatermark() throws HyracksDataException {
+    public synchronized long getLowWatermark() {
         return getLatest().getLowWatermark();
     }
 
     @Override
-    public synchronized boolean isFlushed(long masterLsn) throws HyracksDataException {
+    public synchronized boolean isFlushed(long masterLsn) {
         if (masterLsn == BULKLOAD_LSN) {
             return true;
         }
@@ -104,13 +105,19 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public synchronized void advanceLowWatermark(long lsn) throws HyracksDataException {
-        flushed(getLatest().getValidComponentTimestamp(), lsn);
+    public synchronized void delete() {
+        deleteHistory(Long.MAX_VALUE, 0);
     }
 
     @Override
-    public synchronized void delete() {
-        deleteHistory(Long.MAX_VALUE, 0);
+    public Optional<String> getValidComponentTimestamp() {
+        final String validComponentTimestamp = getLatest().getValidComponentTimestamp();
+        return validComponentTimestamp != null ? Optional.of(validComponentTimestamp) : Optional.empty();
+    }
+
+    @Override
+    public int getCheckpointCount() {
+        return getCheckpoints().size();
     }
 
     private IndexCheckpoint getLatest() {

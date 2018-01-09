@@ -20,6 +20,8 @@ package org.apache.asterix.transaction.management.resource;
 
 import static org.apache.asterix.common.utils.StorageConstants.INDEX_CHECKPOINT_FILE_PREFIX;
 import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_CREATE_FILE;
+import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER;
+import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_TIMESTAMP_FORMAT;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,8 +33,12 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Format;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +54,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.ReplicationJob;
 import org.apache.asterix.common.storage.DatasetResourceReference;
+import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.utils.StorageConstants;
@@ -104,6 +111,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             return true;
         }
     };
+
+    private static final ThreadLocal<SimpleDateFormat> THREAD_LOCAL_FORMATTER =
+            ThreadLocal.withInitial(() -> new SimpleDateFormat(COMPONENT_TIMESTAMP_FORMAT));
 
     // Finals
     private final IIOManager ioManager;
@@ -359,21 +369,64 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     public void cleanup(int partition) throws HyracksDataException {
         final Set<File> partitionIndexes = getPartitionIndexes(partition);
-        // find masks
-        for (File index : partitionIndexes) {
-            File[] masks = index.listFiles(MASK_FILES_FILTER);
-            if (masks != null) {
-                try {
-                    for (File mask : masks) {
-                        deleteIndexMaskedFiles(index, mask);
-                        // delete the mask itself
-                        Files.delete(mask.toPath());
-                    }
-                } catch (IOException e) {
-                    throw HyracksDataException.create(e);
+        try {
+            for (File index : partitionIndexes) {
+                deleteIndexMaskedFiles(index);
+                if (isValidIndex(index)) {
+                    deleteIndexInvalidComponents(index);
+                }
+            }
+        } catch (IOException | ParseException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    private void deleteIndexMaskedFiles(File index) throws IOException {
+        File[] masks = index.listFiles(MASK_FILES_FILTER);
+        if (masks != null) {
+            for (File mask : masks) {
+                deleteIndexMaskedFiles(index, mask);
+                // delete the mask itself
+                Files.delete(mask.toPath());
+            }
+        }
+    }
+
+    private boolean isValidIndex(File index) throws IOException {
+        // any index without any checkpoint files is invalid
+        // this can happen if a crash happens when the index metadata file is created
+        // but before the initial checkpoint is persisted. The index metadata file will
+        // be deleted and recreated when the index is created again
+        return getIndexCheckpointManager(index).getCheckpointCount() != 0;
+    }
+
+    private void deleteIndexInvalidComponents(File index) throws IOException, ParseException {
+        final Optional<String> validComponentTimestamp = getIndexCheckpointManager(index).getValidComponentTimestamp();
+        if (!validComponentTimestamp.isPresent()) {
+            // index doesn't have any components
+            return;
+        }
+        final Format formatter = THREAD_LOCAL_FORMATTER.get();
+        final Date validTimestamp = (Date) formatter.parseObject(validComponentTimestamp.get());
+        final File[] indexComponentFiles = index.listFiles(COMPONENT_FILES_FILTER);
+        if (indexComponentFiles != null) {
+            for (File componentFile : indexComponentFiles) {
+                // delete any file with startTime > validTimestamp
+                final String fileStartTimeStr =
+                        AbstractLSMIndexFileManager.getComponentStartTime(componentFile.getName());
+                final Date fileStartTime = (Date) formatter.parseObject(fileStartTimeStr);
+                if (fileStartTime.after(validTimestamp)) {
+                    LOGGER.info(() -> "Deleting invalid component file: " + componentFile.getAbsolutePath());
+                    Files.delete(componentFile.toPath());
                 }
             }
         }
+    }
+
+    private IIndexCheckpointManager getIndexCheckpointManager(File index) throws HyracksDataException {
+        final String indexFile = Paths.get(index.getAbsolutePath(), StorageConstants.METADATA_FILE_NAME).toString();
+        final ResourceReference indexRef = ResourceReference.of(indexFile);
+        return indexCheckpointManagerProvider.get(indexRef);
     }
 
     private void deleteIndexMaskedFiles(File index, File mask) throws IOException {

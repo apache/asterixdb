@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.StorageApiServlet;
@@ -35,16 +35,15 @@ import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.NodeProperties;
 import org.apache.asterix.common.config.StorageProperties;
-import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.utils.PrintUtil;
 import org.apache.asterix.common.utils.Servlets;
-import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
 import org.apache.asterix.utils.CompatibilityUtil;
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -235,10 +234,13 @@ public class NCApplication extends BaseNCApplication {
     private void performLocalCleanUp() throws HyracksDataException {
         //Delete working area files from failed jobs
         runtimeContext.getIoManager().deleteWorkspaceFiles();
-
-        //TODO
-        //Reclaim storage for orphaned index artifacts in NCs.
-        //Note: currently LSM indexes invalid components are deleted when an index is activated.
+        // Reclaim storage for orphaned index artifacts in NCs.
+        final Set<Integer> nodePartitions = runtimeContext.getReplicaManager().getPartitions();
+        final PersistentLocalResourceRepository localResourceRepository =
+                (PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository();
+        for (Integer partition : nodePartitions) {
+            localResourceRepository.cleanup(partition);
+        }
     }
 
     private void updateOnNodeJoin() {

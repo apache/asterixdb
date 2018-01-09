@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.storage;
 
+import java.util.Optional;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IIndexCheckpointManager {
@@ -79,15 +81,21 @@ public interface IIndexCheckpointManager {
     boolean isFlushed(long masterLsn) throws HyracksDataException;
 
     /**
-     * Advance the index low watermark to {@code lsn}
-     *
-     * @param lsn
-     * @throws HyracksDataException
-     */
-    void advanceLowWatermark(long lsn) throws HyracksDataException;
-
-    /**
      * Deletes all checkpoints
      */
     void delete();
+
+    /**
+     * Gets the index last valid component timestamp if the index has any components. Otherwise {@link Optional#empty()}
+     *
+     * @return the index last valid component timestamp
+     */
+    Optional<String> getValidComponentTimestamp();
+
+    /**
+     * Gets the number of valid checkpoints the index has.
+     *
+     * @return the number of valid checkpoints
+     */
+    int getCheckpointCount();
 }

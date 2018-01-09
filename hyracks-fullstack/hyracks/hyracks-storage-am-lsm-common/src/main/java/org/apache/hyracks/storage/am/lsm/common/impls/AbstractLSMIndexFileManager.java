@@ -77,7 +77,9 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
      */
     public static final String TXN_PREFIX = ".T";
 
-    protected static final FilenameFilter fileNameFilter = (dir, name) -> !name.startsWith(".");
+    public static final String COMPONENT_TIMESTAMP_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS";
+
+    public static final FilenameFilter COMPONENT_FILES_FILTER = (dir, name) -> !name.startsWith(".");
     protected static final FilenameFilter txnFileNameFilter = (dir, name) -> name.startsWith(TXN_PREFIX);
     protected static FilenameFilter bloomFilterFilter =
             (dir, name) -> !name.startsWith(".") && name.endsWith(BLOOM_FILTER_SUFFIX);
@@ -87,7 +89,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     protected final IIOManager ioManager;
     // baseDir should reflect dataset name and partition name and be absolute
     protected final FileReference baseDir;
-    protected final Format formatter = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
+    protected final Format formatter = new SimpleDateFormat(COMPONENT_TIMESTAMP_FORMAT);
     protected final Comparator<ComparableFileName> recencyCmp = new RecencyComparator();
     protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
     private String prevTimestamp = null;
@@ -222,7 +224,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         // (1) The isValid flag is not set
         // (2) The file's interval is contained by some other file
         // Here, we only filter out (1).
-        cleanupAndGetValidFilesInternal(fileNameFilter, treeFactory, allFiles);
+        cleanupAndGetValidFilesInternal(COMPONENT_FILES_FILTER, treeFactory, allFiles);
 
         if (allFiles.isEmpty()) {
             return validFiles;
@@ -410,6 +412,10 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
         prevTimestamp = ts;
         return ts;
+    }
+
+    public static String getComponentStartTime(String fileName) {
+        return fileName.split(DELIMITER)[0];
     }
 
     public static String getComponentEndTime(String fileName) {
