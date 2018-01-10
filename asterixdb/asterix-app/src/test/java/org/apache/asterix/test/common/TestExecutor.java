@@ -1627,7 +1627,8 @@ public class TestExecutor {
     public void cleanup(String testCase, List<String> badtestcases) throws Exception {
         try {
             ArrayList<String> toBeDropped = new ArrayList<>();
-            InputStream resultStream = executeQueryService("select dv.DataverseName from Metadata.`Dataverse` as dv;",
+            InputStream resultStream = executeQueryService(
+                    "select dv.DataverseName from Metadata.`Dataverse` as dv order by dv.DataverseName;",
                     getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.CLEAN_JSON);
             String out = IOUtils.toString(resultStream);
             ObjectMapper om = new ObjectMapper();

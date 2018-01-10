@@ -31,7 +31,7 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
     @Override
     public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
             MetadataProvider metadataProvider,
-            LangRewritingContext context) throws CompilationException {
+            LangRewritingContext context, boolean inlineUdfs) throws CompilationException {
         // Sets up parameters.
         setup(declaredFunctions, topStatement, metadataProvider, context);
 
@@ -63,6 +63,6 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         rewriteListInputFunctions();
 
         // Inlines functions recursively.
-        inlineDeclaredUdfs();
+        inlineDeclaredUdfs(inlineUdfs);
     }
 }

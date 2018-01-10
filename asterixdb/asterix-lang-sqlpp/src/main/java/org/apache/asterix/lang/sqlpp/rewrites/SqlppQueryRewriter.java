@@ -28,6 +28,7 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -86,7 +87,8 @@ class SqlppQueryRewriter implements IQueryRewriter {
 
     @Override
     public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
-            MetadataProvider metadataProvider, LangRewritingContext context) throws CompilationException {
+            MetadataProvider metadataProvider, LangRewritingContext context, boolean inlineUdfs)
+            throws CompilationException {
         if (topStatement == null) {
             return;
         }
@@ -126,7 +128,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         rewriteListInputFunctions();
 
         // Inlines functions.
-        inlineDeclaredUdfs();
+        inlineDeclaredUdfs(inlineUdfs);
 
         // Rewrites function names.
         // This should be done after inlineDeclaredUdfs() because user-defined function
@@ -213,7 +215,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         topExpr.accept(groupByVisitor, null);
     }
 
-    protected void inlineDeclaredUdfs() throws CompilationException {
+    protected void inlineDeclaredUdfs(boolean inlineUdfs) throws CompilationException {
         List<FunctionSignature> funIds = new ArrayList<FunctionSignature>();
         for (FunctionDecl fdecl : declaredFunctions) {
             funIds.add(fdecl.getSignature());
@@ -226,7 +228,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
                     signature -> FunctionMapUtil.normalizeBuiltinFunctionSignature(signature, false)));
         }
         declaredFunctions.addAll(usedStoredFunctionDecls);
-        if (!declaredFunctions.isEmpty()) {
+        if (inlineUdfs && !declaredFunctions.isEmpty()) {
             SqlppInlineUdfsVisitor visitor = new SqlppInlineUdfsVisitor(context,
                     new SqlppFunctionBodyRewriterFactory() /* the rewriter for function bodies expressions*/,
                     declaredFunctions, metadataProvider);
@@ -237,7 +239,8 @@ class SqlppQueryRewriter implements IQueryRewriter {
         declaredFunctions.removeAll(usedStoredFunctionDecls);
     }
 
-    private Set<FunctionSignature> getFunctionCalls(Expression expression) throws CompilationException {
+    @Override
+    public Set<CallExpr> getFunctionCalls(Expression expression) throws CompilationException {
         GatherFunctionCalls gfc = new GatherFunctionCalls();
         expression.accept(gfc, null);
         return gfc.getCalls();

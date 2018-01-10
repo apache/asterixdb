@@ -347,7 +347,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         metadataProvider.setDefaultDataverse(fnDataverse);
         try {
             IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
-            queryRewriter.rewrite(declaredFunctions, wrappedQuery, metadataProvider, context);
+            queryRewriter.rewrite(declaredFunctions, wrappedQuery, metadataProvider, context, true);
             return wrappedQuery.getBody();
         } finally {
             metadataProvider.setDefaultDataverse(defaultDataverse);

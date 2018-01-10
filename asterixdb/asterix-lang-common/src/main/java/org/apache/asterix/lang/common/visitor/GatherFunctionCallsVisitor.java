@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
@@ -53,11 +52,11 @@ import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisito
 
 public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<Void, Void> {
 
-    protected final Set<FunctionSignature> calls = new HashSet<FunctionSignature>();
+    protected final Set<CallExpr> calls = new HashSet<>();
 
     @Override
     public Void visit(CallExpr pf, Void arg) throws CompilationException {
-        calls.add(pf.getFunctionSignature());
+        calls.add(pf);
         for (Expression e : pf.getExprList()) {
             e.accept(this, arg);
         }
@@ -202,7 +201,7 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
         return null;
     }
 
-    public Set<FunctionSignature> getCalls() {
+    public Set<CallExpr> getCalls() {
         return calls;
     }
 

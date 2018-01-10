@@ -7922,13 +7922,54 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-9">
         <output-dir compare="Text">bad-function-ddl-9</output-dir>
-        <expected-error>function experiments.good_function@1 depends upon function experiments.function_that_does_not_exist@0 which is undefined</expected-error>
+        <expected-error>function experiments.function_that_does_not_exist@0 is not defined</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-10">
         <output-dir compare="Text">bad-function-ddl-10</output-dir>
         <expected-error>function experiments.f0@2 is not defined</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="check-dependencies-1">
+        <output-dir compare="Text">check-dependencies-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="drop-dependency-1">
+        <output-dir compare="Text">drop-dependency-1</output-dir>
+        <expected-error>Cannot drop dataverse. Function B.f0@2 depends on function C.f1@2</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="drop-dependency-2">
+        <output-dir compare="Text">drop-dependency-2</output-dir>
+        <expected-error>Cannot drop dataverse. Function B.f2@2 depends on dataset C.TweetMessages</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="drop-dependency-3">
+        <output-dir compare="Text">drop-dependency-3</output-dir>
+        <expected-error>Cannot drop function C.f1@2 being used by function B.f0@2</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="drop-dependency-4">
+        <output-dir compare="Text">drop-dependency-4</output-dir>
+        <expected-error>Cannot drop dataset C.TweetMessages being used by function B.f2@2</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="drop-dependency-5">
+        <output-dir compare="Text">drop-dependency-5</output-dir>
+        <expected-error>Cannot drop function C.f1@2 being used by function C.f0@2</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="drop-dependency-6">
+        <output-dir compare="Text">drop-dependency-6</output-dir>
+        <expected-error>Cannot drop dataset C.TweetMessages being used by function C.f2@2</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

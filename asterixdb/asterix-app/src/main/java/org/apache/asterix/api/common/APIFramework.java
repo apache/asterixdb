@@ -180,7 +180,7 @@ public class APIFramework {
     }
 
     public Pair<IReturningStatement, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
-            MetadataProvider metadataProvider, IReturningStatement q, SessionOutput output)
+            MetadataProvider metadataProvider, IReturningStatement q, SessionOutput output, boolean inlineUdfs)
             throws CompilationException {
         if (q == null) {
             return null;
@@ -193,7 +193,7 @@ public class APIFramework {
             printPlanPostfix(output);
         }
         IQueryRewriter rw = rewriterFactory.createQueryRewriter();
-        rw.rewrite(declaredFunctions, q, metadataProvider, new LangRewritingContext(q.getVarCounter()));
+        rw.rewrite(declaredFunctions, q, metadataProvider, new LangRewritingContext(q.getVarCounter()), inlineUdfs);
         return new Pair<>(q, q.getVarCounter());
     }
 

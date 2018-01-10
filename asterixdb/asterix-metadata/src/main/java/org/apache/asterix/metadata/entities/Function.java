@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.entities;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.metadata.MetadataCache;
@@ -36,13 +37,14 @@ public class Function implements IMetadataEntity<Function> {
     private final String name;
     private final int arity;
     private final List<String> params;
+    private final List<List<List<String>>> dependencies;
     private final String body;
     private final String returnType;
     private final String language;
     private final String kind;
 
     public Function(String dataverseName, String functionName, int arity, List<String> params, String returnType,
-            String functionBody, String language, String functionKind) {
+            String functionBody, String language, String functionKind, List<List<List<String>>> dependencies) {
         this.dataverse = dataverseName;
         this.name = functionName;
         this.params = params;
@@ -51,6 +53,13 @@ public class Function implements IMetadataEntity<Function> {
         this.language = language;
         this.kind = functionKind;
         this.arity = arity;
+        if (dependencies == null) {
+            this.dependencies = new ArrayList<>();
+            this.dependencies.add(new ArrayList<>());
+            this.dependencies.add(new ArrayList<>());
+        } else {
+            this.dependencies = dependencies;
+        }
     }
 
     public String getDataverseName() {
@@ -63,6 +72,10 @@ public class Function implements IMetadataEntity<Function> {
 
     public List<String> getParams() {
         return params;
+    }
+
+    public List<List<List<String>>> getDependencies() {
+        return dependencies;
     }
 
     public String getFunctionBody() {
