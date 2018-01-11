@@ -23,10 +23,6 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
-    <failsafe.test.excludes>**/DmlRecoveryIT.java</failsafe.test.excludes>
-    <cluster.test.excludes>**/AsterixClusterLifeCycleIT.java</cluster.test.excludes>
-    <cluster.extest.excludes>**/ClusterExecutionIT.java</cluster.extest.excludes>
     <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
   </properties>
 
@@ -338,27 +334,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <excludes combine.children="append">
-            <exclude>${failsafe.test.excludes}</exclude>
-            <exclude>${cluster.test.excludes}</exclude>
-            <exclude>${cluster.extest.excludes}</exclude>
-          </excludes>
-          <executions>
-              <execution>
-                  <id>run-tests</id>
-                  <phase>integration-test</phase>
-                  <goals>
-                      <goal>integration-test</goal>
-                      <goal>verify</goal>
-                  </goals>
-              </execution>
-          </executions>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
