@@ -335,4 +335,23 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         return buf.capacity() - getFreeSpaceOff() - (getTupleCount() * slotManager.getSlotSize());
     }
 
+    public ITupleReference getLeftmostTuple() {
+        int tupleCount = getTupleCount();
+        if (tupleCount == 0) {
+            return null;
+        } else {
+            frameTuple.resetByTupleIndex(this, 0);
+            return frameTuple;
+        }
+    }
+
+    public ITupleReference getRightmostTuple() {
+        int tupleCount = getTupleCount();
+        if (tupleCount == 0) {
+            return null;
+        } else {
+            frameTuple.resetByTupleIndex(this, tupleCount - 1);
+            return frameTuple;
+        }
+    }
 }

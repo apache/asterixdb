@@ -40,37 +40,37 @@ import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class BTreeRangeSearchCursor implements ITreeIndexCursor {
 
-    private final IBTreeLeafFrame frame;
-    private final ITreeIndexTupleReference frameTuple;
-    private final boolean exclusiveLatchNodes;
-    private boolean isPageDirty;
+    protected final IBTreeLeafFrame frame;
+    protected final ITreeIndexTupleReference frameTuple;
+    protected final boolean exclusiveLatchNodes;
+    protected boolean isPageDirty;
 
-    private IBufferCache bufferCache = null;
-    private int fileId = -1;
+    protected IBufferCache bufferCache = null;
+    protected int fileId = -1;
 
-    private ICachedPage page = null;
-    private int pageId = -1; // This is used by the LSMRTree flush operation
+    protected ICachedPage page = null;
+    protected int pageId = -1; // This is used by the LSMRTree flush operation
 
-    private int tupleIndex = 0;
-    private int stopTupleIndex;
+    protected int tupleIndex = 0;
+    protected int stopTupleIndex;
 
-    private final RangePredicate reusablePredicate;
-    private final ArrayTupleReference reconciliationTuple;
-    private IIndexAccessor accessor;
-    private ISearchOperationCallback searchCb;
-    private MultiComparator originalKeyCmp;
-    private ArrayTupleBuilder tupleBuilder;
+    protected final RangePredicate reusablePredicate;
+    protected final ArrayTupleReference reconciliationTuple;
+    protected IIndexAccessor accessor;
+    protected ISearchOperationCallback searchCb;
+    protected MultiComparator originalKeyCmp;
+    protected ArrayTupleBuilder tupleBuilder;
 
-    private FindTupleMode lowKeyFtm;
-    private FindTupleMode highKeyFtm;
-    private FindTupleNoExactMatchPolicy lowKeyFtp;
-    private FindTupleNoExactMatchPolicy highKeyFtp;
+    protected FindTupleMode lowKeyFtm;
+    protected FindTupleMode highKeyFtm;
+    protected FindTupleNoExactMatchPolicy lowKeyFtp;
+    protected FindTupleNoExactMatchPolicy highKeyFtp;
 
-    private RangePredicate pred;
-    private MultiComparator lowKeyCmp;
-    private MultiComparator highKeyCmp;
+    protected RangePredicate pred;
+    protected MultiComparator lowKeyCmp;
+    protected MultiComparator highKeyCmp;
     protected ITupleReference lowKey;
-    private ITupleReference highKey;
+    protected ITupleReference highKey;
 
     public BTreeRangeSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
         this.frame = frame;
@@ -83,12 +83,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     @Override
     public void destroy() throws HyracksDataException {
         if (page != null) {
-            if (exclusiveLatchNodes) {
-                page.releaseWriteLatch(isPageDirty);
-            } else {
-                page.releaseReadLatch();
-            }
-            bufferCache.unpin(page);
+            releasePage();
         }
 
         tupleIndex = 0;
@@ -120,18 +115,10 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         return pageId;
     }
 
-    private void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
+    protected void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
         do {
-            ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false);
-            if (exclusiveLatchNodes) {
-                nextLeaf.acquireWriteLatch();
-                page.releaseWriteLatch(isPageDirty);
-            } else {
-                nextLeaf.acquireReadLatch();
-                page.releaseReadLatch();
-            }
-            bufferCache.unpin(page);
-
+            ICachedPage nextLeaf = acquirePage(nextLeafPage);
+            releasePage();
             page = nextLeaf;
             isPageDirty = false;
             frame.setPage(page);
@@ -173,13 +160,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
                 TupleUtils.copyTuple(tupleBuilder, frameTuple, originalKeyCmp.getKeyFieldCount());
                 reconciliationTuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
 
-                // unlatch/unpin
-                if (exclusiveLatchNodes) {
-                    page.releaseWriteLatch(isPageDirty);
-                } else {
-                    page.releaseReadLatch();
-                }
-                bufferCache.unpin(page);
+                releasePage();
                 page = null;
                 isPageDirty = false;
 
@@ -210,7 +191,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         tupleIndex++;
     }
 
-    private int getLowKeyIndex() throws HyracksDataException {
+    protected int getLowKeyIndex() throws HyracksDataException {
         if (lowKey == null) {
             return 0;
         }
@@ -227,7 +208,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         return index;
     }
 
-    private int getHighKeyIndex() throws HyracksDataException {
+    protected int getHighKeyIndex() throws HyracksDataException {
         if (highKey == null) {
             return frame.getTupleCount() - 1;
         }
@@ -248,12 +229,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         // in case open is called multiple times without closing
         if (page != null) {
-            if (exclusiveLatchNodes) {
-                page.releaseWriteLatch(isPageDirty);
-            } else {
-                page.releaseReadLatch();
-            }
-            bufferCache.unpin(page);
+            resetBeforeOpen();
         }
         accessor = ((BTreeCursorInitialState) initialState).getAccessor();
         searchCb = initialState.getSearchOperationCallback();
@@ -291,6 +267,10 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         stopTupleIndex = getHighKeyIndex();
     }
 
+    protected void resetBeforeOpen() throws HyracksDataException {
+        releasePage();
+    }
+
     @Override
     public void close() throws HyracksDataException {
         destroy();
@@ -309,5 +289,24 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
     @Override
     public boolean isExclusiveLatchNodes() {
         return exclusiveLatchNodes;
+    }
+
+    protected void releasePage() throws HyracksDataException {
+        if (exclusiveLatchNodes) {
+            page.releaseWriteLatch(isPageDirty);
+        } else {
+            page.releaseReadLatch();
+        }
+        bufferCache.unpin(page);
+    }
+
+    protected ICachedPage acquirePage(int pageId) throws HyracksDataException {
+        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+        if (exclusiveLatchNodes) {
+            nextPage.acquireWriteLatch();
+        } else {
+            nextPage.acquireReadLatch();
+        }
+        return nextPage;
     }
 }

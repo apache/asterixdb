@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMInteriorFrameFactory;
 import org.apache.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
+import org.apache.hyracks.storage.am.btree.impls.DiskBTree;
 import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -54,6 +55,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.frames.LSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.ComponentFilterHelper;
+import org.apache.hyracks.storage.am.lsm.common.impls.DiskBTreeFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -87,10 +89,11 @@ public class LSMBTreeUtil {
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
         ITreeIndexFrameFactory bulkLoadLeafFrameFactory = new BTreeNSMLeafFrameFactory(bulkLoadTupleWriterFactory);
 
-        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, freePageManagerFactory,
-                interiorFrameFactory, copyTupleLeafFrameFactory, cmpFactories, typeTraits.length);
-        TreeIndexFactory<BTree> bulkLoadBTreeFactory =
-                new BTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, interiorFrameFactory,
+        TreeIndexFactory<DiskBTree> diskBTreeFactory =
+                new DiskBTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, interiorFrameFactory,
+                        copyTupleLeafFrameFactory, cmpFactories, typeTraits.length);
+        TreeIndexFactory<DiskBTree> bulkLoadBTreeFactory =
+                new DiskBTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, interiorFrameFactory,
                         bulkLoadLeafFrameFactory, cmpFactories, typeTraits.length);
 
         ComponentFilterHelper filterHelper = null;
@@ -151,16 +154,17 @@ public class LSMBTreeUtil {
         ITreeIndexFrameFactory transactionLeafFrameFactory =
                 new BTreeNSMLeafFrameFactory(transactionTupleWriterFactory);
 
-        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, freePageManagerFactory,
-                interiorFrameFactory, copyTupleLeafFrameFactory, cmpFactories, typeTraits.length);
-        TreeIndexFactory<BTree> bulkLoadBTreeFactory = new BTreeFactory(ioManager, diskBufferCache,
+        TreeIndexFactory<DiskBTree> diskBTreeFactory =
+                new DiskBTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, interiorFrameFactory,
+                        copyTupleLeafFrameFactory, cmpFactories, typeTraits.length);
+        TreeIndexFactory<DiskBTree> bulkLoadBTreeFactory = new DiskBTreeFactory(ioManager, diskBufferCache,
                 freePageManagerFactory, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, typeTraits.length);
 
         BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, bloomFilterKeyFields);
 
         // This is the component factory for transactions
-        TreeIndexFactory<BTree> transactionBTreeFactory =
-                new BTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, interiorFrameFactory,
+        TreeIndexFactory<DiskBTree> transactionBTreeFactory =
+                new DiskBTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, interiorFrameFactory,
                         transactionLeafFrameFactory, cmpFactories, typeTraits.length);
         //TODO remove BloomFilter from external dataset's secondary LSMBTree index
         ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(ioManager, file, diskBTreeFactory, true);

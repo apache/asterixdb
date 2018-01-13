@@ -838,8 +838,8 @@ public class BTree extends AbstractTreeIndex {
      * for now, we are reusing it while it is an inner class !!!!
      */
     public class BTreeAccessor implements ITreeIndexAccessor {
-        private BTree btree;
-        private BTreeOpContext ctx;
+        protected BTree btree;
+        protected BTreeOpContext ctx;
 
         public BTreeAccessor(BTree btree, IModificationOperationCallback modificationCalback,
                 ISearchOperationCallback searchCallback) {
@@ -894,6 +894,10 @@ public class BTree extends AbstractTreeIndex {
         public BTreeRangeSearchCursor createSearchCursor(boolean exclusive) {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
             return new BTreeRangeSearchCursor(leafFrame, exclusive);
+        }
+
+        public BTreeRangeSearchCursor createPointCursor(boolean exclusive) {
+            return createSearchCursor(exclusive);
         }
 
         @Override

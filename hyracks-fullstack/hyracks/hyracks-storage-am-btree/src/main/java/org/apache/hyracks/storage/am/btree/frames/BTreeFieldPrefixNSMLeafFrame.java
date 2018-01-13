@@ -790,4 +790,14 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         throw new IllegalStateException("nyi");
     }
 
+    @Override
+    public ITupleReference getLeftmostTuple() throws HyracksDataException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public ITupleReference getRightmostTuple() throws HyracksDataException {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
 }

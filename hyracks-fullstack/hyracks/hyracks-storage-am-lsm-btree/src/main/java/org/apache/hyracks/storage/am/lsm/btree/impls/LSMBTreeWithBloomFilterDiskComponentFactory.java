@@ -20,7 +20,7 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterFactory;
-import org.apache.hyracks.storage.am.btree.impls.BTree;
+import org.apache.hyracks.storage.am.btree.impls.DiskBTree;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -28,11 +28,11 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 
 public class LSMBTreeWithBloomFilterDiskComponentFactory implements ILSMDiskComponentFactory {
-    protected final TreeIndexFactory<BTree> btreeFactory;
+    protected final TreeIndexFactory<DiskBTree> btreeFactory;
     protected final IComponentFilterHelper filterHelper;
     protected final BloomFilterFactory bloomFilterFactory;
 
-    public LSMBTreeWithBloomFilterDiskComponentFactory(TreeIndexFactory<BTree> btreeFactory,
+    public LSMBTreeWithBloomFilterDiskComponentFactory(TreeIndexFactory<DiskBTree> btreeFactory,
             BloomFilterFactory bloomFilterFactory, IComponentFilterHelper filterHelper) {
         this.btreeFactory = btreeFactory;
         this.filterHelper = filterHelper;

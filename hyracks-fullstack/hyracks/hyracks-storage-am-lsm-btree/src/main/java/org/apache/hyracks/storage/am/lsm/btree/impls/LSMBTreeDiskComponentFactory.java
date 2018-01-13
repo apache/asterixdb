@@ -20,7 +20,7 @@
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.btree.impls.BTree;
+import org.apache.hyracks.storage.am.btree.impls.DiskBTree;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -28,10 +28,10 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 
 public class LSMBTreeDiskComponentFactory implements ILSMDiskComponentFactory {
-    protected final TreeIndexFactory<BTree> btreeFactory;
+    protected final TreeIndexFactory<DiskBTree> btreeFactory;
     protected final IComponentFilterHelper filterHelper;
 
-    public LSMBTreeDiskComponentFactory(TreeIndexFactory<BTree> btreeFactory, IComponentFilterHelper filterHelper) {
+    public LSMBTreeDiskComponentFactory(TreeIndexFactory<DiskBTree> btreeFactory, IComponentFilterHelper filterHelper) {
         this.btreeFactory = btreeFactory;
         this.filterHelper = filterHelper;
     }
