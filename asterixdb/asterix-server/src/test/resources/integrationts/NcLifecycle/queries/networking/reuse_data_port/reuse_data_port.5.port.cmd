@@ -16,22 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.net.protocols.tcp;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
-
-public interface ITCPConnectionListener {
-    void acceptedConnection(TCPConnection connection);
-
-    void connectionEstablished(TCPConnection connection);
-
-    void connectionFailure(InetSocketAddress remoteAddress, IOException error);
-
-    /**
-     * Notifies the listener that {@code connection} has been closed.
-     *
-     * @param connection
-     */
-    void connectionClosed(TCPConnection connection);
-}
+localhost 12345 30

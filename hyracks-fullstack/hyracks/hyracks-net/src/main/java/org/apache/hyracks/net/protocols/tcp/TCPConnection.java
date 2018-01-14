@@ -24,11 +24,17 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class TCPConnection {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final TCPEndpoint endpoint;
 
     private final SocketChannel channel;
-
+    private final InetSocketAddress remoteAddress;
     private final SelectionKey key;
 
     private final Selector selector;
@@ -42,6 +48,7 @@ public class TCPConnection {
         this.channel = channel;
         this.key = key;
         this.selector = selector;
+        remoteAddress = (InetSocketAddress) channel.socket().getRemoteSocketAddress();
     }
 
     public TCPEndpoint getEndpoint() {
@@ -57,7 +64,7 @@ public class TCPConnection {
     }
 
     public InetSocketAddress getRemoteAddress() {
-        return (InetSocketAddress) channel.socket().getRemoteSocketAddress();
+        return remoteAddress;
     }
 
     public void enable(int ops) {
@@ -86,12 +93,12 @@ public class TCPConnection {
         this.attachment = attachment;
     }
 
-    public void close() {
+    public synchronized void close() {
         key.cancel();
         try {
             channel.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(() -> "Error closing channel at: " + remoteAddress, e);
         }
     }
 }

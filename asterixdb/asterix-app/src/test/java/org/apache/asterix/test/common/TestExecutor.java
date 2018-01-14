@@ -32,6 +32,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -1142,6 +1143,10 @@ public class TestExecutor {
                 command = stripJavaComments(statement).trim().split(" ");
                 executeStorageCommand(command);
                 break;
+            case "port":
+                command = stripJavaComments(statement).trim().split(" ");
+                handlePortCommand(command);
+                break;
             default:
                 throw new IllegalArgumentException("No statements of type " + ctx.getType());
         }
@@ -1746,6 +1751,31 @@ public class TestExecutor {
             throw new IllegalStateException("No replication address specified for node: " + nodeId);
         }
         return replicationAddress.get(nodeId);
+    }
+
+    private void handlePortCommand(String[] command) throws InterruptedException, TimeoutException {
+        if (command.length != 3) {
+            throw new IllegalStateException("Unrecognized port command. Expected (host port timeout(sec))");
+        }
+        String host = command[0];
+        int port = Integer.parseInt(command[1]);
+        int timeoutSec = Integer.parseInt(command[2]);
+        while (isPortActive(host, port)) {
+            TimeUnit.SECONDS.sleep(1);
+            timeoutSec--;
+            if (timeoutSec <= 0) {
+                throw new TimeoutException(
+                        "Port is still in use: " + host + ":" + port + " after " + command[2] + " secs");
+            }
+        }
+    }
+
+    private boolean isPortActive(String host, int port) {
+        try (Socket ignored = new Socket(host, port)) {
+            return true;
+        } catch (IOException ignored) {
+            return false;
+        }
     }
 
     abstract static class TestLoop extends Exception {
