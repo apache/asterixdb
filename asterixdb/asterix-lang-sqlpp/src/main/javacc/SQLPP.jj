@@ -2012,7 +2012,8 @@ Expression IsExpr() throws ParseException:
         (
             <NULL> { fn = BuiltinFunctions.IS_NULL; } |
             <MISSING> { fn = BuiltinFunctions.IS_MISSING; } |
-            <UNKNOWN> { fn = BuiltinFunctions.IS_UNKNOWN; }
+            <UNKNOWN> { fn = BuiltinFunctions.IS_UNKNOWN; } |
+            <VALUED> { not = !not; fn = BuiltinFunctions.IS_UNKNOWN; }
         )
       {
         FunctionSignature signature = new FunctionSignature(fn);
@@ -3293,6 +3294,7 @@ TOKEN [IGNORE_CASE]:
   | <USE : "use">
   | <USING : "using">
   | <VALUE : "value">
+  | <VALUED : "valued">
   | <WHEN : "when">
   | <WHERE : "where">
   | <WITH : "with">

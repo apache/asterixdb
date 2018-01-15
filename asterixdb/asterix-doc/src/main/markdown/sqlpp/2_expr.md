@@ -53,7 +53,7 @@ The following table summarizes the precedence order (from higher to lower) of th
 | *, /, %                                                                     |  Multiplication, division, modulo |
 | +, -                                                                        |  Addition, subtraction  |
 | &#124;&#124;                                                                          |  String concatenation |
-| IS NULL, IS NOT NULL, IS MISSING, IS NOT MISSING, <br/>IS UNKNOWN, IS NOT UNKNOWN| Unknown value comparison |
+| IS NULL, IS NOT NULL, IS MISSING, IS NOT MISSING, <br/>IS UNKNOWN, IS NOT UNKNOWN, IS VALUED, IS NOT VALUED | Unknown value comparison |
 | BETWEEN, NOT BETWEEN                                                        | Range comparison (inclusive on both sides) |
 | =, !=, <>, <, >, <=, >=, LIKE, NOT LIKE, IN, NOT IN                             | Comparison  |
 | NOT                                                                         | Logical negation |
@@ -111,6 +111,8 @@ The following table enumerates all of SQL++'s comparison operators.
 | IS NOT MISSING |  Test if a value is not MISSING                | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS NOT MISSING;|
 | IS UNKNOWN     |  Test if a value is NULL or MISSING            | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS UNKNOWN; |
 | IS NOT UNKNOWN |  Test if a value is neither NULL nor MISSING   | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS NOT UNKNOWN;|
+| IS VALUED      |  Test if a value is neither NULL nor MISSING   | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS VALUED; |
+| IS NOT VALUED  |  Test if a value is NULL or MISSING            | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS NOT VALUED;|
 | BETWEEN        |  Test if a value is between a start value and <br/>a end value. The comparison is inclusive <br/>to both start and end values. |  SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId BETWEEN 10 AND 20;|
 | =              |  Equality test                                 | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId=10; |
 | !=             |  Inequality test                               | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId!=10;|
@@ -132,6 +134,8 @@ The following table summarizes how the missing value comparison operators work.
 | IS NOT MISSING | TRUE | TRUE | FALSE |
 | IS UNKNOWN | FALSE | TRUE | TRUE |
 | IS NOT UNKNOWN | TRUE | FALSE | FALSE|
+| IS VALUED | TRUE | FALSE | FALSE |
+| IS NOT VALUED | FALSE | TRUE | TRUE |
 
 ### <a id="Logical_operators">Logical Operators</a>
 Logical operators perform logical `NOT`, `AND`, and `OR` operations over Boolean values (`TRUE` and `FALSE`) plus `NULL` and `MISSING`.

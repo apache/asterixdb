@@ -35,5 +35,11 @@
   "15": 1 is unknown,
   "16": null is not unknown,
   "17": missing is not unknown,
-  "18": 1 is not unknown
+  "18": 1 is not unknown,
+  "19": null is valued,
+  "20": missing is valued,
+  "21": 1 is valued,
+  "22": null is not valued,
+  "23": missing is not valued,
+  "24": 1 is not valued
 };
