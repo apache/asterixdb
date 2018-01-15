@@ -26,8 +26,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -39,11 +46,15 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class BufferCacheTest {
+    private static final Logger LOGGER = LogManager.getLogger();
     protected static final List<String> openedFiles = new ArrayList<>();
     protected static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
 
@@ -59,6 +70,102 @@ public class BufferCacheTest {
         String fileName = simpleDateFormat.format(new Date()) + openedFiles.size();
         openedFiles.add(fileName);
         return fileName;
+    }
+
+    @Test
+    public void interruptPinTest() throws Exception {
+        /*
+         * This test will create a buffer cache of a small size (4 pages)
+         * and then will create a file of size = 16 pages and have 4 threads
+         * pin and unpin the pages one by one. and another thread interrupts them
+         * for some time.. It then will close the file and ensure that all the pages are
+         * unpinned and that no problems are found
+         */
+        final int bufferCacheNumPages = 4;
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, bufferCacheNumPages, MAX_OPEN_FILES);
+        IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
+        IBufferCache bufferCache =
+                TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        final long duration = TimeUnit.SECONDS.toMillis(20);
+        final String fileName = getFileName();
+        final FileReference file = ioManager.resolve(fileName);
+        final int fileId = bufferCache.createFile(file);
+        final int numPages = 16;
+        bufferCache.openFile(fileId);
+        for (int i = 0; i < numPages; i++) {
+            long dpid = BufferedFileHandle.getDiskPageId(fileId, i);
+            ICachedPage page = bufferCache.confiscatePage(dpid);
+            page.getBuffer().putInt(0, i);
+            bufferCache.createFIFOQueue().put(page);
+        }
+        bufferCache.finishQueue();
+        bufferCache.closeFile(fileId);
+        ExecutorService executor = Executors.newFixedThreadPool(bufferCacheNumPages);
+        MutableObject<Thread>[] readers = new MutableObject[bufferCacheNumPages];
+        Future<Void>[] futures = new Future[bufferCacheNumPages];
+        for (int i = 0; i < bufferCacheNumPages; i++) {
+            readers[i] = new MutableObject<>();
+            final int threadNumber = i;
+            futures[i] = executor.submit(new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    synchronized (readers[threadNumber]) {
+                        readers[threadNumber].setValue(Thread.currentThread());
+                        readers[threadNumber].notifyAll();
+                    }
+                    // for duration, just read the pages one by one.
+                    // At the end, close the file
+                    bufferCache.openFile(fileId);
+                    final long start = System.currentTimeMillis();
+                    int pageNumber = 0;
+                    int totalReads = 0;
+                    int successfulReads = 0;
+                    int interruptedReads = 0;
+                    while (System.currentTimeMillis() - start < duration) {
+                        totalReads++;
+                        pageNumber = (pageNumber + 1) % numPages;
+                        try {
+                            long dpid = BufferedFileHandle.getDiskPageId(fileId, pageNumber);
+                            ICachedPage page = bufferCache.pin(dpid, false);
+                            successfulReads++;
+                            bufferCache.unpin(page);
+                        } catch (HyracksDataException hde) {
+                            interruptedReads++;
+                            // clear
+                            Thread.interrupted();
+                        }
+                    }
+                    bufferCache.closeFile(fileId);
+                    LOGGER.log(Level.INFO, "Total reads = " + totalReads + " Successful Reads = " + successfulReads
+                            + " Interrupted Reads = " + interruptedReads);
+                    return null;
+                }
+            });
+        }
+
+        for (int i = 0; i < bufferCacheNumPages; i++) {
+            synchronized (readers[i]) {
+                while (readers[i].getValue() == null) {
+                    readers[i].wait();
+                }
+            }
+        }
+        final long start = System.currentTimeMillis();
+
+        while (System.currentTimeMillis() - start < duration) {
+            for (int i = 0; i < bufferCacheNumPages; i++) {
+                readers[i].getValue().interrupt();
+            }
+            Thread.sleep(25); // NOSONAR Sleep so some reads are successful
+        }
+        try {
+            for (int i = 0; i < bufferCacheNumPages; i++) {
+                futures[i].get();
+            }
+        } finally {
+            bufferCache.deleteFile(fileId);
+            bufferCache.close();
+        }
     }
 
     @Test
