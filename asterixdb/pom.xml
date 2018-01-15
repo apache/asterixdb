@@ -88,21 +88,18 @@
           <failIfNoTests>false</failIfNoTests>
           <systemPropertyVariables>
             <skipFredSlowTests>true</skipFredSlowTests>
+            <log4j.configurationFile>${testLog4jConfigFile}</log4j.configurationFile>
           </systemPropertyVariables>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
           <argLine>
             -enableassertions -Xmx${test.heap.size}m
             -Dfile.encoding=UTF-8
-            -Djava.util.logging.config.file=${user.home}/logging.properties
             -DrunSlowAQLTests=${runSlowAQLTests}
             -Xdebug
             -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=${debug.suspend.flag}
             ${coverageArgLine}
           </argLine>
-          <systemProperties>
-            <log4j.configurationFile>${testLog4jConfigFile}</log4j.configurationFile>
-          </systemProperties>
           <includes>
             <include>${global.test.includes},${test.includes}</include>
           </includes>

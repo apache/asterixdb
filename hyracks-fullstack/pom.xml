@@ -59,7 +59,7 @@
     <source-format.skip>false</source-format.skip>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     <skip.testResources>${maven.test.skip}</skip.testResources>
-
+    <testLog4jConfigFile>${root.dir}/src/test/resources/log4j2-test.xml</testLog4jConfigFile>
     <!-- Definition of tests in various categories which may be excluded -->
     <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
     <hivesterix.perf.tests>**/hivesterix/perf/PerfTestSuite.java</hivesterix.perf.tests>
@@ -259,11 +259,13 @@
           <reuseForks>false</reuseForks>
           <argLine>-enableassertions -Xmx2048m
             -Dfile.encoding=UTF-8
-            -Djava.util.logging.config.file=${user.home}/logging.properties
             -Xdebug
             -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n
             ${coverageArgLine}
           </argLine>
+          <systemPropertyVariables>
+            <log4j.configurationFile>${testLog4jConfigFile}</log4j.configurationFile>
+          </systemPropertyVariables>
           <includes>
             <include>${global.test.includes},${test.includes}</include>
           </includes>
@@ -271,6 +273,15 @@
             <exclude>${global.test.excludes},${test.excludes}</exclude>
           </excludes>
           <skipTests>${skip.surefire.tests}</skipTests>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <log4j.configurationFile>${testLog4jConfigFile}</log4j.configurationFile>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
       <plugin>
