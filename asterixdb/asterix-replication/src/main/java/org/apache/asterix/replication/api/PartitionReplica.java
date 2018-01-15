@@ -128,7 +128,7 @@ public class PartitionReplica implements IPartitionReplica {
     private JsonNode asJson() {
         ObjectNode json = OBJECT_MAPPER.createObjectNode();
         json.put("id", id.toString());
-        json.put("state", status.name());
+        json.put("status", status.name());
         return json;
     }
 
@@ -152,7 +152,7 @@ public class PartitionReplica implements IPartitionReplica {
     @Override
     public String toString() {
         try {
-            return JSONUtil.convertNode(asJson());
+            return OBJECT_MAPPER.writeValueAsString(asJson());
         } catch (JsonProcessingException e) {
             throw new ReplicationException(e);
         }
