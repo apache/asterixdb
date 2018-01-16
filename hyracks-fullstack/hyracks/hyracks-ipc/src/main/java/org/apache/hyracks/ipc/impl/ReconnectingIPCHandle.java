@@ -72,11 +72,11 @@ class ReconnectingIPCHandle implements IIPCHandle {
         if (delegate.isConnected()) {
             return delegate;
         }
+        LOGGER.warn("ipcHandle {} disconnected; will attempt to reconnect {} times", delegate, reconnectAttempts);
         listener.ipcHandleDisconnected(delegate);
         delegate = ipc.getHandle(getRemoteAddress(), reconnectAttempts);
-        LOGGER.warn("ipcHandle " + delegate + " restored");
+        LOGGER.warn("ipcHandle {} restored", delegate);
         listener.ipcHandleRestored(delegate);
-
         return delegate;
     }
 
