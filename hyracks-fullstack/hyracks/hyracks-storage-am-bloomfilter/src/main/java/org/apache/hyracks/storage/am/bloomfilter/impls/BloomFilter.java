@@ -57,7 +57,7 @@ public class BloomFilter {
     private int numHashes;
     private long numElements;
     private long numBits;
-    // keep trace of the version of the bloomfilter to be backward compatible
+    // keep track of the version of the bloomfilter to be backward compatible
     private int version;
     private final int numBitsPerPage;
     private final int numBlocksPerPage;
@@ -277,27 +277,30 @@ public class BloomFilter {
 
     public class BloomFilterBuilder implements IIndexBulkLoader {
         private final long[] hashes = BloomFilter.createHashArray();
-        private final long numElements;
+        private final long estimatedNumElements;
         private final int numHashes;
         private final long numBits;
         private final int numPages;
+        private long actualNumElements;
         private final IFIFOPageQueue queue;
         private final ICachedPage[] pages;
         private ICachedPage metaDataPage = null;
 
-        public BloomFilterBuilder(long numElements, int numHashes, int numBitsPerElement) throws HyracksDataException {
+        public BloomFilterBuilder(long estimatedNumElemenets, int numHashes, int numBitsPerElement)
+                throws HyracksDataException {
             if (!isActivated) {
                 throw HyracksDataException.create(ErrorCode.CANNOT_CREATE_BLOOM_FILTER_BUILDER_FOR_INACTIVE_FILTER);
             }
             queue = bufferCache.createFIFOQueue();
-            this.numElements = numElements;
+            this.estimatedNumElements = estimatedNumElemenets;
             this.numHashes = numHashes;
-            numBits = this.numElements * numBitsPerElement;
+            numBits = this.estimatedNumElements * numBitsPerElement;
             long tmp = (long) Math.ceil(numBits / (double) numBitsPerPage);
             if (tmp > Integer.MAX_VALUE) {
                 throw HyracksDataException.create(ErrorCode.CANNOT_CREATE_BLOOM_FILTER_WITH_NUMBER_OF_PAGES, tmp);
             }
             numPages = (int) tmp;
+            actualNumElements = 0;
             pages = new ICachedPage[numPages];
             int currentPageId = 1;
             while (currentPageId <= numPages) {
@@ -327,7 +330,7 @@ public class BloomFilter {
             }
             metaDataPage.getBuffer().putInt(NUM_PAGES_OFFSET, numPages);
             metaDataPage.getBuffer().putInt(NUM_HASHES_USED_OFFSET, numHashes);
-            metaDataPage.getBuffer().putLong(NUM_ELEMENTS_OFFSET, numElements);
+            metaDataPage.getBuffer().putLong(NUM_ELEMENTS_OFFSET, actualNumElements);
             metaDataPage.getBuffer().putLong(NUM_BITS_OFFSET, numBits);
             metaDataPage.getBuffer().putInt(VERSION_OFFSET, BLOCKED_BLOOM_FILTER_VERSION);
         }
@@ -337,6 +340,7 @@ public class BloomFilter {
             if (numPages == 0) {
                 throw HyracksDataException.create(ErrorCode.CANNOT_ADD_TUPLES_TO_DUMMY_BLOOM_FILTER);
             }
+            actualNumElements++;
             MurmurHash128Bit.hash3_x64_128(tuple, keyFields, SEED, hashes);
 
             long hash = Math.abs(hashes[0] % numBits);
@@ -367,7 +371,7 @@ public class BloomFilter {
             bufferCache.finishQueue();
             BloomFilter.this.numBits = numBits;
             BloomFilter.this.numHashes = numHashes;
-            BloomFilter.this.numElements = numElements;
+            BloomFilter.this.numElements = actualNumElements;
             BloomFilter.this.numPages = numPages;
             BloomFilter.this.version = BLOCKED_BLOOM_FILTER_VERSION;
         }
@@ -383,6 +387,5 @@ public class BloomFilter {
                 bufferCache.returnPage(metaDataPage, false);
             }
         }
-
     }
 }
