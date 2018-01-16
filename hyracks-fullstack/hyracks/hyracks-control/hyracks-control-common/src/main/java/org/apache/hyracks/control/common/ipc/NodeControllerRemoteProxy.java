@@ -48,26 +48,13 @@ import org.apache.hyracks.control.common.ipc.CCNCFunctions.ThreadDumpRequestFunc
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.UnDeployBinaryFunction;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.UndeployJobSpecFunction;
 import org.apache.hyracks.control.common.job.TaskAttemptDescriptor;
-import org.apache.hyracks.ipc.impl.IPCSystem;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hyracks.ipc.api.IIPCHandle;
 
-public class NodeControllerRemoteProxy extends ControllerRemoteProxy implements INodeController {
-    private static final Logger LOGGER = LogManager.getLogger();
+public class NodeControllerRemoteProxy implements INodeController {
+    private final IIPCHandle ipcHandle;
 
-    public NodeControllerRemoteProxy(IPCSystem ipc, InetSocketAddress inetSocketAddress) {
-        super(ipc, inetSocketAddress);
-    }
-
-    @Override
-    protected int getMaxRetries(boolean first) {
-        // -1 == retry forever
-        return 0;
-    }
-
-    @Override
-    protected Logger getLogger() {
-        return LOGGER;
+    public NodeControllerRemoteProxy(IIPCHandle ipcHandle) {
+        this.ipcHandle = ipcHandle;
     }
 
     @Override
@@ -77,74 +64,78 @@ public class NodeControllerRemoteProxy extends ControllerRemoteProxy implements 
             throws Exception {
         StartTasksFunction stf = new StartTasksFunction(deploymentId, jobId, planBytes,
                 taskDescriptors, connectorPolicies, flags, jobParameters, deployedJobSpecId);
-        ensureIpcHandle().send(-1, stf, null);
+        ipcHandle.send(-1, stf, null);
     }
 
     @Override
     public void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception {
         AbortTasksFunction atf = new AbortTasksFunction(jobId, tasks);
-        ensureIpcHandle().send(-1, atf, null);
+        ipcHandle.send(-1, atf, null);
     }
 
     @Override
     public void cleanUpJoblet(JobId jobId, JobStatus status) throws Exception {
         CleanupJobletFunction cjf = new CleanupJobletFunction(jobId, status);
-        ensureIpcHandle().send(-1, cjf, null);
+        ipcHandle.send(-1, cjf, null);
     }
 
     @Override
     public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception {
         ReportPartitionAvailabilityFunction rpaf = new ReportPartitionAvailabilityFunction(
                 pid, networkAddress);
-        ensureIpcHandle().send(-1, rpaf, null);
+        ipcHandle.send(-1, rpaf, null);
     }
 
     @Override
     public void deployBinary(DeploymentId deploymentId, List<URL> binaryURLs) throws Exception {
         DeployBinaryFunction rpaf = new DeployBinaryFunction(deploymentId, binaryURLs);
-        ensureIpcHandle().send(-1, rpaf, null);
+        ipcHandle.send(-1, rpaf, null);
     }
 
     @Override
     public void undeployBinary(DeploymentId deploymentId) throws Exception {
         UnDeployBinaryFunction rpaf = new UnDeployBinaryFunction(deploymentId);
-        ensureIpcHandle().send(-1, rpaf, null);
+        ipcHandle.send(-1, rpaf, null);
     }
 
     @Override
     public void deployJobSpec(DeployedJobSpecId deployedJobSpecId, byte[] planBytes) throws Exception {
         DeployJobSpecFunction fn = new DeployJobSpecFunction(deployedJobSpecId, planBytes);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void undeployJobSpec(DeployedJobSpecId deployedJobSpecId) throws Exception {
         UndeployJobSpecFunction fn = new UndeployJobSpecFunction(deployedJobSpecId);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void dumpState(String stateDumpId) throws Exception {
         StateDumpRequestFunction dsf = new StateDumpRequestFunction(stateDumpId);
-        ensureIpcHandle().send(-1, dsf, null);
+        ipcHandle.send(-1, dsf, null);
     }
 
     @Override
     public void shutdown(boolean terminateNCService) throws Exception {
         ShutdownRequestFunction sdrf = new ShutdownRequestFunction(terminateNCService);
-        ensureIpcHandle().send(-1, sdrf, null);
+        ipcHandle.send(-1, sdrf, null);
     }
 
     @Override
     public void sendApplicationMessageToNC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception {
         SendApplicationMessageFunction fn = new SendApplicationMessageFunction(data,
                 deploymentId, nodeId);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void takeThreadDump(String requestId) throws Exception {
         ThreadDumpRequestFunction fn = new ThreadDumpRequestFunction(requestId);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    public InetSocketAddress getAddress() {
+        return ipcHandle.getRemoteAddress();
     }
 }

@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.control.common.ipc;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
@@ -53,42 +52,26 @@ import org.apache.hyracks.control.common.job.PartitionDescriptor;
 import org.apache.hyracks.control.common.job.PartitionRequest;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
-import org.apache.hyracks.ipc.impl.IPCSystem;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hyracks.ipc.api.IIPCHandle;
 
-public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implements IClusterController {
-    private static final Logger LOGGER = LogManager.getLogger();
+public class ClusterControllerRemoteProxy implements IClusterController {
 
-    private final int clusterConnectRetries;
+    private IIPCHandle ipcHandle;
 
-    public ClusterControllerRemoteProxy(IPCSystem ipc, InetSocketAddress inetSocketAddress, int clusterConnectRetries,
-                                        IControllerRemoteProxyIPCEventListener eventListener) {
-        super(ipc, inetSocketAddress, eventListener);
-        this.clusterConnectRetries = clusterConnectRetries;
-    }
-
-    @Override
-    protected int getMaxRetries(boolean first) {
-        // -1 == retry forever
-        return first ? clusterConnectRetries : 0;
-    }
-
-    @Override
-    protected Logger getLogger() {
-        return LOGGER;
+    public ClusterControllerRemoteProxy(IIPCHandle ipcHandle) {
+        this.ipcHandle = ipcHandle;
     }
 
     @Override
     public void registerNode(NodeRegistration reg) throws Exception {
         RegisterNodeFunction fn = new RegisterNodeFunction(reg);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void unregisterNode(String nodeId) throws Exception {
         UnregisterNodeFunction fn = new UnregisterNodeFunction(nodeId);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
@@ -96,7 +79,7 @@ public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implemen
             throws Exception {
         NotifyTaskCompleteFunction fn = new NotifyTaskCompleteFunction(jobId, taskId,
                 nodeId, statistics);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
@@ -104,53 +87,53 @@ public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implemen
             throws Exception {
         NotifyTaskFailureFunction fn = new NotifyTaskFailureFunction(jobId, taskId, nodeId,
                 exceptions);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void notifyJobletCleanup(JobId jobId, String nodeId) throws Exception {
         NotifyJobletCleanupFunction fn = new NotifyJobletCleanupFunction(jobId, nodeId);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void notifyDeployBinary(DeploymentId deploymentId, String nodeId, DeploymentStatus status) throws Exception {
         NotifyDeployBinaryFunction fn = new NotifyDeployBinaryFunction(deploymentId, nodeId,
                 status);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception {
         NodeHeartbeatFunction fn = new NodeHeartbeatFunction(id, hbData);
-        ensureIpcHandle(0).send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void reportProfile(String id, List<JobProfile> profiles) throws Exception {
         ReportProfileFunction fn = new ReportProfileFunction(id, profiles);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) throws Exception {
         RegisterPartitionProviderFunction fn = new RegisterPartitionProviderFunction(
                 partitionDescriptor);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception {
         RegisterPartitionRequestFunction fn = new RegisterPartitionRequestFunction(
                 partitionRequest);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void sendApplicationMessageToCC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception {
         SendApplicationMessageFunction fn = new SendApplicationMessageFunction(data,
                 deploymentId, nodeId);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
@@ -158,44 +141,44 @@ public class ClusterControllerRemoteProxy extends ControllerRemoteProxy implemen
             boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) throws Exception {
         RegisterResultPartitionLocationFunction fn = new RegisterResultPartitionLocationFunction(
                 jobId, rsId, orderedResult, emptyResult, partition, nPartitions, networkAddress);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception {
         ReportResultPartitionWriteCompletionFunction fn = new ReportResultPartitionWriteCompletionFunction(
                 jobId, rsId, partition);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void notifyDeployedJobSpecFailure(DeployedJobSpecId deployedJobSpecId, String nodeId) throws Exception {
         ReportDeployedJobSpecFailureFunction fn = new ReportDeployedJobSpecFailureFunction(deployedJobSpecId, nodeId);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void getNodeControllerInfos() throws Exception {
-        ensureIpcHandle().send(-1, new GetNodeControllersInfoFunction(), null);
+        ipcHandle.send(-1, new GetNodeControllersInfoFunction(), null);
     }
 
     @Override
     public void notifyStateDump(String nodeId, String stateDumpId, String state) throws Exception {
         StateDumpResponseFunction fn = new StateDumpResponseFunction(nodeId, stateDumpId,
                 state);
-        ensureIpcHandle().send(-1, fn, null);
+        ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void notifyShutdown(String nodeId) throws Exception {
         ShutdownResponseFunction sdrf = new ShutdownResponseFunction(nodeId);
-        ensureIpcHandle().send(-1, sdrf, null);
+        ipcHandle.send(-1, sdrf, null);
     }
 
     @Override
     public void notifyThreadDump(String nodeId, String requestId, String threadDumpJSON) throws Exception {
         ThreadDumpResponseFunction tdrf = new ThreadDumpResponseFunction(nodeId, requestId,
                 threadDumpJSON);
-        ensureIpcHandle().send(-1, tdrf, null);
+        ipcHandle.send(-1, tdrf, null);
     }
 }

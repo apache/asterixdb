@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.exceptions;
 
+import java.util.function.Predicate;
+
 public class ExceptionUtils {
     public static final String INCORRECT_PARAMETER = "Incorrect parameter.\n";
     public static final String PARAMETER_NAME = "Parameter name: ";
@@ -48,5 +50,22 @@ public class ExceptionUtils {
             cause = nextCause;
         }
         return current;
+    }
+
+    /**
+     * Determines whether supplied exception contains a matching cause in its hierarchy, or is itself a match
+     */
+    public static boolean matchingCause(Throwable e, Predicate<Throwable> test) {
+        Throwable current = e;
+        Throwable cause = e.getCause();
+        while (cause != null && cause != current) {
+            if (test.test(cause)) {
+                return true;
+            }
+            Throwable nextCause = current.getCause();
+            current = cause;
+            cause = nextCause;
+        }
+        return test.test(e);
     }
 }

@@ -68,7 +68,6 @@ import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions;
 import org.apache.hyracks.control.common.ipc.ClusterControllerRemoteProxy;
-import org.apache.hyracks.control.common.ipc.IControllerRemoteProxyIPCEventListener;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.work.FutureValue;
 import org.apache.hyracks.control.common.work.WorkQueue;
@@ -83,6 +82,7 @@ import org.apache.hyracks.control.nc.net.NetworkManager;
 import org.apache.hyracks.control.nc.partitions.PartitionManager;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
 import org.apache.hyracks.control.nc.work.BuildJobProfilesWork;
+import org.apache.hyracks.ipc.api.IIPCEventListener;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IPCPerformanceCounters;
 import org.apache.hyracks.ipc.exceptions.IPCException;
@@ -297,9 +297,10 @@ public class NodeControllerService implements IControllerService {
         if (messagingNetManager != null) {
             messagingNetManager.start();
         }
-        this.ccs = new ClusterControllerRemoteProxy(ipc,
+        this.ccs = new ClusterControllerRemoteProxy(
+                ipc.getHandle(
                 new InetSocketAddress(ncConfig.getClusterAddress(), ncConfig.getClusterPort()),
-                ncConfig.getClusterConnectRetries(), new IControllerRemoteProxyIPCEventListener() {
+                ncConfig.getClusterConnectRetries(), 1, new IIPCEventListener() {
                     @Override
                     public void ipcHandleRestored(IIPCHandle handle) throws IPCException {
                         // we need to re-register in case of NC -> CC connection reset
@@ -310,7 +311,7 @@ public class NodeControllerService implements IControllerService {
                             throw new IPCException(e);
                         }
                     }
-                });
+                }));
         registerNode();
 
         workQueue.start();

@@ -16,22 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common.ipc;
+package org.apache.hyracks.ipc.impl;
 
-import org.apache.hyracks.ipc.api.IIPCHandle;
-import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.hyracks.ipc.api.IIPCEventListener;
 
-public interface IControllerRemoteProxyIPCEventListener {
+public class NoOpIPCEventListener implements IIPCEventListener {
+    public static final IIPCEventListener INSTANCE = new NoOpIPCEventListener();
 
-    default void ipcHandleConnected(IIPCHandle handle) throws IPCException {
-        // no-op
-    }
-
-    default void ipcHandleDisconnected(IIPCHandle handle) throws IPCException {
-        // no-op
-    }
-
-    default void ipcHandleRestored(IIPCHandle handle) throws IPCException {
-        // no-op
+    private NoOpIPCEventListener() {
     }
 }

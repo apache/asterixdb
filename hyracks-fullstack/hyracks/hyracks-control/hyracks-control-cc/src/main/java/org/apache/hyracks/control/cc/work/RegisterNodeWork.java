@@ -50,13 +50,15 @@ public class RegisterNodeWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         String id = reg.getNodeId();
+        // TODO(mblow): it seems we should close IPC handles when we're done with them (like here)
         IIPCHandle ncIPCHandle = ccs.getClusterIPC().getHandle(reg.getNodeControllerAddress());
         CCNCFunctions.NodeRegistrationResult result;
         Map<IOption, Object> ncConfiguration = new HashMap<>();
         try {
             LOGGER.log(Level.WARN, "Registering INodeController: id = " + id);
             NodeControllerRemoteProxy nc =
-                    new NodeControllerRemoteProxy(ccs.getClusterIPC(), reg.getNodeControllerAddress());
+                    new NodeControllerRemoteProxy(
+                            ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerAddress()));
             NodeControllerState state = new NodeControllerState(nc, reg);
             INodeManager nodeManager = ccs.getNodeManager();
             nodeManager.addNode(id, state);
