@@ -3518,6 +3518,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="identifier_01">
+        <output-dir compare="Text">identifier_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="ifthenelse_01">
         <output-dir compare="Text">ifthenelse_01</output-dir>
       </compilation-unit>

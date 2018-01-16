@@ -17,8 +17,6 @@
  * under the License.
  */
 
-with  a as 1,
-      b as 1,
-      _c as 0
-select element (b - a - _c)
-;
+WITH _x as 1
+
+SELECT _x AS _y

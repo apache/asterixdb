@@ -5,10 +5,15 @@ Let Variable [ Name=$a ]
 Let Variable [ Name=$b ]
   :=
   LiteralExpr [LONG] [1]
+Let Variable [ Name=$_c ]
+  :=
+  LiteralExpr [LONG] [0]
 SELECT ELEMENT [
 OperatorExpr [
   Variable [ Name=$b ]
   -
   Variable [ Name=$a ]
+  -
+  Variable [ Name=$_c ]
 ]
 ]
