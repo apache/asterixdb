@@ -21,8 +21,6 @@ package org.apache.hyracks.ipc.api;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hyracks.ipc.exceptions.IPCException;
-
 public class RPCInterface implements IIPCI {
     private final Map<Long, Request> reqMap;
 
@@ -34,9 +32,6 @@ public class RPCInterface implements IIPCI {
         Request req;
         long mid;
         synchronized (this) {
-            if (!handle.isConnected()) {
-                throw new IPCException("Cannot send on a closed handle");
-            }
             req = new Request(handle, this);
             mid = handle.send(-1, request, null);
             reqMap.put(mid, req);

@@ -20,15 +20,14 @@ package org.apache.hyracks.examples.shutdown.test;
 
 import java.net.ServerSocket;
 
+import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import org.apache.hyracks.api.client.HyracksConnection;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.ipc.exceptions.IPCException;
 
 public class ClusterShutdownIT {
     private static Logger LOGGER = LogManager.getLogger();
@@ -40,21 +39,23 @@ public class ClusterShutdownIT {
         hcc.stopCluster(false);
         //what happens here...
         closeTwice.expect(IPCException.class);
-        closeTwice.expectMessage("Cannot send on a closed handle");
+        closeTwice.expectMessage("Connection failed to localhost/127.0.0.1:1098");
         hcc.stopCluster(false);
         ServerSocket c = null;
         ServerSocket s = null;
         try {
-            c = new ServerSocket(1098);
-            //we should be able to bind to this
-            s = new ServerSocket(1099);
-            //and we should be able to bind to this too
+            c = new ServerSocket(1098); // we should be able to bind to this
+            s = new ServerSocket(1099); // and we should be able to bind to this too
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
+            LOGGER.error("Unexpected error", e);
             throw e;
         } finally {
-            s.close();
-            c.close();
+            if (s != null) {
+                s.close();
+            }
+            if (c != null) {
+                c.close();
+            }
         }
     }
 
