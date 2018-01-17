@@ -17,8 +17,6 @@
  * under the License.
  */
 
-SELECT ELEMENT {'root': SQRT(t.a*t.b)} FROM tbl_name t
-GROUP BY root
-WITH u AS root
-HAVING root > 0
-ORDER BY u; 
+SELECT ELEMENT {'root': SUM(t.a*t.b)} FROM tbl_name t
+GROUP BY t.id
+ORDER BY root;

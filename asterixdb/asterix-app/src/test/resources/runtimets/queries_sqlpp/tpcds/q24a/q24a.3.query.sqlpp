@@ -59,12 +59,13 @@ GROUP BY c.c_last_name
 SELECT c_last_name
       ,c_first_name
       ,s_store_name
-      ,SUM(netpaid) paid
+      ,paid
 FROM ssales
 WHERE i_color = 'orchid'
 GROUP BY c_last_name
         ,c_first_name
         ,s_store_name
 GROUP AS g
+LET paid = SUM(netpaid)
 HAVING paid > (SELECT value 0.05*avg(g.ssales.netpaid) FROM g)[0]
 ;

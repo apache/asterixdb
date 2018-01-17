@@ -1563,6 +1563,7 @@
     <test-case FilePath="dapd">
       <compilation-unit name="q2-3">
         <output-dir compare="Text">q2</output-dir>
+        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier sig_id</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dapd">
@@ -2901,11 +2902,13 @@
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-02">
         <output-dir compare="Text">core-02</output-dir>
+        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier deptId</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-02-2">
         <output-dir compare="Text">core-02</output-dir>
+        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier deptId</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">

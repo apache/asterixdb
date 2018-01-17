@@ -4,7 +4,32 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [root]
     :
-    Variable [ Name=$root ]
+    FunctionCall asterix.sql-sum@1[
+      (
+        SELECT ELEMENT [
+        OperatorExpr [
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#3 ]
+              Field=t
+            ]
+            Field=a
+          ]
+          *
+          FieldAccessor [
+            FieldAccessor [
+              Variable [ Name=#3 ]
+              Field=t
+            ]
+            Field=b
+          ]
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS Variable [ Name=#3 ]
+        ]
+      )
+    ]
   )
 ]
 ]
@@ -14,36 +39,43 @@ FROM [  FunctionCall asterix.dataset@1[
   AS Variable [ Name=$t ]
 ]
 Groupby
-  Variable [ Name=$root ]
+  Variable [ Name=$id ]
   :=
-  FunctionCall null.sqrt@1[
-    OperatorExpr [
-      FieldAccessor [
-        Variable [ Name=$t ]
-        Field=a
-      ]
-      *
-      FieldAccessor [
-        Variable [ Name=$t ]
-        Field=b
-      ]
-    ]
+  FieldAccessor [
+    Variable [ Name=$t ]
+    Field=id
   ]
   GROUP AS Variable [ Name=#1 ]
   (
     t:=Variable [ Name=$t ]
   )
 
-Let Variable [ Name=$u ]
-  :=
-  Variable [ Name=$root ]
- HAVING
-  OperatorExpr [
-    Variable [ Name=$root ]
-    >
-    LiteralExpr [LONG] [0]
-  ]
 Orderby
-  Variable [ Name=$u ]
+  FunctionCall asterix.sql-sum@1[
+    (
+      SELECT ELEMENT [
+      OperatorExpr [
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=#2 ]
+            Field=t
+          ]
+          Field=a
+        ]
+        *
+        FieldAccessor [
+          FieldAccessor [
+            Variable [ Name=#2 ]
+            Field=t
+          ]
+          Field=b
+        ]
+      ]
+      ]
+      FROM [        Variable [ Name=#1 ]
+        AS Variable [ Name=#2 ]
+      ]
+    )
+  ]
   ASC
 
