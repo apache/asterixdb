@@ -17,7 +17,7 @@
  * under the License.
  */
 
--- maxresultreads=2
+-- maxresultreads=1
 -- handlevariable=status
 
 select i, i * i as i2 from range(1, 10) i;

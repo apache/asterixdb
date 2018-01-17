@@ -31,9 +31,11 @@ public interface IRequestParameters {
     IHyracksDataset getHyracksDataset();
 
     /**
-     * @return The {@code ResultDelivery} kind required for queries in the list of statements
+     * Gets the required result properties of the request.
+     *
+     * @return the result properties
      */
-    IStatementExecutor.ResultDelivery getResultDelivery();
+    ResultProperties getResultProperties();
 
     /**
      * @return a reference to write the stats of executed queries

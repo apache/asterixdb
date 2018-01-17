@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.partitions.ResultSetPartitionId;
 import org.apache.hyracks.comm.channels.NetworkOutputChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,11 +32,8 @@ public class DatasetPartitionReader {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final DatasetPartitionManager datasetPartitionManager;
-
     private final DatasetMemoryManager datasetMemoryManager;
-
     private final Executor executor;
-
     private final ResultState resultState;
 
     public DatasetPartitionReader(DatasetPartitionManager datasetPartitionManager,
@@ -47,56 +45,67 @@ public class DatasetPartitionReader {
     }
 
     public void writeTo(final IFrameWriter writer) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                NetworkOutputChannel channel = (NetworkOutputChannel) writer;
-                channel.setFrameSize(resultState.getFrameSize());
-                try {
-                    resultState.readOpen();
-                    channel.open();
-                    try {
-                        long offset = 0;
-                        ByteBuffer buffer = ByteBuffer.allocate(resultState.getFrameSize());
-                        while (true) {
-                            buffer.clear();
-                            long size = read(offset, buffer);
-                            if (size <= 0) {
-                                break;
-                            } else if (size < buffer.limit()) {
-                                throw new HyracksDataException("Premature end of file - readSize: " + size
-                                        + " buffer limit: " + buffer.limit());
-                            }
-                            offset += size;
-                            buffer.flip();
-                            channel.nextFrame(buffer);
-                        }
-                        LOGGER.info("Result Reader read + " + offset + " bytes");
-                    } finally {
-                        channel.close();
-                        resultState.readClose();
-                        // If the query is a synchronous query, remove its partition as soon as it is read.
-                        if (!resultState.getAsyncMode()) {
-                            datasetPartitionManager.removePartition(resultState.getResultSetPartitionId().getJobId(),
-                                    resultState.getResultSetPartitionId().getResultSetId(), resultState
-                                            .getResultSetPartitionId().getPartition());
-                        }
-                    }
-                } catch (HyracksDataException e) {
-                    throw new RuntimeException(e);
-                }
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("result reading successful(" + resultState.getResultSetPartitionId() + ")");
-                }
-            }
+        executor.execute(new ResultPartitionSender((NetworkOutputChannel) writer));
+    }
 
-            private long read(long offset, ByteBuffer buffer) throws HyracksDataException {
-                if (datasetMemoryManager == null) {
-                    return resultState.read(offset, buffer);
-                } else {
-                    return resultState.read(datasetMemoryManager, offset, buffer);
+    private class ResultPartitionSender implements Runnable {
+
+        private final NetworkOutputChannel channel;
+
+        ResultPartitionSender(final NetworkOutputChannel channel) {
+            this.channel = channel;
+        }
+
+        @Override
+        public void run() {
+            channel.setFrameSize(resultState.getFrameSize());
+            channel.open();
+            try {
+                resultState.readOpen();
+                long offset = 0;
+                final ByteBuffer buffer = ByteBuffer.allocate(resultState.getFrameSize());
+                while (true) {
+                    buffer.clear();
+                    final long size = read(offset, buffer);
+                    if (size <= 0) {
+                        break;
+                    } else if (size < buffer.limit()) {
+                        throw new IllegalStateException(
+                                "Premature end of file - readSize: " + size + " buffer limit: " + buffer.limit());
+                    }
+                    offset += size;
+                    buffer.flip();
+                    channel.nextFrame(buffer);
                 }
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("result reading successful(" + resultState.getResultSetPartitionId() + ")");
+                }
+            } catch (Exception e) {
+                LOGGER.error(() -> "failed to send result partition " + resultState.getResultSetPartitionId(), e);
+                channel.abort();
+            } finally {
+                close();
             }
-        });
+        }
+
+        private long read(long offset, ByteBuffer buffer) throws HyracksDataException {
+            return datasetMemoryManager != null ?
+                    resultState.read(datasetMemoryManager, offset, buffer) :
+                    resultState.read(offset, buffer);
+        }
+
+        private void close() {
+            try {
+                channel.close();
+                resultState.readClose();
+                if (resultState.isExhausted()) {
+                    final ResultSetPartitionId partitionId = resultState.getResultSetPartitionId();
+                    datasetPartitionManager.removePartition(partitionId.getJobId(), partitionId.getResultSetId(),
+                            partitionId.getPartition());
+                }
+            } catch (HyracksDataException e) {
+                LOGGER.error("unexpected failure in partition reader clean up", e);
+            }
+        }
     }
 }

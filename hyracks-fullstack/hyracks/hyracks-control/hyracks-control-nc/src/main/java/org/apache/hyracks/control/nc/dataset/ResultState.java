@@ -68,17 +68,22 @@ public class ResultState implements IStateObject {
     private long size;
 
     private long persistentSize;
+    private long remainingReads;
 
     ResultState(ResultSetPartitionId resultSetPartitionId, boolean asyncMode, IIOManager ioManager,
-            IWorkspaceFileFactory fileFactory, int frameSize) {
+            IWorkspaceFileFactory fileFactory, int frameSize, long maxReads) {
+        if (maxReads <= 0) {
+            throw new IllegalArgumentException("maxReads must be > 0");
+        }
         this.resultSetPartitionId = resultSetPartitionId;
         this.asyncMode = asyncMode;
         this.ioManager = ioManager;
         this.fileFactory = fileFactory;
         this.frameSize = frameSize;
+        remainingReads = maxReads;
         eos = new AtomicBoolean(false);
         failed = new AtomicBoolean(false);
-        localPageList = new ArrayList<Page>();
+        localPageList = new ArrayList<>();
 
         fileRef = null;
         writeFileHandle = null;
@@ -102,6 +107,7 @@ public class ResultState implements IStateObject {
         closeWriteFileHandle();
         if (fileRef != null) {
             fileRef.delete();
+            fileRef = null;
         }
     }
 
@@ -152,7 +158,10 @@ public class ResultState implements IStateObject {
     }
 
     public synchronized void readOpen() {
-        // It is a noOp for now, leaving here to keep the API stable for future usage.
+        if (isExhausted()) {
+            throw new IllegalStateException("Result reads exhausted");
+        }
+        remainingReads--;
     }
 
     public synchronized void readClose() throws HyracksDataException {
@@ -339,6 +348,7 @@ public class ResultState implements IStateObject {
             ObjectNode on = om.createObjectNode();
             on.put("rspid", resultSetPartitionId.toString());
             on.put("async", asyncMode);
+            on.put("remainingReads", remainingReads);
             on.put("eos", eos.get());
             on.put("failed", failed.get());
             on.put("fileRef", String.valueOf(fileRef));
@@ -346,5 +356,9 @@ public class ResultState implements IStateObject {
         } catch (JsonProcessingException e) { // NOSONAR
             return e.getMessage();
         }
+    }
+
+    public synchronized boolean isExhausted() {
+        return remainingReads == 0;
     }
 }

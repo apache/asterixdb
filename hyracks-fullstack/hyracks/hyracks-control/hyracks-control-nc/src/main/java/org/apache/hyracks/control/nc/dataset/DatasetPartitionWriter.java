@@ -59,7 +59,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
     public DatasetPartitionWriter(IHyracksTaskContext ctx, IDatasetPartitionManager manager, JobId jobId,
             ResultSetId rsId, boolean asyncMode, boolean orderedResult, int partition, int nPartitions,
-            DatasetMemoryManager datasetMemoryManager, IWorkspaceFileFactory fileFactory) {
+            DatasetMemoryManager datasetMemoryManager, IWorkspaceFileFactory fileFactory, long maxReads) {
         this.manager = manager;
         this.jobId = jobId;
         this.resultSetId = rsId;
@@ -70,7 +70,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
 
         resultSetPartitionId = new ResultSetPartitionId(jobId, rsId, partition);
         resultState = new ResultState(resultSetPartitionId, asyncMode, ctx.getIoManager(), fileFactory,
-                ctx.getInitialFrameSize());
+                ctx.getInitialFrameSize(), maxReads);
     }
 
     public ResultState getResultState() {

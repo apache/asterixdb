@@ -52,7 +52,8 @@ public class NetworkOutputChannel implements IFrameWriter {
     }
 
     @Override
-    public void open() throws HyracksDataException {
+    public void open() {
+        // no op
     }
 
     @Override

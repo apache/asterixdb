@@ -17,7 +17,7 @@
  * under the License.
  */
 
--- maxresultreads=2
--- handlevariable=status
+-- polltimeoutsecs=20
+-- handlevariable=result
 
-select i, i * i as i2 from range(1, 10) i;
+$status

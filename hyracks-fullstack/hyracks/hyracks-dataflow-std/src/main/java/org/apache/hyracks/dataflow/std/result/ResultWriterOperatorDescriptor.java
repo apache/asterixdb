@@ -51,14 +51,16 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
     private final boolean asyncMode;
 
     private final IResultSerializerFactory resultSerializerFactory;
+    private final long maxReads;
 
     public ResultWriterOperatorDescriptor(IOperatorDescriptorRegistry spec, ResultSetId rsId, boolean ordered,
-            boolean asyncMode, IResultSerializerFactory resultSerializerFactory) throws IOException {
+            boolean asyncMode, IResultSerializerFactory resultSerializerFactory, long maxReads) throws IOException {
         super(spec, 1, 0);
         this.rsId = rsId;
         this.ordered = ordered;
         this.asyncMode = asyncMode;
         this.resultSerializerFactory = resultSerializerFactory;
+        this.maxReads = maxReads;
     }
 
     @Override
@@ -87,7 +89,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             public void open() throws HyracksDataException {
                 try {
                     datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, rsId, ordered, asyncMode, partition,
-                            nPartitions);
+                            nPartitions, maxReads);
                     datasetPartitionWriter.open();
                     resultSerializer.init();
                 } catch (HyracksException e) {
@@ -139,7 +141,8 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                 sb.append("{ ");
                 sb.append("\"rsId\": \"").append(rsId).append("\", ");
                 sb.append("\"ordered\": ").append(ordered).append(", ");
-                sb.append("\"asyncMode\": ").append(asyncMode).append(" }");
+                sb.append("\"asyncMode\": ").append(asyncMode).append(", ");
+                sb.append("\"maxReads\": ").append(maxReads).append(" }");
                 return sb.toString();
             }
         };

@@ -95,7 +95,7 @@ public class ReplicateOperatorTest extends AbstractIntegrationTest {
             spec.addResultSetId(rsId);
 
             outputOp[i] = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
-                    ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
+                    ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider(), 1);
             PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, outputOp[i], locations);
         }
 

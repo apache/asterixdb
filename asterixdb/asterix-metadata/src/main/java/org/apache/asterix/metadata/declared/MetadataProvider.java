@@ -153,6 +153,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private IAWriterFactory writerFactory;
     private FileSplit outputFile;
     private boolean asyncResults;
+    private long maxResultReads;
     private ResultSetId resultSetId;
     private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
     private TxnId txnId;
@@ -236,6 +237,14 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public void setResultAsyncMode(boolean asyncResults) {
         this.asyncResults = asyncResults;
+    }
+
+    public void setMaxResultReads(long maxResultReads) {
+        this.maxResultReads = maxResultReads;
+    }
+
+    public long getMaxResultReads() {
+        return maxResultReads;
     }
 
     public ResultSetId getResultSetId() {
@@ -536,7 +545,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IResultSerializerFactory resultSerializedAppenderFactory = resultSerializerFactoryProvider
                     .getAqlResultSerializerFactoryProvider(printColumns, printerFactories, getWriterFactory());
             resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, ordered, getResultAsyncMode(),
-                    resultSerializedAppenderFactory);
+                    resultSerializedAppenderFactory, getMaxResultReads());
         } catch (IOException e) {
             throw new AlgebricksException(e);
         }

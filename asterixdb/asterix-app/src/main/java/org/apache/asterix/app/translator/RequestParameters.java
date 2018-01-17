@@ -22,24 +22,24 @@ import java.util.Map;
 
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
-import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
+import org.apache.asterix.translator.ResultProperties;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 
 public class RequestParameters implements IRequestParameters {
 
     private final IHyracksDataset hdc;
-    private final ResultDelivery resultDelivery;
+    private final ResultProperties resultProperties;
     private final Stats stats;
     private final Map<String, String> optionalParameters;
     private final IStatementExecutor.ResultMetadata outMetadata;
     private final String clientContextId;
 
-    public RequestParameters(IHyracksDataset hdc, ResultDelivery resultDelivery, Stats stats,
+    public RequestParameters(IHyracksDataset hdc, ResultProperties resultProperties, Stats stats,
             IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
             Map<String, String> optionalParameters) {
         this.hdc = hdc;
-        this.resultDelivery = resultDelivery;
+        this.resultProperties = resultProperties;
         this.stats = stats;
         this.outMetadata = outMetadata;
         this.clientContextId = clientContextId;
@@ -52,8 +52,8 @@ public class RequestParameters implements IRequestParameters {
     }
 
     @Override
-    public IStatementExecutor.ResultDelivery getResultDelivery() {
-        return resultDelivery;
+    public ResultProperties getResultProperties() {
+        return resultProperties;
     }
 
     @Override

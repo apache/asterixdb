@@ -21,7 +21,6 @@ package org.apache.asterix.api.http.server;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +47,7 @@ import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
+import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -137,7 +137,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         PRETTY("pretty"),
         MODE("mode"),
         TIMEOUT("timeout"),
-        PLAN_FORMAT("plan-format");
+        PLAN_FORMAT("plan-format"),
+        MAX_RESULT_READS("max-result-reads");
 
         private final String str;
 
@@ -193,6 +194,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         boolean pretty;
         String clientContextID;
         String mode;
+        String maxResultReads;
 
         @Override
         public String toString() {
@@ -207,6 +209,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 on.put("clientContextID", clientContextID);
                 on.put("format", format);
                 on.put("timeout", timeout);
+                on.put("maxResultReads", maxResultReads);
                 return om.writer(new MinimalPrettyPrinter()).writeValueAsString(on);
             } catch (JsonProcessingException e) { // NOSONAR
                 return e.getMessage();
@@ -383,6 +386,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 param.mode = toLower(getOptText(jsonRequest, Parameter.MODE.str()));
                 param.clientContextID = getOptText(jsonRequest, Parameter.CLIENT_ID.str());
                 param.timeout = getOptText(jsonRequest, Parameter.TIMEOUT.str());
+                param.maxResultReads = getOptText(jsonRequest, Parameter.MAX_RESULT_READS.str());
             } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
                 GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
@@ -397,6 +401,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             param.mode = toLower(request.getParameter(Parameter.MODE.str()));
             param.clientContextID = request.getParameter(Parameter.CLIENT_ID.str());
             param.timeout = request.getParameter(Parameter.TIMEOUT.str());
+            param.maxResultReads = request.getParameter(Parameter.MAX_RESULT_READS.str());
         }
         return param;
     }
@@ -448,6 +453,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
         ResultDelivery delivery = parseResultDelivery(param.mode);
 
+        final ResultProperties resultProperties = param.maxResultReads == null ?
+                new ResultProperties(delivery) :
+                new ResultProperties(delivery, Long.parseLong(param.maxResultReads));
+
         String handleUrl = getHandleUrl(param.host, param.path, delivery);
         SessionOutput sessionOutput = createSessionOutput(param, handleUrl, httpWriter);
         SessionConfig sessionConfig = sessionOutput.config();
@@ -478,7 +487,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                     "http://" + hostName + ":" + appCtx.getExternalProperties().getQueryWebInterfacePort());
             response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
             response.setStatus(execution.getHttpStatus());
-            executeStatement(statementsText, sessionOutput, delivery, stats, param, execution, optionalParams);
+            executeStatement(statementsText, sessionOutput, resultProperties, stats, param, execution, optionalParams);
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
                 ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
             }
@@ -502,9 +511,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    protected void executeStatement(String statementsText, SessionOutput sessionOutput, ResultDelivery delivery,
-            IStatementExecutor.Stats stats, RequestParameters param, RequestExecutionState execution,
-            Map<String, String> optionalParameters) throws Exception {
+    protected void executeStatement(String statementsText, SessionOutput sessionOutput,
+            ResultProperties resultProperties, IStatementExecutor.Stats stats, RequestParameters param,
+            RequestExecutionState execution, Map<String, String> optionalParameters) throws Exception {
         IClusterManagementWork.ClusterState clusterState =
                 ((ICcApplicationContext) appCtx).getClusterStateManager().getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
@@ -518,8 +527,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 sessionOutput, compilationProvider, componentProvider);
         execution.start();
         final IRequestParameters requestParameters =
-                new org.apache.asterix.app.translator.RequestParameters(getHyracksDataset(), delivery, stats, null,
-                        param.clientContextID, optionalParameters);
+                new org.apache.asterix.app.translator.RequestParameters(getHyracksDataset(), resultProperties, stats,
+                        null, param.clientContextID, optionalParameters);
         translator.compileAndExecute(getHyracksClientConnection(), queryCtx, requestParameters);
         execution.end();
     }

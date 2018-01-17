@@ -35,6 +35,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
+import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.asterix.translator.SessionConfig.PlanFormat;
@@ -120,8 +121,8 @@ public class AsterixJavaClient {
         IStatementExecutor translator = statementExecutorFactory.create(appCtx, statements, output, compilationProvider,
                 storageComponentProvider);
         final IRequestParameters requestParameters =
-                new RequestParameters(null, IStatementExecutor.ResultDelivery.IMMEDIATE, new IStatementExecutor.Stats(),
-                        null, null, null);
+                new RequestParameters(null, new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
+                        new IStatementExecutor.Stats(), null, null, null);
         translator.compileAndExecute(hcc, null, requestParameters);
         writer.flush();
     }

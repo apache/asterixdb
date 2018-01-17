@@ -101,7 +101,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
 
         ResultSetId rsId = new ResultSetId(1);
         IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
-                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
+                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider(), 1);
         spec.addResultSetId(rsId);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID);
 
@@ -173,7 +173,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
 
         ResultSetId rsId = new ResultSetId(1);
         IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
-                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
+                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider(), 1);
         spec.addResultSetId(rsId);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
@@ -246,7 +246,7 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
 
         ResultSetId rsId = new ResultSetId(1);
         IOperatorDescriptor printer = new ResultWriterOperatorDescriptor(spec, rsId, true, false,
-                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider());
+                ResultSerializerFactoryProvider.INSTANCE.getResultSerializerFactoryProvider(), 1);
         spec.addResultSetId(rsId);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);

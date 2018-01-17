@@ -46,6 +46,7 @@ import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
+import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -69,20 +70,20 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     private final ILangExtension.Language lang;
     private final String statementsText;
     private final SessionConfig sessionConfig;
-    private final IStatementExecutor.ResultDelivery delivery;
+    private final ResultProperties resultProperties;
     private final String clientContextID;
     private final String handleUrl;
     private final Map<String, String> optionalParameters;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
-            String statementsText, SessionConfig sessionConfig, IStatementExecutor.ResultDelivery delivery,
+            String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
             String clientContextID, String handleUrl, Map<String, String> optionalParameters) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
         this.statementsText = statementsText;
         this.sessionConfig = sessionConfig;
-        this.delivery = delivery;
+        this.resultProperties = resultProperties;
         this.clientContextID = clientContextID;
         this.handleUrl = handleUrl;
         this.optionalParameters = optionalParameters;
@@ -122,7 +123,8 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
                     compilationProvider, storageComponentProvider);
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             final IRequestParameters requestParameters =
-                    new RequestParameters(null, delivery, stats, outMetadata, clientContextID, optionalParameters);
+                    new RequestParameters(null, resultProperties, stats, outMetadata, clientContextID,
+                            optionalParameters);
             translator.compileAndExecute(ccApp.getHcc(), statementExecutorContext, requestParameters);
             outPrinter.close();
             responseMsg.setResult(outWriter.toString());
