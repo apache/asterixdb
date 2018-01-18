@@ -62,11 +62,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceSc
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class PushFieldAccessRule implements IAlgebraicRewriteRule {
-
-    private static final String IS_MOVABLE = "isMovable";
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
@@ -96,7 +95,6 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         return propagateFieldAccessRec(opRef, context, finalAnnot);
     }
 
-    @SuppressWarnings("unchecked")
     private boolean isAccessToIndexedField(AssignOperator assign, IOptimizationContext context)
             throws AlgebricksException {
         AbstractFunctionCallExpression accessFun =
@@ -172,7 +170,6 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         return e1.equals(e2);
     }
 
-    @SuppressWarnings("unchecked")
     private boolean propagateFieldAccessRec(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
             String finalAnnot) throws AlgebricksException {
         AssignOperator access = (AssignOperator) opRef.getValue();
@@ -184,7 +181,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 && !(op2.getOperatorTag() == LogicalOperatorTag.SELECT && isAccessToIndexedField(access, context))) {
             return false;
         }
-        Object annotation = op2.getAnnotations().get(IS_MOVABLE);
+        Object annotation = op2.getAnnotations().get(OperatorPropertiesUtil.MOVABLE);
         if (annotation != null && !((Boolean) annotation)) {
             return false;
         }
@@ -287,65 +284,78 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 DataSourceScanOperator scan = (DataSourceScanOperator) op2;
                 int n = scan.getVariables().size();
                 LogicalVariable scanRecordVar = scan.getVariables().get(n - 1);
-                AbstractFunctionCallExpression accessFun =
-                        (AbstractFunctionCallExpression) access.getExpressions().get(0).getValue();
-                ILogicalExpression e0 = accessFun.getArguments().get(0).getValue();
+
+                IDataSource<DataSourceId> dataSource = (IDataSource<DataSourceId>) scan.getDataSource();
+                byte dsType = ((DataSource) dataSource).getDatasourceType();
+                if (dsType != DataSource.Type.INTERNAL_DATASET && dsType != DataSource.Type.EXTERNAL_DATASET) {
+                    return false;
+                }
+                DataSourceId asid = dataSource.getId();
+                MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
+                Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
+                if (dataset == null) {
+                    throw new AlgebricksException("Dataset " + asid.getDatasourceName() + " not found.");
+                }
+                if (dataset.getDatasetType() != DatasetType.INTERNAL) {
+                    setAsFinal(access, context, finalAnnot);
+                    return false;
+                }
+
+                String tName = dataset.getItemTypeName();
+                IAType t = mp.findType(dataset.getItemTypeDataverseName(), tName);
+                if (t.getTypeTag() != ATypeTag.OBJECT) {
+                    return false;
+                }
+                ARecordType rt = (ARecordType) t;
+                Pair<ILogicalExpression, List<String>> fieldPathAndVar = getFieldExpression(access, rt);
+                ILogicalExpression e0 = fieldPathAndVar.first;
                 LogicalExpressionTag tag = e0.getExpressionTag();
                 if (tag == LogicalExpressionTag.VARIABLE) {
                     VariableReferenceExpression varRef = (VariableReferenceExpression) e0;
                     if (varRef.getVariableReference() == scanRecordVar) {
-                        ILogicalExpression e1 = accessFun.getArguments().get(1).getValue();
-                        if (e1.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                            IDataSource<DataSourceId> dataSource = (IDataSource<DataSourceId>) scan.getDataSource();
-                            byte dsType = ((DataSource) dataSource).getDatasourceType();
-                            if (dsType == DataSource.Type.FEED || dsType == DataSource.Type.LOADABLE
-                                    || dsType == DataSource.Type.FUNCTION) {
-                                return false;
-                            }
-                            DataSourceId asid = dataSource.getId();
-                            MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
-                            Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
-                            if (dataset == null) {
-                                throw new AlgebricksException("Dataset " + asid.getDatasourceName() + " not found.");
-                            }
-                            if (dataset.getDatasetType() != DatasetType.INTERNAL) {
-                                setAsFinal(access, context, finalAnnot);
-                                return false;
-                            }
-                            ConstantExpression ce = (ConstantExpression) e1;
-                            IAObject obj = ((AsterixConstantValue) ce.getValue()).getObject();
-                            String fldName;
-                            if (obj.getType().getTypeTag() == ATypeTag.STRING) {
-                                fldName = ((AString) obj).getStringValue();
-                            } else {
-                                int pos = ((AInt32) obj).getIntegerValue();
-                                String tName = dataset.getItemTypeName();
-                                IAType t = mp.findType(dataset.getItemTypeDataverseName(), tName);
-                                if (t.getTypeTag() != ATypeTag.OBJECT) {
-                                    return false;
-                                }
-                                ARecordType rt = (ARecordType) t;
-                                if (pos >= rt.getFieldNames().length) {
-                                    setAsFinal(access, context, finalAnnot);
-                                    return false;
-                                }
-                                fldName = rt.getFieldNames()[pos];
-                            }
-                            int p = DatasetUtil.getPositionOfPartitioningKeyField(dataset, fldName);
-                            if (p < 0) { // not one of the partitioning fields
-                                setAsFinal(access, context, finalAnnot);
-                                return false;
-                            }
-                            LogicalVariable keyVar = scan.getVariables().get(p);
-                            access.getExpressions().get(0).setValue(new VariableReferenceExpression(keyVar));
-                            return true;
+                        int p = DatasetUtil.getPositionOfPartitioningKeyField(dataset, fieldPathAndVar.second);
+                        if (p < 0) { // not one of the partitioning fields
+                            setAsFinal(access, context, finalAnnot);
+                            return false;
                         }
+                        LogicalVariable keyVar = scan.getVariables().get(p);
+                        access.getExpressions().get(0).setValue(new VariableReferenceExpression(keyVar));
+                        return true;
+
                     }
                 }
             }
             setAsFinal(access, context, finalAnnot);
             return false;
         }
+    }
+
+    private Pair<ILogicalExpression, List<String>> getFieldExpression(AssignOperator access, ARecordType rt)
+            throws AlgebricksException {
+        LinkedList<String> fieldPath = new LinkedList<>();
+        ILogicalExpression e0 = access.getExpressions().get(0).getValue();
+        while (AnalysisUtil.isAccessToFieldRecord(e0)) {
+            ILogicalExpression e1 = ((AbstractFunctionCallExpression) e0).getArguments().get(1).getValue();
+            if (e1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                return new Pair<>(null, null);
+            }
+            ConstantExpression ce = (ConstantExpression) e1;
+            IAObject obj = ((AsterixConstantValue) ce.getValue()).getObject();
+            String fldName;
+            if (obj.getType().getTypeTag() == ATypeTag.STRING) {
+                fldName = ((AString) obj).getStringValue();
+            } else {
+                int pos = ((AInt32) obj).getIntegerValue();
+                if (pos >= rt.getFieldNames().length) {
+                    return new Pair<>(null, null);
+                }
+                fldName = rt.getFieldNames()[pos];
+            }
+            fieldPath.addFirst(fldName);
+            e0 = ((AbstractFunctionCallExpression) e0).getArguments().get(0).getValue();
+
+        }
+        return new Pair<>(e0, fieldPath);
     }
 
     private void setAsFinal(ILogicalOperator access, IOptimizationContext context, String finalAnnot) {

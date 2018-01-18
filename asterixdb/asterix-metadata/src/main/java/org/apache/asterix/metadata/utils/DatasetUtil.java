@@ -173,10 +173,11 @@ public class DatasetUtil {
         return btreeFields;
     }
 
-    public static int getPositionOfPartitioningKeyField(Dataset dataset, String fieldExpr) {
+    public static int getPositionOfPartitioningKeyField(Dataset dataset, List<String> fieldExpr) {
         List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
         for (int i = 0; i < partitioningKeys.size(); i++) {
-            if ((partitioningKeys.get(i).size() == 1) && partitioningKeys.get(i).get(0).equals(fieldExpr)) {
+            List<String> partitioningKey = partitioningKeys.get(i);
+            if (partitioningKey.equals(fieldExpr)) {
                 return i;
             }
         }

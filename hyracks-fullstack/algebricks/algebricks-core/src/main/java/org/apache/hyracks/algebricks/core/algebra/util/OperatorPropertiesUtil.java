@@ -45,7 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 
 public class OperatorPropertiesUtil {
 
-    private static final String MOVABLE = "isMovable";
+    public static final String MOVABLE = "isMovable";
 
     private OperatorPropertiesUtil() {
     }
