@@ -65,13 +65,7 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Asterix { \n");
-        for (IPushRuntimeFactory f : pipeline.getRuntimeFactories()) {
-            sb.append("  " + f.toString() + ";\n");
-        }
-        sb.append("}");
-        return sb.toString();
+        return "AlgebricksMeta " + Arrays.toString(pipeline.getRuntimeFactories());
     }
 
     @Override
