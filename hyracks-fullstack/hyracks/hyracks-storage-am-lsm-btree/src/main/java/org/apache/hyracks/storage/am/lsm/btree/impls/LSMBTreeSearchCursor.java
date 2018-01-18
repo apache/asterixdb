@@ -22,12 +22,13 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
+import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
-public class LSMBTreeSearchCursor implements IIndexCursor {
+public class LSMBTreeSearchCursor implements ILSMIndexCursor {
 
     public enum LSMBTreeSearchType {
         POINT,
@@ -37,7 +38,7 @@ public class LSMBTreeSearchCursor implements IIndexCursor {
     private final LSMBTreePointSearchCursor pointCursor;
     private final LSMBTreeRangeSearchCursor rangeCursor;
     private final LSMBTreeDiskComponentScanCursor scanCursor;
-    private IIndexCursor currentCursor;
+    private ILSMIndexCursor currentCursor;
 
     public LSMBTreeSearchCursor(ILSMIndexOperationContext opCtx) {
         pointCursor = new LSMBTreePointSearchCursor(opCtx);

@@ -98,14 +98,4 @@ public class EnforcedIndexCursor implements IIndexCursor {
     public ITupleReference getTuple() {
         return null;
     }
-
-    @Override
-    public ITupleReference getFilterMinTuple() {
-        return null;
-    }
-
-    @Override
-    public ITupleReference getFilterMaxTuple() {
-        return null;
-    }
 }

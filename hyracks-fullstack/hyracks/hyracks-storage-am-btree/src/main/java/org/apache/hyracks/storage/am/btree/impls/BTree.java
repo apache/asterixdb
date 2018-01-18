@@ -718,6 +718,7 @@ public class BTree extends AbstractTreeIndex {
                 }
                 if (restartOp) {
                     // Wait for the SMO to persistFrontiers before restarting.
+                    // We didn't release the pin on the page!!
                     treeLatch.readLock().lock();
                     treeLatch.readLock().unlock();
                     ctx.getPageLsns().removeLast();

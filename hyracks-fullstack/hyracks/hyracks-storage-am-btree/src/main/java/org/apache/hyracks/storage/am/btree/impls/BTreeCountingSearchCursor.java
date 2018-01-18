@@ -234,16 +234,6 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public ITupleReference getFilterMinTuple() {
-        return null;
-    }
-
-    @Override
-    public ITupleReference getFilterMaxTuple() {
-        return null;
-    }
-
-    @Override
     public void setBufferCache(IBufferCache bufferCache) {
         this.bufferCache = bufferCache;
     }

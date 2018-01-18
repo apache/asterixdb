@@ -22,12 +22,13 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 
-public class LSMRTreeWithAntiMatterTuplesFlushCursor implements IIndexCursor {
+public class LSMRTreeWithAntiMatterTuplesFlushCursor implements ILSMIndexCursor {
     private final TreeTupleSorter rTreeTupleSorter;
     private final TreeTupleSorter bTreeTupleSorter;
     private final int[] comparatorFields;

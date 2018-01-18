@@ -94,15 +94,4 @@ public interface IIndexCursor {
      * @return the tuple pointed to by the cursor
      */
     ITupleReference getTuple();
-
-    /**
-     * @return the min tuple of the current index's filter
-     */
-    ITupleReference getFilterMinTuple();
-
-    /**
-     *
-     * @return the max tuple of the current index's filter
-     */
-    ITupleReference getFilterMaxTuple();
 }

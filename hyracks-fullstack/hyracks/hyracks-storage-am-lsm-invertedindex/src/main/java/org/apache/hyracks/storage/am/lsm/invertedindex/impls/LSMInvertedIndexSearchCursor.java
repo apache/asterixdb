@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
+import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
@@ -40,7 +41,7 @@ import org.apache.hyracks.storage.common.MultiComparator;
  * Searches the components one-by-one, completely consuming a cursor before moving on to the next one.
  * Therefore, the are no guarantees about sort order of the results.
  */
-public class LSMInvertedIndexSearchCursor implements IIndexCursor {
+public class LSMInvertedIndexSearchCursor implements ILSMIndexCursor {
 
     private IIndexAccessor currentAccessor;
     private IIndexCursor currentCursor;

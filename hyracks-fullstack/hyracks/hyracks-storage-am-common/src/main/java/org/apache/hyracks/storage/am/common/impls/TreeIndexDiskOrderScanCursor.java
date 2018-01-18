@@ -58,16 +58,6 @@ public class TreeIndexDiskOrderScanCursor implements ITreeIndexCursor {
         return frameTuple;
     }
 
-    @Override
-    public ITupleReference getFilterMinTuple() {
-        return null;
-    }
-
-    @Override
-    public ITupleReference getFilterMaxTuple() {
-        return null;
-    }
-
     private boolean positionToNextLeaf(boolean skipCurrent) throws HyracksDataException {
         while (frame.getLevel() != 0 || skipCurrent || frame.getTupleCount() == 0) {
             if (++currentPageId > maxPageId) {

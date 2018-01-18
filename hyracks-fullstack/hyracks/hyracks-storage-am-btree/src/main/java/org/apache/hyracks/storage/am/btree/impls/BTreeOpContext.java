@@ -142,7 +142,7 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     public void setOperation(IndexOperation newOp) {
         if (newOp == IndexOperation.SEARCH || newOp == IndexOperation.DISKORDERSCAN) {
             if (cursorInitialState == null) {
-                cursorInitialState = new BTreeCursorInitialState(null, searchCallback, accessor);
+                cursorInitialState = new BTreeCursorInitialState(searchCallback, accessor);
             }
         } else {
             // Insert, delete, update or upsert operation.

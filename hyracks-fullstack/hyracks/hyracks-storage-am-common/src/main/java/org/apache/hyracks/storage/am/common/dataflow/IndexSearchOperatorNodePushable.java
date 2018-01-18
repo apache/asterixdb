@@ -38,6 +38,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
+import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -180,8 +181,8 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             ITupleReference tuple = cursor.getTuple();
             writeTupleToOutput(tuple);
             if (appendIndexFilter) {
-                writeFilterTupleToOutput(cursor.getFilterMinTuple());
-                writeFilterTupleToOutput(cursor.getFilterMaxTuple());
+                writeFilterTupleToOutput(((ILSMIndexCursor)cursor).getFilterMinTuple());
+                writeFilterTupleToOutput(((ILSMIndexCursor)cursor).getFilterMaxTuple());
             }
             FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         }

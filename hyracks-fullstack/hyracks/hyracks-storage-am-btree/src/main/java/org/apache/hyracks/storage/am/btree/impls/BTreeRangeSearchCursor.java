@@ -97,16 +97,6 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
         return frameTuple;
     }
 
-    @Override
-    public ITupleReference getFilterMinTuple() {
-        return null;
-    }
-
-    @Override
-    public ITupleReference getFilterMaxTuple() {
-        return null;
-    }
-
     public int getTupleOffset() {
         return frame.getTupleOffset(tupleIndex - 1);
     }

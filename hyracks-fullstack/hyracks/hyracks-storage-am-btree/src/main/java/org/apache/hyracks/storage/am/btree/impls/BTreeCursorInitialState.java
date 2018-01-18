@@ -33,8 +33,7 @@ public class BTreeCursorInitialState implements ICursorInitialState {
     private MultiComparator originalKeyCmp;
     private final IIndexAccessor accessor;
 
-    public BTreeCursorInitialState(ICachedPage page, ISearchOperationCallback searchCallback, IIndexAccessor accessor) {
-        this.page = page;
+    public BTreeCursorInitialState(ISearchOperationCallback searchCallback, IIndexAccessor accessor) {
         this.searchCallback = searchCallback;
         this.accessor = accessor;
     }

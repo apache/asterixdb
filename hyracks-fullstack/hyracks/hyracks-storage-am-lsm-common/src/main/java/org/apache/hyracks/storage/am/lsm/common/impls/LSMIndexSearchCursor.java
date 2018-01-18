@@ -26,6 +26,7 @@ import java.util.PriorityQueue;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
@@ -34,7 +35,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
 
-public abstract class LSMIndexSearchCursor implements IIndexCursor {
+public abstract class LSMIndexSearchCursor implements ILSMIndexCursor {
     protected static final int SWITCH_COMPONENT_CYCLE = 100;
     protected final ILSMIndexOperationContext opCtx;
     protected final boolean returnDeletedTuples;
