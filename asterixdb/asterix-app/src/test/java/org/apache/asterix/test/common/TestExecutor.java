@@ -1275,65 +1275,74 @@ public class TestExecutor {
         long startTime = System.currentTimeMillis();
         long limitTime = startTime + TimeUnit.SECONDS.toMillis(timeoutSecs);
         ctx.setType(ctx.getType().substring("poll".length()));
-        boolean expectedException = false;
-        Exception finalException = null;
-        LOGGER.debug("polling for up to " + timeoutSecs + " seconds w/ " + retryDelaySecs + " second(s) delay");
-        int responsesReceived = 0;
-        final ExecutorService executorService = Executors.newSingleThreadExecutor();
-        while (true) {
-            try {
-                Future<Void> execution = executorService.submit(() -> {
-                    executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
-                            expectedResultFileCtxs, testFile, actualPath);
-                    return null;
-                });
-                execution.get(limitTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-                responsesReceived++;
-                finalException = null;
-                break;
-            } catch (TimeoutException e) {
-                if (responsesReceived == 0) {
-                    throw new Exception(
-                            "Poll limit (" + timeoutSecs + "s) exceeded without obtaining *any* result from server");
-                } else if (finalException != null) {
-                    throw new Exception("Poll limit (" + timeoutSecs
-                            + "s) exceeded without obtaining expected result; last exception:", finalException);
-                } else {
-                    throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining expected result");
+        try {
+            boolean expectedException = false;
+            Exception finalException = null;
+            LOGGER.debug("polling for up to " + timeoutSecs + " seconds w/ " + retryDelaySecs + " second(s) delay");
+            int responsesReceived = 0;
+            final ExecutorService executorService = Executors.newSingleThreadExecutor();
+            while (true) {
+                try {
+                    Future<Void> execution = executorService.submit(() -> {
+                        executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
+                                queryCount, expectedResultFileCtxs, testFile, actualPath);
+                        return null;
+                    });
+                    execution.get(limitTime - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+                    responsesReceived++;
+                    finalException = null;
+                    break;
+                } catch (TimeoutException e) {
+                    if (responsesReceived == 0) {
+                        throw new Exception("Poll limit (" + timeoutSecs
+                                + "s) exceeded without obtaining *any* result from server");
+                    } else if (finalException != null) {
+                        throw new Exception(
+                                "Poll limit (" + timeoutSecs
+                                        + "s) exceeded without obtaining expected result; last exception:",
+                                finalException);
+                    } else {
+                        throw new Exception(
+                                "Poll limit (" + timeoutSecs + "s) exceeded without obtaining expected result");
 
+                    }
+                } catch (ExecutionException ee) {
+                    Exception e;
+                    if (ee.getCause() instanceof Exception) {
+                        e = (Exception) ee.getCause();
+                    } else {
+                        e = ee;
+                    }
+                    if (e instanceof ComparisonException) {
+                        LOGGER.log(Level.INFO, "Comparison failure on poll: " + e.getMessage());
+                    } else {
+                        LOGGER.log(Level.INFO, "received exception on poll", e);
+                    }
+                    responsesReceived++;
+                    if (isExpected(e, cUnit)) {
+                        expectedException = true;
+                        finalException = e;
+                        break;
+                    }
+                    if ((System.currentTimeMillis() > limitTime)) {
+                        finalException = e;
+                        break;
+                    }
+                    LOGGER.debug("sleeping " + retryDelaySecs + " second(s) before polling again");
+                    TimeUnit.SECONDS.sleep(retryDelaySecs);
                 }
-            } catch (ExecutionException ee) {
-                Exception e;
-                if (ee.getCause() instanceof Exception) {
-                    e = (Exception) ee.getCause();
-                } else {
-                    e = ee;
-                }
-                if (e instanceof ComparisonException) {
-                    LOGGER.log(Level.INFO, "Comparison failure on poll: " + e.getMessage());
-                } else {
-                    LOGGER.log(Level.INFO, "received exception on poll", e);
-                }
-                responsesReceived++;
-                if (isExpected(e, cUnit)) {
-                    expectedException = true;
-                    finalException = e;
-                    break;
-                }
-                if ((System.currentTimeMillis() > limitTime)) {
-                    finalException = e;
-                    break;
-                }
-                LOGGER.debug("sleeping " + retryDelaySecs + " second(s) before polling again");
-                TimeUnit.SECONDS.sleep(retryDelaySecs);
             }
+            if (expectedException) {
+                throw finalException;
+            } else if (finalException != null) {
+                throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining expected result",
+                        finalException);
+            }
+
+        } finally {
+            ctx.setType("poll" + ctx.getType());
         }
-        if (expectedException) {
-            throw finalException;
-        } else if (finalException != null) {
-            throw new Exception("Poll limit (" + timeoutSecs + "s) exceeded without obtaining expected result",
-                    finalException);
-        }
+
     }
 
     public InputStream executeSqlppUpdateOrDdl(String statement, OutputFormat outputFormat) throws Exception {
