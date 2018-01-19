@@ -19,8 +19,6 @@
 package org.apache.asterix.test.txn;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -46,7 +44,6 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.test.common.TestTupleReference;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants;
-import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.junit.After;
@@ -59,6 +56,7 @@ public class LogManagerTest {
     protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
     private static final AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
     private static final String PREPARE_NEXT_LOG_FILE_METHOD = "prepareNextLogFile";
+    private static final String ENSURE_LAST_PAGE_FLUSHED_METHOD = "ensureLastPageFlushed";
 
     @Before
     public void setUp() throws Exception {
@@ -146,39 +144,20 @@ public class LogManagerTest {
         int logFileCountBeforeInterrupt = logManager.getLogFileIds().size();
 
         // ensure an interrupted transactor will create next log file but will fail to position the log channel
-        final AtomicBoolean interrupted = new AtomicBoolean(false);
+        final AtomicBoolean failed = new AtomicBoolean(false);
         Thread interruptedTransactor = new Thread(() -> {
             Thread.currentThread().interrupt();
-            try {
-                prepareNextLogFile(logManager);
-            } catch (Exception e) {
-                Throwable rootCause = ExceptionUtils.getRootCause(e);
-                if (rootCause.getCause() instanceof java.nio.channels.ClosedByInterruptException) {
-                    interrupted.set(true);
-                }
-            }
-        });
-        interruptedTransactor.start();
-        interruptedTransactor.join();
-        // ensure a new log file was created but the thread was interrupt
-        int logFileCountAfterInterrupt = logManager.getLogFileIds().size();
-        Assert.assertEquals(logFileCountBeforeInterrupt + 1, logFileCountAfterInterrupt);
-        Assert.assertTrue(interrupted.get());
-
-        // ensure next transactor will not create another file
-        final AtomicBoolean failed = new AtomicBoolean(false);
-        Thread transactor = new Thread(() -> {
             try {
                 prepareNextLogFile(logManager);
             } catch (Exception e) {
                 failed.set(true);
             }
         });
-        transactor.start();
-        transactor.join();
-        // make sure no new files were created and the operation was successful
-        int countAfterTransactor = logManager.getLogFileIds().size();
-        Assert.assertEquals(logFileCountAfterInterrupt, countAfterTransactor);
+        interruptedTransactor.start();
+        interruptedTransactor.join();
+        // ensure a new log file was created and survived interrupt
+        int logFileCountAfterInterrupt = logManager.getLogFileIds().size();
+        Assert.assertEquals(logFileCountBeforeInterrupt + 1, logFileCountAfterInterrupt);
         Assert.assertFalse(failed.get());
 
         // make sure we can still log to the new file
@@ -196,14 +175,20 @@ public class LogManagerTest {
     }
 
     private static void prepareNextLogFile(LogManager logManager) throws Exception {
-        Method method;
+        Method ensureLastPageFlushed;
+        Method prepareNextLogFile;
+        String targetMethod = null;
         try {
-            method = LogManager.class.getDeclaredMethod(PREPARE_NEXT_LOG_FILE_METHOD, null);
+            targetMethod = ENSURE_LAST_PAGE_FLUSHED_METHOD;
+            ensureLastPageFlushed = LogManager.class.getDeclaredMethod(targetMethod, null);
+            targetMethod = PREPARE_NEXT_LOG_FILE_METHOD;
+            prepareNextLogFile = LogManager.class.getDeclaredMethod(targetMethod, null);
         } catch (Exception e) {
-            throw new IllegalStateException(
-                    "Couldn't find " + PREPARE_NEXT_LOG_FILE_METHOD + " in LogManager. Was it renamed?");
+            throw new IllegalStateException("Couldn't find " + targetMethod + " in LogManager. Was it renamed?");
         }
-        method.setAccessible(true);
-        method.invoke(logManager, null);
+        ensureLastPageFlushed.setAccessible(true);
+        ensureLastPageFlushed.invoke(logManager, null);
+        prepareNextLogFile.setAccessible(true);
+        prepareNextLogFile.invoke(logManager, null);
     }
 }

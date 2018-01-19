@@ -93,6 +93,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private LogFlusher logFlusher;
     private Future<? extends Object> futureLogFlusher;
     protected LinkedBlockingQueue<ILogRecord> flushLogsQ;
+    private long currentLogFileId;
 
     public LogManager(ITransactionSubsystem txnSubsystem) {
         this.txnSubsystem = txnSubsystem;
@@ -239,17 +240,18 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private void prepareNextLogFile() {
         final long nextFileBeginLsn = getNextFileFirstLsn();
         try {
+            closeCurrentLogFile();
             createNextLogFile();
-            setLogPosition(nextFileBeginLsn);
+            InvokeUtil.doIoUninterruptibly(() -> setLogPosition(nextFileBeginLsn));
+            // move appendLSN and flushLSN to the first LSN of the next log file
+            // only after the file was created and the channel was positioned successfully
+            appendLSN.set(nextFileBeginLsn);
+            flushLSN.set(nextFileBeginLsn);
+            LOGGER.info("Created new txn log file with id({}) starting with LSN = {}", currentLogFileId,
+                    nextFileBeginLsn);
         } catch (IOException e) {
             throw new ACIDException(e);
         }
-        // move appendLSN and flushLSN to the first LSN of the next log file
-        // only after the file was created and the channel was positioned successfully
-        appendLSN.set(nextFileBeginLsn);
-        flushLSN.set(nextFileBeginLsn);
-        LOGGER.info("Created new txn log file with id({}) starting with LSN = {}", getLogFileId(nextFileBeginLsn),
-                nextFileBeginLsn);
     }
 
     private long getNextFileFirstLsn() {
@@ -258,8 +260,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     private void ensureLastPageFlushed() {
-        // Mark the page as the last page so that it will close the output file channel.
-        appendPage.setLastPage();
         // Make sure to flush whatever left in the log tail.
         appendPage.setFull();
         synchronized (flushLSN) {
@@ -301,6 +301,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     @Override
     public void stop(boolean dumpState, OutputStream os) {
         terminateLogFlusher();
+        closeCurrentLogFile();
         if (dumpState) {
             dumpState(os);
         }
@@ -387,6 +388,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     @Override
     public void renewLogFiles() {
         terminateLogFlusher();
+        closeCurrentLogFile();
         long lastMaxLogFileId = deleteAllLogFiles();
         initializeLogManager(lastMaxLogFileId + 1);
     }
@@ -445,13 +447,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     private long deleteAllLogFiles() {
-        if (appendChannel != null) {
-            try {
-                appendChannel.close();
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to close a fileChannel of a log file");
-            }
-        }
         txnLogFileId2ReaderCount.clear();
         List<Long> logFileIds = getLogFileIds();
         if (logFileIds != null) {
@@ -537,9 +532,22 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         final long fileId = getLogFileId(lsn);
         final Path targetFilePath = Paths.get(getLogFilePath(fileId));
         final long targetPosition = getLogFileOffset(lsn);
-        final RandomAccessFile raf = new RandomAccessFile(targetFilePath.toFile(), "rw"); // NOSONAR closed by LogBuffer
+        final RandomAccessFile raf = new RandomAccessFile(targetFilePath.toFile(), "rw"); // NOSONAR closed when full
         appendChannel = raf.getChannel();
         appendChannel.position(targetPosition);
+        currentLogFileId = fileId;
+    }
+
+    private void closeCurrentLogFile() {
+        if (appendChannel != null && appendChannel.isOpen()) {
+            try {
+                LOGGER.info("closing current log file with id({})", currentLogFileId);
+                appendChannel.close();
+            } catch (IOException e) {
+                LOGGER.error(() -> "failed to close log file with id(" + currentLogFileId + ")", e);
+                throw new ACIDException(e);
+            }
+        }
     }
 
     @Override
@@ -560,14 +568,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     @Override
     public int getLogPageSize() {
         return logPageSize;
-    }
-
-    @Override
-    public void renewLogFilesAndStartFromLSN(long LSNtoStartFrom) throws IOException {
-        terminateLogFlusher();
-        deleteAllLogFiles();
-        long newLogFile = getLogFileId(LSNtoStartFrom);
-        initializeLogManager(newLogFile + 1);
     }
 
     @Override
@@ -687,7 +687,7 @@ class LogFlusher implements Callable<Boolean> {
     }
 
     @Override
-    public Boolean call() throws InterruptedException {
+    public Boolean call() {
         started.release();
         boolean interrupted = false;
         try {

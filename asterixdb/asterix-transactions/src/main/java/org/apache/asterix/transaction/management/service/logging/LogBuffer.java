@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.transaction.management.service.logging;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -56,7 +55,6 @@ public class LogBuffer implements ILogBuffer {
     protected final ByteBuffer appendBuffer;
     private final ByteBuffer flushBuffer;
     private final ByteBuffer unlockBuffer;
-    private boolean isLastPage;
     protected final LinkedBlockingQueue<ILogRecord> syncCommitQ;
     protected final LinkedBlockingQueue<ILogRecord> flushQ;
     protected final LinkedBlockingQueue<ILogRecord> remoteJobsQ;
@@ -76,7 +74,6 @@ public class LogBuffer implements ILogBuffer {
         full = new AtomicBoolean(false);
         appendOffset = 0;
         flushOffset = 0;
-        isLastPage = false;
         syncCommitQ = new LinkedBlockingQueue<>(logPageSize / ILogRecord.JOB_TERMINATE_LOG_SIZE);
         flushQ = new LinkedBlockingQueue<>();
         remoteJobsQ = new LinkedBlockingQueue<>();
@@ -132,11 +129,6 @@ public class LogBuffer implements ILogBuffer {
     }
 
     @Override
-    public void setLastPage() {
-        this.isLastPage = true;
-    }
-
-    @Override
     public boolean hasSpace(int logSize) {
         return appendOffset + logSize <= logPageSize && !full.get();
     }
@@ -152,7 +144,6 @@ public class LogBuffer implements ILogBuffer {
         full.set(false);
         appendOffset = 0;
         flushOffset = 0;
-        isLastPage = false;
         stop = false;
     }
 
@@ -174,24 +165,18 @@ public class LogBuffer implements ILogBuffer {
                                         + ", full: " + full.get());
                             }
                             if (stopping || stop) {
-                                fileChannel.close();
                                 return;
                             }
                             wait();
                         }
                         endOffset = appendOffset;
                     }
-                internalFlush(flushOffset, endOffset);
+                    internalFlush(flushOffset, endOffset);
                 } catch (InterruptedException e) {
                     interrupted = true;
                 }
             }
             internalFlush(flushOffset, appendOffset);
-            if (isLastPage) {
-                fileChannel.close();
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
         } finally {
             if (interrupted) {
                 Thread.currentThread().interrupt();
@@ -235,8 +220,8 @@ public class LogBuffer implements ILogBuffer {
                         reusableTxnId.setId(logRecord.getTxnId());
                         reusableDatasetId.setId(logRecord.getDatasetId());
                         txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableTxnId);
-                        txnSubsystem.getLockManager().unlock(reusableDatasetId, logRecord.getPKHashValue(),
-                                LockMode.ANY, txnCtx);
+                        txnSubsystem.getLockManager()
+                                .unlock(reusableDatasetId, logRecord.getPKHashValue(), LockMode.ANY, txnCtx);
                         txnCtx.notifyEntityCommitted();
                         if (txnSubsystem.getTransactionProperties().isCommitProfilerEnabled()) {
                             txnSubsystem.incrementEntityCommitCount();

@@ -63,14 +63,6 @@ public interface ILogManager {
     public String getNodeId();
 
     /**
-     * Delete all log files and start new log partition > LSNtoStartFrom
-     *
-     * @param LSNtoStartFrom
-     * @throws IOException
-     */
-    public void renewLogFilesAndStartFromLSN(long LSNtoStartFrom) throws IOException;
-
-    /**
      * @return the log page size in bytes
      */
     public int getLogPageSize();

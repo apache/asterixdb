@@ -19,6 +19,7 @@
 package org.apache.asterix.common.utils;
 
 import java.io.IOException;
+import java.nio.channels.ClosedByInterruptException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +30,9 @@ import org.apache.logging.log4j.Logger;
 public class InvokeUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private InvokeUtil() {
+    }
 
     /**
      * Executes the passed interruptible, retrying if the operation is interrupted. Once the interruptible
@@ -144,6 +148,31 @@ public class InvokeUtil {
         return false;
     }
 
+    /**
+     * Executes the passed interruptible, retrying if the operation fails due to {@link ClosedByInterruptException} or
+     * {@link InterruptedException}. Once the interruptible completes, the current thread will be re-interrupted, if
+     * the original operation was interrupted.
+     */
+    public static void doIoUninterruptibly(ThrowingIOInterruptible interruptible) throws IOException {
+        boolean interrupted = false;
+        try {
+            while (true) {
+                try {
+                    interruptible.run();
+                    break;
+                } catch (ClosedByInterruptException | InterruptedException e) {
+                    LOGGER.error("IO operation Interrupted. Retrying..", e);
+                    interrupted = true;
+                    Thread.interrupted();
+                }
+            }
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
     @FunctionalInterface
     public interface Interruptible {
         void run() throws InterruptedException;
@@ -154,4 +183,8 @@ public class InvokeUtil {
         void run() throws Exception; // NOSONAR
     }
 
+    @FunctionalInterface
+    public interface ThrowingIOInterruptible {
+        void run() throws IOException, InterruptedException;
+    }
 }

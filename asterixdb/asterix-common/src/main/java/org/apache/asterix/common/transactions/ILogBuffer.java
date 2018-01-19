@@ -62,11 +62,6 @@ public interface ILogBuffer {
     void reset();
 
     /**
-     * Set current page to be the last page of the associated file
-     */
-    void setLastPage();
-
-    /**
      * stops the log buffer
      */
     void stop();
