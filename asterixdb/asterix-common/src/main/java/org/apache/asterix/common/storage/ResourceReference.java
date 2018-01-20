@@ -95,27 +95,6 @@ public class ResourceReference {
         return Integer.parseInt(partition.substring(StorageConstants.PARTITION_DIR_PREFIX.length()));
     }
 
-    protected static void parseLegacyPath(ResourceReference ref, String path) {
-        // old format: root/partition/dataverse/datasetName_idx_IndexName/fileName
-        final String[] tokens = path.split(File.separator);
-        if (tokens.length < 4) {
-            throw new IllegalStateException("Unrecognized legacy path structure: " + path);
-        }
-        int offset = tokens.length;
-        ref.name = tokens[--offset];
-        // split combined dataset/index name
-        final String[] indexTokens = tokens[--offset].split(StorageConstants.LEGACY_DATASET_INDEX_NAME_SEPARATOR);
-        if (indexTokens.length != 2) {
-            throw new IllegalStateException("Unrecognized legacy path structure: " + path);
-        }
-        ref.dataset = indexTokens[0];
-        ref.index = indexTokens[1];
-        ref.dataverse = tokens[--offset];
-        ref.partition = tokens[--offset];
-        ref.root = tokens[--offset];
-        ref.rebalance = String.valueOf(0);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {

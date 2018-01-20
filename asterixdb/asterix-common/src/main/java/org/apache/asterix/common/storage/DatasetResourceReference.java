@@ -35,14 +35,6 @@ public class DatasetResourceReference extends ResourceReference {
     }
 
     public static DatasetResourceReference of(LocalResource localResource) {
-        return of(localResource, StorageConstants.VERSION);
-    }
-
-    public static DatasetResourceReference of(LocalResource localResource, int version) {
-        if (version < StorageConstants.REBALANCE_STORAGE_VERSION) {
-            // to support legacy storage migration
-            return parseLegacyPath(localResource);
-        }
         return parse(localResource);
     }
 
@@ -62,14 +54,6 @@ public class DatasetResourceReference extends ResourceReference {
         final DatasetResourceReference datasetResourceReference = new DatasetResourceReference();
         final String filePath = Paths.get(localResource.getPath(), StorageConstants.METADATA_FILE_NAME).toString();
         parse(datasetResourceReference, filePath);
-        assignIds(localResource, datasetResourceReference);
-        return datasetResourceReference;
-    }
-
-    private static DatasetResourceReference parseLegacyPath(LocalResource localResource) {
-        final DatasetResourceReference datasetResourceReference = new DatasetResourceReference();
-        final String filePath = Paths.get(localResource.getPath(), StorageConstants.METADATA_FILE_NAME).toString();
-        parseLegacyPath(datasetResourceReference, filePath);
         assignIds(localResource, datasetResourceReference);
         return datasetResourceReference;
     }
