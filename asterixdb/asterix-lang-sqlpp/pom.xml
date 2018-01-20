@@ -32,6 +32,9 @@
     </license>
   </licenses>
   <artifactId>asterix-lang-sqlpp</artifactId>
+  <properties>
+    <root.dir>${basedir}/..</root.dir>
+  </properties>
   <build>
     <plugins>
       <plugin>

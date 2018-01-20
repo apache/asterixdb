@@ -18,7 +18,6 @@
  !-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.apache.asterix</groupId>
   <artifactId>lexer-generator-maven-plugin</artifactId>
   <parent>
     <artifactId>asterix-maven-plugins</artifactId>
@@ -30,7 +29,7 @@
   <name>lexer-generator-maven-plugin</name>
 
   <properties>
-    <appendedResourcesDirectory>${basedir}/../../src/main/appended-resources</appendedResourcesDirectory>
+    <root.dir>${basedir}/../..</root.dir>
   </properties>
   <dependencies>
     <dependency>

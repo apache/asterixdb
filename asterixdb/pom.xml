@@ -42,20 +42,23 @@
   </licenses>
 
   <properties>
+    <root.dir>${basedir}</root.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <file.encoding>UTF-8</file.encoding>
     <jvm.extraargs />
     <jdk.version>1.8</jdk.version>
     <javac.xlint.value>all</javac.xlint.value>
+    <source-format.goal>format</source-format.goal>
+    <source-format.skip>false</source-format.skip>
     <runSlowAQLTests>false</runSlowAQLTests>
-    <appendedResourcesDirectory>${basedir}/src/main/appended-resources</appendedResourcesDirectory>
+    <appendedResourcesDirectory>${root.dir}/src/main/appended-resources</appendedResourcesDirectory>
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
     <debug.suspend.flag>n</debug.suspend.flag>
     <skipTests>false</skipTests>
     <maven.test.skip>false</maven.test.skip>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     <skip.testResources>${maven.test.skip}</skip.testResources>
-    <testLog4jConfigFile>${basedir}/../asterix-app/src/test/resources/log4j2-test.xml</testLog4jConfigFile>
+    <testLog4jConfigFile>${root.dir}/asterix-app/src/test/resources/log4j2-test.xml</testLog4jConfigFile>
 
     <!-- Definition of tests in various categories which may be excluded -->
     <repeated.tests>**/RepeatedTest.java</repeated.tests>
@@ -506,6 +509,11 @@
           <artifactId>javacc-maven-plugin</artifactId>
           <version>2.6</version>
         </plugin>
+        <plugin>
+          <groupId>net.revelc.code.formatter</groupId>
+          <artifactId>formatter-maven-plugin</artifactId>
+          <version>2.0.1</version>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -696,6 +704,31 @@
             <artifactId>maven-javadoc-plugin</artifactId>
             <configuration>
               <additionalparam>-Xdoclint:none</additionalparam>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>source-format</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>net.revelc.code.formatter</groupId>
+            <artifactId>formatter-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>${source-format.goal}</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <configFile>${root.dir}/AsterixCodeFormatProfile.xml</configFile>
+              <skipFormatting>${source-format.skip}</skipFormatting>
             </configuration>
           </plugin>
         </plugins>

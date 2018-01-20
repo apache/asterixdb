@@ -29,7 +29,7 @@
   <name>asterix-evaluator-generator-maven-plugin</name>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <root.dir>${basedir}/../..</root.dir>
   </properties>
   <build>
     <plugins>

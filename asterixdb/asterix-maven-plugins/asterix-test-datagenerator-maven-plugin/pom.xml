@@ -29,6 +29,10 @@
     <version>0.9.3-SNAPSHOT</version>
   </parent>
 
+  <properties>
+    <root.dir>${basedir}/../..</root.dir>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>

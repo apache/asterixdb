@@ -56,6 +56,7 @@
     <javac.xlint.value>all</javac.xlint.value>
     <jvm.extraargs />
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
+    <source-format.goal>format</source-format.goal>
     <source-format.skip>false</source-format.skip>
     <skipTests>false</skipTests>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
@@ -526,9 +527,6 @@
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
-      <properties>
-        <source-format.goal>format</source-format.goal>
-      </properties>
       <build>
         <plugins>
           <plugin>

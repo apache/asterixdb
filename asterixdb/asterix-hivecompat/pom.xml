@@ -32,6 +32,10 @@
     </license>
   </licenses>
   <artifactId>asterix-hivecompat</artifactId>
+  <properties>
+    <root.dir>${basedir}/..</root.dir>
+    <source-format.skip>true</source-format.skip>
+  </properties>
   <build>
     <plugins>
       <plugin>

@@ -29,7 +29,7 @@
   <name>record-manager-generator-maven-plugin</name>
 
   <properties>
-    <appendedResourcesDirectory>${basedir}/../../src/main/appended-resources</appendedResourcesDirectory>
+    <root.dir>${basedir}/../..</root.dir>
   </properties>
   <dependencies>
     <dependency>

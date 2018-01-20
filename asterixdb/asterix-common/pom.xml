@@ -33,7 +33,7 @@
     </license>
   </licenses>
   <properties>
-    <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+    <root.dir>${basedir}/..</root.dir>
   </properties>
   <build>
     <plugins>

@@ -25,7 +25,7 @@
   </parent>
   <artifactId>asterix-runtime</artifactId>
   <properties>
-    <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+    <root.dir>${basedir}/..</root.dir>
   </properties>
   <licenses>
     <license>

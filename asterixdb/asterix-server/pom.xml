@@ -21,11 +21,6 @@
   <artifactId>asterix-server</artifactId>
   <name>asterix-server</name>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
-  </properties>
-
   <parent>
     <groupId>org.apache.asterix</groupId>
     <artifactId>apache-asterixdb</artifactId>
@@ -40,6 +35,10 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
+
+  <properties>
+    <root.dir>${basedir}/..</root.dir>
+  </properties>
 
   <build>
     <plugins>

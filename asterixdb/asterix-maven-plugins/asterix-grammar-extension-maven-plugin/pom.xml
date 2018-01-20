@@ -25,6 +25,9 @@
   </parent>
   <artifactId>asterix-grammar-extension-maven-plugin</artifactId>
   <packaging>maven-plugin</packaging>
+  <properties>
+    <root.dir>${basedir}/../..</root.dir>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.maven</groupId>

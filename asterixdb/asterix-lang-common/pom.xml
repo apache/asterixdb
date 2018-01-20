@@ -34,6 +34,11 @@
   </licenses>
 
   <artifactId>asterix-lang-common</artifactId>
+
+  <properties>
+    <root.dir>${basedir}/..</root.dir>
+  </properties>
+
   <build>
     <plugins>
       <plugin>

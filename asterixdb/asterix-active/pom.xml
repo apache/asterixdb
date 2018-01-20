@@ -24,6 +24,9 @@
     <version>0.9.3-SNAPSHOT</version>
   </parent>
   <artifactId>asterix-active</artifactId>
+  <properties>
+    <root.dir>${basedir}/..</root.dir>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.asterix</groupId>

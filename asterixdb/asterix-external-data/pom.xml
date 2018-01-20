@@ -33,7 +33,7 @@
   </licenses>
   <artifactId>asterix-external-data</artifactId>
   <properties>
-    <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
+    <root.dir>${basedir}/..</root.dir>
     <generatedSourcesDirectory>${project.build.directory}/generated-sources/lexer/</generatedSourcesDirectory>
   </properties>
   <build>

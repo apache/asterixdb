@@ -38,8 +38,7 @@
   </licenses>
 
   <properties>
-    <appendedResourcesDirectory>${basedir}/../src/main/appended-resources</appendedResourcesDirectory>
-    <testLog4jConfigFile>${basedir}/../../asterix-app/src/test/resources/log4j2-test.xml</testLog4jConfigFile>
+    <root.dir>${basedir}/..</root.dir>
   </properties>
 
   <modules>

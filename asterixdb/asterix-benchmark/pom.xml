@@ -25,6 +25,10 @@
   </parent>
   <artifactId>asterix-benchmark</artifactId>
 
+  <properties>
+    <root.dir>${basedir}/..</root.dir>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
