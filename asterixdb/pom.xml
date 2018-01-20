@@ -62,6 +62,12 @@
     <invalid.tests>**/DmlTest.java</invalid.tests>
     <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
     <global.test.excludes>${invalid.tests},${repeated.tests}</global.test.excludes>
+    <test.includes>${global.test.includes}</test.includes>
+    <test.excludes>${global.test.excludes}</test.excludes>
+    <global.itest.includes>**/*IT.java,**/*IT.java,**/*ITCase.java</global.itest.includes>
+    <global.itest.excludes/>
+    <itest.includes>${global.itest.includes}</itest.includes>
+    <itest.excludes>${global.itest.excludes}</itest.excludes>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.3-SNAPSHOT</algebricks.version>
@@ -101,10 +107,10 @@
             ${coverageArgLine}
           </argLine>
           <includes>
-            <include>${global.test.includes},${test.includes}</include>
+            <include>${test.includes}</include>
           </includes>
           <excludes>
-            <exclude>${global.test.excludes},${test.excludes}</exclude>
+            <exclude>${test.excludes}</exclude>
           </excludes>
           <skipTests>${skip.surefire.tests}</skipTests>
         </configuration>
@@ -120,6 +126,12 @@
           <systemProperties>
             <log4j.configurationFile>${testLog4jConfigFile}</log4j.configurationFile>
           </systemProperties>
+          <includes>
+            <include>${itest.includes}</include>
+          </includes>
+          <excludes>
+            <exclude>${itest.excludes}</exclude>
+          </excludes>
         </configuration>
         <executions>
           <execution>

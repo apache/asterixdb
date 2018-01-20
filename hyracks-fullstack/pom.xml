@@ -57,6 +57,7 @@
     <jvm.extraargs />
     <sonar.jacoco.reportPath>${env.PWD}/target/jacoco-merged.exec</sonar.jacoco.reportPath>
     <source-format.skip>false</source-format.skip>
+    <skipTests>false</skipTests>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     <skip.testResources>${maven.test.skip}</skip.testResources>
     <testLog4jConfigFile>${root.dir}/src/test/resources/log4j2-test.xml</testLog4jConfigFile>
@@ -64,8 +65,9 @@
     <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
     <hivesterix.perf.tests>**/hivesterix/perf/PerfTestSuite.java</hivesterix.perf.tests>
     <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
-    <global.test.excludes>**/Abstract*.java,${hanging.pregelix.tests},${hivesterix.perf.tests}
-    </global.test.excludes>
+    <global.test.excludes>**/Abstract*.java,${hanging.pregelix.tests},${hivesterix.perf.tests}</global.test.excludes>
+    <test.includes>${global.test.includes}</test.includes>
+    <test.excludes>${global.test.excludes}</test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <hadoop.version>2.2.0</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
@@ -267,10 +269,10 @@
             <log4j.configurationFile>${testLog4jConfigFile}</log4j.configurationFile>
           </systemPropertyVariables>
           <includes>
-            <include>${global.test.includes},${test.includes}</include>
+            <include>${test.includes}</include>
           </includes>
           <excludes combine.children="append">
-            <exclude>${global.test.excludes},${test.excludes}</exclude>
+            <exclude>${test.excludes}</exclude>
           </excludes>
           <skipTests>${skip.surefire.tests}</skipTests>
         </configuration>
