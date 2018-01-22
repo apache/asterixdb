@@ -284,8 +284,37 @@
     <profile>
       <id>asterix-gerrit-asterix-app</id>
       <properties>
-        <test.excludes>**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java</test.excludes>
+        <test.excludes>**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java</test.excludes>
       </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>SqlppExecutionTest</id>
+                <configuration>
+                  <includes combine.self="override">
+                    <include>**/SqlppExecutionTest.java</include>
+                  </includes>
+                  <excludes combine.self="override"/>
+                  <argLine>
+                    -enableassertions -Xmx${test.heap.size}m
+                    -Dfile.encoding=UTF-8
+                    -Xdebug
+                    -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=${debug.suspend.flag}
+                    -Xloggc:"${project.build.directory}/surefire-reports/SqlppExecutionTest-%p-gc.log" -XX:+PrintGC -XX:+PrintGCDateStamps -XX:GCLogFileSize=10M
+                  </argLine>
+                </configuration>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>asterix-gerrit-asterix-app-sql-execution</id>
