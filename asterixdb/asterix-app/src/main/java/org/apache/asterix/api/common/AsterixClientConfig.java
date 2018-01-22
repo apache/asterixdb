@@ -37,8 +37,8 @@ public class AsterixClientConfig {
     @Option(name = "-hyracks-job", usage = "Generates and prints the Hyracks job. It is false by default.")
     public String hyracksJob = "false";
 
-    @Option(name = "-hyracks-port", usage = "The port used to connect to the Hyracks server.")
-    public int hyracksPort = AsterixHyracksIntegrationUtil.DEFAULT_HYRACKS_CC_CLIENT_PORT;
+    @Option(name = "-hyracks-port", usage = "The port used to connect to the Hyracks server. (default: 1098)")
+    public int hyracksPort = 1098;
 
     @Argument
     private List<String> arguments = new ArrayList<String>();
