@@ -29,7 +29,6 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -86,6 +85,7 @@ public class ConfigManager implements IConfigManager, Serializable {
     private transient SortedMap<Integer, List<IConfigurator>> configurators = new TreeMap<>();
     private boolean configured;
     private String versionString = "version undefined";
+    private transient Map<String, Set<Map.Entry<String, String>>> extensionOptions = new TreeMap();
 
     public ConfigManager() {
         this(null);
@@ -309,6 +309,7 @@ public class ConfigManager implements IConfigManager, Serializable {
                     .parseSectionName(section.getParent() == null ? section.getName() : section.getParent().getName());
             String node;
             if (rootSection == Section.EXTENSION) {
+                extensionOptions.put(section.getName(), section.entrySet());
                 continue;
             } else if (rootSection == Section.NC) {
                 node = section.getName().equals(section.getSimpleName()) ? null : section.getSimpleName();
@@ -471,6 +472,10 @@ public class ConfigManager implements IConfigManager, Serializable {
                     }
                 }
             }
+        });
+        extensionOptions.forEach((extension, options) -> {
+            options.forEach(option -> ini
+                    .add(extension, option.getKey(), option.getValue()));
         });
         return ini;
     }
