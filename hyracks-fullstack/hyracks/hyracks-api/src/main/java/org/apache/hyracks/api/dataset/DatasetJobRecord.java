@@ -84,7 +84,7 @@ public class DatasetJobRecord implements IDatasetStateRecord {
     private Map<ResultSetId, ResultSetMetaData> resultSetMetadataMap = new HashMap<>();
 
     public DatasetJobRecord() {
-        this.timestamp = System.currentTimeMillis();
+        this.timestamp = System.nanoTime();
         this.status = new Status();
     }
 

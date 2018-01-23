@@ -40,6 +40,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.control.common.dataset.AbstractDatasetManager;
 import org.apache.hyracks.control.common.dataset.ResultStateSweeper;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.logging.log4j.Level;
@@ -53,25 +54,23 @@ import org.apache.logging.log4j.Logger;
  * the job (after it receives all the results) completely. Then we can just get rid of the location information for that
  * job.
  */
-public class DatasetDirectoryService implements IDatasetDirectoryService {
+public class DatasetDirectoryService extends AbstractDatasetManager implements IDatasetDirectoryService {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
-    private final long resultTTL;
 
     private final long resultSweepThreshold;
 
     private final Map<JobId, JobResultInfo> jobResultLocations;
 
     public DatasetDirectoryService(long resultTTL, long resultSweepThreshold) {
-        this.resultTTL = resultTTL;
+        super(resultTTL);
         this.resultSweepThreshold = resultSweepThreshold;
-        jobResultLocations = new LinkedHashMap<JobId, JobResultInfo>();
+        jobResultLocations = new LinkedHashMap<>();
     }
 
     @Override
     public void init(ExecutorService executor) {
-        executor.execute(new ResultStateSweeper(this, resultTTL, resultSweepThreshold, LOGGER));
+        executor.execute(new ResultStateSweeper(this, resultSweepThreshold, LOGGER));
     }
 
     @Override
@@ -181,12 +180,7 @@ public class DatasetDirectoryService implements IDatasetDirectoryService {
     }
 
     @Override
-    public synchronized long getResultTimestamp(JobId jobId) {
-        return getState(jobId).getTimestamp();
-    }
-
-    @Override
-    public synchronized void deinitState(JobId jobId) {
+    public synchronized void sweep(JobId jobId) {
         jobResultLocations.remove(jobId);
     }
 

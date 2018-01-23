@@ -37,7 +37,7 @@ class ResultSetMap implements IDatasetStateRecord, Serializable {
     private final HashMap<ResultSetId, ResultState[]> resultStateMap;
 
     ResultSetMap() {
-        timestamp = System.currentTimeMillis();
+        timestamp = System.nanoTime();
         resultStateMap = new HashMap<>();
     }
 

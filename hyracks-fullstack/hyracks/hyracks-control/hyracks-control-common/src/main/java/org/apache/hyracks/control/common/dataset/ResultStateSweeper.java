@@ -19,12 +19,7 @@
 
 package org.apache.hyracks.control.common.dataset;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.hyracks.api.dataset.IDatasetManager;
-import org.apache.hyracks.api.job.JobId;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
 /**
@@ -33,53 +28,26 @@ import org.apache.logging.log4j.Logger;
 public class ResultStateSweeper implements Runnable {
 
     private final IDatasetManager datasetManager;
-
-    private final long resultTTL;
-
     private final long resultSweepThreshold;
-
     private final Logger logger;
 
-    private final List<JobId> toBeCollected;
-
-    public ResultStateSweeper(IDatasetManager datasetManager, long resultTTL, long resultSweepThreshold,
-            Logger logger) {
+    public ResultStateSweeper(IDatasetManager datasetManager, long resultSweepThreshold, Logger logger) {
         this.datasetManager = datasetManager;
-        this.resultTTL = resultTTL;
         this.resultSweepThreshold = resultSweepThreshold;
         this.logger = logger;
-        toBeCollected = new ArrayList<JobId>();
     }
 
     @Override
-    @SuppressWarnings("squid:S2142") // catch interrupted exception
     public void run() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 Thread.sleep(resultSweepThreshold);
-                sweep();
+                datasetManager.sweepExpiredDatasets();
+                logger.trace("Result state cleanup instance successfully completed.");
             } catch (InterruptedException e) {
-                logger.log(Level.WARN, "Result cleaner thread interrupted, shutting down.");
-                break; // the interrupt was explicit from another thread. This thread should shut down...
+                logger.warn("Result cleaner thread interrupted, shutting down.");
+                Thread.currentThread().interrupt();
             }
-        }
-    }
-
-    private void sweep() {
-        synchronized (datasetManager) {
-            toBeCollected.clear();
-            for (JobId jobId : datasetManager.getJobIds()) {
-                final long timestamp = datasetManager.getResultTimestamp(jobId);
-                if (timestamp != -1 && System.currentTimeMillis() > timestamp + resultTTL) {
-                    toBeCollected.add(jobId);
-                }
-            }
-            for (JobId jobId : toBeCollected) {
-                datasetManager.deinitState(jobId);
-            }
-        }
-        if (logger.isTraceEnabled()) {
-            logger.trace("Result state cleanup instance successfully completed.");
         }
     }
 }
