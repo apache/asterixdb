@@ -127,7 +127,7 @@ public class ResultState implements IStateObject {
             String fName = FILE_PREFIX + String.valueOf(resultSetPartitionId.getPartition());
             fileRef = fileFactory.createUnmanagedWorkspaceFile(fName);
             writeFileHandle = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
-                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_SYNC);
         }
 
         size += ioManager.syncWrite(writeFileHandle, size, buffer);
