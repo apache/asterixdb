@@ -16,14 +16,14 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-<Configuration status="INFO">
+<Configuration status="WARN">
   <Appenders>
-    <Console name="Console" target="SYSTEM_ERR">
+    <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
   </Appenders>
   <Loggers>
-    <Root level="INFO">
+    <Root level="WARN">
       <AppenderRef ref="Console"/>
     </Root>
   </Loggers>

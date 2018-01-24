@@ -1678,7 +1678,7 @@ public class TestExecutor {
             }
             if (!toBeDropped.isEmpty()) {
                 badtestcases.add(testCase);
-                LOGGER.warn("Last test left some garbage. Dropping dataverses: " + StringUtils.join(toBeDropped, ','));
+                LOGGER.info("Last test left some garbage. Dropping dataverses: " + StringUtils.join(toBeDropped, ','));
                 StringBuilder dropStatement = new StringBuilder();
                 for (String dv : toBeDropped) {
                     dropStatement.append("drop dataverse ");
