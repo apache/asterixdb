@@ -61,16 +61,11 @@ import org.apache.logging.log4j.Logger;
 
 public class LogManager implements ILogManager, ILifeCycleComponent {
 
-    /*
-     * Constants
-     */
     private static final Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger();
     private static final long SMALLEST_LOG_FILE_ID = 0;
     private static final int INITIAL_LOG_SIZE = 0;
-    public static final boolean IS_DEBUG_MODE = false;// true
-    /*
-     * Finals
-     */
+    private static final boolean IS_DEBUG_MODE = false;
+
     private final ITransactionSubsystem txnSubsystem;
     private final LogManagerProperties logManagerProperties;
     private final int numLogPages;
@@ -82,9 +77,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final long logFileSize;
     private final int logPageSize;
     private final AtomicLong appendLSN;
-    /*
-     * Mutables
-     */
+    private final long maxLogRecordSize;
+
     private LinkedBlockingQueue<ILogBuffer> emptyQ;
     private LinkedBlockingQueue<ILogBuffer> flushQ;
     private LinkedBlockingQueue<ILogBuffer> stashQ;
@@ -100,6 +94,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         logManagerProperties =
                 new LogManagerProperties(this.txnSubsystem.getTransactionProperties(), this.txnSubsystem.getId());
         logFileSize = logManagerProperties.getLogPartitionSize();
+        maxLogRecordSize = logFileSize - 1;
         logPageSize = logManagerProperties.getLogPageSize();
         numLogPages = logManagerProperties.getNumLogPages();
         logDir = logManagerProperties.getLogDir();
@@ -193,6 +188,9 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     private boolean fileHasSpace(int logSize) {
+        if (logSize > maxLogRecordSize) {
+            throw new ACIDException("Maximum log record size of (" + maxLogRecordSize + ") exceeded");
+        }
         /*
          * To eliminate the case where the modulo of the next appendLSN = 0 (the next
          * appendLSN = the first LSN of the next log file), we do not allow a log to be
