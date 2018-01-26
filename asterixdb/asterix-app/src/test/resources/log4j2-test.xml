@@ -29,10 +29,10 @@
     <Root level="WARN">
       <AppenderRef ref="InfoLog"/>
     </Root>
-    <Logger name="org.apache.hyracks" level="INFO">
+    <Logger name="org.apache.hyracks" level="INFO" additivity="false">
       <AppenderRef ref="InfoLog"/>
     </Logger>
-    <Logger name="org.apache.asterix" level="INFO">
+    <Logger name="org.apache.asterix" level="INFO" additivity="false">
       <AppenderRef ref="InfoLog"/>
     </Logger>
     <Logger name="org.apache.asterix.test" level="WARN">
