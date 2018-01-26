@@ -136,8 +136,9 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                     tb.reset();
                     boolean recordWasInserted = false;
                     boolean recordWasDeleted = false;
+                    boolean isDelete = isDeleteOperation(tuple, numOfPrimaryKeys);
                     resetSearchPredicate(index);
-                    if (isFiltered || hasSecondaries) {
+                    if (isFiltered || isDelete || hasSecondaries) {
                         lsmAccessor.search(cursor, searchPred);
                         if (cursor.hasNext()) {
                             cursor.next();
@@ -154,12 +155,13 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                         searchCallback.before(key); // lock
                         appendPreviousTupleAsMissing();
                     }
-                    if (isDeleteOperation(tuple, numOfPrimaryKeys)) {
+                    if (isDelete && prevTuple != null) {
                         // Only delete if it is a delete and not upsert
+                        // And previous tuple with the same key was found
                         abstractModCallback.setOp(Operation.DELETE);
                         lsmAccessor.forceDelete(tuple);
                         recordWasDeleted = true;
-                    } else {
+                    } else if (!isDelete) {
                         abstractModCallback.setOp(Operation.UPSERT);
                         lsmAccessor.forceUpsert(tuple);
                         recordWasInserted = true;
