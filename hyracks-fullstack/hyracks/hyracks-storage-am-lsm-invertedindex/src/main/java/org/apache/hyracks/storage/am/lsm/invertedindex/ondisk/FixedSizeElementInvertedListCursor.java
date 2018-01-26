@@ -96,7 +96,6 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
         int pix = 0;
         for (int i = startPageId; i <= endPageId; i++) {
             pages[pix] = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i), false);
-            pages[pix].acquireReadLatch();
             pix++;
         }
         pinned = true;
@@ -106,7 +105,6 @@ public class FixedSizeElementInvertedListCursor implements IInvertedListCursor {
     public void unpinPages() throws HyracksDataException {
         int numPages = endPageId - startPageId + 1;
         for (int i = 0; i < numPages; i++) {
-            pages[i].releaseReadLatch();
             bufferCache.unpin(pages[i]);
         }
         pinned = false;
