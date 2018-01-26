@@ -51,7 +51,10 @@ public class NodeManagerTest {
     @Test
     public void testNormal() throws HyracksException, IPCException {
         IResourceManager resourceManager = new ResourceManager();
-        INodeManager nodeManager = new NodeManager(mockCcs(), makeCCConfig(), resourceManager);
+        final CCConfig ccConfig = makeCCConfig();
+        final int coresMultiplier = 1;
+        ccConfig.setCoresMultiplier(coresMultiplier);
+        INodeManager nodeManager = new NodeManager(mockCcs(), ccConfig, resourceManager);
         NodeControllerState ncState1 = mockNodeControllerState(NODE1, false);
         NodeControllerState ncState2 = mockNodeControllerState(NODE2, false);
 
@@ -70,6 +73,38 @@ public class NodeManagerTest {
 
         // Verifies states after removing dead nodes.
         nodeManager.removeDeadNodes();
+        verifyEmptyCluster(resourceManager, nodeManager);
+    }
+
+    @Test
+    public void testAdjustedNodeCapacity() throws HyracksException, IPCException {
+        IResourceManager resourceManager = new ResourceManager();
+        final CCConfig ccConfig = makeCCConfig();
+        final int coresMultiplier = 3;
+        ccConfig.setCoresMultiplier(coresMultiplier);
+        INodeManager nodeManager = new NodeManager(mockCcs(), ccConfig, resourceManager);
+        NodeControllerState ncState1 = mockNodeControllerState(NODE1, false);
+        NodeControllerState ncState2 = mockNodeControllerState(NODE2, false);
+
+        // verify state after adding two nodes
+        nodeManager.addNode(NODE1, ncState1);
+        nodeManager.addNode(NODE2, ncState2);
+        int activeNodes = 2;
+        // verify adjusted cores
+        Assert.assertEquals(NODE_CORES * activeNodes * coresMultiplier,
+                resourceManager.getCurrentCapacity().getAggregatedCores());
+        // verify unadjusted memory size
+        Assert.assertEquals(NODE_MEMORY_SIZE * activeNodes,
+                resourceManager.getCurrentCapacity().getAggregatedMemoryByteSize());
+        // verify state after removing a node.
+        nodeManager.removeNode(NODE1);
+        activeNodes = 1;
+        Assert.assertEquals(NODE_CORES * activeNodes * coresMultiplier,
+                resourceManager.getCurrentCapacity().getAggregatedCores());
+        Assert.assertEquals(NODE_MEMORY_SIZE * activeNodes,
+                resourceManager.getCurrentCapacity().getAggregatedMemoryByteSize());
+        // verify state after removing last node
+        nodeManager.removeNode(NODE2);
         verifyEmptyCluster(resourceManager, nodeManager);
     }
 

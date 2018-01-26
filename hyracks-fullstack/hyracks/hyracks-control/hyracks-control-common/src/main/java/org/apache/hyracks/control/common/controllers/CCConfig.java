@@ -66,7 +66,8 @@ public class CCConfig extends ControllerConfig {
         JOB_QUEUE_CLASS(STRING, "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue"),
         JOB_QUEUE_CAPACITY(INTEGER, 4096),
         JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager"),
-        ENFORCE_FRAME_WRITER_PROTOCOL(BOOLEAN, false);
+        ENFORCE_FRAME_WRITER_PROTOCOL(BOOLEAN, false),
+        CORES_MULTIPLIER(INTEGER, 3);
 
         private final IOptionType parser;
         private Object defaultValue;
@@ -161,6 +162,8 @@ public class CCConfig extends ControllerConfig {
                 case ENFORCE_FRAME_WRITER_PROTOCOL:
                     return "A flag indicating if runtime should enforce frame writer protocol and detect "
                             + "bad behaving operators";
+                case CORES_MULTIPLIER:
+                    return "Specifies the multiplier to use on the cluster available cores";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -362,5 +365,13 @@ public class CCConfig extends ControllerConfig {
 
     public void setEnforceFrameWriterProtocol(boolean enforce) {
         configManager.set(Option.ENFORCE_FRAME_WRITER_PROTOCOL, enforce);
+    }
+
+    public void setCoresMultiplier(int coresMultiplier) {
+        configManager.set(Option.CORES_MULTIPLIER, coresMultiplier);
+    }
+
+    public int getCoresMultiplier() {
+        return getAppConfig().getInt(Option.CORES_MULTIPLIER);
     }
 }

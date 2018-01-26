@@ -59,6 +59,7 @@ public class NodeManager implements INodeManager {
     private final IResourceManager resourceManager;
     private final Map<String, NodeControllerState> nodeRegistry;
     private final Map<InetAddress, Set<String>> ipAddressNodeNameMap;
+    private final int nodeCoresMultiplier;
 
     public NodeManager(ClusterControllerService ccs, CCConfig ccConfig, IResourceManager resourceManager) {
         this.ccs = ccs;
@@ -66,6 +67,7 @@ public class NodeManager implements INodeManager {
         this.resourceManager = resourceManager;
         this.nodeRegistry = new LinkedHashMap<>();
         this.ipAddressNodeNameMap = new HashMap<>();
+        this.nodeCoresMultiplier = ccConfig.getCoresMultiplier();
     }
 
     @Override
@@ -122,7 +124,7 @@ public class NodeManager implements INodeManager {
         }
         // Updates the cluster capacity.
         LOGGER.warn("updating cluster capacity");
-        resourceManager.update(nodeId, ncState.getCapacity());
+        resourceManager.update(nodeId, getAdjustedNodeCapacity(ncState.getCapacity()));
     }
 
     @Override
@@ -218,4 +220,7 @@ public class NodeManager implements INodeManager {
         }
     }
 
+    private NodeCapacity getAdjustedNodeCapacity(NodeCapacity nodeCapacity) {
+        return new NodeCapacity(nodeCapacity.getMemoryByteSize(), nodeCapacity.getCores() * nodeCoresMultiplier);
+    }
 }
