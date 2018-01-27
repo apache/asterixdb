@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.messaging.CcIdentifiedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
@@ -33,7 +34,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class RegistrationTasksResponseMessage implements INCLifecycleMessage, INcAddressedMessage {
+public class RegistrationTasksResponseMessage extends CcIdentifiedMessage
+        implements INCLifecycleMessage, INcAddressedMessage {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
@@ -57,7 +59,7 @@ public class RegistrationTasksResponseMessage implements INCLifecycleMessage, IN
                     if (LOGGER.isInfoEnabled()) {
                         LOGGER.log(Level.INFO, "Starting startup task: " + task);
                     }
-                    task.perform(cs);
+                    task.perform(getCcId(), cs);
                     if (LOGGER.isInfoEnabled()) {
                         LOGGER.log(Level.INFO, "Completed startup task: " + task);
                     }
@@ -70,7 +72,7 @@ public class RegistrationTasksResponseMessage implements INCLifecycleMessage, IN
             NCLifecycleTaskReportMessage result = new NCLifecycleTaskReportMessage(nodeId, success);
             result.setException(exception);
             try {
-                broker.sendMessageToCC(result);
+                broker.sendMessageToCC(getCcId(), result);
             } catch (Exception e) {
                 success = false;
                 LOGGER.log(Level.ERROR, "Failed sending message to cc", e);

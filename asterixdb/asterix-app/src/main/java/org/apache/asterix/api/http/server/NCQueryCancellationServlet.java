@@ -62,7 +62,8 @@ public class NCQueryCancellationServlet extends QueryCancellationServlet {
         try {
             CancelQueryRequest cancelQueryMessage =
                     new CancelQueryRequest(serviceCtx.getNodeId(), cancelQueryFuture.getFutureId(), clientContextId);
-            messageBroker.sendMessageToCC(cancelQueryMessage);
+            // TODO(mblow): multicc -- need to send cancellation to the correct cc
+            messageBroker.sendMessageToPrimaryCC(cancelQueryMessage);
             cancelQueryFuture.get(DEFAULT_NC_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
             response.setStatus(HttpResponseStatus.OK);
         } catch (Exception e) {

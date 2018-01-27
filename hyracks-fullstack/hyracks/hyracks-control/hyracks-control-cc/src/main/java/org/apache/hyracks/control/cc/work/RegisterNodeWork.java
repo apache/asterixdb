@@ -57,7 +57,7 @@ public class RegisterNodeWork extends SynchronizableWork {
         try {
             LOGGER.log(Level.WARN, "Registering INodeController: id = " + id);
             NodeControllerRemoteProxy nc =
-                    new NodeControllerRemoteProxy(
+                    new NodeControllerRemoteProxy(ccs.getCcId(),
                             ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerAddress()));
             NodeControllerState state = new NodeControllerState(nc, reg);
             INodeManager nodeManager = ccs.getNodeManager();
@@ -73,7 +73,6 @@ public class RegisterNodeWork extends SynchronizableWork {
             params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriodMillis());
             params.setProfileDumpPeriod(ccs.getCCConfig().getProfileDumpPeriod());
             result = new CCNCFunctions.NodeRegistrationResult(params, null);
-            ccs.getJobIdFactory().ensureMinimumId(reg.getMaxJobId() + 1);
         } catch (Exception e) {
             LOGGER.log(Level.WARN, "Node registration failed", e);
             result = new CCNCFunctions.NodeRegistrationResult(null, e);

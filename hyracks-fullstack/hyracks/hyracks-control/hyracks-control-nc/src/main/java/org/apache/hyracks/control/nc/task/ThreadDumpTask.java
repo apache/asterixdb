@@ -18,8 +18,9 @@
  */
 package org.apache.hyracks.control.nc.task;
 
-import org.apache.hyracks.util.ThreadDumpUtil;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,10 +29,12 @@ public class ThreadDumpTask implements Runnable {
     private static final Logger LOGGER = LogManager.getLogger();
     private final NodeControllerService ncs;
     private final String requestId;
+    private final CcId ccId;
 
-    public ThreadDumpTask(NodeControllerService ncs, String requestId) {
+    public ThreadDumpTask(NodeControllerService ncs, String requestId, CcId ccId) {
         this.ncs = ncs;
         this.requestId = requestId;
+        this.ccId = ccId;
     }
 
     @Override
@@ -44,8 +47,7 @@ public class ThreadDumpTask implements Runnable {
             result = null;
         }
         try {
-            ncs.getClusterController().notifyThreadDump(
-                    ncs.getContext().getNodeId(), requestId, result);
+            ncs.getClusterController(ccId).notifyThreadDump(ncs.getContext().getNodeId(), requestId, result);
         } catch (Exception e) {
             LOGGER.log(Level.WARN, "Exception sending thread dump to CC", e);
         }

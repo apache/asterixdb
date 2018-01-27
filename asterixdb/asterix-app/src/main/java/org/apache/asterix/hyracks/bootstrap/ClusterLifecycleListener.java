@@ -60,9 +60,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
 
     @Override
     public void notifyNodeJoin(String nodeId, Map<IOption, Object> ncConfiguration) throws HyracksException {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("NC: " + nodeId + " joined");
-        }
+        LOGGER.info("NC: {} joined", nodeId);
         IClusterStateManager csm = appCtx.getClusterStateManager();
         csm.notifyNodeJoin(nodeId, ncConfiguration);
 
@@ -79,9 +77,7 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
     @Override
     public void notifyNodeFailure(Collection<String> deadNodeIds) throws HyracksException {
         for (String deadNode : deadNodeIds) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("NC: " + deadNode + " left");
-            }
+            LOGGER.info("NC: {} left", deadNode);
             IClusterStateManager csm = appCtx.getClusterStateManager();
             csm.notifyNodeFailure(deadNode);
 

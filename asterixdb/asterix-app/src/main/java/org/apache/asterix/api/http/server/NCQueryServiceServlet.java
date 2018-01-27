@@ -88,7 +88,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                     responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(),
                     resultProperties.getNcToCcResultProperties(), param.clientContextID, handleUrl, optionalParameters);
             execution.start();
-            ncMb.sendMessageToCC(requestMsg);
+            ncMb.sendMessageToPrimaryCC(requestMsg);
             try {
                 responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
@@ -137,7 +137,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         try {
             CancelQueryRequest cancelQueryMessage =
                     new CancelQueryRequest(nodeId, cancelQueryFuture.getFutureId(), clientContextID);
-            messageBroker.sendMessageToCC(cancelQueryMessage);
+            // TODO(mblow): multicc -- need to send cancellation to the correct cc
+            messageBroker.sendMessageToPrimaryCC(cancelQueryMessage);
             if (wait) {
                 cancelQueryFuture.get(ExecuteStatementRequestMessage.DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS,
                         TimeUnit.MILLISECONDS);

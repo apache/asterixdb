@@ -24,6 +24,7 @@ import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.hyracks.api.client.NodeStatus;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.logging.log4j.Level;
@@ -44,12 +45,12 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
         this.nodeStatus = nodeStatus;
     }
 
-    public static void send(NodeControllerService cs, NodeStatus nodeStatus, SystemState systemState)
+    public static void send(CcId ccId, NodeControllerService cs, NodeStatus nodeStatus, SystemState systemState)
             throws HyracksDataException {
         try {
             RegistrationTasksRequestMessage msg = new RegistrationTasksRequestMessage(cs.getId(), nodeStatus,
                     systemState);
-            ((INCMessageBroker) cs.getContext().getMessageBroker()).sendMessageToCC(msg);
+            ((INCMessageBroker) cs.getContext().getMessageBroker()).sendMessageToCC(ccId, msg);
         } catch (Exception e) {
             LOGGER.log(Level.ERROR, "Unable to send RegistrationTasksRequestMessage to CC", e);
             throw HyracksDataException.create(e);

@@ -31,8 +31,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.asterix.active.message.ActiveManagerMessage;
-import org.apache.asterix.active.message.ActiveStatsResponse;
 import org.apache.asterix.active.message.ActiveStatsRequestMessage;
+import org.apache.asterix.active.message.ActiveStatsResponse;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
@@ -116,7 +116,7 @@ public class ActiveManager {
                 LOGGER.warn("Request stats of a runtime that is not registered " + runtimeId);
                 // Send a failure message
                 ((NodeControllerService) serviceCtx.getControllerService())
-                        .sendApplicationMessageToCC(
+                        .sendApplicationMessageToCC(message.getCcId(),
                                 JavaSerializationUtils
                                         .serialize(new ActiveStatsResponse(reqId, null,
                                                 new RuntimeDataException(ErrorCode.ACTIVE_MANAGER_INVALID_RUNTIME,
@@ -126,7 +126,7 @@ public class ActiveManager {
             String stats = runtime.getStats();
             ActiveStatsResponse response = new ActiveStatsResponse(reqId, stats, null);
             ((NodeControllerService) serviceCtx.getControllerService())
-                    .sendApplicationMessageToCC(JavaSerializationUtils.serialize(response), null);
+                    .sendApplicationMessageToCC(message.getCcId(), JavaSerializationUtils.serialize(response), null);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }

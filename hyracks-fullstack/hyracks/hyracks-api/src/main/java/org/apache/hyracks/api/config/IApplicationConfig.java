@@ -67,6 +67,10 @@ public interface IApplicationConfig {
         return (int)get(option);
     }
 
+    default short getShort(IOption option) {
+        return (short)get(option);
+    }
+
     default String getString(IOption option) {
         return (String)get(option);
     }

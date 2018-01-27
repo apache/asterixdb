@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.control.nc.work;
 
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.control.common.base.IClusterController;
 import org.apache.hyracks.control.common.deployment.DeploymentStatus;
@@ -35,10 +36,12 @@ public class UnDeployBinaryWork extends AbstractWork {
 
     private DeploymentId deploymentId;
     private NodeControllerService ncs;
+    private final CcId ccId;
 
-    public UnDeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId) {
+    public UnDeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId, CcId ccId) {
         this.deploymentId = deploymentId;
         this.ncs = ncs;
+        this.ccId = ccId;
     }
 
     @Override
@@ -52,7 +55,7 @@ public class UnDeployBinaryWork extends AbstractWork {
             status = DeploymentStatus.FAIL;
         }
         try {
-            IClusterController ccs = ncs.getClusterController();
+            IClusterController ccs = ncs.getClusterController(ccId);
             ccs.notifyDeployBinary(deploymentId, ncs.getId(), status);
         } catch (Exception e) {
             throw new RuntimeException(e);

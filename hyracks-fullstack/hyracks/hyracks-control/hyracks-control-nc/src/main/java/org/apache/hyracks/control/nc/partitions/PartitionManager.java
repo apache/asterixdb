@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -58,10 +59,10 @@ public class PartitionManager {
         this.fileFactory = new WorkspaceFileFactory(deallocatableRegistry, ncs.getIoManager());
     }
 
-    public synchronized void registerPartition(PartitionId pid, TaskAttemptId taId, IPartition partition,
+    public synchronized void registerPartition(PartitionId pid, CcId ccId, TaskAttemptId taId, IPartition partition,
             PartitionState state, boolean updateToCC) throws HyracksDataException {
         try {
-            /**
+            /*
              * process pending requests
              */
             NetworkOutputChannel writer = partitionRequests.remove(pid);
@@ -73,24 +74,20 @@ public class PartitionManager {
                 }
             }
 
-            /**
+            /*
              * put a coming available partition into the available partition map
              */
-            List<IPartition> pList = availablePartitionMap.get(pid);
-            if (pList == null) {
-                pList = new ArrayList<>();
-                availablePartitionMap.put(pid, pList);
-            }
+            List<IPartition> pList = availablePartitionMap.computeIfAbsent(pid, k -> new ArrayList<>());
             pList.add(partition);
 
-            /**
+            /*
              * update to CC only when necessary
              */
             if (updateToCC) {
-                updatePartitionState(pid, taId, partition, state);
+                updatePartitionState(ccId, pid, taId, partition, state);
             }
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -128,7 +125,7 @@ public class PartitionManager {
                 partitionRequests.put(partitionId, writer);
             }
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -140,14 +137,15 @@ public class PartitionManager {
         deallocatableRegistry.close();
     }
 
-    public void updatePartitionState(PartitionId pid, TaskAttemptId taId, IPartition partition, PartitionState state)
+    public void updatePartitionState(CcId ccId, PartitionId pid, TaskAttemptId taId, IPartition partition,
+            PartitionState state)
             throws HyracksDataException {
         PartitionDescriptor desc = new PartitionDescriptor(pid, ncs.getId(), taId, partition.isReusable());
         desc.setState(state);
         try {
-            ncs.getClusterController().registerPartitionProvider(desc);
+            ncs.getClusterController(ccId).registerPartitionProvider(desc);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

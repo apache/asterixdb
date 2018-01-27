@@ -25,6 +25,7 @@ import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.transaction.management.service.transaction.TxnIdFactory;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.logging.log4j.Level;
@@ -51,8 +52,7 @@ public class ReportLocalCountersMessage implements ICcAddressedMessage {
         resourceIdManager.report(src, maxResourceId);
     }
 
-    public static void send(NodeControllerService cs) throws HyracksDataException {
-        NodeControllerService ncs = cs;
+    public static void send(CcId ccId, NodeControllerService ncs) throws HyracksDataException {
         INcApplicationContext appContext = (INcApplicationContext) ncs.getApplicationContext();
         long maxResourceId = Math.max(appContext.getLocalResourceRepository().maxId(),
                 MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID);
@@ -60,7 +60,7 @@ public class ReportLocalCountersMessage implements ICcAddressedMessage {
         ReportLocalCountersMessage countersMessage =
                 new ReportLocalCountersMessage(ncs.getId(), maxResourceId, maxTxnId);
         try {
-            ((INCMessageBroker) ncs.getContext().getMessageBroker()).sendMessageToCC(countersMessage);
+            ((INCMessageBroker) ncs.getContext().getMessageBroker()).sendMessageToCC(ccId, countersMessage);
         } catch (Exception e) {
             LOGGER.log(Level.ERROR, "Unable to report local counters", e);
             throw HyracksDataException.create(e);

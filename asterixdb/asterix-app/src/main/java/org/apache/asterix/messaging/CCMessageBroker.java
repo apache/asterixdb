@@ -28,6 +28,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
+import org.apache.asterix.common.messaging.api.ICcIdentifiedMessage;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INcResponse;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -39,7 +40,6 @@ import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -70,6 +70,9 @@ public class CCMessageBroker implements ICCMessageBroker {
     public void sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception {
         INodeManager nodeManager = ccs.getNodeManager();
         NodeControllerState state = nodeManager.getNodeControllerState(nodeId);
+        if (msg instanceof ICcIdentifiedMessage) {
+            ((ICcIdentifiedMessage) msg).setCcId(ccs.getCcId());
+        }
         if (state != null) {
             state.getNodeController().sendApplicationMessageToNC(JavaSerializationUtils.serialize(msg), null, nodeId);
         } else {
@@ -97,6 +100,9 @@ public class CCMessageBroker implements ICCMessageBroker {
                 for (int i = 0; i < ncs.size(); i++) {
                     String nc = ncs.get(i);
                     INcAddressedMessage message = requests.get(i);
+                    if (!(message instanceof ICcIdentifiedMessage)) {
+                        throw new IllegalStateException("sync request message not cc identified: " + message);
+                    }
                     sendApplicationMessageToNC(message, nc);
                 }
                 long time = System.currentTimeMillis();

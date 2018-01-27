@@ -93,10 +93,10 @@ public class DatasetPartitionManager extends AbstractDatasetManager implements I
             boolean orderedResult, boolean emptyResult) throws HyracksException {
         try {
             // Be sure to send the *public* network address to the CC
-            ncs.getClusterController().registerResultPartitionLocation(jobId, rsId, orderedResult, emptyResult,
-                    partition, nPartitions, ncs.getDatasetNetworkManager().getPublicNetworkAddress());
+            ncs.getClusterController(jobId.getCcId()).registerResultPartitionLocation(jobId, rsId, orderedResult,
+                    emptyResult, partition, nPartitions, ncs.getDatasetNetworkManager().getPublicNetworkAddress());
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -105,9 +105,9 @@ public class DatasetPartitionManager extends AbstractDatasetManager implements I
         try {
             LOGGER.debug("Reporting partition write completion: JobId: " + jobId + ": ResultSetId: " + rsId
                     + ":partition: " + partition);
-            ncs.getClusterController().reportResultPartitionWriteCompletion(jobId, rsId, partition);
+            ncs.getClusterController(jobId.getCcId()).reportResultPartitionWriteCompletion(jobId, rsId, partition);
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 

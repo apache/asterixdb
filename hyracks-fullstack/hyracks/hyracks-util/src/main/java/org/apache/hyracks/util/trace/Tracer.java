@@ -38,7 +38,8 @@ public class Tracer implements ITracer {
 
     protected static final Level TRACE_LOG_LEVEL = Level.INFO;
     protected static final String CAT = "Tracer";
-    protected static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    protected static final ThreadLocal<DateFormat> DATE_FORMAT = ThreadLocal
+            .withInitial(() -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 
     protected final Logger traceLog;
     protected long categories;
@@ -67,9 +68,7 @@ public class Tracer implements ITracer {
     }
 
     public static String dateTimeStamp() {
-        synchronized (DATE_FORMAT) {
-            return "{\"datetime\":\"" + DATE_FORMAT.format(new Date()) + "\"}";
-        }
+        return "{\"datetime\":\"" + DATE_FORMAT.get().format(new Date()) + "\"}";
     }
 
     @Override

@@ -21,6 +21,7 @@ package org.apache.hyracks.control.common.controllers;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
+import static org.apache.hyracks.control.common.config.OptionTypes.SHORT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 
 import java.io.File;
@@ -33,6 +34,7 @@ import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.util.file.FileUtil;
 import org.ini4j.Ini;
@@ -67,7 +69,8 @@ public class CCConfig extends ControllerConfig {
         JOB_QUEUE_CAPACITY(INTEGER, 4096),
         JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager"),
         ENFORCE_FRAME_WRITER_PROTOCOL(BOOLEAN, false),
-        CORES_MULTIPLIER(INTEGER, 3);
+        CORES_MULTIPLIER(INTEGER, 3),
+        CONTROLLER_ID(SHORT, (short)0x0000);
 
         private final IOptionType parser;
         private Object defaultValue;
@@ -164,6 +167,8 @@ public class CCConfig extends ControllerConfig {
                             + "bad behaving operators";
                 case CORES_MULTIPLIER:
                     return "Specifies the multiplier to use on the cluster available cores";
+                case CONTROLLER_ID:
+                    return "The 16-bit (0-65535) id of this Cluster Controller";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -373,5 +378,9 @@ public class CCConfig extends ControllerConfig {
 
     public int getCoresMultiplier() {
         return getAppConfig().getInt(Option.CORES_MULTIPLIER);
+    }
+
+    public CcId getCcId() {
+        return CcId.valueOf(getAppConfig().getShort(Option.CONTROLLER_ID));
     }
 }

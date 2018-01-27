@@ -63,17 +63,15 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
             List<Exception> exceptions;
             if (exceptionHistory == null) {
                 // couldn't be found
-                long maxJobId = ccs.getJobIdFactory().maxJobId();
-                exceptions = Collections.singletonList(jobId.getId() <= maxJobId
-                        ? HyracksDataException.create(ErrorCode.JOB_HAS_BEEN_CLEARED_FROM_HISTORY, jobId)
-                        : HyracksDataException.create(ErrorCode.JOB_HAS_NOT_BEEN_CREATED_YET, jobId));
+                exceptions = Collections
+                        .singletonList(HyracksDataException.create(ErrorCode.JOB_HAS_BEEN_CLEARED_FROM_HISTORY, jobId));
 
             } else {
                 exceptions = exceptionHistory;
             }
             ccs.getExecutor().execute(() -> {
                 if (!exceptions.isEmpty()) {
-                    /**
+                    /*
                      * only report the first exception because IResultCallback will only throw one exception
                      * anyway
                      */

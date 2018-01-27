@@ -22,10 +22,11 @@ import java.io.Serializable;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.messaging.CcIdentifiedMessage;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class ActiveManagerMessage implements INcAddressedMessage {
+public class ActiveManagerMessage extends CcIdentifiedMessage implements INcAddressedMessage {
     public enum Kind {
         STOP_ACTIVITY,
         REQUEST_STATS

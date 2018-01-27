@@ -222,15 +222,10 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     public void close() {
         long stillAllocated = memoryAllocation.get();
         if (stillAllocated > 0) {
-            LOGGER.warn("Freeing leaked " + stillAllocated + " bytes");
+            LOGGER.info(() -> "Freeing leaked " + stillAllocated + " bytes");
             serviceCtx.getMemoryManager().deallocate(stillAllocated);
         }
-        nodeController.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                deallocatableRegistry.close();
-            }
-        });
+        nodeController.getExecutor().execute(() -> deallocatableRegistry.close());
     }
 
     ByteBuffer allocateFrame() throws HyracksDataException {
@@ -298,7 +293,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         for (PartitionId pid : pids) {
             partitionRequestMap.put(pid, collector);
             PartitionRequest req = new PartitionRequest(pid, nodeController.getId(), taId, minState);
-            nodeController.getClusterController().registerPartitionRequest(req);
+            nodeController.getClusterController(jobId.getCcId()).registerPartitionRequest(req);
         }
     }
 
@@ -326,7 +321,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         close();
         cleanupPending = false;
         try {
-            nodeController.getClusterController().notifyJobletCleanup(jobId, nodeController.getId());
+            nodeController.getClusterController(jobId.getCcId()).notifyJobletCleanup(jobId, nodeController.getId());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -341,4 +336,5 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     public ClassLoader getClassLoader() throws HyracksException {
         return DeploymentUtils.getClassLoader(deploymentId, serviceCtx);
     }
+
 }

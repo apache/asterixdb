@@ -16,31 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.nc.work;
+package org.apache.asterix.common.messaging;
 
-import java.io.ByteArrayOutputStream;
+import java.io.Serializable;
 
+import org.apache.asterix.common.messaging.api.ICcIdentifiedMessage;
 import org.apache.hyracks.api.control.CcId;
-import org.apache.hyracks.control.common.work.SynchronizableWork;
-import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class StateDumpWork extends SynchronizableWork {
-    private final NodeControllerService ncs;
+public abstract class CcIdentifiedMessage implements ICcIdentifiedMessage, Serializable {
+    private CcId ccId;
 
-    private final String stateDumpId;
-    private final CcId ccId;
-
-    public StateDumpWork(NodeControllerService ncs, String stateDumpId, CcId ccId) {
-        this.ncs = ncs;
-        this.stateDumpId = stateDumpId;
-        this.ccId = ccId;
+    @Override
+    public CcId getCcId() {
+        return ccId;
     }
 
     @Override
-    protected void doRun() throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ncs.getContext().getStateDumpHandler().dumpState(baos);
-        ncs.getClusterController(ccId).notifyStateDump(ncs.getContext().getNodeId(), stateDumpId,
-                baos.toString("UTF-8"));
+    public void setCcId(CcId ccId) {
+        this.ccId = ccId;
     }
 }

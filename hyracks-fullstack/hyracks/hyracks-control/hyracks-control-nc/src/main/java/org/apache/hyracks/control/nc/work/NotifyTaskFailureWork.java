@@ -56,7 +56,7 @@ public class NotifyTaskFailureWork extends AbstractWork {
             if (dpm != null) {
                 dpm.abortReader(jobId);
             }
-            ncs.getClusterController().notifyTaskFailure(jobId, taskId, ncs.getId(), exceptions);
+            ncs.getClusterController(jobId.getCcId()).notifyTaskFailure(jobId, taskId, ncs.getId(), exceptions);
         } catch (Exception e) {
             LOGGER.log(Level.ERROR, "Failure reporting task failure to cluster controller", e);
         }

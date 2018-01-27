@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
@@ -33,20 +34,21 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 public class BuildJobProfilesWork extends SynchronizableWork {
     private final NodeControllerService ncs;
 
+    private final CcId ccId;
     private final FutureValue<List<JobProfile>> fv;
 
-    public BuildJobProfilesWork(NodeControllerService ncs, FutureValue<List<JobProfile>> fv) {
+    public BuildJobProfilesWork(NodeControllerService ncs, CcId ccId, FutureValue<List<JobProfile>> fv) {
         this.ncs = ncs;
+        this.ccId = ccId;
         this.fv = fv;
     }
 
     @Override
     protected void doRun() throws Exception {
-        List<JobProfile> profiles = new ArrayList<JobProfile>();
+        List<JobProfile> profiles = new ArrayList<>();
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
-        for (Joblet ji : jobletMap.values()) {
-            profiles.add(new JobProfile(ji.getJobId()));
-        }
+        jobletMap.values().stream().filter(ji -> ji.getJobId().getCcId().equals(ccId))
+                .forEach(ji -> profiles.add(new JobProfile(ji.getJobId())));
         for (JobProfile jProfile : profiles) {
             Joblet ji;
             JobletProfile jobletProfile = new JobletProfile(ncs.getId());

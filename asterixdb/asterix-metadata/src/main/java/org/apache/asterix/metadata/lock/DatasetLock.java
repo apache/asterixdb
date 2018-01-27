@@ -24,9 +24,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.metadata.IMetadataLock;
-import org.apache.asterix.common.utils.InvokeUtil;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.util.InvokeUtil;
 
 public class DatasetLock implements IMetadataLock {
 

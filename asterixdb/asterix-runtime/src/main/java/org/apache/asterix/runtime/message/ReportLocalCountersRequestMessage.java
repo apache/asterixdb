@@ -19,16 +19,18 @@
 package org.apache.asterix.runtime.message;
 
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.messaging.CcIdentifiedMessage;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
-public class ReportLocalCountersRequestMessage implements INcAddressedMessage {
+public class ReportLocalCountersRequestMessage extends CcIdentifiedMessage implements INcAddressedMessage {
     private static final long serialVersionUID = 1L;
 
     @Override
     public void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        ReportLocalCountersMessage.send((NodeControllerService) appCtx.getServiceContext().getControllerService());
+        ReportLocalCountersMessage.send(getCcId(),
+                (NodeControllerService) appCtx.getServiceContext().getControllerService());
     }
 
     @Override

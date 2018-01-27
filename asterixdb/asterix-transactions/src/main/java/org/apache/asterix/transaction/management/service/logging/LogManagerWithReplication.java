@@ -28,7 +28,7 @@ import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
-import org.apache.asterix.common.utils.InvokeUtil;
+import org.apache.hyracks.util.InvokeUtil;
 
 public class LogManagerWithReplication extends LogManager {
 

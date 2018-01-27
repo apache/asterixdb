@@ -54,6 +54,7 @@ import org.apache.asterix.test.base.TestMethodTracer;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.job.JobStatus;
@@ -98,7 +99,7 @@ public class ActiveEventsListenerTest {
 
     @Before
     public void setUp() throws Exception {
-        jobIdFactory = new JobIdFactory();
+        jobIdFactory = new JobIdFactory(CcId.valueOf((short) 0));
         handler = new ActiveNotificationHandler();
         allDatasets = new ArrayList<>();
         firstDataset = new Dataset(dataverseName, "firstDataset", null, null, null, null, null, null, null, null, 0, 0);

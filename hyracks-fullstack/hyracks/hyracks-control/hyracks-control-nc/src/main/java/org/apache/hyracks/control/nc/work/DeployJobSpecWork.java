@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.control.nc.work;
 
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
@@ -34,12 +35,15 @@ public class DeployJobSpecWork extends AbstractWork {
 
     private final NodeControllerService ncs;
     private final byte[] acgBytes;
+    private final CcId ccId;
     private final DeployedJobSpecId deployedJobSpecId;
 
-    public DeployJobSpecWork(NodeControllerService ncs, DeployedJobSpecId deployedJobSpecId, byte[] acgBytes) {
+    public DeployJobSpecWork(NodeControllerService ncs, DeployedJobSpecId deployedJobSpecId, byte[] acgBytes,
+            CcId ccId) {
         this.ncs = ncs;
         this.deployedJobSpecId = deployedJobSpecId;
         this.acgBytes = acgBytes;
+        this.ccId = ccId;
     }
 
     @Override
@@ -51,7 +55,7 @@ public class DeployJobSpecWork extends AbstractWork {
             ncs.storeActivityClusterGraph(deployedJobSpecId, acg);
         } catch (HyracksException e) {
             try {
-                ncs.getClusterController().notifyDeployedJobSpecFailure(deployedJobSpecId, ncs.getId());
+                ncs.getClusterController(ccId).notifyDeployedJobSpecFailure(deployedJobSpecId, ncs.getId());
             } catch (Exception e1) {
                 e1.printStackTrace();
             }

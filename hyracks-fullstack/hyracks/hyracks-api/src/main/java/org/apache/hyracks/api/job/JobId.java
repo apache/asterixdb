@@ -23,16 +23,22 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IWritable;
 
-public final class JobId implements IWritable, Serializable {
+public final class JobId implements IWritable, Serializable, Comparable {
 
-    public static final JobId INVALID = new JobId(-1l);
+    private static final int CC_BITS = Short.SIZE;
+    static final int ID_BITS = Long.SIZE - CC_BITS;
+    static final long MAX_ID = (1L << ID_BITS) - 1;
+
+    public static final JobId INVALID = null;
 
     private static final long serialVersionUID = 1L;
     private long id;
+    private transient CcId ccId;
 
     public static JobId create(DataInput dis) throws IOException {
         JobId jobId = new JobId();
@@ -51,6 +57,17 @@ public final class JobId implements IWritable, Serializable {
         return id;
     }
 
+    public CcId getCcId() {
+        if (ccId == null) {
+            ccId = CcId.valueOf((int) (id >>> ID_BITS));
+        }
+        return ccId;
+    }
+
+    public long getIdOnly() {
+        return id & MAX_ID;
+    }
+
     @Override
     public int hashCode() {
         return (int) id;
@@ -58,13 +75,7 @@ public final class JobId implements IWritable, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof JobId)) {
-            return false;
-        }
-        return ((JobId) o).id == id;
+        return o == this || o instanceof JobId && ((JobId) o).id == id;
     }
 
     @Override
@@ -88,5 +99,10 @@ public final class JobId implements IWritable, Serializable {
     @Override
     public void readFields(DataInput input) throws IOException {
         id = input.readLong();
+    }
+
+    @Override
+    public int compareTo(Object other) {
+        return Long.compare(id, ((JobId) other).id);
     }
 }

@@ -38,6 +38,7 @@ import java.util.Set;
 
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
@@ -150,10 +151,23 @@ public class CCNCFunctions {
 
     }
 
-    public static abstract class Function implements Serializable {
+    public abstract static class Function implements Serializable {
         private static final long serialVersionUID = 1L;
 
         public abstract FunctionId getFunctionId();
+    }
+
+    public abstract static class CCIdentifiedFunction extends Function {
+        private static final long serialVersionUID = 1L;
+        private final CcId ccId;
+
+        protected CCIdentifiedFunction(CcId ccId) {
+            this.ccId = ccId;
+        }
+
+        public CcId getCcId() {
+            return ccId;
+        }
     }
 
     public static class RegisterNodeFunction extends Function {
@@ -668,24 +682,33 @@ public class CCNCFunctions {
         }
     }
 
-    //TODO: Add CC id to this job to only abort jobs by this CC: https://issues.apache.org/jira/browse/ASTERIXDB-2110
     public static class AbortCCJobsFunction extends Function {
         private static final long serialVersionUID = 1L;
+        private final CcId ccId;
+
+        public AbortCCJobsFunction(CcId ccId) {
+            this.ccId = ccId;
+        }
 
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.ABORT_ALL_JOBS;
         }
+
+        public CcId getCcId() {
+            return ccId;
+        }
     }
 
-    public static class DeployJobSpecFunction extends Function {
+    public static class DeployJobSpecFunction extends CCIdentifiedFunction {
         private static final long serialVersionUID = 1L;
 
         private final DeployedJobSpecId deployedJobSpecId;
 
         private final byte[] acgBytes;
 
-        public DeployJobSpecFunction(DeployedJobSpecId deployedJobSpecId, byte[] acgBytes) {
+        public DeployJobSpecFunction(DeployedJobSpecId deployedJobSpecId, byte[] acgBytes, CcId ccId) {
+            super(ccId);
             this.deployedJobSpecId = deployedJobSpecId;
             this.acgBytes = acgBytes;
         }
@@ -704,12 +727,13 @@ public class CCNCFunctions {
         }
     }
 
-    public static class UndeployJobSpecFunction extends Function {
+    public static class UndeployJobSpecFunction extends CCIdentifiedFunction {
         private static final long serialVersionUID = 1L;
 
         private final DeployedJobSpecId deployedJobSpecId;
 
-        public UndeployJobSpecFunction(DeployedJobSpecId deployedJobSpecId) {
+        public UndeployJobSpecFunction(DeployedJobSpecId deployedJobSpecId, CcId ccId) {
+            super(ccId);
             this.deployedJobSpecId = deployedJobSpecId;
         }
 
@@ -724,7 +748,7 @@ public class CCNCFunctions {
     }
 
     public static class StartTasksFunction extends Function {
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
 
         private final DeploymentId deploymentId;
         private final JobId jobId;
@@ -1008,11 +1032,12 @@ public class CCNCFunctions {
         }
     }
 
-    public static class ThreadDumpRequestFunction extends Function {
+    public static class ThreadDumpRequestFunction extends CCIdentifiedFunction {
         private static final long serialVersionUID = 1L;
         private final String requestId;
 
-        public ThreadDumpRequestFunction(String requestId) {
+        public ThreadDumpRequestFunction(String requestId, CcId ccId) {
+            super(ccId);
             this.requestId = requestId;
         }
 
@@ -1106,13 +1131,14 @@ public class CCNCFunctions {
         }
     }
 
-    public static class DeployBinaryFunction extends Function {
+    public static class DeployBinaryFunction extends CCIdentifiedFunction {
         private static final long serialVersionUID = 1L;
 
         private final List<URL> binaryURLs;
         private final DeploymentId deploymentId;
 
-        public DeployBinaryFunction(DeploymentId deploymentId, List<URL> binaryURLs) {
+        public DeployBinaryFunction(DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId) {
+            super(ccId);
             this.binaryURLs = binaryURLs;
             this.deploymentId = deploymentId;
         }
@@ -1131,12 +1157,13 @@ public class CCNCFunctions {
         }
     }
 
-    public static class UnDeployBinaryFunction extends Function {
+    public static class UnDeployBinaryFunction extends CCIdentifiedFunction {
         private static final long serialVersionUID = 1L;
 
         private final DeploymentId deploymentId;
 
-        public UnDeployBinaryFunction(DeploymentId deploymentId) {
+        public UnDeployBinaryFunction(DeploymentId deploymentId, CcId ccId) {
+            super(ccId);
             this.deploymentId = deploymentId;
         }
 
@@ -1211,12 +1238,13 @@ public class CCNCFunctions {
         }
     }
 
-    public static class StateDumpRequestFunction extends Function {
+    public static class StateDumpRequestFunction extends CCIdentifiedFunction {
         private static final long serialVersionUID = 1L;
 
         private final String stateDumpId;
 
-        public StateDumpRequestFunction(String stateDumpId) {
+        public StateDumpRequestFunction(String stateDumpId, CcId ccId) {
+            super(ccId);
             this.stateDumpId = stateDumpId;
         }
 
@@ -1265,12 +1293,13 @@ public class CCNCFunctions {
         }
     }
 
-    public static class ShutdownRequestFunction extends Function {
+    public static class ShutdownRequestFunction extends CCIdentifiedFunction {
         private static final long serialVersionUID = 1L;
 
         private final boolean terminateNCService;
 
-        public ShutdownRequestFunction(boolean terminateNCService) {
+        public ShutdownRequestFunction(boolean terminateNCService, CcId ccId) {
+            super(ccId);
             this.terminateNCService = terminateNCService;
         }
 

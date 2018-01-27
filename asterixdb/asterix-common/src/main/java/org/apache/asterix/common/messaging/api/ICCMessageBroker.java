@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.hyracks.api.messages.IMessageBroker;
 
 public interface ICCMessageBroker extends IMessageBroker {
-    public enum ResponseState {
+    enum ResponseState {
         UNINITIALIZED,
         SUCCESS,
         FAILURE

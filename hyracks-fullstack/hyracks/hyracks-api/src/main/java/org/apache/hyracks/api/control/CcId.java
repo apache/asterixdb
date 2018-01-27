@@ -16,31 +16,47 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.app.nc.task;
+package org.apache.hyracks.api.control;
 
-import org.apache.asterix.common.api.INCLifecycleTask;
-import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.hyracks.api.control.CcId;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
+import java.io.Serializable;
 
-public class StartReplicationServiceTask implements INCLifecycleTask {
+public class CcId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Override
-    public void perform(CcId ccId, IControllerService cs) throws HyracksDataException {
-        INcApplicationContext appContext = (INcApplicationContext) cs.getApplicationContext();
-        try {
-            // open replication channel
-            appContext.getReplicationChannel().start();
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+    private short id;
+
+    private CcId(short id) {
+        this.id = id;
+    }
+
+    public static CcId valueOf(String ccIdString) {
+        return new CcId(Integer.decode(ccIdString).shortValue());
+    }
+
+    public static CcId valueOf(int ccId) {
+        if ((ccId & ~0xffff) != 0) {
+            throw new IllegalArgumentException("ccId cannot exceed 16-bits: " + Integer.toHexString(ccId));
         }
+        return new CcId((short) ccId);
+    }
+
+    public short shortValue() {
+        return id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof CcId && id == ((CcId) obj).id;
     }
 
     @Override
     public String toString() {
-        return "{ \"class\" : \"" + getClass().getSimpleName() + "\" }";
+        return "CC:" + Integer.toHexString(((int) id) & 0xffff);
     }
 }

@@ -105,7 +105,7 @@ public class NodeManager implements INodeManager {
             try {
                 // TODO(mblow): it seems we should close IPC handles when we're done with them (like here)
                 IIPCHandle ncIPCHandle = ccs.getClusterIPC().getHandle(ncState.getNodeController().getAddress());
-                ncIPCHandle.send(-1, new AbortCCJobsFunction(), null);
+                ncIPCHandle.send(-1, new AbortCCJobsFunction(ccConfig.getCcId()), null);
             } catch (IPCException e) {
                 throw HyracksDataException.create(e);
             }

@@ -20,6 +20,7 @@ package org.apache.asterix.app.nc.task;
 
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.runtime.message.ReportLocalCountersMessage;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -29,8 +30,8 @@ public class ReportLocalCountersTask implements INCLifecycleTask {
     private static final long serialVersionUID = 1L;
 
     @Override
-    public void perform(IControllerService cs) throws HyracksDataException {
-        ReportLocalCountersMessage.send((NodeControllerService) cs);
+    public void perform(CcId ccId, IControllerService cs) throws HyracksDataException {
+        ReportLocalCountersMessage.send(ccId, (NodeControllerService) cs);
     }
 
     @Override

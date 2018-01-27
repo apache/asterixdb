@@ -31,6 +31,7 @@ import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
@@ -68,8 +69,13 @@ public class NCMessageBroker implements INCMessageBroker {
     }
 
     @Override
-    public void sendMessageToCC(ICcAddressedMessage message) throws Exception {
-        ncs.sendApplicationMessageToCC(JavaSerializationUtils.serialize(message), null);
+    public void sendMessageToCC(CcId ccId, ICcAddressedMessage message) throws Exception {
+        ncs.sendApplicationMessageToCC(ccId, JavaSerializationUtils.serialize(message), null);
+    }
+
+    @Override
+    public void sendMessageToPrimaryCC(ICcAddressedMessage message) throws Exception {
+        sendMessageToCC(ncs.getPrimaryClusterController().getCcId(), message);
     }
 
     @Override
@@ -145,7 +151,7 @@ public class NCMessageBroker implements INCMessageBroker {
          */
         @Override
         public void run() {
-            while (true) {
+            while (!Thread.currentThread().isInterrupted()) {
                 INcAddressedMessage msg = null;
                 try {
                     msg = receivedMsgsQ.take();

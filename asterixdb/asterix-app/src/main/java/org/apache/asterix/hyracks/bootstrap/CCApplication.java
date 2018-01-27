@@ -57,7 +57,6 @@ import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.external.ExternalLibraryUtils;
 import org.apache.asterix.app.replication.NcLifecycleCoordinator;
 import org.apache.asterix.common.api.AsterixThreadFactory;
-import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.ExternalProperties;
@@ -345,14 +344,6 @@ public class CCApplication extends BaseCCApplication {
 
     public IStatementExecutorContext getStatementExecutorContext() {
         return statementExecutorCtx;
-    }
-
-    @Override
-    public void startupCompleted() throws Exception {
-        ccServiceCtx.getControllerService().getExecutor().submit(() -> {
-            appCtx.getClusterStateManager().waitForState(IClusterManagementWork.ClusterState.ACTIVE);
-            return null;
-        });
     }
 
     @Override

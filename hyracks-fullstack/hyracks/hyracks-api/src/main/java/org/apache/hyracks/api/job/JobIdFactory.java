@@ -18,20 +18,36 @@
  */
 package org.apache.hyracks.api.job;
 
+import static org.apache.hyracks.api.job.JobId.ID_BITS;
+import static org.apache.hyracks.api.job.JobId.MAX_ID;
+
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.hyracks.api.control.CcId;
+
 public class JobIdFactory {
-    private final AtomicLong id = new AtomicLong(0);
+    private final AtomicLong id;
+
+    public JobIdFactory(CcId ccId) {
+        id = new AtomicLong((long) ccId.shortValue() << ID_BITS);
+    }
 
     public JobId create() {
-        return new JobId(id.getAndIncrement());
+        return new JobId(id.getAndUpdate(prev -> {
+            if ((prev & MAX_ID) == MAX_ID) {
+                return prev ^ MAX_ID;
+            } else {
+                return prev + 1;
+            }
+        }));
     }
 
-    public long maxJobId() {
-        return id.get();
-    }
-
-    public void ensureMinimumId(long id) {
-        this.id.updateAndGet(current -> Math.max(current, id));
+    public JobId maxJobId() {
+        long next = id.get();
+        if ((next & MAX_ID) == 0) {
+            return new JobId(next | MAX_ID);
+        } else {
+            return new JobId(next - 1);
+        }
     }
 }

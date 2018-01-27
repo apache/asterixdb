@@ -72,7 +72,8 @@ final class NodeControllerIPCI implements IIPCI {
                 ncs.getWorkQueue().schedule(new AbortTasksWork(ncs, atf.getJobId(), atf.getTasks()));
                 return;
             case ABORT_ALL_JOBS:
-                ncs.getWorkQueue().schedule(new AbortAllJobsWork(ncs));
+                CCNCFunctions.AbortCCJobsFunction aajf = (CCNCFunctions.AbortCCJobsFunction) fn;
+                ncs.getWorkQueue().schedule(new AbortAllJobsWork(ncs, aajf.getCcId()));
                 return;
             case CLEANUP_JOBLET:
                 CCNCFunctions.CleanupJobletFunction cjf = (CCNCFunctions.CleanupJobletFunction) fn;
@@ -97,27 +98,29 @@ final class NodeControllerIPCI implements IIPCI {
 
             case DEPLOY_BINARY:
                 CCNCFunctions.DeployBinaryFunction dbf = (CCNCFunctions.DeployBinaryFunction) fn;
-                ncs.getWorkQueue().schedule(new DeployBinaryWork(ncs, dbf.getDeploymentId(), dbf.getBinaryURLs()));
+                ncs.getWorkQueue()
+                        .schedule(new DeployBinaryWork(ncs, dbf.getDeploymentId(), dbf.getBinaryURLs(), dbf.getCcId()));
                 return;
 
             case UNDEPLOY_BINARY:
                 CCNCFunctions.UnDeployBinaryFunction ndbf = (CCNCFunctions.UnDeployBinaryFunction) fn;
-                ncs.getWorkQueue().schedule(new UnDeployBinaryWork(ncs, ndbf.getDeploymentId()));
+                ncs.getWorkQueue().schedule(new UnDeployBinaryWork(ncs, ndbf.getDeploymentId(), ndbf.getCcId()));
                 return;
 
             case DISTRIBUTE_JOB:
                 CCNCFunctions.DeployJobSpecFunction djf = (CCNCFunctions.DeployJobSpecFunction) fn;
-                ncs.getWorkQueue().schedule(new DeployJobSpecWork(ncs, djf.getDeployedJobSpecId(), djf.getacgBytes()));
+                ncs.getWorkQueue().schedule(
+                        new DeployJobSpecWork(ncs, djf.getDeployedJobSpecId(), djf.getacgBytes(), djf.getCcId()));
                 return;
 
             case DESTROY_JOB:
                 CCNCFunctions.UndeployJobSpecFunction dsjf = (CCNCFunctions.UndeployJobSpecFunction) fn;
-                ncs.getWorkQueue().schedule(new UndeployJobSpecWork(ncs, dsjf.getDeployedJobSpecId()));
+                ncs.getWorkQueue().schedule(new UndeployJobSpecWork(ncs, dsjf.getDeployedJobSpecId(), dsjf.getCcId()));
                 return;
 
             case STATE_DUMP_REQUEST:
                 final CCNCFunctions.StateDumpRequestFunction dsrf = (StateDumpRequestFunction) fn;
-                ncs.getWorkQueue().schedule(new StateDumpWork(ncs, dsrf.getStateDumpId()));
+                ncs.getWorkQueue().schedule(new StateDumpWork(ncs, dsrf.getStateDumpId(), dsrf.getCcId()));
                 return;
 
             case SHUTDOWN_REQUEST:
@@ -127,7 +130,7 @@ final class NodeControllerIPCI implements IIPCI {
 
             case THREAD_DUMP_REQUEST:
                 final CCNCFunctions.ThreadDumpRequestFunction tdrf = (CCNCFunctions.ThreadDumpRequestFunction) fn;
-                ncs.getExecutor().submit(new ThreadDumpTask(ncs, tdrf.getRequestId()));
+                ncs.getExecutor().submit(new ThreadDumpTask(ncs, tdrf.getRequestId(), tdrf.getCcId()));
                 return;
 
             default:

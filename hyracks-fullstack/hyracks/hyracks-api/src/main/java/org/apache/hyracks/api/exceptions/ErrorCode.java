@@ -126,7 +126,7 @@ public class ErrorCode {
     public static final int ILLEGAL_MEMORY_BUDGET = 90;
     public static final int TIMEOUT = 91;
     public static final int JOB_HAS_BEEN_CLEARED_FROM_HISTORY = 92;
-    public static final int JOB_HAS_NOT_BEEN_CREATED_YET = 93;
+    // 93
     public static final int CANNOT_READ_CLOSED_FILE = 94;
     public static final int TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME = 95;
     public static final int ILLEGAL_ATTEMPT_TO_ENTER_EMPTY_COMPONENT = 96;

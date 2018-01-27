@@ -54,8 +54,8 @@ import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.asterix.common.transactions.TxnLogFile;
-import org.apache.asterix.common.utils.InvokeUtil;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
+import org.apache.hyracks.util.InvokeUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 

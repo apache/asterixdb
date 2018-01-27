@@ -16,23 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.api;
-
-import java.io.Serializable;
+package org.apache.asterix.common.messaging.api;
 
 import org.apache.hyracks.api.control.CcId;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.service.IControllerService;
 
-@FunctionalInterface
-public interface INCLifecycleTask extends Serializable {
+public interface ICcIdentifiedMessage {
+    CcId getCcId();
 
-    /**
-     * Performs the task.
-     *
-     * @param ccId
-     * @param cs
-     * @throws HyracksDataException
-     */
-    void perform(CcId ccId, IControllerService cs) throws HyracksDataException;
+    void setCcId(CcId ccId);
 }

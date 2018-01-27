@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.application;
 
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 
@@ -33,5 +34,5 @@ public interface INCApplication extends IApplication {
      */
     IFileDeviceResolver getFileDeviceResolver();
 
-    void onRegisterNode() throws Exception;
+    void onRegisterNode(CcId ccId) throws Exception;
 }

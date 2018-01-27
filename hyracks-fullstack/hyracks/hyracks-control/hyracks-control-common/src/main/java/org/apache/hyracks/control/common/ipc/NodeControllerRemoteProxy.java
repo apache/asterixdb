@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
@@ -51,9 +52,11 @@ import org.apache.hyracks.control.common.job.TaskAttemptDescriptor;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 
 public class NodeControllerRemoteProxy implements INodeController {
+    private final CcId ccId;
     private final IIPCHandle ipcHandle;
 
-    public NodeControllerRemoteProxy(IIPCHandle ipcHandle) {
+    public NodeControllerRemoteProxy(CcId ccId, IIPCHandle ipcHandle) {
+        this.ccId = ccId;
         this.ipcHandle = ipcHandle;
     }
 
@@ -88,37 +91,37 @@ public class NodeControllerRemoteProxy implements INodeController {
 
     @Override
     public void deployBinary(DeploymentId deploymentId, List<URL> binaryURLs) throws Exception {
-        DeployBinaryFunction rpaf = new DeployBinaryFunction(deploymentId, binaryURLs);
+        DeployBinaryFunction rpaf = new DeployBinaryFunction(deploymentId, binaryURLs, ccId);
         ipcHandle.send(-1, rpaf, null);
     }
 
     @Override
     public void undeployBinary(DeploymentId deploymentId) throws Exception {
-        UnDeployBinaryFunction rpaf = new UnDeployBinaryFunction(deploymentId);
+        UnDeployBinaryFunction rpaf = new UnDeployBinaryFunction(deploymentId, ccId);
         ipcHandle.send(-1, rpaf, null);
     }
 
     @Override
     public void deployJobSpec(DeployedJobSpecId deployedJobSpecId, byte[] planBytes) throws Exception {
-        DeployJobSpecFunction fn = new DeployJobSpecFunction(deployedJobSpecId, planBytes);
+        DeployJobSpecFunction fn = new DeployJobSpecFunction(deployedJobSpecId, planBytes, ccId);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void undeployJobSpec(DeployedJobSpecId deployedJobSpecId) throws Exception {
-        UndeployJobSpecFunction fn = new UndeployJobSpecFunction(deployedJobSpecId);
+        UndeployJobSpecFunction fn = new UndeployJobSpecFunction(deployedJobSpecId, ccId);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void dumpState(String stateDumpId) throws Exception {
-        StateDumpRequestFunction dsf = new StateDumpRequestFunction(stateDumpId);
+        StateDumpRequestFunction dsf = new StateDumpRequestFunction(stateDumpId, ccId);
         ipcHandle.send(-1, dsf, null);
     }
 
     @Override
     public void shutdown(boolean terminateNCService) throws Exception {
-        ShutdownRequestFunction sdrf = new ShutdownRequestFunction(terminateNCService);
+        ShutdownRequestFunction sdrf = new ShutdownRequestFunction(terminateNCService, ccId);
         ipcHandle.send(-1, sdrf, null);
     }
 
@@ -131,7 +134,7 @@ public class NodeControllerRemoteProxy implements INodeController {
 
     @Override
     public void takeThreadDump(String requestId) throws Exception {
-        ThreadDumpRequestFunction fn = new ThreadDumpRequestFunction(requestId);
+        ThreadDumpRequestFunction fn = new ThreadDumpRequestFunction(requestId, ccId);
         ipcHandle.send(-1, fn, null);
     }
 

@@ -18,9 +18,18 @@
  */
 package org.apache.asterix.common.messaging.api;
 
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.messages.IMessageBroker;
 
 public interface INCMessageBroker extends IMessageBroker {
+
+    /**
+     * Sends application message from this NC to the primary CC.
+     *
+     * @param message
+     * @throws Exception
+     */
+    public void sendMessageToPrimaryCC(ICcAddressedMessage message) throws Exception;
 
     /**
      * Sends application message from this NC to the CC.
@@ -28,7 +37,7 @@ public interface INCMessageBroker extends IMessageBroker {
      * @param message
      * @throws Exception
      */
-    public void sendMessageToCC(ICcAddressedMessage message) throws Exception;
+    public void sendMessageToCC(CcId ccId, ICcAddressedMessage message) throws Exception;
 
     /**
      * Sends application message from this NC to another NC.

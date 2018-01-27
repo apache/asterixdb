@@ -81,6 +81,27 @@ public class OptionTypes {
         }
     };
 
+    public static final IOptionType<Short> SHORT = new IOptionType<Short>() {
+        @Override
+        public Short parse(String s) {
+            int value = Integer.decode(s);
+            if (Integer.highestOneBit(value) > 16) {
+                throw new IllegalArgumentException("The given value " + s + " is too big for a short");
+            }
+            return (short)value;
+        }
+
+        @Override
+        public Class<Short> targetType() {
+            return Short.class;
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (short)value);
+        }
+    };
+
     public static final IOptionType<Integer> INTEGER = new IOptionType<Integer>() {
         @Override
         public Integer parse(String s) {

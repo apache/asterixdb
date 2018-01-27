@@ -21,6 +21,7 @@ package org.apache.hyracks.control.common.ipc;
 import java.util.List;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.deployment.DeploymentId;
@@ -56,9 +57,11 @@ import org.apache.hyracks.ipc.api.IIPCHandle;
 
 public class ClusterControllerRemoteProxy implements IClusterController {
 
+    private final CcId ccId;
     private IIPCHandle ipcHandle;
 
-    public ClusterControllerRemoteProxy(IIPCHandle ipcHandle) {
+    public ClusterControllerRemoteProxy(CcId ccId, IIPCHandle ipcHandle) {
+        this.ccId = ccId;
         this.ipcHandle = ipcHandle;
     }
 
@@ -180,5 +183,15 @@ public class ClusterControllerRemoteProxy implements IClusterController {
         ThreadDumpResponseFunction tdrf = new ThreadDumpResponseFunction(nodeId, requestId,
                 threadDumpJSON);
         ipcHandle.send(-1, tdrf, null);
+    }
+
+    @Override
+    public CcId getCcId() {
+        return ccId;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + " " + ccId + " [" + ipcHandle.getRemoteAddress() + "]";
     }
 }

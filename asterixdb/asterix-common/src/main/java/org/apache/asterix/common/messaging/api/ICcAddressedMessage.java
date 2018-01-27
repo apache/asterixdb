@@ -29,5 +29,4 @@ public interface ICcAddressedMessage extends IMessage {
      * handle the message upon delivery
      */
     void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException;
-
 }

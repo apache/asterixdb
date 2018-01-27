@@ -25,7 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,14 +36,12 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.ICCApplication;
-import org.apache.hyracks.api.application.IClusterLifecycleListener;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.config.IApplicationConfig;
-import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.context.ICCContext;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -147,6 +144,8 @@ public class ClusterControllerService implements IControllerService {
 
     private ShutdownRun shutdownCallback;
 
+    private final CcId ccId;
+
     static {
         ExitUtil.init();
     }
@@ -182,7 +181,8 @@ public class ClusterControllerService implements IControllerService {
         // Node manager is in charge of cluster membership management.
         nodeManager = new NodeManager(this, ccConfig, resourceManager);
 
-        jobIdFactory = new JobIdFactory();
+        ccId = ccConfig.getCcId();
+        jobIdFactory = new JobIdFactory(ccId);
 
         deployedJobSpecIdFactory = new DeployedJobSpecIdFactory();
     }
@@ -252,17 +252,18 @@ public class ClusterControllerService implements IControllerService {
         }
     }
 
-    private Pair<String, Integer> getNCService(String nodeId) {
+    private InetSocketAddress getNCService(String nodeId) {
         IApplicationConfig ncConfig = configManager.getNodeEffectiveConfig(nodeId);
-        return Pair.of(ncConfig.getString(NCConfig.Option.NCSERVICE_ADDRESS),
-                ncConfig.getInt(NCConfig.Option.NCSERVICE_PORT));
+        final int port = ncConfig.getInt(NCConfig.Option.NCSERVICE_PORT);
+        return port == NCConfig.NCSERVICE_PORT_DISABLED ? null
+                : InetSocketAddress.createUnresolved(ncConfig.getString(NCConfig.Option.NCSERVICE_ADDRESS), port);
     }
 
-    private Map<String, Pair<String, Integer>> getNCServices() {
-        Map<String, Pair<String, Integer>> ncMap = new TreeMap<>();
+    private Map<String, InetSocketAddress> getNCServices() {
+        Map<String, InetSocketAddress> ncMap = new TreeMap<>();
         for (String ncId : configManager.getNodeNames()) {
-            Pair<String, Integer> ncService = getNCService(ncId);
-            if (ncService.getRight() != NCConfig.NCSERVICE_PORT_DISABLED) {
+            InetSocketAddress ncService = getNCService(ncId);
+            if (ncService != null) {
                 ncMap.put(ncId, ncService);
             }
         }
@@ -271,31 +272,19 @@ public class ClusterControllerService implements IControllerService {
 
     private void connectNCs() {
         getNCServices().forEach((key, value) -> {
-            final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this, value.getLeft(),
-                    value.getRight(), key);
+            final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this, value.getHostString(),
+                    value.getPort(), key);
             executor.submit(triggerWork);
-        });
-        serviceCtx.addClusterLifecycleListener(new IClusterLifecycleListener() {
-            @Override
-            public void notifyNodeJoin(String nodeId, Map<IOption, Object> ncConfiguration) throws HyracksException {
-                // no-op, we don't care
-                LOGGER.log(Level.WARN, "Getting notified that node: " + nodeId + " has joined. and we don't care");
-            }
-
-            @Override
-            public void notifyNodeFailure(Collection<String> deadNodeIds) throws HyracksException {
-                LOGGER.log(Level.WARN, "Getting notified that nodes: " + deadNodeIds + " has failed");
-            }
         });
     }
 
     public boolean startNC(String nodeId) {
-        Pair<String, Integer> ncServiceAddress = getNCService(nodeId);
+        InetSocketAddress ncServiceAddress = getNCService(nodeId);
         if (ncServiceAddress == null) {
             return false;
         }
-        final TriggerNCWork startNc = new TriggerNCWork(ClusterControllerService.this, ncServiceAddress.getLeft(),
-                ncServiceAddress.getRight(), nodeId);
+        final TriggerNCWork startNc = new TriggerNCWork(ClusterControllerService.this, ncServiceAddress.getHostString(),
+                ncServiceAddress.getPort(), nodeId);
         executor.submit(startNc);
         return true;
 
@@ -304,11 +293,9 @@ public class ClusterControllerService implements IControllerService {
     private void terminateNCServices() throws Exception {
         List<ShutdownNCServiceWork> shutdownNCServiceWorks = new ArrayList<>();
         getNCServices().forEach((key, value) -> {
-            if (value.getRight() != NCConfig.NCSERVICE_PORT_DISABLED) {
-                ShutdownNCServiceWork shutdownWork = new ShutdownNCServiceWork(value.getLeft(), value.getRight(), key);
-                workQueue.schedule(shutdownWork);
-                shutdownNCServiceWorks.add(shutdownWork);
-            }
+            ShutdownNCServiceWork shutdownWork = new ShutdownNCServiceWork(value.getHostString(), value.getPort(), key);
+            workQueue.schedule(shutdownWork);
+            shutdownNCServiceWorks.add(shutdownWork);
         });
         for (ShutdownNCServiceWork shutdownWork : shutdownNCServiceWorks) {
             shutdownWork.sync();
@@ -426,6 +413,10 @@ public class ClusterControllerService implements IControllerService {
 
     public DeployedJobSpecIdFactory getDeployedJobSpecIdFactory() {
         return deployedJobSpecIdFactory;
+    }
+
+    public CcId getCcId() {
+        return ccId;
     }
 
     private final class ClusterControllerContext implements ICCContext {

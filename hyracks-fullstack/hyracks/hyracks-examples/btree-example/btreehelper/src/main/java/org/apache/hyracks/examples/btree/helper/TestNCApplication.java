@@ -22,6 +22,7 @@ import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IConfigManager;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 
@@ -45,7 +46,7 @@ public class TestNCApplication implements INCApplication {
     }
 
     @Override
-    public void onRegisterNode() throws Exception {
+    public void onRegisterNode(CcId ccs) throws Exception {
         // No-op
     }
 

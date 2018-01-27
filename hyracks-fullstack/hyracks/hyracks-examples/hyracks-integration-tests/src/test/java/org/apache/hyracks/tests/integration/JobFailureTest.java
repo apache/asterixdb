@@ -56,12 +56,6 @@ public class JobFailureTest extends AbstractMultiNCIntegrationTest {
     }
 
     @Test
-    public void waitForNonExistingJob() throws Exception {
-        JobId jobId = new JobId(Long.MAX_VALUE);
-        waitForCompletion(jobId, "has not been created yet");
-    }
-
-    @Test
     public void failureOnInit() throws Exception {
         JobSpecification spec = new JobSpecification();
         connectToSinkAndRun(spec, new FailOnInitializeDeInitializeOperatorDescriptor(spec, true, false),

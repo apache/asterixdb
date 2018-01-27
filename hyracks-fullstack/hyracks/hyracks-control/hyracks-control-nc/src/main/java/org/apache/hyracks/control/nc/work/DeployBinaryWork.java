@@ -22,6 +22,7 @@ package org.apache.hyracks.control.nc.work;
 import java.net.URL;
 import java.util.List;
 
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.control.common.base.IClusterController;
 import org.apache.hyracks.control.common.deployment.DeploymentStatus;
@@ -40,11 +41,13 @@ public class DeployBinaryWork extends AbstractWork {
     private DeploymentId deploymentId;
     private NodeControllerService ncs;
     private List<URL> binaryURLs;
+    private final CcId ccId;
 
-    public DeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId, List<URL> binaryURLs) {
+    public DeployBinaryWork(NodeControllerService ncs, DeploymentId deploymentId, List<URL> binaryURLs, CcId ccId) {
         this.deploymentId = deploymentId;
         this.ncs = ncs;
         this.binaryURLs = binaryURLs;
+        this.ccId = ccId;
     }
 
     @Override
@@ -59,7 +62,7 @@ public class DeployBinaryWork extends AbstractWork {
             e.printStackTrace();
         }
         try {
-            IClusterController ccs = ncs.getClusterController();
+            IClusterController ccs = ncs.getClusterController(ccId);
             ccs.notifyDeployBinary(deploymentId, ncs.getId(), status);
         } catch (Exception e) {
             throw new RuntimeException(e);

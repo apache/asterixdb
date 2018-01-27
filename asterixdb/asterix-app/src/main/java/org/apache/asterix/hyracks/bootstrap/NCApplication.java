@@ -50,6 +50,7 @@ import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.config.IConfigManager;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
@@ -198,19 +199,23 @@ public class NCApplication extends BaseNCApplication {
             state = SystemState.BOOTSTRAPPING;
         }
         // Request registration tasks from CC
-        RegistrationTasksRequestMessage.send((NodeControllerService) ncServiceCtx.getControllerService(),
-                NodeStatus.BOOTING, state);
+        // TODO (mblow): multicc
+        final NodeControllerService ncControllerService = (NodeControllerService) ncServiceCtx.getControllerService();
+        RegistrationTasksRequestMessage.send(ncControllerService.getPrimaryClusterController().getCcId(),
+                ncControllerService, NodeStatus.BOOTING, state);
         startupCompleted = true;
     }
 
     @Override
-    public void onRegisterNode() throws Exception {
-        if (startupCompleted) {
+    public void onRegisterNode(CcId ccId) throws Exception {
+        // TODO (mblow): multicc
+        if (startupCompleted && ccId.equals(((NodeControllerService) ncServiceCtx.getControllerService())
+                .getPrimaryClusterController().getCcId())) {
             /*
              * If the node completed its startup before, then this is a re-registration with
              * the CC and therefore the system state should be HEALTHY and the node status is ACTIVE
              */
-            RegistrationTasksRequestMessage.send((NodeControllerService) ncServiceCtx.getControllerService(),
+            RegistrationTasksRequestMessage.send(ccId, (NodeControllerService) ncServiceCtx.getControllerService(),
                     NodeStatus.ACTIVE, SystemState.HEALTHY);
         }
     }

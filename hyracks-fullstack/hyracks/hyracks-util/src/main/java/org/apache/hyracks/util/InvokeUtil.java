@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.utils;
+package org.apache.hyracks.util;
 
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;

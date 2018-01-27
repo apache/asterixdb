@@ -41,8 +41,8 @@ public class NotifyTaskCompleteWork extends AbstractWork {
         TaskProfile taskProfile =
                 new TaskProfile(task.getTaskAttemptId(), task.getPartitionSendProfile(), task.getStatsCollector());
         try {
-            ncs.getClusterController().notifyTaskComplete(task.getJobletContext().getJobId(), task.getTaskAttemptId(),
-                    ncs.getId(), taskProfile);
+            ncs.getClusterController(task.getJobletContext().getJobId().getCcId()).notifyTaskComplete(
+                    task.getJobletContext().getJobId(), task.getTaskAttemptId(), ncs.getId(), taskProfile);
         } catch (Exception e) {
             LOGGER.log(Level.ERROR, "Failed notifying task complete for " + task.getTaskAttemptId(), e);
         }

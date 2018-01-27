@@ -188,7 +188,8 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
         eos = false;
         failed = false;
         deallocated = false;
-        manager.registerPartition(pid, taId, this, PartitionState.STARTED, false);
+        manager.registerPartition(pid, ctx.getJobletContext().getJobId().getCcId(), taId, this, PartitionState.STARTED,
+                false);
     }
 
     private void checkOrCreateFile() throws HyracksDataException {
