@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.Set;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.http.server.ResultUtil;
+import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -100,6 +102,7 @@ import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.control.common.config.OptionTypes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -346,8 +349,14 @@ public class APIFramework {
         if (statement == null) {
             // Sets a required capacity, only for read-only queries.
             // DDLs and DMLs are considered not that frequent.
-            spec.setRequiredClusterCapacity(ResourceUtils.getRequiredCompacity(plan, computationLocations,
-                    sortFrameLimit, groupFrameLimit, joinFrameLimit, frameSize));
+            // limit the computation locations to the locations that will be used in the query
+            final AlgebricksAbsolutePartitionConstraint jobLocations =
+                    getJobLocations(spec, metadataProvider.getApplicationContext().getNodeJobTracker(),
+                            computationLocations);
+            final IClusterCapacity jobRequiredCapacity = ResourceUtils
+                    .getRequiredCapacity(plan, jobLocations, sortFrameLimit, groupFrameLimit, joinFrameLimit,
+                            frameSize);
+            spec.setRequiredClusterCapacity(jobRequiredCapacity);
         }
 
         if (conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
@@ -498,5 +507,13 @@ public class APIFramework {
                 throw AsterixException.create(ErrorCode.COMPILATION_UNSUPPORTED_QUERY_PARAMETER, parameterName);
             }
         }
+    }
+
+    public static AlgebricksAbsolutePartitionConstraint getJobLocations(JobSpecification spec,
+            INodeJobTracker jobTracker, AlgebricksAbsolutePartitionConstraint clusterLocations) {
+        final Set<String> jobParticipatingNodes = jobTracker.getJobParticipatingNodes(spec);
+        return new AlgebricksAbsolutePartitionConstraint(
+                Arrays.stream(clusterLocations.getLocations()).filter(jobParticipatingNodes::contains)
+                        .toArray(String[]::new));
     }
 }

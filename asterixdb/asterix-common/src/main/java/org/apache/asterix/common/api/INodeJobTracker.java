@@ -23,6 +23,7 @@ import java.util.Set;
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
 
 public interface INodeJobTracker extends IJobLifecycleListener, IClusterLifecycleListener {
 
@@ -34,4 +35,14 @@ public interface INodeJobTracker extends IJobLifecycleListener, IClusterLifecycl
      * @return unmodifiable set of the node pending jobs.
      */
     Set<JobId> getPendingJobs(String nodeId);
+
+    /**
+     * Gets the set of nodes that will participate in the execution
+     * of the job. The nodes will include only nodes that are known
+     * to this {@link INodeJobTracker}
+     *
+     * @param spec
+     * @return The participating nodes in the job execution
+     */
+    Set<String> getJobParticipatingNodes(JobSpecification spec);
 }

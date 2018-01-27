@@ -29,12 +29,18 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.asterix.runtime.job.listener.NodeJobTracker;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.constraints.Constraint;
+import org.apache.hyracks.api.constraints.expressions.ConstantExpression;
+import org.apache.hyracks.api.constraints.expressions.LValueConstraintExpression;
+import org.apache.hyracks.api.job.JobSpecification;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import junit.extensions.PA;
 
@@ -173,4 +179,25 @@ public class APIFrameworkTest {
         Assert.assertTrue(loc.getLocations().length == 8);
     }
 
+    @Test
+    public void testJobLocations() {
+        final String nc1 = "nc1";
+        final String nc2 = "nc2";
+        final NodeJobTracker nodeJobTracker = new NodeJobTracker();
+        nodeJobTracker.notifyNodeJoin(nc1, null);
+        nodeJobTracker.notifyNodeJoin(nc2, null);
+
+        final JobSpecification jobSpec = new JobSpecification();
+        // add only nc1 to the job locations
+        final ConstantExpression nc1Location = new ConstantExpression(nc1);
+        final LValueConstraintExpression lValueMock = Mockito.mock(LValueConstraintExpression.class);
+        jobSpec.getUserConstraints().add(new Constraint(lValueMock, nc1Location));
+
+        final String[] clusterLocation = new String[] { nc1, nc2 };
+        final AlgebricksAbsolutePartitionConstraint jobLocations = APIFramework
+                .getJobLocations(jobSpec, nodeJobTracker, new AlgebricksAbsolutePartitionConstraint(clusterLocation));
+        // ensure nc2 wasn't included
+        Assert.assertEquals(1, jobLocations.getLocations().length);
+        Assert.assertEquals(nc1, jobLocations.getLocations()[0]);
+    }
 }

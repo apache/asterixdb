@@ -52,7 +52,7 @@ public class ResourceUtils {
      * @throws AlgebricksException
      *             if the query plan is malformed.
      */
-    public static IClusterCapacity getRequiredCompacity(ILogicalPlan plan,
+    public static IClusterCapacity getRequiredCapacity(ILogicalPlan plan,
             AlgebricksAbsolutePartitionConstraint computationLocations, int sortFrameLimit, int groupFrameLimit,
             int joinFrameLimit, int frameSize)
             throws AlgebricksException {
