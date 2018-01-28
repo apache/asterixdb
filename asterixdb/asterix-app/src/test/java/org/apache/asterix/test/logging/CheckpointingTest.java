@@ -67,9 +67,9 @@ import org.junit.Test;
 
 public class CheckpointingTest {
 
-    private static final String TEST_CONFIG_FILE_NAME = "cc.conf";
+    private static final String TEST_CONFIG_FILE_NAME = "cc-small-txn-log-partition.conf";
     private static final String TEST_CONFIG_PATH = System.getProperty("user.dir") + File.separator + "src"
-            + File.separator + "main" + File.separator + "resources";
+            + File.separator + "test" + File.separator + "resources";
     private static final String TEST_CONFIG_FILE_PATH = TEST_CONFIG_PATH + File.separator + TEST_CONFIG_FILE_NAME;
     private static final IAType[] KEY_TYPES = { BuiltinType.AINT32 };
     private static final ARecordType RECORD_TYPE = new ARecordType("TestRecordType", new String[] { "key", "value" },
@@ -88,7 +88,6 @@ public class CheckpointingTest {
     private static final String DATASET_NAME = "TestDS";
     private static final String DATA_TYPE_NAME = "DUMMY";
     private static final String NODE_GROUP_NAME = "DEFAULT";
-    private static final int TXN_LOG_PARTITION_SIZE = StorageUtil.getIntSizeInBytes(2, StorageUnit.MEGABYTE);
 
     @Before
     public void setUp() throws Exception {
@@ -101,18 +100,10 @@ public class CheckpointingTest {
         TestHelper.deleteExistingInstanceFiles();
     }
 
-    private List<Pair<IOption, Object>> setOpts() {
-        List<Pair<IOption, Object>> opts = new ArrayList<>();
-        opts.add(Pair.of(TransactionProperties.Option.TXN_LOG_PARTITIONSIZE, TXN_LOG_PARTITION_SIZE));
-        opts.add(Pair.of(TransactionProperties.Option.TXN_LOG_CHECKPOINT_POLLFREQUENCY, Integer.MAX_VALUE));
-        return opts;
-    }
-
     @Test
     public void testDeleteOldLogFiles() {
         try {
             TestNodeController nc = new TestNodeController(new File(TEST_CONFIG_FILE_PATH).getAbsolutePath(), false);
-            nc.setOpts(setOpts());
             StorageComponentProvider storageManager = new StorageComponentProvider();
             nc.init();
             List<List<String>> partitioningKeys = new ArrayList<>();
