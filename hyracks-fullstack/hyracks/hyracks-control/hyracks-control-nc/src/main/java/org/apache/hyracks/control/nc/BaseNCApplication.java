@@ -28,12 +28,13 @@ import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
+import org.apache.hyracks.util.LoggingConfigUtil;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configurator;
 
 public class BaseNCApplication implements INCApplication {
     public static final BaseNCApplication INSTANCE = new BaseNCApplication();
@@ -98,7 +99,7 @@ public class BaseNCApplication implements INCApplication {
     }
 
     protected void configureLoggingLevel(Level level) {
-        Configurator.setLevel("org.apache.hyracks", level);
+        LoggingConfigUtil.defaultIfMissing(HyracksConstants.HYRACKS_LOGGER_NAME, level);
     }
 
 }

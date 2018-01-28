@@ -20,6 +20,7 @@ package org.apache.hyracks.api.util;
 
 public class HyracksConstants {
     public static final String KEY_MESSAGE = "HYX:MSG";
+    public static final String HYRACKS_LOGGER_NAME = "org.apache.hyracks";
 
     private HyracksConstants() {
     }
