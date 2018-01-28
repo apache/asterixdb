@@ -43,15 +43,15 @@ public class ReplicatePOperator extends AbstractReplicatePOperator {
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
-                propagatedSchema, context);
+        RecordDescriptor recDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
 
         ReplicateOperator rop = (ReplicateOperator) op;
         int outputArity = rop.getOutputArity();
         boolean[] outputMaterializationFlags = rop.getOutputMaterializationFlags();
 
-        ReplicateOperatorDescriptor splitOpDesc = new ReplicateOperatorDescriptor(spec, recDescriptor, outputArity,
-                outputMaterializationFlags);
+        ReplicateOperatorDescriptor splitOpDesc =
+                new ReplicateOperatorDescriptor(spec, recDescriptor, outputArity, outputMaterializationFlags);
         contributeOpDesc(builder, (AbstractLogicalOperator) op, splitOpDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

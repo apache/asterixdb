@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.common.api;
 
-
 public interface IClusterManagementWorkResponse {
 
     public enum Status {

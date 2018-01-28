@@ -55,7 +55,8 @@ public class FuzzyJoinTest {
 
         BufferedWriter out = new BufferedWriter(new FileWriter(base + dataset.getPathPart0(Directory.SSJOINOUT)));
         for (ResultSelfJoin result : results) {
-            out.write(String.format("%d %d %.3f\n", rids.get(result.indexX), rids.get(result.indexY), result.similarity));
+            out.write(
+                    String.format("%d %d %.3f\n", rids.get(result.indexX), rids.get(result.indexY), result.similarity));
         }
         out.close();
 

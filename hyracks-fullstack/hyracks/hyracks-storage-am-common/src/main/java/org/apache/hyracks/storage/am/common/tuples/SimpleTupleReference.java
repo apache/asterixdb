@@ -98,7 +98,7 @@ public class SimpleTupleReference implements ITreeIndexTupleReference {
 
     @Override
     public int getTupleSize() {
-        return nullFlagsBytes + fieldSlotsBytes + ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes
-                + (fieldCount - 1) * 2);
+        return nullFlagsBytes + fieldSlotsBytes
+                + ShortPointable.getShort(buf, tupleStartOff + nullFlagsBytes + (fieldCount - 1) * 2);
     }
 }

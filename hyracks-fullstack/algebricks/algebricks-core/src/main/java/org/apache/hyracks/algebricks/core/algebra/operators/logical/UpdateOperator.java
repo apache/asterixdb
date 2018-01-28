@@ -35,7 +35,8 @@ public class UpdateOperator extends AbstractLogicalOperator {
     }
 
     @Override
-    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform) throws AlgebricksException {
+    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform)
+            throws AlgebricksException {
         // TODO Auto-generated method stub
         return false;
     }

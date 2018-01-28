@@ -131,7 +131,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                         try {
                             mergeFields(outRecType, rp0, rp1, true, 0);
                             rbStack.get(0).write(out, true);
-                        } catch (IOException  e) {
+                        } catch (IOException e) {
                             throw new HyracksDataException(e);
                         }
                         result.set(resultStorage);
@@ -168,8 +168,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                                                 openFromParent, nestedLevel);
                                         foundMatch = true;
                                     } else {
-                                        throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME,
-                                                getIdentifier());
+                                        throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME, getIdentifier());
                                     }
                                 }
                             }

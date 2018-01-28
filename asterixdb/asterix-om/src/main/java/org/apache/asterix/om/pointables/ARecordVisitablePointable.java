@@ -227,8 +227,8 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                         }
                     } else {
                         typeTag = fieldTypes[fieldNumber].getTypeTag();
-                        fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber],
-                                typeTag, false);
+                        fieldValueLength =
+                                NonTaggedFormatUtil.getFieldValueLength(b, fieldOffsets[fieldNumber], typeTag, false);
                     }
                     // set field value (including the type tag)
                     int fstart = dataBos.size();
@@ -246,8 +246,8 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                 for (int i = 0; i < numberOfOpenFields; i++) {
                     // set the field name (including a type tag, which is
                     // astring)
-                    int fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, ATypeTag.STRING,
-                            false);
+                    int fieldValueLength =
+                            NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, ATypeTag.STRING, false);
                     int fnstart = dataBos.size();
                     dataDos.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                     dataDos.write(b, fieldOffset, fieldValueLength);

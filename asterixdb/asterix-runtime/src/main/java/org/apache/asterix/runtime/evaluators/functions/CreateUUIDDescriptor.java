@@ -56,8 +56,8 @@ public class CreateUUIDDescriptor extends AbstractScalarFunctionDynamicDescripto
             private static final long serialVersionUID = 1L;
 
             @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<AUUID> uuidSerDe = SerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.AUUID);
+            private final ISerializerDeserializer<AUUID> uuidSerDe =
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AUUID);
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {

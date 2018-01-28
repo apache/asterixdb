@@ -42,11 +42,11 @@ public class FileOffsetIndexer implements IExternalIndexer {
     protected RecordReader<?, ? extends Writable> recordReader;
 
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<IAObject> intSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    private ISerializerDeserializer<IAObject> intSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<IAObject> longSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT64);
+    private ISerializerDeserializer<IAObject> longSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
     @Override
     public void reset(IIndexingDatasource dataSource) throws HyracksDataException {

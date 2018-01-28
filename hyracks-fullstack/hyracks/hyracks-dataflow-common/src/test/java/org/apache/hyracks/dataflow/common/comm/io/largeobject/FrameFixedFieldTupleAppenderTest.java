@@ -155,8 +155,8 @@ public class FrameFixedFieldTupleAppenderTest {
 
     private IFrameTupleAccessor prepareData(DATA_TYPE type) throws HyracksDataException {
         IFrameTupleAccessor accessor = new FrameTupleAccessor(recordDescriptor);
-        IFrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(new FrameManager(INPUT_BUFFER_SIZE)),
-                true);
+        IFrameTupleAppender appender =
+                new FrameTupleAppender(new VSizeFrame(new FrameManager(INPUT_BUFFER_SIZE)), true);
         int i = 0;
         do {
             switch (type) {

@@ -68,8 +68,8 @@ public class StreamProjectPOperator extends AbstractPropagatePropertiesForUsedVa
             projectionList[i++] = pos;
         }
         StreamProjectRuntimeFactory runtime = new StreamProjectRuntimeFactory(projectionList, flushFramesRapidly);
-        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema,
-                context);
+        RecordDescriptor recDesc =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         builder.contributeMicroOperator(project, runtime, recDesc);
         ILogicalOperator src = project.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, project, 0);

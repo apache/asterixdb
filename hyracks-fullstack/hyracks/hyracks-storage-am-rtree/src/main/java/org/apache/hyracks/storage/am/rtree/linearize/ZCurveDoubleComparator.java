@@ -36,8 +36,8 @@ public class ZCurveDoubleComparator implements ILinearizeComparator {
     private double stepsize;
     private DoubleArrayList boundsStack = new DoubleArrayList(2000, 400);
 
-    private IPrimitiveValueProvider valueProvider = DoublePrimitiveValueProviderFactory.INSTANCE
-            .createPrimitiveValueProvider();
+    private IPrimitiveValueProvider valueProvider =
+            DoublePrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
 
     private double[] a;
     private double[] b;

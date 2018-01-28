@@ -19,16 +19,15 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
-public class DelimitedUTF8StringBinaryTokenizerFactory implements
-        IBinaryTokenizerFactory {
+public class DelimitedUTF8StringBinaryTokenizerFactory implements IBinaryTokenizerFactory {
 
     private static final long serialVersionUID = 1L;
     private final boolean ignoreTokenCount;
     private final boolean sourceHasTypeTag;
     private final ITokenFactory tokenFactory;
 
-    public DelimitedUTF8StringBinaryTokenizerFactory(boolean ignoreTokenCount,
-            boolean sourceHasTypeTag, ITokenFactory tokenFactory) {
+    public DelimitedUTF8StringBinaryTokenizerFactory(boolean ignoreTokenCount, boolean sourceHasTypeTag,
+            ITokenFactory tokenFactory) {
         this.ignoreTokenCount = ignoreTokenCount;
         this.sourceHasTypeTag = sourceHasTypeTag;
         this.tokenFactory = tokenFactory;
@@ -36,7 +35,6 @@ public class DelimitedUTF8StringBinaryTokenizerFactory implements
 
     @Override
     public IBinaryTokenizer createTokenizer() {
-        return new DelimitedUTF8StringBinaryTokenizer(ignoreTokenCount,
-                sourceHasTypeTag, tokenFactory);
+        return new DelimitedUTF8StringBinaryTokenizer(ignoreTokenCount, sourceHasTypeTag, tokenFactory);
     }
 }

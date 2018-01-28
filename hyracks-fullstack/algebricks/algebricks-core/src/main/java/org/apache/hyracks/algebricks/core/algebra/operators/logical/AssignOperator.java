@@ -92,8 +92,8 @@ public class AssignOperator extends AbstractAssignOperator {
             env.setVarType(variables.get(i), ctx.getExpressionTypeComputer().getType(expressions.get(i).getValue(),
                     ctx.getMetadataProvider(), env));
             if (expressions.get(i).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                LogicalVariable var = ((VariableReferenceExpression) expressions.get(i).getValue())
-                        .getVariableReference();
+                LogicalVariable var =
+                        ((VariableReferenceExpression) expressions.get(i).getValue()).getVariableReference();
                 for (List<LogicalVariable> list : env.getCorrelatedMissableVariableLists()) {
                     if (list.contains(var)) {
                         list.add(variables.get(i));

@@ -35,11 +35,9 @@ public class AUUIDPartialBinaryComparatorFactory implements IBinaryComparatorFac
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                int msbCompare = Long.compare(LongPointable.getLong(b1, s1),
-                        LongPointable.getLong(b2, s2));
+                int msbCompare = Long.compare(LongPointable.getLong(b1, s1), LongPointable.getLong(b2, s2));
                 if (msbCompare == 0) {
-                    return Long.compare(LongPointable.getLong(b1, s1 + 8),
-                            LongPointable.getLong(b2, s2 + 8));
+                    return Long.compare(LongPointable.getLong(b1, s1 + 8), LongPointable.getLong(b2, s2 + 8));
                 } else {
                     return msbCompare;
                 }

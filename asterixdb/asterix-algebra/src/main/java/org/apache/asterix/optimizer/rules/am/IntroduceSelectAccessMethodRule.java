@@ -177,8 +177,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context)
             throws AlgebricksException {
         Pair<IAccessMethod, Index> chosenIndex = null;
-        Optional<Pair<IAccessMethod, Index>> primaryIndex = chosenIndexes.stream()
-                .filter(pair -> pair.second.isPrimaryIndex()).findFirst();
+        Optional<Pair<IAccessMethod, Index>> primaryIndex =
+                chosenIndexes.stream().filter(pair -> pair.second.isPrimaryIndex()).findFirst();
         if (chosenIndexes.size() == 1) {
             chosenIndex = chosenIndexes.get(0);
         } else if (primaryIndex.isPresent()) {
@@ -235,8 +235,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                     throw new AlgebricksException(
                             "The order by expression should be variables, but they aren't variables.");
                 }
-                VariableReferenceExpression orderedVar = (VariableReferenceExpression) orderExpression.second
-                        .getValue();
+                VariableReferenceExpression orderedVar =
+                        (VariableReferenceExpression) orderExpression.second.getValue();
                 orderedColumn.add(orderedVar.getVariableReference());
             }
             inputVars.add(orderedColumn);
@@ -372,7 +372,6 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         return false;
 
     }
-
 
     @Override
     public Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods() {

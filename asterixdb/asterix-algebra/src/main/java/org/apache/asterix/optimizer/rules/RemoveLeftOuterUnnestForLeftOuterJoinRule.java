@@ -88,8 +88,8 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
         LeftOuterJoinOperator lojOperator = (LeftOuterJoinOperator) gbyOperator.getInputs().get(0).getValue();
 
         // Checks whether the left outer unnest and the group-by operator are qualified for rewriting.
-        Triple<Boolean, ILogicalExpression, ILogicalExpression> checkGbyResult = checkUnnestAndGby(outerUnnest,
-                gbyOperator);
+        Triple<Boolean, ILogicalExpression, ILogicalExpression> checkGbyResult =
+                checkUnnestAndGby(outerUnnest, gbyOperator);
         // The argument for listify and not(is-missing(...)) check should be variables.
         if (!isVariableReference(checkGbyResult.second) || !isVariableReference(checkGbyResult.third)) {
             return false;

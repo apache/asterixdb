@@ -19,7 +19,6 @@
 
 package org.apache.asterix.fuzzyjoin.tests.dataset;
 
-
 public class DBLPDataset extends PublicationsDataset {
     private static final String NAME = "dblp";
     private static final int NO_RECORDS = 1268017;

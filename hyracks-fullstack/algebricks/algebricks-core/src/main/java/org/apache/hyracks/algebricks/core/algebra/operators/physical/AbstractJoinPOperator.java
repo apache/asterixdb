@@ -25,7 +25,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 public abstract class AbstractJoinPOperator extends AbstractPhysicalOperator {
 
     public enum JoinPartitioningType {
-        PAIRWISE, BROADCAST
+        PAIRWISE,
+        BROADCAST
     }
 
     protected final JoinKind kind;

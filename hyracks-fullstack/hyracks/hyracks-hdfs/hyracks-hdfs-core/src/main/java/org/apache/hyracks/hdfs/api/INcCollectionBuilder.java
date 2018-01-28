@@ -30,7 +30,6 @@ import org.apache.hyracks.api.client.NodeControllerInfo;
  */
 public interface INcCollectionBuilder {
 
-    public INcCollection build(Map<String, NodeControllerInfo> ncNameToNcInfos,
-            Map<String, List<String>> ipToNcMapping, Map<String, Integer> ncNameToIndex, String[] NCs, int[] workloads,
-            int slotLimit);
+    public INcCollection build(Map<String, NodeControllerInfo> ncNameToNcInfos, Map<String, List<String>> ipToNcMapping,
+            Map<String, Integer> ncNameToIndex, String[] NCs, int[] workloads, int slotLimit);
 }

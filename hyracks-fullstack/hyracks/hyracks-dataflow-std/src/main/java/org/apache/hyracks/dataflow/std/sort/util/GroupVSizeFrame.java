@@ -26,8 +26,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class GroupVSizeFrame extends VSizeFrame {
 
-    public GroupVSizeFrame(IHyracksCommonContext ctx, int frameSize)
-            throws HyracksDataException {
+    public GroupVSizeFrame(IHyracksCommonContext ctx, int frameSize) throws HyracksDataException {
         super(ctx, frameSize);
     }
 

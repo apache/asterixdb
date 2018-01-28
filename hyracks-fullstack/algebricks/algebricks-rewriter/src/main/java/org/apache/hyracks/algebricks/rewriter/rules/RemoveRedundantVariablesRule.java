@@ -69,7 +69,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
 
     private final VariableSubstitutionVisitor substVisitor = new VariableSubstitutionVisitor();
-    private final Map<LogicalVariable, List<LogicalVariable>> equivalentVarsMap = new HashMap<LogicalVariable, List<LogicalVariable>>();
+    private final Map<LogicalVariable, List<LogicalVariable>> equivalentVarsMap =
+            new HashMap<LogicalVariable, List<LogicalVariable>>();
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)

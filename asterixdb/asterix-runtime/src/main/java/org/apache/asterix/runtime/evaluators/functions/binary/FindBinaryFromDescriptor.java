@@ -57,8 +57,7 @@ public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescr
                     @Override
                     protected int getFromOffset(IFrameTupleReference tuple) throws HyracksDataException {
                         return ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 2,
-                                pointables[2].getByteArray(),
-                                    pointables[2].getStartOffset());
+                                pointables[2].getByteArray(), pointables[2].getStartOffset());
                     }
                 };
             }

@@ -49,12 +49,12 @@ public class RetainLogsRule extends TestWatcher {
 
     @Override
     protected void failed(Throwable e, Description description) {
-        File reportDir = new File(destDir, description.getTestClass().getSimpleName() + "." + description.getMethodName());
+        File reportDir =
+                new File(destDir, description.getTestClass().getSimpleName() + "." + description.getMethodName());
         reportDir.mkdirs();
         try {
             AsterixTestHelper.deepSelectiveCopy(baseDir, reportDir,
-                    pathname -> pathname.getName().endsWith("log") &&
-                            pathname.lastModified() > startTime);
+                    pathname -> pathname.getName().endsWith("log") && pathname.lastModified() > startTime);
         } catch (Exception e1) {
             e1.printStackTrace();
         }

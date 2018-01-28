@@ -39,9 +39,9 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
     private char recordStart;
     private char recordEnd;
     private int recordNumber = 0;
-    private static final List<String> recordReaderFormats = Collections
-            .unmodifiableList(Arrays.asList(ExternalDataConstants.FORMAT_ADM, ExternalDataConstants.FORMAT_JSON,
-                    ExternalDataConstants.FORMAT_SEMISTRUCTURED));
+    private static final List<String> recordReaderFormats =
+            Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.FORMAT_ADM,
+                    ExternalDataConstants.FORMAT_JSON, ExternalDataConstants.FORMAT_SEMISTRUCTURED));
     private static final String REQUIRED_CONFIGS = "";
 
     @Override

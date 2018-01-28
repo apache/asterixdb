@@ -60,8 +60,8 @@ public class TweetParserTest {
         unionTypeList.add(ANULL);
         unionTypeList.add(AMISSING);
         IAType geoUnionType = new AUnionType(unionTypeList, "GeoType?");
-        ARecordType tweetRecordType = new ARecordType("TweetType", new String[] { "id", "geo" },
-                new IAType[] { AINT64, geoUnionType }, true);
+        ARecordType tweetRecordType =
+                new ARecordType("TweetType", new String[] { "id", "geo" }, new IAType[] { AINT64, geoUnionType }, true);
 
         TweetParser parser = new TweetParser(tweetRecordType);
 
@@ -86,8 +86,8 @@ public class TweetParserTest {
         // contruct type
         IAType geoFieldType = new ARecordType("GeoType", new String[] { "coordinates" },
                 new IAType[] { new AOrderedListType(AFLOAT, "point") }, true);
-        ARecordType tweetRecordType = new ARecordType("TweetType", new String[] { "id", "geo" },
-                new IAType[] { AINT64, geoFieldType }, true);
+        ARecordType tweetRecordType =
+                new ARecordType("TweetType", new String[] { "id", "geo" }, new IAType[] { AINT64, geoFieldType }, true);
 
         TweetParser parser = new TweetParser(tweetRecordType);
         List<String> lines = Files.readAllLines(Paths.get(getClass().getResource("/test_tweets.txt").toURI()));

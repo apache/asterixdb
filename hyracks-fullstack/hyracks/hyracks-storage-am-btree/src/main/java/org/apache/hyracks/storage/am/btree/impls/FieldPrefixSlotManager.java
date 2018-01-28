@@ -57,7 +57,8 @@ public class FieldPrefixSlotManager implements IPrefixSlotManager {
     }
 
     // returns prefix slot number, or TUPLE_UNCOMPRESSED of no match was found
-    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple) throws HyracksDataException {
+    public int findPrefix(ITupleReference tuple, ITreeIndexTupleReference framePrefixTuple)
+            throws HyracksDataException {
         int prefixMid;
         int prefixBegin = 0;
         int prefixEnd = frame.getPrefixTupleCount() - 1;

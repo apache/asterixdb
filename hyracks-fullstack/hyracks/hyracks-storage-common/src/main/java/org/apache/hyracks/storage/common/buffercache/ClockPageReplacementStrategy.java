@@ -170,7 +170,7 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
             return;
         }
         final int newSize = pageSize * multiplier;
-        ByteBuffer oldBuffer = ((CachedPage)cPage).buffer;
+        ByteBuffer oldBuffer = ((CachedPage) cPage).buffer;
         oldBuffer.position(0);
         final int delta = multiplier - origMultiplier;
         if (multiplier < origMultiplier) {
@@ -194,8 +194,7 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     }
 
     @Override
-    public void fixupCapacityOnLargeRead(ICachedPageInternal cPage)
-            throws HyracksDataException {
+    public void fixupCapacityOnLargeRead(ICachedPageInternal cPage) throws HyracksDataException {
         ByteBuffer oldBuffer = ((CachedPage) cPage).buffer;
         final int multiplier = cPage.getFrameSizeMultiplier();
         final int newSize = pageSize * multiplier;

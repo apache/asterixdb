@@ -197,11 +197,10 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
             this.allProjectFields = projectedFields;
             this.firstKeyNormalizerComputer =
                     firstKeyNormalizerFactory != null ? firstKeyNormalizerFactory.createNormalizedKeyComputer() : null;
-            this.normalizedKeyDecisive =
-                    firstKeyNormalizerFactory != null
-                            ? firstKeyNormalizerFactory.getNormalizedKeyProperties().isDecisive()
-                                    && compareFields[0].length == 1
-                            : false;
+            this.normalizedKeyDecisive = firstKeyNormalizerFactory != null
+                    ? firstKeyNormalizerFactory.getNormalizedKeyProperties().isDecisive()
+                            && compareFields[0].length == 1
+                    : false;
             comparators = new IBinaryComparator[compareFields[0].length];
             for (int i = 0; i < comparators.length; i++) {
                 comparators[i] = comparatorFactory[i].createBinaryComparator();

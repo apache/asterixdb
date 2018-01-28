@@ -37,7 +37,8 @@ public class ReinferAllTypesRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         if (context.checkIfInDontApplySet(this, opRef.getValue())) {
             return false;
         }

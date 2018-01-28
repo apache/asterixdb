@@ -148,7 +148,7 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         List<LogicalVariable> gbyCols = getGbyColumns();
         int keys[] = JobGenHelper.variablesToFieldIndexes(gbyCols, inputSchemas[0]);
         GroupByOperator gby = (GroupByOperator) op;
@@ -221,20 +221,20 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
         }
 
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(gbyCols,
-                aggOpInputEnv, context);
-        RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema,
-                context);
-        IBinaryHashFunctionFamily[] hashFunctionFactories = JobGenHelper.variablesToBinaryHashFunctionFamilies(gbyCols,
-                aggOpInputEnv, context);
+        IBinaryComparatorFactory[] comparatorFactories =
+                JobGenHelper.variablesToAscBinaryComparatorFactories(gbyCols, aggOpInputEnv, context);
+        RecordDescriptor recordDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
+        IBinaryHashFunctionFamily[] hashFunctionFactories =
+                JobGenHelper.variablesToBinaryHashFunctionFamilies(gbyCols, aggOpInputEnv, context);
 
         ISerializedAggregateEvaluatorFactory[] merges = new ISerializedAggregateEvaluatorFactory[n];
         List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
         IOperatorSchema[] localInputSchemas = new IOperatorSchema[1];
         localInputSchemas[0] = new OperatorSchemaImpl();
         for (i = 0; i < n; i++) {
-            AggregateFunctionCallExpression aggFun = (AggregateFunctionCallExpression) aggOp.getMergeExpressions()
-                    .get(i).getValue();
+            AggregateFunctionCallExpression aggFun =
+                    (AggregateFunctionCallExpression) aggOp.getMergeExpressions().get(i).getValue();
             aggFun.getUsedVariables(usedVars);
         }
         i = 0;
@@ -248,16 +248,16 @@ public class ExternalGroupByPOperator extends AbstractPhysicalOperator {
             localInputSchemas[0].addVariable(usedVar);
         }
         for (i = 0; i < n; i++) {
-            AggregateFunctionCallExpression mergeFun = (AggregateFunctionCallExpression) aggOp.getMergeExpressions()
-                    .get(i).getValue();
+            AggregateFunctionCallExpression mergeFun =
+                    (AggregateFunctionCallExpression) aggOp.getMergeExpressions().get(i).getValue();
             merges[i] = expressionRuntimeProvider.createSerializableAggregateFunctionFactory(mergeFun, aggOpInputEnv,
                     localInputSchemas, context);
         }
         IAggregatorDescriptorFactory aggregatorFactory = new SerializableAggregatorDescriptorFactory(aff);
         IAggregatorDescriptorFactory mergeFactory = new SerializableAggregatorDescriptorFactory(merges);
 
-        INormalizedKeyComputerFactory normalizedKeyFactory = JobGenHelper
-                .variablesToAscNormalizedKeyComputerFactory(gbyCols, aggOpInputEnv, context);
+        INormalizedKeyComputerFactory normalizedKeyFactory =
+                JobGenHelper.variablesToAscNormalizedKeyComputerFactory(gbyCols, aggOpInputEnv, context);
 
         // Calculates the hash table size (# of unique hash values) based on the budget and a tuple size.
         int memoryBudgetInBytes = context.getFrameSize() * frameLimit;

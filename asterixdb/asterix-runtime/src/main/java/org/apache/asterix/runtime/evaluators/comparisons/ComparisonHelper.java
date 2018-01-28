@@ -51,28 +51,28 @@ public class ComparisonHelper implements Serializable {
     private static final long serialVersionUID = 1L;
     static final String COMPARISON = "comparison operations (>, >=, <, and <=)";
 
-    private final IBinaryComparator strBinaryComp = BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator circleBinaryComp = ACirclePartialBinaryComparatorFactory.INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator durationBinaryComp = ADurationPartialBinaryComparatorFactory.INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator intervalBinaryComp = AIntervalAscPartialBinaryComparatorFactory.INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator lineBinaryComparator = ALinePartialBinaryComparatorFactory.INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator pointBinaryComparator = APointPartialBinaryComparatorFactory.INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator point3DBinaryComparator = APoint3DPartialBinaryComparatorFactory.INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator polygonBinaryComparator = APolygonPartialBinaryComparatorFactory.INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator rectangleBinaryComparator = ARectanglePartialBinaryComparatorFactory.INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator uuidBinaryComparator = AUUIDPartialBinaryComparatorFactory.INSTANCE
-            .createBinaryComparator();
-    private final IBinaryComparator byteArrayComparator = new PointableBinaryComparatorFactory(
-            ByteArrayPointable.FACTORY).createBinaryComparator();
+    private final IBinaryComparator strBinaryComp =
+            BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
+    private final IBinaryComparator circleBinaryComp =
+            ACirclePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    private final IBinaryComparator durationBinaryComp =
+            ADurationPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    private final IBinaryComparator intervalBinaryComp =
+            AIntervalAscPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    private final IBinaryComparator lineBinaryComparator =
+            ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    private final IBinaryComparator pointBinaryComparator =
+            APointPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    private final IBinaryComparator point3DBinaryComparator =
+            APoint3DPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    private final IBinaryComparator polygonBinaryComparator =
+            APolygonPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    private final IBinaryComparator rectangleBinaryComparator =
+            ARectanglePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    private final IBinaryComparator uuidBinaryComparator =
+            AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+    private final IBinaryComparator byteArrayComparator =
+            new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
 
     public int compare(ATypeTag typeTag1, ATypeTag typeTag2, IPointable arg1, IPointable arg2)
             throws HyracksDataException {
@@ -177,7 +177,7 @@ public class ComparisonHelper implements Serializable {
     private int compareStringWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
         if (typeTag2 == ATypeTag.STRING) {
             return strBinaryComp.compare(arg1.getByteArray(), arg1.getStartOffset(), arg1.getLength() - 1,
-                        arg2.getByteArray(), arg2.getStartOffset(), arg2.getLength() - 1);
+                    arg2.getByteArray(), arg2.getStartOffset(), arg2.getLength() - 1);
         }
         throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_STRING_TYPE_TAG, typeTag2.serialize());
     }

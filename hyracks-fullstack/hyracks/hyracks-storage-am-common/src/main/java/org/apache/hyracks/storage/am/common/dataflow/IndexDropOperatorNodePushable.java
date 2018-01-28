@@ -87,7 +87,7 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
                     return;
                 }
                 if (canRetry(e)) {
-                    LOGGER.info( "Retrying drop on exception", e);
+                    LOGGER.info("Retrying drop on exception", e);
                     continue;
                 }
                 throw e;

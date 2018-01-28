@@ -108,8 +108,8 @@ public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescript
                 return new IScalarEvaluator() {
                     private final IScalarEvaluator argEvaluator = args[0].createScalarEvaluator(ctx);
                     private final IPointable argPtr = new VoidPointable();
-                    private final ARecordVisitablePointable recordVisitablePointable = new ARecordVisitablePointable(
-                            recType);
+                    private final ARecordVisitablePointable recordVisitablePointable =
+                            new ARecordVisitablePointable(recType);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

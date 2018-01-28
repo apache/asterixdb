@@ -302,8 +302,8 @@ public class NodeControllerService implements IControllerService {
             messagingNetManager.start();
         }
 
-        final InetSocketAddress ccAddress = new InetSocketAddress(ncConfig.getClusterAddress(),
-                ncConfig.getClusterPort());
+        final InetSocketAddress ccAddress =
+                new InetSocketAddress(ncConfig.getClusterAddress(), ncConfig.getClusterPort());
         this.primaryCcs = addCc(ncConfig.getClusterControllerId(), ccAddress);
 
         workQueue.start();
@@ -390,8 +390,8 @@ public class NodeControllerService implements IControllerService {
         NetworkAddress messagingAddress =
                 messagingNetManager != null ? messagingNetManager.getPublicNetworkAddress() : null;
         int allCores = osMXBean.getAvailableProcessors();
-        nodeRegistration = new NodeRegistration(ncAddress, id, ncConfig, netAddress, datasetAddress,
-                osMXBean.getName(), osMXBean.getArch(), osMXBean.getVersion(), allCores, runtimeMXBean.getVmName(),
+        nodeRegistration = new NodeRegistration(ncAddress, id, ncConfig, netAddress, datasetAddress, osMXBean.getName(),
+                osMXBean.getArch(), osMXBean.getVersion(), allCores, runtimeMXBean.getVmName(),
                 runtimeMXBean.getVmVersion(), runtimeMXBean.getVmVendor(), runtimeMXBean.getClassPath(),
                 runtimeMXBean.getLibraryPath(), runtimeMXBean.getBootClassPath(), runtimeMXBean.getInputArguments(),
                 runtimeMXBean.getSystemProperties(), hbSchema, messagingAddress, application.getCapacity(),
@@ -403,8 +403,8 @@ public class NodeControllerService implements IControllerService {
 
         // Start heartbeat generator.
         if (!heartbeatThreads.containsKey(ccs)) {
-            Thread heartbeatThread = new Thread(new HeartbeatTask(ccs, nodeParameters.getHeartbeatPeriod()),
-                    id + "-Heartbeat");
+            Thread heartbeatThread =
+                    new Thread(new HeartbeatTask(ccs, nodeParameters.getHeartbeatPeriod()), id + "-Heartbeat");
             heartbeatThread.setPriority(Thread.MAX_PRIORITY);
             heartbeatThread.setDaemon(true);
             heartbeatThread.start();
@@ -528,7 +528,6 @@ public class NodeControllerService implements IControllerService {
         }
         return jpbs;
     }
-
 
     public void storeActivityClusterGraph(DeployedJobSpecId deployedJobSpecId, ActivityClusterGraph acg)
             throws HyracksException {

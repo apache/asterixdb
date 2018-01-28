@@ -30,8 +30,8 @@ public class OperatorExecutionTimeProfiler {
         if (ExecutionTimeProfiler.PROFILE_MODE) {
             //SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
             try {
-                executionTimeProfiler = new ExecutionTimeProfiler(profileHomeDir + "executionTime-"
-                        + Inet4Address.getLocalHost().getHostAddress() + ".txt");
+                executionTimeProfiler = new ExecutionTimeProfiler(
+                        profileHomeDir + "executionTime-" + Inet4Address.getLocalHost().getHostAddress() + ".txt");
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }

@@ -59,23 +59,23 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
             new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
             new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-    static RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer() });
+    static RecordDescriptor ordersDesc =
+            new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-    static RecordDescriptor custOrderJoinDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer() });
+    static RecordDescriptor custOrderJoinDesc =
+            new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
     static IValueParserFactory[] custValueParserFactories = new IValueParserFactory[custDesc.getFieldCount()];
     static IValueParserFactory[] orderValueParserFactories = new IValueParserFactory[ordersDesc.getFieldCount()];
@@ -86,9 +86,8 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     }
 
     private IOperatorDescriptor getPrinter(JobSpecification spec, String path) {
-        IFileSplitProvider outputSplitProvider = new ConstantFileSplitProvider(
-                new FileSplit[] {
-                        new ManagedFileSplit(NC1_ID, path) });
+        IFileSplitProvider outputSplitProvider =
+                new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID, path) });
 
         return DEBUG ? new PlainFileWriterOperatorDescriptor(spec, outputSplitProvider, "|")
                 : new NullSinkOperatorDescriptor(spec);
@@ -97,12 +96,12 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     @Test
     public void customerOrderCIDHybridHashJoin_Case1() throws Exception {
         JobSpecification spec = new JobSpecification();
-        FileSplit[] custSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID, "data" + File.separator
-                + "tpch0.001" + File.separator + "customer4.tbl") };
+        FileSplit[] custSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                "data" + File.separator + "tpch0.001" + File.separator + "customer4.tbl") };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
 
-        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator
-                + "tpch0.001" + File.separator + "orders4.tbl") };
+        FileSplit[] ordersSplits = new FileSplit[] {
+                new ManagedFileSplit(NC2_ID, "data" + File.separator + "tpch0.001" + File.separator + "orders4.tbl") };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
         FileScanOperatorDescriptor ordScanner = new FileScanOperatorDescriptor(spec, ordersSplitsProvider,
@@ -117,8 +116,8 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                 1.2, new int[] { 0 }, new int[] { 1 },
                 new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                custOrderJoinDesc, new JoinComparatorFactory(
-                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 0, 1),
+                custOrderJoinDesc,
+                new JoinComparatorFactory(PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 0, 1),
                 new JoinComparatorFactory(PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 1, 0),
                 null);
 
@@ -146,12 +145,12 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
     public void customerOrderCIDHybridHashJoin_Case2() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID, "data" + File.separator
-                + "tpch0.001" + File.separator + "customer3.tbl") };
+        FileSplit[] custSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                "data" + File.separator + "tpch0.001" + File.separator + "customer3.tbl") };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
 
-        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator
-                + "tpch0.001" + File.separator + "orders4.tbl") };
+        FileSplit[] ordersSplits = new FileSplit[] {
+                new ManagedFileSplit(NC2_ID, "data" + File.separator + "tpch0.001" + File.separator + "orders4.tbl") };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
 
@@ -167,8 +166,8 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                 1.2, new int[] { 0 }, new int[] { 1 },
                 new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                custOrderJoinDesc, new JoinComparatorFactory(
-                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 0, 1),
+                custOrderJoinDesc,
+                new JoinComparatorFactory(PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 0, 1),
                 new JoinComparatorFactory(PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 1, 0),
                 null);
 
@@ -197,12 +196,12 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
 
         JobSpecification spec = new JobSpecification();
 
-        FileSplit[] custSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID, "data" + File.separator
-                + "tpch0.001" + File.separator + "customer3.tbl") };
+        FileSplit[] custSplits = new FileSplit[] { new ManagedFileSplit(NC1_ID,
+                "data" + File.separator + "tpch0.001" + File.separator + "customer3.tbl") };
         IFileSplitProvider custSplitsProvider = new ConstantFileSplitProvider(custSplits);
 
-        FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator
-                + "tpch0.001" + File.separator + "orders1.tbl") };
+        FileSplit[] ordersSplits = new FileSplit[] {
+                new ManagedFileSplit(NC2_ID, "data" + File.separator + "tpch0.001" + File.separator + "orders1.tbl") };
 
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
 
@@ -218,8 +217,8 @@ public class TPCHCustomerOptimizedHybridHashJoinTest extends AbstractIntegration
                 1.2, new int[] { 0 }, new int[] { 1 },
                 new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                custOrderJoinDesc, new JoinComparatorFactory(
-                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 0, 1),
+                custOrderJoinDesc,
+                new JoinComparatorFactory(PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 0, 1),
                 new JoinComparatorFactory(PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY), 1, 0),
                 null);
 

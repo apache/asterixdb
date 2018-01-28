@@ -33,6 +33,7 @@ public class ClusterShutdownIT {
     private static Logger LOGGER = LogManager.getLogger();
     @Rule
     public ExpectedException closeTwice = ExpectedException.none();
+
     @Test
     public void runShutdown() throws Exception {
         IHyracksClientConnection hcc = new HyracksConnection("localhost", 1098);

@@ -59,8 +59,8 @@ public class MaterializingOperatorDescriptor extends AbstractOperatorDescriptor 
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
         if (isSingleActivity) {
-            MaterializerReaderActivityNode mra = new MaterializerReaderActivityNode(
-                    new ActivityId(odId, MATERIALIZER_READER_ACTIVITY_ID));
+            MaterializerReaderActivityNode mra =
+                    new MaterializerReaderActivityNode(new ActivityId(odId, MATERIALIZER_READER_ACTIVITY_ID));
 
             builder.addActivity(this, mra);
             builder.addSourceEdge(0, mra, 0);

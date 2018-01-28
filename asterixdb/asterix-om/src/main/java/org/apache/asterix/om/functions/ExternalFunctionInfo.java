@@ -35,8 +35,8 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
     private final FunctionKind kind;
     private final IAType returnType;
 
-    public ExternalFunctionInfo(String namespace, String name, int arity, FunctionKind kind,
-            List<IAType> argumentTypes, IAType returnType, IResultTypeComputer rtc, String body, String language) {
+    public ExternalFunctionInfo(String namespace, String name, int arity, FunctionKind kind, List<IAType> argumentTypes,
+            IAType returnType, IResultTypeComputer rtc, String body, String language) {
         super(namespace, name, arity, true);
         this.rtc = rtc;
         this.argumentTypes = argumentTypes;

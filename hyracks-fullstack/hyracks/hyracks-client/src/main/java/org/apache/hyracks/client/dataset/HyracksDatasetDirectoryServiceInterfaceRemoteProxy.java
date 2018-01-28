@@ -40,16 +40,16 @@ public class HyracksDatasetDirectoryServiceInterfaceRemoteProxy implements IHyra
 
     @Override
     public Status getDatasetResultStatus(JobId jobId, ResultSetId rsId) throws Exception {
-        HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction gdrlf = new HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction(
-                jobId, rsId);
+        HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction gdrlf =
+                new HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction(jobId, rsId);
         return (Status) rpci.call(ipcHandle, gdrlf);
     }
 
     @Override
     public DatasetDirectoryRecord[] getDatasetResultLocations(JobId jobId, ResultSetId rsId,
             DatasetDirectoryRecord[] knownRecords) throws Exception {
-        HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf = new HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction(
-                jobId, rsId, knownRecords);
+        HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf =
+                new HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction(jobId, rsId, knownRecords);
         return (DatasetDirectoryRecord[]) rpci.call(ipcHandle, gdrlf);
     }
 }

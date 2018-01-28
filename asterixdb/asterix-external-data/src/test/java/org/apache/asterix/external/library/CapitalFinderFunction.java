@@ -52,7 +52,8 @@ public class CapitalFinderFunction implements IExternalScalarFunction {
 
     @Override
     public void initialize(IFunctionHelper functionHelper) throws Exception {
-        InputStream in = CapitalFinderFunction.class.getClassLoader().getResourceAsStream("data/countriesCapitals.properties");
+        InputStream in =
+                CapitalFinderFunction.class.getClassLoader().getResourceAsStream("data/countriesCapitals.properties");
         capitalList = new Properties();
         capitalList.load(in);
         capital = (JString) functionHelper.getObject(JTypeTag.STRING);

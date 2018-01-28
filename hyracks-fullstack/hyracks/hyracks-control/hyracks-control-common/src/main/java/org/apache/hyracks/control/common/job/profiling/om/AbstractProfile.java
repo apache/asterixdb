@@ -45,7 +45,7 @@ public abstract class AbstractProfile implements IWritable, Serializable {
         return counters;
     }
 
-    public abstract ObjectNode toJSON() ;
+    public abstract ObjectNode toJSON();
 
     protected void populateCounters(ObjectNode jo) {
         ObjectMapper om = new ObjectMapper();

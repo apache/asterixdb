@@ -69,7 +69,8 @@ public class Scheduler {
      *            the hyracks cluster toplogy
      * @throws HyracksException
      */
-    public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, ClusterTopology topology) throws HyracksException {
+    public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, ClusterTopology topology)
+            throws HyracksException {
         scheduler = new org.apache.hyracks.hdfs.scheduler.Scheduler(ncNameToNcInfos, topology);
     }
 

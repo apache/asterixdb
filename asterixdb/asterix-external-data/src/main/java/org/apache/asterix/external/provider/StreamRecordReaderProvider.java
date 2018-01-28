@@ -39,8 +39,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class StreamRecordReaderProvider {
 
-    private static final String RESOURCE = "META-INF/services/org.apache.asterix.external.input.record."
-            + "reader.stream.StreamRecordReader";
+    private static final String RESOURCE =
+            "META-INF/services/org.apache.asterix.external.input.record." + "reader.stream.StreamRecordReader";
     private static Map<String, List<Pair<String[], Class>>> recordReaders = null;
 
     protected static StreamRecordReader getInstance(Class clazz) throws AsterixException {

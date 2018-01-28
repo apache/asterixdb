@@ -57,7 +57,7 @@ public class ActiveManager {
     private volatile boolean shutdown;
 
     public ActiveManager(ExecutorService executor, String nodeId, long activeMemoryBudget, int frameSize,
-                         INCServiceContext serviceCtx) throws HyracksDataException {
+            INCServiceContext serviceCtx) throws HyracksDataException {
         this.executor = executor;
         this.nodeId = nodeId;
         this.activeFramePool = new ConcurrentFramePool(nodeId, activeMemoryBudget, frameSize);
@@ -115,18 +115,17 @@ public class ActiveManager {
             if (runtime == null) {
                 LOGGER.warn("Request stats of a runtime that is not registered " + runtimeId);
                 // Send a failure message
-                ((NodeControllerService) serviceCtx.getControllerService())
-                        .sendApplicationMessageToCC(message.getCcId(),
-                                JavaSerializationUtils
-                                        .serialize(new ActiveStatsResponse(reqId, null,
-                                                new RuntimeDataException(ErrorCode.ACTIVE_MANAGER_INVALID_RUNTIME,
-                                                        runtimeId.toString()))), null);
+                ((NodeControllerService) serviceCtx.getControllerService()).sendApplicationMessageToCC(
+                        message.getCcId(),
+                        JavaSerializationUtils.serialize(new ActiveStatsResponse(reqId, null, new RuntimeDataException(
+                                ErrorCode.ACTIVE_MANAGER_INVALID_RUNTIME, runtimeId.toString()))),
+                        null);
                 return;
             }
             String stats = runtime.getStats();
             ActiveStatsResponse response = new ActiveStatsResponse(reqId, stats, null);
-            ((NodeControllerService) serviceCtx.getControllerService())
-                    .sendApplicationMessageToCC(message.getCcId(), JavaSerializationUtils.serialize(response), null);
+            ((NodeControllerService) serviceCtx.getControllerService()).sendApplicationMessageToCC(message.getCcId(),
+                    JavaSerializationUtils.serialize(response), null);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }

@@ -31,19 +31,17 @@ import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 
 public class DataSetConstants {
 
-    public static final RecordDescriptor inputRecordDesc = new RecordDescriptor(
-            new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+    public static final RecordDescriptor inputRecordDesc =
+            new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
                     new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                     new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                     new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                     new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-    public static final IValueParserFactory[] inputParserFactories =
-            new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-                    UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-                    UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-                    UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-                    UTF8StringParserFactory.INSTANCE };
+    public static final IValueParserFactory[] inputParserFactories = new IValueParserFactory[] {
+            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE };
 
     // field, type and key declarations for primary index
     public static int[] primaryFieldPermutation = { 0, 1, 2, 4, 5, 7 };
@@ -54,10 +52,9 @@ public class DataSetConstants {
     public static final IBinaryComparatorFactory[] filterCmpFactories =
             new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
 
-    public static final ITypeTraits[] primaryTypeTraits =
-            new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS, UTF8StringPointable.TYPE_TRAITS,
-                    UTF8StringPointable.TYPE_TRAITS, UTF8StringPointable.TYPE_TRAITS, UTF8StringPointable.TYPE_TRAITS,
-                    UTF8StringPointable.TYPE_TRAITS };
+    public static final ITypeTraits[] primaryTypeTraits = new ITypeTraits[] { UTF8StringPointable.TYPE_TRAITS,
+            UTF8StringPointable.TYPE_TRAITS, UTF8StringPointable.TYPE_TRAITS, UTF8StringPointable.TYPE_TRAITS,
+            UTF8StringPointable.TYPE_TRAITS, UTF8StringPointable.TYPE_TRAITS };
 
     public static final IBinaryComparatorFactory[] primaryComparatorFactories =
             new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
@@ -65,18 +62,16 @@ public class DataSetConstants {
 
     public static final int[] primaryBloomFilterKeyFields = new int[] { 0 };
 
-    public static final RecordDescriptor primaryRecDesc = new RecordDescriptor(
-            new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
-                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-                    new UTF8StringSerializerDeserializer() });
+    public static final RecordDescriptor primaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-    public static final RecordDescriptor primaryAndFilterRecDesc = new RecordDescriptor(
-            new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
-                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-                    new UTF8StringSerializerDeserializer() });
+    public static final RecordDescriptor primaryAndFilterRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
     // field, type and key declarations for secondary indexes
 
@@ -94,11 +89,10 @@ public class DataSetConstants {
             new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
                     PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
 
-    public static final RecordDescriptor secondaryRecDesc = new RecordDescriptor(
-            new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
-                    new UTF8StringSerializerDeserializer() });
-    public static final RecordDescriptor secondaryWithFilterRecDesc = new RecordDescriptor(
-            new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+    public static final RecordDescriptor secondaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
+    public static final RecordDescriptor secondaryWithFilterRecDesc =
+            new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
                     new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                     new UTF8StringSerializerDeserializer() });
 }

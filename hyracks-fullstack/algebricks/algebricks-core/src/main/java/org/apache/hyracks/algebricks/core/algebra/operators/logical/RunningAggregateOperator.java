@@ -72,10 +72,8 @@ public class RunningAggregateOperator extends AbstractAssignOperator {
         IVariableTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
         int n = variables.size();
         for (int i = 0; i < n; i++) {
-            env.setVarType(
-                    variables.get(i),
-                    ctx.getExpressionTypeComputer().getType(expressions.get(i).getValue(), ctx.getMetadataProvider(),
-                            env));
+            env.setVarType(variables.get(i), ctx.getExpressionTypeComputer().getType(expressions.get(i).getValue(),
+                    ctx.getMetadataProvider(), env));
         }
         return env;
     }

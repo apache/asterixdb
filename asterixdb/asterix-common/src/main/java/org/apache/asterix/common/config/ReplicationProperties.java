@@ -36,12 +36,18 @@ import org.apache.hyracks.util.StorageUtil.StorageUnit;
 public class ReplicationProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        REPLICATION_LOG_BUFFER_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, StorageUnit.KILOBYTE),
+        REPLICATION_LOG_BUFFER_PAGESIZE(
+                INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(128, StorageUnit.KILOBYTE),
                 "The size in bytes of each log buffer page"),
         REPLICATION_LOG_BUFFER_NUMPAGES(INTEGER, 8, "The number of log buffer pages"),
-        REPLICATION_LOG_BATCHSIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, StorageUnit.KILOBYTE),
+        REPLICATION_LOG_BATCHSIZE(
+                INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(4, StorageUnit.KILOBYTE),
                 "The size in bytes to replicate in each batch"),
-        REPLICATION_TIMEOUT(LONG, TimeUnit.SECONDS.toSeconds(30),
+        REPLICATION_TIMEOUT(
+                LONG,
+                TimeUnit.SECONDS.toSeconds(30),
                 "The time in seconds to timeout waiting for master or replica to ack"),
         REPLICATION_ENABLED(BOOLEAN, false, "Whether or not data replication is enabled"),
         REPLICATION_FACTOR(INTEGER, 2, "Number of replicas (backups) to maintain per master replica"),

@@ -197,8 +197,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void serializeSchemalessRecord(ARecord record, DataOutput dataOutput, boolean writeTypeTag)
             throws HyracksDataException {
-        ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
+        ISerializerDeserializer<AString> stringSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
         RecordBuilder confRecordBuilder = new RecordBuilder();
         confRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
@@ -219,8 +219,8 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     @SuppressWarnings("unchecked")
     public static void serializeSimpleSchemalessRecord(List<Pair<String, String>> record, DataOutput dataOutput,
             boolean writeTypeTag) throws HyracksDataException {
-        ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
+        ISerializerDeserializer<AString> stringSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
         RecordBuilder confRecordBuilder = new RecordBuilder();
         confRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
@@ -317,11 +317,11 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         int fieldUtflength = UTF8StringUtil.getUTFLength(fieldName, nstart + 1);
         int fieldUtfMetaLen = UTF8StringUtil.getNumBytesToStoreLength(fieldUtflength);
 
-        IBinaryHashFunction utf8HashFunction = BinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
-                .createBinaryHashFunction();
+        IBinaryHashFunction utf8HashFunction =
+                BinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryHashFunction();
 
-        IBinaryComparator utf8BinaryComparator = BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE
-                .createBinaryComparator();
+        IBinaryComparator utf8BinaryComparator =
+                BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
 
         int fieldNameHashCode = utf8HashFunction.hash(fieldName, nstart + 1, fieldUtflength + fieldUtfMetaLen);
 

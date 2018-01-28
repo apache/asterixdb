@@ -384,7 +384,6 @@ public final class MetadataRecordTypes {
     public static final int FEED_CONN_APPLIED_FUNCTIONS_FIELD_INDEX = 4;
     public static final int FEED_CONN_POLICY_FIELD_INDEX = 5;
 
-
     public static final ARecordType FEED_CONNECTION_RECORDTYPE = createRecordType(
             // RecordTypeName
             RECORD_NAME_FEED_CONNECTION,
@@ -393,7 +392,7 @@ public final class MetadataRecordTypes {
                     FIELD_NAME_RETURN_TYPE, FIELD_NAME_APPLIED_FUNCTIONS, FIELD_NAME_POLICY_NAME },
             // FieldTypes
             new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
-                    new AUnorderedListType(BuiltinType.ASTRING, null), BuiltinType.ASTRING},
+                    new AUnorderedListType(BuiltinType.ASTRING, null), BuiltinType.ASTRING },
             //IsOpen?
             true);
 

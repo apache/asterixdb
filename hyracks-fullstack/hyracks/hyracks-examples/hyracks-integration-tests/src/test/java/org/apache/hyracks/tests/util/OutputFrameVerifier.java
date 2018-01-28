@@ -56,8 +56,7 @@ public class OutputFrameVerifier implements IFrameWriter {
             Object[] objects = new Object[inputRecordDescriptor.getFieldCount()];
             for (int fid = 0; fid < inputRecordDescriptor.getFieldCount(); fid++) {
                 ByteArrayInputStream bais = new ByteArrayInputStream(frameAccessor.getBuffer().array(),
-                        frameAccessor.getAbsoluteFieldStartOffset(tid, fid),
-                        frameAccessor.getFieldLength(tid, fid));
+                        frameAccessor.getAbsoluteFieldStartOffset(tid, fid), frameAccessor.getFieldLength(tid, fid));
                 DataInputStream dis = new DataInputStream(bais);
                 objects[fid] = inputRecordDescriptor.getFields()[fid].deserialize(dis);
             }

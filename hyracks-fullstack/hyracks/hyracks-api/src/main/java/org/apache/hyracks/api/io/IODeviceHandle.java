@@ -48,8 +48,7 @@ public class IODeviceHandle implements Serializable {
     public IODeviceHandle(File mount, String workspace) {
         this.mount = mount;
         this.workspace = workspace == null ? null
-                : workspace.endsWith(File.separator) ? workspace.substring(0, workspace.length() - 1)
-                        : workspace;
+                : workspace.endsWith(File.separator) ? workspace.substring(0, workspace.length() - 1) : workspace;
     }
 
     public File getMount() {
@@ -78,7 +77,7 @@ public class IODeviceHandle implements Serializable {
      *            comma separated list of devices
      * @return
      */
-    public static List<IODeviceHandle> getDevices(String [] ioDevices) {
+    public static List<IODeviceHandle> getDevices(String[] ioDevices) {
         List<IODeviceHandle> devices = new ArrayList<>();
         for (String ioDevice : ioDevices) {
             String devPath = ioDevice.trim();

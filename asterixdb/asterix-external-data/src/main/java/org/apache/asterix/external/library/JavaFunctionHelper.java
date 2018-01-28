@@ -52,8 +52,8 @@ public class JavaFunctionHelper implements IFunctionHelper {
     private final IDataOutputProvider outputProvider;
     private final IJObject[] arguments;
     private IJObject resultHolder;
-    private final IObjectPool<IJObject, IAType> objectPool = new ListObjectPool<IJObject, IAType>(
-            JTypeObjectFactory.INSTANCE);
+    private final IObjectPool<IJObject, IAType> objectPool =
+            new ListObjectPool<IJObject, IAType>(JTypeObjectFactory.INSTANCE);
     private final JObjectPointableVisitor pointableVisitor;
     private final PointableAllocator pointableAllocator;
     private final Map<Integer, TypeInfo> poolTypeInfo;

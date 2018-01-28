@@ -66,22 +66,20 @@ public class InMemoryHashJoin {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe,
-            ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild,
-            ITuplePartitionComputer tpcBuild, FrameTuplePairComparator comparator, boolean isLeftOuter,
-            IMissingWriter[] missingWritersBuild, ISerializableTable table, IPredicateEvaluator predEval,
-            ISimpleFrameBufferManager bufferManager)
+    public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe, ITuplePartitionComputer tpcProbe,
+            FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild, ITuplePartitionComputer tpcBuild,
+            FrameTuplePairComparator comparator, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
+            ISerializableTable table, IPredicateEvaluator predEval, ISimpleFrameBufferManager bufferManager)
             throws HyracksDataException {
         this(ctx, accessorProbe, tpcProbe, accessorBuild, rDBuild, tpcBuild, comparator, isLeftOuter,
                 missingWritersBuild, table, predEval, false, bufferManager);
     }
 
-    public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe,
-            ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild,
-            RecordDescriptor rDBuild, ITuplePartitionComputer tpcBuild, FrameTuplePairComparator comparator,
-            boolean isLeftOuter, IMissingWriter[] missingWritersBuild, ISerializableTable table,
-            IPredicateEvaluator predEval, boolean reverse, ISimpleFrameBufferManager bufferManager)
-            throws HyracksDataException {
+    public InMemoryHashJoin(IHyracksTaskContext ctx, FrameTupleAccessor accessorProbe, ITuplePartitionComputer tpcProbe,
+            FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild, ITuplePartitionComputer tpcBuild,
+            FrameTuplePairComparator comparator, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
+            ISerializableTable table, IPredicateEvaluator predEval, boolean reverse,
+            ISimpleFrameBufferManager bufferManager) throws HyracksDataException {
         this.table = table;
         storedTuplePointer = new TuplePointer();
         buffers = new ArrayList<>();

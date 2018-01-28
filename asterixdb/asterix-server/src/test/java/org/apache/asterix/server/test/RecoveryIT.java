@@ -67,8 +67,8 @@ public class RecoveryIT {
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
 
-        File externalTestsJar = new File(
-                StringUtils.join(new String[] { "..", "asterix-external-data", "target" }, File.separator))
+        File externalTestsJar =
+                new File(StringUtils.join(new String[] { "..", "asterix-external-data", "target" }, File.separator))
                         .listFiles((dir, name) -> name.matches("asterix-external-data-.*-tests.jar"))[0];
 
         asterixInstallerPath = new File(System.getProperty("user.dir"));
@@ -106,8 +106,8 @@ public class RecoveryIT {
     public static void tearDown() throws Exception {
         File outdir = new File(PATH_ACTUAL);
         FileUtils.deleteDirectory(outdir);
-        File dataCopyDir = new File(
-                ncServiceHomePath + File.separator + ".." + File.separator + ".." + File.separator + "data");
+        File dataCopyDir =
+                new File(ncServiceHomePath + File.separator + ".." + File.separator + ".." + File.separator + "data");
         FileUtils.deleteDirectory(dataCopyDir);
         TestExecutor.executeScript(pb,
                 scriptHomePath + File.separator + "setup_teardown" + File.separator + "stop_and_delete.sh");

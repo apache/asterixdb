@@ -65,12 +65,12 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
 
     private final ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
 
-    private final IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool = new ListObjectPool<IARecordBuilder, ATypeTag>(
-            new RecordBuilderFactory());
-    private final IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool = new ListObjectPool<IAsterixListBuilder, ATypeTag>(
-            new ListBuilderFactory());
-    private final IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool = new ListObjectPool<IMutableValueStorage, ATypeTag>(
-            new AbvsBuilderFactory());
+    private final IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool =
+            new ListObjectPool<IARecordBuilder, ATypeTag>(new RecordBuilderFactory());
+    private final IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool =
+            new ListObjectPool<IAsterixListBuilder, ATypeTag>(new ListBuilderFactory());
+    private final IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
+            new ListObjectPool<IMutableValueStorage, ATypeTag>(new AbvsBuilderFactory());
 
     private final String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
     private final String mismatchErrorMessage2 = " got a value of type ";
@@ -198,8 +198,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 if (checkType(ATypeTag.BOOLEAN, objectType)) {
                     booleanSerde.serialize(ABoolean.TRUE, out);
                 } else {
-                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
-                            objectType.getTypeName());
+                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH, objectType.getTypeName());
                 }
                 break;
             case AdmLexer.TOKEN_BOOLEAN_CONS:
@@ -209,8 +208,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 if (checkType(ATypeTag.BOOLEAN, objectType)) {
                     booleanSerde.serialize(ABoolean.FALSE, out);
                 } else {
-                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
-                            objectType.getTypeName());
+                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH, objectType.getTypeName());
                 }
                 break;
             case AdmLexer.TOKEN_DOUBLE_LITERAL:
@@ -256,19 +254,18 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 break;
             case AdmLexer.TOKEN_STRING_LITERAL:
                 if (checkType(ATypeTag.STRING, objectType)) {
-                    String tokenImage = admLexer.getLastTokenImage().substring(1,
-                            admLexer.getLastTokenImage().length() - 1);
+                    String tokenImage =
+                            admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
                     aString.setValue(admLexer.containsEscapes() ? replaceEscapes(tokenImage) : tokenImage);
                     stringSerde.serialize(aString, out);
                 } else if (checkType(ATypeTag.UUID, objectType)) {
                     // Dealing with UUID type that is represented by a string
-                    String tokenImage = admLexer.getLastTokenImage().substring(1,
-                            admLexer.getLastTokenImage().length() - 1);
+                    String tokenImage =
+                            admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
                     aUUID.parseUUIDString(tokenImage);
                     uuidSerde.serialize(aUUID, out);
                 } else {
-                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
-                            objectType.getTypeName());
+                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH, objectType.getTypeName());
                 }
                 break;
             case AdmLexer.TOKEN_STRING_CONS:
@@ -286,8 +283,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                         }
                     }
                 }
-                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
-                        objectType.getTypeName());
+                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH, objectType.getTypeName());
             case AdmLexer.TOKEN_DATE_CONS:
                 parseConstructor(ATypeTag.DATE, objectType, out);
                 break;
@@ -302,8 +298,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     objectType = getComplexType(objectType, ATypeTag.INTERVAL);
                     parseInterval(ATypeTag.INTERVAL, objectType, out);
                 } else {
-                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
-                            objectType.getTypeName());
+                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH, objectType.getTypeName());
                 }
                 break;
             case AdmLexer.TOKEN_DURATION_CONS:
@@ -338,8 +333,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     objectType = getComplexType(objectType, ATypeTag.MULTISET);
                     parseUnorderedList((AUnorderedListType) objectType, out);
                 } else {
-                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
-                            objectType.getTypeName());
+                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH, objectType.getTypeName());
                 }
                 break;
             case AdmLexer.TOKEN_START_ORDERED_LIST:
@@ -347,8 +341,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     objectType = getComplexType(objectType, ATypeTag.ARRAY);
                     parseOrderedList((AOrderedListType) objectType, out);
                 } else {
-                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
-                            objectType.getTypeName());
+                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH, objectType.getTypeName());
                 }
                 break;
             case AdmLexer.TOKEN_START_RECORD:
@@ -356,8 +349,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     objectType = getComplexType(objectType, ATypeTag.OBJECT);
                     parseRecord((ARecordType) objectType, out);
                 } else {
-                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH,
-                            objectType.getTypeName());
+                    throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH, objectType.getTypeName());
                 }
                 break;
             case AdmLexer.TOKEN_UUID_CONS:
@@ -407,8 +399,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                         readpos += 4;
                         break;
                     default:
-                        throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_ILLEGAL_ESCAPE,
-                                chars[readpos + 1]);
+                        throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_ILLEGAL_ESCAPE, chars[readpos + 1]);
                 }
                 ++readpos;
                 movemarker = readpos + 1;
@@ -517,12 +508,12 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     expectingRecordField = false;
 
                     if (recType != null) {
-                        String fldName = admLexer.getLastTokenImage().substring(1,
-                                admLexer.getLastTokenImage().length() - 1);
+                        String fldName =
+                                admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
                         fieldId = recBuilder.getFieldId(fldName);
                         if ((fieldId < 0) && !recType.isOpen()) {
-                            throw new ParseException(
-                                    ErrorCode.PARSER_ADM_DATA_PARSER_EXTRA_FIELD_IN_CLOSED_RECORD, fldName);
+                            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_EXTRA_FIELD_IN_CLOSED_RECORD,
+                                    fldName);
                         } else if ((fieldId < 0) && recType.isOpen()) {
                             aStringFieldName.setValue(admLexer.getLastTokenImage().substring(1,
                                     admLexer.getLastTokenImage().length() - 1));
@@ -545,8 +536,7 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
 
                     token = admLexer.next();
                     if (token != AdmLexer.TOKEN_COLON) {
-                        throw new ParseException(
-                                ErrorCode.PARSER_ADM_DATA_PARSER_UNEXPECTED_TOKEN_WHEN_EXPECT_COMMA,
+                        throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_UNEXPECTED_TOKEN_WHEN_EXPECT_COMMA,
                                 AdmLexer.tokenKindToString(token));
                     }
 
@@ -561,12 +551,10 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     break;
                 case AdmLexer.TOKEN_COMMA:
                     if (first) {
-                        throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_FOUND_COMMA_WHEN,
-                                "before any");
+                        throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_FOUND_COMMA_WHEN, "before any");
                     }
                     if (expectingRecordField) {
-                        throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_FOUND_COMMA_WHEN,
-                                "expecting a");
+                        throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_FOUND_COMMA_WHEN, "expecting a");
                     }
                     expectingRecordField = true;
                     break;
@@ -675,8 +663,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 String arg = admLexer.getLastTokenImage();
                 switch (tag) {
                     case DATE:
-                        chrononTimeInMs += (parseDatePart(arg, 0, arg.length() - 1)
-                                / GregorianCalendarSystem.CHRONON_OF_DAY);
+                        chrononTimeInMs +=
+                                (parseDatePart(arg, 0, arg.length() - 1) / GregorianCalendarSystem.CHRONON_OF_DAY);
                         break;
                     case TIME:
                         chrononTimeInMs += parseTimePart(arg, 0, arg.length() - 1);
@@ -687,8 +675,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                             throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_INTERVAL_INVALID_DATETIME);
                         }
                         chrononTimeInMs += parseDatePart(arg, 0, timeSeperatorOffsetInDatetimeString - 1);
-                        chrononTimeInMs += parseTimePart(arg, timeSeperatorOffsetInDatetimeString + 1,
-                                arg.length() - 1);
+                        chrononTimeInMs +=
+                                parseTimePart(arg, timeSeperatorOffsetInDatetimeString + 1, arg.length() - 1);
                         break;
                     default:
                         throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_INTERVAL_UNSUPPORTED_TYPE);
@@ -874,18 +862,17 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             if (token == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                 token = admLexer.next();
                 if (token == AdmLexer.TOKEN_STRING_LITERAL) {
-                    String unquoted = admLexer.getLastTokenImage().substring(1,
-                            admLexer.getLastTokenImage().length() - 1);
+                    String unquoted =
+                            admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
                     if (!parseValue(unquoted, typeTag, dataOutput)) {
-                        throw new ParseException(
-                                ErrorCode.PARSER_ADM_DATA_PARSER_CONSTRUCTOR_MISSING_DESERIALIZER,
+                        throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_CONSTRUCTOR_MISSING_DESERIALIZER,
                                 AdmLexer.tokenKindToString(token));
                     }
                     token = admLexer.next();
                     if (token == AdmLexer.TOKEN_CONSTRUCTOR_CLOSE) {
                         if (targetTypeTag != typeTag) {
-                            ITypeConvertComputer promoteComputer = ATypeHierarchy.getTypePromoteComputer(typeTag,
-                                    targetTypeTag);
+                            ITypeConvertComputer promoteComputer =
+                                    ATypeHierarchy.getTypePromoteComputer(typeTag, targetTypeTag);
                             // the availability if the promote computer should be consistent with
                             // the availability of a target type
                             assert promoteComputer != null;

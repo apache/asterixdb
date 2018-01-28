@@ -44,8 +44,8 @@ public class AOrderedlistPrinterFactory implements IPrinterFactory {
     @Override
     public IPrinter createPrinter() {
         final PointableAllocator allocator = new PointableAllocator();
-        final IAType inputType = orderedlistType == null
-                ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.ARRAY) : orderedlistType;
+        final IAType inputType = orderedlistType == null ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.ARRAY)
+                : orderedlistType;
         final IVisitablePointable listAccessor = allocator.allocateListValue(inputType);
         final APrintVisitor printVisitor = new APrintVisitor();
         final Pair<PrintStream, ATypeTag> arg = new Pair<>(null, null);

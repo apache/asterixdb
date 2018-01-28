@@ -124,8 +124,8 @@ public class SortMergeExchangePOperator extends AbstractExchangePOperator {
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
         List<ILocalStructuralProperty> localProps = new ArrayList<ILocalStructuralProperty>(sortColumns.length);
         localProps.add(new LocalOrderProperty(Arrays.asList(sortColumns)));
-        StructuralPropertiesVector[] r = new StructuralPropertiesVector[] { new StructuralPropertiesVector(null,
-                localProps) };
+        StructuralPropertiesVector[] r =
+                new StructuralPropertiesVector[] { new StructuralPropertiesVector(null, localProps) };
         return new PhysicalRequirements(r, IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
 

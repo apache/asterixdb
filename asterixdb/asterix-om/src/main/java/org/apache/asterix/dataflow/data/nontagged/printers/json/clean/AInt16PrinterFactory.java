@@ -29,8 +29,8 @@ public class AInt16PrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final AInt16PrinterFactory INSTANCE = new AInt16PrinterFactory();
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps
-            .print(AInt16SerializerDeserializer.getShort(b, s + 1));
+    public static final IPrinter PRINTER =
+            (byte[] b, int s, int l, PrintStream ps) -> ps.print(AInt16SerializerDeserializer.getShort(b, s + 1));
 
     @Override
     public IPrinter createPrinter() {

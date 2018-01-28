@@ -90,11 +90,11 @@ public class ApiServlet extends AbstractServlet {
         this.componentProvider = componentProvider;
     }
 
-    @Override protected void post(IServletRequest request, IServletResponse response) {
+    @Override
+    protected void post(IServletRequest request, IServletResponse response) {
         // Query language
-        ILangCompilationProvider compilationProvider = "AQL".equals(request.getParameter("query-language")) ?
-                aqlCompilationProvider :
-                sqlppCompilationProvider;
+        ILangCompilationProvider compilationProvider = "AQL".equals(request.getParameter("query-language"))
+                ? aqlCompilationProvider : sqlppCompilationProvider;
         IParserFactory parserFactory = compilationProvider.getParserFactory();
 
         // Output format.
@@ -150,14 +150,12 @@ public class ApiServlet extends AbstractServlet {
             }
             IParser parser = parserFactory.createParser(query);
             List<Statement> aqlStatements = parser.parse();
-            SessionConfig sessionConfig =
-                    new SessionConfig(format, true, isSet(executeQuery), true, planFormat);
+            SessionConfig sessionConfig = new SessionConfig(format, true, isSet(executeQuery), true, planFormat);
             sessionConfig.set(SessionConfig.FORMAT_HTML, true);
             sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, csvAndHeader);
             sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, isSet(wrapperArray));
-            sessionConfig
-                    .setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam), isSet(printLogicalPlanParam),
-                            isSet(printOptimizedLogicalPlanParam), isSet(printJob));
+            sessionConfig.setOOBData(isSet(printExprParam), isSet(printRewrittenExprParam),
+                    isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam), isSet(printJob));
             SessionOutput sessionOutput = new SessionOutput(sessionConfig, out);
             MetadataManager.INSTANCE.init();
             IStatementExecutor translator = statementExectorFactory.create(appCtx, aqlStatements, sessionOutput,
@@ -232,8 +230,8 @@ public class ApiServlet extends AbstractServlet {
             try {
                 line = br.readLine();
             } catch (NullPointerException e) {
-                LOGGER.log(Level.WARN,
-                        "NPE reading resource " + resourcePath + ", assuming JDK-8080094; returning 404", e);
+                LOGGER.log(Level.WARN, "NPE reading resource " + resourcePath + ", assuming JDK-8080094; returning 404",
+                        e);
                 // workaround lame JDK bug where a broken InputStream is returned in case the resourcePath is a
                 // directory; see https://bugs.openjdk.java.net/browse/JDK-8080094
                 response.setStatus(HttpResponseStatus.NOT_FOUND);

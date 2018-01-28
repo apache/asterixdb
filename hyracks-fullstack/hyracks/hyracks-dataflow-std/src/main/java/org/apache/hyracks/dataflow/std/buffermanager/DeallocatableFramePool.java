@@ -64,7 +64,7 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
 
     private ByteBuffer mergeExistingFrames(int frameSize) throws HyracksDataException {
         int mergedSize = memBudget - allocated;
-        for (Iterator<ByteBuffer> iter = buffers.iterator(); iter.hasNext(); ) {
+        for (Iterator<ByteBuffer> iter = buffers.iterator(); iter.hasNext();) {
             ByteBuffer buffer = iter.next();
             iter.remove();
             mergedSize += buffer.capacity();
@@ -88,7 +88,7 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
     }
 
     private ByteBuffer findExistingFrame(int frameSize) {
-        for (Iterator<ByteBuffer> iter = buffers.iterator(); iter.hasNext(); ) {
+        for (Iterator<ByteBuffer> iter = buffers.iterator(); iter.hasNext();) {
             ByteBuffer next = iter.next();
             if (next.capacity() >= frameSize) {
                 iter.remove();

@@ -66,8 +66,8 @@ public class InlineWithExpressionVisitor extends AbstractSqlppExpressionScopingV
             }
 
             // Inlines WITH expressions into the select expression.
-            SelectExpression newSelectExpression = (SelectExpression) substituteExpression(selectExpression,
-                    varExprMap, context);
+            SelectExpression newSelectExpression =
+                    (SelectExpression) substituteExpression(selectExpression, varExprMap, context);
 
             // Continues to visit the rewritten select expression.
             return super.visit(newSelectExpression, arg);

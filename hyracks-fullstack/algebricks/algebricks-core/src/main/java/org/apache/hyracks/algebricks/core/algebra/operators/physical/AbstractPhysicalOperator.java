@@ -72,8 +72,8 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
     }
 
     protected PhysicalRequirements emptyUnaryRequirements() {
-        StructuralPropertiesVector[] req = new StructuralPropertiesVector[] {
-                StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR };
+        StructuralPropertiesVector[] req =
+                new StructuralPropertiesVector[] { StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR };
         return new PhysicalRequirements(req, IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
 
@@ -117,7 +117,7 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
 
     protected AlgebricksPipeline[] compileSubplans(IOperatorSchema outerPlanSchema,
             AbstractOperatorWithNestedPlans npOp, IOperatorSchema opSchema, JobGenContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         AlgebricksPipeline[] subplans = new AlgebricksPipeline[npOp.getNestedPlans().size()];
         PlanCompiler pc = new PlanCompiler(context);
         int i = 0;
@@ -129,7 +129,7 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
 
     private AlgebricksPipeline buildPipelineWithProjection(ILogicalPlan p, IOperatorSchema outerPlanSchema,
             AbstractOperatorWithNestedPlans npOp, IOperatorSchema opSchema, PlanCompiler pc)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         if (p.getRoots().size() > 1) {
             throw new NotImplementedException("Nested plans with several roots are not supported.");
         }

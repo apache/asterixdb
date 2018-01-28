@@ -106,7 +106,7 @@ public abstract class AbstractIntegrationTest {
         ncConfig1.setClusterListenAddress("127.0.0.1");
         ncConfig1.setDataListenAddress("127.0.0.1");
         ncConfig1.setResultListenAddress("127.0.0.1");
-        ncConfig1.setIODevices(new String [] { joinPath(System.getProperty("user.dir"), "target", "data", "device0") });
+        ncConfig1.setIODevices(new String[] { joinPath(System.getProperty("user.dir"), "target", "data", "device0") });
         nc1 = new NodeControllerService(ncConfig1);
         nc1.start();
 
@@ -116,7 +116,7 @@ public abstract class AbstractIntegrationTest {
         ncConfig2.setClusterListenAddress("127.0.0.1");
         ncConfig2.setDataListenAddress("127.0.0.1");
         ncConfig2.setResultListenAddress("127.0.0.1");
-        ncConfig2.setIODevices(new String [] { joinPath(System.getProperty("user.dir"), "target", "data", "device1") });
+        ncConfig2.setIODevices(new String[] { joinPath(System.getProperty("user.dir"), "target", "data", "device1") });
         nc2 = new NodeControllerService(ncConfig2);
         nc2.start();
 

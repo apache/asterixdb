@@ -44,8 +44,8 @@ public class EvaluatorMissingCheckVisitor extends ClassVisitor {
     private static final String TYPE_CHECKER_DESC = "L" + TYPE_CHECKER_CLASS + ";";
     private static final String TYPE_CHECKER_NAME = "typeChecker";
     private static final String IS_MISSING = "isMissing";
-    private static final String TYPECHECK_METHOD_DESC = "(Lorg/apache/hyracks/data/std/api/IPointable;"
-            + "Lorg/apache/hyracks/data/std/api/IPointable;)Z";
+    private static final String TYPECHECK_METHOD_DESC =
+            "(Lorg/apache/hyracks/data/std/api/IPointable;" + "Lorg/apache/hyracks/data/std/api/IPointable;)Z";
     private static final String CONSTRUCTOR = "<init>";
     private String className = null;
     private Label lastAddedLabel = null;

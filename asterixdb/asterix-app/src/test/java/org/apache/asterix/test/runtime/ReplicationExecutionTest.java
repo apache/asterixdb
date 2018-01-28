@@ -60,7 +60,8 @@ public class ReplicationExecutionTest {
                 final String nodeId = nc.getId();
                 final INcApplicationContext appCtx = (INcApplicationContext) nc.getApplicationContext();
                 int apiPort = appCtx.getExternalProperties().getNcApiPort();
-                int replicationPort = (int) appCtx.getServiceContext().getAppConfig().get(NCConfig.Option.REPLICATION_LISTEN_PORT);
+                int replicationPort =
+                        (int) appCtx.getServiceContext().getAppConfig().get(NCConfig.Option.REPLICATION_LISTEN_PORT);
                 ncEndPoints.put(nodeId, InetSocketAddress.createUnresolved(ip, apiPort));
                 replicationAddress.put(nodeId, InetSocketAddress.createUnresolved(ip, replicationPort));
             }

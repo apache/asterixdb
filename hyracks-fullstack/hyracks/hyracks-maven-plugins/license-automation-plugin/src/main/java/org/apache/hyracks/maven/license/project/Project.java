@@ -44,8 +44,8 @@ public class Project {
     @JsonIgnore
     private MavenProject mavenProject;
 
-    public static final Comparator<Project> PROJECT_COMPARATOR = (o1, o2) ->
-            o1.compareToken().compareTo(o2.compareToken());
+    public static final Comparator<Project> PROJECT_COMPARATOR =
+            (o1, o2) -> o1.compareToken().compareTo(o2.compareToken());
 
     public Project(MavenProject project, String location, File artifactPath) {
         mavenProject = project;
@@ -60,10 +60,10 @@ public class Project {
 
     @JsonCreator
     public Project(@JsonProperty("name") String name, @JsonProperty("groupId") String groupId,
-                   @JsonProperty("artifactId") String artifactId, @JsonProperty("url") String url,
-                   @JsonProperty("version") String version, @JsonProperty("location") String location,
-                   @JsonProperty("artifactPath") String artifactPath, @JsonProperty("noticeText") String noticeText,
-                   @JsonProperty("licenseText") String licenseText) {
+            @JsonProperty("artifactId") String artifactId, @JsonProperty("url") String url,
+            @JsonProperty("version") String version, @JsonProperty("location") String location,
+            @JsonProperty("artifactPath") String artifactPath, @JsonProperty("noticeText") String noticeText,
+            @JsonProperty("licenseText") String licenseText) {
         this.name = name;
         this.groupId = groupId;
         this.artifactId = artifactId;

@@ -54,21 +54,21 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                     protected final IntervalLogic il = new IntervalLogic();
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
-                    private TaggedValuePointable argPtr0 = (TaggedValuePointable) TaggedValuePointable.FACTORY
-                            .createPointable();
-                    private TaggedValuePointable argPtr1 = (TaggedValuePointable) TaggedValuePointable.FACTORY
-                            .createPointable();
-                    private AIntervalPointable interval0 = (AIntervalPointable) AIntervalPointable.FACTORY
-                            .createPointable();
-                    private AIntervalPointable interval1 = (AIntervalPointable) AIntervalPointable.FACTORY
-                            .createPointable();
+                    private TaggedValuePointable argPtr0 =
+                            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
+                    private TaggedValuePointable argPtr1 =
+                            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
+                    private AIntervalPointable interval0 =
+                            (AIntervalPointable) AIntervalPointable.FACTORY.createPointable();
+                    private AIntervalPointable interval1 =
+                            (AIntervalPointable) AIntervalPointable.FACTORY.createPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     // possible output types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+                    private ISerializerDeserializer<ABoolean> booleanSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

@@ -82,10 +82,10 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
         }
 
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
-                columnList, context.getTypeEnvironment(op), context);
-        RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema,
-                context);
+        IBinaryComparatorFactory[] comparatorFactories = JobGenHelper
+                .variablesToAscBinaryComparatorFactories(columnList, context.getTypeEnvironment(op), context);
+        RecordDescriptor recordDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
 
         PreclusteredGroupOperatorDescriptor opDesc = new PreclusteredGroupOperatorDescriptor(spec, keys,
                 comparatorFactories, aggregatorFactory, recordDescriptor, groupAll, framesLimit);

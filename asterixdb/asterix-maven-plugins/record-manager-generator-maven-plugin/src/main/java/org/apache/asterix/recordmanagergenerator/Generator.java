@@ -34,13 +34,8 @@ public class Generator {
         SUPPORT
     }
 
-    public static void generateSource(
-            TemplateType tmplType,
-            String packageName,
-            RecordType rec,
-            InputStream is,
-            StringBuilder sb,
-            boolean debug) {
+    public static void generateSource(TemplateType tmplType, String packageName, RecordType rec, InputStream is,
+            StringBuilder sb, boolean debug) {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(is));
 
@@ -63,16 +58,12 @@ public class Generator {
 
     }
 
-    private static void generateMemoryManagerSource(
-            String packageName,
-            RecordType resource,
-            BufferedReader in,
-            StringBuilder sb,
-            boolean debug) throws IOException {
+    private static void generateMemoryManagerSource(String packageName, RecordType resource, BufferedReader in,
+            StringBuilder sb, boolean debug) throws IOException {
         String line = null;
         String indent = "    ";
 
-        while((line = in.readLine()) != null) {
+        while ((line = in.readLine()) != null) {
             if (line.contains("@PACKAGE@")) {
                 line = line.replace("@PACKAGE@", packageName);
             }
@@ -114,16 +105,12 @@ public class Generator {
         }
     }
 
-    private static void generateArenaManagerSource(
-            String packageName,
-            RecordType resource,
-            BufferedReader in,
-            StringBuilder sb,
-            boolean debug) throws IOException {
+    private static void generateArenaManagerSource(String packageName, RecordType resource, BufferedReader in,
+            StringBuilder sb, boolean debug) throws IOException {
         String line = null;
         String indent = "    ";
 
-        while((line = in.readLine()) != null) {
+        while ((line = in.readLine()) != null) {
             if (line.contains("@PACKAGE@")) {
                 line = line.replace("@PACKAGE@", packageName);
             }
@@ -152,13 +139,10 @@ public class Generator {
         }
     }
 
-    private static void generateSupportFileSource(
-            String packageName,
-            BufferedReader in,
-            StringBuilder sb,
+    private static void generateSupportFileSource(String packageName, BufferedReader in, StringBuilder sb,
             boolean debug) throws IOException {
         String line = null;
-        while((line = in.readLine()) != null) {
+        while ((line = in.readLine()) != null) {
             if (line.contains("@PACKAGE@")) {
                 line = line.replace("@PACKAGE@", packageName);
             }

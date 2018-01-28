@@ -31,7 +31,8 @@ public class TupleBatch {
     private final TupleGenerator[] tupleGens;
     public final AtomicBoolean inUse = new AtomicBoolean(false);
 
-    public TupleBatch(int size, IFieldValueGenerator[] fieldGens, ISerializerDeserializer[] fieldSerdes, int payloadSize) {
+    public TupleBatch(int size, IFieldValueGenerator[] fieldGens, ISerializerDeserializer[] fieldSerdes,
+            int payloadSize) {
         this.size = size;
         tupleGens = new TupleGenerator[size];
         for (int i = 0; i < size; i++) {
@@ -40,7 +41,7 @@ public class TupleBatch {
     }
 
     public void generate() throws IOException {
-        for(TupleGenerator tupleGen : tupleGens) {
+        for (TupleGenerator tupleGen : tupleGens) {
             tupleGen.next();
         }
     }

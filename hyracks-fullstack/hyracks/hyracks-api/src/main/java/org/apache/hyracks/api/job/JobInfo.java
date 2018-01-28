@@ -33,7 +33,8 @@ public class JobInfo implements Serializable {
 
     private final Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
 
-    public JobInfo(JobId jobId, JobStatus jobStatus, Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations) {
+    public JobInfo(JobId jobId, JobStatus jobStatus,
+            Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations) {
         this.jobId = jobId;
         this.operatorLocations = operatorLocations;
         this.status = jobStatus;

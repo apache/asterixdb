@@ -64,14 +64,12 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
 
         FileSplit[] splits = new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator + "words.txt") };
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
-        RecordDescriptor desc = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
+        RecordDescriptor desc =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(
-                spec,
-                splitProvider,
-                new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','),
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, new DelimitedDataTupleParserFactory(
+                        new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','), desc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
         InMemorySortOperatorDescriptor sorter = new InMemorySortOperatorDescriptor(spec, new int[] { 0 },
@@ -84,11 +82,13 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PreclusteredGroupOperatorDescriptor group = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 0 },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }), desc2);
+                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }),
+                desc2);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, group, NC2_ID);
 
         InMemorySortOperatorDescriptor sorter2 = new InMemorySortOperatorDescriptor(spec, new int[] { 1 },
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) }, desc2);
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
+                desc2);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter2, NC2_ID);
 
         RecordDescriptor desc3 = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -96,7 +96,8 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PreclusteredGroupOperatorDescriptor group2 = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 1 },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                 new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }), desc3);
+                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }),
+                desc3);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, group2, NC2_ID);
 
         ResultSetId rsId = new ResultSetId(1);
@@ -106,18 +107,16 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC2_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(new int[] { 0 },
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                .of(UTF8StringPointable.FACTORY) }));
+                new FieldHashPartitionComputerFactory(new int[] { 0 }, new IBinaryHashFunctionFactory[] {
+                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, csvScanner, 0, sorter, 0);
 
         IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
         spec.connect(conn2, sorter, 0, group, 0);
 
         IConnectorDescriptor conn3 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(new int[] { 1 },
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                .of(UTF8StringPointable.FACTORY) }));
+                new FieldHashPartitionComputerFactory(new int[] { 1 }, new IBinaryHashFunctionFactory[] {
+                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn3, group, 0, sorter2, 0);
 
         IConnectorDescriptor conn4 = new OneToOneConnectorDescriptor(spec);
@@ -136,14 +135,12 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
 
         FileSplit[] splits = new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator + "words.txt") };
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
-        RecordDescriptor desc = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
+        RecordDescriptor desc =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(
-                spec,
-                splitProvider,
-                new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','),
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, new DelimitedDataTupleParserFactory(
+                        new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','), desc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
         InMemorySortOperatorDescriptor sorter = new InMemorySortOperatorDescriptor(spec, new int[] { 0 },
@@ -156,11 +153,13 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PreclusteredGroupOperatorDescriptor group = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 0 },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }), desc2);
+                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }),
+                desc2);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, group, NC1_ID, NC2_ID, NC1_ID, NC2_ID);
 
         InMemorySortOperatorDescriptor sorter2 = new InMemorySortOperatorDescriptor(spec, new int[] { 1 },
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) }, desc2);
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
+                desc2);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter2, NC1_ID, NC2_ID);
 
         RecordDescriptor desc3 = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -168,7 +167,8 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PreclusteredGroupOperatorDescriptor group2 = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 1 },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                 new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }), desc3);
+                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }),
+                desc3);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, group2, NC1_ID, NC2_ID);
 
         ResultSetId rsId = new ResultSetId(1);
@@ -179,18 +179,16 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(new int[] { 0 },
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                .of(UTF8StringPointable.FACTORY) }));
+                new FieldHashPartitionComputerFactory(new int[] { 0 }, new IBinaryHashFunctionFactory[] {
+                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, csvScanner, 0, sorter, 0);
 
         IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
         spec.connect(conn2, sorter, 0, group, 0);
 
         IConnectorDescriptor conn3 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(new int[] { 1 },
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                .of(UTF8StringPointable.FACTORY) }));
+                new FieldHashPartitionComputerFactory(new int[] { 1 }, new IBinaryHashFunctionFactory[] {
+                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn3, group, 0, sorter2, 0);
 
         IConnectorDescriptor conn4 = new OneToOneConnectorDescriptor(spec);
@@ -209,14 +207,12 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
 
         FileSplit[] splits = new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator + "words.txt") };
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
-        RecordDescriptor desc = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
+        RecordDescriptor desc =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(
-                spec,
-                splitProvider,
-                new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','),
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, new DelimitedDataTupleParserFactory(
+                        new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','), desc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
         ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, 3, new int[] { 0 },
@@ -229,11 +225,13 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PreclusteredGroupOperatorDescriptor group = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 0 },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
                 new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }), desc2);
+                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }),
+                desc2);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, group, NC1_ID, NC2_ID, NC1_ID, NC2_ID);
 
         InMemorySortOperatorDescriptor sorter2 = new InMemorySortOperatorDescriptor(spec, new int[] { 1 },
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) }, desc2);
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
+                desc2);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter2, NC1_ID, NC2_ID);
 
         RecordDescriptor desc3 = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -241,7 +239,8 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PreclusteredGroupOperatorDescriptor group2 = new PreclusteredGroupOperatorDescriptor(spec, new int[] { 1 },
                 new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) },
                 new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }), desc3);
+                        new IFieldAggregateDescriptorFactory[] { new CountFieldAggregatorFactory(true) }),
+                desc3);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, group2, NC1_ID, NC2_ID);
 
         ResultSetId rsId = new ResultSetId(1);
@@ -252,18 +251,16 @@ public class CountOfCountsTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(new int[] { 0 },
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                .of(UTF8StringPointable.FACTORY) }));
+                new FieldHashPartitionComputerFactory(new int[] { 0 }, new IBinaryHashFunctionFactory[] {
+                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, csvScanner, 0, sorter, 0);
 
         IConnectorDescriptor conn2 = new OneToOneConnectorDescriptor(spec);
         spec.connect(conn2, sorter, 0, group, 0);
 
         IConnectorDescriptor conn3 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(new int[] { 1 },
-                        new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory
-                                .of(UTF8StringPointable.FACTORY) }));
+                new FieldHashPartitionComputerFactory(new int[] { 1 }, new IBinaryHashFunctionFactory[] {
+                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn3, group, 0, sorter2, 0);
 
         IConnectorDescriptor conn4 = new OneToOneConnectorDescriptor(spec);

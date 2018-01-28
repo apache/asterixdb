@@ -338,9 +338,8 @@ public class IPCConnectionManager {
                     // reset failingLoops on a good loop
                     failingLoops = 0;
                 } catch (Exception e) {
-                    int sleepSecs = (int)Math.pow(2, Math.min(11, failingLoops++));
-                    LOGGER.log(Level.ERROR, "Exception processing message; sleeping " + sleepSecs
-                            + " seconds", e);
+                    int sleepSecs = (int) Math.pow(2, Math.min(11, failingLoops++));
+                    LOGGER.log(Level.ERROR, "Exception processing message; sleeping " + sleepSecs + " seconds", e);
                     try {
                         Thread.sleep(TimeUnit.SECONDS.toMillis(sleepSecs));
                     } catch (InterruptedException e1) {

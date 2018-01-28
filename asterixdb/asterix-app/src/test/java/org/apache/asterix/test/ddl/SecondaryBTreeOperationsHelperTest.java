@@ -86,8 +86,8 @@ public class SecondaryBTreeOperationsHelperTest {
 
             // create a secondary primary index
             TestDataUtil.createPrimaryIndex(datasetName, primaryIndexName);
-            index = metadataProvider
-                    .getIndex(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName, primaryIndexName);
+            index = metadataProvider.getIndex(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName,
+                    primaryIndexName);
             Assert.assertNotNull(index);
             jobSpecification = IndexUtil.buildSecondaryIndexLoadingJobSpec(dataset, index, metadataProvider);
             jobSpecification.getOperatorMap().values().forEach(iOperatorDescriptor -> {
@@ -96,8 +96,8 @@ public class SecondaryBTreeOperationsHelperTest {
 
             // create a normal BTree index
             TestDataUtil.createSecondaryBTreeIndex(datasetName, secondaryIndexName, SKFieldName);
-            index = metadataProvider
-                    .getIndex(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName, secondaryIndexName);
+            index = metadataProvider.getIndex(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName,
+                    secondaryIndexName);
             Assert.assertNotNull(index);
             jobSpecification = IndexUtil.buildSecondaryIndexLoadingJobSpec(dataset, index, metadataProvider);
             final long numOfSortOperators = jobSpecification.getOperatorMap().values().stream()

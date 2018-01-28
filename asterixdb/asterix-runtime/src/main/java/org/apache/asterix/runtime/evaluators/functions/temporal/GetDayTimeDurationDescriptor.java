@@ -70,8 +70,8 @@ public class GetDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicD
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
-                                    BuiltinType.ADAYTIMEDURATION);
+                            SerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
 
                     AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
 
@@ -88,8 +88,7 @@ public class GetDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicD
                                     ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
                         }
 
-                        aDayTimeDuration
-                                    .setMilliseconds(ADurationSerializerDeserializer.getDayTime(bytes, offset + 1));
+                        aDayTimeDuration.setMilliseconds(ADurationSerializerDeserializer.getDayTime(bytes, offset + 1));
                         dayTimeDurationSerde.serialize(aDayTimeDuration, out);
                         result.set(resultStorage);
                     }

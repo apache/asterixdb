@@ -99,8 +99,7 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
 
         //create the logical and physical operator
         CommitOperator commitOperator = new CommitOperator(primaryKeyLogicalVars, isSink);
-        CommitPOperator commitPOperator =
-                new CommitPOperator(dataset, primaryKeyLogicalVars, isSink);
+        CommitPOperator commitPOperator = new CommitPOperator(dataset, primaryKeyLogicalVars, isSink);
         commitOperator.setPhysicalOperator(commitPOperator);
 
         //create ExtensionOperator and put the commitOperator in it.

@@ -41,7 +41,7 @@ public class PerfExperiment {
             logger.setLevel(Level.OFF);
         }
         boolean sorted = Boolean.parseBoolean(args[0]);
-        int numThreads =  Integer.parseInt(args[1]);
+        int numThreads = Integer.parseInt(args[1]);
 
         //int numTuples = 100000; // 100K
         //int numTuples = 1000000; // 1M
@@ -58,11 +58,12 @@ public class PerfExperiment {
         int numBatches = numTuples / batchSize;
 
         int payLoadSize = 240;
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes =
+                new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes, payLoadSize);
 
-        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes,
-                fieldSerdes.length);
+        IBinaryComparatorFactory[] cmpFactories =
+                SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
         int[] bloomFilterKeyFields = new int[cmpFactories.length];
         for (int i = 0; i < bloomFilterKeyFields.length; i++) {
             bloomFilterKeyFields[i] = i;
@@ -73,8 +74,8 @@ public class PerfExperiment {
         int repeats = 1;
         long[] times = new long[repeats];
 
-//        int numThreads = 4;
-//        boolean sorted = true;
+        //        int numThreads = 4;
+        //        boolean sorted = true;
         for (int i = 0; i < repeats; i++) {
             //ConcurrentSkipListRunner runner = new ConcurrentSkipListRunner(numBatches, batchSize, tupleSize, typeTraits, cmp);
             //InMemoryBTreeRunner runner = new InMemoryBTreeRunner(numBatches, 8192, 100000, typeTraits, cmpFactories);
@@ -90,7 +91,8 @@ public class PerfExperiment {
             int onDiskNumPages = 16384; // 2GB
             LSMTreeRunner runner = new LSMTreeRunner(numBatches, inMemPageSize, inMemNumPages, onDiskPageSize,
                     onDiskNumPages, typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate);
-            DataGenThread dataGen = new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, payLoadSize, 50, 10, sorted);
+            DataGenThread dataGen =
+                    new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, payLoadSize, 50, 10, sorted);
             dataGen.start();
             runner.reset();
             times[i] = runner.runExperiment(dataGen, numThreads);

@@ -74,7 +74,8 @@ public class ActivityCluster implements Serializable {
         connectorRecordDescriptorMap = new HashMap<ConnectorDescriptorId, RecordDescriptor>();
         activityInputMap = new HashMap<ActivityId, List<IConnectorDescriptor>>();
         activityOutputMap = new HashMap<ActivityId, List<IConnectorDescriptor>>();
-        connectorActivityMap = new HashMap<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>>();
+        connectorActivityMap =
+                new HashMap<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>>();
         blocked2blockerMap = new HashMap<ActivityId, Set<ActivityId>>();
         dependencies = new ArrayList<ActivityCluster>();
     }
@@ -108,8 +109,7 @@ public class ActivityCluster implements Serializable {
         }
         insertIntoIndexedMap(activityInputMap, consumerActivity.getActivityId(), consumerPort, connector);
         insertIntoIndexedMap(activityOutputMap, producerActivity.getActivityId(), producerPort, connector);
-        connectorActivityMap.put(
-                connector.getConnectorId(),
+        connectorActivityMap.put(connector.getConnectorId(),
                 Pair.<Pair<IActivity, Integer>, Pair<IActivity, Integer>> of(
                         Pair.<IActivity, Integer> of(producerActivity, producerPort),
                         Pair.<IActivity, Integer> of(consumerActivity, consumerPort)));
@@ -187,7 +187,7 @@ public class ActivityCluster implements Serializable {
         vList.set(index, value);
     }
 
-    public JsonNode toJSON()  {
+    public JsonNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ArrayNode jans = om.createArrayNode();
         ObjectNode jac = om.createObjectNode();

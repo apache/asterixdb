@@ -68,5 +68,4 @@ public class StringTrimDescriptor extends AbstractScalarFunctionDynamicDescripto
         };
     }
 
-
 }

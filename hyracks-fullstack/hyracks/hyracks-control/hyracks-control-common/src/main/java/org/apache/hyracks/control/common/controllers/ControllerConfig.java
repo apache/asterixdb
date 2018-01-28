@@ -33,6 +33,7 @@ import org.apache.hyracks.util.file.FileUtil;
 public class ControllerConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
     public enum Option implements IOption {
         CONFIG_FILE(OptionTypes.STRING, "Specify path to master configuration file", null),
         CONFIG_FILE_URL(OptionTypes.URL, "Specify URL to master configuration file", null),

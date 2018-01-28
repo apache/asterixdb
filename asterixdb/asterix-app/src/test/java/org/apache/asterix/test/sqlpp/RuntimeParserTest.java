@@ -44,8 +44,8 @@ public class RuntimeParserTest {
     protected static final Logger LOGGER = LogManager.getLogger();
 
     protected static final String PATH_ACTUAL = "target" + File.separator + "runtime_parserts" + File.separator;
-    protected static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
-            File.separator);
+    protected static final String PATH_BASE =
+            StringUtils.join(new String[] { "src", "test", "resources", "runtimets" }, File.separator);
 
     private final TestExecutor testExecutor = new ParserTestExecutor();
 

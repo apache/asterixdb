@@ -67,9 +67,11 @@ public class LexerNodeMergeNodeTest {
         node2.appendTokenName(token2_name);
         node.merge(node2);
 
-        assertEquals(" ( " + rule_name + token_tostring + " || " + rule2_name + token_tostring + " ) ", node.toString());
-        assertEquals(rule_match + "{" + "\n" + rule_action + "\n" + token_return + "}" + rule2_match + "{" + "\n"
-                + rule2_action + "\n" + token2_return + "}return parseError(TOKEN_MYTOKEN,TOKEN_MYTOKEN2);\n",
+        assertEquals(" ( " + rule_name + token_tostring + " || " + rule2_name + token_tostring + " ) ",
+                node.toString());
+        assertEquals(
+                rule_match + "{" + "\n" + rule_action + "\n" + token_return + "}" + rule2_match + "{" + "\n"
+                        + rule2_action + "\n" + token2_return + "}return parseError(TOKEN_MYTOKEN,TOKEN_MYTOKEN2);\n",
                 node.toJava());
     }
 

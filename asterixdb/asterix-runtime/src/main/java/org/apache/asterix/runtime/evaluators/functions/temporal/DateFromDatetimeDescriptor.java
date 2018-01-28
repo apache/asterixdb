@@ -72,8 +72,8 @@ public class DateFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
 
                     // possible returning types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATE);
+                    private ISerializerDeserializer<ADate> dateSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
                     private AMutableDate aDate = new AMutableDate(0);
 
                     @Override

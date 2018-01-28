@@ -308,8 +308,8 @@ public class DateTimeFormatUtils {
                     break;
                 case DAY_CHAR:
                     processState = DateTimeProcessState.DAY;
-                    pointerMove = parseFormatField(format, formatStart, formatLength, formatPointer, DAY_CHAR,
-                            MAX_DAY_CHARS);
+                    pointerMove =
+                            parseFormatField(format, formatStart, formatLength, formatPointer, DAY_CHAR, MAX_DAY_CHARS);
                     formatPointer += pointerMove;
                     formatCharCopies += pointerMove;
                     break;
@@ -762,8 +762,8 @@ public class DateTimeFormatUtils {
                     break;
                 case DAY_CHAR:
                     processState = DateTimeProcessState.DAY;
-                    pointerMove = parseFormatField(format, formatStart, formatLength, formatPointer, DAY_CHAR,
-                            MAX_DAY_CHARS);
+                    pointerMove =
+                            parseFormatField(format, formatStart, formatLength, formatPointer, DAY_CHAR, MAX_DAY_CHARS);
                     formatPointer += pointerMove;
                     formatCharCopies += pointerMove;
                     break;

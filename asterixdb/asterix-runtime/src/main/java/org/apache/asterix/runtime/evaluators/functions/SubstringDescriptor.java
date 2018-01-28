@@ -103,8 +103,7 @@ public class SubstringDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         try {
                             UTF8StringPointable.substr(string, start, len, builder, array);
                         } catch (StringIndexOutOfBoundsException e) {
-                            throw new RuntimeDataException(ErrorCode.OUT_OF_BOUND, getIdentifier(), 1,
-                                    start + len - 1);
+                            throw new RuntimeDataException(ErrorCode.OUT_OF_BOUND, getIdentifier(), 1, start + len - 1);
                         } catch (IOException e) {
                             throw new HyracksDataException(e);
                         }

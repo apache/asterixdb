@@ -92,14 +92,14 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
 
                     private boolean pointOnLine(double pX, double pY, double startX, double startY, double endX,
                             double endY) throws HyracksDataException {
-                        double crossProduct = SpatialUtils.crossProduct(pY - startY, pX - startX, endY - startY,
-                                endX - startX);
+                        double crossProduct =
+                                SpatialUtils.crossProduct(pY - startY, pX - startX, endY - startY, endX - startX);
                         if (Math.abs(crossProduct) > SpatialUtils.doubleEpsilon()) { // crossProduct != 0
                             return false;
                         }
 
-                        double dotProduct = SpatialUtils.dotProduct((pX - startX), (pY - startY), (endX - startX),
-                                (endY - startY));
+                        double dotProduct =
+                                SpatialUtils.dotProduct((pX - startX), (pY - startY), (endX - startX), (endY - startY));
                         if (dotProduct < 0.0) {
                             return false;
                         }
@@ -536,8 +536,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                             min1 = spatialUtils.getMinProjection();
                             max1 = spatialUtils.getMaxProjection();
 
-                            dotProduct = SpatialUtils.dotProduct(spatialUtils.getXAxis(), spatialUtils.getYAxis(), cX,
-                                    cY);
+                            dotProduct =
+                                    SpatialUtils.dotProduct(spatialUtils.getXAxis(), spatialUtils.getYAxis(), cX, cY);
                             max2 = dotProduct + radius;
                             min2 = dotProduct - radius;
 
@@ -687,9 +687,9 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                         trianglesX1.reset();
                         trianglesY1.reset();
                         while (true) {
-                            middleVertex1 = triangulatePolygon(bytes1, offset1, numOfPoints1, pointsOffsets1,
-                                    trianglesX1, trianglesY1, numOfTriangles1, nonSimplePolygonDetection1,
-                                    middleVertex1);
+                            middleVertex1 =
+                                    triangulatePolygon(bytes1, offset1, numOfPoints1, pointsOffsets1, trianglesX1,
+                                            trianglesY1, numOfTriangles1, nonSimplePolygonDetection1, middleVertex1);
 
                             if (middleVertex1 == -1) {
                                 break;

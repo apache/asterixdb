@@ -94,8 +94,8 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
     public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         try {
-            StreamRecordReader streamRecordReader = (StreamRecordReader) recordReaderClazz.getConstructor()
-                    .newInstance();
+            StreamRecordReader streamRecordReader =
+                    (StreamRecordReader) recordReaderClazz.getConstructor().newInstance();
             streamRecordReader.configure(streamFactory.createInputStream(ctx, partition), configuration);
             return streamRecordReader;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException

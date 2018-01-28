@@ -24,7 +24,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotat
 public class SkipSecondaryIndexSearchExpressionAnnotation extends AbstractExpressionAnnotation {
 
     public static final String HINT_STRING = "skip-index";
-    public static final SkipSecondaryIndexSearchExpressionAnnotation INSTANCE = new SkipSecondaryIndexSearchExpressionAnnotation();
+    public static final SkipSecondaryIndexSearchExpressionAnnotation INSTANCE =
+            new SkipSecondaryIndexSearchExpressionAnnotation();
 
     @Override
     public IExpressionAnnotation copy() {

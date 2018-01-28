@@ -119,10 +119,10 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         ccFutureData = new HashMap<>();
         ccFutureData.put("threaddump",
                 executor.submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processThreadDump(null)))));
-        ccFutureData.put("config", executor.submit(
-                () -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processNodeDetails(null, false, true)))));
-        ccFutureData.put("stats", executor.submit(
-                () -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processNodeDetails(null, true, false)))));
+        ccFutureData.put("config", executor
+                .submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processNodeDetails(null, false, true)))));
+        ccFutureData.put("stats", executor
+                .submit(() -> fixupKeys((ObjectNode) OBJECT_MAPPER.readTree(processNodeDetails(null, true, false)))));
         return ccFutureData;
     }
 

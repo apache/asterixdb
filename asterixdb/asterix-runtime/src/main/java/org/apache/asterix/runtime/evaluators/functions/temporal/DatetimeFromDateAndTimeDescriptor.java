@@ -77,8 +77,8 @@ public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDyn
 
                     // possible returning types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADateTime> datetimeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATETIME);
+                    private ISerializerDeserializer<ADateTime> datetimeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
                     private AMutableDateTime aDateTime = new AMutableDateTime(0);
 
                     @Override

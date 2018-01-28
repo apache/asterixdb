@@ -30,8 +30,8 @@ public class SecondaryIndexSearchOperationCallbackFactory implements ISearchOper
     private static final long serialVersionUID = 1L;
 
     @Override
-    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable)
-            throws HyracksDataException {
+    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx,
+            IOperatorNodePushable operatorNodePushable) throws HyracksDataException {
         return new SecondaryIndexSearchOperationCallback(resourceId);
     }
 }

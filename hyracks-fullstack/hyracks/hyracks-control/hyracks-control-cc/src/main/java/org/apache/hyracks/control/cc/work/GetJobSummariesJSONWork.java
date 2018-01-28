@@ -46,7 +46,7 @@ public class GetJobSummariesJSONWork extends SynchronizableWork {
         populateJSON(jobManager.getArchivedJobs());
     }
 
-    private void populateJSON(Collection<JobRun> jobRuns)  {
+    private void populateJSON(Collection<JobRun> jobRuns) {
         ObjectMapper om = new ObjectMapper();
         for (JobRun run : jobRuns) {
             ObjectNode jo = om.createObjectNode();

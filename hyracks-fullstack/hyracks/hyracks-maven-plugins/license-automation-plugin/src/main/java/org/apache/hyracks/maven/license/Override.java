@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.maven.license;
 
-public class Override  {
+public class Override {
 
     @SuppressWarnings("unused") // set by Maven plugin configuration
     private String url;

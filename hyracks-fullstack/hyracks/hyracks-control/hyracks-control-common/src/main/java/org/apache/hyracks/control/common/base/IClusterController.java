@@ -40,8 +40,7 @@ public interface IClusterController {
 
     void unregisterNode(String nodeId) throws Exception;
 
-    void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
-            throws Exception;
+    void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics) throws Exception;
 
     void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, List<Exception> exceptions)
             throws Exception;
@@ -66,8 +65,8 @@ public interface IClusterController {
 
     void sendApplicationMessageToCC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception;
 
-    void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
-            boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) throws Exception;
+    void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult, boolean emptyResult,
+            int partition, int nPartitions, NetworkAddress networkAddress) throws Exception;
 
     void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception;
 

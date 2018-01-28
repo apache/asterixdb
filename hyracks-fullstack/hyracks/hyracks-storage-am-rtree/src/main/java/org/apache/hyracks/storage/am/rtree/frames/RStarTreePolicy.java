@@ -71,10 +71,12 @@ public class RStarTreePolicy implements IRTreePolicy {
 
     @Override
     public void split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
-            ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) throws HyracksDataException {
+            ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey)
+            throws HyracksDataException {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterleftRTreeFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
-        RTreeTypeAwareTupleWriter rTreeTupleWriterRightFrame = ((RTreeTypeAwareTupleWriter) rightFrame.getTupleWriter());
+        RTreeTypeAwareTupleWriter rTreeTupleWriterRightFrame =
+                ((RTreeTypeAwareTupleWriter) rightFrame.getTupleWriter());
 
         RTreeNSMFrame leftRTreeFrame = ((RTreeNSMFrame) leftFrame);
 
@@ -92,10 +94,10 @@ public class RStarTreePolicy implements IRTreePolicy {
             for (int k = 0; k < leftRTreeFrame.getTupleCount(); ++k) {
 
                 frameTuple.resetByTupleIndex(leftRTreeFrame, k);
-                double LowerKey = keyValueProviders[i]
-                        .getValue(frameTuple.getFieldData(i), frameTuple.getFieldStart(i));
-                double UpperKey = keyValueProviders[j]
-                        .getValue(frameTuple.getFieldData(j), frameTuple.getFieldStart(j));
+                double LowerKey =
+                        keyValueProviders[i].getValue(frameTuple.getFieldData(i), frameTuple.getFieldStart(i));
+                double UpperKey =
+                        keyValueProviders[j].getValue(frameTuple.getFieldData(j), frameTuple.getFieldStart(j));
 
                 tupleEntries1.add(k, LowerKey);
                 tupleEntries2.add(k, UpperKey);
@@ -186,8 +188,8 @@ public class RStarTreePolicy implements IRTreePolicy {
             if (tupleEntries1.get(i).getTupleIndex() != -1) {
                 frameTuple.resetByTupleIndex(leftRTreeFrame, tupleEntries1.get(i).getTupleIndex());
                 rightFrame.insert(frameTuple, -1);
-                ((UnorderedSlotManager) slotManager).modifySlot(
-                        slotManager.getSlotOff(tupleEntries1.get(i).getTupleIndex()), -1);
+                ((UnorderedSlotManager) slotManager)
+                        .modifySlot(slotManager.getSlotOff(tupleEntries1.get(i).getTupleIndex()), -1);
                 totalBytes += leftRTreeFrame.getTupleSize(frameTuple);
                 numOfDeletedTuples++;
             } else {
@@ -198,8 +200,8 @@ public class RStarTreePolicy implements IRTreePolicy {
         ((UnorderedSlotManager) slotManager).deleteEmptySlots();
 
         // maintain space information
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + totalBytes
-                + (slotManager.getSlotSize() * numOfDeletedTuples));
+        buf.putInt(totalFreeSpaceOff,
+                buf.getInt(totalFreeSpaceOff) + totalBytes + (slotManager.getSlotSize() * numOfDeletedTuples));
 
         // compact both pages
         rightFrame.compact();
@@ -238,8 +240,8 @@ public class RStarTreePolicy implements IRTreePolicy {
         tupleEntries2.clear();
     }
 
-    public void generateDist(ITreeIndexFrame leftRTreeFrame, ITreeIndexTupleReference frameTuple,
-            ITupleReference tuple, TupleEntryArrayList entries, Rectangle rec, int start, int end) {
+    public void generateDist(ITreeIndexFrame leftRTreeFrame, ITreeIndexTupleReference frameTuple, ITupleReference tuple,
+            TupleEntryArrayList entries, Rectangle rec, int start, int end) {
         int j = 0;
         while (entries.get(j).getTupleIndex() == -1) {
             j++;
@@ -302,20 +304,19 @@ public class RStarTreePolicy implements IRTreePolicy {
 
                         int c = ((RTreeNSMInteriorFrame) frame).pointerCmp(frameTuple, cmpFrameTuple, cmp);
                         if (c != 0) {
-                            double intersection = RTreeComputationUtils.overlappedArea(frameTuple, tuple,
-                                    cmpFrameTuple, cmp, keyValueProviders);
+                            double intersection = RTreeComputationUtils.overlappedArea(frameTuple, tuple, cmpFrameTuple,
+                                    cmp, keyValueProviders);
                             if (intersection != 0.0) {
-                                difference += intersection
-                                        - RTreeComputationUtils.overlappedArea(frameTuple, null, cmpFrameTuple, cmp,
-                                                keyValueProviders);
+                                difference += intersection - RTreeComputationUtils.overlappedArea(frameTuple, null,
+                                        cmpFrameTuple, cmp, keyValueProviders);
                             }
                         } else {
                             id = j;
                         }
                     }
 
-                    double enlargedArea = RTreeComputationUtils.enlargedArea(cmpFrameTuple, tuple, cmp,
-                            keyValueProviders);
+                    double enlargedArea =
+                            RTreeComputationUtils.enlargedArea(cmpFrameTuple, tuple, cmp, keyValueProviders);
                     if (difference < minOverlap) {
                         minOverlap = difference;
                         minEnlargedArea = enlargedArea;

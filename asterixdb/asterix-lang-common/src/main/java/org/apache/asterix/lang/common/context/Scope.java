@@ -203,7 +203,7 @@ public final class Scope {
         return symbols.keySet();
     }
 
-    public Scope getParentScope(){
+    public Scope getParentScope() {
         return parent;
     }
 }

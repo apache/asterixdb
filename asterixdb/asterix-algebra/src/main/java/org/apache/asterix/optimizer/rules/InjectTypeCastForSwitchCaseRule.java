@@ -100,9 +100,9 @@ public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
             if (TypeResolverUtil.needsCast(producedType, type)) {
                 ILogicalExpression argExpr = argRef.getValue();
                 // Injects a cast call to cast the data type to the produced type of the switch-case function call.
-                ScalarFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE),
-                        new ArrayList<>(Collections.singletonList(new MutableObject<>(argExpr))));
+                ScalarFunctionCallExpression castFunc =
+                        new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE),
+                                new ArrayList<>(Collections.singletonList(new MutableObject<>(argExpr))));
                 TypeCastUtils.setRequiredAndInputTypes(castFunc, producedType, type);
                 argRef.setValue(castFunc);
                 rewritten = true;

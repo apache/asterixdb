@@ -26,7 +26,8 @@ public class AIntervalDescPartialBinaryComparatorFactory implements IBinaryCompa
 
     private static final long serialVersionUID = 1L;
 
-    public static final AIntervalDescPartialBinaryComparatorFactory INSTANCE = new AIntervalDescPartialBinaryComparatorFactory();
+    public static final AIntervalDescPartialBinaryComparatorFactory INSTANCE =
+            new AIntervalDescPartialBinaryComparatorFactory();
 
     private AIntervalDescPartialBinaryComparatorFactory() {
 

@@ -134,8 +134,10 @@ public class DeployedJobSpecsTest {
         verify(nc2, Mockito.timeout(TIME_THRESHOLD).times(2)).checkForDuplicateDeployedJobSpec(any());
 
         //confirm that both jobs are distributed
-        Assert.assertTrue(nc1.getActivityClusterGraph(distributedId1) != null && nc2.getActivityClusterGraph(distributedId1) != null);
-        Assert.assertTrue(nc1.getActivityClusterGraph(distributedId2) != null && nc2.getActivityClusterGraph(distributedId2) != null);
+        Assert.assertTrue(nc1.getActivityClusterGraph(distributedId1) != null
+                && nc2.getActivityClusterGraph(distributedId1) != null);
+        Assert.assertTrue(nc1.getActivityClusterGraph(distributedId2) != null
+                && nc2.getActivityClusterGraph(distributedId2) != null);
         Assert.assertTrue(cc.getDeployedJobSpecStore().getDeployedJobSpecDescriptor(distributedId1) != null);
         Assert.assertTrue(cc.getDeployedJobSpecStore().getDeployedJobSpecDescriptor(distributedId2) != null);
 
@@ -157,7 +159,8 @@ public class DeployedJobSpecsTest {
         verify(nc2, Mockito.timeout(TIME_THRESHOLD).times(1)).removeActivityClusterGraph(any());
 
         //confirm the first job is destroyed
-        Assert.assertTrue(nc1.getActivityClusterGraph(distributedId1) == null && nc2.getActivityClusterGraph(distributedId1) == null);
+        Assert.assertTrue(nc1.getActivityClusterGraph(distributedId1) == null
+                && nc2.getActivityClusterGraph(distributedId1) == null);
         cc.getDeployedJobSpecStore().checkForExistingDeployedJobSpecDescriptor(distributedId1);
 
         //run the second job
@@ -187,7 +190,8 @@ public class DeployedJobSpecsTest {
         verify(nc2, Mockito.timeout(TIME_THRESHOLD).times(2)).removeActivityClusterGraph(any());
 
         //confirm the second job is destroyed
-        Assert.assertTrue(nc1.getActivityClusterGraph(distributedId2) == null && nc2.getActivityClusterGraph(distributedId2) == null);
+        Assert.assertTrue(nc1.getActivityClusterGraph(distributedId2) == null
+                && nc2.getActivityClusterGraph(distributedId2) == null);
         cc.getDeployedJobSpecStore().checkForExistingDeployedJobSpecDescriptor(distributedId2);
 
         //run the second job 100 times in parallel

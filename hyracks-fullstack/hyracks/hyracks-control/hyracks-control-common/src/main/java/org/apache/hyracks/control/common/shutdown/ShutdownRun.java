@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
-public class ShutdownRun implements IShutdownStatusConditionVariable{
+public class ShutdownRun implements IShutdownStatusConditionVariable {
 
     private final Set<String> shutdownNodeIds = new TreeSet<>();
     private boolean shutdownSuccess = false;
@@ -60,7 +60,7 @@ public class ShutdownRun implements IShutdownStatusConditionVariable{
         return shutdownSuccess;
     }
 
-    public synchronized Set<String> getRemainingNodes(){
+    public synchronized Set<String> getRemainingNodes() {
         return shutdownNodeIds;
     }
 

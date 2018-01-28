@@ -76,8 +76,8 @@ public class TimeFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
 
                     // possible returning types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ATime> timeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ATIME);
+                    private ISerializerDeserializer<ATime> timeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
                     private AMutableTime aTime = new AMutableTime(0);
 
                     @Override

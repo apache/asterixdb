@@ -34,7 +34,7 @@ public class AsyncFIFOPageQueueManager implements Runnable {
     protected BufferCache bufferCache;
     volatile protected PageQueue pageQueue;
 
-    public AsyncFIFOPageQueueManager(BufferCache bufferCache){
+    public AsyncFIFOPageQueueManager(BufferCache bufferCache) {
         this.bufferCache = bufferCache;
     }
 
@@ -43,7 +43,8 @@ public class AsyncFIFOPageQueueManager implements Runnable {
         public final IFIFOPageWriter writer;
 
         protected PageQueue(IBufferCache bufferCache, IFIFOPageWriter writer) {
-            if(DEBUG) System.out.println("[FIFO] New Queue");
+            if (DEBUG)
+                System.out.println("[FIFO] New Queue");
             this.bufferCache = bufferCache;
             this.writer = writer;
         }
@@ -59,10 +60,9 @@ public class AsyncFIFOPageQueueManager implements Runnable {
         @Override
         public void put(ICachedPage page) throws HyracksDataException {
             try {
-                if(!poisoned.get()) {
+                if (!poisoned.get()) {
                     queue.put(page);
-                }
-                else{
+                } else {
                     throw new HyracksDataException("Queue is closing");
                 }
             } catch (InterruptedException e) {
@@ -72,22 +72,21 @@ public class AsyncFIFOPageQueueManager implements Runnable {
         }
     }
 
-
     public PageQueue createQueue(IFIFOPageWriter writer) {
         if (pageQueue == null) {
-            synchronized(this){
+            synchronized (this) {
                 if (pageQueue == null) {
                     writerThread = new Thread(this);
                     writerThread.setName("FIFO Writer Thread");
                     writerThread.start();
-                    pageQueue = new PageQueue(bufferCache,writer);
+                    pageQueue = new PageQueue(bufferCache, writer);
                 }
             }
         }
         return pageQueue;
     }
 
-    public void destroyQueue(){
+    public void destroyQueue() {
         poisoned.set(true);
         if (writerThread == null) {
             synchronized (this) {
@@ -99,16 +98,16 @@ public class AsyncFIFOPageQueueManager implements Runnable {
 
         //Dummy cached page to act as poison pill
         CachedPage poisonPill = new CachedPage();
-        poisonPill.setQueueInfo(new QueueInfo(true,true));
+        poisonPill.setQueueInfo(new QueueInfo(true, true));
 
-        try{
+        try {
             synchronized (poisonPill) {
                 queue.put(poisonPill);
-                while(queue.contains(poisonPill)){
+                while (queue.contains(poisonPill)) {
                     poisonPill.wait();
                 }
             }
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
@@ -139,26 +138,30 @@ public class AsyncFIFOPageQueueManager implements Runnable {
 
     @Override
     public void run() {
-        if (DEBUG) System.out.println("[FIFO] Writer started");
+        if (DEBUG)
+            System.out.println("[FIFO] Writer started");
         boolean die = false;
         while (!die) {
             ICachedPage entry;
             try {
                 entry = queue.take();
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
             }
-            if (entry.getQueueInfo() != null && entry.getQueueInfo().hasWaiters()){
-                synchronized(entry) {
-                    if(entry.getQueueInfo().isPoison()) { die = true; }
+            if (entry.getQueueInfo() != null && entry.getQueueInfo().hasWaiters()) {
+                synchronized (entry) {
+                    if (entry.getQueueInfo().isPoison()) {
+                        die = true;
+                    }
                     entry.notifyAll();
                     continue;
                 }
             }
 
-            if (DEBUG) System.out.println("[FIFO] Write " + BufferedFileHandle.getFileId(((CachedPage)entry).dpid)+","
-                    + BufferedFileHandle.getPageId(((CachedPage)entry).dpid));
+            if (DEBUG)
+                System.out.println("[FIFO] Write " + BufferedFileHandle.getFileId(((CachedPage) entry).dpid) + ","
+                        + BufferedFileHandle.getPageId(((CachedPage) entry).dpid));
 
             try {
                 pageQueue.getWriter().write(entry, bufferCache);

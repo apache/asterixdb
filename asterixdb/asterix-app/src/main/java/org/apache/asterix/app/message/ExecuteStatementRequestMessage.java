@@ -122,9 +122,8 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             IStatementExecutor translator = statementExecutorFactory.create(ccAppCtx, statements, sessionOutput,
                     compilationProvider, storageComponentProvider);
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
-            final IRequestParameters requestParameters =
-                    new RequestParameters(null, resultProperties, stats, outMetadata, clientContextID,
-                            optionalParameters);
+            final IRequestParameters requestParameters = new RequestParameters(null, resultProperties, stats,
+                    outMetadata, clientContextID, optionalParameters);
             translator.compileAndExecute(ccApp.getHcc(), statementExecutorContext, requestParameters);
             outPrinter.close();
             responseMsg.setResult(outWriter.toString());

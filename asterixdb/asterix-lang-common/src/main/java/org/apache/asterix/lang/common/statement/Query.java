@@ -44,8 +44,7 @@ public class Query implements IReturningStatement {
         this(explain, topLevel, body, varCounter, null);
     }
 
-    public Query(boolean explain, boolean topLevel, Expression body, int varCounter,
-            List<VarIdentifier> externalVars) {
+    public Query(boolean explain, boolean topLevel, Expression body, int varCounter, List<VarIdentifier> externalVars) {
         this.explain = explain;
         this.topLevel = topLevel;
         this.body = body;

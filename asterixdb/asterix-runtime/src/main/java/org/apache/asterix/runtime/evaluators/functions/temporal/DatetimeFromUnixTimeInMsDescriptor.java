@@ -78,8 +78,8 @@ public class DatetimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDy
 
                     // possible output types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADateTime> datetimeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATETIME);
+                    private ISerializerDeserializer<ADateTime> datetimeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
 
                     private AMutableDateTime aDatetime = new AMutableDateTime(0);
 

@@ -47,8 +47,8 @@ public class AdmDataGenTest {
     private static final String EXTENSION_QUERY = "adg";
     private static final String FILENAME_IGNORE = "ignore.txt";
     private static final String FILENAME_ONLY = "only.txt";
-    private static final String PATH_BASE = "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR + "adgts"
-            + SEPARATOR;
+    private static final String PATH_BASE =
+            "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR + "adgts" + SEPARATOR;
     private static final String PATH_QUERIES = PATH_BASE + "dgscripts" + SEPARATOR;
     private static final String PATH_EXPECTED = PATH_BASE + "results" + SEPARATOR;
     private static final String PATH_ACTUAL = "adgtest" + SEPARATOR;
@@ -109,12 +109,12 @@ public class AdmDataGenTest {
 
     @Test
     public void test() throws Exception {
-        String scriptFileShort = scriptFile.getPath().substring(PATH_QUERIES.length())
-                .replace(SEPARATOR.charAt(0), '/');
+        String scriptFileShort =
+                scriptFile.getPath().substring(PATH_QUERIES.length()).replace(SEPARATOR.charAt(0), '/');
         if (!only.isEmpty()) {
             if (!only.contains(scriptFileShort)) {
-                LOGGER.info("SKIP TEST: \"" + scriptFile.getPath()
-                        + "\" \"only.txt\" not empty and not in \"only.txt\".");
+                LOGGER.info(
+                        "SKIP TEST: \"" + scriptFile.getPath() + "\" \"only.txt\" not empty and not in \"only.txt\".");
             }
             Assume.assumeTrue(only.contains(scriptFileShort));
         }
@@ -186,8 +186,8 @@ public class AdmDataGenTest {
                 lineActual = readerActual.readLine();
                 // Assert.assertEquals(null, lineActual);
                 if (lineActual != null) {
-                    throw new Exception("Result for " + scriptFile + " changed at line " + num + ":\n< \n> "
-                            + lineActual);
+                    throw new Exception(
+                            "Result for " + scriptFile + " changed at line " + num + ":\n< \n> " + lineActual);
                 }
             } finally {
                 readerExpected.close();

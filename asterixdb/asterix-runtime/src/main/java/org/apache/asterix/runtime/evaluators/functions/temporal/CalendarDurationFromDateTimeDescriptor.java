@@ -92,8 +92,8 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADuration> durationSerde = SerializerDeserializerProvider.
-                            INSTANCE.getSerializerDeserializer(BuiltinType.ADURATION);
+                    private ISerializerDeserializer<ADuration> durationSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADURATION);
 
                     private AMutableDuration aDuration = new AMutableDuration(0, 0);
 
@@ -120,8 +120,8 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
                                     ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
                         }
 
-                        int yearMonthDurationInMonths = ADurationSerializerDeserializer.getYearMonth(bytes1,
-                                offset1 + 1);
+                        int yearMonthDurationInMonths =
+                                ADurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1);
                         long dayTimeDurationInMs = ADurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1);
 
                         long startingTimePoint = ADateTimeSerializerDeserializer.getChronon(bytes0, offset0 + 1);
@@ -188,8 +188,7 @@ public class CalendarDurationFromDateTimeDescriptor extends AbstractScalarFuncti
                                 boolean isLeapYear = calInstanct.isLeapYear(year1);
                                 // need to "borrow" the days in previous month to make the day positive; when month is
                                 // 1 (Jan), Dec will be borrowed
-                                day += isLeapYear
-                                        ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[(12 + month1 - 2) % 12])
+                                day += isLeapYear ? (GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[(12 + month1 - 2) % 12])
                                         : (GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[(12 + month1 - 2) % 12]);
                                 month -= 1;
                             }

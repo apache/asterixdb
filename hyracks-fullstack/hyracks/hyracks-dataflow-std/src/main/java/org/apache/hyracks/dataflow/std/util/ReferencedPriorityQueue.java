@@ -113,7 +113,7 @@ public class ReferencedPriorityQueue {
                 ReferenceEntry tmp = entries[slot];
                 entries[slot] = curr;
                 curr = tmp;// winner to pass up
-            }// else curr wins
+            } // else curr wins
             slot >>= 1;
         }
         // set new entries[0]

@@ -131,8 +131,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         storageRoots = new Path[ioManager.getIODevices().size()];
         final List<IODeviceHandle> ioDevices = ioManager.getIODevices();
         for (int i = 0; i < ioDevices.size(); i++) {
-            storageRoots[i] = Paths.get(ioDevices.get(i).getMount().getAbsolutePath(),
-                    StorageConstants.STORAGE_ROOT_DIR_NAME);
+            storageRoots[i] =
+                    Paths.get(ioDevices.get(i).getMount().getAbsolutePath(), StorageConstants.STORAGE_ROOT_DIR_NAME);
         }
         createStorageRoots();
         resourceCache = CacheBuilder.newBuilder().maximumSize(MAX_CACHED_RESOURCES).build();

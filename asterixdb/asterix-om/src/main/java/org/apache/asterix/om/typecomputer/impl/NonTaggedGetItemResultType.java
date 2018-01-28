@@ -41,8 +41,7 @@ public class NonTaggedGetItemResultType extends AbstractResultTypeComputer {
         ATypeTag actualTypeTag = type.getTypeTag();
         if (argIndex == 0) {
             if (type.getTypeTag() != ATypeTag.MULTISET && type.getTypeTag() != ATypeTag.ARRAY) {
-                throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING,
-                        ATypeTag.ARRAY);
+                throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING, ATypeTag.ARRAY);
             }
         } else {
             if (!ATypeHierarchy.isCompatible(type.getTypeTag(), ATypeTag.INTEGER)) {

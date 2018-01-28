@@ -67,8 +67,8 @@ public class MetadataTxnTest {
 
     @Test
     public void abortMetadataTxn() throws Exception {
-        ICcApplicationContext appCtx = (ICcApplicationContext) integrationUtil.getClusterControllerService()
-                .getApplicationContext();
+        ICcApplicationContext appCtx =
+                (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
         final MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
         final MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxn);
@@ -95,8 +95,8 @@ public class MetadataTxnTest {
 
     @Test
     public void rebalanceFailureMetadataTxn() throws Exception {
-        ICcApplicationContext appCtx = (ICcApplicationContext) integrationUtil.getClusterControllerService()
-                .getApplicationContext();
+        ICcApplicationContext appCtx =
+                (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
         String nodeGroup = "ng";
         String datasetName = "dataset1";
         final TestCaseContext.OutputFormat format = TestCaseContext.OutputFormat.CLEAN_JSON;
@@ -155,8 +155,8 @@ public class MetadataTxnTest {
         testExecutor.executeSqlppUpdateOrDdl("CREATE DATASET " + datasetName + "(KeyType) PRIMARY KEY id;", format);
 
         // get created dataset
-        ICcApplicationContext appCtx = (ICcApplicationContext) integrationUtil.getClusterControllerService()
-                .getApplicationContext();
+        ICcApplicationContext appCtx =
+                (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
         MetadataProvider metadataProvider = new MetadataProvider(appCtx, null);
         final MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -199,8 +199,8 @@ public class MetadataTxnTest {
         Assert.assertEquals(0, failCount.get());
 
         // make sure all metadata indexes have no pending operations after all txns committed/aborted
-        final IDatasetLifecycleManager datasetLifecycleManager = ((INcApplicationContext) integrationUtil.ncs[0]
-                .getApplicationContext()).getDatasetLifecycleManager();
+        final IDatasetLifecycleManager datasetLifecycleManager =
+                ((INcApplicationContext) integrationUtil.ncs[0].getApplicationContext()).getDatasetLifecycleManager();
         int maxMetadatasetId = 14;
         for (int i = 1; i <= maxMetadatasetId; i++) {
             if (datasetLifecycleManager.getIndex(i, i) != null) {

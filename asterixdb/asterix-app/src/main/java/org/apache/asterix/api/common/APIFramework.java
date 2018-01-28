@@ -350,12 +350,10 @@ public class APIFramework {
             // Sets a required capacity, only for read-only queries.
             // DDLs and DMLs are considered not that frequent.
             // limit the computation locations to the locations that will be used in the query
-            final AlgebricksAbsolutePartitionConstraint jobLocations =
-                    getJobLocations(spec, metadataProvider.getApplicationContext().getNodeJobTracker(),
-                            computationLocations);
-            final IClusterCapacity jobRequiredCapacity = ResourceUtils
-                    .getRequiredCapacity(plan, jobLocations, sortFrameLimit, groupFrameLimit, joinFrameLimit,
-                            frameSize);
+            final AlgebricksAbsolutePartitionConstraint jobLocations = getJobLocations(spec,
+                    metadataProvider.getApplicationContext().getNodeJobTracker(), computationLocations);
+            final IClusterCapacity jobRequiredCapacity = ResourceUtils.getRequiredCapacity(plan, jobLocations,
+                    sortFrameLimit, groupFrameLimit, joinFrameLimit, frameSize);
             spec.setRequiredClusterCapacity(jobRequiredCapacity);
         }
 
@@ -512,8 +510,7 @@ public class APIFramework {
     public static AlgebricksAbsolutePartitionConstraint getJobLocations(JobSpecification spec,
             INodeJobTracker jobTracker, AlgebricksAbsolutePartitionConstraint clusterLocations) {
         final Set<String> jobParticipatingNodes = jobTracker.getJobParticipatingNodes(spec);
-        return new AlgebricksAbsolutePartitionConstraint(
-                Arrays.stream(clusterLocations.getLocations()).filter(jobParticipatingNodes::contains)
-                        .toArray(String[]::new));
+        return new AlgebricksAbsolutePartitionConstraint(Arrays.stream(clusterLocations.getLocations())
+                .filter(jobParticipatingNodes::contains).toArray(String[]::new));
     }
 }

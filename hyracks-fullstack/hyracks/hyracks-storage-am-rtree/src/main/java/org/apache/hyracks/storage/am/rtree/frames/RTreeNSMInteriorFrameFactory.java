@@ -38,8 +38,8 @@ public class RTreeNSMInteriorFrameFactory extends RTreeFrameFactory {
         for (int i = 0; i < keyValueProviders.length; i++) {
             keyValueProviders[i] = keyValueProviderFactories[i].createPrimitiveValueProvider();
         }
-        return new RTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders,
-                rtreePolicyType, isPointMBR);
+        return new RTreeNSMInteriorFrame(tupleWriterFactory.createTupleWriter(), keyValueProviders, rtreePolicyType,
+                isPointMBR);
     }
 
 }

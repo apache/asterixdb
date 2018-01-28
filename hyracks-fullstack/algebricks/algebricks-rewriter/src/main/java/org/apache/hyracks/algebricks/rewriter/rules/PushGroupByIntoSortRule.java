@@ -46,7 +46,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class PushGroupByIntoSortRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -67,8 +68,8 @@ public class PushGroupByIntoSortRule implements IAlgebraicRewriteRule {
                     Mutable<ILogicalOperator> op2Ref = op.getInputs().get(0).getValue().getInputs().get(0);
                     AbstractLogicalOperator op2 = (AbstractLogicalOperator) op2Ref.getValue();
                     if (op2.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.STABLE_SORT) {
-                        AbstractStableSortPOperator sortPhysicalOperator = (AbstractStableSortPOperator) op2
-                                .getPhysicalOperator();
+                        AbstractStableSortPOperator sortPhysicalOperator =
+                                (AbstractStableSortPOperator) op2.getPhysicalOperator();
                         if (groupByOperator.getNestedPlans().size() != 1) {
                             //Sort group-by currently works only for one nested plan with one root containing
                             //an aggregate and a nested-tuple-source.
@@ -88,13 +89,14 @@ public class PushGroupByIntoSortRule implements IAlgebraicRewriteRule {
                             continue;
                         }
                         AggregateOperator aggOp = (AggregateOperator) r0.getValue();
-                        AbstractLogicalOperator aggInputOp = (AbstractLogicalOperator) aggOp.getInputs().get(0)
-                                .getValue();
+                        AbstractLogicalOperator aggInputOp =
+                                (AbstractLogicalOperator) aggOp.getInputs().get(0).getValue();
                         if (aggInputOp.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
                             continue;
                         }
 
-                        boolean hasIntermediateAggregate = generateMergeAggregationExpressions(groupByOperator, context);
+                        boolean hasIntermediateAggregate =
+                                generateMergeAggregationExpressions(groupByOperator, context);
                         if (!hasIntermediateAggregate) {
                             continue;
                         }
@@ -132,8 +134,8 @@ public class PushGroupByIntoSortRule implements IAlgebraicRewriteRule {
                     "External/sort group-by currently works only for one nested plan with one root containing"
                             + "an aggregate and a nested-tuple-source.");
         }
-        IMergeAggregationExpressionFactory mergeAggregationExpressionFactory = context
-                .getMergeAggregationExpressionFactory();
+        IMergeAggregationExpressionFactory mergeAggregationExpressionFactory =
+                context.getMergeAggregationExpressionFactory();
         Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
         AggregateOperator aggOp = (AggregateOperator) r0.getValue();
         List<Mutable<ILogicalExpression>> aggFuncRefs = aggOp.getExpressions();
@@ -141,8 +143,8 @@ public class PushGroupByIntoSortRule implements IAlgebraicRewriteRule {
         int n = aggOp.getExpressions().size();
         List<Mutable<ILogicalExpression>> mergeExpressionRefs = new ArrayList<Mutable<ILogicalExpression>>();
         for (int i = 0; i < n; i++) {
-            ILogicalExpression mergeExpr = mergeAggregationExpressionFactory.createMergeAggregation(
-                    originalAggVars.get(i), aggFuncRefs.get(i).getValue(), context);
+            ILogicalExpression mergeExpr = mergeAggregationExpressionFactory
+                    .createMergeAggregation(originalAggVars.get(i), aggFuncRefs.get(i).getValue(), context);
             if (mergeExpr == null) {
                 return false;
             }

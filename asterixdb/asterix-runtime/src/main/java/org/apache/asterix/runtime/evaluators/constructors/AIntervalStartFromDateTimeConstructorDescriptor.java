@@ -82,8 +82,8 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                     private AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
                     private AMutableDuration aDuration = new AMutableDuration(0, 0L);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInterval> intervalSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINTERVAL);
+                    private ISerializerDeserializer<AInterval> intervalSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINTERVAL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override

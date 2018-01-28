@@ -20,5 +20,6 @@
 package org.apache.hyracks.storage.am.rtree.impls;
 
 public enum EntriesOrder {
-    ASCENDING, DESCENDING
+    ASCENDING,
+    DESCENDING
 }

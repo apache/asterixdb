@@ -90,8 +90,8 @@ public class ClassAdToADMTest extends TestCase {
     public void testSchemaful() {
         try {
             File file = new File("target/classad-wtih-temporals.adm");
-            File expected = new File(
-                    getClass().getResource("/classad/results/classad-with-temporals.adm").toURI().getPath());
+            File expected =
+                    new File(getClass().getResource("/classad/results/classad-with-temporals.adm").toURI().getPath());
             FileUtils.deleteQuietly(file);
             PrintStream printStream = new PrintStream(Files.newOutputStream(Paths.get(file.toURI())));
             String[] recordFieldNames = { "GlobalJobId", "Owner", "ClusterId", "ProcId", "RemoteWallClockTime",

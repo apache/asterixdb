@@ -46,8 +46,8 @@ class AListCaster {
 
     // for storing the cast result
     private final IVisitablePointable itemTempReference = PointableAllocator.allocateUnrestableEmpty();
-    private final Triple<IVisitablePointable, IAType, Boolean> itemVisitorArg = new Triple<>(itemTempReference, null,
-            null);
+    private final Triple<IVisitablePointable, IAType, Boolean> itemVisitorArg =
+            new Triple<>(itemTempReference, null, null);
 
     private final UnorderedListBuilder unOrderedListBuilder = new UnorderedListBuilder();
     private final OrderedListBuilder orderedListBuilder = new OrderedListBuilder();

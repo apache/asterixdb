@@ -80,7 +80,8 @@ public class TestDataUtil {
         fields.forEach((fName, fType) -> stringBuilder.append(fName).append(":").append(fType).append(","));
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE TYPE dsType AS {" + stringBuilder + "};", OUTPUT_FORMAT);
-        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE DATASET " + dataset + "(dsType) PRIMARY KEY " + PKName + ";", OUTPUT_FORMAT);
+        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE DATASET " + dataset + "(dsType) PRIMARY KEY " + PKName + ";",
+                OUTPUT_FORMAT);
     }
 
     /**
@@ -90,7 +91,8 @@ public class TestDataUtil {
      * @throws Exception
      */
     public static void createPrimaryIndex(String dataset, String indexName) throws Exception {
-        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE PRIMARY INDEX " + indexName + " ON " + dataset + ";", OUTPUT_FORMAT);
+        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE PRIMARY INDEX " + indexName + " ON " + dataset + ";",
+                OUTPUT_FORMAT);
     }
 
     /**
@@ -101,7 +103,8 @@ public class TestDataUtil {
      * @throws Exception
      */
     public static void createSecondaryBTreeIndex(String dataset, String indexName, String SKName) throws Exception {
-        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE INDEX " + indexName + " ON " + dataset + "(" + SKName + ");", OUTPUT_FORMAT);
+        TEST_EXECUTOR.executeSqlppUpdateOrDdl("CREATE INDEX " + indexName + " ON " + dataset + "(" + SKName + ");",
+                OUTPUT_FORMAT);
     }
 
     /**
@@ -127,8 +130,8 @@ public class TestDataUtil {
      */
     public static long getDatasetCount(String datasetName) throws Exception {
         final String query = "SELECT VALUE COUNT(*) FROM `" + datasetName + "`;";
-        final InputStream responseStream = TEST_EXECUTOR
-                .executeQueryService(query, TEST_EXECUTOR.getEndpoint(Servlets.QUERY_SERVICE), OUTPUT_FORMAT);
+        final InputStream responseStream = TEST_EXECUTOR.executeQueryService(query,
+                TEST_EXECUTOR.getEndpoint(Servlets.QUERY_SERVICE), OUTPUT_FORMAT);
         final ObjectNode response = OBJECT_MAPPER.readValue(responseStream, ObjectNode.class);
         final JsonNode result = response.get("results");
         // make sure there is a single value in result
@@ -209,8 +212,8 @@ public class TestDataUtil {
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
         final MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         try {
-            return SplitsAndConstraintsUtil
-                    .getIndexSplits(dataset, dataset.getDatasetName(), mdTxnCtx, ccAppCtx.getClusterStateManager());
+            return SplitsAndConstraintsUtil.getIndexSplits(dataset, dataset.getDatasetName(), mdTxnCtx,
+                    ccAppCtx.getClusterStateManager());
         } finally {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         }

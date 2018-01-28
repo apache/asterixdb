@@ -99,8 +99,8 @@ public class ScriptOperator extends AbstractLogicalOperator {
 
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
-        IVariableTypeEnvironment env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
-                ctx.getMetadataProvider());
+        IVariableTypeEnvironment env =
+                new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
         for (Pair<LogicalVariable, Object> p : scriptDesc.getVarTypePairs()) {
             env.setVarType(p.first, p.second);
         }

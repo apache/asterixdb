@@ -65,7 +65,7 @@ public interface ILogicalOperator {
 
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException;
+            throws AlgebricksException;
 
     // variables
 

@@ -64,4 +64,3 @@ public class MaxHeap extends AbstractHeap implements IMaxHeap<IResetableComparab
         trickleDown(0);
     }
 }
-

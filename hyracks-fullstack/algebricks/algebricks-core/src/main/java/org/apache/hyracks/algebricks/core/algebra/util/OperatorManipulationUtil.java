@@ -40,8 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.
-        LogicalOperatorDeepCopyWithNewVariablesVisitor;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.OperatorDeepCopyVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -102,8 +101,8 @@ public class OperatorManipulationUtil {
             }
             case NESTEDTUPLESOURCE: {
                 NestedTupleSourceOperator nts = (NestedTupleSourceOperator) op;
-                AbstractLogicalOperator prevOp = (AbstractLogicalOperator) nts.getDataSourceReference().getValue()
-                        .getInputs().get(0).getValue();
+                AbstractLogicalOperator prevOp =
+                        (AbstractLogicalOperator) nts.getDataSourceReference().getValue().getInputs().get(0).getValue();
                 if (prevOp.getExecutionMode() != AbstractLogicalOperator.ExecutionMode.UNPARTITIONED) {
                     nts.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
                 }
@@ -169,8 +168,8 @@ public class OperatorManipulationUtil {
         if (op.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE && goThroughNts) {
             NestedTupleSourceOperator nts = (NestedTupleSourceOperator) op;
             if (nts.getDataSourceReference() != null) {
-                AbstractLogicalOperator op2 = (AbstractLogicalOperator) nts.getDataSourceReference().getValue()
-                        .getInputs().get(0).getValue();
+                AbstractLogicalOperator op2 =
+                        (AbstractLogicalOperator) nts.getDataSourceReference().getValue().getInputs().get(0).getValue();
                 substituteVarRec(op2, v1, v2, goThroughNts, ctx);
             }
         }
@@ -202,8 +201,8 @@ public class OperatorManipulationUtil {
 
     public static Pair<ILogicalOperator, Map<LogicalVariable, LogicalVariable>> deepCopyWithNewVars(
             ILogicalOperator root, IOptimizationContext ctx) throws AlgebricksException {
-        LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new
-                LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx, null, true);
+        LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor =
+                new LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx, null, true);
         ILogicalOperator newRoot = deepCopyVisitor.deepCopy(root);
         return Pair.of(newRoot, deepCopyVisitor.getInputToOutputVariableMapping());
     }

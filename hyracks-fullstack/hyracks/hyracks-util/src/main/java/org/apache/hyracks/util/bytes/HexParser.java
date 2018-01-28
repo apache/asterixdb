@@ -21,9 +21,7 @@ package org.apache.hyracks.util.bytes;
 
 public class HexParser {
     public static boolean isValidHexChar(char c) {
-        if (c >= '0' && c <= '9'
-                || c >= 'a' && c <= 'f'
-                || c >= 'A' && c <= 'F') {
+        if (c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F') {
             return true;
         }
         return false;
@@ -79,19 +77,17 @@ public class HexParser {
         }
     }
 
-    public static void generateByteArrayFromHexString(char[] input, int start, int length, byte[] output,
-            int offset) {
+    public static void generateByteArrayFromHexString(char[] input, int start, int length, byte[] output, int offset) {
         for (int i = 0; i < length; i += 2) {
-            output[offset + i / 2] = (byte) ((getValueFromValidHexChar(input[start + i]) << 4) +
-                    getValueFromValidHexChar(input[start + i + 1]));
+            output[offset + i / 2] = (byte) ((getValueFromValidHexChar(input[start + i]) << 4)
+                    + getValueFromValidHexChar(input[start + i + 1]));
         }
     }
 
-    public static void generateByteArrayFromHexString(byte[] input, int start, int length, byte[] output,
-            int offset) {
+    public static void generateByteArrayFromHexString(byte[] input, int start, int length, byte[] output, int offset) {
         for (int i = 0; i < length; i += 2) {
-            output[offset + i / 2] = (byte) ((getValueFromValidHexChar((char) input[start + i]) << 4) +
-                    getValueFromValidHexChar((char) input[start + i + 1]));
+            output[offset + i / 2] = (byte) ((getValueFromValidHexChar((char) input[start + i]) << 4)
+                    + getValueFromValidHexChar((char) input[start + i + 1]));
         }
     }
 }

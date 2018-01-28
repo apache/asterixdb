@@ -96,10 +96,10 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
         switch (partitioningType) {
             case PAIRWISE:
                 pp1 = new UnorderedPartitionedProperty(new ListSet<>(keysLeftBranch),
-                            context.getComputationNodeDomain());
+                        context.getComputationNodeDomain());
                 pp2 = new UnorderedPartitionedProperty(new ListSet<>(keysRightBranch),
-                            context.getComputationNodeDomain());
-                    break;
+                        context.getComputationNodeDomain());
+                break;
             case BROADCAST:
                 pp1 = new RandomPartitioningProperty(context.getComputationNodeDomain());
                 pp2 = new BroadcastPartitioningProperty(context.getComputationNodeDomain());

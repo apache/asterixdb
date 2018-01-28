@@ -67,7 +67,7 @@ public class TupleUtils {
     }
 
     public static void createIntegerTuple(ArrayTupleBuilder tupleBuilder, ArrayTupleReference tuple, boolean filtered,
-                                          final int... fields) throws HyracksDataException {
+            final int... fields) throws HyracksDataException {
         DataOutput dos = tupleBuilder.getDataOutput();
         tupleBuilder.reset();
         for (final int i : fields) {
@@ -88,8 +88,8 @@ public class TupleUtils {
 
     public static ITupleReference createIntegerTuple(boolean filtered, final int... fields)
             throws HyracksDataException {
-        ArrayTupleBuilder tupleBuilder = filtered ? new ArrayTupleBuilder(fields.length + 1)
-                : new ArrayTupleBuilder(fields.length);
+        ArrayTupleBuilder tupleBuilder =
+                filtered ? new ArrayTupleBuilder(fields.length + 1) : new ArrayTupleBuilder(fields.length);
         ArrayTupleReference tuple = new ArrayTupleReference();
         createIntegerTuple(tupleBuilder, tuple, fields);
         return tuple;
@@ -122,8 +122,8 @@ public class TupleUtils {
         StringBuilder strBuilder = new StringBuilder();
         int numPrintFields = Math.min(tuple.getFieldCount(), fields.length);
         for (int i = 0; i < numPrintFields; i++) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i),
-                    tuple.getFieldLength(i));
+            ByteArrayInputStream inStream =
+                    new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
             DataInput dataIn = new DataInputStream(inStream);
             Object o = fields[i].deserialize(dataIn);
             strBuilder.append(o.toString());
@@ -139,8 +139,8 @@ public class TupleUtils {
         int numFields = Math.min(tuple.getFieldCount(), fields.length);
         Object[] objs = new Object[numFields];
         for (int i = 0; i < numFields; i++) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i),
-                    tuple.getFieldLength(i));
+            ByteArrayInputStream inStream =
+                    new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
             DataInput dataIn = new DataInputStream(inStream);
             objs[i] = fields[i].deserialize(dataIn);
         }

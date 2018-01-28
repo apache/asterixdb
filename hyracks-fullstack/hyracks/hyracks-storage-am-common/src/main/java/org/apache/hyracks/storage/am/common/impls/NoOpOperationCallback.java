@@ -27,7 +27,7 @@ import org.apache.hyracks.storage.common.ISearchOperationCallback;
 /**
  * Dummy operation callback that simply does nothing.
  */
-public enum NoOpOperationCallback implements IModificationOperationCallback,ISearchOperationCallback {
+public enum NoOpOperationCallback implements IModificationOperationCallback, ISearchOperationCallback {
     INSTANCE;
 
     @Override

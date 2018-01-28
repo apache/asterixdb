@@ -46,8 +46,7 @@ public class AOptionalFieldPrinterFactory implements IPrinterFactory {
 
             @Override
             public void init() throws HyracksDataException {
-                nullPrinter = (ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL))
-                        .createPrinter();
+                nullPrinter = (ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.ANULL)).createPrinter();
                 fieldPrinter = (ADMPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
                         .createPrinter();
             }

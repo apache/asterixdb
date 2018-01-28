@@ -43,7 +43,7 @@ public class IndentDirective implements TemplateDirectiveModel {
     private static final String PARAM_NAME_WRAP = "wrap";
 
     @Override
-    public void execute(Environment env, Map params, TemplateModel [] loopVars, TemplateDirectiveBody body)
+    public void execute(Environment env, Map params, TemplateModel[] loopVars, TemplateDirectiveBody body)
             throws TemplateException, IOException {
 
         int numSpaces = -1;
@@ -106,8 +106,7 @@ public class IndentDirective implements TemplateDirectiveModel {
     }
 
     private TemplateModelException paramException(String paramName, String message) throws TemplateModelException {
-        return new TemplateModelException(
-                "The '" + paramName + "' parameter " + message);
+        return new TemplateModelException("The '" + paramName + "' parameter " + message);
     }
 
     private static class IndentingWriter extends Writer {

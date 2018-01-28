@@ -75,8 +75,8 @@ public class NGramTokenizerTest {
 
     void runTestNGramTokenizerWithCountedHashedUTF8Tokens(boolean prePost) throws IOException {
         HashedUTF8NGramTokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
-        NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(gramLength, prePost, false,
-                false, tokenFactory);
+        NGramUTF8StringBinaryTokenizer tokenizer =
+                new NGramUTF8StringBinaryTokenizer(gramLength, prePost, false, false, tokenFactory);
         tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
         ArrayList<String> expectedGrams = new ArrayList<String>();
@@ -124,8 +124,8 @@ public class NGramTokenizerTest {
 
     void runTestNGramTokenizerWithHashedUTF8Tokens(boolean prePost) throws IOException {
         HashedUTF8NGramTokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
-        NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(gramLength, prePost, true, false,
-                tokenFactory);
+        NGramUTF8StringBinaryTokenizer tokenizer =
+                new NGramUTF8StringBinaryTokenizer(gramLength, prePost, true, false, tokenFactory);
         tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
         ArrayList<String> expectedGrams = new ArrayList<String>();
@@ -164,8 +164,8 @@ public class NGramTokenizerTest {
 
     void runTestNGramTokenizerWithUTF8Tokens(boolean prePost) throws IOException {
         UTF8NGramTokenFactory tokenFactory = new UTF8NGramTokenFactory();
-        NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(gramLength, prePost, true, false,
-                tokenFactory);
+        NGramUTF8StringBinaryTokenizer tokenizer =
+                new NGramUTF8StringBinaryTokenizer(gramLength, prePost, true, false, tokenFactory);
         tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
         ArrayList<String> expectedGrams = new ArrayList<String>();

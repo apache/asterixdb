@@ -139,7 +139,8 @@ public class PrimaryIndexSearchExample {
                                      // into search op
 
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
-        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(storageManager, btreeSplitProvider);
+        IIndexDataflowHelperFactory dataflowHelperFactory =
+                new IndexDataflowHelperFactory(storageManager, btreeSplitProvider);
         BTreeSearchOperatorDescriptor btreeSearchOp = new BTreeSearchOperatorDescriptor(spec, recDesc, lowKeyFields,
                 highKeyFields, true, true, dataflowHelperFactory, false, false, null,
                 NoOpOperationCallbackFactory.INSTANCE, null, null, false);

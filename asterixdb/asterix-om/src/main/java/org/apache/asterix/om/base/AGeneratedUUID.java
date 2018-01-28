@@ -26,12 +26,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AGeneratedUUID extends AUUID {
 
     private static class Holder {
-        static final byte [] hostUnique = new byte[4];
+        static final byte[] hostUnique = new byte[4];
 
         static {
             new SecureRandom().nextBytes(hostUnique);
-       }
+        }
     }
+
     static final Random random = new Random();
     static final AtomicInteger nextInstance = new AtomicInteger(random.nextInt());
 
@@ -45,10 +46,10 @@ public class AGeneratedUUID extends AUUID {
         System.arraycopy(Holder.hostUnique, 0, uuidBytes, 0, 4);
 
         // overwrite the next four bytes with the thread unique value
-        uuidBytes[5] = (byte)(unique >> 24);
-        uuidBytes[6] = (byte)(unique >> 16);
-        uuidBytes[7] = (byte)(unique >> 8);
-        uuidBytes[8] = (byte)unique;
+        uuidBytes[5] = (byte) (unique >> 24);
+        uuidBytes[6] = (byte) (unique >> 16);
+        uuidBytes[7] = (byte) (unique >> 8);
+        uuidBytes[8] = (byte) unique;
     }
 
     public void nextUUID() {

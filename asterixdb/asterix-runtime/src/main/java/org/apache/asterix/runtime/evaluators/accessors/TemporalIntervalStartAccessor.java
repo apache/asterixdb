@@ -75,16 +75,16 @@ public class TemporalIntervalStartAccessor extends AbstractScalarFunctionDynamic
 
                     // possible output
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATE);
+                    private final ISerializerDeserializer<ADate> dateSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
                     private final AMutableDate aDate = new AMutableDate(0);
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ADateTime> datetimeSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
                     private final AMutableDateTime aDateTime = new AMutableDateTime(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ATime> timeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ATIME);
+                    private final ISerializerDeserializer<ATime> timeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
                     private final AMutableTime aTime = new AMutableTime(0);
 
                     @Override
@@ -96,10 +96,10 @@ public class TemporalIntervalStartAccessor extends AbstractScalarFunctionDynamic
                         resultStorage.reset();
                         try {
                             if (bytes[startOffset] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                                byte timeType = AIntervalSerializerDeserializer.getIntervalTimeType(bytes,
-                                        startOffset + 1);
-                                long startTime = AIntervalSerializerDeserializer.getIntervalStart(bytes,
-                                        startOffset + 1);
+                                byte timeType =
+                                        AIntervalSerializerDeserializer.getIntervalTimeType(bytes, startOffset + 1);
+                                long startTime =
+                                        AIntervalSerializerDeserializer.getIntervalStart(bytes, startOffset + 1);
                                 if (timeType == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
                                     aDate.setValue((int) (startTime));
                                     dateSerde.serialize(aDate, out);

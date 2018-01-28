@@ -256,8 +256,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
         }
     }
 
-    public void resume(MetadataProvider mdProvider)
-            throws HyracksDataException, InterruptedException {
+    public void resume(MetadataProvider mdProvider) throws HyracksDataException, InterruptedException {
         LOGGER.log(level, "Resuming active events handler");
         for (IActiveEntityEventsListener listener : entityEventListeners.values()) {
             LOGGER.log(level, "Resuming " + listener.getEntityId());

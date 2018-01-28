@@ -70,9 +70,8 @@ public class NodeJobTracker implements INodeJobTracker {
 
     @Override
     public synchronized Set<JobId> getPendingJobs(String nodeId) {
-        return nodeJobs.containsKey(nodeId) ?
-                Collections.unmodifiableSet(nodeJobs.get(nodeId)) :
-                Collections.emptySet();
+        return nodeJobs.containsKey(nodeId) ? Collections.unmodifiableSet(nodeJobs.get(nodeId))
+                : Collections.emptySet();
     }
 
     @Override

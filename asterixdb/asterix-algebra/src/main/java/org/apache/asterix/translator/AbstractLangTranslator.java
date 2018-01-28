@@ -157,8 +157,8 @@ public abstract class AbstractLangTranslator {
                 if (hints != null && !hints.isEmpty()) {
                     StringBuilder errorMsgBuffer = new StringBuilder();
                     for (Entry<String, String> hint : hints.entrySet()) {
-                        Pair<Boolean, String> validationResult = DatasetHints.validate(appCtx, hint.getKey(),
-                                hint.getValue());
+                        Pair<Boolean, String> validationResult =
+                                DatasetHints.validate(appCtx, hint.getKey(), hint.getValue());
                         if (!validationResult.first) {
                             errorMsgBuffer.append("Dataset: ").append(datasetStmt.getName().getValue())
                                     .append(" error in processing hint: ").append(hint.getKey()).append(" ")

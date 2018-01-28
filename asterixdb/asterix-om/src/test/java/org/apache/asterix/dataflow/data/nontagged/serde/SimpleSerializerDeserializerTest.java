@@ -32,8 +32,8 @@ public class SimpleSerializerDeserializerTest {
     @Test
     public void test() {
         Reflections reflections = new Reflections("org.apache.asterix.dataflow.data.nontagged.serde");
-        Set<Class<? extends ISerializerDeserializer>> allClasses = reflections
-                .getSubTypesOf(ISerializerDeserializer.class);
+        Set<Class<? extends ISerializerDeserializer>> allClasses =
+                reflections.getSubTypesOf(ISerializerDeserializer.class);
 
         for (Class<? extends ISerializerDeserializer> cl : allClasses) {
             String className = cl.getName();

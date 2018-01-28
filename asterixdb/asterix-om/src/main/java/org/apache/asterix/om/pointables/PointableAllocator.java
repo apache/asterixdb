@@ -37,21 +37,21 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class PointableAllocator {
 
-    private IObjectPool<IVisitablePointable, IAType> flatValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
-            AFlatValuePointable.FACTORY);
-    private IObjectPool<IVisitablePointable, IAType> recordValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
-            ARecordVisitablePointable.FACTORY);
-    private IObjectPool<IVisitablePointable, IAType> listValueAllocator = new ListObjectPool<IVisitablePointable, IAType>(
-            AListVisitablePointable.FACTORY);
-    private IObjectPool<AOrderedListType, IAType> orederedListTypeAllocator = new ListObjectPool<AOrderedListType, IAType>(
-            new IObjectFactory<AOrderedListType, IAType>() {
+    private IObjectPool<IVisitablePointable, IAType> flatValueAllocator =
+            new ListObjectPool<IVisitablePointable, IAType>(AFlatValuePointable.FACTORY);
+    private IObjectPool<IVisitablePointable, IAType> recordValueAllocator =
+            new ListObjectPool<IVisitablePointable, IAType>(ARecordVisitablePointable.FACTORY);
+    private IObjectPool<IVisitablePointable, IAType> listValueAllocator =
+            new ListObjectPool<IVisitablePointable, IAType>(AListVisitablePointable.FACTORY);
+    private IObjectPool<AOrderedListType, IAType> orederedListTypeAllocator =
+            new ListObjectPool<AOrderedListType, IAType>(new IObjectFactory<AOrderedListType, IAType>() {
                 @Override
                 public AOrderedListType create(IAType type) {
                     return new AOrderedListType(type, type.getTypeName() + "OrderedList");
                 }
             });
-    private IObjectPool<AOrderedListType, IAType> unorederedListTypeAllocator = new ListObjectPool<AOrderedListType, IAType>(
-            new IObjectFactory<AOrderedListType, IAType>() {
+    private IObjectPool<AOrderedListType, IAType> unorederedListTypeAllocator =
+            new ListObjectPool<AOrderedListType, IAType>(new IObjectFactory<AOrderedListType, IAType>() {
                 @Override
                 public AOrderedListType create(IAType type) {
                     return new AOrderedListType(type, type.getTypeName() + "UnorderedList");

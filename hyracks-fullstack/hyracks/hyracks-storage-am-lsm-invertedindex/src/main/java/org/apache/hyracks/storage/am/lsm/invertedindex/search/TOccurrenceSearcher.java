@@ -34,8 +34,7 @@ public class TOccurrenceSearcher extends AbstractTOccurrenceSearcher {
 
     protected final ArrayList<IInvertedListCursor> invListCursors = new ArrayList<>();
 
-    public TOccurrenceSearcher(IHyracksCommonContext ctx, IInPlaceInvertedIndex invIndex)
-            throws HyracksDataException {
+    public TOccurrenceSearcher(IHyracksCommonContext ctx, IInPlaceInvertedIndex invIndex) throws HyracksDataException {
         super(ctx, invIndex);
     }
 

@@ -74,8 +74,8 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                     private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
 
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private final ISerializerDeserializer<AInt64> int64Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
                     private final AMutableInt64 aInt64 = new AMutableInt64(0);
 
                     @Override

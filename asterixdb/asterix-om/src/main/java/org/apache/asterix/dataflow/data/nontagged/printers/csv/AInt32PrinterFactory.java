@@ -29,8 +29,8 @@ public class AInt32PrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final AInt32PrinterFactory INSTANCE = new AInt32PrinterFactory();
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps
-            .print(AInt32SerializerDeserializer.getInt(b, s + 1));
+    public static final IPrinter PRINTER =
+            (byte[] b, int s, int l, PrintStream ps) -> ps.print(AInt32SerializerDeserializer.getInt(b, s + 1));
 
     @Override
     public IPrinter createPrinter() {

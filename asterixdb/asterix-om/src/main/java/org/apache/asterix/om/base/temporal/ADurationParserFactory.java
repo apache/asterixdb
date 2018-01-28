@@ -35,7 +35,8 @@ public class ADurationParserFactory implements IValueParserFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String durationErrorMessage = "Wrong Input Format for a duration/year-month-duration/day-time-duration Value";
+    private static final String durationErrorMessage =
+            "Wrong Input Format for a duration/year-month-duration/day-time-duration Value";
     private static final String onlyYearMonthErrorMessage = "Only year-month fields are allowed";
     private static final String onlyDayTimeErrorMessage = "Only day-time fields are allowed";
 
@@ -214,11 +215,11 @@ public class ADurationParserFactory implements IValueParserFactory {
                                 if (charAccessor.getCharAt(offset + i) >= '0'
                                         && charAccessor.getCharAt(offset + i) <= '9') {
                                     if (i < 4) {
-                                        millisecond = millisecond * DECIMAL_UNIT
-                                                + (charAccessor.getCharAt(offset + i) - '0');
+                                        millisecond =
+                                                millisecond * DECIMAL_UNIT + (charAccessor.getCharAt(offset + i) - '0');
                                     } else {
-                                        throw new HyracksDataException(durationErrorMessage
-                                                + ": wrong MILLISECOND field.");
+                                        throw new HyracksDataException(
+                                                durationErrorMessage + ": wrong MILLISECOND field.");
                                     }
                                 } else {
                                     break;
@@ -253,10 +254,9 @@ public class ADurationParserFactory implements IValueParserFactory {
         }
 
         int totalMonths = sign * (year * 12 + month);
-        long totalMilliseconds = sign
-                * (day * GregorianCalendarSystem.CHRONON_OF_DAY + hour * GregorianCalendarSystem.CHRONON_OF_HOUR
-                        + minute * GregorianCalendarSystem.CHRONON_OF_MINUTE + second
-                        * GregorianCalendarSystem.CHRONON_OF_SECOND + millisecond);
+        long totalMilliseconds = sign * (day * GregorianCalendarSystem.CHRONON_OF_DAY
+                + hour * GregorianCalendarSystem.CHRONON_OF_HOUR + minute * GregorianCalendarSystem.CHRONON_OF_MINUTE
+                + second * GregorianCalendarSystem.CHRONON_OF_SECOND + millisecond);
 
         if (sign > 0) {
             if (totalMonths < 0) {
@@ -264,9 +264,8 @@ public class ADurationParserFactory implements IValueParserFactory {
                         + ": total number of months is beyond its max value (-2147483647 to 2147483647).");
             }
             if (totalMilliseconds < 0) {
-                throw new HyracksDataException(
-                        durationErrorMessage
-                                + ": total number of milliseconds is beyond its max value (-9223372036854775808 to 9223372036854775807).");
+                throw new HyracksDataException(durationErrorMessage
+                        + ": total number of milliseconds is beyond its max value (-9223372036854775808 to 9223372036854775807).");
             }
         }
 

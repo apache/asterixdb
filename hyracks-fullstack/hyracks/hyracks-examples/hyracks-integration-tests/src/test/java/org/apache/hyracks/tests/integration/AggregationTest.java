@@ -73,9 +73,8 @@ import org.junit.Test;
  */
 public class AggregationTest extends AbstractIntegrationTest {
 
-    final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(
-            new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator + "tpch0.002" + File.separator
-                    + "lineitem.tbl") });
+    final IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] {
+            new ManagedFileSplit(NC2_ID, "data" + File.separator + "tpch0.002" + File.separator + "lineitem.tbl") });
 
     final RecordDescriptor desc = new RecordDescriptor(new ISerializerDeserializer[] {
             new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
@@ -110,8 +109,8 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void singleKeySumPreClusterGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
@@ -150,8 +149,8 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void singleKeySumExtGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
@@ -164,18 +163,19 @@ public class AggregationTest extends AbstractIntegrationTest {
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
-        ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, frameLimits,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
-                        new FloatSumFieldAggregatorFactory(5, false) }),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
-                        new FloatSumFieldAggregatorFactory(3, false) }),
-                outputRec, outputRec, new HashSpillableTableFactory(
-                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
+        ExternalGroupOperatorDescriptor grouper =
+                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields, frameLimits,
+                        new IBinaryComparatorFactory[] {
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                        new UTF8StringNormalizedKeyComputerFactory(),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
+                                new FloatSumFieldAggregatorFactory(5, false) }),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
+                                new FloatSumFieldAggregatorFactory(3, false) }),
+                        outputRec, outputRec, new HashSpillableTableFactory(
+                                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -199,8 +199,8 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void singleKeyAvgPreClusterGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
@@ -239,8 +239,8 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void singleKeyAvgExtGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
@@ -253,18 +253,19 @@ public class AggregationTest extends AbstractIntegrationTest {
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
-        ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, frameLimits,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(),
-                new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new CountFieldAggregatorFactory(false), new AvgFieldGroupAggregatorFactory(1, false) }),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
-                        new AvgFieldMergeAggregatorFactory(3, false) }),
-                outputRec, outputRec, new HashSpillableTableFactory(
-                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
+        ExternalGroupOperatorDescriptor grouper =
+                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields, frameLimits,
+                        new IBinaryComparatorFactory[] {
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                        new UTF8StringNormalizedKeyComputerFactory(),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new CountFieldAggregatorFactory(false),
+                                new AvgFieldGroupAggregatorFactory(1, false) }),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
+                                new AvgFieldMergeAggregatorFactory(3, false) }),
+                        outputRec, outputRec, new HashSpillableTableFactory(
+                                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -288,13 +289,13 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void singleKeyMinMaxStringPreClusterGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+        RecordDescriptor outputRec =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
                         IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() });
 
         int[] keyFields = new int[] { 0 };
@@ -328,13 +329,13 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void singleKeyMinMaxStringExtGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+        RecordDescriptor outputRec =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
                         IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() });
 
         int[] keyFields = new int[] { 0 };
@@ -342,18 +343,19 @@ public class AggregationTest extends AbstractIntegrationTest {
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
-        ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, frameLimits,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(),
-                new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new MinMaxStringFieldAggregatorFactory(15, true, true) }),
-                new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new MinMaxStringFieldAggregatorFactory(2, true, true) }),
-                outputRec, outputRec, new HashSpillableTableFactory(
-                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
+        ExternalGroupOperatorDescriptor grouper =
+                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields, frameLimits,
+                        new IBinaryComparatorFactory[] {
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                        new UTF8StringNormalizedKeyComputerFactory(),
+                        new MultiFieldsAggregatorFactory(
+                                new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                        new MinMaxStringFieldAggregatorFactory(15, true, true) }),
+                        new MultiFieldsAggregatorFactory(
+                                new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                        new MinMaxStringFieldAggregatorFactory(2, true, true) }),
+                        outputRec, outputRec, new HashSpillableTableFactory(
+                                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -377,8 +379,8 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void multiKeySumPreClusterGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
@@ -419,8 +421,8 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void multiKeySumExtGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
@@ -469,13 +471,13 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void multiKeyAvgPreClusterGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+        RecordDescriptor outputRec =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
                         new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
                         IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
 
@@ -513,13 +515,13 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void multiKeyAvgExtGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
-        RecordDescriptor outputRec = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+        RecordDescriptor outputRec =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
                         new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
                         IntegerSerializerDeserializer.INSTANCE, FloatSerializerDeserializer.INSTANCE });
 
@@ -566,8 +568,8 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void multiKeyMinMaxStringPreClusterGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 
@@ -609,8 +611,8 @@ public class AggregationTest extends AbstractIntegrationTest {
     public void multiKeyMinMaxStringExtGroupTest() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        FileScanOperatorDescriptor csvScanner = new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory,
-                desc);
+        FileScanOperatorDescriptor csvScanner =
+                new FileScanOperatorDescriptor(spec, splitProvider, tupleParserFactory, desc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner, NC2_ID);
 

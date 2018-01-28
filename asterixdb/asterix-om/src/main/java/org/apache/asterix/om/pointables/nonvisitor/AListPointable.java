@@ -189,8 +189,7 @@ public class AListPointable extends AbstractPointable {
         }
     }
 
-    public void getItemValue(AbstractCollectionType inputType, int index, DataOutput dOut)
-            throws IOException {
+    public void getItemValue(AbstractCollectionType inputType, int index, DataOutput dOut) throws IOException {
         if (getType() != ATypeTag.ANY.serialize()) {
             dOut.writeByte(getType());
         }

@@ -41,5 +41,4 @@ public class TypeMismatchException extends RuntimeDataException {
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 
-
 }

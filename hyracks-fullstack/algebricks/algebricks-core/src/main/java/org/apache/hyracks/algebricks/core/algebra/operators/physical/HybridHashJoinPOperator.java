@@ -116,10 +116,10 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
         int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
         int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IBinaryHashFunctionFactory[] hashFunFactories = JobGenHelper
-                .variablesToBinaryHashFunctionFactories(keysLeftBranch, env, context);
-        IBinaryHashFunctionFamily[] hashFunFamilies = JobGenHelper.variablesToBinaryHashFunctionFamilies(keysLeftBranch,
-                env, context);
+        IBinaryHashFunctionFactory[] hashFunFactories =
+                JobGenHelper.variablesToBinaryHashFunctionFactories(keysLeftBranch, env, context);
+        IBinaryHashFunctionFamily[] hashFunFamilies =
+                JobGenHelper.variablesToBinaryHashFunctionFamilies(keysLeftBranch, env, context);
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keysLeft.length];
         int i = 0;
         IBinaryComparatorFactoryProvider bcfp = context.getBinaryComparatorFactoryProvider();
@@ -128,13 +128,13 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
             comparatorFactories[i++] = bcfp.getBinaryComparatorFactory(t, true);
         }
 
-        IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider = context
-                .getPredicateEvaluatorFactoryProvider();
+        IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider =
+                context.getPredicateEvaluatorFactoryProvider();
         IPredicateEvaluatorFactory predEvaluatorFactory = predEvaluatorFactoryProvider == null ? null
                 : predEvaluatorFactoryProvider.getPredicateEvaluatorFactory(keysLeft, keysRight);
 
-        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
-                propagatedSchema, context);
+        RecordDescriptor recDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc;
         boolean optimizedHashJoin = true;
@@ -173,8 +173,8 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                             comparatorFactories, recDescriptor, predEvaluatorFactory, false, null);
                     break;
                 case LEFT_OUTER:
-                    IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1]
-                            .getSize()];
+                    IMissingWriterFactory[] nonMatchWriterFactories =
+                            new IMissingWriterFactory[inputSchemas[1].getSize()];
                     for (int j = 0; j < nonMatchWriterFactories.length; j++) {
                         nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                     }
@@ -207,8 +207,8 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
                             predEvaluatorFactory);
                     break;
                 case LEFT_OUTER:
-                    IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1]
-                            .getSize()];
+                    IMissingWriterFactory[] nonMatchWriterFactories =
+                            new IMissingWriterFactory[inputSchemas[1].getSize()];
                     for (int j = 0; j < nonMatchWriterFactories.length; j++) {
                         nonMatchWriterFactories[j] = context.getMissingWriterFactory();
                     }

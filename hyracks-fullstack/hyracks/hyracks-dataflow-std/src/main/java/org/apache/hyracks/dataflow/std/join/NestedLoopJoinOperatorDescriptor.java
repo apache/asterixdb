@@ -117,8 +117,8 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
             final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(nljAid, 0);
             final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             final ITuplePairComparator comparator = comparatorFactory.createTuplePairComparator(ctx);
-            final IPredicateEvaluator predEvaluator = (predEvaluatorFactory != null)
-                    ? predEvaluatorFactory.createPredicateEvaluator() : null;
+            final IPredicateEvaluator predEvaluator =
+                    (predEvaluatorFactory != null) ? predEvaluatorFactory.createPredicateEvaluator() : null;
 
             final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nullWriterFactories1.length] : null;
             if (isLeftOuter) {

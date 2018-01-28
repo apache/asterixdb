@@ -217,9 +217,8 @@ public class LogReplicationManager {
         }
         LOGGER.error("Replica failed", e);
         failedSockets.add(replicaSocket);
-        Optional<ReplicationDestination> socketDest =
-                destinations.entrySet().stream().filter(entry -> entry.getValue().equals(replicaSocket))
-                        .map(Map.Entry::getKey).findFirst();
+        Optional<ReplicationDestination> socketDest = destinations.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(replicaSocket)).map(Map.Entry::getKey).findFirst();
         socketDest.ifPresent(dest -> replicationManager.notifyFailure(dest, e));
     }
 
@@ -236,8 +235,8 @@ public class LogReplicationManager {
         public void run() {
             Thread.currentThread().setName("TxnAckListener (" + dest + ")");
             LOGGER.info("Started listening on socket: {}", dest);
-            try (BufferedReader incomingResponse = new BufferedReader(
-                    new InputStreamReader(replicaSocket.socket().getInputStream()))) {
+            try (BufferedReader incomingResponse =
+                    new BufferedReader(new InputStreamReader(replicaSocket.socket().getInputStream()))) {
                 while (true) {
                     final String response = incomingResponse.readLine();
                     if (response == null) {

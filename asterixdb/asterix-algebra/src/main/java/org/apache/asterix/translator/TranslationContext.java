@@ -97,7 +97,6 @@ public final class TranslationContext implements IVariableContext {
         return var;
     }
 
-
     public void setVar(VariableExpr v, LogicalVariable var) {
         currentVarMap.put(v.getVar().getId(), var);
     }

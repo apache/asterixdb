@@ -67,8 +67,8 @@ public class CurrentDateTimeDescriptor extends AbstractScalarFunctionDynamicDesc
                     private DataOutput out = resultStorage.getDataOutput();
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADateTime> datetimeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATETIME);
+                    private ISerializerDeserializer<ADateTime> datetimeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
                     private AMutableDateTime aDateTime = new AMutableDateTime(0);
 
                     @Override

@@ -34,8 +34,8 @@ public class ConstantTupleSourceOperatorDescriptor extends AbstractSingleActivit
     private byte[] tupleData;
     private int tupleSize;
 
-    public ConstantTupleSourceOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc, int[] fieldSlots,
-            byte[] tupleData, int tupleSize) {
+    public ConstantTupleSourceOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
+            int[] fieldSlots, byte[] tupleData, int tupleSize) {
         super(spec, 0, 1);
         this.tupleData = tupleData;
         this.fieldSlots = fieldSlots;

@@ -38,8 +38,8 @@ public class IOManagerPathTest {
     public void testPrefixNames() throws HyracksDataException {
         IODeviceHandle shorter = new IODeviceHandle(new File("/tmp/tst/1"), "storage");
         IODeviceHandle longer = new IODeviceHandle(new File("/tmp/tst/11"), "storage");
-        IOManager ioManager = new IOManager(Arrays.asList(new IODeviceHandle[] { shorter, longer }),
-                new DefaultDeviceResolver());
+        IOManager ioManager =
+                new IOManager(Arrays.asList(new IODeviceHandle[] { shorter, longer }), new DefaultDeviceResolver());
         FileReference f = ioManager.resolveAbsolutePath("/tmp/tst/11/storage/Foo_idx_foo/my_btree");
         Assert.assertEquals("/tmp/tst/11/storage/Foo_idx_foo/my_btree", f.getAbsolutePath());
     }
@@ -48,8 +48,8 @@ public class IOManagerPathTest {
     public void testDuplicates() throws HyracksDataException {
         IODeviceHandle first = new IODeviceHandle(new File("/tmp/tst/1"), "storage");
         IODeviceHandle second = new IODeviceHandle(new File("/tmp/tst/1"), "storage");
-        IOManager ioManager = new IOManager(Arrays.asList(new IODeviceHandle[] { first, second }),
-                new DefaultDeviceResolver());
+        IOManager ioManager =
+                new IOManager(Arrays.asList(new IODeviceHandle[] { first, second }), new DefaultDeviceResolver());
     }
 
     @After

@@ -113,7 +113,8 @@ public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptor
                 int count = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
                 count += 1;
                 if (!useObjectState) {
                     try {
@@ -139,7 +140,8 @@ public class AvgFieldGroupAggregatorFactory implements IFieldAggregateDescriptor
                 int sum = 0, count = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
                 count += 1;
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);

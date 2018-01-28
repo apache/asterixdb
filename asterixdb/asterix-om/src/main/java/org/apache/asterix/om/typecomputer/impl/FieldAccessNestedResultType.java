@@ -59,8 +59,7 @@ public class FieldAccessNestedResultType extends AbstractResultTypeComputer {
                     checkOrderedList(funcName, type);
                     break;
                 default:
-                    throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING,
-                            ATypeTag.ARRAY);
+                    throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING, ATypeTag.ARRAY);
             }
         }
     }

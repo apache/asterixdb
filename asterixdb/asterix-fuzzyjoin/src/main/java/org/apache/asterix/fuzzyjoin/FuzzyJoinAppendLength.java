@@ -45,8 +45,8 @@ public class FuzzyJoinAppendLength {
         String line;
         while ((line = input.readLine()) != null) {
             String[] splits = line.split(FuzzyJoinConfig.RECORD_SEPARATOR_REGEX);
-            Collection<String> tokens = tokenizer
-                    .tokenize(FuzzyJoinUtil.getData(splits, dataColumns, FuzzyJoinConfig.TOKEN_SEPARATOR));
+            Collection<String> tokens =
+                    tokenizer.tokenize(FuzzyJoinUtil.getData(splits, dataColumns, FuzzyJoinConfig.TOKEN_SEPARATOR));
             output.write(splits[0] + FuzzyJoinConfig.RECORD_SEPARATOR + splits[1] + FuzzyJoinConfig.RECORD_SEPARATOR
                     + splits[2] + FuzzyJoinConfig.RECORD_SEPARATOR + splits[3] + FuzzyJoinConfig.RECORD_SEPARATOR
                     + tokens.size() + "\n");

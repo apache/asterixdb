@@ -29,8 +29,8 @@ public class AInt8PrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final AInt8PrinterFactory INSTANCE = new AInt8PrinterFactory();
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps
-            .print(AInt8SerializerDeserializer.getByte(b, s + 1));
+    public static final IPrinter PRINTER =
+            (byte[] b, int s, int l, PrintStream ps) -> ps.print(AInt8SerializerDeserializer.getByte(b, s + 1));
 
     @Override
     public IPrinter createPrinter() {

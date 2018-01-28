@@ -131,17 +131,17 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
                 // If a sub-record do merge, else ignore and let the values decide what to do
                 if (fieldType1Copy.getFieldTypes()[i].getTypeTag() == ATypeTag.OBJECT) {
                     IAType[] oldTypes = resultType.getFieldTypes();
-                    oldTypes[pos] = mergedNestedType(fname, fieldType1Copy.getFieldTypes()[i],
-                            resultType.getFieldTypes()[pos]);
+                    oldTypes[pos] =
+                            mergedNestedType(fname, fieldType1Copy.getFieldTypes()[i], resultType.getFieldTypes()[pos]);
                     resultType = new ARecordType(resultType.getTypeName(), resultType.getFieldNames(), oldTypes,
-                                resultType.isOpen());
+                            resultType.isOpen());
                 }
             } else {
-                IAType[] combinedFieldTypes = ArrayUtils.addAll(resultType.getFieldTypes().clone(),
-                            fieldType1Copy.getFieldTypes()[i]);
+                IAType[] combinedFieldTypes =
+                        ArrayUtils.addAll(resultType.getFieldTypes().clone(), fieldType1Copy.getFieldTypes()[i]);
                 resultType = new ARecordType(resultType.getTypeName(),
-                            ArrayUtils.addAll(resultType.getFieldNames(), fieldType1Copy.getFieldNames()[i]),
-                            combinedFieldTypes, resultType.isOpen());
+                        ArrayUtils.addAll(resultType.getFieldNames(), fieldType1Copy.getFieldNames()[i]),
+                        combinedFieldTypes, resultType.isOpen());
             }
         }
 

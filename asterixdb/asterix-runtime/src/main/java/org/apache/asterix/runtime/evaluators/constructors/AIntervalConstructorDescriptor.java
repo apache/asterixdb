@@ -74,8 +74,8 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
                     private AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInterval> intervalSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINTERVAL);
+                    private ISerializerDeserializer<AInterval> intervalSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINTERVAL);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

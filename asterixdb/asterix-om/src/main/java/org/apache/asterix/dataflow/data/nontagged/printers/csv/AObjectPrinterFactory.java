@@ -119,8 +119,8 @@ public class AObjectPrinterFactory implements IPrinterFactory {
 
     @Override
     public IPrinter createPrinter() {
-        final ARecordVisitablePointable rPointable = new ARecordVisitablePointable(
-                DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+        final ARecordVisitablePointable rPointable =
+                new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         final Pair<PrintStream, ATypeTag> streamTag = new Pair<>(null, null);
 
         final IPrintVisitor visitor = new APrintVisitor();

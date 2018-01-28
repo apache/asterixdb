@@ -23,7 +23,7 @@ import java.util.ArrayList;
 
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
 
-public class ArrayListFactory<T> implements IObjectFactory<ArrayList<T>>{
+public class ArrayListFactory<T> implements IObjectFactory<ArrayList<T>> {
     @Override
     public ArrayList<T> create() {
         return new ArrayList<T>();

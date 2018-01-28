@@ -43,7 +43,7 @@ public class NumericCaretDescriptor extends AbstractNumericArithmeticEval {
      */
     @Override
     protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
-        if(rhs > Integer.MAX_VALUE){
+        if (rhs > Integer.MAX_VALUE) {
             throw new ArithmeticException("Exponent cannot be larger than 2^31-1");
         }
         return LongMath.checkedPow(lhs, (int) rhs);

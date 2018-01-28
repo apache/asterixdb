@@ -181,8 +181,8 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
         return prevAdditionalFilteringExpression;
     }
 
-    public void
-            setBeforeOpAdditionalFilteringExpression(Mutable<ILogicalExpression> prevAdditionalFilteringExpression) {
+    public void setBeforeOpAdditionalFilteringExpression(
+            Mutable<ILogicalExpression> prevAdditionalFilteringExpression) {
         this.prevAdditionalFilteringExpression = prevAdditionalFilteringExpression;
     }
 

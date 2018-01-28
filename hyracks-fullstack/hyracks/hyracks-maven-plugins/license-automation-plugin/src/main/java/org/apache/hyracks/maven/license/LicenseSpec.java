@@ -46,8 +46,8 @@ public class LicenseSpec {
 
     @JsonCreator
     public LicenseSpec(@JsonProperty("aliasUrls") List<String> aliasUrls, @JsonProperty("content") String content,
-                       @JsonProperty("contentFile") String contentFile, @JsonProperty("displayName") String displayName,
-                       @JsonProperty("metric") int metric, @JsonProperty("url") String url) {
+            @JsonProperty("contentFile") String contentFile, @JsonProperty("displayName") String displayName,
+            @JsonProperty("metric") int metric, @JsonProperty("url") String url) {
         this.aliasUrls = aliasUrls;
         this.content = content;
         this.contentFile = contentFile;
@@ -77,8 +77,7 @@ public class LicenseSpec {
             String file;
             try {
                 URI uri = new URI(url);
-                file = ((uri.getHost() != null ? uri.getHost() : "")
-                        + uri.getPath()).replaceAll(BAD_CHARS, "_");
+                file = ((uri.getHost() != null ? uri.getHost() : "") + uri.getPath()).replaceAll(BAD_CHARS, "_");
             } catch (URISyntaxException e) {
                 file = url.replaceAll(BAD_CHARS, "_");
             }

@@ -41,9 +41,9 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
     public TopKSorterOperatorDescriptor(IOperatorDescriptorRegistry spec, int framesLimit, int topK, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) {
-        this(spec, framesLimit, topK, sortFields,
-                firstKeyNormalizerFactory != null ? new INormalizedKeyComputerFactory[] { firstKeyNormalizerFactory }
-                        : null,
+        this(spec, framesLimit, topK,
+                sortFields, firstKeyNormalizerFactory != null
+                        ? new INormalizedKeyComputerFactory[] { firstKeyNormalizerFactory } : null,
                 comparatorFactories, recordDescriptor);
     }
 

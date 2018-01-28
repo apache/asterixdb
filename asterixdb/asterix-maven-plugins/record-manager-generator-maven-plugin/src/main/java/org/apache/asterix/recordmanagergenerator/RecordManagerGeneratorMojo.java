@@ -68,7 +68,6 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
      */
     MavenProject project;
 
-
     String recordManagerTemplate = "RecordManager.java";
     String arenaManagerTemplate = "ArenaManager.java";
     String[] supportTemplates = { "RecordManagerStats.java", "AllocInfo.java", "TypeUtil.java" };
@@ -101,10 +100,8 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
     }
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        String outputPath = project.getBuild().getDirectory() + File.separator
-                + "generated-sources" + File.separator
-                + "java" + File.separator
-                + packageName.replace('.', File.separatorChar);
+        String outputPath = project.getBuild().getDirectory() + File.separator + "generated-sources" + File.separator
+                + "java" + File.separator + packageName.replace('.', File.separatorChar);
         File dir = new File(outputPath);
         if (!dir.exists()) {
             dir.mkdirs();
@@ -122,7 +119,8 @@ public class RecordManagerGeneratorMojo extends AbstractMojo {
         }
     }
 
-    private void generateSource(Generator.TemplateType mgrType, String template, String recordType, String outputPath) throws MojoFailureException {
+    private void generateSource(Generator.TemplateType mgrType, String template, String recordType, String outputPath)
+            throws MojoFailureException {
         InputStream is = getClass().getClassLoader().getResourceAsStream(template);
         if (is == null) {
             throw new MojoFailureException("template '" + template + "' not found in classpath");

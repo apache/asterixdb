@@ -45,21 +45,29 @@ public class APoint3DPartialBinaryComparatorFactory implements IBinaryComparator
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
                 try {
-                    int c = Double.compare(
-                            ADoubleSerializerDeserializer.getDouble(b1,
-                                    s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1),
-                            ADoubleSerializerDeserializer.getDouble(b2,
-                                    s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
+                    int c = Double
+                            .compare(
+                                    ADoubleSerializerDeserializer
+                                            .getDouble(b1,
+                                                    s1 + APoint3DSerializerDeserializer
+                                                            .getCoordinateOffset(Coordinate.X) - 1),
+                                    ADoubleSerializerDeserializer.getDouble(b2,
+                                            s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
                     if (c == 0) {
-                        c = Double.compare(
-                                ADoubleSerializerDeserializer.getDouble(b1,
-                                        s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1),
-                                ADoubleSerializerDeserializer.getDouble(b2,
-                                        s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1));
+                        c = Double
+                                .compare(
+                                        ADoubleSerializerDeserializer.getDouble(
+                                                b1, s1 + APoint3DSerializerDeserializer
+                                                        .getCoordinateOffset(Coordinate.Y) - 1),
+                                        ADoubleSerializerDeserializer.getDouble(b2,
+                                                s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Y)
+                                                        - 1));
                         if (c == 0) {
                             return Double.compare(
-                                    ADoubleSerializerDeserializer.getDouble(b1,
-                                            s1 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Z) - 1),
+                                    ADoubleSerializerDeserializer
+                                            .getDouble(b1,
+                                                    s1 + APoint3DSerializerDeserializer
+                                                            .getCoordinateOffset(Coordinate.Z) - 1),
                                     ADoubleSerializerDeserializer.getDouble(b2,
                                             s2 + APoint3DSerializerDeserializer.getCoordinateOffset(Coordinate.Z) - 1));
                         }

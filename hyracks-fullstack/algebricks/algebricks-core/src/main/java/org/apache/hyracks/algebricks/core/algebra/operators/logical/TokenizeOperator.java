@@ -50,12 +50,9 @@ public class TokenizeOperator extends AbstractLogicalOperator {
     private final List<Object> tokenizeVarTypes;
     private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
 
-    public TokenizeOperator(IDataSourceIndex<?, ?> dataSourceIndex,
-            List<Mutable<ILogicalExpression>> primaryKeyExprs,
-            List<Mutable<ILogicalExpression>> secondaryKeyExprs,
-            List<LogicalVariable> tokenizeVars,
-            Mutable<ILogicalExpression> filterExpr, Kind operation,
-            boolean bulkload, boolean isPartitioned,
+    public TokenizeOperator(IDataSourceIndex<?, ?> dataSourceIndex, List<Mutable<ILogicalExpression>> primaryKeyExprs,
+            List<Mutable<ILogicalExpression>> secondaryKeyExprs, List<LogicalVariable> tokenizeVars,
+            Mutable<ILogicalExpression> filterExpr, Kind operation, boolean bulkload, boolean isPartitioned,
             List<Object> tokenizeVarTypes) {
         this.dataSourceIndex = dataSourceIndex;
         this.primaryKeyExprs = primaryKeyExprs;
@@ -76,9 +73,7 @@ public class TokenizeOperator extends AbstractLogicalOperator {
     }
 
     @Override
-    public boolean acceptExpressionTransform(
-            ILogicalExpressionReferenceTransform visitor)
-            throws AlgebricksException {
+    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         boolean b = false;
         for (int i = 0; i < primaryKeyExprs.size(); i++) {
             if (visitor.transform(primaryKeyExprs.get(i))) {
@@ -94,8 +89,7 @@ public class TokenizeOperator extends AbstractLogicalOperator {
     }
 
     @Override
-    public <R, T> R accept(ILogicalOperatorVisitor<R, T> visitor, T arg)
-            throws AlgebricksException {
+    public <R, T> R accept(ILogicalOperatorVisitor<R, T> visitor, T arg) throws AlgebricksException {
         return visitor.visitTokenizeOperator(this, arg);
     }
 
@@ -109,8 +103,8 @@ public class TokenizeOperator extends AbstractLogicalOperator {
         return new VariablePropagationPolicy() {
 
             @Override
-            public void propagateVariables(IOperatorSchema target,
-                    IOperatorSchema... sources) throws AlgebricksException {
+            public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
+                    throws AlgebricksException {
                 target.addAllVariables(sources[0]);
                 for (LogicalVariable v : tokenizeVars) {
                     target.addVariable(v);
@@ -126,8 +120,7 @@ public class TokenizeOperator extends AbstractLogicalOperator {
     }
 
     @Override
-    public IVariableTypeEnvironment computeOutputTypeEnvironment(
-            ITypingContext ctx) throws AlgebricksException {
+    public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         IVariableTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
 
         // If the secondary index is not length-partitioned, create one new

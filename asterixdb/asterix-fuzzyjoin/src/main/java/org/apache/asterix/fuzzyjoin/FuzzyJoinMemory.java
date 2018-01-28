@@ -80,7 +80,7 @@ public class FuzzyJoinMemory {
     @SuppressWarnings("squid:S1166") // Either log or rethrow this exception
     public static void readRecords(String fileName, List<int[]> records, List<Integer> rids) throws IOException {
         try (LittleEndianIntInputStream in =
-                     new LittleEndianIntInputStream(new BufferedInputStream(new FileInputStream(fileName)))) {
+                new LittleEndianIntInputStream(new BufferedInputStream(new FileInputStream(fileName)))) {
 
             while (true) {
                 int rid = 0;
@@ -161,9 +161,8 @@ public class FuzzyJoinMemory {
                             count = -1;
                         }
                         // suffix filter
-                        if (count == 1
-                                && !similarityFilters.passSuffixFilter(tokens, indexToken, records.get(indexProbe),
-                                        indexTokenProbe)) {
+                        if (count == 1 && !similarityFilters.passSuffixFilter(tokens, indexToken,
+                                records.get(indexProbe), indexTokenProbe)) {
                             count = -1;
                         }
                         counts.put(indexProbe, count);
@@ -268,9 +267,8 @@ public class FuzzyJoinMemory {
                             count = -1;
                         }
                         // suffix filter
-                        if (count == 1
-                                && !similarityFilters.passSuffixFilter(tokens, indexToken, records.get(indexProbe),
-                                        indexTokenProbe)) {
+                        if (count == 1 && !similarityFilters.passSuffixFilter(tokens, indexToken,
+                                records.get(indexProbe), indexTokenProbe)) {
                             count = -1;
                         }
                         counts.put(indexProbe, count);

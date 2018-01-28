@@ -112,8 +112,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
             } catch (ClosedByInterruptException e) {
                 Thread.currentThread().interrupt();
                 if (LOGGER.isWarnEnabled()) {
-                    LOGGER.log(Level.WARN, "Interrupted while reading checkpoint file: " + file.getAbsolutePath(),
-                            e);
+                    LOGGER.log(Level.WARN, "Interrupted while reading checkpoint file: " + file.getAbsolutePath(), e);
                 }
                 throw new ACIDException(e);
             } catch (IOException e) {

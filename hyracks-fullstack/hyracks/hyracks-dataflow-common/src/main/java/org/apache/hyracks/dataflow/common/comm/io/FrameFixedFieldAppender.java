@@ -76,9 +76,9 @@ public class FrameFixedFieldAppender extends AbstractFrameAppender implements IF
             IntSerDeUtils.putInt(array, tupleDataEndOffset + currentField * 4, lastFieldEndOffset);
             if (++currentField == fieldCount) {
                 tupleDataEndOffset += fieldCount * 4 + lastFieldEndOffset;
-                IntSerDeUtils
-                        .putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1),
-                                tupleDataEndOffset);
+                IntSerDeUtils.putInt(array,
+                        FrameHelper.getTupleCountOffset(frame.getFrameSize()) - 4 * (tupleCount + 1),
+                        tupleDataEndOffset);
                 ++tupleCount;
                 IntSerDeUtils.putInt(array, FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
 

@@ -86,8 +86,8 @@ public class TemporalIntervalEndDatetimeAccessor extends AbstractScalarFunctionD
                         resultStorage.reset();
                         try {
                             if (bytes[startOffset] == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                                byte timeType = AIntervalSerializerDeserializer.getIntervalTimeType(bytes,
-                                        startOffset + 1);
+                                byte timeType =
+                                        AIntervalSerializerDeserializer.getIntervalTimeType(bytes, startOffset + 1);
                                 long endTime = AIntervalSerializerDeserializer.getIntervalEnd(bytes, startOffset + 1);
                                 if (timeType == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
                                     aDateTime.setValue(endTime);

@@ -39,8 +39,7 @@ public interface IPageReplacementStrategy {
 
     public int getNumPages();
 
-    void fixupCapacityOnLargeRead(ICachedPageInternal cPage)
-            throws HyracksDataException;
+    void fixupCapacityOnLargeRead(ICachedPageInternal cPage) throws HyracksDataException;
 
     public int getPageSize();
 

@@ -79,7 +79,7 @@ public class DotFormatBuilder {
 
     public class Node {
         private final StringValue nodeId;
-        private HashMap<String,AttributeValue> attributes = new HashMap<>();
+        private HashMap<String, AttributeValue> attributes = new HashMap<>();
 
         // no instantiation
         private Node(StringValue nodeId, StringValue nodeLabel) {
@@ -142,7 +142,7 @@ public class DotFormatBuilder {
     public class Edge {
         private final Node source;
         private final Node destination;
-        private final HashMap<String,AttributeValue> attributes = new HashMap<>();
+        private final HashMap<String, AttributeValue> attributes = new HashMap<>();
 
         // no instantiation
         private Edge(Node source, Node destination) {
@@ -214,7 +214,7 @@ public class DotFormatBuilder {
 
     public static final class StringValue extends AttributeValue {
         // no instantiation
-        private StringValue (String value) {
+        private StringValue(String value) {
             super(value);
         }
 
@@ -224,7 +224,7 @@ public class DotFormatBuilder {
                 newValue = "";
             }
             newValue = newValue.replace("\n", "\\n");
-            return new StringValue("\"" + newValue.replace("\"","\'").trim() + "\"");
+            return new StringValue("\"" + newValue.replace("\"", "\'").trim() + "\"");
         }
     }
 
@@ -233,7 +233,7 @@ public class DotFormatBuilder {
         public static final Color SKYBLUE = new Color("skyblue");
 
         // no instantiation
-        private Color (String color) {
+        private Color(String color) {
             super(color);
         }
     }

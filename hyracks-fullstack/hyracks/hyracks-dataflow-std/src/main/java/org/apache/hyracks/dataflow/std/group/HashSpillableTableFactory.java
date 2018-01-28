@@ -84,17 +84,18 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             intermediateResultKeys[i] = i;
         }
 
-        final FrameTuplePairComparator ftpcInputCompareToAggregate = new FrameTuplePairComparator(keyFields,
-                intermediateResultKeys, comparators);
+        final FrameTuplePairComparator ftpcInputCompareToAggregate =
+                new FrameTuplePairComparator(keyFields, intermediateResultKeys, comparators);
 
-        final ITuplePartitionComputer tpc = new FieldHashPartitionComputerFamily(keyFields, hashFunctionFamilies)
-                .createPartitioner(seed);
+        final ITuplePartitionComputer tpc =
+                new FieldHashPartitionComputerFamily(keyFields, hashFunctionFamilies).createPartitioner(seed);
 
         // For calculating hash value for the already aggregated tuples (not incoming tuples)
         // This computer is required to calculate the hash value of a aggregated tuple
         // while doing the garbage collection work on Hash Table.
-        final ITuplePartitionComputer tpcIntermediate = new FieldHashPartitionComputerFamily(intermediateResultKeys,
-                hashFunctionFamilies).createPartitioner(seed);
+        final ITuplePartitionComputer tpcIntermediate =
+                new FieldHashPartitionComputerFamily(intermediateResultKeys, hashFunctionFamilies)
+                        .createPartitioner(seed);
 
         final IAggregatorDescriptor aggregator = aggregateFactory.createAggregator(ctx, inRecordDescriptor,
                 outRecordDescriptor, keyFields, intermediateResultKeys, null, -1);
@@ -110,9 +111,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
         final int numPartitions = getNumOfPartitions(inputDataBytesSize / ctx.getInitialFrameSize(), memoryBudget);
         final int entriesPerPartition = (int) Math.ceil(1.0 * tableSize / numPartitions);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(
-                    "created hashtable, table size:" + tableSize + " file size:" + inputDataBytesSize + "  #partitions:"
-                    + numPartitions);
+            LOGGER.debug("created hashtable, table size:" + tableSize + " file size:" + inputDataBytesSize
+                    + "  #partitions:" + numPartitions);
         }
 
         final ArrayTupleBuilder outputTupleBuilder = new ArrayTupleBuilder(outRecordDescriptor.getFields().length);
@@ -122,14 +122,14 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             private final TuplePointer pointer = new TuplePointer();
             private final BitSet spilledSet = new BitSet(numPartitions);
             // This frame pool will be shared by both data table and hash table.
-            private final IDeallocatableFramePool framePool = new DeallocatableFramePool(ctx,
-                    framesLimit * ctx.getInitialFrameSize());
+            private final IDeallocatableFramePool framePool =
+                    new DeallocatableFramePool(ctx, framesLimit * ctx.getInitialFrameSize());
             // buffer manager for hash table
-            private final ISimpleFrameBufferManager bufferManagerForHashTable = new FramePoolBackedFrameBufferManager(
-                    framePool);
+            private final ISimpleFrameBufferManager bufferManagerForHashTable =
+                    new FramePoolBackedFrameBufferManager(framePool);
 
-            private final ISerializableTable hashTableForTuplePointer = new SerializableHashTable(tableSize, ctx,
-                    bufferManagerForHashTable);
+            private final ISerializableTable hashTableForTuplePointer =
+                    new SerializableHashTable(tableSize, ctx, bufferManagerForHashTable);
 
             // buffer manager for data table
             final IPartitionedTupleBufferManager bufferManager = new VPartitionTupleBufferManager(
@@ -138,8 +138,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
             final ITuplePointerAccessor bufferAccessor = bufferManager.getTuplePointerAccessor(outRecordDescriptor);
 
-            private final PreferToSpillFullyOccupiedFramePolicy spillPolicy = new PreferToSpillFullyOccupiedFramePolicy(
-                    bufferManager, spilledSet);
+            private final PreferToSpillFullyOccupiedFramePolicy spillPolicy =
+                    new PreferToSpillFullyOccupiedFramePolicy(bufferManager, spilledSet);
 
             private final FrameTupleAppender outputAppender = new FrameTupleAppender(new VSizeFrame(ctx));
 
@@ -157,8 +157,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
                 // Checks whether the garbage collection is required and conducts a garbage collection if so.
                 if (hashTableForTuplePointer.isGarbageCollectionNeeded()) {
-                    int numberOfFramesReclaimed = hashTableForTuplePointer.collectGarbage(bufferAccessor,
-                            tpcIntermediate);
+                    int numberOfFramesReclaimed =
+                            hashTableForTuplePointer.collectGarbage(bufferAccessor, tpcIntermediate);
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("Garbage Collection on Hash table is done. Deallocated frames:"
                                 + numberOfFramesReclaimed);
@@ -310,8 +310,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             // partition again and again.
             return 2;
         }
-        long numberOfPartitions = (long) (Math
-                .ceil((nubmerOfInputFrames * FUDGE_FACTOR - frameLimit) / (frameLimit - 1)));
+        long numberOfPartitions =
+                (long) (Math.ceil((nubmerOfInputFrames * FUDGE_FACTOR - frameLimit) / (frameLimit - 1)));
         numberOfPartitions = Math.max(2, numberOfPartitions);
         if (numberOfPartitions > frameLimit) {
             numberOfPartitions = (long) Math.ceil(Math.sqrt(nubmerOfInputFrames * FUDGE_FACTOR));

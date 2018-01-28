@@ -55,7 +55,7 @@ public class AYearMonthDuration implements IAObject {
     }
 
     @Override
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode json = om.createObjectNode();
 

@@ -143,8 +143,8 @@ public class FunctionMapUtil {
             return callExpr;
         }
         callExpr.setFunctionSignature(new FunctionSignature(FunctionConstants.ASTERIX_NS, internalFuncName, 1));
-        callExpr.setExprList(new ArrayList<>(Collections.singletonList(new ListConstructor(
-                ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, callExpr.getExprList()))));
+        callExpr.setExprList(new ArrayList<>(Collections.singletonList(
+                new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, callExpr.getExprList()))));
         return callExpr;
     }
 

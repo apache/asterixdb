@@ -33,14 +33,12 @@ public interface IRuleSetFactory {
      * @throws AlgebricksException
      */
     public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getLogicalRewrites(
-            ICcApplicationContext appCtx)
-            throws AlgebricksException;
+            ICcApplicationContext appCtx) throws AlgebricksException;
 
     /**
      * @return the physical rewrites
      */
     public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getPhysicalRewrites(
-            ICcApplicationContext appCtx)
-            throws AlgebricksException;
+            ICcApplicationContext appCtx) throws AlgebricksException;
 
 }

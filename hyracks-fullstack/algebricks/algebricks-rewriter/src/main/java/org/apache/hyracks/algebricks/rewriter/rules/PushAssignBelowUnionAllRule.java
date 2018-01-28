@@ -110,8 +110,8 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
             for (int j = 0; j < assignVars.size(); j++) {
                 LogicalVariable first = newAssignOps[0].getVariables().get(j);
                 LogicalVariable second = newAssignOps[1].getVariables().get(j);
-                Triple<LogicalVariable, LogicalVariable, LogicalVariable> varMapping = new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(
-                        first, second, assignVars.get(j));
+                Triple<LogicalVariable, LogicalVariable, LogicalVariable> varMapping =
+                        new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(first, second, assignVars.get(j));
                 unionOp.getVariableMappings().add(varMapping);
             }
             context.computeAndSetTypeEnvironmentForOperator(unionOp);
@@ -127,7 +127,7 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
 
     private AssignOperator createAssignBelowUnionAllBranch(UnionAllOperator unionOp, int inputIndex,
             AssignOperator originalAssignOp, Set<LogicalVariable> assignUsedVars, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         AssignOperator newAssignOp = cloneAssignOperator(originalAssignOp, context);
         newAssignOp.getInputs()
                 .add(new MutableObject<ILogicalOperator>(unionOp.getInputs().get(inputIndex).getValue()));

@@ -65,22 +65,22 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                     protected final IntervalLogic il = new IntervalLogic();
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
-                    private TaggedValuePointable argPtr0 = (TaggedValuePointable) TaggedValuePointable.FACTORY
-                            .createPointable();
-                    private TaggedValuePointable argPtr1 = (TaggedValuePointable) TaggedValuePointable.FACTORY
-                            .createPointable();
-                    private AIntervalPointable interval0 = (AIntervalPointable) AIntervalPointable.FACTORY
-                            .createPointable();
-                    private AIntervalPointable interval1 = (AIntervalPointable) AIntervalPointable.FACTORY
-                            .createPointable();
+                    private TaggedValuePointable argPtr0 =
+                            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
+                    private TaggedValuePointable argPtr1 =
+                            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
+                    private AIntervalPointable interval0 =
+                            (AIntervalPointable) AIntervalPointable.FACTORY.createPointable();
+                    private AIntervalPointable interval1 =
+                            (AIntervalPointable) AIntervalPointable.FACTORY.createPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     private final AMutableInterval aInterval = new AMutableInterval(0, 0, (byte) -1);
 
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ANULL);
+                    private final ISerializerDeserializer<ANull> nullSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<AInterval> intervalSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINTERVAL);
@@ -92,7 +92,6 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                         eval1.evaluate(tuple, argPtr1);
                         byte type0 = argPtr0.getTag();
                         byte type1 = argPtr1.getTag();
-
 
                         if (type0 == ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG && type0 == type1) {
                             argPtr0.getValue(interval0);

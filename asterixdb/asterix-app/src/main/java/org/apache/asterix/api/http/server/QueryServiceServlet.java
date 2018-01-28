@@ -125,7 +125,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     @Override
     protected void options(IServletRequest request, IServletResponse response) throws Exception {
         response.setHeader("Access-Control-Allow-Origin",
-            "http://" + hostName + ":" + appCtx.getExternalProperties().getQueryWebInterfacePort());
+                "http://" + hostName + ":" + appCtx.getExternalProperties().getQueryWebInterfacePort());
         response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         response.setStatus(HttpResponseStatus.OK);
     }
@@ -453,9 +453,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
         ResultDelivery delivery = parseResultDelivery(param.mode);
 
-        final ResultProperties resultProperties = param.maxResultReads == null ?
-                new ResultProperties(delivery) :
-                new ResultProperties(delivery, Long.parseLong(param.maxResultReads));
+        final ResultProperties resultProperties = param.maxResultReads == null ? new ResultProperties(delivery)
+                : new ResultProperties(delivery, Long.parseLong(param.maxResultReads));
 
         String handleUrl = getHandleUrl(param.host, param.path, delivery);
         SessionOutput sessionOutput = createSessionOutput(param, handleUrl, httpWriter);
@@ -526,9 +525,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         IStatementExecutor translator = statementExecutorFactory.create((ICcApplicationContext) appCtx, statements,
                 sessionOutput, compilationProvider, componentProvider);
         execution.start();
-        final IRequestParameters requestParameters =
-                new org.apache.asterix.app.translator.RequestParameters(getHyracksDataset(), resultProperties, stats,
-                        null, param.clientContextID, optionalParameters);
+        final IRequestParameters requestParameters = new org.apache.asterix.app.translator.RequestParameters(
+                getHyracksDataset(), resultProperties, stats, null, param.clientContextID, optionalParameters);
         translator.compileAndExecute(getHyracksClientConnection(), queryCtx, requestParameters);
         execution.end();
     }

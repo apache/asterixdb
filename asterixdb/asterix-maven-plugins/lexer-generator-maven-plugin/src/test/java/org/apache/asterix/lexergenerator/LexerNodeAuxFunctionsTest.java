@@ -27,7 +27,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-
 import org.apache.asterix.lexergenerator.LexerNode;
 import org.apache.asterix.lexergenerator.Token;
 import org.apache.asterix.lexergenerator.rules.RuleEpsilon;
@@ -42,16 +41,10 @@ public class LexerNodeAuxFunctionsTest {
         node.append(rule);
         node.add(rule2);
         node.appendTokenName(token_name);
-        assertEquals(" ( " + rule_name +token_tostring + " || " + rule2_name + token_tostring + " ) ", node.toString());
-        assertEquals(rule_match+"{"
-                        +"\n" + rule_action
-                        +"\n" +token_return
-                     +"}"
-                     +rule2_match+"{"
-                        +"\n"+rule2_action
-                        +"\n"+token_return
-                     +"}"
-                     +expectedDifferentReturn , node.toJavaAuxFunction());
+        assertEquals(" ( " + rule_name + token_tostring + " || " + rule2_name + token_tostring + " ) ",
+                node.toString());
+        assertEquals(rule_match + "{" + "\n" + rule_action + "\n" + token_return + "}" + rule2_match + "{" + "\n"
+                + rule2_action + "\n" + token_return + "}" + expectedDifferentReturn, node.toJavaAuxFunction());
     }
 
     @Test
@@ -61,18 +54,11 @@ public class LexerNodeAuxFunctionsTest {
         node.add(ruleB);
         node.add(ruleC);
         node.appendTokenName(token_name);
-        assertEquals(" ( a" + token_tostring + " || b" + token_tostring + " || c" + token_tostring + " ) ", node.toString());
-        assertEquals("switch(currentChar){\n" +
-                "case 'a':" +
-                "\n" + ruleABC_action +
-                "\n" + token_return   +
-                "case 'b':" +
-                "\n" + ruleABC_action +
-                "\n" + token_return   +
-                "case 'c':" +
-                "\n" + ruleABC_action +
-                "\n" + token_return   +
-                "}\n"+ expectedDifferentReturn , node.toJavaAuxFunction());
+        assertEquals(" ( a" + token_tostring + " || b" + token_tostring + " || c" + token_tostring + " ) ",
+                node.toString());
+        assertEquals("switch(currentChar){\n" + "case 'a':" + "\n" + ruleABC_action + "\n" + token_return + "case 'b':"
+                + "\n" + ruleABC_action + "\n" + token_return + "case 'c':" + "\n" + ruleABC_action + "\n"
+                + token_return + "}\n" + expectedDifferentReturn, node.toJavaAuxFunction());
     }
 
     @Test
@@ -90,7 +76,7 @@ public class LexerNodeAuxFunctionsTest {
         assertEquals(expectedNeededAuxFunctions, node.neededAuxFunctions());
     }
 
-    @Test(expected=Exception.class)
+    @Test(expected = Exception.class)
     public void NodeExpandFirstActionError() throws Exception {
         LexerNode node = new LexerNode();
         node.append(ruleA);
@@ -104,7 +90,8 @@ public class LexerNodeAuxFunctionsTest {
         try {
             node.expandFirstAction(tokens);
         } catch (Exception e) {
-            assertEquals("Cannot find a token used as part of another definition, missing token: token1", e.getMessage());
+            assertEquals("Cannot find a token used as part of another definition, missing token: token1",
+                    e.getMessage());
             throw e;
         }
     }

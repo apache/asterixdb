@@ -86,8 +86,8 @@ public class FieldRangePartitionComputerFactory implements ITuplePartitionComput
                     int fIdx = rangeFields[f];
                     int fStart = accessor.getFieldStartOffset(tIndex, fIdx);
                     int fEnd = accessor.getFieldEndOffset(tIndex, fIdx);
-                    c = comparators[f].compare(accessor.getBuffer().array(), startOffset + slotLength + fStart, fEnd
-                            - fStart, rangeMap.getByteArray(fieldIndex, f), rangeMap.getStartOffset(fieldIndex, f),
+                    c = comparators[f].compare(accessor.getBuffer().array(), startOffset + slotLength + fStart,
+                            fEnd - fStart, rangeMap.getByteArray(fieldIndex, f), rangeMap.getStartOffset(fieldIndex, f),
                             rangeMap.getLength(fieldIndex, f));
                     if (c != 0) {
                         return c;

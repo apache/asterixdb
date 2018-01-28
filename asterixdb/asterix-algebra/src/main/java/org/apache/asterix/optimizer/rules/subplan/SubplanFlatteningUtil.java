@@ -91,16 +91,16 @@ class SubplanFlatteningUtil {
      */
     public static Pair<Set<LogicalVariable>, Mutable<ILogicalOperator>> inlineLeftNtsInSubplanJoin(
             SubplanOperator subplanOp, IOptimizationContext context) throws AlgebricksException {
-        Pair<Boolean, ILogicalOperator> applicableAndNtsToRewrite = SubplanFlatteningUtil
-                .isQualifiedForSpecialFlattening(subplanOp);
+        Pair<Boolean, ILogicalOperator> applicableAndNtsToRewrite =
+                SubplanFlatteningUtil.isQualifiedForSpecialFlattening(subplanOp);
         if (!applicableAndNtsToRewrite.first) {
             return new Pair<Set<LogicalVariable>, Mutable<ILogicalOperator>>(null, null);
         }
 
         ILogicalOperator qualifiedNts = applicableAndNtsToRewrite.second;
         ILogicalOperator subplanInputOp = subplanOp.getInputs().get(0).getValue();
-        InlineLeftNtsInSubplanJoinFlatteningVisitor specialVisitor = new InlineLeftNtsInSubplanJoinFlatteningVisitor(
-                context, subplanInputOp, qualifiedNts);
+        InlineLeftNtsInSubplanJoinFlatteningVisitor specialVisitor =
+                new InlineLeftNtsInSubplanJoinFlatteningVisitor(context, subplanInputOp, qualifiedNts);
 
         // Rewrites the query plan.
         Mutable<ILogicalOperator> topRef = subplanOp.getNestedPlans().get(0).getRoots().get(0);
@@ -157,7 +157,7 @@ class SubplanFlatteningUtil {
         }
         if (currentOp.getOperatorTag() == LogicalOperatorTag.SUBPLAN
                 && containsOperators((SubplanOperator) currentOp, interestedOperatorTags)) {
-                return true;
+            return true;
         }
         for (Mutable<ILogicalOperator> childRef : currentOp.getInputs()) {
             if (containsOperatorsInternal(childRef.getValue(), interestedOperatorTags)) {

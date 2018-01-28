@@ -28,6 +28,7 @@ public class TokenizerBufferedFactory {
     }
 
     public static boolean isSeparator(char c) {
-        return !(Character.isLetterOrDigit(c) || Character.getType(c) == Character.OTHER_LETTER || Character.getType(c) == Character.OTHER_NUMBER);
+        return !(Character.isLetterOrDigit(c) || Character.getType(c) == Character.OTHER_LETTER
+                || Character.getType(c) == Character.OTHER_NUMBER);
     }
 }

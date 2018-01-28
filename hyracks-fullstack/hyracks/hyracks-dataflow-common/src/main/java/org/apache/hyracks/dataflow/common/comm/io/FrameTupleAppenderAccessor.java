@@ -47,9 +47,8 @@ public class FrameTupleAppenderAccessor extends FrameTupleAppender implements IF
 
     @Override
     public int getTupleStartOffset(int tupleIndex) {
-        int offset = tupleIndex == 0 ?
-                FrameConstants.TUPLE_START_OFFSET :
-                IntSerDeUtils.getInt(getBuffer().array(), tupleCountOffset - 4 * tupleIndex);
+        int offset = tupleIndex == 0 ? FrameConstants.TUPLE_START_OFFSET
+                : IntSerDeUtils.getInt(getBuffer().array(), tupleCountOffset - 4 * tupleIndex);
         return offset;
     }
 
@@ -65,8 +64,8 @@ public class FrameTupleAppenderAccessor extends FrameTupleAppender implements IF
 
     @Override
     public int getFieldStartOffset(int tupleIndex, int fIdx) {
-        return fIdx == 0 ? 0 : IntSerDeUtils.getInt(getBuffer().array(),
-                getTupleStartOffset(tupleIndex) + (fIdx - 1) * 4);
+        return fIdx == 0 ? 0
+                : IntSerDeUtils.getInt(getBuffer().array(), getTupleStartOffset(tupleIndex) + (fIdx - 1) * 4);
     }
 
     @Override

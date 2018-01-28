@@ -27,8 +27,8 @@ public class ByteArrayPointableTest {
 
     @Test
     public void testCompareTo() throws Exception {
-        ByteArrayPointable byteArrayPointable = ByteArrayPointable
-                .generatePointableFromPureBytes(new byte[] { 1, 2, 3, 4 });
+        ByteArrayPointable byteArrayPointable =
+                ByteArrayPointable.generatePointableFromPureBytes(new byte[] { 1, 2, 3, 4 });
 
         testEqual(byteArrayPointable, ByteArrayPointable.generatePointableFromPureBytes(new byte[] { 1, 2, 3, 4 }));
 

@@ -76,8 +76,8 @@ public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescrip
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
             @SuppressWarnings("unchecked")
-            private final ISerializerDeserializer<ABoolean> boolSerde = SerializerDeserializerProvider.INSTANCE
-                    .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+            private final ISerializerDeserializer<ABoolean> boolSerde =
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {

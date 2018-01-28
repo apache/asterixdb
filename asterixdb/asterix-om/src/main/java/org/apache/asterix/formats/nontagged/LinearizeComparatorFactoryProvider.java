@@ -52,8 +52,8 @@ public class LinearizeComparatorFactoryProvider implements ILinearizeComparatorF
                 || typeTag == ATypeTag.BIGINT) {
             return addOffset(new ZCurveIntComparatorFactory(dimension), ascending);
         } else {
-            throw new AlgebricksException("Cannot propose linearizer for key with type " + typeTag + " and dimension "
-                    + dimension + ".");
+            throw new AlgebricksException(
+                    "Cannot propose linearizer for key with type " + typeTag + " and dimension " + dimension + ".");
         }
     }
 

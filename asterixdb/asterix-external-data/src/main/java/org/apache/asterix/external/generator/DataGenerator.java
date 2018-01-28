@@ -177,12 +177,11 @@ public class DataGenerator {
                             : (date.getMonth() + random.nextInt(endDate.getMonth() - date.getMonth()))
                     : random.nextInt(12) + 1;
 
-            int day = (year == endDate.getYear())
-                    ? month == endDate.getMonth()
+            int day =
+                    (year == endDate.getYear()) ? month == endDate.getMonth()
                             ? date.getDay() == endDate.getDay() ? endDate.getDay()
                                     : date.getDay() + random.nextInt(endDate.getDay() - date.getDay())
-                            : random.nextInt(28) + 1
-                    : random.nextInt(28) + 1;
+                            : random.nextInt(28) + 1 : random.nextInt(28) + 1;
             recentDate.reset(month, day, year);
             return recentDate;
         }
@@ -495,9 +494,9 @@ public class DataGenerator {
 
     public static class TweetMessage {
 
-        private static final String[] DEFAULT_FIELDS = new String[] { TweetFields.TWEETID, TweetFields.USER,
-                TweetFields.LATITUDE, TweetFields.LONGITUDE, TweetFields.MESSAGE_TEXT, TweetFields.CREATED_AT,
-                TweetFields.COUNTRY };
+        private static final String[] DEFAULT_FIELDS =
+                new String[] { TweetFields.TWEETID, TweetFields.USER, TweetFields.LATITUDE, TweetFields.LONGITUDE,
+                        TweetFields.MESSAGE_TEXT, TweetFields.CREATED_AT, TweetFields.COUNTRY };
 
         private int id;
         private TwitterUser user;
@@ -1183,14 +1182,13 @@ public class DataGenerator {
             "Hallam", "Delores", "Cressida", "Carlyle", "Leann", "Kelcey", "Laurence", "Ryan", "Reynold", "Mark",
             "Collyn", "Audie", "Sammy", "Ellery", "Sallie", "Pamelia", "Adolph", "Lydia", "Titania", "Ron", "Bridger",
             "Aline", "Read", "Kelleigh", "Weldon", "Irving", "Garey", "Diggory", "Evander", "Kylee", "Deidre", "Ormond",
-            "Laurine", "Reannon", "Arline", "Pat"};
+            "Laurine", "Reannon", "Arline", "Pat" };
 
     public static final String[] jargon = { "wireless", "signal", "network", "3G", "plan", "touch-screen",
             "customer-service", "reachability", "voice-command", "shortcut-menu", "customization", "platform", "speed",
             "voice-clarity", "voicemail-service" };
 
-    public static final String[] vendors = { "at&t", "verizon", "t-mobile", "sprint", "motorola", "samsung",
-            "iphone" };
+    public static final String[] vendors = { "at&t", "verizon", "t-mobile", "sprint", "motorola", "samsung", "iphone" };
 
     public static final String[] org_list = { "Latsonity", "ganjalax", "Zuncan", "Lexitechno", "Hot-tech", "subtam",
             "Coneflex", "Ganjatax", "physcane", "Tranzap", "Qvohouse", "Zununoing", "jaydax", "Keytech", "goldendexon",

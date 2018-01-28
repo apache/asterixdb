@@ -19,7 +19,6 @@
 
 package org.apache.asterix.fuzzyjoin.invertedlist;
 
-
 public interface InvertedList extends Iterable<int[]> {
     public void add(int[] element);
 

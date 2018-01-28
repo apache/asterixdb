@@ -42,7 +42,7 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
     private int tupleCount;
     private int freeDataEndOffset;
     private int deletedSpace;
-    private byte[] array;   // to speed up the array visit a little
+    private byte[] array; // to speed up the array visit a little
 
     public DeletableFrameTupleAppender(RecordDescriptor recordDescriptor) {
         this.recordDescriptor = recordDescriptor;
@@ -146,7 +146,7 @@ public class DeletableFrameTupleAppender implements IAppendDeletableFrameTupleAc
             endOffset = getTupleEndOffset(i);
             if (endOffset >= 0) {
                 int length = endOffset - startOffset;
-                assert ( length >= 0);
+                assert (length >= 0);
                 if (freeDataEndOffset != startOffset) {
                     System.arraycopy(array, startOffset, array, freeDataEndOffset, length);
                 }

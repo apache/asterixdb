@@ -47,8 +47,8 @@ public class AOptionalFieldPrinterFactory implements IPrinterFactory {
             public void init() throws HyracksDataException {
                 nullPrinter = (CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING))
                         .createPrinter();
-                fieldPrinter = (CleanJSONPrinterFactoryProvider.INSTANCE
-                        .getPrinterFactory(unionType.getActualType())).createPrinter();
+                fieldPrinter = (CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
+                        .createPrinter();
             }
 
             @Override

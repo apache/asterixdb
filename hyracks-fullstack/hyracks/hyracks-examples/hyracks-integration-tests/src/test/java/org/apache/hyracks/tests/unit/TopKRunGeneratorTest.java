@@ -137,8 +137,8 @@ public class TopKRunGeneratorTest {
     public void testHybridTopKWithTwoNormalizedKeys() throws HyracksDataException {
         int topK = SORT_FRAME_LIMIT;
         IHyracksTaskContext ctx = AbstractRunGeneratorTest.testUtils.create(PAGE_SIZE);
-        AbstractSortRunGenerator sorter = new HybridTopKSortRunGenerator(
-                ctx, SORT_FRAME_LIMIT, topK, SortFields, new INormalizedKeyComputerFactory[] {
+        AbstractSortRunGenerator sorter = new HybridTopKSortRunGenerator(ctx,
+                SORT_FRAME_LIMIT, topK, SortFields, new INormalizedKeyComputerFactory[] {
                         new IntegerNormalizedKeyComputerFactory(), new UTF8StringNormalizedKeyComputerFactory() },
                 ComparatorFactories, RecordDesc);
         testInMemoryOnly(ctx, topK, ORDER.REVERSE, sorter);

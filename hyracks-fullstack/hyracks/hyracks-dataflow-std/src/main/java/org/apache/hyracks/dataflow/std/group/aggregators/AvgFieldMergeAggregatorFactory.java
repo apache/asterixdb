@@ -118,7 +118,8 @@ public class AvgFieldMergeAggregatorFactory implements IFieldAggregateDescriptor
                 int sum = 0, count = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
                 count += 1;
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);
@@ -156,8 +157,10 @@ public class AvgFieldMergeAggregatorFactory implements IFieldAggregateDescriptor
                 int count = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
-                count += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart + 4);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                count += IntegerPointable.getInteger(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart + 4);
                 if (!useObjectState) {
                     try {
                         fieldOutput.writeInt(sum);

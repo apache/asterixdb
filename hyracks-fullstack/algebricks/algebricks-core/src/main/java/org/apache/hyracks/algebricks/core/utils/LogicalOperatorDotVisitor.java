@@ -350,7 +350,7 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     @Override
     public String visitScriptOperator(ScriptOperator op, Void noArgs) throws AlgebricksException {
         stringBuilder.setLength(0);
-        stringBuilder.append("script (in: ").append(op.getInputVariables()).append(") (out: " )
+        stringBuilder.append("script (in: ").append(op.getInputVariables()).append(") (out: ")
                 .append(op.getOutputVariables()).append(")");
         return stringBuilder.toString();
     }

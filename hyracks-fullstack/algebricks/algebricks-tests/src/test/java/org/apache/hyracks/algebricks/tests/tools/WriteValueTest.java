@@ -66,8 +66,8 @@ public class WriteValueTest {
         WriteValueTools.writeInt(i, baaos);
         byte[] goal = Integer.toString(i).getBytes();
         if (baaos.size() != goal.length) {
-            throw new Exception("Expecting to write " + i + " in " + goal.length + " bytes, but found " + baaos.size()
-                    + " bytes.");
+            throw new Exception(
+                    "Expecting to write " + i + " in " + goal.length + " bytes, but found " + baaos.size() + " bytes.");
         }
         for (int k = 0; k < goal.length; k++) {
             if (goal[k] != baaos.getByteArray()[k]) {
@@ -82,8 +82,8 @@ public class WriteValueTest {
         WriteValueTools.writeLong(x, baaos);
         byte[] goal = Long.toString(x).getBytes();
         if (baaos.size() != goal.length) {
-            throw new Exception("Expecting to write " + x + " in " + goal.length + " bytes, but found " + baaos.size()
-                    + " bytes.");
+            throw new Exception(
+                    "Expecting to write " + x + " in " + goal.length + " bytes, but found " + baaos.size() + " bytes.");
         }
         for (int k = 0; k < goal.length; k++) {
             if (goal[k] != baaos.getByteArray()[k]) {
@@ -100,8 +100,8 @@ public class WriteValueTest {
         WriteValueTools.writeUTF8StringWithQuotes(str, baaos);
         byte[] b = str.getBytes("UTF-8");
         if (baaos.size() != b.length + 2) {
-            throw new Exception("Expecting to write " + b + " in " + b.length + " bytes, but found " + baaos.size()
-                    + " bytes.");
+            throw new Exception(
+                    "Expecting to write " + b + " in " + b.length + " bytes, but found " + baaos.size() + " bytes.");
         }
         if (baaos.getByteArray()[0] != '\"' || baaos.getByteArray()[baaos.size() - 1] != '\"') {
             throw new Exception("Missing quotes.");

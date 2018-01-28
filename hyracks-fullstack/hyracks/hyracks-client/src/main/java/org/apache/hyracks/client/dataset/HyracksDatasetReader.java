@@ -75,8 +75,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
 
     public HyracksDatasetReader(IHyracksDatasetDirectoryServiceConnection datasetDirectoryServiceConnection,
             ClientNetworkManager netManager, IHyracksCommonContext datasetClientCtx, JobId jobId,
-            ResultSetId resultSetId)
-            throws Exception {
+            ResultSetId resultSetId) throws Exception {
         this.datasetDirectoryServiceConnection = datasetDirectoryServiceConnection;
         this.netManager = netManager;
         this.datasetClientCtx = datasetClientCtx;
@@ -105,8 +104,8 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
 
     private DatasetDirectoryRecord getRecord(int partition) throws Exception {
         while (knownRecords == null || knownRecords[partition] == null) {
-            knownRecords = datasetDirectoryServiceConnection
-                    .getDatasetResultLocations(jobId, resultSetId, knownRecords);
+            knownRecords =
+                    datasetDirectoryServiceConnection.getDatasetResultLocations(jobId, resultSetId, knownRecords);
         }
         return knownRecords[partition];
     }
@@ -157,7 +156,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
                 readBuffer = resultChannel.getNextBuffer();
                 lastMonitor.notifyFrameRead();
                 if (readBuffer != null) {
-                    if (readSize <=0) {
+                    if (readSize <= 0) {
                         int nBlocks = FrameHelper.deserializeNumOfMinFrame(readBuffer);
                         frame.ensureFrameSize(frame.getMinSize() * nBlocks);
                         frame.getBuffer().clear();

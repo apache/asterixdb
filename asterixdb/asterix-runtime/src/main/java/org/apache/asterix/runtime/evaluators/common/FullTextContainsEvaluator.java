@@ -57,10 +57,10 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
 
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected final DataOutput out = resultStorage.getDataOutput();
-    protected final TaggedValuePointable argLeft = (TaggedValuePointable) TaggedValuePointable.FACTORY
-            .createPointable();
-    protected final TaggedValuePointable argRight = (TaggedValuePointable) TaggedValuePointable.FACTORY
-            .createPointable();
+    protected final TaggedValuePointable argLeft =
+            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
+    protected final TaggedValuePointable argRight =
+            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
     protected TaggedValuePointable[] argOptions;
     protected final IScalarEvaluator evalLeft;
     protected final IScalarEvaluator evalRight;

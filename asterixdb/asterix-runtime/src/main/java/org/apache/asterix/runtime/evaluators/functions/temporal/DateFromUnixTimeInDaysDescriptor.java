@@ -70,8 +70,8 @@ public class DateFromUnixTimeInDaysDescriptor extends AbstractScalarFunctionDyna
 
                     // possible returning types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATE);
+                    private ISerializerDeserializer<ADate> dateSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

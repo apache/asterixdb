@@ -157,10 +157,10 @@ public class IndexingScheduler {
      */
     private void scheduleNonLocalSlots(InputSplit[] splits, final int[] workloads, String[] locations, int slotLimit,
             boolean[] scheduled, final HashMap<String, Integer> locationToNumOfAssignement)
-                    throws IOException, UnknownHostException {
+            throws IOException, UnknownHostException {
 
-        PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(NCs.length,
-                Comparator.comparing(locationToNumOfAssignement::get));
+        PriorityQueue<String> scheduleCadndiates =
+                new PriorityQueue<String>(NCs.length, Comparator.comparing(locationToNumOfAssignement::get));
 
         scheduleCadndiates.addAll(Arrays.asList(NCs));
         /*

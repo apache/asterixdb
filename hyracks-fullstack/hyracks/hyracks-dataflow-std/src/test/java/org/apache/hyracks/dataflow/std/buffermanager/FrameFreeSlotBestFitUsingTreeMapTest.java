@@ -54,11 +54,10 @@ public class FrameFreeSlotBestFitUsingTreeMapTest {
     }
 
     @Test
-    public void testReset(){
+    public void testReset() {
         testAll();
         policy.reset();
         testAll();
     }
-
 
 }

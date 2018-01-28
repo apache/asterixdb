@@ -53,7 +53,8 @@ public class RemoveRedundantProjectionRule implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) opRef.getValue();
         if (op1.getOperatorTag() == LogicalOperatorTag.PROJECT) {
             Mutable<ILogicalOperator> opRef2 = op1.getInputs().get(0);

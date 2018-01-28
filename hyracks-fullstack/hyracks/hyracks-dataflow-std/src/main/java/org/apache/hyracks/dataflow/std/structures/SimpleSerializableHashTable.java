@@ -309,16 +309,16 @@ public class SimpleSerializableHashTable implements ISerializableTable {
         lastContentFrame.writeInt(lastOffsetInCurrentFrame + 2, pointer.getFrameIndex());
         lastContentFrame.writeInt(lastOffsetInCurrentFrame + 3, pointer.getTupleIndex());
         int newLastOffsetInContentFrame = lastOffsetInCurrentFrame + entryCapacity * 2;
-        newLastOffsetInContentFrame = newLastOffsetInContentFrame < frameCapacity ? newLastOffsetInContentFrame
-                    : frameCapacity - 1;
+        newLastOffsetInContentFrame =
+                newLastOffsetInContentFrame < frameCapacity ? newLastOffsetInContentFrame : frameCapacity - 1;
         currentOffsetInEachFrameList.set(currentFrameNumber, newLastOffsetInContentFrame);
 
         requiredIntCapacity = entryCapacity * 2 - (frameCapacity - lastOffsetInCurrentFrame);
         while (requiredIntCapacity > 0) {
             currentFrameNumber++;
             requiredIntCapacity -= frameCapacity;
-            newLastOffsetInContentFrame = requiredIntCapacity < 0 ? requiredIntCapacity + frameCapacity
-                    : frameCapacity - 1;
+            newLastOffsetInContentFrame =
+                    requiredIntCapacity < 0 ? requiredIntCapacity + frameCapacity : frameCapacity - 1;
             currentOffsetInEachFrameList.set(currentFrameNumber, newLastOffsetInContentFrame);
         }
 

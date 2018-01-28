@@ -41,8 +41,8 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
     protected final ByteArrayPointable wordPtr = new ByteArrayPointable();
 
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt64> intSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT64);
+    protected ISerializerDeserializer<AInt64> intSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
     public AbstractFindBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
             String functionName) throws HyracksDataException {

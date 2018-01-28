@@ -42,7 +42,6 @@ public class GetThreadDumpWork extends AbstractWork {
     private final IResultCallback<String> callback;
     private final ThreadDumpRun run;
 
-
     public GetThreadDumpWork(ClusterControllerService ccs, String nodeId, IResultCallback<String> callback) {
         this.ccs = ccs;
         this.nodeId = nodeId;
@@ -83,8 +82,8 @@ public class GetThreadDumpWork extends AbstractWork {
                             Thread.sleep(sleepTime);
                         }
                         if (ccs.removeThreadDumpRun(run.getRequestId()) != null) {
-                            LOGGER.log(Level.WARN, "Timed out thread dump request " + run.getRequestId()
-                                    + " for node " + nodeId);
+                            LOGGER.log(Level.WARN,
+                                    "Timed out thread dump request " + run.getRequestId() + " for node " + nodeId);
                             callback.setException(new TimeoutException("Thread dump request for node " + nodeId
                                     + " timed out after " + TIMEOUT_SECS + " seconds."));
                         }

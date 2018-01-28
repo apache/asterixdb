@@ -55,8 +55,8 @@ public class NCServiceExecutionIT {
     // Important paths and files for this test.
 
     // The "target" subdirectory of asterix-server. All outputs go here.
-    public static final String TARGET_DIR = StringUtils.join(new String[] { "../asterix-server/target" },
-            File.separator);
+    public static final String TARGET_DIR =
+            StringUtils.join(new String[] { "../asterix-server/target" }, File.separator);
 
     // Directory where the NCs create and store all data, as configured by
     // src/test/resources/NCServiceExecutionIT/cc.conf.
@@ -65,12 +65,12 @@ public class NCServiceExecutionIT {
     // The log directory, where all CC, NCService, and NC logs are written. CC and
     // NCService logs are configured on the HyracksVirtualCluster below. NC logs
     // are configured in src/test/resources/NCServiceExecutionIT/ncservice*.conf.
-    public static final String LOG_DIR = StringUtils.join(new String[] { TARGET_DIR, "failsafe-reports" },
-            File.separator);
+    public static final String LOG_DIR =
+            StringUtils.join(new String[] { TARGET_DIR, "failsafe-reports" }, File.separator);
 
     // Directory where *.conf files are located.
-    public static final String CONF_DIR = StringUtils
-            .join(new String[] { TARGET_DIR, "test-classes", "NCServiceExecutionIT" }, File.separator);
+    public static final String CONF_DIR =
+            StringUtils.join(new String[] { TARGET_DIR, "test-classes", "NCServiceExecutionIT" }, File.separator);
 
     // The app.home specified for HyracksVirtualCluster. The NCService expects
     // to find the NC startup script in ${app.home}/bin.
@@ -84,13 +84,13 @@ public class NCServiceExecutionIT {
 
     // Path to the actual AQL test files, which we borrow from asterix-app. This is
     // passed to TestExecutor.
-    protected static final String TESTS_DIR = StringUtils
-            .join(new String[] { ASTERIX_APP_DIR, "src", "test", "resources", "runtimets" }, File.separator);
+    protected static final String TESTS_DIR =
+            StringUtils.join(new String[] { ASTERIX_APP_DIR, "src", "test", "resources", "runtimets" }, File.separator);
 
     // Path that actual results are written to. We create and clean this directory
     // here, and also pass it to TestExecutor which writes the test output there.
-    public static final String ACTUAL_RESULTS_DIR = StringUtils.join(new String[] { TARGET_DIR, "ittest" },
-            File.separator);
+    public static final String ACTUAL_RESULTS_DIR =
+            StringUtils.join(new String[] { TARGET_DIR, "ittest" }, File.separator);
 
     private static final Logger LOGGER = LogManager.getLogger();
 

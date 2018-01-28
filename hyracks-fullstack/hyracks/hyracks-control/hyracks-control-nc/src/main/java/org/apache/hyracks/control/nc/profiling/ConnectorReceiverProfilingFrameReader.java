@@ -36,8 +36,8 @@ public class ConnectorReceiverProfilingFrameReader implements IFrameReader {
         this.reader = reader;
         this.openCounter = ctx.getCounterContext().getCounter(cdId + ".receiver." + receiverIndex + ".open", true);
         this.closeCounter = ctx.getCounterContext().getCounter(cdId + ".receiver." + receiverIndex + ".close", true);
-        this.frameCounter = ctx.getCounterContext()
-                .getCounter(cdId + ".receiver." + receiverIndex + ".nextFrame", true);
+        this.frameCounter =
+                ctx.getCounterContext().getCounter(cdId + ".receiver." + receiverIndex + ".nextFrame", true);
     }
 
     @Override

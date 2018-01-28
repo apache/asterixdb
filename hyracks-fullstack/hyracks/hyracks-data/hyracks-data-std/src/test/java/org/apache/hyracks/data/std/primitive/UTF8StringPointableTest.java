@@ -34,8 +34,8 @@ import org.junit.Test;
 public class UTF8StringPointableTest {
     public static UTF8StringPointable STRING_EMPTY = generateUTF8Pointable(UTF8StringSample.EMPTY_STRING);
     public static UTF8StringPointable STRING_UTF8_MIX = generateUTF8Pointable(UTF8StringSample.STRING_UTF8_MIX);
-    public static UTF8StringPointable STRING_UTF8_MIX_LOWERCASE = generateUTF8Pointable(
-            UTF8StringSample.STRING_UTF8_MIX_LOWERCASE);
+    public static UTF8StringPointable STRING_UTF8_MIX_LOWERCASE =
+            generateUTF8Pointable(UTF8StringSample.STRING_UTF8_MIX_LOWERCASE);
 
     public static UTF8StringPointable STRING_LEN_127 = generateUTF8Pointable(UTF8StringSample.STRING_LEN_127);
     public static UTF8StringPointable STRING_LEN_128 = generateUTF8Pointable(UTF8StringSample.STRING_LEN_128);

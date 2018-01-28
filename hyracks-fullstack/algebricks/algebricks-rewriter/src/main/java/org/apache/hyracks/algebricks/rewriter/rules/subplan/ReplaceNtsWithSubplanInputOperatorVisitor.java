@@ -141,8 +141,8 @@ class ReplaceNtsWithSubplanInputOperatorVisitor implements IQueryOperatorVisitor
             isOriginalCopyUsed = true;
             return subplanInputOperator;
         }
-        LogicalOperatorDeepCopyWithNewVariablesVisitor visitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx,
-                ctx);
+        LogicalOperatorDeepCopyWithNewVariablesVisitor visitor =
+                new LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx, ctx);
         ILogicalOperator copiedSubplanInputOperator = visitor.deepCopy(subplanInputOperator);
         varMap.putAll(visitor.getInputToOutputVariableMapping());
         return copiedSubplanInputOperator;

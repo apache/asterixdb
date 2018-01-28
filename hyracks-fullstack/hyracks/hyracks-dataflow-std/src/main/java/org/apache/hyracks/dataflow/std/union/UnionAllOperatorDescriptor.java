@@ -62,7 +62,7 @@ public class UnionAllOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
             return new UnionOperator();
         }
     }

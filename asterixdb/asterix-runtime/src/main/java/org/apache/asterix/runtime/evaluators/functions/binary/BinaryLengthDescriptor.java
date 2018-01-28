@@ -60,8 +60,8 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                     private AMutableInt64 result = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> intSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private ISerializerDeserializer<AInt64> intSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable resultPointable)
@@ -72,7 +72,7 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 .getStartOffset()]];
                         checkTypeMachingThrowsIfNot(getIdentifier().getName(), EXPECTED_TAGS, tag);
                         int len = ByteArrayPointable.getContentLength(pointables[0].getByteArray(),
-                                    pointables[0].getStartOffset() + 1);
+                                pointables[0].getStartOffset() + 1);
                         result.setValue(len);
                         intSerde.serialize(result, dataOutput);
                         resultPointable.set(resultStorage);

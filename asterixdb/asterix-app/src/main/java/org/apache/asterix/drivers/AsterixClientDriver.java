@@ -64,9 +64,8 @@ public class AsterixClientDriver {
             boolean onlyPhysical, boolean createBinaryRuntime) throws Exception {
         ILangCompilationProvider compilationProvider = new AqlCompilationProvider();
         FileReader reader = new FileReader(filename);
-        AsterixJavaClient q =
-                new AsterixJavaClient(null, hcc, reader, compilationProvider, new DefaultStatementExecutorFactory(),
-                        new StorageComponentProvider());
+        AsterixJavaClient q = new AsterixJavaClient(null, hcc, reader, compilationProvider,
+                new DefaultStatementExecutorFactory(), new StorageComponentProvider());
         q.compile(optimize, true, true, true, onlyPhysical, createBinaryRuntime, createBinaryRuntime);
         return q;
     }

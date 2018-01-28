@@ -154,8 +154,8 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
                             // Sets the nts for a original subplan.
                             Mutable<ILogicalOperator> originalGbyRootOpRef = gbyNestedPlan.getRoots().get(rootIndex);
                             Mutable<ILogicalOperator> originalGbyNtsRef = downToNts(originalGbyRootOpRef);
-                            NestedTupleSourceOperator originalNts = (NestedTupleSourceOperator) originalGbyNtsRef
-                                    .getValue();
+                            NestedTupleSourceOperator originalNts =
+                                    (NestedTupleSourceOperator) originalGbyNtsRef.getValue();
                             originalNts.setDataSourceReference(new MutableObject<>(gby));
 
                             // Pushes a new subplan if possible.

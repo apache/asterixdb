@@ -44,8 +44,8 @@ public class PlanTranslationUtil {
             List<Mutable<ILogicalExpression>> assignExpressions, List<LogicalVariable> vars,
             List<Mutable<ILogicalExpression>> varRefs, IVariableContext context) {
         IAObject value = (field.size() > 1) ? new AOrderedList(field) : new AString(field.get(0));
-        ScalarFunctionCallExpression metaKeyFunction = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.META_KEY));
+        ScalarFunctionCallExpression metaKeyFunction =
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.META_KEY));
         metaKeyFunction.getArguments()
                 .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)));
         metaKeyFunction.getArguments()

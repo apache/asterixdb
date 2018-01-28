@@ -38,9 +38,8 @@ public class DeployedJobSpecStore {
     }
 
     public void addDeployedJobSpecDescriptor(DeployedJobSpecId deployedJobSpecId,
-            ActivityClusterGraph activityClusterGraph,
-            JobSpecification jobSpecification, Set<Constraint> activityClusterGraphConstraints)
-                    throws HyracksException {
+            ActivityClusterGraph activityClusterGraph, JobSpecification jobSpecification,
+            Set<Constraint> activityClusterGraphConstraints) throws HyracksException {
         if (deployedJobSpecDescriptorMap.get(deployedJobSpecId) != null) {
             throw HyracksException.create(ErrorCode.DUPLICATE_DEPLOYED_JOB, deployedJobSpecId);
         }
@@ -80,8 +79,8 @@ public class DeployedJobSpecStore {
 
         private final Set<Constraint> activityClusterGraphConstraints;
 
-        private DeployedJobSpecDescriptor(ActivityClusterGraph activityClusterGraph,
-                JobSpecification jobSpecification, Set<Constraint> activityClusterGraphConstraints) {
+        private DeployedJobSpecDescriptor(ActivityClusterGraph activityClusterGraph, JobSpecification jobSpecification,
+                Set<Constraint> activityClusterGraphConstraints) {
             this.activityClusterGraph = activityClusterGraph;
             this.jobSpecification = jobSpecification;
             this.activityClusterGraphConstraints = activityClusterGraphConstraints;

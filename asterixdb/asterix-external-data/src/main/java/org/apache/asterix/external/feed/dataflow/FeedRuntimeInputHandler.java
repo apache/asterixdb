@@ -77,11 +77,9 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
             IFrameWriter writer, FeedPolicyAccessor fpa, FrameTupleAccessor fta, ConcurrentFramePool framePool)
             throws HyracksDataException {
         this.writer = writer;
-        this.spiller = fpa.spillToDiskOnCongestion() ?
-                new FrameSpiller(ctx,
-                        connectionId.getFeedId() + "_" + connectionId.getDatasetName() + "_" + runtimeId.getPartition(),
-                        fpa.getMaxSpillOnDisk()) :
-                null;
+        this.spiller = fpa.spillToDiskOnCongestion() ? new FrameSpiller(ctx,
+                connectionId.getFeedId() + "_" + connectionId.getDatasetName() + "_" + runtimeId.getPartition(),
+                fpa.getMaxSpillOnDisk()) : null;
         this.exceptionHandler = new FeedExceptionHandler(ctx, fta);
         this.fpa = fpa;
         this.framePool = framePool;
@@ -289,8 +287,8 @@ public class FeedRuntimeInputHandler extends AbstractUnaryInputUnaryOutputOperat
             while (spiller.usedBudget() > MAX_SPILL_USED_BEFORE_RESUME) {
                 if (DEBUG) {
                     LOGGER.info("in stall(frame). Spilling has been consumed. We will wait for it to be less than "
-                            + MAX_SPILL_USED_BEFORE_RESUME + " consumed. Current consumption = " + spiller
-                            .usedBudget());
+                            + MAX_SPILL_USED_BEFORE_RESUME + " consumed. Current consumption = "
+                            + spiller.usedBudget());
                 }
                 spiller.wait();
             }

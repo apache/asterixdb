@@ -43,22 +43,22 @@ public class Common {
             new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
             new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-    static RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer() });
-    static RecordDescriptor custOrderJoinDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer() });
+    static RecordDescriptor ordersDesc =
+            new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
+    static RecordDescriptor custOrderJoinDesc =
+            new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
     static RecordDescriptor lineitemDesc = new RecordDescriptor(new ISerializerDeserializer[] {
             IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
@@ -70,25 +70,20 @@ public class Common {
             new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
             new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
-    static IValueParserFactory[] lineitemParserFactories = new IValueParserFactory[] {
-            IntegerParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
-            IntegerParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
-            IntegerParserFactory.INSTANCE, FloatParserFactory.INSTANCE,
-            FloatParserFactory.INSTANCE, FloatParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, };
+    static IValueParserFactory[] lineitemParserFactories = new IValueParserFactory[] { IntegerParserFactory.INSTANCE,
+            IntegerParserFactory.INSTANCE, IntegerParserFactory.INSTANCE, IntegerParserFactory.INSTANCE,
+            IntegerParserFactory.INSTANCE, FloatParserFactory.INSTANCE, FloatParserFactory.INSTANCE,
+            FloatParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, };
 
     static IValueParserFactory[] custParserFactories = new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
             UTF8StringParserFactory.INSTANCE };
     static IValueParserFactory[] orderParserFactories = new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
+            UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
             UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE };
 
     static FileSplit[] parseFileSplits(String fileSplits) {

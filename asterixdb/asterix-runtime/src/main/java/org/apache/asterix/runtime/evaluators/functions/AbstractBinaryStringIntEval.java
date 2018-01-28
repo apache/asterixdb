@@ -36,8 +36,8 @@ public abstract class AbstractBinaryStringIntEval extends AbstractBinaryStringEv
 
     // For outputting results.
     @SuppressWarnings({ "rawtypes" })
-    private ISerializerDeserializer intSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    private ISerializerDeserializer intSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     private AMutableInt32 resultValue = new AMutableInt32(0);
 
     public AbstractBinaryStringIntEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,

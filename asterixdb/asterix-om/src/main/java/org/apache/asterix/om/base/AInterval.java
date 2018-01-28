@@ -64,15 +64,15 @@ public class AInterval implements IAObject {
             return false;
         } else {
             AInterval t = (AInterval) o;
-            return (t.intervalStart == this.intervalStart || t.intervalEnd == this.intervalEnd
-                    && t.typetag == this.typetag);
+            return (t.intervalStart == this.intervalStart
+                    || t.intervalEnd == this.intervalEnd && t.typetag == this.typetag);
         }
     }
 
     @Override
     public int hashCode() {
-        return (int) (((int) (this.intervalStart ^ (this.intervalStart >>> 32))) * 31 + (int) (this.intervalEnd ^ (this.intervalEnd >>> 32)))
-                * 31 + (int) this.typetag;
+        return (int) (((int) (this.intervalStart ^ (this.intervalStart >>> 32))) * 31
+                + (int) (this.intervalEnd ^ (this.intervalEnd >>> 32))) * 31 + (int) this.typetag;
     }
 
     /* (non-Javadoc)
@@ -99,9 +99,8 @@ public class AInterval implements IAObject {
             if (typetag == ATypeTag.DATE.serialize()) {
                 sbder.append("date: { ");
 
-                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(
-                        intervalStart * ADate.CHRONON_OF_DAY, 0, sbder, GregorianCalendarSystem.Fields.YEAR,
-                        GregorianCalendarSystem.Fields.DAY, false);
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalStart * ADate.CHRONON_OF_DAY,
+                        0, sbder, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY, false);
 
                 sbder.append(" }, date: {");
                 GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalEnd * ADate.CHRONON_OF_DAY,
@@ -145,7 +144,7 @@ public class AInterval implements IAObject {
     }
 
     @Override
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         // TODO(madhusudancs): Remove this method when a printer based JSON serializer is implemented.
         return null;
     }

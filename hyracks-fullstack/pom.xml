@@ -377,6 +377,21 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>net.revelc.code.formatter</groupId>
+        <artifactId>formatter-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>${source-format.goal}</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <configFile>${root.dir}/AsterixCodeFormatProfile.xml</configFile>
+          <skipFormatting>${source-format.skip}</skipFormatting>
+        </configuration>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -521,31 +536,6 @@
       <properties>
         <hanging.pregelix.tests />
       </properties>
-    </profile>
-    <profile>
-      <id>source-format</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>net.revelc.code.formatter</groupId>
-            <artifactId>formatter-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>${source-format.goal}</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <configFile>${root.dir}/AsterixCodeFormatProfile.xml</configFile>
-              <skipFormatting>${source-format.skip}</skipFormatting>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
     </profile>
     <profile>
       <id>skip-assembly</id>

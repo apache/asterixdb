@@ -39,8 +39,8 @@ import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
-    private static final List<String> parserFormats = Collections
-            .unmodifiableList(Arrays.asList("csv", "delimited-text"));
+    private static final List<String> parserFormats =
+            Collections.unmodifiableList(Arrays.asList("csv", "delimited-text"));
 
     @Override
     public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
@@ -73,8 +73,8 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
         if (delimiterValue == null) {
             delimiterValue = ExternalDataConstants.DEFAULT_DELIMITER;
         } else if (delimiterValue.length() != 1) {
-            throw new RuntimeDataException(
-                    ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_NOT_VALID_DELIMITER, delimiterValue);
+            throw new RuntimeDataException(ErrorCode.PARSER_FACTORY_DELIMITED_DATA_PARSER_FACTORY_NOT_VALID_DELIMITER,
+                    delimiterValue);
         }
         return delimiterValue.charAt(0);
     }

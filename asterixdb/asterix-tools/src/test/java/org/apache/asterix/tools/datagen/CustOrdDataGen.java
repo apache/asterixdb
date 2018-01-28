@@ -44,8 +44,8 @@ public class CustOrdDataGen {
             "Lake St.", "Hill St.", "Park St.", "View St." };
     private static final int MIN_STREET_NUM = 1;
     private static final int MAX_STREET_NUM = 10000;
-    private static final String[] CITIES = { "Seattle", "San Jose", "Mountain View", "Los Angeles", "Sunnyvale",
-            "Portland" };
+    private static final String[] CITIES =
+            { "Seattle", "San Jose", "Mountain View", "Los Angeles", "Sunnyvale", "Portland" };
 
     private static final int MIN_INTERESTS = 0;
     private static final int MAX_INTERESTS = 5;
@@ -67,13 +67,13 @@ public class CustOrdDataGen {
     private String[] ORDER_PRIORITIES = { "LOW", "MEDIUM", "HIGH", "PREMIUM" };
     private String[] ORDER_STATUSES = { "ORDER_PLACED", "PAYMENT_RECEIVED", "ORDER_SHIPPED", "ORDER_DELIVERED" };
 
-    private String[] firstNames = { "Joe", "John", "Jill", "Gill", "Bill", "William", "Kathy", "Cathey", "Jane",
-            "Albert" };
-    private String[] lastNames = { "Doe", "Smith", "Li", "Singh", "Williams", "Davis", "Brown", "Wilson", "Moore",
-            "Thomas" };
+    private String[] firstNames =
+            { "Joe", "John", "Jill", "Gill", "Bill", "William", "Kathy", "Cathey", "Jane", "Albert" };
+    private String[] lastNames =
+            { "Doe", "Smith", "Li", "Singh", "Williams", "Davis", "Brown", "Wilson", "Moore", "Thomas" };
 
-    private static final String[] UNDECLARED_FIELD_NAMES = { "param1", "param2", "param3", "param4", "param5",
-            "param6", "param7", "param8", "param9", "param10" };
+    private static final String[] UNDECLARED_FIELD_NAMES =
+            { "param1", "param2", "param3", "param4", "param5", "param6", "param7", "param8", "param9", "param10" };
 
     private int currentCID = 0;
     private int currentOID = 0;
@@ -414,8 +414,8 @@ public class CustOrdDataGen {
             customersFile.write(customerList.get(ix).getJSON() + "\n");
 
             // generate orders
-            int numOrders = Math.abs(rndValue.nextInt()) % (MAX_ORDERS_PER_CUST - MIN_ORDERS_PER_CUST)
-                    + MIN_ORDERS_PER_CUST;
+            int numOrders =
+                    Math.abs(rndValue.nextInt()) % (MAX_ORDERS_PER_CUST - MIN_ORDERS_PER_CUST) + MIN_ORDERS_PER_CUST;
             for (int i = 0; i < numOrders; i++) {
                 ordersBatch[i].generateFieldValues(customerList.get(ix));
                 ordersList.add(ordersBatch[i]);

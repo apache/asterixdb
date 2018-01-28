@@ -345,8 +345,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             }
 
             // Adds an aggregate operator to listfy unnest variables.
-            AggregateFunctionCallExpression fListify = BuiltinFunctions
-                    .makeAggregateFunctionExpression(BuiltinFunctions.LISTIFY, mkSingletonArrayList(
+            AggregateFunctionCallExpression fListify =
+                    BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.LISTIFY, mkSingletonArrayList(
                             new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varToListify))));
 
             LogicalVariable aggVar = context.newSubplanOutputVar();
@@ -510,8 +510,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
                 // A "THEN" branch can be entered only when the tuple has not enter any other preceding
                 // branches and the current "WHEN" condition is TRUE.
-                branchEntraceConditionExprRef = new MutableObject<>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.AND), andArgs));
+                branchEntraceConditionExprRef = new MutableObject<>(
+                        new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.AND), andArgs));
             }
 
             // Translates the corresponding "THEN" expression.
@@ -539,8 +539,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             arguments.add(new MutableObject<>(argVar));
         }
         arguments.add(new MutableObject<>(new VariableReferenceExpression(opAndVarForElse.second)));
-        AbstractFunctionCallExpression swithCaseExpr = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.SWITCH_CASE), arguments);
+        AbstractFunctionCallExpression swithCaseExpr =
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.SWITCH_CASE), arguments);
         AssignOperator assignOp = new AssignOperator(selectVar, new MutableObject<>(swithCaseExpr));
         assignOp.getInputs().add(new MutableObject<>(opAndVarForElse.first));
 

@@ -75,8 +75,8 @@ public class CreateLineDescriptor extends AbstractScalarFunctionDynamicDescripto
                     private AMutableLine aLine = new AMutableLine(null, null);
                     private AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ALine> lineSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ALINE);
+                    private ISerializerDeserializer<ALine> lineSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ALINE);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -104,15 +104,15 @@ public class CreateLineDescriptor extends AbstractScalarFunctionDynamicDescripto
                                             ADoubleSerializerDeserializer.getDouble(bytes0,
                                                     offset0 + APointSerializerDeserializer
                                                             .getCoordinateOffset(Coordinate.X)),
-                                    ADoubleSerializerDeserializer.getDouble(bytes0,
-                                            offset0 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
+                                            ADoubleSerializerDeserializer.getDouble(bytes0, offset0
+                                                    + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
                             aPoint[1]
                                     .setValue(
                                             ADoubleSerializerDeserializer.getDouble(bytes1,
                                                     offset1 + APointSerializerDeserializer
                                                             .getCoordinateOffset(Coordinate.X)),
-                                    ADoubleSerializerDeserializer.getDouble(bytes1,
-                                            offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
+                                            ADoubleSerializerDeserializer.getDouble(bytes1, offset1
+                                                    + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)));
                             aLine.setValue(aPoint[0], aPoint[1]);
                             lineSerde.serialize(aLine, out);
                         } catch (IOException e1) {

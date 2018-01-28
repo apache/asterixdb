@@ -89,7 +89,8 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
     private final List<ILogicalExpression> originalAssignExprs = new ArrayList<ILogicalExpression>();
 
     private final CommonExpressionSubstitutionVisitor substVisitor = new CommonExpressionSubstitutionVisitor();
-    private final Map<ILogicalExpression, ExprEquivalenceClass> exprEqClassMap = new HashMap<ILogicalExpression, ExprEquivalenceClass>();
+    private final Map<ILogicalExpression, ExprEquivalenceClass> exprEqClassMap =
+            new HashMap<ILogicalExpression, ExprEquivalenceClass>();
 
     // Set of operators for which common subexpression elimination should not be performed.
     private static final Set<LogicalOperatorTag> ignoreOps = new HashSet<LogicalOperatorTag>(6);
@@ -310,8 +311,8 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                     return false;
                 }
                 // Place a Select operator beneath op that contains the enclosing expression.
-                SelectOperator selectOp = new SelectOperator(new MutableObject<ILogicalExpression>(enclosingExpr),
-                        false, null);
+                SelectOperator selectOp =
+                        new SelectOperator(new MutableObject<ILogicalExpression>(enclosingExpr), false, null);
                 selectOp.getInputs().add(new MutableObject<ILogicalOperator>(op.getInputs().get(0).getValue()));
                 op.getInputs().get(0).setValue(selectOp);
                 // Set firstOp to be the select below op, since we want to assign the common subexpr there.

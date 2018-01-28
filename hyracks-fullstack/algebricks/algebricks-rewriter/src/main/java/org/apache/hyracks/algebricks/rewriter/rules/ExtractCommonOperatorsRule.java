@@ -52,8 +52,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
-    private final HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> childrenToParents
-            = new HashMap<>();
+    private final HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> childrenToParents =
+            new HashMap<>();
     private final List<Mutable<ILogicalOperator>> roots = new ArrayList<>();
     private final List<List<Mutable<ILogicalOperator>>> equivalenceClasses = new ArrayList<>();
     private final HashMap<Mutable<ILogicalOperator>, BitSet> opToCandidateInputs = new HashMap<>();
@@ -210,7 +210,8 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                     continue;
                 }
                 ArrayList<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
-                Map<LogicalVariable, LogicalVariable> variableMappingBack = new HashMap<LogicalVariable, LogicalVariable>();
+                Map<LogicalVariable, LogicalVariable> variableMappingBack =
+                        new HashMap<LogicalVariable, LogicalVariable>();
                 IsomorphismUtilities.mapVariablesTopDown(ref.getValue(), candidate.getValue(), variableMappingBack);
                 for (int i = 0; i < liveVarsNew.size(); i++) {
                     liveVars.add(variableMappingBack.get(liveVarsNew.get(i)));
@@ -240,8 +241,8 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 for (Mutable<ILogicalOperator> parentOpRef : parentOpList) {
                     AbstractLogicalOperator parentOp = (AbstractLogicalOperator) parentOpRef.getValue();
                     int index = parentOp.getInputs().indexOf(ref);
-                    ILogicalOperator childOp = parentOp.getOperatorTag() == LogicalOperatorTag.PROJECT ? assignOperator
-                            : projectOperator;
+                    ILogicalOperator childOp =
+                            parentOp.getOperatorTag() == LogicalOperatorTag.PROJECT ? assignOperator : projectOperator;
                     if (!HeuristicOptimizer.isHyracksOp(parentOp.getPhysicalOperator().getOperatorTag())) {
                         parentOp.getInputs().set(index, new MutableObject<ILogicalOperator>(childOp));
                     } else {
@@ -263,7 +264,8 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
     }
 
     private void genCandidates(IOptimizationContext context) throws AlgebricksException {
-        List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses = new ArrayList<List<Mutable<ILogicalOperator>>>();
+        List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses =
+                new ArrayList<List<Mutable<ILogicalOperator>>>();
         while (equivalenceClasses.size() > 0) {
             previousEquivalenceClasses.clear();
             for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
@@ -364,7 +366,8 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
     }
 
     private void prune(IOptimizationContext context) throws AlgebricksException {
-        List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses = new ArrayList<List<Mutable<ILogicalOperator>>>();
+        List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses =
+                new ArrayList<List<Mutable<ILogicalOperator>>>();
         for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
             List<Mutable<ILogicalOperator>> candidatesCopy = new ArrayList<Mutable<ILogicalOperator>>();
             candidatesCopy.addAll(candidates);

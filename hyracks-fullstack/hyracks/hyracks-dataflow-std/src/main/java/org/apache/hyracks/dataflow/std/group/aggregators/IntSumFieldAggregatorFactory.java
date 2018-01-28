@@ -107,7 +107,8 @@ public class IntSumFieldAggregatorFactory implements IFieldAggregateDescriptorFa
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
 
-                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
 
                 if (!useObjectState) {
                     try {
@@ -143,7 +144,8 @@ public class IntSumFieldAggregatorFactory implements IFieldAggregateDescriptorFa
                 int sum = 0;
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
-                sum += IntegerPointable.getInteger(accessor.getBuffer().array(), tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
+                sum += IntegerPointable.getInteger(accessor.getBuffer().array(),
+                        tupleOffset + accessor.getFieldSlotsLength() + fieldStart);
 
                 if (!useObjectState) {
                     ByteBuffer buf = ByteBuffer.wrap(data);

@@ -138,8 +138,7 @@ public class PartitionManager {
     }
 
     public void updatePartitionState(CcId ccId, PartitionId pid, TaskAttemptId taId, IPartition partition,
-            PartitionState state)
-            throws HyracksDataException {
+            PartitionState state) throws HyracksDataException {
         PartitionDescriptor desc = new PartitionDescriptor(pid, ncs.getId(), taId, partition.isReusable());
         desc.setState(state);
         try {

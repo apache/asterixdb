@@ -61,10 +61,8 @@ public class SessionConfig implements Serializable {
         public static PlanFormat get(String fmtString, String label, PlanFormat defaultFmt, Logger logger) {
             try {
                 if (fmtString != null) {
-                    String format =
-                            ("JSON".equalsIgnoreCase(fmtString) || "CLEAN_JSON".equalsIgnoreCase(fmtString))
-                                    ? "JSON"
-                                    : fmtString;
+                    String format = ("JSON".equalsIgnoreCase(fmtString) || "CLEAN_JSON".equalsIgnoreCase(fmtString))
+                            ? "JSON" : fmtString;
                     return PlanFormat.valueOf(format);
                 }
             } catch (IllegalArgumentException e) {
@@ -168,6 +166,7 @@ public class SessionConfig implements Serializable {
     public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
         this(fmt, optimize, executeQuery, generateJobSpec, PlanFormat.STRING);
     }
+
     public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec,
             PlanFormat lpfmt) {
         this.fmt = fmt;

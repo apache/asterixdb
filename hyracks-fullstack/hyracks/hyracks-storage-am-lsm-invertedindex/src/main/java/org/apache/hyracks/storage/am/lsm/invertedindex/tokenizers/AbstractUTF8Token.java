@@ -115,8 +115,7 @@ public abstract class AbstractUTF8Token implements IToken {
 
     // The preChar and postChar are required to be a single byte utf8 char, e.g. ASCII char.
     protected void serializeToken(UTF8StringBuilder builder, GrowableArray out, int numPreChars, int numPostChars,
-            char preChar, char postChar)
-            throws IOException {
+            char preChar, char postChar) throws IOException {
 
         handleTokenTypeTag(out.getDataOutput());
 

@@ -89,14 +89,12 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
     private final ClassAdObjectPool objectPool;
     // asterix objects
     private ARecordType recordType;
-    private IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool = new ListObjectPool<IARecordBuilder, ATypeTag>(
-            new RecordBuilderFactory());
+    private IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool =
+            new ListObjectPool<IARecordBuilder, ATypeTag>(new RecordBuilderFactory());
     private IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool =
-            new ListObjectPool<IAsterixListBuilder, ATypeTag>(
-                    new ListBuilderFactory());
+            new ListObjectPool<IAsterixListBuilder, ATypeTag>(new ListBuilderFactory());
     private IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
-            new ListObjectPool<IMutableValueStorage, ATypeTag>(
-                    new AbvsBuilderFactory());
+            new ListObjectPool<IMutableValueStorage, ATypeTag>(new AbvsBuilderFactory());
     private final ClassAd rootAd;
     private String exprPrefix = "expr=";
     private String exprSuffix = "";
@@ -1351,7 +1349,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     if (!parseArgumentList(argList)) {
                         tree.setInnerTree(null);
                         return false;
-                    };
+                    } ;
                     // special case function-calls should be converted
                     // into a literal expression if the argument is a
                     // string literal
@@ -1399,7 +1397,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                 tree.setInnerTree(Operation.createOperation(Operation.OpKind_PARENTHESES_OP, treeL, objectPool));
                 return (tree.size() != 0);
             }
-                // constants
+            // constants
             case LEX_OPEN_BOX: {
                 isExpr = true;
                 ClassAd newAd = objectPool.classAdPool.get();

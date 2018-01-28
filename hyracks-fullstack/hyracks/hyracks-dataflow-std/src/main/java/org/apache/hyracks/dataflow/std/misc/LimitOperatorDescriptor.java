@@ -46,7 +46,7 @@ public class LimitOperatorDescriptor extends AbstractSingleActivityOperatorDescr
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
 
         return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
             private FrameTupleAccessor fta;

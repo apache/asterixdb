@@ -106,7 +106,7 @@ public class RSSRecordReader implements IRecordReader<SyndEntry> {
         this.modified = modified;
     }
 
-    private SyndEntry getNextRSSFeed() throws IOException, FeedException, FetcherException  {
+    private SyndEntry getNextRSSFeed() throws IOException, FeedException, FetcherException {
         if (rssFeedBuffer.isEmpty()) {
             fetchFeed();
         }

@@ -40,7 +40,7 @@ public class IdentityOperatorDescriptor extends AbstractSingleActivityOperatorDe
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
-                    throws HyracksDataException {
+            throws HyracksDataException {
         return new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
             @Override
             public void open() throws HyracksDataException {

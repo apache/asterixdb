@@ -212,8 +212,8 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      */
     public long getChronon(int year, int month, int day, int hour, int min, int sec, int millis, int timezone) {
         // Added milliseconds for all fields but month and day
-        long chrononTime = chrononizeBeginningOfYear(year) + hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE + sec
-                * CHRONON_OF_SECOND + millis + timezone;
+        long chrononTime = chrononizeBeginningOfYear(year) + hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE
+                + sec * CHRONON_OF_SECOND + millis + timezone;
 
         // Added milliseconds for days of the month.
         chrononTime += (day - 1 + DAYS_SINCE_MONTH_BEGIN_ORDI[month - 1]) * CHRONON_OF_DAY;
@@ -238,8 +238,8 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      */
     public int getChronon(int hour, int min, int sec, int millis, int timezone) {
         // Added milliseconds for all fields but month and day
-        long chrononTime = hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE + sec * CHRONON_OF_SECOND + millis
-                + timezone;
+        long chrononTime =
+                hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE + sec * CHRONON_OF_SECOND + millis + timezone;
         return (int) chrononTime;
     }
 

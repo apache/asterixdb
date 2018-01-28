@@ -48,8 +48,7 @@ public class DatasetDataSource extends DataSource {
     private Dataset dataset;
 
     public DatasetDataSource(DataSourceId id, Dataset dataset, IAType itemType, IAType metaItemType,
-            byte datasourceType, IDatasetDetails datasetDetails, INodeDomain datasetDomain)
-            throws AlgebricksException {
+            byte datasourceType, IDatasetDetails datasetDetails, INodeDomain datasetDomain) throws AlgebricksException {
         super(id, itemType, metaItemType, datasourceType, datasetDomain);
         this.dataset = dataset;
         switch (dataset.getDatasetType()) {
@@ -116,9 +115,9 @@ public class DatasetDataSource extends DataSource {
 
                 int[] minFilterFieldIndexes = createFilterIndexes(minFilterVars, opSchema);
                 int[] maxFilterFieldIndexes = createFilterIndexes(maxFilterVars, opSchema);
-                return metadataProvider.buildBtreeRuntime(jobSpec, opSchema, typeEnv, context, true,
-                        false, ((DatasetDataSource) dataSource).getDataset(), primaryIndex.getIndexName(), null, null,
-                        true, true, false, minFilterFieldIndexes, maxFilterFieldIndexes);
+                return metadataProvider.buildBtreeRuntime(jobSpec, opSchema, typeEnv, context, true, false,
+                        ((DatasetDataSource) dataSource).getDataset(), primaryIndex.getIndexName(), null, null, true,
+                        true, false, minFilterFieldIndexes, maxFilterFieldIndexes);
             default:
                 throw new AlgebricksException("Unknown datasource type");
         }

@@ -94,8 +94,7 @@ public class AsterixJavaClient {
 
     public void compile(boolean optimize, boolean printRewrittenExpressions, boolean printLogicalPlan,
             boolean printOptimizedPlan, boolean printPhysicalOpsOnly, boolean generateBinaryRuntime, boolean printJob,
-            PlanFormat pformat)
-            throws Exception {
+            PlanFormat pformat) throws Exception {
         queryJobSpec = null;
         dmlJobs = null;
 

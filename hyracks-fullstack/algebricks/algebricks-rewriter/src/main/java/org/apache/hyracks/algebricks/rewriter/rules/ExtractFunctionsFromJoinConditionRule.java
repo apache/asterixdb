@@ -63,7 +63,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -104,8 +105,8 @@ public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteR
             for (Mutable<ILogicalExpression> exprRef : fexp.getArguments()) {
                 if (exprRef.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     LogicalVariable newVar = context.newVar();
-                    AssignOperator newAssign = new AssignOperator(newVar, new MutableObject<ILogicalExpression>(exprRef
-                            .getValue().cloneExpression()));
+                    AssignOperator newAssign = new AssignOperator(newVar,
+                            new MutableObject<ILogicalExpression>(exprRef.getValue().cloneExpression()));
                     newAssign.setExecutionMode(joinOp.getExecutionMode());
 
                     // Place assign below joinOp.

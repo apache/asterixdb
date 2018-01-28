@@ -64,8 +64,8 @@ public class BloomCalculations {
                     0.000176 },
             { 1.0, 0.0513, 0.00998, 0.00312, 0.0013, 0.000663, 0.000394, 0.000264, 0.000194, 0.000155, 0.000132,
                     0.000118, 0.000111, 0.000109 },
-            { 1.0, 0.0488, 0.00906, 0.0027, 0.00108, 0.00053, 0.000303, 0.000196, 0.00014, 0.000108, 8.89e-05,
-                    7.77e-05, 7.12e-05, 6.79e-05, 6.71e-05 } // 20
+            { 1.0, 0.0488, 0.00906, 0.0027, 0.00108, 0.00053, 0.000303, 0.000196, 0.00014, 0.000108, 8.89e-05, 7.77e-05,
+                    7.12e-05, 6.79e-05, 6.71e-05 } // 20
     }; // the first column is a dummy column representing K=0.
 
     /**
@@ -147,7 +147,8 @@ public class BloomCalculations {
 
         // we allocate one more bucket per element to compensate the effect introduced by using blocked bloom filter
         // a detail analysis can be found at https://dl.acm.org/citation.cfm?id=1594230
-        return new BloomFilterSpecification(K, bucketsPerElement + 1);    }
+        return new BloomFilterSpecification(K, bucketsPerElement + 1);
+    }
 
     /**
      * Calculates the maximum number of buckets per element that this implementation

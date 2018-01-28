@@ -34,12 +34,8 @@ public class Base64Printer {
         int i;
         for (i = offset; remaining >= 3; remaining -= 3, i += 3) {
             appendable.append(encode(input[i] >> 2));
-            appendable.append(encode(
-                    ((input[i] & 0x3) << 4)
-                            | ((input[i + 1] >> 4) & 0xF)));
-            appendable.append(encode(
-                    ((input[i + 1] & 0xF) << 2)
-                            | ((input[i + 2] >> 6) & 0x3)));
+            appendable.append(encode(((input[i] & 0x3) << 4) | ((input[i + 1] >> 4) & 0xF)));
+            appendable.append(encode(((input[i + 1] & 0xF) << 2) | ((input[i + 2] >> 6) & 0x3)));
             appendable.append(encode(input[i + 2] & 0x3F));
         }
         // encode when exactly 1 element (left) to encode
@@ -52,8 +48,7 @@ public class Base64Printer {
         // encode when exactly 2 elements (left) to encode
         if (remaining == 2) {
             appendable.append(encode(input[i] >> 2));
-            appendable.append(encode(((input[i] & 0x3) << 4)
-                    | ((input[i + 1] >> 4) & 0xF)));
+            appendable.append(encode(((input[i] & 0x3) << 4) | ((input[i + 1] >> 4) & 0xF)));
             appendable.append(encode((input[i + 1] & 0xF) << 2));
             appendable.append('=');
         }
@@ -73,12 +68,8 @@ public class Base64Printer {
         int i;
         for (i = offset; remaining >= 3; remaining -= 3, i += 3) {
             buf[ptr++] = encode(input[i] >> 2);
-            buf[ptr++] = encode(
-                    ((input[i] & 0x3) << 4)
-                            | ((input[i + 1] >> 4) & 0xF));
-            buf[ptr++] = encode(
-                    ((input[i + 1] & 0xF) << 2)
-                            | ((input[i + 2] >> 6) & 0x3));
+            buf[ptr++] = encode(((input[i] & 0x3) << 4) | ((input[i + 1] >> 4) & 0xF));
+            buf[ptr++] = encode(((input[i + 1] & 0xF) << 2) | ((input[i + 2] >> 6) & 0x3));
             buf[ptr++] = encode(input[i + 2] & 0x3F);
         }
         // encode when exactly 1 element (left) to encode
@@ -91,8 +82,7 @@ public class Base64Printer {
         // encode when exactly 2 elements (left) to encode
         if (remaining == 2) {
             buf[ptr++] = encode(input[i] >> 2);
-            buf[ptr++] = encode(((input[i] & 0x3) << 4)
-                    | ((input[i + 1] >> 4) & 0xF));
+            buf[ptr++] = encode(((input[i] & 0x3) << 4) | ((input[i + 1] >> 4) & 0xF));
             buf[ptr++] = encode((input[i + 1] & 0xF) << 2);
             buf[ptr++] = '=';
         }

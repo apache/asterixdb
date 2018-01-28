@@ -73,15 +73,15 @@ class ARecordCaster {
     private final IVisitablePointable nullTypeTag = PointableAllocator.allocateUnrestableEmpty();
     private final IVisitablePointable missingTypeTag = PointableAllocator.allocateUnrestableEmpty();
 
-    private final IBinaryComparator fieldNameComparator = PointableBinaryComparatorFactory
-            .of(UTF8StringPointable.FACTORY).createBinaryComparator();
+    private final IBinaryComparator fieldNameComparator =
+            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
 
     private final ByteArrayAccessibleOutputStream outputBos = new ByteArrayAccessibleOutputStream();
     private final DataOutputStream outputDos = new DataOutputStream(outputBos);
 
     private final IVisitablePointable fieldTempReference = PointableAllocator.allocateUnrestableEmpty();
-    private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg = new Triple<>(fieldTempReference, null,
-            null);
+    private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg =
+            new Triple<>(fieldTempReference, null, null);
 
     private int numInputFields = 0;
 

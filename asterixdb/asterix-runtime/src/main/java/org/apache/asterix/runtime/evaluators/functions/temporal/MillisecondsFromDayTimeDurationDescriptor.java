@@ -68,8 +68,8 @@ public class MillisecondsFromDayTimeDurationDescriptor extends AbstractScalarFun
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private ISerializerDeserializer<AInt64> int64Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
                     AMutableInt64 aInt64 = new AMutableInt64(0);
 

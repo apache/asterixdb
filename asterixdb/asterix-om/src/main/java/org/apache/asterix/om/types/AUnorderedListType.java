@@ -27,7 +27,7 @@ public class AUnorderedListType extends AbstractCollectionType {
 
     private static final long serialVersionUID = 1L;
 
-    public static final AUnorderedListType FULLY_OPEN_UNORDEREDLIST_TYPE = new AUnorderedListType(null,"");
+    public static final AUnorderedListType FULLY_OPEN_UNORDEREDLIST_TYPE = new AUnorderedListType(null, "");
 
     /**
      * @param itemType
@@ -77,7 +77,7 @@ public class AUnorderedListType extends AbstractCollectionType {
     }
 
     @Override
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode type = om.createObjectNode();
         type.put("type", AUnorderedListType.class.getName());

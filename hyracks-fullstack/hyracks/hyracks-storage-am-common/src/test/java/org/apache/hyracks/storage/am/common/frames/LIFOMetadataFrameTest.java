@@ -41,8 +41,7 @@ public class LIFOMetadataFrameTest {
         Assert.assertNull(longPointable.getByteArray());
         byte[] longBytes = new byte[Long.BYTES];
         MutableArrayValueReference value = new MutableArrayValueReference(longBytes);
-        int space = frame.getSpace() - (value.getLength() + Integer.BYTES * 2
-                + testKey.getLength());
+        int space = frame.getSpace() - (value.getLength() + Integer.BYTES * 2 + testKey.getLength());
         for (long l = 1L; l < 52L; l++) {
             LongPointable.setLong(longBytes, 0, l);
             frame.put(testKey, value);

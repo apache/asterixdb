@@ -55,8 +55,8 @@ public class FileSynchronizer {
             ReplicateFileTask task = new ReplicateFileTask(file, filePath.getFile().length(), metadata);
             ReplicationProtocol.sendTo(replica, task);
             // send the file itself
-            try (RandomAccessFile fromFile = new RandomAccessFile(filePath.getFile(),
-                    "r"); FileChannel fileChannel = fromFile.getChannel()) {
+            try (RandomAccessFile fromFile = new RandomAccessFile(filePath.getFile(), "r");
+                    FileChannel fileChannel = fromFile.getChannel()) {
                 NetworkingUtil.sendFile(fileChannel, channel);
             }
             ReplicationProtocol.waitForAck(replica);

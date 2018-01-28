@@ -118,10 +118,10 @@ public class ActivityClusterGraphBuilder {
                     for (int i = 0; i < nActivityOutputs; ++i) {
                         IConnectorDescriptor conn = aOutputs.get(i);
                         ac.addConnector(conn);
-                        Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>> pcPair = jag.getConnectorActivityMap()
-                                .get(conn.getConnectorId());
-                        ac.connect(conn, activity, i, pcPair.getRight().getLeft(), pcPair.getRight().getRight(), jag
-                                .getConnectorRecordDescriptorMap().get(conn.getConnectorId()));
+                        Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>> pcPair =
+                                jag.getConnectorActivityMap().get(conn.getConnectorId());
+                        ac.connect(conn, activity, i, pcPair.getRight().getLeft(), pcPair.getRight().getRight(),
+                                jag.getConnectorRecordDescriptorMap().get(conn.getConnectorId()));
                     }
                 }
             }

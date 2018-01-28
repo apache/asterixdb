@@ -40,8 +40,7 @@ public class TwitterFirehoseInputStream extends AsterixInputStream {
     private final DataProvider dataProvider;
     private boolean started;
 
-    public TwitterFirehoseInputStream(Map<String, String> configuration, int partition)
-            throws IOException {
+    public TwitterFirehoseInputStream(Map<String, String> configuration, int partition) throws IOException {
         executorService = Executors.newCachedThreadPool();
         outputStream = new PipedOutputStream();
         inputStream = new PipedInputStream(outputStream);

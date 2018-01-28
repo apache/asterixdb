@@ -116,9 +116,8 @@ public class WorkQueue {
                     break;
                 }
                 if (DEBUG) {
-                    LOGGER.log(Level.TRACE,
-                            "Dequeue (" + WorkQueue.this.hashCode() + "): " + dequeueCount.incrementAndGet() + "/"
-                                    + enqueueCount);
+                    LOGGER.log(Level.TRACE, "Dequeue (" + WorkQueue.this.hashCode() + "): "
+                            + dequeueCount.incrementAndGet() + "/" + enqueueCount);
                 }
                 if (LOGGER.isEnabled(r.logLevel())) {
                     LOGGER.log(r.logLevel(), "Executing: " + r);
@@ -141,8 +140,7 @@ public class WorkQueue {
             if (waitedDelta > 0 || blockedDelta > 0) {
                 LOGGER.warn("Work " + r + " waited " + waitedDelta + " times (~"
                         + (after.getWaitedTime() - before.getWaitedTime()) + "ms), blocked " + blockedDelta
-                        + " times (~" + (after.getBlockedTime() - before.getBlockedTime()) + "ms)"
-                );
+                        + " times (~" + (after.getBlockedTime() - before.getBlockedTime()) + "ms)");
             }
         }
     }

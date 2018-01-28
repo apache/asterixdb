@@ -79,11 +79,11 @@ public class ReplicateOperatorTest extends AbstractIntegrationTest {
 
         DelimitedDataTupleParserFactory stringParser = new DelimitedDataTupleParserFactory(
                 new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, '\u0000');
-        RecordDescriptor stringRec = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(), });
+        RecordDescriptor stringRec =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(), });
 
-        FileScanOperatorDescriptor scanOp = new FileScanOperatorDescriptor(spec, new ConstantFileSplitProvider(
-                inputSplits), stringParser, stringRec);
+        FileScanOperatorDescriptor scanOp = new FileScanOperatorDescriptor(spec,
+                new ConstantFileSplitProvider(inputSplits), stringParser, stringRec);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scanOp, locations);
 
         ReplicateOperatorDescriptor replicateOp = new ReplicateOperatorDescriptor(spec, stringRec, outputArity);

@@ -72,9 +72,8 @@ public class RunMergingFrameReader implements IFrameReader {
         // right now we didn't take multiple key normalizers for frame merger, since during this step it won't be
         // too many cache misses (merging multiple runs sequentially).
         // but still, we can apply a special optimization if there is only 1 sort field
-        this.normalizedKeyDecisive =
-                nmkComputer != null ? nmkComputer.getNormalizedKeyProperties().isDecisive() && comparators.length == 1
-                        : false;
+        this.normalizedKeyDecisive = nmkComputer != null
+                ? nmkComputer.getNormalizedKeyProperties().isDecisive() && comparators.length == 1 : false;
         this.recordDesc = recordDesc;
         this.topK = topK;
     }

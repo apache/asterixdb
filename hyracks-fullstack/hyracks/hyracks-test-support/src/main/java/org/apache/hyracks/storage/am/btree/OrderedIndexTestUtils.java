@@ -58,8 +58,8 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     private static void compareActualAndExpected(ITupleReference actual, CheckTuple expected,
             ISerializerDeserializer[] fieldSerdes) throws HyracksDataException {
         for (int i = 0; i < fieldSerdes.length; i++) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(actual.getFieldData(i), actual.getFieldStart(i),
-                    actual.getFieldLength(i));
+            ByteArrayInputStream inStream =
+                    new ByteArrayInputStream(actual.getFieldData(i), actual.getFieldStart(i), actual.getFieldLength(i));
             DataInput dataIn = new DataInputStream(inStream);
             Object actualObj = fieldSerdes[i].deserialize(dataIn);
             if (!actualObj.equals(expected.getField(i))) {
@@ -99,20 +99,20 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), lowKey);
         MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), highKey);
         IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor(false);
-        RangePredicate rangePred = new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp,
-                highKeyCmp);
+        RangePredicate rangePred =
+                new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp, highKeyCmp);
         ctx.getIndexAccessor().search(searchCursor, rangePred);
         // Get the subset of elements from the expected set within given key
         // range.
         CheckTuple lowKeyCheck = createCheckTupleFromTuple(lowKey, ctx.getFieldSerdes(), lowKeyCmp.getKeyFieldCount());
-        CheckTuple highKeyCheck = createCheckTupleFromTuple(highKey, ctx.getFieldSerdes(),
-                highKeyCmp.getKeyFieldCount());
+        CheckTuple highKeyCheck =
+                createCheckTupleFromTuple(highKey, ctx.getFieldSerdes(), highKeyCmp.getKeyFieldCount());
         SortedSet<CheckTuple> expectedSubset = null;
         if (lowKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()
                 || highKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()) {
             // Searching on a key prefix (low key or high key or both).
-            expectedSubset = getPrefixExpectedSubset((TreeSet<CheckTuple>) ctx.getCheckTuples(), lowKeyCheck,
-                    highKeyCheck);
+            expectedSubset =
+                    getPrefixExpectedSubset((TreeSet<CheckTuple>) ctx.getCheckTuples(), lowKeyCheck, highKeyCheck);
         } else {
             // Searching on all key fields.
             expectedSubset = ((TreeSet<CheckTuple>) ctx.getCheckTuples()).subSet(lowKeyCheck, lowKeyInclusive,
@@ -246,8 +246,8 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
             throws HyracksDataException {
         int fieldCount = ctx.getFieldCount();
         int numTuples = checkTuples.size();
-        ArrayTupleBuilder tupleBuilder = filtered ? new ArrayTupleBuilder(fieldCount + 1)
-                : new ArrayTupleBuilder(fieldCount);
+        ArrayTupleBuilder tupleBuilder =
+                filtered ? new ArrayTupleBuilder(fieldCount + 1) : new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
 
         int c = 1;
@@ -298,7 +298,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
                 // because we ignore duplicate keys.
                 ctx.insertCheckTuple(createStringCheckTuple(fieldValues, ctx.getKeyFieldCount()), ctx.getCheckTuples());
                 if (filtered) {
-                    addFilterField(ctx,minMax);
+                    addFilterField(ctx, minMax);
                 }
             } catch (HyracksDataException e) {
                 // Ignore duplicate key insertions.
@@ -476,8 +476,8 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    public void checkExpectedResults(IIndexCursor cursor, Collection checkTuples,
-            ISerializerDeserializer[] fieldSerdes, int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception {
+    public void checkExpectedResults(IIndexCursor cursor, Collection checkTuples, ISerializerDeserializer[] fieldSerdes,
+            int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception {
         int actualCount = 0;
         try {
             while (cursor.hasNext()) {

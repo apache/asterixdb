@@ -40,8 +40,8 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 import org.apache.hyracks.util.IntSerDeUtils;
 
 public abstract class AbstractTupleMemoryManagerTest {
-    ISerializerDeserializer[] fieldsSerDer = new ISerializerDeserializer[] {
-            IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() };
+    ISerializerDeserializer[] fieldsSerDer = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer() };
     RecordDescriptor recordDescriptor = new RecordDescriptor(fieldsSerDer);
     ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(recordDescriptor.getFieldCount());
     FrameTupleAccessor inFTA = new FrameTupleAccessor(recordDescriptor);
@@ -61,9 +61,7 @@ public abstract class AbstractTupleMemoryManagerTest {
         assertEquals(map.size(), mapInserted.size());
     }
 
-    protected Map<Integer, Integer> prepareFixedSizeTuples(
-            int tuplePerFrame,
-            int extraMetaBytePerFrame,
+    protected Map<Integer, Integer> prepareFixedSizeTuples(int tuplePerFrame, int extraMetaBytePerFrame,
             int extraMetaBytePerRecord) throws HyracksDataException {
         Map<Integer, Integer> dataSet = new HashMap<>();
         ByteBuffer buffer = ByteBuffer.allocate(Common.BUDGET);
@@ -72,8 +70,7 @@ public abstract class AbstractTupleMemoryManagerTest {
         appender.reset(frame, true);
 
         int sizePerTuple = (Common.MIN_FRAME_SIZE - 1 - tuplePerFrame * 4 - 4 - extraMetaBytePerFrame) / tuplePerFrame;
-        int sizeChar =
-                sizePerTuple - extraMetaBytePerRecord - fieldsSerDer.length * 4 - 4 - 2; //2byte to write str length
+        int sizeChar = sizePerTuple - extraMetaBytePerRecord - fieldsSerDer.length * 4 - 4 - 2; //2byte to write str length
         assert (sizeChar > 0);
         for (int i = 0; i < Common.NUM_MIN_FRAME * tuplePerFrame; i++) {
             tupleBuilder.reset();

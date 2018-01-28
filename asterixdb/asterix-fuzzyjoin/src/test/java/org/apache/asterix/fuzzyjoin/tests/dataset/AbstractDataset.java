@@ -40,7 +40,8 @@ public abstract class AbstractDataset {
     }
 
     public static enum Relation {
-        R, S,
+        R,
+        S,
     }
 
     public static final String FILE_PART = "part-";

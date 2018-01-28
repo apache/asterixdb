@@ -130,8 +130,7 @@ public enum ATypeTag implements IEnumSerializer {
     }
 
     public boolean isDerivedType() {
-        return this == ATypeTag.OBJECT || this == ATypeTag.ARRAY || this == ATypeTag.MULTISET
-                || this == ATypeTag.UNION;
+        return this == ATypeTag.OBJECT || this == ATypeTag.ARRAY || this == ATypeTag.MULTISET || this == ATypeTag.UNION;
     }
 
     @Override

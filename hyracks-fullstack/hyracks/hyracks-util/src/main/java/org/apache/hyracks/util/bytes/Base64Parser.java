@@ -152,7 +152,7 @@ public class Base64Parser {
             break;
         }
 
-        j++;    // text.charAt(j) is now at some base64 char, so +1 to make it the size
+        j++; // text.charAt(j) is now at some base64 char, so +1 to make it the size
         int padSize = length - j;
         if (padSize > 2) // something is wrong with base64. be safe and go with the upper bound
         {
@@ -180,7 +180,7 @@ public class Base64Parser {
             break;
         }
 
-        j++;    // text.charAt(j) is now at some base64 char, so +1 to make it the size
+        j++; // text.charAt(j) is now at some base64 char, so +1 to make it the size
         int padSize = length - j;
         if (padSize > 2) // something is wrong with base64. be safe and go with the upper bound
         {

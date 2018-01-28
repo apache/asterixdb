@@ -90,8 +90,8 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
         List<LogicalVariable> scanVariables = new ArrayList<>();
         scanVariables.addAll(primaryKeys);
         scanVariables.add(new LogicalVariable(-1));
-        IPhysicalPropertiesVector physicalProps = dataSourceIndex.getDataSource().getPropertiesProvider()
-                .computePropertiesVector(scanVariables);
+        IPhysicalPropertiesVector physicalProps =
+                dataSourceIndex.getDataSource().getPropertiesProvider().computePropertiesVector(scanVariables);
         List<ILocalStructuralProperty> localProperties = new ArrayList<>();
         List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
         // Data needs to be sorted based on the [token, number of token, PK]
@@ -106,8 +106,8 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
             orderColumns.add(new OrderColumn(pkVar, OrderKind.ASC));
         }
         localProperties.add(new LocalOrderProperty(orderColumns));
-        StructuralPropertiesVector spv = new StructuralPropertiesVector(physicalProps.getPartitioningProperty(),
-                localProperties);
+        StructuralPropertiesVector spv =
+                new StructuralPropertiesVector(physicalProps.getPartitioningProperty(), localProperties);
         return new PhysicalRequirements(new IPhysicalPropertiesVector[] { spv },
                 IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
@@ -132,9 +132,9 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
         JobSpecification spec = builder.getJobSpec();
         RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = mp.getIndexInsertRuntime(
-                dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys, secondaryKeys,
-                additionalFilteringKeys, filterExpr, inputDesc, context, spec, true);
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints =
+                mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys,
+                        secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec, true);
         builder.contributeHyracksOperator(indexInsertDeleteOp, runtimeAndConstraints.first);
         builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
         ILogicalOperator src = indexInsertDeleteOp.getInputs().get(0).getValue();

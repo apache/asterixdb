@@ -41,14 +41,14 @@ public abstract class AbstractTupleTranslator<T> implements IMetadataEntityTuple
     private static final long serialVersionUID = 1L;
     protected AMutableString aString = new AMutableString("");
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ASTRING);
+    protected ISerializerDeserializer<AString> stringSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    protected ISerializerDeserializer<ABoolean> booleanSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt32> int32Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    protected ISerializerDeserializer<AInt32> int32Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
 
     protected final transient IARecordBuilder recordBuilder;
     protected final transient ArrayBackedValueStorage fieldValue;

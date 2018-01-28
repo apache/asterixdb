@@ -42,7 +42,8 @@ public class PushProperJoinThroughProduct implements IAlgebraicRewriteRule {
     private List<LogicalVariable> productLeftBranchVars = new ArrayList<LogicalVariable>();
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 

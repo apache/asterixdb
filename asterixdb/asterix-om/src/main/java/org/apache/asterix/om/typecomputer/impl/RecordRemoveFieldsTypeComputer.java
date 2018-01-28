@@ -128,8 +128,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
     }
 
     private void computeTypeFromNonConstantExpression(String funcName, ILogicalExpression expression,
-            Set<String> fieldNameSet,
-            List<List<String>> pathList) throws AlgebricksException {
+            Set<String> fieldNameSet, List<List<String>> pathList) throws AlgebricksException {
         AbstractFunctionCallExpression funcExp = (AbstractFunctionCallExpression) expression;
         List<Mutable<ILogicalExpression>> args = funcExp.getArguments();
 
@@ -188,8 +187,8 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
 
     private boolean setFieldNameSet(ILogicalExpression expr, Set<String> fieldNameSet) {
         if (expr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-            AOrderedList orderedList = (AOrderedList) (((AsterixConstantValue) ((ConstantExpression) expr).getValue())
-                    .getObject());
+            AOrderedList orderedList =
+                    (AOrderedList) (((AsterixConstantValue) ((ConstantExpression) expr).getValue()).getObject());
             for (int i = 0; i < orderedList.size(); i++) {
                 AString as = (AString) orderedList.getItem(i);
                 fieldNameSet.add(as.getStringValue());
@@ -320,8 +319,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
                 destFieldTypes.toArray(new IAType[n]), isOpen);
     }
 
-    private static ARecordType getRecordTypeFromType(String funcName, IAType type0)
-            throws AlgebricksException {
+    private static ARecordType getRecordTypeFromType(String funcName, IAType type0) throws AlgebricksException {
         switch (type0.getTypeTag()) {
             case OBJECT:
                 return (ARecordType) type0;

@@ -45,8 +45,7 @@ public class SerializableHashTable extends SimpleSerializableHashTable {
     }
 
     public SerializableHashTable(int tableSize, final IHyracksFrameMgrContext ctx,
-            ISimpleFrameBufferManager bufferManager, double garbageCollectionThreshold)
-            throws HyracksDataException {
+            ISimpleFrameBufferManager bufferManager, double garbageCollectionThreshold) throws HyracksDataException {
         super(tableSize, ctx, false);
         this.bufferManager = bufferManager;
 
@@ -142,8 +141,8 @@ public class SerializableHashTable extends SimpleSerializableHashTable {
 
             // Step #2. Advances the reader until it hits the end of the given frame.
             while (gcInfo.currentReadIntOffsetInPageForGC < frameCapacity) {
-                nextSlotIntPosInPageForGC = findNextSlotInPage(currentReadContentFrameForGC,
-                        gcInfo.currentReadIntOffsetInPageForGC);
+                nextSlotIntPosInPageForGC =
+                        findNextSlotInPage(currentReadContentFrameForGC, gcInfo.currentReadIntOffsetInPageForGC);
 
                 if (nextSlotIntPosInPageForGC == INVALID_VALUE) {
                     // There isn't a valid slot in the page. Exits the loop #2 and reads the next frame.
@@ -174,8 +173,8 @@ public class SerializableHashTable extends SimpleSerializableHashTable {
                     }
 
                     // Migrates this slot to the current offset in Writer's Frame if possible.
-                    currentPageChanged = MigrateSlot(gcInfo, bufferAccessor, tpc, capacityInIntCount,
-                            nextSlotIntPosInPageForGC);
+                    currentPageChanged =
+                            MigrateSlot(gcInfo, bufferAccessor, tpc, capacityInIntCount, nextSlotIntPosInPageForGC);
 
                     if (currentPageChanged) {
                         currentReadContentFrameForGC = contents.get(gcInfo.currentReadPageForGC);
@@ -385,8 +384,8 @@ public class SerializableHashTable extends SimpleSerializableHashTable {
      * given tuple pointer.
      */
     private void updateHeaderToContentPointerInHeaderFrame(ITuplePointerAccessor bufferAccessor,
-            ITuplePartitionComputer tpc, TuplePointer hashedTuple, int newContentFrame,
-            int newOffsetInContentFrame) throws HyracksDataException {
+            ITuplePartitionComputer tpc, TuplePointer hashedTuple, int newContentFrame, int newOffsetInContentFrame)
+            throws HyracksDataException {
         // Finds the original hash value. We assume that bufferAccessor and tpc is already assigned.
         bufferAccessor.reset(hashedTuple);
         int entry = tpc.partition(bufferAccessor, hashedTuple.getTupleIndex(), tableSize);
@@ -400,7 +399,6 @@ public class SerializableHashTable extends SimpleSerializableHashTable {
         headerFrame.writeInt(offsetInHeaderFrame, newContentFrame);
         headerFrame.writeInt(offsetInHeaderFrame + 1, newOffsetInContentFrame);
     }
-
 
     /**
      * Tries to find the next valid slot position in the given content frame from the current position.

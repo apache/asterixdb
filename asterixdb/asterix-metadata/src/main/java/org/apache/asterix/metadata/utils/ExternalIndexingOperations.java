@@ -203,8 +203,8 @@ public class ExternalIndexingOperations {
                 mergePolicyFactory, mergePolicyProperties);
         IIndexBuilderFactory indexBuilderFactory = new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
                 secondaryFileSplitProvider, resourceFactory, true);
-        IIndexDataflowHelperFactory dataflowHelperFactory =
-                new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), secondaryFileSplitProvider);
+        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
+                storageComponentProvider.getStorageManager(), secondaryFileSplitProvider);
         ExternalFilesIndexCreateOperatorDescriptor externalFilesOp = new ExternalFilesIndexCreateOperatorDescriptor(
                 spec, indexBuilderFactory, dataflowHelperFactory, externalFilesSnapshot);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, externalFilesOp,
@@ -221,8 +221,8 @@ public class ExternalIndexingOperations {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint = metadataProvider
                 .getSplitProviderAndConstraints(dataset, IndexingConstants.getFilesIndexName(dataset.getDatasetName()));
         IFileSplitProvider secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
-        IIndexDataflowHelperFactory dataflowHelperFactory =
-                new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), secondaryFileSplitProvider);
+        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
+                storageComponentProvider.getStorageManager(), secondaryFileSplitProvider);
         ExternalFilesIndexModificationOperatorDescriptor externalFilesOp =
                 new ExternalFilesIndexModificationOperatorDescriptor(spec, dataflowHelperFactory,
                         externalFilesSnapshot);

@@ -75,8 +75,8 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADateTime> datetimeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATETIME);
+                    private ISerializerDeserializer<ADateTime> datetimeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
 
                     private AMutableDateTime aDateTime = new AMutableDateTime(0);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();

@@ -81,7 +81,8 @@ public class ReplicationIT {
         this.tcCtx = tcCtx;
     }
 
-    @Rule public TestRule retainLogs = new RetainLogsRule(NCServiceExecutionIT.ASTERIX_APP_DIR, reportPath, this);
+    @Rule
+    public TestRule retainLogs = new RetainLogsRule(NCServiceExecutionIT.ASTERIX_APP_DIR, reportPath, this);
 
     @Before
     public void before() throws Exception {

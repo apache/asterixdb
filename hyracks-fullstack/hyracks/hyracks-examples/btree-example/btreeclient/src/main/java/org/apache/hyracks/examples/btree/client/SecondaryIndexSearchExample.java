@@ -183,7 +183,8 @@ public class SecondaryIndexSearchExample {
                                             // op
 
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
-        IIndexDataflowHelperFactory primaryHelperFactory = new IndexDataflowHelperFactory(storageManager, primarySplitProvider);
+        IIndexDataflowHelperFactory primaryHelperFactory =
+                new IndexDataflowHelperFactory(storageManager, primarySplitProvider);
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec, primaryRecDesc,
                 primaryLowKeyFields, primaryHighKeyFields, true, true, primaryHelperFactory, false, false, null,
                 NoOpOperationCallbackFactory.INSTANCE, null, null, false);

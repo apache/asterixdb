@@ -54,8 +54,8 @@ public class QueryCancellationServlet extends AbstractServlet {
         }
 
         // Retrieves the corresponding Hyracks job id.
-        IStatementExecutorContext runningQueries = (IStatementExecutorContext) ctx
-                .get(ServletConstants.RUNNING_QUERIES_ATTR);
+        IStatementExecutorContext runningQueries =
+                (IStatementExecutorContext) ctx.get(ServletConstants.RUNNING_QUERIES_ATTR);
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(ServletConstants.HYRACKS_CONNECTION_ATTR);
         JobId jobId = runningQueries.getJobIdFromClientContextId(clientContextId);
 

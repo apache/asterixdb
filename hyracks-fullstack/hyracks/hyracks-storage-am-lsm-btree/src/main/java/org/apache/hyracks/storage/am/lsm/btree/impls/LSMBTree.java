@@ -364,8 +364,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public LSMBTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback) {
         int numBloomFilterKeyFields = hasBloomFilter
-                ? ((LSMBTreeWithBloomFilterDiskComponentFactory) componentFactory).getBloomFilterKeyFields().length
-                : 0;
+                ? ((LSMBTreeWithBloomFilterDiskComponentFactory) componentFactory).getBloomFilterKeyFields().length : 0;
         return new LSMBTreeOpContext(this, memoryComponents, insertLeafFrameFactory, deleteLeafFrameFactory,
                 modificationCallback, searchCallback, numBloomFilterKeyFields, getTreeFields(), getFilterFields(),
                 getHarness(), getFilterCmpFactories(), tracer);

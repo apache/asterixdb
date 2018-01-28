@@ -31,7 +31,6 @@ public class ExecutionTimeProfiler {
     private StringBuilder sb;
     private Object lock1 = new Object();
 
-
     // [Key: Job, Value: [Key: Operator, Value: Duration of each operators]]
     private HashMap<String, LinkedHashMap<String, String>> spentTimePerJobMap;
 

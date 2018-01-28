@@ -55,8 +55,8 @@ public class EntityId implements Serializable {
             return true;
         }
         EntityId other = (EntityId) o;
-        return Objects.equals(other.dataverse, dataverse) && Objects.equals(other.entityName, entityName) &&
-                Objects.equals(other.extensionName, extensionName);
+        return Objects.equals(other.dataverse, dataverse) && Objects.equals(other.entityName, entityName)
+                && Objects.equals(other.extensionName, extensionName);
     }
 
     @Override

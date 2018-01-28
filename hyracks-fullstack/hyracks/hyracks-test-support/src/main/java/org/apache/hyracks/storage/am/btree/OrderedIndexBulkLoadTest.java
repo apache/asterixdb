@@ -39,8 +39,8 @@ public abstract class OrderedIndexBulkLoadTest extends OrderedIndexTestDriver {
 
     @Override
     protected void runTest(ISerializerDeserializer[] fieldSerdes, int numKeys, BTreeLeafFrameType leafType,
-            ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey, ITupleReference prefixHighKey)
-            throws Exception {
+            ITupleReference lowKey, ITupleReference highKey, ITupleReference prefixLowKey,
+            ITupleReference prefixHighKey) throws Exception {
         OrderedIndexTestContext ctx = createTestContext(fieldSerdes, numKeys, leafType, false);
         ctx.getIndex().create();
         ctx.getIndex().activate();

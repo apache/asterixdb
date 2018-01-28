@@ -44,8 +44,8 @@ import org.apache.hyracks.control.common.work.IPCResponder;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public class GetNodeDetailsJSONWork extends SynchronizableWork {
-    private static final Section [] CC_SECTIONS = { Section.CC, Section.COMMON };
-    private static final Section [] NC_SECTIONS = { Section.NC, Section.COMMON };
+    private static final Section[] CC_SECTIONS = { Section.CC, Section.COMMON };
+    private static final Section[] NC_SECTIONS = { Section.NC, Section.COMMON };
 
     private final INodeManager nodeManager;
     private final CCConfig ccConfig;
@@ -152,7 +152,6 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
         }
         return o;
     }
-
 
     public ObjectNode getDetail() {
         return detail;

@@ -44,10 +44,9 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
     public InMemorySortRuntimeFactory(int[] sortFields, INormalizedKeyComputerFactory firstKeyNormalizerFactory,
             IBinaryComparatorFactory[] comparatorFactories, int[] projectionList) {
-        this(sortFields,
-                firstKeyNormalizerFactory != null ? new INormalizedKeyComputerFactory[] { firstKeyNormalizerFactory }
-                        : null,
-                comparatorFactories, projectionList);
+        this(sortFields, firstKeyNormalizerFactory != null
+                ? new INormalizedKeyComputerFactory[] { firstKeyNormalizerFactory } : null, comparatorFactories,
+                projectionList);
     }
 
     public InMemorySortRuntimeFactory(int[] sortFields, INormalizedKeyComputerFactory[] keyNormalizerFactories,

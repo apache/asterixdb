@@ -124,8 +124,8 @@ public class CCApplication extends BaseCCApplication {
         if (args.length > 0) {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
-        final ClusterControllerService controllerService = (ClusterControllerService) ccServiceCtx
-                .getControllerService();
+        final ClusterControllerService controllerService =
+                (ClusterControllerService) ccServiceCtx.getControllerService();
         ccServiceCtx.setMessageBroker(new CCMessageBroker(controllerService));
 
         configureLoggingLevel(ccServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
@@ -137,8 +137,8 @@ public class CCApplication extends BaseCCApplication {
         hcc = new HyracksConnection(strIP, port);
         MetadataBuiltinFunctions.init();
         ILibraryManager libraryManager = new ExternalLibraryManager();
-        ReplicationProperties repProp = new ReplicationProperties(
-                PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig()));
+        ReplicationProperties repProp =
+                new ReplicationProperties(PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig()));
         INcLifecycleCoordinator lifecycleCoordinator = createNcLifeCycleCoordinator(repProp.isReplicationEnabled());
         ExternalLibraryUtils.setUpExternaLibraries(libraryManager, false);
         componentProvider = new StorageComponentProvider();
@@ -225,8 +225,8 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected HttpServer setupJSONAPIServer(ExternalProperties externalProperties) throws Exception {
-        HttpServer jsonAPIServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
-                externalProperties.getAPIServerPort());
+        HttpServer jsonAPIServer =
+                new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getAPIServerPort());
         jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, appCtx);
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,

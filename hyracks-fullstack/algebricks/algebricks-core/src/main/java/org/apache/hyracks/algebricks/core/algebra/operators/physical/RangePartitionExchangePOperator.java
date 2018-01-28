@@ -58,7 +58,8 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
     private INodeDomain domain;
     private IRangeMap rangeMap;
 
-    public RangePartitionExchangePOperator(List<OrderColumn> partitioningFields, INodeDomain domain, IRangeMap rangeMap) {
+    public RangePartitionExchangePOperator(List<OrderColumn> partitioningFields, INodeDomain domain,
+            IRangeMap rangeMap) {
         this.partitioningFields = partitioningFields;
         this.domain = domain;
         this.rangeMap = rangeMap;
@@ -79,7 +80,8 @@ public class RangePartitionExchangePOperator extends AbstractExchangePOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        IPartitioningProperty p = new OrderedPartitionedProperty(new ArrayList<OrderColumn>(partitioningFields), domain);
+        IPartitioningProperty p =
+                new OrderedPartitionedProperty(new ArrayList<OrderColumn>(partitioningFields), domain);
         this.deliveredProperties = new StructuralPropertiesVector(p, new LinkedList<ILocalStructuralProperty>());
     }
 

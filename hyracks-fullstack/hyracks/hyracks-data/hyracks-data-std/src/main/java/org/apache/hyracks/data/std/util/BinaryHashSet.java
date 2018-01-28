@@ -119,7 +119,6 @@ public class BinaryHashSet {
         return putFindInternal(key, false, keyArray, increaseFoundCount);
     }
 
-
     // Put an entry or find an entry
     private int putFindInternal(BinaryEntry key, boolean isInsert, byte[] keyArray, boolean increaseFoundCount)
             throws HyracksDataException {

@@ -30,8 +30,8 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
     @Override
     public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
-            MetadataProvider metadataProvider,
-            LangRewritingContext context, boolean inlineUdfs) throws CompilationException {
+            MetadataProvider metadataProvider, LangRewritingContext context, boolean inlineUdfs)
+            throws CompilationException {
         // Sets up parameters.
         setup(declaredFunctions, topStatement, metadataProvider, context);
 

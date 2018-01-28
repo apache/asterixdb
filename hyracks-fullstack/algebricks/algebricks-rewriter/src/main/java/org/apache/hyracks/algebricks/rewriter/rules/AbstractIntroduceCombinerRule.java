@@ -65,9 +65,8 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
         }
     }
 
-    protected Pair<Boolean, Mutable<ILogicalOperator>> tryToPushAgg(AggregateOperator initAgg,
-            GroupByOperator newGbyOp, Set<SimilarAggregatesInfo> toReplaceSet, IOptimizationContext context)
-            throws AlgebricksException {
+    protected Pair<Boolean, Mutable<ILogicalOperator>> tryToPushAgg(AggregateOperator initAgg, GroupByOperator newGbyOp,
+            Set<SimilarAggregatesInfo> toReplaceSet, IOptimizationContext context) throws AlgebricksException {
 
         List<LogicalVariable> initVars = initAgg.getVariables();
         List<Mutable<ILogicalExpression>> initExprs = initAgg.getExpressions();

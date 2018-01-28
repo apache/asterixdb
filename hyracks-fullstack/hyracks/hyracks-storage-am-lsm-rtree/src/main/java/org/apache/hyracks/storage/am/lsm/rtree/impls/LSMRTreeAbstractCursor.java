@@ -175,7 +175,6 @@ public abstract class LSMRTreeAbstractCursor implements ILSMIndexCursor {
         open = false;
     }
 
-
     @Override
     public ITupleReference getTuple() {
         return frameTuple;

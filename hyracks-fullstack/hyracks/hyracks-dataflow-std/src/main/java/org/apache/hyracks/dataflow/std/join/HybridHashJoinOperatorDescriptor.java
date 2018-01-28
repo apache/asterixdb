@@ -176,22 +176,22 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nonMatchWriterFactories1.length]
-                    : null;
+            final IMissingWriter[] nullWriters1 =
+                    isLeftOuter ? new IMissingWriter[nonMatchWriterFactories1.length] : null;
             if (isLeftOuter) {
                 for (int i = 0; i < nonMatchWriterFactories1.length; i++) {
                     nullWriters1[i] = nonMatchWriterFactories1[i].createMissingWriter();
                 }
             }
-            final IPredicateEvaluator predEvaluator = (predEvaluatorFactory == null ? null
-                    : predEvaluatorFactory.createPredicateEvaluator());
+            final IPredicateEvaluator predEvaluator =
+                    (predEvaluatorFactory == null ? null : predEvaluatorFactory.createPredicateEvaluator());
 
             IOperatorNodePushable op = new AbstractUnaryInputSinkOperatorNodePushable() {
                 private BuildAndPartitionTaskState state = new BuildAndPartitionTaskState(
                         ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
                 private final FrameTupleAccessor accessorBuild = new FrameTupleAccessor(rd1);
-                private final ITuplePartitionComputer hpcBuild = new FieldHashPartitionComputerFactory(keys1,
-                        hashFunctionFactories).createPartitioner();
+                private final ITuplePartitionComputer hpcBuild =
+                        new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories).createPartitioner();
                 private final FrameTupleAppender appender = new FrameTupleAppender();
                 private final FrameTupleAppender ftappender = new FrameTupleAppender();
                 private IFrame[] bufferForPartitions;
@@ -285,8 +285,8 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         if (memsize > inputsize0) {
                             state.nPartitions = 0;
                         } else {
-                            state.nPartitions = (int) (Math
-                                    .ceil((inputsize0 * factor / nPartitions - memsize) / (memsize - 1)));
+                            state.nPartitions =
+                                    (int) (Math.ceil((inputsize0 * factor / nPartitions - memsize) / (memsize - 1)));
                         }
                         if (state.nPartitions <= 0) {
                             // becomes in-memory HJ
@@ -303,10 +303,10 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         throw new HyracksDataException("not enough memory");
                     }
 
-                    ITuplePartitionComputer hpc0 = new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories)
-                            .createPartitioner();
-                    ITuplePartitionComputer hpc1 = new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories)
-                            .createPartitioner();
+                    ITuplePartitionComputer hpc0 =
+                            new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories).createPartitioner();
+                    ITuplePartitionComputer hpc1 =
+                            new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories).createPartitioner();
                     int tableSize = (int) (state.memoryForHashtable * recordsPerFrame * factor);
                     ISerializableTable table = new SimpleSerializableHashTable(tableSize, ctx);
                     state.joiner =
@@ -369,23 +369,23 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nonMatchWriterFactories1.length]
-                    : null;
+            final IMissingWriter[] nullWriters1 =
+                    isLeftOuter ? new IMissingWriter[nonMatchWriterFactories1.length] : null;
             if (isLeftOuter) {
                 for (int i = 0; i < nonMatchWriterFactories1.length; i++) {
                     nullWriters1[i] = nonMatchWriterFactories1[i].createMissingWriter();
                 }
             }
-            final IPredicateEvaluator predEvaluator = (predEvaluatorFactory == null ? null
-                    : predEvaluatorFactory.createPredicateEvaluator());
+            final IPredicateEvaluator predEvaluator =
+                    (predEvaluatorFactory == null ? null : predEvaluatorFactory.createPredicateEvaluator());
 
             IOperatorNodePushable op = new AbstractUnaryInputUnaryOutputOperatorNodePushable() {
                 private BuildAndPartitionTaskState state;
                 private final FrameTupleAccessor accessorProbe = new FrameTupleAccessor(rd0);
-                private final ITuplePartitionComputerFactory hpcf0 = new FieldHashPartitionComputerFactory(keys0,
-                        hashFunctionFactories);
-                private final ITuplePartitionComputerFactory hpcf1 = new FieldHashPartitionComputerFactory(keys1,
-                        hashFunctionFactories);
+                private final ITuplePartitionComputerFactory hpcf0 =
+                        new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories);
+                private final ITuplePartitionComputerFactory hpcf1 =
+                        new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories);
                 private final ITuplePartitionComputer hpcProbe = hpcf0.createPartitioner();
 
                 private final FrameTupleAppender appender = new FrameTupleAppender();
@@ -476,10 +476,10 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         } finally {
                             state.joiner.releaseMemory();
                         }
-                        ITuplePartitionComputer hpcRep0 = new RepartitionComputerFactory(state.nPartitions, hpcf0)
-                                .createPartitioner();
-                        ITuplePartitionComputer hpcRep1 = new RepartitionComputerFactory(state.nPartitions, hpcf1)
-                                .createPartitioner();
+                        ITuplePartitionComputer hpcRep0 =
+                                new RepartitionComputerFactory(state.nPartitions, hpcf0).createPartitioner();
+                        ITuplePartitionComputer hpcRep1 =
+                                new RepartitionComputerFactory(state.nPartitions, hpcf1).createPartitioner();
                         if (state.memoryForHashtable != memsize - 2) {
                             for (int i = 0; i < state.nPartitions; i++) {
                                 ByteBuffer buf = bufferForPartitions[i].getBuffer();
@@ -505,11 +505,10 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                                     continue;
                                 }
                                 table.reset();
-                                InMemoryHashJoin joiner =
-                                        new InMemoryHashJoin(ctx, new FrameTupleAccessor(rd0), hpcRep0,
-                                                new FrameTupleAccessor(rd1), rd1, hpcRep1,
-                                                new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter,
-                                                nullWriters1, table, predEvaluator, null);
+                                InMemoryHashJoin joiner = new InMemoryHashJoin(ctx, new FrameTupleAccessor(rd0),
+                                        hpcRep0, new FrameTupleAccessor(rd1), rd1, hpcRep1,
+                                        new FrameTuplePairComparator(keys0, keys1, comparators), isLeftOuter,
+                                        nullWriters1, table, predEvaluator, null);
 
                                 if (buildWriter != null) {
                                     RunFileReader buildReader = buildWriter.createDeleteOnCloseReader();
@@ -559,8 +558,8 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 private void write(int i, ByteBuffer head) throws HyracksDataException {
                     RunFileWriter writer = probeWriters[i];
                     if (writer == null) {
-                        FileReference file = ctx
-                                .createManagedWorkspaceFile(PartitionAndJoinActivityNode.class.getSimpleName());
+                        FileReference file =
+                                ctx.createManagedWorkspaceFile(PartitionAndJoinActivityNode.class.getSimpleName());
                         writer = new RunFileWriter(file, ctx.getIoManager());
                         writer.open();
                         probeWriters[i] = writer;

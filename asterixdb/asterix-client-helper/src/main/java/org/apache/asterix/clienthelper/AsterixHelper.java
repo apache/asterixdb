@@ -25,7 +25,7 @@ public class AsterixHelper {
     private AsterixHelper() {
     }
 
-    public static void main(String [] args) throws IOException {
+    public static void main(String[] args) throws IOException {
         AsterixHelperExecution execution = new AsterixHelperExecution();
         System.exit(execution.execute(args));
     }

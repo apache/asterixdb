@@ -69,8 +69,8 @@ public class ConfigManager implements IConfigManager, Serializable {
     private HashSet<IOption> registeredOptions = new HashSet<>();
     private HashMap<IOption, Object> definedMap = new HashMap<>();
     private HashMap<IOption, Object> defaultMap = new HashMap<>();
-    private CompositeMap<IOption, Object> configurationMap = new CompositeMap<>(definedMap, defaultMap,
-            new NoOpMapMutator());
+    private CompositeMap<IOption, Object> configurationMap =
+            new CompositeMap<>(definedMap, defaultMap, new NoOpMapMutator());
     private EnumMap<Section, Map<String, IOption>> sectionMap = new EnumMap<>(Section.class);
     @SuppressWarnings("squid:S1948") // TreeMap is serializable, and therefore so is its synchronized map
     private Map<String, Map<IOption, Object>> nodeSpecificMap = Collections.synchronizedMap(new TreeMap<>());
@@ -474,8 +474,7 @@ public class ConfigManager implements IConfigManager, Serializable {
             }
         });
         extensionOptions.forEach((extension, options) -> {
-            options.forEach(option -> ini
-                    .add(extension, option.getKey(), option.getValue()));
+            options.forEach(option -> ini.add(extension, option.getKey(), option.getValue()));
         });
         return ini;
     }

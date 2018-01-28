@@ -188,8 +188,8 @@ public class SortGroupByPOperator extends AbstractPhysicalOperator {
             AggregateFunctionCallExpression aggFun = (AggregateFunctionCallExpression) exprRef.getValue();
             aff[i++] = expressionRuntimeProvider.createAggregateFunctionFactory(aggFun, aggOpInputEnv, inputSchemas,
                     context);
-            intermediateTypes.add(partialAggregationTypeComputer.getType(aggFun, aggOpInputEnv,
-                    context.getMetadataProvider()));
+            intermediateTypes
+                    .add(partialAggregationTypeComputer.getType(aggFun, aggOpInputEnv, context.getMetadataProvider()));
         }
 
         int[] keyAndDecFields = new int[keys.length + fdColumns.length];
@@ -227,16 +227,16 @@ public class SortGroupByPOperator extends AbstractPhysicalOperator {
             }
             i++;
         }
-        RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema,
-                context);
+        RecordDescriptor recordDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
 
         IAggregateEvaluatorFactory[] merges = new IAggregateEvaluatorFactory[n];
         List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
         IOperatorSchema[] localInputSchemas = new IOperatorSchema[1];
         localInputSchemas[0] = new OperatorSchemaImpl();
         for (i = 0; i < n; i++) {
-            AggregateFunctionCallExpression aggFun = (AggregateFunctionCallExpression) aggOp.getMergeExpressions()
-                    .get(i).getValue();
+            AggregateFunctionCallExpression aggFun =
+                    (AggregateFunctionCallExpression) aggOp.getMergeExpressions().get(i).getValue();
             aggFun.getUsedVariables(usedVars);
         }
         i = 0;
@@ -250,18 +250,18 @@ public class SortGroupByPOperator extends AbstractPhysicalOperator {
             localInputSchemas[0].addVariable(usedVar);
         }
         for (i = 0; i < n; i++) {
-            AggregateFunctionCallExpression mergeFun = (AggregateFunctionCallExpression) aggOp.getMergeExpressions()
-                    .get(i).getValue();
+            AggregateFunctionCallExpression mergeFun =
+                    (AggregateFunctionCallExpression) aggOp.getMergeExpressions().get(i).getValue();
             merges[i] = expressionRuntimeProvider.createAggregateFunctionFactory(mergeFun, aggOpInputEnv,
                     localInputSchemas, context);
         }
-        RecordDescriptor partialAggRecordDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
-                localInputSchemas[0], context);
+        RecordDescriptor partialAggRecordDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), localInputSchemas[0], context);
 
-        IAggregatorDescriptorFactory aggregatorFactory = new SimpleAlgebricksAccumulatingAggregatorFactory(aff,
-                keyAndDecFields);
-        IAggregatorDescriptorFactory mergeFactory = new SimpleAlgebricksAccumulatingAggregatorFactory(merges,
-                keyAndDecFields);
+        IAggregatorDescriptorFactory aggregatorFactory =
+                new SimpleAlgebricksAccumulatingAggregatorFactory(aff, keyAndDecFields);
+        IAggregatorDescriptorFactory mergeFactory =
+                new SimpleAlgebricksAccumulatingAggregatorFactory(merges, keyAndDecFields);
 
         INormalizedKeyComputerFactory normalizedKeyFactory = null;
         INormalizedKeyComputerFactoryProvider nkcfProvider = context.getNormalizedKeyComputerFactoryProvider();
@@ -269,9 +269,9 @@ public class SortGroupByPOperator extends AbstractPhysicalOperator {
             normalizedKeyFactory = null;
         }
         Object type = aggOpInputEnv.getVarType(gbyCols.get(0));
-        normalizedKeyFactory = orderColumns[0].getOrder() == OrderKind.ASC ? nkcfProvider
-                .getNormalizedKeyComputerFactory(type, true) : nkcfProvider
-                .getNormalizedKeyComputerFactory(type, false);
+        normalizedKeyFactory =
+                orderColumns[0].getOrder() == OrderKind.ASC ? nkcfProvider.getNormalizedKeyComputerFactory(type, true)
+                        : nkcfProvider.getNormalizedKeyComputerFactory(type, false);
         SortGroupByOperatorDescriptor gbyOpDesc = new SortGroupByOperatorDescriptor(spec, frameLimit, keys,
                 keyAndDecFields, normalizedKeyFactory, compFactories, aggregatorFactory, mergeFactory,
                 partialAggRecordDescriptor, recordDescriptor, false);

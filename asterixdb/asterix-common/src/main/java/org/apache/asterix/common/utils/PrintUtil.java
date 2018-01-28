@@ -38,7 +38,7 @@ public class PrintUtil {
             sb.append(entry.getKey());
             sb.append('=');
             sb.append(Arrays.toString(entry.getValue()));
-            if (! iter.hasNext()) {
+            if (!iter.hasNext()) {
                 break;
             }
             sb.append(',').append(' ');

@@ -56,9 +56,8 @@ public class RegisterNodeWork extends SynchronizableWork {
         Map<IOption, Object> ncConfiguration = new HashMap<>();
         try {
             LOGGER.log(Level.WARN, "Registering INodeController: id = " + id);
-            NodeControllerRemoteProxy nc =
-                    new NodeControllerRemoteProxy(ccs.getCcId(),
-                            ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerAddress()));
+            NodeControllerRemoteProxy nc = new NodeControllerRemoteProxy(ccs.getCcId(),
+                    ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerAddress()));
             NodeControllerState state = new NodeControllerState(nc, reg);
             INodeManager nodeManager = ccs.getNodeManager();
             nodeManager.addNode(id, state);

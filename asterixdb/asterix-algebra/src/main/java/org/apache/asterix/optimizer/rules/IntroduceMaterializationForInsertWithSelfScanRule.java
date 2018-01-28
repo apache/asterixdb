@@ -58,16 +58,16 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
         }
 
         InsertDeleteUpsertOperator insertOp = (InsertDeleteUpsertOperator) op;
-        boolean sameDataset = checkIfInsertAndScanDatasetsSame(op, ((DatasetDataSource) insertOp.getDataSource())
-                .getDataset().getDatasetName());
+        boolean sameDataset = checkIfInsertAndScanDatasetsSame(op,
+                ((DatasetDataSource) insertOp.getDataSource()).getDataset().getDatasetName());
 
         if (sameDataset) {
             MaterializeOperator materializeOperator = new MaterializeOperator();
             MaterializePOperator materializePOperator = new MaterializePOperator(true);
             materializeOperator.setPhysicalOperator(materializePOperator);
 
-            materializeOperator.getInputs().add(
-                    new MutableObject<ILogicalOperator>(insertOp.getInputs().get(0).getValue()));
+            materializeOperator.getInputs()
+                    .add(new MutableObject<ILogicalOperator>(insertOp.getInputs().get(0).getValue()));
             context.computeAndSetTypeEnvironmentForOperator(materializeOperator);
 
             insertOp.getInputs().clear();
@@ -105,8 +105,7 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
             } else if (descendantOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator dataSourceScanOp = (DataSourceScanOperator) descendantOp;
                 DataSource ds = (DataSource) dataSourceScanOp.getDataSource();
-                if ((ds.getDatasourceType() == Type.INTERNAL_DATASET
-                        || ds.getDatasourceType() == Type.EXTERNAL_DATASET)
+                if ((ds.getDatasourceType() == Type.INTERNAL_DATASET || ds.getDatasourceType() == Type.EXTERNAL_DATASET)
                         && ((DatasetDataSource) ds).getDataset().getDatasetName().compareTo(insertDatasetName) == 0) {
                     return true;
                 }

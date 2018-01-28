@@ -34,8 +34,8 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 public abstract class AbstractTripleStringStringEval extends AbstractTripleStringEval {
 
     @SuppressWarnings("rawtypes")
-    private final ISerializerDeserializer stringSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ASTRING);
+    private final ISerializerDeserializer stringSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
     private final AMutableString resultValue = new AMutableString("");
 
     public AbstractTripleStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,

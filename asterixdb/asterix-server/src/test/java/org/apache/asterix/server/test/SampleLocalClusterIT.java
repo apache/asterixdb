@@ -108,8 +108,8 @@ public class SampleLocalClusterIT {
 
     @Test
     public void test0_startCluster() throws Exception {
-        Process process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh"), "-f")
-                .inheritIO().start();
+        Process process =
+                new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh"), "-f").inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
         process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/start-sample-cluster.sh")).inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
@@ -127,8 +127,8 @@ public class SampleLocalClusterIT {
 
     @Test
     public void test2_stopCluster() throws Exception {
-        Process process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh")).inheritIO()
-                .start();
+        Process process =
+                new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh")).inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
         try {
             new URL("http://127.0.0.1:19002").openConnection().connect();

@@ -122,8 +122,8 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
 
             // Replaces all Nts' in the nested plan with the Subplan input operator or its deep copy.
             ILogicalOperator topOperator = rootRefs.get(0).getValue();
-            ReplaceNtsWithSubplanInputOperatorVisitor visitor = new ReplaceNtsWithSubplanInputOperatorVisitor(context,
-                    subplan);
+            ReplaceNtsWithSubplanInputOperatorVisitor visitor =
+                    new ReplaceNtsWithSubplanInputOperatorVisitor(context, subplan);
             ILogicalOperator newTopOperator = topOperator.accept(visitor, null);
             currentOpRef.setValue(newTopOperator);
             OperatorManipulationUtil.computeTypeEnvironmentBottomUp(newTopOperator, context);
@@ -168,7 +168,7 @@ public class EliminateSubplanWithInputCardinalityOneRule implements IAlgebraicRe
      */
     private void isCardinalityOne(Mutable<ILogicalOperator> opRef, Set<LogicalVariable> freeVars,
             Set<LogicalVariable> varsWithCardinalityOne, Set<LogicalVariable> varsLiveAtUnnestAndJoin)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         AbstractLogicalOperator operator = (AbstractLogicalOperator) opRef.getValue();
         List<LogicalVariable> liveVars = new ArrayList<>();
         VariableUtilities.getLiveVariables(operator, liveVars);

@@ -58,8 +58,8 @@ public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
         }
         Set<String> cleanupPendingNodes = run.getCleanupPendingNodeIds();
         if (!cleanupPendingNodes.remove(nodeId)) {
-            LOGGER.log(Level.WARN, () -> nodeId + " not in pending cleanup nodes set: " + cleanupPendingNodes +
-                    " for job " + jobId);
+            LOGGER.log(Level.WARN,
+                    () -> nodeId + " not in pending cleanup nodes set: " + cleanupPendingNodes + " for job " + jobId);
             return;
         }
         INodeManager nodeManager = ccs.getNodeManager();

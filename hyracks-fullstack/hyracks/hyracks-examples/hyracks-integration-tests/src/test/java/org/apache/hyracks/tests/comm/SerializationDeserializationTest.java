@@ -48,8 +48,8 @@ import org.junit.Test;
 
 public class SerializationDeserializationTest {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String DBLP_FILE = "data" + File.separator + "device1" + File.separator + "data"
-            + File.separator + "dblp.txt";
+    private static final String DBLP_FILE =
+            "data" + File.separator + "device1" + File.separator + "data" + File.separator + "dblp.txt";
 
     private static class SerDeserRunner {
         private final IHyracksTaskContext ctx;

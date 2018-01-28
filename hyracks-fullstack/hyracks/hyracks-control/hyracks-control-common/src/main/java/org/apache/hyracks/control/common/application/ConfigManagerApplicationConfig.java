@@ -42,17 +42,17 @@ public class ConfigManagerApplicationConfig implements IApplicationConfig, Seria
 
     @Override
     public String getString(String section, String key) {
-        return (String)get(section, key);
+        return (String) get(section, key);
     }
 
     @Override
     public int getInt(String section, String key) {
-        return (int)get(section, key);
+        return (int) get(section, key);
     }
 
     @Override
     public long getLong(String section, String key) {
-        return (long)get(section, key);
+        return (long) get(section, key);
     }
 
     @Override

@@ -32,7 +32,7 @@ public class LSMBTreeCopyTupleWriter extends LSMBTreeTupleWriter {
     public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff) {
         int tupleSize = bytesRequired(tuple);
         byte[] buf = tuple.getFieldData(0);
-        int tupleStartOff = ((LSMBTreeTupleReference)tuple).getTupleStart();
+        int tupleStartOff = ((LSMBTreeTupleReference) tuple).getTupleStart();
         System.arraycopy(buf, tupleStartOff, targetBuf, targetOff, tupleSize);
         return tupleSize;
     }

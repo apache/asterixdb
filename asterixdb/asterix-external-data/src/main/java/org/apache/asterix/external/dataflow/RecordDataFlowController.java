@@ -34,8 +34,7 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
     protected final int numOfTupleFields;
 
     public RecordDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder,
-            IRecordDataParser<T> dataParser, IRecordReader<? extends T> recordReader,
-            int numOfTupleFields) {
+            IRecordDataParser<T> dataParser, IRecordReader<? extends T> recordReader, int numOfTupleFields) {
         super(ctx, tupleForwarder);
         this.dataParser = dataParser;
         this.recordReader = recordReader;

@@ -23,7 +23,8 @@ import java.net.URISyntaxException;
 
 public class JSONOutputRequestUtil {
 
-    private JSONOutputRequestUtil() {}
+    private JSONOutputRequestUtil() {
+    }
 
     public static URI uri(String host, String prefix, String path) throws URISyntaxException {
         String name = host;

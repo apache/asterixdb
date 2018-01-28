@@ -85,12 +85,12 @@ public class IntroJoinInsideSubplanRule extends AbstractDecorrelationRule {
                         OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc(op1, free1);
                         if (!free1.isEmpty()) {
                             OperatorManipulationUtil.ntsToEts(op2Ref, context);
-                            NestedTupleSourceOperator nts = new NestedTupleSourceOperator(
-                                    new MutableObject<ILogicalOperator>(subplan));
+                            NestedTupleSourceOperator nts =
+                                    new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(subplan));
                             Mutable<ILogicalOperator> ntsRef = new MutableObject<ILogicalOperator>(nts);
                             Mutable<ILogicalOperator> innerRef = new MutableObject<ILogicalOperator>(op2);
-                            InnerJoinOperator join = new InnerJoinOperator(new MutableObject<ILogicalExpression>(
-                                    ConstantExpression.TRUE), ntsRef, innerRef);
+                            InnerJoinOperator join = new InnerJoinOperator(
+                                    new MutableObject<ILogicalExpression>(ConstantExpression.TRUE), ntsRef, innerRef);
                             op2Ref.setValue(join);
                             context.computeAndSetTypeEnvironmentForOperator(nts);
                             context.computeAndSetTypeEnvironmentForOperator(join);

@@ -240,8 +240,8 @@ public class LinkedMetaDataPageManager implements IMetadataPageManager {
     @Override
     public void close() throws HyracksDataException {
         if (ready) {
-            ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()),
-                    false);
+            ICachedPage metaNode =
+                    bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()), false);
             ITreeIndexMetadataFrame metaFrame = frameFactory.createFrame();
             metaNode.acquireWriteLatch();
             try {
@@ -319,8 +319,8 @@ public class LinkedMetaDataPageManager implements IMetadataPageManager {
     public long getFileOffset(ITreeIndexMetadataFrame frame, IValueReference key) throws HyracksDataException {
         int metadataPageNum = getMetadataPageId();
         if (metadataPageNum != IBufferCache.INVALID_PAGEID) {
-            ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()),
-                    false);
+            ICachedPage metaNode =
+                    bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()), false);
             metaNode.acquireReadLatch();
             try {
                 frame.setPage(metaNode);

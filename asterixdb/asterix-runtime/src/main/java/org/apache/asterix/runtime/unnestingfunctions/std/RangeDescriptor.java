@@ -67,8 +67,8 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
                 return new IUnnestingEvaluator() {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     @SuppressWarnings("rawtypes")
-                    private ISerializerDeserializer serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private ISerializerDeserializer serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
                     private IPointable inputVal = new VoidPointable();
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);

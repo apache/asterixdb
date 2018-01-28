@@ -50,8 +50,7 @@ public class SerializableSqlSumAggregateFunction extends AbstractSerializableSum
         // but if all input value are system null, then we should return
         // null in finish().
         if (isLocalAgg) {
-            throw new UnsupportedItemTypeException(BuiltinFunctions.SQL_SUM,
-                    ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
+            throw new UnsupportedItemTypeException(BuiltinFunctions.SQL_SUM, ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
         }
     }
 

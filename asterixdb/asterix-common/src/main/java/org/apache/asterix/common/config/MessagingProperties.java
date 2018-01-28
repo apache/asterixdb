@@ -30,7 +30,9 @@ import org.apache.hyracks.util.StorageUtil;
 public class MessagingProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        MESSAGING_FRAME_SIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(4, KILOBYTE),
+        MESSAGING_FRAME_SIZE(
+                INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(4, KILOBYTE),
                 "The frame size to be used for NC to NC messaging"),
         MESSAGING_FRAME_COUNT(INTEGER, 512, "Number of reusable frames for NC to NC messaging");
 

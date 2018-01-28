@@ -53,7 +53,7 @@ public class PushMapOperatorDownThroughProductRule implements IAlgebraicRewriteR
 
         if (!OperatorPropertiesUtil.isMovable(op1)) {
             return false;
-        };
+        } ;
 
         Mutable<ILogicalOperator> op2Ref = op1.getInputs().get(0);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op2Ref.getValue();

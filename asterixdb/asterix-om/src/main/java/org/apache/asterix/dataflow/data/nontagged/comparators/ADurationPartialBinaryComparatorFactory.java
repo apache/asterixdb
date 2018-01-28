@@ -28,7 +28,8 @@ public class ADurationPartialBinaryComparatorFactory implements IBinaryComparato
 
     private static final long serialVersionUID = 1L;
 
-    public static final ADurationPartialBinaryComparatorFactory INSTANCE = new ADurationPartialBinaryComparatorFactory();
+    public static final ADurationPartialBinaryComparatorFactory INSTANCE =
+            new ADurationPartialBinaryComparatorFactory();
 
     private ADurationPartialBinaryComparatorFactory() {
 

@@ -38,8 +38,8 @@ public class TestAsterixMembersReader implements IRecordReader<RecordWithPK<char
     private int counter = 0;
     private final int numOfRecords = 10;
     private final StringBuilder builder = new StringBuilder();
-    private static final String[] names = { "Abdullah", "Michael", "Till", "Yingyi", "Ildar", "Taewoo", "Young-Seok",
-            "Murtadha", "Ian", "Steven" };
+    private static final String[] names =
+            { "Abdullah", "Michael", "Till", "Yingyi", "Ildar", "Taewoo", "Young-Seok", "Murtadha", "Ian", "Steven" };
 
     public TestAsterixMembersReader() {
         rawRecord = new CharArrayRecord();

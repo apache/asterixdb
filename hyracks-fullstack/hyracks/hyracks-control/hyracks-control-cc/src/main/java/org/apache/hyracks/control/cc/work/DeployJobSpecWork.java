@@ -59,8 +59,7 @@ public class DeployJobSpecWork extends SynchronizableWork {
                     acggf.createActivityClusterGraphGenerator(ccServiceCtx, EnumSet.noneOf(JobFlag.class));
             ActivityClusterGraph acg = acgg.initialize();
             ccs.getDeployedJobSpecStore().addDeployedJobSpecDescriptor(deployedJobSpecId, acg,
-                    acggf.getJobSpecification(),
-                    acgg.getConstraints());
+                    acggf.getJobSpecification(), acgg.getConstraints());
 
             byte[] acgBytes = JavaSerializationUtils.serialize(acg);
 

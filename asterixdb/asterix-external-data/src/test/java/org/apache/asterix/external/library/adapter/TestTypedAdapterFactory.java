@@ -85,10 +85,12 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                         (IApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
                 ClusterPartition nodePartition = appCtx.getMetadataProperties().getNodePartitions().get(nodeId)[0];
                 parser = new ADMDataParser(outputType, true);
-                forwarder = DataflowUtils.getTupleForwarder(configuration,
-                        FeedUtils.getFeedLogManager(ctx,
-                                FeedUtils.splitsForAdapter(ExternalDataUtils.getDataverse(configuration),
-                                        ExternalDataUtils.getFeedName(configuration), nodeId, nodePartition)));
+                forwarder =
+                        DataflowUtils
+                                .getTupleForwarder(configuration,
+                                        FeedUtils.getFeedLogManager(ctx, FeedUtils.splitsForAdapter(
+                                                ExternalDataUtils.getDataverse(configuration),
+                                                ExternalDataUtils.getFeedName(configuration), nodeId, nodePartition)));
                 tb = new ArrayTupleBuilder(1);
                 return new ITupleParser() {
 

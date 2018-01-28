@@ -98,8 +98,7 @@ public class NodeManager implements INodeManager {
         }
         // Updates the node registry.
         if (nodeRegistry.containsKey(nodeId)) {
-            LOGGER.warn(
-                    "Node with name " + nodeId + " has already registered; failing the node then re-registering.");
+            LOGGER.warn("Node with name " + nodeId + " has already registered; failing the node then re-registering.");
             removeDeadNode(nodeId);
         } else {
             try {
@@ -150,8 +149,8 @@ public class NodeManager implements INodeManager {
         Set<String> deadNodes = new HashSet<>();
         Set<JobId> affectedJobIds = new HashSet<>();
         Iterator<Map.Entry<String, NodeControllerState>> nodeIterator = nodeRegistry.entrySet().iterator();
-        long deadNodeNanosThreshold = TimeUnit.MILLISECONDS
-                .toNanos(ccConfig.getHeartbeatMaxMisses() * ccConfig.getHeartbeatPeriodMillis());
+        long deadNodeNanosThreshold =
+                TimeUnit.MILLISECONDS.toNanos(ccConfig.getHeartbeatMaxMisses() * ccConfig.getHeartbeatPeriodMillis());
         while (nodeIterator.hasNext()) {
             Map.Entry<String, NodeControllerState> entry = nodeIterator.next();
             String nodeId = entry.getKey();

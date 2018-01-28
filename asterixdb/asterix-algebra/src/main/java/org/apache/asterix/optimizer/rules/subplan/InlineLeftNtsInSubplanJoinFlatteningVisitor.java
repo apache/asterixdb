@@ -399,8 +399,8 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
      */
     private void injectNullCheckVars(AbstractBinaryJoinOperator joinOp) {
         LogicalVariable assignVar = context.newVar();
-        ILogicalOperator assignOp = new AssignOperator(assignVar,
-                new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+        ILogicalOperator assignOp =
+                new AssignOperator(assignVar, new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
         assignOp.getInputs().add(joinOp.getInputs().get(1));
         joinOp.getInputs().set(1, new MutableObject<ILogicalOperator>(assignOp));
         nullCheckVars.add(assignVar);

@@ -65,8 +65,8 @@ public class StringStreamingScriptPOperator extends AbstractPropagatePropertiesF
         StringStreamingScriptDescription sssd = (StringStreamingScriptDescription) scriptDesc;
         StringStreamingRuntimeFactory runtime = new StringStreamingRuntimeFactory(sssd.getCommand(),
                 sssd.getPrinterFactories(), sssd.getFieldDelimiter(), sssd.getParserFactory());
-        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema,
-                context);
+        RecordDescriptor recDesc =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         builder.contributeMicroOperator(scriptOp, runtime, recDesc);
         // and contribute one edge from its child
         ILogicalOperator src = scriptOp.getInputs().get(0).getValue();

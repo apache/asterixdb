@@ -75,8 +75,8 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
                     // possible returning types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private ISerializerDeserializer<AInt64> int64Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
 
                     @Override

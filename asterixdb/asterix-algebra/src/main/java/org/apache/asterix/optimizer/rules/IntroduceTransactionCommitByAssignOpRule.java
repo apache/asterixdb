@@ -36,7 +36,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class IntroduceTransactionCommitByAssignOpRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -61,8 +62,8 @@ public class IntroduceTransactionCommitByAssignOpRule implements IAlgebraicRewri
 
         //create an assignOp with a variable and the condition of the select-operator.
         LogicalVariable v = context.newVar();
-        AssignOperator assignOperator = new AssignOperator(v, new MutableObject<ILogicalExpression>(selectOperator
-                .getCondition().getValue()));
+        AssignOperator assignOperator =
+                new AssignOperator(v, new MutableObject<ILogicalExpression>(selectOperator.getCondition().getValue()));
 
         //set the input of the new assign-operator to the input of the select-operator.
         assignOperator.getInputs().add(childOfSelect);

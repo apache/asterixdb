@@ -41,9 +41,8 @@ public interface IQueryRewriter {
      * @param context,
      *            manages ids of variables and guarantees uniqueness of variables.
      */
-    void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr,
-            MetadataProvider metadataProvider, LangRewritingContext context, boolean inlineUdfs)
-            throws CompilationException;
+    void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr, MetadataProvider metadataProvider,
+            LangRewritingContext context, boolean inlineUdfs) throws CompilationException;
 
     /**
      * Find the function calls used by a given expression

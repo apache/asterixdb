@@ -60,8 +60,8 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
                 return new IRunningAggregateEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private final ISerializerDeserializer<AInt64> serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private final ISerializerDeserializer<AInt64> serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
                     private final AMutableInt64 m = new AMutableInt64(0);
                     private int cnt;
 

@@ -59,8 +59,8 @@ public class ADateTimeParserFactory implements IValueParserFactory {
 
                 chrononTimeInMs = ADateParserFactory.parseDatePart(buffer, start, timeOffset);
 
-                chrononTimeInMs += ATimeParserFactory.parseTimePart(buffer, start + timeOffset + 1, length - timeOffset
-                        - 1);
+                chrononTimeInMs +=
+                        ATimeParserFactory.parseTimePart(buffer, start + timeOffset + 1, length - timeOffset - 1);
 
                 try {
                     out.writeLong(chrononTimeInMs);

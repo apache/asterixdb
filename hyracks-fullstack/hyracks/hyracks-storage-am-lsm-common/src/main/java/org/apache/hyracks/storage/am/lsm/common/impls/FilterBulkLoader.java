@@ -35,9 +35,8 @@ public class FilterBulkLoader implements IChainedComponentBulkLoader {
     protected final PermutingTupleReference filterTuple;
     protected final MultiComparator filterCmp;
 
-    public FilterBulkLoader(ILSMComponentFilter filter, ITreeIndex treeIndex,
-            ILSMComponentFilterManager filterManager, int[] indexFields, int[] filterFields,
-            MultiComparator filterCmp) {
+    public FilterBulkLoader(ILSMComponentFilter filter, ITreeIndex treeIndex, ILSMComponentFilterManager filterManager,
+            int[] indexFields, int[] filterFields, MultiComparator filterCmp) {
         this.filter = filter;
         this.treeIndex = treeIndex;
         this.filterManager = filterManager;

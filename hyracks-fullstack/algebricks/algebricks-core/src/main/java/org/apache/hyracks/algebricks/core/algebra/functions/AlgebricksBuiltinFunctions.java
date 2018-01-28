@@ -43,8 +43,8 @@ public class AlgebricksBuiltinFunctions {
 
     // booleans
     public final static FunctionIdentifier NOT = new FunctionIdentifier(ALGEBRICKS_NS, "not", 1);
-    public final static FunctionIdentifier AND = new FunctionIdentifier(ALGEBRICKS_NS, "and",
-            FunctionIdentifier.VARARGS);
+    public final static FunctionIdentifier AND =
+            new FunctionIdentifier(ALGEBRICKS_NS, "and", FunctionIdentifier.VARARGS);
     public final static FunctionIdentifier OR = new FunctionIdentifier(ALGEBRICKS_NS, "or", FunctionIdentifier.VARARGS);
 
     // numerics
@@ -56,7 +56,8 @@ public class AlgebricksBuiltinFunctions {
     // nulls
     public final static FunctionIdentifier IS_NULL = new FunctionIdentifier(ALGEBRICKS_NS, "is-null", 1);
 
-    private static final Map<FunctionIdentifier, ComparisonKind> comparisonFunctions = new HashMap<FunctionIdentifier, ComparisonKind>();
+    private static final Map<FunctionIdentifier, ComparisonKind> comparisonFunctions =
+            new HashMap<FunctionIdentifier, ComparisonKind>();
 
     static {
         comparisonFunctions.put(AlgebricksBuiltinFunctions.EQ, ComparisonKind.EQ);

@@ -82,15 +82,14 @@ public class SourcePointerResolver {
     }
 
     private void ensureCDDLSourcesPointer(Collection<Project> projects, ArtifactRepository central,
-                                          ArtifactResolutionRequest request)
-            throws ProjectBuildingException, IOException {
+            ArtifactResolutionRequest request) throws ProjectBuildingException, IOException {
         for (Project p : projects) {
             if (p.getSourcePointer() != null) {
                 continue;
             }
             mojo.getLog().debug("finding sources for artifact: " + p);
-            Artifact sourcesArtifact = new DefaultArtifact(p.getGroupId(), p.getArtifactId(),
-                    p.getVersion(), Artifact.SCOPE_COMPILE, "jar", "sources", null);
+            Artifact sourcesArtifact = new DefaultArtifact(p.getGroupId(), p.getArtifactId(), p.getVersion(),
+                    Artifact.SCOPE_COMPILE, "jar", "sources", null);
             MavenProject mavenProject = mojo.resolveDependency(sourcesArtifact);
             sourcesArtifact.setArtifactHandler(mavenProject.getArtifact().getArtifactHandler());
             final ArtifactRepository localRepo = mojo.getSession().getLocalRepository();
@@ -162,7 +161,7 @@ public class SourcePointerResolver {
 
         @java.lang.Override
         public String pathOfLocalRepositoryMetadata(ArtifactMetadata artifactMetadata,
-                                                    ArtifactRepository artifactRepository) {
+                ArtifactRepository artifactRepository) {
             return null;
         }
 

@@ -345,9 +345,8 @@ public class OperatorPropertiesUtil {
             StructuralPropertiesVector partitionedPropertiesVector) {
         ILogicalOperator leftChild = op.getInputs().get(0).getValue();
         ILogicalOperator rightChild = op.getInputs().get(1).getValue();
-        boolean unPartitioned =
-                leftChild.getExecutionMode().equals(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED) && rightChild
-                        .getExecutionMode().equals(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
+        boolean unPartitioned = leftChild.getExecutionMode().equals(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED)
+                && rightChild.getExecutionMode().equals(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
         return unPartitioned ? StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR : partitionedPropertiesVector;
     }
 }

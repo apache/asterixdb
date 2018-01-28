@@ -39,10 +39,8 @@ import org.junit.Test;
 
 public class DeletableFrameTupleAppenderTest {
     DeletableFrameTupleAppender appender;
-    ISerializerDeserializer[] fields = new ISerializerDeserializer[] {
-            IntegerSerializerDeserializer.INSTANCE,
-            new UTF8StringSerializerDeserializer(),
-    };
+    ISerializerDeserializer[] fields = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(), };
     RecordDescriptor recordDescriptor = new RecordDescriptor(fields);
     ArrayTupleBuilder builder = new ArrayTupleBuilder(recordDescriptor.getFieldCount());
     static final char TEST_CH = 'x';

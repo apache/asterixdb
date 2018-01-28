@@ -91,8 +91,8 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
                 // Need to add an offset to the given limit value
                 // since the original topmost limit will use the offset value.
                 // We can't apply the offset multiple times.
-                IFunctionInfo finfoAdd = context.getMetadataProvider()
-                        .lookupFunction(AlgebricksBuiltinFunctions.NUMERIC_ADD);
+                IFunctionInfo finfoAdd =
+                        context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.NUMERIC_ADD);
                 List<Mutable<ILogicalExpression>> addArgs = new ArrayList<>();
                 addArgs.add(
                         new MutableObject<ILogicalExpression>(limitOp.getMaxObjects().getValue().cloneExpression()));

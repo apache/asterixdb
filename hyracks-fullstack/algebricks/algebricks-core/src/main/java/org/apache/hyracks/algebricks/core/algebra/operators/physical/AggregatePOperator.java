@@ -60,11 +60,11 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
         AggregateOperator aggOp = (AggregateOperator) op;
         ILogicalOperator op2 = op.getInputs().get(0).getValue();
         if (aggOp.getExecutionMode() != AbstractLogicalOperator.ExecutionMode.UNPARTITIONED) {
-            deliveredProperties = new StructuralPropertiesVector(op2.getDeliveredPhysicalProperties()
-                    .getPartitioningProperty(), new ArrayList<>());
+            deliveredProperties = new StructuralPropertiesVector(
+                    op2.getDeliveredPhysicalProperties().getPartitioningProperty(), new ArrayList<>());
         } else {
-            deliveredProperties = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED,
-                    new ArrayList<>());
+            deliveredProperties =
+                    new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED, new ArrayList<>());
         }
     }
 

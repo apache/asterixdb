@@ -110,8 +110,8 @@ public class RemoveUnnecessarySortMergeExchange implements IAlgebraicRewriteRule
             for (OrderColumn oc : sme.getSortColumns()) {
                 ocList.add(oc);
             }
-            HashPartitionMergeExchangePOperator hpme = new HashPartitionMergeExchangePOperator(ocList,
-                    hpe.getHashFields(), hpe.getDomain());
+            HashPartitionMergeExchangePOperator hpme =
+                    new HashPartitionMergeExchangePOperator(ocList, hpe.getHashFields(), hpe.getDomain());
             op1.setPhysicalOperator(hpme);
         }
 

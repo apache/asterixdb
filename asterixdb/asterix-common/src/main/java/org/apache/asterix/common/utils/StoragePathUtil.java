@@ -77,9 +77,8 @@ public class StoragePathUtil {
     }
 
     public static int getPartitionNumFromRelativePath(String relativePath) {
-        int startIdx =
-                relativePath.indexOf(StorageConstants.PARTITION_DIR_PREFIX) + StorageConstants.PARTITION_DIR_PREFIX
-                        .length();
+        int startIdx = relativePath.indexOf(StorageConstants.PARTITION_DIR_PREFIX)
+                + StorageConstants.PARTITION_DIR_PREFIX.length();
         String partition = relativePath.substring(startIdx, relativePath.indexOf(File.separatorChar, startIdx));
         return Integer.parseInt(partition);
     }

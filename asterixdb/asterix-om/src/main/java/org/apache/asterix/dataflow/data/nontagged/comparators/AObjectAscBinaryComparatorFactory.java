@@ -57,51 +57,51 @@ public class AObjectAscBinaryComparatorFactory implements IBinaryComparatorFacto
             // BOOLEAN
             final IBinaryComparator ascBoolComp = BooleanBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // TINYINT
-            final IBinaryComparator ascByteComp = new PointableBinaryComparatorFactory(BytePointable.FACTORY)
-                    .createBinaryComparator();
+            final IBinaryComparator ascByteComp =
+                    new PointableBinaryComparatorFactory(BytePointable.FACTORY).createBinaryComparator();
             // SMALLINT
-            final IBinaryComparator ascShortComp = new PointableBinaryComparatorFactory(ShortPointable.FACTORY)
-                    .createBinaryComparator();
+            final IBinaryComparator ascShortComp =
+                    new PointableBinaryComparatorFactory(ShortPointable.FACTORY).createBinaryComparator();
             // INTEGER
-            final IBinaryComparator ascIntComp = new PointableBinaryComparatorFactory(IntegerPointable.FACTORY)
-                    .createBinaryComparator();
+            final IBinaryComparator ascIntComp =
+                    new PointableBinaryComparatorFactory(IntegerPointable.FACTORY).createBinaryComparator();
             // BIGINT
             final IBinaryComparator ascLongComp = LongBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // STRING
-            final IBinaryComparator ascStrComp = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
-                    .createBinaryComparator();
+            final IBinaryComparator ascStrComp =
+                    new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
             // BINARY
-            final IBinaryComparator ascByteArrayComp = new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY)
-                    .createBinaryComparator();
+            final IBinaryComparator ascByteArrayComp =
+                    new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
             // FLOAT
-            final IBinaryComparator ascFloatComp = new PointableBinaryComparatorFactory(FloatPointable.FACTORY)
-                    .createBinaryComparator();
+            final IBinaryComparator ascFloatComp =
+                    new PointableBinaryComparatorFactory(FloatPointable.FACTORY).createBinaryComparator();
             // DOUBLE
-            final IBinaryComparator ascDoubleComp = new PointableBinaryComparatorFactory(DoublePointable.FACTORY)
-                    .createBinaryComparator();
+            final IBinaryComparator ascDoubleComp =
+                    new PointableBinaryComparatorFactory(DoublePointable.FACTORY).createBinaryComparator();
             // RECTANGLE
-            final IBinaryComparator ascRectangleComp = ARectanglePartialBinaryComparatorFactory.INSTANCE
-                    .createBinaryComparator();
+            final IBinaryComparator ascRectangleComp =
+                    ARectanglePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // CIRCLE
-            final IBinaryComparator ascCircleComp = ACirclePartialBinaryComparatorFactory.INSTANCE
-                    .createBinaryComparator();
+            final IBinaryComparator ascCircleComp =
+                    ACirclePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // DURATION
-            final IBinaryComparator ascDurationComp = ADurationPartialBinaryComparatorFactory.INSTANCE
-                    .createBinaryComparator();
+            final IBinaryComparator ascDurationComp =
+                    ADurationPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // INTERVAL
-            final IBinaryComparator ascIntervalComp = AIntervalAscPartialBinaryComparatorFactory.INSTANCE
-                    .createBinaryComparator();
+            final IBinaryComparator ascIntervalComp =
+                    AIntervalAscPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // LINE
             final IBinaryComparator ascLineComp = ALinePartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // POINT
-            final IBinaryComparator ascPointComp = APointPartialBinaryComparatorFactory.INSTANCE
-                    .createBinaryComparator();
+            final IBinaryComparator ascPointComp =
+                    APointPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // POINT3D
-            final IBinaryComparator ascPoint3DComp = APoint3DPartialBinaryComparatorFactory.INSTANCE
-                    .createBinaryComparator();
+            final IBinaryComparator ascPoint3DComp =
+                    APoint3DPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // POLYGON
-            final IBinaryComparator ascPolygonComp = APolygonPartialBinaryComparatorFactory.INSTANCE
-                    .createBinaryComparator();
+            final IBinaryComparator ascPolygonComp =
+                    APolygonPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // UUID
             final IBinaryComparator ascUUIDComp = AUUIDPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             // RAW

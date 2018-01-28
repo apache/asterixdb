@@ -121,8 +121,8 @@ public class EquivalenceClassUtils {
                     new MutableObject<ILogicalExpression>(new VariableReferenceExpression(referredRecordVar)),
                     new MutableObject<ILogicalExpression>(
                             new ConstantExpression(new AsterixConstantValue(new AInt32(fieldIndexInRecord)))));
-            EquivalenceClass equivClass = new EquivalenceClass(Collections.singletonList(var), var,
-                    Collections.singletonList(expr));
+            EquivalenceClass equivClass =
+                    new EquivalenceClass(Collections.singletonList(var), var, Collections.singletonList(expr));
             Map<LogicalVariable, EquivalenceClass> equivalenceMap = context.getEquivalenceClassMap(operator);
             if (equivalenceMap == null) {
                 equivalenceMap = new HashMap<LogicalVariable, EquivalenceClass>();
@@ -148,7 +148,7 @@ public class EquivalenceClassUtils {
      */
     public static Pair<ILogicalOperator, Set<LogicalVariable>> findOrCreatePrimaryKeyOpAndVariables(
             ILogicalOperator operator, boolean usedForCorrelationJoin, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         computePrimaryKeys(operator, context);
 
         Set<LogicalVariable> liveVars = new HashSet<>();

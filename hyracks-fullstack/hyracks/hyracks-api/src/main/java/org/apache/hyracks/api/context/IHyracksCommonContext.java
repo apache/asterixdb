@@ -20,7 +20,7 @@ package org.apache.hyracks.api.context;
 
 import org.apache.hyracks.api.io.IIOManager;
 
-public interface IHyracksCommonContext extends IHyracksFrameMgrContext{
+public interface IHyracksCommonContext extends IHyracksFrameMgrContext {
 
     public IIOManager getIoManager();
 }

@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class VirtualFreePageManagerFactory implements IPageManagerFactory {
     private static final long serialVersionUID = 1L;
+
     @Override
     public IPageManager createPageManager(IBufferCache bufferCache) {
         return new VirtualFreePageManager(bufferCache);

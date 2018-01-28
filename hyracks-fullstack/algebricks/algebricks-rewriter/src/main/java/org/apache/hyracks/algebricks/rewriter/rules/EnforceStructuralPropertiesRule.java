@@ -149,8 +149,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             }
             AbstractLogicalOperator op = (AbstractLogicalOperator) root.getValue();
             op.computeDeliveredPhysicalProperties(context);
-            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> Structural properties for " + op.getPhysicalOperator()
-                    + ": " + op.getDeliveredPhysicalProperties() + "\n");
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> Structural properties for " + op.getPhysicalOperator() + ": "
+                    + op.getDeliveredPhysicalProperties() + "\n");
         }
         return changed;
     }

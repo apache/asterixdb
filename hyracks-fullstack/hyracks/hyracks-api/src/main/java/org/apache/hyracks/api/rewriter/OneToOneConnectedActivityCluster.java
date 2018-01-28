@@ -38,10 +38,14 @@ public class OneToOneConnectedActivityCluster extends ActivityCluster {
 
     private static final long serialVersionUID = 1L;
 
-    protected final Map<Integer, Pair<ActivityId, Integer>> clusterInputIndexMap = new HashMap<Integer, Pair<ActivityId, Integer>>();
-    protected final Map<Integer, Pair<ActivityId, Integer>> clusterOutputIndexMap = new HashMap<Integer, Pair<ActivityId, Integer>>();
-    protected final Map<Pair<ActivityId, Integer>, Integer> invertedClusterOutputIndexMap = new HashMap<Pair<ActivityId, Integer>, Integer>();
-    protected final Map<Pair<ActivityId, Integer>, Integer> invertedClusterInputIndexMap = new HashMap<Pair<ActivityId, Integer>, Integer>();
+    protected final Map<Integer, Pair<ActivityId, Integer>> clusterInputIndexMap =
+            new HashMap<Integer, Pair<ActivityId, Integer>>();
+    protected final Map<Integer, Pair<ActivityId, Integer>> clusterOutputIndexMap =
+            new HashMap<Integer, Pair<ActivityId, Integer>>();
+    protected final Map<Pair<ActivityId, Integer>, Integer> invertedClusterOutputIndexMap =
+            new HashMap<Pair<ActivityId, Integer>, Integer>();
+    protected final Map<Pair<ActivityId, Integer>, Integer> invertedClusterInputIndexMap =
+            new HashMap<Pair<ActivityId, Integer>, Integer>();
 
     public OneToOneConnectedActivityCluster(ActivityClusterGraph acg, ActivityClusterId id) {
         super(acg, id);

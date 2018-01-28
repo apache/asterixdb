@@ -37,8 +37,8 @@ public class TestRecordWithPKParser<T> implements IRecordWithPKDataParser<Record
     }
 
     @Override
-    public void parse(final IRawRecord<? extends RecordWithPK<T>> record, final DataOutput out) throws
-            HyracksDataException {
+    public void parse(final IRawRecord<? extends RecordWithPK<T>> record, final DataOutput out)
+            throws HyracksDataException {
         recordParser.parse(record.get().getRecord(), out);
     }
 

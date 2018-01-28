@@ -69,8 +69,8 @@ public class UnixTimeFromDatetimeInMsDescriptor extends AbstractScalarFunctionDy
                     // possible returning types
                     private AMutableInt64 aInt64 = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private ISerializerDeserializer<AInt64> int64Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

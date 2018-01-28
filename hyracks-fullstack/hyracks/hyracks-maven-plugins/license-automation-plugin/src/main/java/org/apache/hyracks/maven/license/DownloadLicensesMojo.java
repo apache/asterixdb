@@ -39,10 +39,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.ProjectBuildingException;
 
-@Mojo(name = "licensedownload",
-        requiresProject = true,
-        requiresDependencyResolution = ResolutionScope.TEST,
-        defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
+@Mojo(name = "licensedownload", requiresProject = true, requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class DownloadLicensesMojo extends LicenseMojo {
 
     @Parameter(required = true)
@@ -73,7 +70,7 @@ public class DownloadLicensesMojo extends LicenseMojo {
 
     private void doDownload(int timeoutMillis, int id, String url, String fileName) {
         try {
-            HttpURLConnection conn = (HttpURLConnection)new URL(url).openConnection();
+            HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
             conn.setConnectTimeout(timeoutMillis);
             conn.setReadTimeout(timeoutMillis);
             conn.setRequestMethod("GET");
@@ -90,4 +87,3 @@ public class DownloadLicensesMojo extends LicenseMojo {
         }
     }
 }
-

@@ -93,8 +93,8 @@ public class SerializableAggregatorDescriptorFactory extends AbstractAccumulatin
                 int fieldSlotLength = stateAccessor.getFieldSlotsLength();
                 for (int i = 0; i < aggs.length; i++) {
                     byte[] data = stateAccessor.getBuffer().array();
-                    int start = stateAccessor.getFieldStartOffset(stateTupleIndex, i + keys.length)
-                            + stateTupleStart + fieldSlotLength;
+                    int start = stateAccessor.getFieldStartOffset(stateTupleIndex, i + keys.length) + stateTupleStart
+                            + fieldSlotLength;
                     aggs[i].step(ftr, data, start, stateFieldLength[i]);
                 }
             }

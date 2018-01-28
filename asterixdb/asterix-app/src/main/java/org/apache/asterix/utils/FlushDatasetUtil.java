@@ -61,13 +61,13 @@ public class FlushDatasetUtil {
                 new IPushRuntimeFactory[] { new EmptyTupleSourceRuntimeFactory() }, rDescs);
 
         TxnId txnId = TxnIdFactory.create();
-        FlushDatasetOperatorDescriptor flushOperator = new FlushDatasetOperatorDescriptor(spec, txnId,
-                dataset.getDatasetId());
+        FlushDatasetOperatorDescriptor flushOperator =
+                new FlushDatasetOperatorDescriptor(spec, txnId, dataset.getDatasetId());
 
         spec.connect(new OneToOneConnectorDescriptor(spec), emptySource, 0, flushOperator, 0);
 
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint = metadataProvider
-                .getSplitProviderAndConstraints(dataset, dataset.getDatasetName());
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
+                metadataProvider.getSplitProviderAndConstraints(dataset, dataset.getDatasetName());
         AlgebricksPartitionConstraint primaryPartitionConstraint = primarySplitsAndConstraint.second;
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, emptySource,

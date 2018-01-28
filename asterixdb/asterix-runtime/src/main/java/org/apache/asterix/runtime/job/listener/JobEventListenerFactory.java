@@ -60,9 +60,8 @@ public class JobEventListenerFactory implements IJobEventListenerFactory {
 
     @Override
     public void updateListenerJobParameters(JobParameterByteStore jobParameterByteStore) {
-        String AsterixTransactionIdString =
-                new String(jobParameterByteStore.getParameterValue(TRANSACTION_ID_PARAMETER_NAME, 0,
-                        TRANSACTION_ID_PARAMETER_NAME.length));
+        String AsterixTransactionIdString = new String(jobParameterByteStore
+                .getParameterValue(TRANSACTION_ID_PARAMETER_NAME, 0, TRANSACTION_ID_PARAMETER_NAME.length));
         if (AsterixTransactionIdString.length() > 0) {
             this.txnId = new TxnId(Integer.parseInt(AsterixTransactionIdString));
         }
@@ -75,8 +74,9 @@ public class JobEventListenerFactory implements IJobEventListenerFactory {
             @Override
             public void jobletFinish(JobStatus jobStatus) {
                 try {
-                    ITransactionManager txnManager = ((INcApplicationContext) jobletContext.getServiceContext()
-                            .getApplicationContext()).getTransactionSubsystem().getTransactionManager();
+                    ITransactionManager txnManager =
+                            ((INcApplicationContext) jobletContext.getServiceContext().getApplicationContext())
+                                    .getTransactionSubsystem().getTransactionManager();
                     ITransactionContext txnContext = txnManager.getTransactionContext(txnId);
                     txnContext.setWriteTxn(transactionalWrite);
                     if (jobStatus != JobStatus.FAILURE) {

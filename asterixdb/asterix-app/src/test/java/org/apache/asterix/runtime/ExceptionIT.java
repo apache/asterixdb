@@ -60,8 +60,8 @@ public class ExceptionIT {
     }
 
     private void testFunction(IFunctionDescriptorFactory funcFactory) throws Exception {
-        AbstractScalarFunctionDynamicDescriptor funcDesc = (AbstractScalarFunctionDynamicDescriptor) funcFactory
-                .createFunctionDescriptor();
+        AbstractScalarFunctionDynamicDescriptor funcDesc =
+                (AbstractScalarFunctionDynamicDescriptor) funcFactory.createFunctionDescriptor();
         int inputArity = funcDesc.getIdentifier().getArity();
         Iterator<IScalarEvaluatorFactory[]> argEvalFactoryIterator = getArgCombinations(inputArity);
         while (argEvalFactoryIterator.hasNext()) {

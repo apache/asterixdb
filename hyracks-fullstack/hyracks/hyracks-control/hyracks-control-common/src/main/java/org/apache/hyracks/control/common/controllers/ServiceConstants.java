@@ -23,5 +23,6 @@ public class ServiceConstants {
         START_NC,
         TERMINATE
     }
+
     public static final String NC_SERVICE_MAGIC_COOKIE = "hyncmagic2";
 }

@@ -133,8 +133,8 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        List<String> pkFieldName = ((InternalDatasetDetails) dds.getDataset().getDatasetDetails()).getPrimaryKey()
-                .get(0);
+        List<String> pkFieldName =
+                ((InternalDatasetDetails) dds.getDataset().getDatasetDetails()).getPrimaryKey().get(0);
         ILogicalExpression rec0 = new VariableReferenceExpression(inputRecord);
         ILogicalExpression rec1 = createPrimaryKeyRecordExpression(pkFieldName);
         ILogicalExpression mergedRec = createRecordMergeFunction(rec0, rec1);
@@ -160,15 +160,15 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
     private ILogicalExpression createNotNullFunction(ILogicalExpression mergedRec) {
         List<Mutable<ILogicalExpression>> args = new ArrayList<>();
         args.add(new MutableObject<ILogicalExpression>(mergedRec));
-        AbstractFunctionCallExpression notNullFn = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.CHECK_UNKNOWN), args);
+        AbstractFunctionCallExpression notNullFn =
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CHECK_UNKNOWN), args);
         return notNullFn;
     }
 
     private AbstractFunctionCallExpression createPrimaryKeyRecordExpression(List<String> pkFieldName) {
         //Create lowest level of nested uuid
-        AbstractFunctionCallExpression uuidFn = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_UUID));
+        AbstractFunctionCallExpression uuidFn =
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_UUID));
         List<Mutable<ILogicalExpression>> openRecordConsArgs = new ArrayList<>();
         Mutable<ILogicalExpression> pkFieldNameExpression = new MutableObject<ILogicalExpression>(
                 new ConstantExpression(new AsterixConstantValue(new AString(pkFieldName.get(pkFieldName.size() - 1)))));

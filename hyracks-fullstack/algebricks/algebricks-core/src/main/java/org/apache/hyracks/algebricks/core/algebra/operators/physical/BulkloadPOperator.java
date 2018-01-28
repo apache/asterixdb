@@ -76,8 +76,8 @@ public class BulkloadPOperator extends AbstractPhysicalOperator {
         List<LogicalVariable> scanVariables = new ArrayList<>();
         scanVariables.addAll(primaryKeys);
         scanVariables.add(new LogicalVariable(-1));
-        IPhysicalPropertiesVector physicalProps = dataSource.getPropertiesProvider()
-                .computePropertiesVector(scanVariables);
+        IPhysicalPropertiesVector physicalProps =
+                dataSource.getPropertiesProvider().computePropertiesVector(scanVariables);
         StructuralPropertiesVector spv = new StructuralPropertiesVector(physicalProps.getPartitioningProperty(),
                 physicalProps.getLocalProperties());
         return new PhysicalRequirements(new IPhysicalPropertiesVector[] { spv },
@@ -95,7 +95,7 @@ public class BulkloadPOperator extends AbstractPhysicalOperator {
     @Override
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         InsertDeleteUpsertOperator insertDeleteOp = (InsertDeleteUpsertOperator) op;
         assert insertDeleteOp.getOperation() == Kind.INSERT;
         assert insertDeleteOp.isBulkload();
@@ -104,9 +104,9 @@ public class BulkloadPOperator extends AbstractPhysicalOperator {
         JobSpecification spec = builder.getJobSpec();
         RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = mp.getInsertRuntime(dataSource,
-                propagatedSchema, typeEnv, primaryKeys, payload, additionalFilteringKeys, additionalNonFilterVars,
-                inputDesc, context, spec, true);
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints =
+                mp.getInsertRuntime(dataSource, propagatedSchema, typeEnv, primaryKeys, payload,
+                        additionalFilteringKeys, additionalNonFilterVars, inputDesc, context, spec, true);
         builder.contributeHyracksOperator(insertDeleteOp, runtimeAndConstraints.first);
         builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
         ILogicalOperator src = insertDeleteOp.getInputs().get(0).getValue();

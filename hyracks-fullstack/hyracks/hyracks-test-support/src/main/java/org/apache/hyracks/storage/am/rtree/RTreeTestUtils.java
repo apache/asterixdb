@@ -173,8 +173,8 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     }
 
     @Override
-    public void checkExpectedResults(IIndexCursor cursor, Collection checkTuples,
-            ISerializerDeserializer[] fieldSerdes, int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception {
+    public void checkExpectedResults(IIndexCursor cursor, Collection checkTuples, ISerializerDeserializer[] fieldSerdes,
+            int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception {
         int actualCount = 0;
         try {
             while (cursor.hasNext()) {

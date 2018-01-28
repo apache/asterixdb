@@ -92,8 +92,8 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
         protected final IScalarEvaluator edThreshEval;
 
         @SuppressWarnings("unchecked")
-        private final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+        private final ISerializerDeserializer<ABoolean> booleanSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
         public EditDistanceListIsFilterableEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
                 throws HyracksDataException {
@@ -122,16 +122,15 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
                     listLen = AOrderedListSerializerDeserializer.getNumberOfItems(bytes, offset);
                     break;
                 default:
-                    throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE,
-                            0, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG,
-                            ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
+                    throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE, 0,
+                            ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
 
             // Check type and extract edit-distance threshold.
             bytes = edThreshPtr.getByteArray();
             offset = edThreshPtr.getStartOffset();
-            long edThresh = ATypeHierarchy.getIntegerValue(
-                    BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(), 1, bytes, offset);
+            long edThresh = ATypeHierarchy.getIntegerValue(BuiltinFunctions.EDIT_DISTANCE_LIST_IS_FILTERABLE.getName(),
+                    1, bytes, offset);
 
             // Compute result.
             long lowerBound = listLen - edThresh;

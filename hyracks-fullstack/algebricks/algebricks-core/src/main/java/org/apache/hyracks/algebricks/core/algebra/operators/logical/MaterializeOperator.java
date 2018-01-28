@@ -43,7 +43,8 @@ public class MaterializeOperator extends AbstractLogicalOperator {
     }
 
     @Override
-    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform) throws AlgebricksException {
+    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform)
+            throws AlgebricksException {
         return false;
     }
 

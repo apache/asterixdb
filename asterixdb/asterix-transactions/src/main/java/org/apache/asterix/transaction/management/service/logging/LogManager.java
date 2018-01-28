@@ -408,8 +408,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
                      * The log file which contains the checkpointLSN has been reached.
                      * The oldest log file being accessed by a LogReader has been reached.
                      */
-                    if (id >= checkpointLSNLogFileID || (txnLogFileId2ReaderCount.containsKey(id)
-                            && txnLogFileId2ReaderCount.get(id) > 0)) {
+                    if (id >= checkpointLSNLogFileID
+                            || (txnLogFileId2ReaderCount.containsKey(id) && txnLogFileId2ReaderCount.get(id) > 0)) {
                         break;
                     }
 

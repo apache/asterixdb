@@ -66,7 +66,7 @@ public class ExtractGroupByDecorVariablesRule implements IAlgebraicRewriteRule {
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorVarExpr : decorList) {
             Mutable<ILogicalExpression> exprRef = decorVarExpr.second;
             ILogicalExpression expr = exprRef.getValue();
-            if (expr ==null || expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            if (expr == null || expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 continue;
             }
             // Rewrites the decoration entry if the decoration expression is not a variable reference expression.

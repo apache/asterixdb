@@ -49,8 +49,8 @@ import org.apache.hyracks.util.ThreadDumpUtil;
 public class LangExecutionUtil {
 
     private static final String PATH_ACTUAL = "target" + File.separator + "rttest" + File.separator;
-    private static final String PATH_BASE = StringUtils.join(new String[] { "src", "test", "resources", "runtimets" },
-            File.separator);
+    private static final String PATH_BASE =
+            StringUtils.join(new String[] { "src", "test", "resources", "runtimets" }, File.separator);
 
     private static final boolean cleanupOnStart = true;
     private static final boolean cleanupOnStop = true;
@@ -214,8 +214,8 @@ public class LangExecutionUtil {
         String processId = processName.split("@")[0];
 
         // Checks whether there are leaked run files from operators.
-        Process process = Runtime.getRuntime()
-                .exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf|wc -l" });
+        Process process =
+                Runtime.getRuntime().exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf|wc -l" });
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             int runFileCount = Integer.parseInt(reader.readLine().trim());
             if (runFileCount != 0) {
@@ -231,8 +231,8 @@ public class LangExecutionUtil {
     }
 
     private static void outputLeakedOpenFiles(String processId) throws IOException {
-        Process process = Runtime.getRuntime()
-                .exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf" });
+        Process process =
+                Runtime.getRuntime().exec(new String[] { "bash", "-c", "lsof -p " + processId + "|grep waf" });
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {

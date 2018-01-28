@@ -51,8 +51,8 @@ class JoinComparator implements ITuplePairComparator {
         int fEnd1 = accessor1.getFieldEndOffset(tIndex1, field1);
         int fLen1 = fEnd1 - fStart1;
 
-        int c = bComparator.compare(accessor0.getBuffer().array(), fStart0 + fStartOffset0, fLen0, accessor1
-                .getBuffer().array(), fStart1 + fStartOffset1, fLen1);
+        int c = bComparator.compare(accessor0.getBuffer().array(), fStart0 + fStartOffset0, fLen0,
+                accessor1.getBuffer().array(), fStart1 + fStartOffset1, fLen1);
         if (c != 0) {
             return c;
         }

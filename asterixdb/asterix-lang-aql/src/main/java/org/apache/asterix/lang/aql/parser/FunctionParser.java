@@ -42,8 +42,8 @@ public class FunctionParser {
 
     public FunctionDecl getFunctionDecl(Function function) throws CompilationException {
         if (!function.getLanguage().equals(Function.LANGUAGE_AQL)) {
-            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE,
-                    Function.LANGUAGE_AQL, function.getLanguage());
+            throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, Function.LANGUAGE_AQL,
+                    function.getLanguage());
         }
         String functionBody = function.getFunctionBody();
         List<String> params = function.getParams();

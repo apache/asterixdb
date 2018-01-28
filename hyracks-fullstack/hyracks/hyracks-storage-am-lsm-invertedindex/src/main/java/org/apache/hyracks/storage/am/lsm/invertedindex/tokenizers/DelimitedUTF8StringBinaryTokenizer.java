@@ -72,10 +72,11 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
                     int tokenStart = tokensStart.get(i);
                     curTokenCount++; // assume we found it
                     int offset = 0;
-                    for (int charPos= 0; charPos < tokenLength; charPos++) {
+                    for (int charPos = 0; charPos < tokenLength; charPos++) {
                         // case insensitive comparison
-                        if (Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, currentTokenStart + offset))
-                                != Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, tokenStart + offset))) {
+                        if (Character.toLowerCase(
+                                UTF8StringUtil.charAt(sentenceBytes, currentTokenStart + offset)) != Character
+                                        .toLowerCase(UTF8StringUtil.charAt(sentenceBytes, tokenStart + offset))) {
                             curTokenCount--;
                             break;
                         }
@@ -92,7 +93,6 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
         token.reset(sentenceBytes, currentTokenStart, byteIndex, tokenLength, curTokenCount);
         tokenCount++;
     }
-
 
     // TODO Why we bother to get the tokenCount in advance? It seems a caller's problem.
     @Override

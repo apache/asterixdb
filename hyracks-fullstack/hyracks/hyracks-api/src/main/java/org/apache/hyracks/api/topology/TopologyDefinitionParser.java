@@ -74,9 +74,10 @@ public class TopologyDefinitionParser {
         public void endElement(String uri, String localName, String qName) throws SAXException {
             if ("network-switch".equals(localName) || "terminal".equals(localName)) {
                 ElementStackEntry e = stack.pop();
-                NetworkEndpoint endpoint = e.type == EndpointType.NETWORK_SWITCH ? new NetworkSwitch(e.name,
-                        e.properties, e.ports.toArray(new NetworkSwitch.Port[e.ports.size()])) : new NetworkTerminal(
-                        e.name, e.properties);
+                NetworkEndpoint endpoint = e.type == EndpointType.NETWORK_SWITCH
+                        ? new NetworkSwitch(e.name, e.properties,
+                                e.ports.toArray(new NetworkSwitch.Port[e.ports.size()]))
+                        : new NetworkTerminal(e.name, e.properties);
                 stack.peek().ports.add(new NetworkSwitch.Port(endpoint));
             } else if ("property".equals(localName)) {
                 if (!inPropertyElement) {

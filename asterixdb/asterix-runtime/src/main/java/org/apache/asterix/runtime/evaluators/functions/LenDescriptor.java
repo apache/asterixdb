@@ -71,8 +71,8 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     // result
                     private final AMutableInt64 res = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private final ISerializerDeserializer<AInt64> int64Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -83,8 +83,8 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
                         if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                 && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0,
-                                    serList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
+                            throw new TypeMismatchException(getIdentifier(), 0, serList[offset],
+                                    ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
                                     ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                         }
 

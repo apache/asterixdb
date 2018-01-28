@@ -37,7 +37,8 @@ import org.apache.hyracks.api.job.JobSpecification;
 
 public class PlanCompiler {
     private JobGenContext context;
-    private Map<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> operatorVisitedToParents = new HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>>();
+    private Map<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> operatorVisitedToParents =
+            new HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>>();
 
     public PlanCompiler(JobGenContext context) {
         this.context = context;

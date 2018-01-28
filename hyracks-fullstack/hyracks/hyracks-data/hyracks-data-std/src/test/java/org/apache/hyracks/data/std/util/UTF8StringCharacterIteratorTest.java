@@ -49,7 +49,7 @@ public class UTF8StringCharacterIteratorTest {
     }
 
     @Test
-    public void testIterator(){
+    public void testIterator() {
         testEachIterator(UTF8StringSample.EMPTY_STRING);
         testEachIterator(UTF8StringSample.STRING_UTF8_MIX);
         testEachIterator(UTF8StringSample.STRING_LEN_128);

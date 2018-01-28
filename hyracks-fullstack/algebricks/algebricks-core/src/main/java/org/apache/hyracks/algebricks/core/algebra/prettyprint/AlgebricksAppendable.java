@@ -37,7 +37,8 @@ public class AlgebricksAppendable {
         return app;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return app.toString();
     }
 

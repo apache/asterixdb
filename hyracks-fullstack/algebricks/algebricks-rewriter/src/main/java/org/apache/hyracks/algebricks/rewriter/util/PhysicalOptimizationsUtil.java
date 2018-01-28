@@ -41,15 +41,16 @@ public class PhysicalOptimizationsUtil {
         visitOperatorAndItsDescendants(op, visitor, ctx);
     }
 
-    public static <R> void visitOperatorAndItsDescendants(ILogicalOperator op, ILogicalOperatorVisitor<R, IOptimizationContext> visitor,
-            IOptimizationContext ctx) throws AlgebricksException {
+    public static <R> void visitOperatorAndItsDescendants(ILogicalOperator op,
+            ILogicalOperatorVisitor<R, IOptimizationContext> visitor, IOptimizationContext ctx)
+            throws AlgebricksException {
         Set<ILogicalOperator> visitSet = new HashSet<ILogicalOperator>();
         computeFDsAndEqClassesWithVisitorRec(op, ctx, visitor, visitSet);
     }
 
     private static <R> void computeFDsAndEqClassesWithVisitorRec(ILogicalOperator op, IOptimizationContext ctx,
             ILogicalOperatorVisitor<R, IOptimizationContext> visitor, Set<ILogicalOperator> visitSet)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         visitSet.add(op);
         for (Mutable<ILogicalOperator> i : op.getInputs()) {
             computeFDsAndEqClassesWithVisitorRec((AbstractLogicalOperator) i.getValue(), ctx, visitor, visitSet);

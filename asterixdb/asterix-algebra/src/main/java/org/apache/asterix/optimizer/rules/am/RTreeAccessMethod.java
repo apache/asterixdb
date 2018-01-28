@@ -196,8 +196,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = numDimensions * 2;
         // we made sure indexSubTree has datasource scan
-        AbstractDataSourceOperator dataSourceOp = (AbstractDataSourceOperator) indexSubTree.getDataSourceRef()
-                .getValue();
+        AbstractDataSourceOperator dataSourceOp =
+                (AbstractDataSourceOperator) indexSubTree.getDataSourceRef().getValue();
         RTreeJobGenParams jobGenParams = new RTreeJobGenParams(chosenIndex.getIndexName(), IndexType.RTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         // A spatial object is serialized in the constant of the func expr we are optimizing.
@@ -214,8 +214,8 @@ public class RTreeAccessMethod implements IAccessMethod {
 
         for (int i = 0; i < numSecondaryKeys; i++) {
             // The create MBR function "extracts" one field of an MBR around the given spatial object.
-            AbstractFunctionCallExpression createMBR = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_MBR));
+            AbstractFunctionCallExpression createMBR =
+                    new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_MBR));
             // Spatial object is the constant from the func expr we are optimizing.
             createMBR.getArguments().add(new MutableObject<>(searchKeyExpr));
             // The number of dimensions.
@@ -236,8 +236,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         if (probeSubTree == null) {
             // We are optimizing a selection query.
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
-            assignSearchKeys.getInputs().add(new MutableObject<>(
-                    OperatorManipulationUtil.deepCopy(dataSourceOp.getInputs().get(0).getValue())));
+            assignSearchKeys.getInputs().add(
+                    new MutableObject<>(OperatorManipulationUtil.deepCopy(dataSourceOp.getInputs().get(0).getValue())));
             assignSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
         } else {
             // We are optimizing a join, place the assign op top of the probe subtree.

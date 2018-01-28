@@ -29,10 +29,10 @@ import org.apache.asterix.external.provider.ParserFactoryProvider;
 import org.junit.Assert;
 import org.junit.Test;
 
-
 public class ParserFactoryProviderLoadParserTest {
 
     IDataParserFactory factory;
+
     @Test
     public void test() throws AsterixException {
         boolean result = true;

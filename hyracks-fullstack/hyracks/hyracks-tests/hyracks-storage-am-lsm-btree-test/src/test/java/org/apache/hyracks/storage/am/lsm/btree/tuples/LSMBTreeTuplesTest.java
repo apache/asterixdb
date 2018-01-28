@@ -70,10 +70,11 @@ public class LSMBTreeTuplesTest {
                 // Create and write tuple to bytes using an LSMBTreeTupleWriter.
                 LSMBTreeTupleWriter maxMatterTupleWriter =
                         new LSMBTreeTupleWriter(maxTypeTraits, numKeyFields, false, false);
-                ITupleReference maxTuple = TupleUtils.createTuple(maxFieldSerdes, (Object[])maxFields);
+                ITupleReference maxTuple = TupleUtils.createTuple(maxFieldSerdes, (Object[]) maxFields);
                 ByteBuffer maxMatterBuf = writeTuple(maxTuple, maxMatterTupleWriter);
                 // Tuple reference should work for both matter and antimatter tuples (doesn't matter which factory creates it).
-                LSMBTreeTupleReference maxLsmBTreeTuple = (LSMBTreeTupleReference) maxMatterTupleWriter.createTupleReference();
+                LSMBTreeTupleReference maxLsmBTreeTuple =
+                        (LSMBTreeTupleReference) maxMatterTupleWriter.createTupleReference();
 
                 ISerializerDeserializer[] fieldSerdes = Arrays.copyOfRange(maxFieldSerdes, 0, numFields);
                 ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
@@ -84,7 +85,7 @@ public class LSMBTreeTuplesTest {
                     fields[j] = fieldGens[j].next();
                 }
                 // Create and write tuple to bytes using an LSMBTreeTupleWriter.
-                ITupleReference tuple = TupleUtils.createTuple(fieldSerdes, (Object[])fields);
+                ITupleReference tuple = TupleUtils.createTuple(fieldSerdes, (Object[]) fields);
                 LSMBTreeTupleWriter matterTupleWriter = new LSMBTreeTupleWriter(typeTraits, numKeyFields, false, false);
                 LSMBTreeTupleWriter antimatterTupleWriter =
                         new LSMBTreeTupleWriter(typeTraits, numKeyFields, true, false);
@@ -98,7 +99,8 @@ public class LSMBTreeTuplesTest {
                 }
 
                 // Tuple reference should work for both matter and antimatter tuples (doesn't matter which factory creates it).
-                LSMBTreeTupleReference lsmBTreeTuple = (LSMBTreeTupleReference) matterTupleWriter.createTupleReference();
+                LSMBTreeTupleReference lsmBTreeTuple =
+                        (LSMBTreeTupleReference) matterTupleWriter.createTupleReference();
 
                 // Use LSMBTree tuple reference to interpret the written tuples.
                 // Repeat the block inside to test that repeated resetting to matter/antimatter tuples works.
@@ -145,7 +147,8 @@ public class LSMBTreeTuplesTest {
         }
     }
 
-    private void checkTuple(LSMBTreeTupleReference tuple, int expectedFieldCount, boolean expectedAntimatter, ISerializerDeserializer[] fieldSerdes, Object[] expectedFields) throws HyracksDataException {
+    private void checkTuple(LSMBTreeTupleReference tuple, int expectedFieldCount, boolean expectedAntimatter,
+            ISerializerDeserializer[] fieldSerdes, Object[] expectedFields) throws HyracksDataException {
         assertEquals(expectedFieldCount, tuple.getFieldCount());
         assertEquals(expectedAntimatter, tuple.isAntimatter());
         Object[] deserMatterTuple = TupleUtils.deserializeTuple(tuple, fieldSerdes);
@@ -156,22 +159,20 @@ public class LSMBTreeTuplesTest {
 
     @Test
     public void testLSMBTreeTuple() throws HyracksDataException {
-        ISerializerDeserializer[] intFields = new IntegerSerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] intFields =
+                new IntegerSerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+                        IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         testLSMBTreeTuple(intFields);
 
-        ISerializerDeserializer[] stringFields = new ISerializerDeserializer[] {
+        ISerializerDeserializer[] stringFields = new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
                 new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-                new UTF8StringSerializerDeserializer() };
+                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() };
         testLSMBTreeTuple(stringFields);
 
-        ISerializerDeserializer[] mixedFields = new ISerializerDeserializer[] {
-                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE,
-                new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-                IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] mixedFields = new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer(), IntegerSerializerDeserializer.INSTANCE };
         testLSMBTreeTuple(mixedFields);
     }
 }

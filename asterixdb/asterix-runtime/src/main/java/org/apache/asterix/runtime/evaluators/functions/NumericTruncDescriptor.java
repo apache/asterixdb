@@ -118,9 +118,9 @@ public class NumericTruncDescriptor extends AbstractScalarFunctionDynamicDescrip
             } else if (bytes[offset] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
                 return (int) AInt64SerializerDeserializer.getLong(bytes, offset + 1);
             } else {
-                throw new TypeMismatchException(getIdentifier(), 1, bytes[offset],
-                        ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
-                        ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+                throw new TypeMismatchException(getIdentifier(), 1, bytes[offset], ATypeTag.SERIALIZED_INT8_TYPE_TAG,
+                        ATypeTag.SERIALIZED_INT16_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
+                        ATypeTag.SERIALIZED_INT64_TYPE_TAG);
             }
         }
 
@@ -178,10 +178,10 @@ public class NumericTruncDescriptor extends AbstractScalarFunctionDynamicDescrip
                     serde.serialize(aDouble, out);
                 }
             } else {
-                throw new TypeMismatchException(getIdentifier(), 0, data[offset],
-                        ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
-                        ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
-                        ATypeTag.SERIALIZED_FLOAT_TYPE_TAG, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
+                throw new TypeMismatchException(getIdentifier(), 0, data[offset], ATypeTag.SERIALIZED_INT8_TYPE_TAG,
+                        ATypeTag.SERIALIZED_INT16_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
+                        ATypeTag.SERIALIZED_INT64_TYPE_TAG, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
+                        ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
             }
             result.set(resultStorage);
         }

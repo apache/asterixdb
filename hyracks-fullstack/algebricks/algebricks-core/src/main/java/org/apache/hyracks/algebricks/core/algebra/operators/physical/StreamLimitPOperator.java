@@ -62,8 +62,8 @@ public class StreamLimitPOperator extends AbstractPhysicalOperator {
         ILogicalOperator op2 = op.getInputs().get(0).getValue();
         if (limitOp.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.UNPARTITIONED) {
             //partitioning property: unpartitioned;  local property: whatever from the child
-            deliveredProperties = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED, op2
-                    .getDeliveredPhysicalProperties().getLocalProperties());
+            deliveredProperties = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED,
+                    op2.getDeliveredPhysicalProperties().getLocalProperties());
         } else {
             deliveredProperties = op2.getDeliveredPhysicalProperties().clone();
         }
@@ -89,13 +89,13 @@ public class StreamLimitPOperator extends AbstractPhysicalOperator {
         LimitOperator limit = (LimitOperator) op;
         IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IScalarEvaluatorFactory maxObjectsFact = expressionRuntimeProvider.createEvaluatorFactory(limit.getMaxObjects()
-                .getValue(), env, inputSchemas, context);
+        IScalarEvaluatorFactory maxObjectsFact = expressionRuntimeProvider
+                .createEvaluatorFactory(limit.getMaxObjects().getValue(), env, inputSchemas, context);
         ILogicalExpression offsetExpr = limit.getOffset().getValue();
-        IScalarEvaluatorFactory offsetFact = (offsetExpr == null) ? null : expressionRuntimeProvider
-                .createEvaluatorFactory(offsetExpr, env, inputSchemas, context);
-        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema,
-                context);
+        IScalarEvaluatorFactory offsetFact = (offsetExpr == null) ? null
+                : expressionRuntimeProvider.createEvaluatorFactory(offsetExpr, env, inputSchemas, context);
+        RecordDescriptor recDesc =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         StreamLimitRuntimeFactory runtime = new StreamLimitRuntimeFactory(maxObjectsFact, offsetFact, null,
                 context.getBinaryIntegerInspectorFactory());
         builder.contributeMicroOperator(limit, runtime, recDesc);

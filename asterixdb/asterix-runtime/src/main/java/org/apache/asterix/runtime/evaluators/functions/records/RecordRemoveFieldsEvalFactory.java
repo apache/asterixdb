@@ -125,8 +125,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
             }
 
             private void processRecord(ARecordType requiredType, ARecordVisitablePointable srp,
-                    AListVisitablePointable inputList, int nestedLevel)
-                    throws IOException {
+                    AListVisitablePointable inputList, int nestedLevel) throws IOException {
                 if (rbStack.size() < (nestedLevel + 1)) {
                     rbStack.add(new RecordBuilder());
                 }
@@ -156,8 +155,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
 
             private void addKeptFieldToSubRecord(ARecordType requiredType, IVisitablePointable fieldNamePointable,
                     IVisitablePointable fieldValuePointable, IVisitablePointable fieldTypePointable,
-                    AListVisitablePointable inputList, int nestedLevel)
-                    throws IOException {
+                    AListVisitablePointable inputList, int nestedLevel) throws IOException {
 
                 runtimeRecordTypeInfo.reset(requiredType);
                 int pos = runtimeRecordTypeInfo.getFieldIndex(fieldNamePointable.getByteArray(),

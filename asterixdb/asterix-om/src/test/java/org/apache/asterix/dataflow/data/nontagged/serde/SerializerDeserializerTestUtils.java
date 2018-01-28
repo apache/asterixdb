@@ -64,19 +64,19 @@ public class SerializerDeserializerTestUtils {
         ARecord addr12 = new ARecord(addrRecordType,
                 new IAObject[] { new AString("210 University Drive"), new AString("Philadelphia"), new AString("PA"),
                         new AInt16((short) 10086), new AInterval(100, 300, (byte) 0) });
-        ARecord addr21 = new ARecord(addrRecordType,
-                new IAObject[] { new AString("1 College Street"), new AString("Seattle"), new AString("WA"),
-                        new AInt16((short) 20012), new AInterval(400, 500, (byte) 0) });
-        ARecord addr22 = new ARecord(addrRecordType,
-                new IAObject[] { new AString("20 Lindsay Avenue"), new AString("Columbus"), new AString("OH"),
-                        new AInt16((short) 30120), new AInterval(600, 900, (byte) 0) });
-        ARecord addr31 = new ARecord(addrRecordType,
-                new IAObject[] { new AString("200 14th Avenue"), new AString("Long Island"), new AString("NY"),
-                        new AInt16((short) 95011), new AInterval(12000, 14000, (byte) 0) });
+        ARecord addr21 =
+                new ARecord(addrRecordType, new IAObject[] { new AString("1 College Street"), new AString("Seattle"),
+                        new AString("WA"), new AInt16((short) 20012), new AInterval(400, 500, (byte) 0) });
+        ARecord addr22 =
+                new ARecord(addrRecordType, new IAObject[] { new AString("20 Lindsay Avenue"), new AString("Columbus"),
+                        new AString("OH"), new AInt16((short) 30120), new AInterval(600, 900, (byte) 0) });
+        ARecord addr31 =
+                new ARecord(addrRecordType, new IAObject[] { new AString("200 14th Avenue"), new AString("Long Island"),
+                        new AString("NY"), new AInt16((short) 95011), new AInterval(12000, 14000, (byte) 0) });
         // With nested open field addr31.
-        ARecord addr32 = new ARecord(addrRecordType,
-                new IAObject[] { new AString("51 8th Street"), new AString("Orlando"), new AString("FL"),
-                        new AInt16((short) 49045), new AInterval(190000, 200000, (byte) 0) });
+        ARecord addr32 =
+                new ARecord(addrRecordType, new IAObject[] { new AString("51 8th Street"), new AString("Orlando"),
+                        new AString("FL"), new AInt16((short) 49045), new AInterval(190000, 200000, (byte) 0) });
 
         ARecord record1 = new ARecord(employeeType, new IAObject[] { new AInt64(0L), new AString("Tom"),
                 new AOrderedList(addrListType, Arrays.asList(new IAObject[] { addr11, addr12 })) });

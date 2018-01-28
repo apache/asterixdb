@@ -56,7 +56,9 @@ public interface IOption {
     /**
      * @return a true value indicates this option should not be advertised (e.g. command-line usage, documentation)
      */
-    default boolean hidden() { return false; }
+    default boolean hidden() {
+        return false;
+    }
 
     default String cmdline() {
         return "-" + name().toLowerCase().replace("_", "-");

@@ -59,7 +59,8 @@ public class JobBuilder implements IHyracksJobBuilder {
     private final Map<ILogicalOperator, AlgebricksPartitionConstraint> pcForMicroOps = new HashMap<>();
 
     private final Map<ILogicalOperator, Integer> algebraicOpBelongingToMetaAsterixOp = new HashMap<>();
-    private final Map<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>> metaAsterixOpSkeletons = new HashMap<>();
+    private final Map<Integer, List<Pair<IPushRuntimeFactory, RecordDescriptor>>> metaAsterixOpSkeletons =
+            new HashMap<>();
     private final Map<Integer, AlgebricksMetaOperatorDescriptor> metaAsterixOps = new HashMap<>();
     private final Map<IOperatorDescriptor, AlgebricksPartitionConstraint> partitionConstraintMap = new HashMap<>();
 
@@ -205,8 +206,8 @@ public class JobBuilder implements IHyracksJobBuilder {
         if (opInputs != null) {
             for (IConnectorDescriptor conn : opInputs) {
                 ConnectorDescriptorId cid = conn.getConnectorId();
-                org.apache.commons.lang3.tuple.Pair<org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>, org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>> p = jobSpec
-                        .getConnectorOperatorMap().get(cid);
+                org.apache.commons.lang3.tuple.Pair<org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>, org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>> p =
+                        jobSpec.getConnectorOperatorMap().get(cid);
                 IOperatorDescriptor src = p.getLeft().getLeft();
                 TargetConstraint constraint = tgtConstraints.get(conn);
                 if (constraint != null) {
@@ -236,8 +237,8 @@ public class JobBuilder implements IHyracksJobBuilder {
         if (opInputs != null) {
             for (IConnectorDescriptor conn : opInputs) {
                 ConnectorDescriptorId cid = conn.getConnectorId();
-                org.apache.commons.lang3.tuple.Pair<org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>, org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>> p = jobSpec
-                        .getConnectorOperatorMap().get(cid);
+                org.apache.commons.lang3.tuple.Pair<org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>, org.apache.commons.lang3.tuple.Pair<IOperatorDescriptor, Integer>> p =
+                        jobSpec.getConnectorOperatorMap().get(cid);
                 IOperatorDescriptor src = p.getLeft().getLeft();
                 // Pre-order DFS
                 setPartitionConstraintsBottomup(src.getOperatorId(), tgtConstraints, opDesc, finalPass);

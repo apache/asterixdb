@@ -40,7 +40,8 @@ class ListDeepEqualityChecker {
     private BinaryEntry valEntry = new BinaryEntry();
 
     private final DeepEqualityVisitorHelper deepEqualityVisitorHelper = new DeepEqualityVisitorHelper();
-    private final Pair<IVisitablePointable, Boolean> itemVisitorArg = new Pair<IVisitablePointable, Boolean>(null, false);
+    private final Pair<IVisitablePointable, Boolean> itemVisitorArg =
+            new Pair<IVisitablePointable, Boolean>(null, false);
 
     public ListDeepEqualityChecker() {
         hashMap = deepEqualityVisitorHelper.initializeHashMap(valEntry);
@@ -50,22 +51,22 @@ class ListDeepEqualityChecker {
             DeepEqualityVisitor visitor) throws HyracksDataException {
         this.visitor = visitor;
 
-        AListVisitablePointable listLeft = (AListVisitablePointable)listPointableLeft;
+        AListVisitablePointable listLeft = (AListVisitablePointable) listPointableLeft;
         List<IVisitablePointable> itemsLeft = listLeft.getItems();
         List<IVisitablePointable> itemTagTypesLeft = listLeft.getItemTags();
 
-
-        AListVisitablePointable listRight = (AListVisitablePointable)listPointableRight;
+        AListVisitablePointable listRight = (AListVisitablePointable) listPointableRight;
         List<IVisitablePointable> itemsRight = listRight.getItems();
         List<IVisitablePointable> itemTagTypesRight = listRight.getItemTags();
 
-        if (itemsLeft.size() != itemsRight.size()) return false;
+        if (itemsLeft.size() != itemsRight.size())
+            return false;
 
         boolean isOrderedRight = listLeft.ordered();
         if (isOrderedRight != listRight.ordered())
             return false;
 
-        if( isOrderedRight) {
+        if (isOrderedRight) {
             return processOrderedList(itemsLeft, itemTagTypesLeft, itemsRight, itemTagTypesRight);
         } else {
             return processUnorderedList(itemsLeft, itemTagTypesLeft, itemsRight, itemTagTypesRight);
@@ -75,9 +76,10 @@ class ListDeepEqualityChecker {
     private boolean processOrderedList(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemTagTypesLeft,
             List<IVisitablePointable> itemsRight, List<IVisitablePointable> itemTagTypesRight)
             throws HyracksDataException {
-        for(int i=0; i<itemsLeft.size(); i++) {
+        for (int i = 0; i < itemsLeft.size(); i++) {
             ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(itemTagTypesLeft.get(i));
-            if(fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(itemTagTypesRight.get(i))) {
+            if (fieldTypeLeft.isDerivedType()
+                    && fieldTypeLeft != PointableHelper.getTypeTag(itemTagTypesRight.get(i))) {
                 return false;
             }
             itemVisitorArg.first = itemsRight.get(i);
@@ -89,13 +91,13 @@ class ListDeepEqualityChecker {
         return true;
     }
 
-    private boolean processUnorderedList(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemTagTypesLeft,
-            List<IVisitablePointable> itemsRight, List<IVisitablePointable> itemTagTypesRight)
-            throws HyracksDataException {
+    private boolean processUnorderedList(List<IVisitablePointable> itemsLeft,
+            List<IVisitablePointable> itemTagTypesLeft, List<IVisitablePointable> itemsRight,
+            List<IVisitablePointable> itemTagTypesRight) throws HyracksDataException {
 
         hashMap.clear();
         // Build phase: Add items into hash map, starting with first list.
-        for(int i=0; i<itemsLeft.size(); i++) {
+        for (int i = 0; i < itemsLeft.size(); i++) {
             IVisitablePointable item = itemsLeft.get(i);
             byte[] buf = item.getByteArray();
             int off = item.getStartOffset();
@@ -108,12 +110,11 @@ class ListDeepEqualityChecker {
         return probeHashMap(itemsLeft, itemTagTypesLeft, itemsRight, itemTagTypesRight);
     }
 
-
     private boolean probeHashMap(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemTagTypesLeft,
             List<IVisitablePointable> itemsRight, List<IVisitablePointable> itemTagTypesRight)
             throws HyracksDataException {
         // Probe phase: Probe items from second list
-        for(int indexRight=0; indexRight<itemsRight.size(); indexRight++) {
+        for (int indexRight = 0; indexRight < itemsRight.size(); indexRight++) {
             IVisitablePointable itemRight = itemsRight.get(indexRight);
             byte[] buf = itemRight.getByteArray();
             int off = itemRight.getStartOffset();
@@ -128,7 +129,8 @@ class ListDeepEqualityChecker {
 
             int indexLeft = IntegerPointable.getInteger(entry.getBuf(), entry.getOffset());
             ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(itemTagTypesLeft.get(indexLeft));
-            if(fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(itemTagTypesRight.get(indexRight))) {
+            if (fieldTypeLeft.isDerivedType()
+                    && fieldTypeLeft != PointableHelper.getTypeTag(itemTagTypesRight.get(indexRight))) {
                 return false;
             }
 
@@ -140,4 +142,3 @@ class ListDeepEqualityChecker {
         return true;
     }
 }
-

@@ -345,10 +345,8 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
             try {
                 frame.setPage(page);
                 int inPageOffset = frame.getOffset(key);
-                return inPageOffset >= 0
-                        ? ((long) pageId * bufferCache.getPageSizeWithHeader()) + frame.getOffset(key)
-                                + IBufferCache.RESERVED_HEADER_BYTES
-                        : -1L;
+                return inPageOffset >= 0 ? ((long) pageId * bufferCache.getPageSizeWithHeader()) + frame.getOffset(key)
+                        + IBufferCache.RESERVED_HEADER_BYTES : -1L;
             } finally {
                 page.releaseReadLatch();
                 unpinPage(page);

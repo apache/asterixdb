@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.common;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {
     protected final int numKeys;
     protected final Comparable[] fields;
@@ -101,7 +101,7 @@ public class CheckTuple<T extends Comparable<T>> implements Comparable<T> {
         StringBuilder strBuilder = new StringBuilder();
         for (int i = 0; i < fields.length; i++) {
             strBuilder.append(fields[i].toString());
-            if (i != fields.length-1) {
+            if (i != fields.length - 1) {
                 strBuilder.append(" ");
             }
         }

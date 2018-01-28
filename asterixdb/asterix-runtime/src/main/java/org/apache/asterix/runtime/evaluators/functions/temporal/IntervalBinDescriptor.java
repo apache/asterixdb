@@ -198,12 +198,12 @@ public class IntervalBinDescriptor extends AbstractScalarFunctionDynamicDescript
                                 binEndChronon = DurationArithmeticOperations.addDuration(chrononToStart,
                                         yearMonth * ((int) binIndex + 1), dayTime * (binIndex + 1), false);
 
-                                binStartChronon = binStartChronon / GregorianCalendarSystem.CHRONON_OF_DAY
-                                        + ((binStartChronon < 0
+                                binStartChronon =
+                                        binStartChronon / GregorianCalendarSystem.CHRONON_OF_DAY + ((binStartChronon < 0
                                                 && binStartChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1
                                                         : 0);
-                                binEndChronon = binEndChronon / GregorianCalendarSystem.CHRONON_OF_DAY
-                                        + ((binEndChronon < 0
+                                binEndChronon =
+                                        binEndChronon / GregorianCalendarSystem.CHRONON_OF_DAY + ((binEndChronon < 0
                                                 && binEndChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1
                                                         : 0);
                                 break;

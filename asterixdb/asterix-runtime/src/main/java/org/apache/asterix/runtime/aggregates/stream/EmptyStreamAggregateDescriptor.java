@@ -62,8 +62,8 @@ public class EmptyStreamAggregateDescriptor extends AbstractAggregateFunctionDyn
 
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     @SuppressWarnings("rawtypes")
-                    private ISerializerDeserializer serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+                    private ISerializerDeserializer serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     boolean res = true;
 

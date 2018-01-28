@@ -161,7 +161,7 @@ public class ActivityClusterGraph implements Serializable {
         return ac.getProducerActivity(cid);
     }
 
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode acgj = om.createObjectNode();
         ArrayNode acl = om.createArrayNode();

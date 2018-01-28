@@ -42,7 +42,7 @@ public class TestSuiteParser {
 
         JAXBContext ctx = JAXBContext.newInstance(org.apache.asterix.testframework.xml.TestSuite.class);
         Unmarshaller um = ctx.createUnmarshaller();
-        return (org.apache.asterix.testframework.xml.TestSuite) um.unmarshal(new SAXSource(saxParser.getXMLReader(),
-                new InputSource(testSuiteCatalog.toURI().toString())));
+        return (org.apache.asterix.testframework.xml.TestSuite) um.unmarshal(
+                new SAXSource(saxParser.getXMLReader(), new InputSource(testSuiteCatalog.toURI().toString())));
     }
 }

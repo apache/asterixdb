@@ -145,7 +145,8 @@ public class PrimaryIndexBulkLoadExample {
                                                  // to field 0 of B-Tree tuple,
                                                  // etc.
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.btreeName);
-        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(storageManager, btreeSplitProvider);
+        IIndexDataflowHelperFactory dataflowHelperFactory =
+                new IndexDataflowHelperFactory(storageManager, btreeSplitProvider);
         TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec, recDesc,
                 fieldPermutation, 0.7f, false, 1000L, true, dataflowHelperFactory);
 

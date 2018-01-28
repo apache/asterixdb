@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class MinHeapTest extends AbstracHeapTest{
+public class MinHeapTest extends AbstracHeapTest {
 
     @Test
     public void testInitialMinHeap() {
@@ -101,6 +101,5 @@ public class MinHeapTest extends AbstracHeapTest{
             assertEquals(i++ + capacity, minI.i);
         }
     }
-
 
 }

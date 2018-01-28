@@ -245,8 +245,7 @@ public abstract class AbstractMultiNCIntegrationTest {
                 @Override
                 public JobSubmissionStatus allocate(JobSpecification job) throws HyracksException {
                     return maxRAM > job.getRequiredClusterCapacity().getAggregatedMemoryByteSize()
-                            ? JobSubmissionStatus.EXECUTE
-                            : JobSubmissionStatus.QUEUE;
+                            ? JobSubmissionStatus.EXECUTE : JobSubmissionStatus.QUEUE;
                 }
 
                 @Override

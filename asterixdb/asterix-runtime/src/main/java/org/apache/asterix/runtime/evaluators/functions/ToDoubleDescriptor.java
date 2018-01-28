@@ -60,7 +60,7 @@ public class ToDoubleDescriptor extends AbstractScalarFunctionDynamicDescriptor 
                 return new AbstractDoubleConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ANull> nullSerde =
-                        SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     protected void evaluateImpl(IPointable result) throws IOException {

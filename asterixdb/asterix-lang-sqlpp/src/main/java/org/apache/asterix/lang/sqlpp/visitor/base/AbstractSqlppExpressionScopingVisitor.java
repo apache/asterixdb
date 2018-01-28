@@ -274,7 +274,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     public Expression visit(LimitClause limitClause, ILangExpression arg) throws CompilationException {
         scopeChecker.pushForbiddenScope(scopeChecker.getCurrentScope());
         limitClause.setLimitExpr(visit(limitClause.getLimitExpr(), limitClause));
-        if(limitClause.hasOffset()) {
+        if (limitClause.hasOffset()) {
             limitClause.setOffset(visit(limitClause.getOffset(), limitClause));
         }
         scopeChecker.popForbiddenScope();
@@ -375,8 +375,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     // Adds a new encountered alias identifier into a scope
     private void addNewVarSymbolToScope(Scope scope, VarIdentifier var) throws CompilationException {
         if (scope.findLocalSymbol(var.getValue()) != null) {
-            throw new CompilationException("Duplicate alias definitions: "
-                    + SqlppVariableUtil.toUserDefinedName(var.getValue()));
+            throw new CompilationException(
+                    "Duplicate alias definitions: " + SqlppVariableUtil.toUserDefinedName(var.getValue()));
         }
         scope.addNewVarSymbolToScope(var);
     }
@@ -387,8 +387,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         for (String symbolToBeMerged : symbolsToBeMerged) {
             if (hostScope.findLocalSymbol(symbolToBeMerged) != null) {
                 throw new CompilationException(
-                        "Duplicate alias definitions: "
-                        + SqlppVariableUtil.toUserDefinedName(symbolToBeMerged));
+                        "Duplicate alias definitions: " + SqlppVariableUtil.toUserDefinedName(symbolToBeMerged));
             }
         }
         hostScope.merge(scopeToBeMerged);

@@ -148,8 +148,8 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
         if (k < 0) {
             return null;
         }
-        return new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX), fce.getArguments().get(0),
+        return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
+                fce.getArguments().get(0),
                 new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(k)))));
     }
 }

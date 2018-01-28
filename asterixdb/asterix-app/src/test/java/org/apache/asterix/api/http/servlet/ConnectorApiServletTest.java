@@ -152,7 +152,8 @@ public class ConnectorApiServletTest {
         nodeMap.put("asterix_nc2", mockInfo2);
         PA.invokeMethod(let,
                 "formResponseObject(" + ObjectNode.class.getName() + ", " + FileSplit.class.getName() + "[], "
-                        + ARecordType.class.getName() + ", " + String.class.getName() + ", " + Map.class.getName() + ")",
+                        + ARecordType.class.getName() + ", " + String.class.getName() + ", " + Map.class.getName()
+                        + ")",
                 actualResponse, splits, recordType, primaryKey, nodeMap);
         // Constructs expected response.
         ObjectNode expectedResponse = om.createObjectNode();

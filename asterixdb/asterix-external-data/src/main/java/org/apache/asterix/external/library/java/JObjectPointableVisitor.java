@@ -41,8 +41,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObject, TypeInfo> {
 
     private final Map<ATypeTag, IJObjectAccessor> flatJObjectAccessors = new HashMap<ATypeTag, IJObjectAccessor>();
-    private final Map<IVisitablePointable, IJRecordAccessor> raccessorToJObject = new HashMap<IVisitablePointable, IJRecordAccessor>();
-    private final Map<IVisitablePointable, IJListAccessor> laccessorToPrinter = new HashMap<IVisitablePointable, IJListAccessor>();
+    private final Map<IVisitablePointable, IJRecordAccessor> raccessorToJObject =
+            new HashMap<IVisitablePointable, IJRecordAccessor>();
+    private final Map<IVisitablePointable, IJListAccessor> laccessorToPrinter =
+            new HashMap<IVisitablePointable, IJListAccessor>();
 
     @Override
     public IJObject visit(AListVisitablePointable accessor, TypeInfo arg) throws HyracksDataException {

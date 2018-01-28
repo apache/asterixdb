@@ -20,5 +20,6 @@
 package org.apache.hyracks.storage.am.rtree.frames;
 
 public enum RTreePolicyType {
-    RTREE, RSTARTREE
+    RTREE,
+    RSTARTREE
 }

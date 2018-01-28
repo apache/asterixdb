@@ -123,7 +123,7 @@ class ThreadCountingOperatorDescriptor extends AbstractOperatorDescriptor {
         @Override
         public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
             return new IOperatorNodePushable() {
                 private CountDownLatch allOpenedSignal = new CountDownLatch(3);
                 private Set<Long> threads = new HashSet<>();

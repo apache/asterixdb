@@ -49,8 +49,8 @@ public class RegisterPartitionAvailibilityWork extends AbstractWork {
             return;
         }
         PartitionMatchMaker pmm = run.getPartitionMatchMaker();
-        List<Pair<PartitionDescriptor, PartitionRequest>> matches = pmm
-                .registerPartitionDescriptor(partitionDescriptor);
+        List<Pair<PartitionDescriptor, PartitionRequest>> matches =
+                pmm.registerPartitionDescriptor(partitionDescriptor);
         for (Pair<PartitionDescriptor, PartitionRequest> match : matches) {
             try {
                 PartitionUtils.reportPartitionMatch(ccs, pid, match);

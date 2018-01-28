@@ -35,8 +35,8 @@ public class AObjectBinaryHashFunctionFactory implements IBinaryHashFunctionFact
     @Override
     public IBinaryHashFunction createBinaryHashFunction() {
         return new IBinaryHashFunction() {
-            private IBinaryHashFunction genericBinaryHash = MurmurHash3BinaryHashFunctionFamily.INSTANCE
-                    .createBinaryHashFunction(0);
+            private IBinaryHashFunction genericBinaryHash =
+                    MurmurHash3BinaryHashFunctionFamily.INSTANCE.createBinaryHashFunction(0);
 
             @Override
             public int hash(byte[] bytes, int offset, int length) throws HyracksDataException {

@@ -40,6 +40,7 @@ public class LSMInvertedIndexMultiThreadTestDriver extends IndexMultiThreadTestD
     }
 
     public DataGenThread createDatagenThread(int numThreads, int numBatches, int batchSize) {
-        return new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, fieldGens, RANDOM_SEED, 2 * numThreads);
+        return new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, fieldGens, RANDOM_SEED,
+                2 * numThreads);
     }
 }

@@ -18,24 +18,24 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
-public class QueueInfo implements IQueueInfo{
+public class QueueInfo implements IQueueInfo {
 
     private final boolean poison;
     private final boolean waiters;
 
-    public QueueInfo(boolean waiters, boolean poison){
+    public QueueInfo(boolean waiters, boolean poison) {
         this.waiters = waiters;
         this.poison = poison;
     }
 
     @Override
-    public boolean hasWaiters(){
+    public boolean hasWaiters() {
         return waiters;
 
     }
 
     @Override
-    public boolean isPoison(){
+    public boolean isPoison() {
         return poison;
     }
 }

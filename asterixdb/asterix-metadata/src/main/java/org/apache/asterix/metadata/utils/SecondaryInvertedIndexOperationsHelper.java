@@ -212,8 +212,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         IOperatorDescriptor keyProviderOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
 
         // Create primary index scan op.
-        IOperatorDescriptor primaryScanOp =
-                DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset);
+        IOperatorDescriptor primaryScanOp = DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset);
 
         IOperatorDescriptor sourceOp = primaryScanOp;
         boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();

@@ -460,6 +460,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     public byte[] getJobParameter(byte[] name, int start, int length) throws HyracksException {
         return ncs.createOrGetJobParameterByteStore(joblet.getJobId()).getParameterValue(name, start, length);
     }
+
     public Set<JobFlag> getJobFlags() {
         return jobFlags;
     }

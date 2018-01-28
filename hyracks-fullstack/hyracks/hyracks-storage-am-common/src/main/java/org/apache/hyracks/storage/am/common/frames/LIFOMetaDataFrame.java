@@ -76,8 +76,8 @@ public class LIFOMetaDataFrame implements ITreeIndexMetadataFrame {
 
     @Override
     public int getSpace() {
-        return buf.array().length - buf.getInt(Constants.FREE_SPACE_OFFSET) - (Integer.BYTES * buf.getInt(
-                FREE_PAGE_COUNT_OFFSET));
+        return buf.array().length - buf.getInt(Constants.FREE_SPACE_OFFSET)
+                - (Integer.BYTES * buf.getInt(FREE_PAGE_COUNT_OFFSET));
     }
 
     @Override
@@ -209,8 +209,8 @@ public class LIFOMetaDataFrame implements ITreeIndexMetadataFrame {
     private boolean isInner(IValueReference key, int tupleOffset) {
         int keySize = buf.getInt(tupleOffset);
         if (keySize == key.getLength()) {
-            return LIFOMetaDataFrame.compare(key.getByteArray(), key.getStartOffset(), buf.array(), tupleOffset
-                    + Integer.BYTES, keySize) == 0;
+            return LIFOMetaDataFrame.compare(key.getByteArray(), key.getStartOffset(), buf.array(),
+                    tupleOffset + Integer.BYTES, keySize) == 0;
         }
         return false;
     }
@@ -253,8 +253,8 @@ public class LIFOMetaDataFrame implements ITreeIndexMetadataFrame {
             int available = getSpace();
             int required = key.getLength() + Integer.BYTES + Integer.BYTES + value.getLength();
             if (available < required) {
-                throw new HyracksDataException("Available space in the page ("
-                        + available + ") is not enough to store the key value pair(" + required + ")");
+                throw new HyracksDataException("Available space in the page (" + available
+                        + ") is not enough to store the key value pair(" + required + ")");
             }
             buf.putInt(offset, key.getLength());
             offset += Integer.BYTES;
@@ -294,14 +294,14 @@ public class LIFOMetaDataFrame implements ITreeIndexMetadataFrame {
 
     @Override
     public String toString() {
-        StringBuilder aString = new StringBuilder(this.getClass().getSimpleName()).append('\n').
-                append("Tuple Count: " + getTupleCount()).append('\n').
-                append("Free Space offset: " + buf.getInt(Constants.FREE_SPACE_OFFSET)).append('\n').
-                append("Level: " + buf.get(Constants.LEVEL_OFFSET)).append('\n').
-                append("Version: " + buf.getInt(STORAGE_VERSION_OFFSET)).append('\n').
-                append("Max Page: " + buf.getInt(MAX_PAGE_OFFSET)).append('\n').
-                append("Root Page: " + buf.getInt(ROOT_PAGE_OFFSET)).append('\n').
-                append("Number of free pages: " + buf.getInt(FREE_PAGE_COUNT_OFFSET));
+        StringBuilder aString = new StringBuilder(this.getClass().getSimpleName()).append('\n')
+                .append("Tuple Count: " + getTupleCount()).append('\n')
+                .append("Free Space offset: " + buf.getInt(Constants.FREE_SPACE_OFFSET)).append('\n')
+                .append("Level: " + buf.get(Constants.LEVEL_OFFSET)).append('\n')
+                .append("Version: " + buf.getInt(STORAGE_VERSION_OFFSET)).append('\n')
+                .append("Max Page: " + buf.getInt(MAX_PAGE_OFFSET)).append('\n')
+                .append("Root Page: " + buf.getInt(ROOT_PAGE_OFFSET)).append('\n')
+                .append("Number of free pages: " + buf.getInt(FREE_PAGE_COUNT_OFFSET));
         int tupleCount = getTupleCount();
         int offset;
         for (int i = 0; i < tupleCount; i++) {

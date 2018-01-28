@@ -43,16 +43,14 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(LONG_BYTE_UNIT, Runtime.getRuntime().maxMemory() / 4),
         STORAGE_MEMORYCOMPONENT_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         STORAGE_MEMORYCOMPONENT_NUMPAGES(INTEGER, (Function<IApplicationConfig, Integer>) accessor ->
-                // By default, uses 1/16 of the STORAGE_MEMORYCOMPONENT_GLOBALBUDGET for the write buffer
-                // budget for a dataset, including data and indexes.
-                (int) (accessor.getLong(STORAGE_MEMORYCOMPONENT_GLOBALBUDGET) /
-                        (16 * accessor.getInt(STORAGE_MEMORYCOMPONENT_PAGESIZE)))),
+        // By default, uses 1/16 of the STORAGE_MEMORYCOMPONENT_GLOBALBUDGET for the write buffer
+        // budget for a dataset, including data and indexes.
+        (int) (accessor.getLong(STORAGE_MEMORYCOMPONENT_GLOBALBUDGET) / (16 * accessor.getInt(STORAGE_MEMORYCOMPONENT_PAGESIZE)))),
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(INTEGER, 2),
         STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES(INTEGER, (Function<IApplicationConfig, Integer>) accessor ->
-                // By default, uses the min of 1/64 of the STORAGE_MEMORYCOMPONENT_GLOBALBUDGET and 256 pages
-                // for the write buffer budget for a metadata dataset, including data and indexes.
-                Math.min((int) (accessor.getLong(STORAGE_MEMORYCOMPONENT_GLOBALBUDGET)
-                        / (64 * accessor.getInt(STORAGE_MEMORYCOMPONENT_PAGESIZE))), 256)),
+        // By default, uses the min of 1/64 of the STORAGE_MEMORYCOMPONENT_GLOBALBUDGET and 256 pages
+        // for the write buffer budget for a metadata dataset, including data and indexes.
+        Math.min((int) (accessor.getLong(STORAGE_MEMORYCOMPONENT_GLOBALBUDGET) / (64 * accessor.getInt(STORAGE_MEMORYCOMPONENT_PAGESIZE))), 256)),
         STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d);
 
         private final IOptionType interpreter;
@@ -79,20 +77,20 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_BUFFERCACHE_PAGESIZE:
                     return "The page size in bytes for pages in the buffer cache";
                 case STORAGE_BUFFERCACHE_SIZE:
-                    return "The size of memory allocated to the disk buffer cache.  The value should be a multiple" +
-                            " of the buffer cache page size.";
+                    return "The size of memory allocated to the disk buffer cache.  The value should be a multiple"
+                            + " of the buffer cache page size.";
                 case STORAGE_BUFFERCACHE_MAXOPENFILES:
                     return "The maximum number of open files in the buffer cache";
                 case STORAGE_MEMORYCOMPONENT_GLOBALBUDGET:
-                    return "The size of memory allocated to the memory components.  The value should be a multiple " +
-                            "of the memory component page size";
+                    return "The size of memory allocated to the memory components.  The value should be a multiple "
+                            + "of the memory component page size";
                 case STORAGE_MEMORYCOMPONENT_PAGESIZE:
                     return "The page size in bytes for pages allocated to memory components";
                 case STORAGE_MEMORYCOMPONENT_NUMPAGES:
-                    return "The number of pages to allocate for a memory component.  This budget is shared by all " +
-                            "the memory components of the primary index and all its secondary indexes across all I/O " +
-                            "devices on a node.  Note: in-memory components usually has fill factor of 75% since " +
-                            "the pages are 75% full and the remaining 25% is un-utilized";
+                    return "The number of pages to allocate for a memory component.  This budget is shared by all "
+                            + "the memory components of the primary index and all its secondary indexes across all I/O "
+                            + "devices on a node.  Note: in-memory components usually has fill factor of 75% since "
+                            + "the pages are 75% full and the remaining 25% is un-utilized";
                 case STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS:
                     return "The number of memory components to be used per lsm index";
                 case STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES:
@@ -114,16 +112,15 @@ public class StorageProperties extends AbstractProperties {
             return defaultValue;
         }
 
-
         @Override
         public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
             switch (this) {
                 case STORAGE_MEMORYCOMPONENT_NUMPAGES:
-                    return "1/16th of the " + optionPrinter.apply(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET) +
-                            " value";
+                    return "1/16th of the " + optionPrinter.apply(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET)
+                            + " value";
                 case STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES:
-                    return "1/64th of the " + optionPrinter.apply(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET) +
-                            " value or 256, whichever is larger";
+                    return "1/64th of the " + optionPrinter.apply(Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET)
+                            + " value or 256, whichever is larger";
                 default:
                     return null;
             }

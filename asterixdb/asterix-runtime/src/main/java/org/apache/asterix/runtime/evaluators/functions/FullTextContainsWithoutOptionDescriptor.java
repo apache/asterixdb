@@ -64,5 +64,4 @@ public class FullTextContainsWithoutOptionDescriptor extends AbstractScalarFunct
         return BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION;
     }
 
-
 }

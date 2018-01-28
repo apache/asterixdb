@@ -144,8 +144,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         if (!dataverse.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
             MetadataProvider metadataProvider = new MetadataProvider(appCtx, dataverse);
             try {
-                List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx,
-                        dataverse.getDataverseName());
+                List<Dataset> datasets =
+                        MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverse.getDataverseName());
                 for (Dataset dataset : datasets) {
                     if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
                         // External dataset
@@ -157,8 +157,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                         TransactionState datasetState = dsd.getState();
                         if (!indexes.isEmpty()) {
                             if (datasetState == TransactionState.BEGIN) {
-                                List<ExternalFile> files = MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx,
-                                        dataset);
+                                List<ExternalFile> files =
+                                        MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx, dataset);
                                 // if persumed abort, roll backward
                                 // 1. delete all pending files
                                 for (ExternalFile file : files) {
@@ -169,8 +169,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                             }
                             // 2. clean artifacts in NCs
                             metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                            JobSpecification jobSpec = ExternalIndexingOperations.buildAbortOp(dataset, indexes,
-                                    metadataProvider);
+                            JobSpecification jobSpec =
+                                    ExternalIndexingOperations.buildAbortOp(dataset, indexes, metadataProvider);
                             executeHyracksJob(jobSpec);
                             // 3. correct the dataset state
                             ((ExternalDatasetDetails) dataset.getDatasetDetails()).setState(TransactionState.COMMIT);
@@ -178,13 +178,13 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                         } else if (datasetState == TransactionState.READY_TO_COMMIT) {
-                            List<ExternalFile> files = MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx,
-                                    dataset);
+                            List<ExternalFile> files =
+                                    MetadataManager.INSTANCE.getDatasetExternalFiles(mdTxnCtx, dataset);
                             // if ready to commit, roll forward
                             // 1. commit indexes in NCs
                             metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                            JobSpecification jobSpec = ExternalIndexingOperations.buildRecoverOp(dataset, indexes,
-                                    metadataProvider);
+                            JobSpecification jobSpec =
+                                    ExternalIndexingOperations.buildRecoverOp(dataset, indexes, metadataProvider);
                             executeHyracksJob(jobSpec);
                             // 2. add pending files in metadata
                             for (ExternalFile file : files) {

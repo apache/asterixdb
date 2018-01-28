@@ -35,12 +35,11 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 
 public class LocalFileSystemUtils {
 
-    public static void traverse(final List<File> files, File root, final String expression,
-            final LinkedList<Path> dirs) throws IOException {
+    public static void traverse(final List<File> files, File root, final String expression, final LinkedList<Path> dirs)
+            throws IOException {
         final Path path = root.toPath();
         if (!Files.exists(path)) {
-            throw new RuntimeDataException(ErrorCode.UTIL_LOCAL_FILE_SYSTEM_UTILS_PATH_NOT_FOUND,
-                    path.toString());
+            throw new RuntimeDataException(ErrorCode.UTIL_LOCAL_FILE_SYSTEM_UTILS_PATH_NOT_FOUND, path.toString());
         }
         if (!Files.isDirectory(path)) {
             validateAndAdd(path, expression, files);

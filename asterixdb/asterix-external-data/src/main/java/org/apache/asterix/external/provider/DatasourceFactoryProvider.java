@@ -68,8 +68,8 @@ public class DatasourceFactoryProvider {
         IInputStreamFactory streamSourceFactory;
         if (ExternalDataUtils.isExternal(streamSource)) {
             String dataverse = ExternalDataUtils.getDataverse(configuration);
-            streamSourceFactory = ExternalDataUtils.createExternalInputStreamFactory(libraryManager, dataverse,
-                    streamSource);
+            streamSourceFactory =
+                    ExternalDataUtils.createExternalInputStreamFactory(libraryManager, dataverse, streamSource);
         } else {
             switch (streamSource) {
                 case ExternalDataConstants.STREAM_LOCAL_FILESYSTEM:
@@ -87,8 +87,7 @@ public class DatasourceFactoryProvider {
                         streamSourceFactory = (IInputStreamFactory) Class.forName(streamSource).newInstance();
                     } catch (Exception e) {
                         throw new RuntimeDataException(
-                                ErrorCode.PROVIDER_DATASOURCE_FACTORY_UNKNOWN_INPUT_STREAM_FACTORY, e,
-                                streamSource);
+                                ErrorCode.PROVIDER_DATASOURCE_FACTORY_UNKNOWN_INPUT_STREAM_FACTORY, e, streamSource);
                     }
             }
         }

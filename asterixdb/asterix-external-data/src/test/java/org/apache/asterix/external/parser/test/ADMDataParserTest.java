@@ -38,22 +38,22 @@ public class ADMDataParserTest {
     @Test
     public void test() throws IOException {
         String[] dates = { "-9537-08-04", "9656-06-03", "-9537-04-04", "9656-06-04", "-9537-10-04", "9626-09-05" };
-        AMutableDate[] parsedDates = new AMutableDate[] { new AMutableDate(-4202630), new AMutableDate(2807408),
-                new AMutableDate(-4202752), new AMutableDate(2807409), new AMutableDate(-4202569),
-                new AMutableDate(2796544), };
+        AMutableDate[] parsedDates =
+                new AMutableDate[] { new AMutableDate(-4202630), new AMutableDate(2807408), new AMutableDate(-4202752),
+                        new AMutableDate(2807409), new AMutableDate(-4202569), new AMutableDate(2796544), };
 
         String[] times = { "12:04:45.689Z", "12:41:59.002Z", "12:10:45.169Z", "15:37:48.736Z", "04:16:42.321Z",
                 "12:22:56.816Z" };
-        AMutableTime[] parsedTimes = new AMutableTime[] { new AMutableTime(43485689), new AMutableTime(45719002),
-                new AMutableTime(43845169), new AMutableTime(56268736), new AMutableTime(15402321),
-                new AMutableTime(44576816), };
+        AMutableTime[] parsedTimes =
+                new AMutableTime[] { new AMutableTime(43485689), new AMutableTime(45719002), new AMutableTime(43845169),
+                        new AMutableTime(56268736), new AMutableTime(15402321), new AMutableTime(44576816), };
 
         String[] dateTimes = { "-2640-10-11T17:32:15.675Z", "4104-02-01T05:59:11.902Z", "0534-12-08T08:20:31.487Z",
                 "6778-02-16T22:40:21.653Z", "2129-12-12T13:18:35.758Z", "8647-07-01T13:10:19.691Z" };
-        AMutableDateTime[] parsedDateTimes = new AMutableDateTime[] { new AMutableDateTime(-145452954464325L),
-                new AMutableDateTime(67345192751902L), new AMutableDateTime(-45286270768513L),
-                new AMutableDateTime(151729886421653L), new AMutableDateTime(5047449515758L),
-                new AMutableDateTime(210721439419691L) };
+        AMutableDateTime[] parsedDateTimes =
+                new AMutableDateTime[] { new AMutableDateTime(-145452954464325L), new AMutableDateTime(67345192751902L),
+                        new AMutableDateTime(-45286270768513L), new AMutableDateTime(151729886421653L),
+                        new AMutableDateTime(5047449515758L), new AMutableDateTime(210721439419691L) };
 
         Thread[] threads = new Thread[16];
         AtomicInteger errorCount = new AtomicInteger(0);

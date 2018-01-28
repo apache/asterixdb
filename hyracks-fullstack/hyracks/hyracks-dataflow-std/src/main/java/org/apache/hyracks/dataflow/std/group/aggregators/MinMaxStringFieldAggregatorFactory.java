@@ -113,9 +113,9 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
                 int fieldLength = accessor.getFieldLength(tIndex, aggField);
-                String strField = utf8SerializerDeserializer.deserialize(new DataInputStream(
-                        new ByteArrayInputStream(accessor.getBuffer().array(), tupleOffset
-                                + accessor.getFieldSlotsLength() + fieldStart, fieldLength)));
+                String strField = utf8SerializerDeserializer
+                        .deserialize(new DataInputStream(new ByteArrayInputStream(accessor.getBuffer().array(),
+                                tupleOffset + accessor.getFieldSlotsLength() + fieldStart, fieldLength)));
                 if (hasBinaryState) {
                     // Object-binary-state
                     Object[] storedState;
@@ -158,9 +158,9 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                 int tupleOffset = accessor.getTupleStartOffset(tIndex);
                 int fieldStart = accessor.getFieldStartOffset(tIndex, aggField);
                 int fieldLength = accessor.getFieldLength(tIndex, aggField);
-                String strField = utf8SerializerDeserializer.deserialize(new DataInputStream(
-                        new ByteArrayInputStream(accessor.getBuffer().array(), tupleOffset
-                                + accessor.getFieldSlotsLength() + fieldStart, fieldLength)));
+                String strField = utf8SerializerDeserializer
+                        .deserialize(new DataInputStream(new ByteArrayInputStream(accessor.getBuffer().array(),
+                                tupleOffset + accessor.getFieldSlotsLength() + fieldStart, fieldLength)));
                 if (hasBinaryState) {
                     int stateIdx = IntegerPointable.getInteger(data, offset);
 

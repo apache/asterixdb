@@ -183,8 +183,8 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
         if (simCheckFuncExpr != null) {
             // Create a new assign under matchingAssign which assigns the result of our similarity-check function to a variable.
             LogicalVariable newVar = context.newVar();
-            AssignOperator newAssign = new AssignOperator(newVar,
-                    new MutableObject<ILogicalExpression>(simCheckFuncExpr));
+            AssignOperator newAssign =
+                    new AssignOperator(newVar, new MutableObject<ILogicalExpression>(simCheckFuncExpr));
             // Hook up inputs.
             newAssign.getInputs()
                     .add(new MutableObject<ILogicalOperator>(matchingAssign.getInputs().get(0).getValue()));

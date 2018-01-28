@@ -92,13 +92,13 @@ public class FuzzyFiltersJaccard {
      * @return
      */
     public boolean passPositionFilter(int noGramsCommon, int positionX, int positionY, int lengthX, int lengthY) {
-        return getIntersectUpperBound(noGramsCommon, positionX, positionY, lengthX, lengthY) >= getIntersectLowerBound(
-                lengthX, lengthY);
+        return getIntersectUpperBound(noGramsCommon, positionX, positionY, lengthX,
+                lengthY) >= getIntersectLowerBound(lengthX, lengthY);
     }
 
     public boolean passPositionFilter(int noGramsCommon, long positionX, long positionY, long lengthX, long lengthY) {
-        return getIntersectUpperBound(noGramsCommon, positionX, positionY, lengthX, lengthY) >= getIntersectLowerBound(
-                lengthX, lengthY);
+        return getIntersectUpperBound(noGramsCommon, positionX, positionY, lengthX,
+                lengthY) >= getIntersectLowerBound(lengthX, lengthY);
     }
 
 }

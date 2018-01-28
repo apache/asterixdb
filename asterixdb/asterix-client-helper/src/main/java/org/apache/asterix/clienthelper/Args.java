@@ -28,21 +28,17 @@ import org.kohsuke.args4j.Option;
 @SuppressWarnings("FieldCanBeLocal")
 public class Args {
 
-    @Option(name = "-clusteraddress", metaVar = "<address>",
-            usage = "Hostname or IP Address of the cluster")
+    @Option(name = "-clusteraddress", metaVar = "<address>", usage = "Hostname or IP Address of the cluster")
     protected String clusterAddress = InetAddress.getLoopbackAddress().getHostAddress();
 
     @Option(name = "-clusterport", metaVar = "<port>", usage = "Port of the cluster to connect to")
     protected int clusterPort = 19002;
 
-    @Option(name = "-clusterstatepath", metaVar = "<path>", hidden = true,
-            usage = "Path on host:port to check for cluster readiness")
+    @Option(name = "-clusterstatepath", metaVar = "<path>", hidden = true, usage = "Path on host:port to check for cluster readiness")
     protected String clusterStatePath = "admin/cluster";
 
-    @Option(name = "-shutdownpath", metaVar = "<path>", hidden = true,
-            usage = "Path on host:port to invoke to initiate shutdown")
+    @Option(name = "-shutdownpath", metaVar = "<path>", hidden = true, usage = "Path on host:port to invoke to initiate shutdown")
     protected String shutdownPath = "admin/shutdown";
-
 
     @Option(name = "-timeout", metaVar = "<secs>", usage = "Timeout for wait commands in seconds")
     protected int timeoutSecs = 0;

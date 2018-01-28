@@ -166,7 +166,7 @@ public class StorageUtil {
             return bytes + " B";
         }
         final int baseValue = (63 - Long.numberOfLeadingZeros(bytes)) / 10;
-        final char bytePrefix = " kMGTPE" .charAt(baseValue);
+        final char bytePrefix = " kMGTPE".charAt(baseValue);
         final long divisor = 1L << (baseValue * 10);
         if (bytes % divisor == 0) {
             return String.format("%d %sB", bytes / divisor, bytePrefix);

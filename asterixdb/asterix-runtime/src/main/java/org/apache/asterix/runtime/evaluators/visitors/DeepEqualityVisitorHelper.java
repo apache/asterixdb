@@ -32,8 +32,10 @@ public class DeepEqualityVisitorHelper {
     public static final int TABLE_SIZE = 100;
     public static final int TABLE_FRAME_SIZE = 32768;
 
-    private final ListItemBinaryHashFunctionFactory listItemBinaryHashFunctionFactory = ListItemBinaryHashFunctionFactory.INSTANCE;
-    private final ListItemBinaryComparatorFactory listItemBinaryComparatorFactory = ListItemBinaryComparatorFactory.INSTANCE;
+    private final ListItemBinaryHashFunctionFactory listItemBinaryHashFunctionFactory =
+            ListItemBinaryHashFunctionFactory.INSTANCE;
+    private final ListItemBinaryComparatorFactory listItemBinaryComparatorFactory =
+            ListItemBinaryComparatorFactory.INSTANCE;
 
     private final IBinaryHashFunction putHashFunc = listItemBinaryHashFunctionFactory.createBinaryHashFunction();
     private final IBinaryHashFunction getHashFunc = listItemBinaryHashFunctionFactory.createBinaryHashFunction();

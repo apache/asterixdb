@@ -98,8 +98,8 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
 
-    private JobRun(DeploymentId deploymentId, JobId jobId, Set<JobFlag> jobFlags,
-            JobSpecification spec, ActivityClusterGraph acg) {
+    private JobRun(DeploymentId deploymentId, JobId jobId, Set<JobFlag> jobFlags, JobSpecification spec,
+            ActivityClusterGraph acg) {
         this.deploymentId = deploymentId;
         this.jobId = jobId;
         this.jobFlags = jobFlags;
@@ -118,10 +118,9 @@ public class JobRun implements IJobStatusConditionVariable {
     //Run a deployed job spec
     public JobRun(ClusterControllerService ccs, DeploymentId deploymentId, JobId jobId, Set<JobFlag> jobFlags,
             DeployedJobSpecDescriptor deployedJobSpecDescriptor, Map<byte[], byte[]> jobParameters,
-            DeployedJobSpecId deployedJobSpecId)
-            throws HyracksException {
-        this(deploymentId, jobId, jobFlags,
-                deployedJobSpecDescriptor.getJobSpecification(), deployedJobSpecDescriptor.getActivityClusterGraph());
+            DeployedJobSpecId deployedJobSpecId) throws HyracksException {
+        this(deploymentId, jobId, jobFlags, deployedJobSpecDescriptor.getJobSpecification(),
+                deployedJobSpecDescriptor.getActivityClusterGraph());
         ccs.createOrGetJobParameterByteStore(jobId).setParameters(jobParameters);
         Set<Constraint> constaints = deployedJobSpecDescriptor.getActivityClusterGraphConstraints();
         this.scheduler = new JobExecutor(ccs, this, constaints, deployedJobSpecId);
@@ -252,7 +251,7 @@ public class JobRun implements IJobStatusConditionVariable {
         return connectorPolicyMap;
     }
 
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode result = om.createObjectNode();
 

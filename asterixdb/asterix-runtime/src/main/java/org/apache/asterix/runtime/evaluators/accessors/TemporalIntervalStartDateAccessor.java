@@ -73,8 +73,8 @@ public class TemporalIntervalStartDateAccessor extends AbstractScalarFunctionDyn
 
                     // possible output
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATE);
+                    private final ISerializerDeserializer<ADate> dateSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
                     private final AMutableDate aDate = new AMutableDate(0);
 
                     @Override
@@ -86,10 +86,10 @@ public class TemporalIntervalStartDateAccessor extends AbstractScalarFunctionDyn
                         resultStorage.reset();
                         try {
                             if (bytes[startOffset] == SERIALIZED_INTERVAL_TYPE_TAG) {
-                                byte timeType = AIntervalSerializerDeserializer.getIntervalTimeType(bytes,
-                                        startOffset + 1);
-                                long startTime = AIntervalSerializerDeserializer.getIntervalStart(bytes,
-                                        startOffset + 1);
+                                byte timeType =
+                                        AIntervalSerializerDeserializer.getIntervalTimeType(bytes, startOffset + 1);
+                                long startTime =
+                                        AIntervalSerializerDeserializer.getIntervalStart(bytes, startOffset + 1);
                                 if (timeType == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
                                     aDate.setValue((int) (startTime));
                                     dateSerde.serialize(aDate, out);

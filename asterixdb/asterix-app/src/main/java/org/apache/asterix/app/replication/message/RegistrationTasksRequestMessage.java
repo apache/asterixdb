@@ -48,8 +48,8 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
     public static void send(CcId ccId, NodeControllerService cs, NodeStatus nodeStatus, SystemState systemState)
             throws HyracksDataException {
         try {
-            RegistrationTasksRequestMessage msg = new RegistrationTasksRequestMessage(cs.getId(), nodeStatus,
-                    systemState);
+            RegistrationTasksRequestMessage msg =
+                    new RegistrationTasksRequestMessage(cs.getId(), nodeStatus, systemState);
             ((INCMessageBroker) cs.getContext().getMessageBroker()).sendMessageToCC(ccId, msg);
         } catch (Exception e) {
             LOGGER.log(Level.ERROR, "Unable to send RegistrationTasksRequestMessage to CC", e);

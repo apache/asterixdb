@@ -43,7 +43,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class FactorRedundantGroupAndDecorVarsRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -77,8 +78,8 @@ public class FactorRedundantGroupAndDecorVarsRule implements IAlgebraicRewriteRu
             LogicalVariable lhs = varRhsToLhs.get(v);
             if (lhs != null) {
                 if (p.first != null) {
-                    AssignOperator assign = new AssignOperator(p.first, new MutableObject<ILogicalExpression>(
-                            new VariableReferenceExpression(lhs)));
+                    AssignOperator assign = new AssignOperator(p.first,
+                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(lhs)));
                     ILogicalOperator op = opRef.getValue();
                     assign.getInputs().add(new MutableObject<ILogicalOperator>(op));
                     opRef.setValue(assign);

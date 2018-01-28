@@ -94,8 +94,8 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
             }
             boolean castFlag = !IntroduceDynamicTypeCastRule.compatible(requiredRecordType, inputRecordType);
             if (castFlag || checkUnknown) {
-                AbstractFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE));
+                AbstractFunctionCallExpression castFunc =
+                        new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE));
                 castFunc.getArguments().add(funcCallExpr.getArguments().get(iter1));
                 TypeCastUtils.setRequiredAndInputTypes(castFunc, requiredRecordType, inputRecordType);
                 funcCallExpr.getArguments().set(iter1, new MutableObject<>(castFunc));

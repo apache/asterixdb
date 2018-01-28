@@ -282,9 +282,8 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
                             new FieldAccessor(new FieldAccessor(fromBindingVar, fieldVars.values().iterator().next()),
                                     SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar())));
                 } else {
-                    throw new CompilationException(
-                            "Cannot resolve alias reference for undefined identifier " + usedVar.getVar().getValue()
-                                    + " in " + fieldVars);
+                    throw new CompilationException("Cannot resolve alias reference for undefined identifier "
+                            + usedVar.getVar().getValue() + " in " + fieldVars);
                 }
             }
 

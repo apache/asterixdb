@@ -67,10 +67,10 @@ public class APIFrameworkTest {
         APIFramework apiFramework = new APIFramework(mock(ILangCompilationProvider.class));
 
         // Tests large storage locations.
-        AlgebricksAbsolutePartitionConstraint storageLocations = new AlgebricksAbsolutePartitionConstraint(
-                new String[] { "node1", "node1", "node2" });
-        AlgebricksAbsolutePartitionConstraint computationLocations = (AlgebricksAbsolutePartitionConstraint) PA
-                .invokeMethod(apiFramework,
+        AlgebricksAbsolutePartitionConstraint storageLocations =
+                new AlgebricksAbsolutePartitionConstraint(new String[] { "node1", "node1", "node2" });
+        AlgebricksAbsolutePartitionConstraint computationLocations =
+                (AlgebricksAbsolutePartitionConstraint) PA.invokeMethod(apiFramework,
                         "chooseLocations(" + IClusterInfoCollector.class.getName() + ",int,"
                                 + AlgebricksAbsolutePartitionConstraint.class.getName() + ")",
                         clusterInfoCollector, CompilerProperties.COMPILER_PARALLELISM_AS_STORAGE, storageLocations);
@@ -114,8 +114,8 @@ public class APIFrameworkTest {
         APIFramework apiFramework = new APIFramework(mock(ILangCompilationProvider.class));
 
         // Tests odd number parallelism.
-        AlgebricksAbsolutePartitionConstraint loc = (AlgebricksAbsolutePartitionConstraint) PA.invokeMethod(
-                apiFramework, "getComputationLocations(java.util.Map,int)", map, 5);
+        AlgebricksAbsolutePartitionConstraint loc = (AlgebricksAbsolutePartitionConstraint) PA
+                .invokeMethod(apiFramework, "getComputationLocations(java.util.Map,int)", map, 5);
         int nc1Count = 0, nc2Count = 0;
         String[] partitions = loc.getLocations();
         for (String partition : partitions) {
@@ -194,8 +194,8 @@ public class APIFrameworkTest {
         jobSpec.getUserConstraints().add(new Constraint(lValueMock, nc1Location));
 
         final String[] clusterLocation = new String[] { nc1, nc2 };
-        final AlgebricksAbsolutePartitionConstraint jobLocations = APIFramework
-                .getJobLocations(jobSpec, nodeJobTracker, new AlgebricksAbsolutePartitionConstraint(clusterLocation));
+        final AlgebricksAbsolutePartitionConstraint jobLocations = APIFramework.getJobLocations(jobSpec, nodeJobTracker,
+                new AlgebricksAbsolutePartitionConstraint(clusterLocation));
         // ensure nc2 wasn't included
         Assert.assertEquals(1, jobLocations.getLocations().length);
         Assert.assertEquals(nc1, jobLocations.getLocations()[0]);

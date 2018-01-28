@@ -130,8 +130,7 @@ public class LexerGenerator {
         StringBuilder result = new StringBuilder();
         Set<String> functions = main.neededAuxFunctions();
         for (String token : functions) {
-            result.append("private int parse_" + token
-                    + "(char currentChar) throws IOException {\n");
+            result.append("private int parse_" + token + "(char currentChar) throws IOException {\n");
             result.append(tokens.get(token).getNode().toJavaAuxFunction());
             result.append("\n}\n\n");
         }

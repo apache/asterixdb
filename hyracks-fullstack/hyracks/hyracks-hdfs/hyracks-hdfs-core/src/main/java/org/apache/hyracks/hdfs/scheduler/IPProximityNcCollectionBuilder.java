@@ -46,8 +46,7 @@ public class IPProximityNcCollectionBuilder implements INcCollectionBuilder {
                 byte[] rawip;
                 try {
                     rawip = ncNameToNcInfos.get(NCs[i]).getNetworkAddress().lookupIpAddress();
-                }
-                catch (UnknownHostException e) {
+                } catch (UnknownHostException e) {
                     // QQQ Should probably have a neater solution than this
                     throw new RuntimeException(e);
                 }
@@ -122,8 +121,8 @@ public class IPProximityNcCollectionBuilder implements INcCollectionBuilder {
                         /**
                          * Update the entry of the selected NC
                          */
-                        List<String> dataLocations = ipToNcMapping.get(InetAddress.getByAddress(
-                                currentCandidateIp.getBytes()).getHostAddress());
+                        List<String> dataLocations = ipToNcMapping
+                                .get(InetAddress.getByAddress(currentCandidateIp.getBytes()).getHostAddress());
                         for (String nc : dataLocations) {
                             int ncIndex = ncNameToIndex.get(nc);
                             if (workloads[ncIndex] < slotLimit) {

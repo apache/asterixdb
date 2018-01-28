@@ -41,8 +41,9 @@ public class SpatialIndexProfiler {
             }
             falsePositivePerQuery.begin();
             try {
-                cacheMissPerQuery = new ExperimentProfiler(PROFILE_HOME_DIR + "cacheMissPerQuery-"
-                        + Inet4Address.getLocalHost().getHostAddress() + ".txt", 1);
+                cacheMissPerQuery = new ExperimentProfiler(
+                        PROFILE_HOME_DIR + "cacheMissPerQuery-" + Inet4Address.getLocalHost().getHostAddress() + ".txt",
+                        1);
             } catch (UnknownHostException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

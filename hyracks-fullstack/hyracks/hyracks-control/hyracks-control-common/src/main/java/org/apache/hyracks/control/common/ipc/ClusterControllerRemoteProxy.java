@@ -80,16 +80,14 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     @Override
     public void notifyTaskComplete(JobId jobId, TaskAttemptId taskId, String nodeId, TaskProfile statistics)
             throws Exception {
-        NotifyTaskCompleteFunction fn = new NotifyTaskCompleteFunction(jobId, taskId,
-                nodeId, statistics);
+        NotifyTaskCompleteFunction fn = new NotifyTaskCompleteFunction(jobId, taskId, nodeId, statistics);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void notifyTaskFailure(JobId jobId, TaskAttemptId taskId, String nodeId, List<Exception> exceptions)
             throws Exception {
-        NotifyTaskFailureFunction fn = new NotifyTaskFailureFunction(jobId, taskId, nodeId,
-                exceptions);
+        NotifyTaskFailureFunction fn = new NotifyTaskFailureFunction(jobId, taskId, nodeId, exceptions);
         ipcHandle.send(-1, fn, null);
     }
 
@@ -101,8 +99,7 @@ public class ClusterControllerRemoteProxy implements IClusterController {
 
     @Override
     public void notifyDeployBinary(DeploymentId deploymentId, String nodeId, DeploymentStatus status) throws Exception {
-        NotifyDeployBinaryFunction fn = new NotifyDeployBinaryFunction(deploymentId, nodeId,
-                status);
+        NotifyDeployBinaryFunction fn = new NotifyDeployBinaryFunction(deploymentId, nodeId, status);
         ipcHandle.send(-1, fn, null);
     }
 
@@ -120,37 +117,34 @@ public class ClusterControllerRemoteProxy implements IClusterController {
 
     @Override
     public void registerPartitionProvider(PartitionDescriptor partitionDescriptor) throws Exception {
-        RegisterPartitionProviderFunction fn = new RegisterPartitionProviderFunction(
-                partitionDescriptor);
+        RegisterPartitionProviderFunction fn = new RegisterPartitionProviderFunction(partitionDescriptor);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void registerPartitionRequest(PartitionRequest partitionRequest) throws Exception {
-        RegisterPartitionRequestFunction fn = new RegisterPartitionRequestFunction(
-                partitionRequest);
+        RegisterPartitionRequestFunction fn = new RegisterPartitionRequestFunction(partitionRequest);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void sendApplicationMessageToCC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception {
-        SendApplicationMessageFunction fn = new SendApplicationMessageFunction(data,
-                deploymentId, nodeId);
+        SendApplicationMessageFunction fn = new SendApplicationMessageFunction(data, deploymentId, nodeId);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, boolean orderedResult,
             boolean emptyResult, int partition, int nPartitions, NetworkAddress networkAddress) throws Exception {
-        RegisterResultPartitionLocationFunction fn = new RegisterResultPartitionLocationFunction(
-                jobId, rsId, orderedResult, emptyResult, partition, nPartitions, networkAddress);
+        RegisterResultPartitionLocationFunction fn = new RegisterResultPartitionLocationFunction(jobId, rsId,
+                orderedResult, emptyResult, partition, nPartitions, networkAddress);
         ipcHandle.send(-1, fn, null);
     }
 
     @Override
     public void reportResultPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws Exception {
-        ReportResultPartitionWriteCompletionFunction fn = new ReportResultPartitionWriteCompletionFunction(
-                jobId, rsId, partition);
+        ReportResultPartitionWriteCompletionFunction fn =
+                new ReportResultPartitionWriteCompletionFunction(jobId, rsId, partition);
         ipcHandle.send(-1, fn, null);
     }
 
@@ -167,8 +161,7 @@ public class ClusterControllerRemoteProxy implements IClusterController {
 
     @Override
     public void notifyStateDump(String nodeId, String stateDumpId, String state) throws Exception {
-        StateDumpResponseFunction fn = new StateDumpResponseFunction(nodeId, stateDumpId,
-                state);
+        StateDumpResponseFunction fn = new StateDumpResponseFunction(nodeId, stateDumpId, state);
         ipcHandle.send(-1, fn, null);
     }
 
@@ -180,8 +173,7 @@ public class ClusterControllerRemoteProxy implements IClusterController {
 
     @Override
     public void notifyThreadDump(String nodeId, String requestId, String threadDumpJSON) throws Exception {
-        ThreadDumpResponseFunction tdrf = new ThreadDumpResponseFunction(nodeId, requestId,
-                threadDumpJSON);
+        ThreadDumpResponseFunction tdrf = new ThreadDumpResponseFunction(nodeId, requestId, threadDumpJSON);
         ipcHandle.send(-1, tdrf, null);
     }
 

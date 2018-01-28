@@ -75,41 +75,30 @@ public class TreeIndexStats {
         strBuilder.append("TREE LEVELS:  " + treeLevels + "\n");
         strBuilder.append("FREE PAGES :  " + freePages + "\n");
         strBuilder.append("META PAGES :  " + metaPages + "\n");
-        long totalPages = interiorStats.getNumPages() + leafStats.getNumPages()
-                + freePages + metaPages;
+        long totalPages = interiorStats.getNumPages() + leafStats.getNumPages() + freePages + metaPages;
         strBuilder.append("TOTAL PAGES : " + totalPages + "\n");
 
         strBuilder.append("\n");
         strBuilder.append("ROOT STATS" + "\n");
-        strBuilder
-                .append("NUM TUPLES:      " + rootStats.getNumTuples() + "\n");
-        strBuilder.append("FILL FACTOR    : "
-                + df.format(rootStats.getAvgFillFactor()) + "\n");
+        strBuilder.append("NUM TUPLES:      " + rootStats.getNumTuples() + "\n");
+        strBuilder.append("FILL FACTOR    : " + df.format(rootStats.getAvgFillFactor()) + "\n");
 
         if (interiorStats.getNumPages() > 0) {
             strBuilder.append("\n");
             strBuilder.append("INTERIOR STATS" + "\n");
-            strBuilder.append("NUM PAGES:       " + interiorStats.getNumPages()
-                    + "\n");
-            strBuilder.append("NUM TUPLES:      "
-                    + interiorStats.getNumTuples() + "\n");
-            strBuilder.append("AVG TUPLES/PAGE: "
-                    + df.format(interiorStats.getAvgNumTuples()) + "\n");
-            strBuilder.append("AVG FILL FACTOR: "
-                    + df.format(interiorStats.getAvgFillFactor()) + "\n");
+            strBuilder.append("NUM PAGES:       " + interiorStats.getNumPages() + "\n");
+            strBuilder.append("NUM TUPLES:      " + interiorStats.getNumTuples() + "\n");
+            strBuilder.append("AVG TUPLES/PAGE: " + df.format(interiorStats.getAvgNumTuples()) + "\n");
+            strBuilder.append("AVG FILL FACTOR: " + df.format(interiorStats.getAvgFillFactor()) + "\n");
         }
 
         if (leafStats.getNumPages() > 0) {
             strBuilder.append("\n");
             strBuilder.append("LEAF STATS" + "\n");
-            strBuilder.append("NUM PAGES:       "
-                    + df.format(leafStats.getNumPages()) + "\n");
-            strBuilder.append("NUM TUPLES:      "
-                    + df.format(leafStats.getNumTuples()) + "\n");
-            strBuilder.append("AVG TUPLES/PAGE: "
-                    + df.format(leafStats.getAvgNumTuples()) + "\n");
-            strBuilder.append("AVG FILL FACTOR: "
-                    + df.format(leafStats.getAvgFillFactor()) + "\n");
+            strBuilder.append("NUM PAGES:       " + df.format(leafStats.getNumPages()) + "\n");
+            strBuilder.append("NUM TUPLES:      " + df.format(leafStats.getNumTuples()) + "\n");
+            strBuilder.append("AVG TUPLES/PAGE: " + df.format(leafStats.getAvgNumTuples()) + "\n");
+            strBuilder.append("AVG FILL FACTOR: " + df.format(leafStats.getAvgFillFactor()) + "\n");
         }
 
         return strBuilder.toString();
@@ -130,8 +119,7 @@ public class TreeIndexStats {
         public void add(ITreeIndexFrame frame) {
             numPages++;
             numTuples += frame.getTupleCount();
-            sumFillFactors += (double) (frame.getBuffer().capacity() - frame
-                    .getTotalFreeSpace())
+            sumFillFactors += (double) (frame.getBuffer().capacity() - frame.getTotalFreeSpace())
                     / (double) frame.getBuffer().capacity();
         }
 

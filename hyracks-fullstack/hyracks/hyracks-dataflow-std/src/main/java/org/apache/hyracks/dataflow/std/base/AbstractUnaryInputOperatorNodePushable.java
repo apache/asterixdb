@@ -22,8 +22,8 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class AbstractUnaryInputOperatorNodePushable extends AbstractOperatorNodePushable implements
-        IFrameWriter {
+public abstract class AbstractUnaryInputOperatorNodePushable extends AbstractOperatorNodePushable
+        implements IFrameWriter {
     protected IFrameWriter writer;
     protected RecordDescriptor recordDesc;
 

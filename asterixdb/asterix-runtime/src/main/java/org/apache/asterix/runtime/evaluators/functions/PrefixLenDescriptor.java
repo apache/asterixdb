@@ -49,8 +49,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "prefix-len@3",
-            3);
+    private final static FunctionIdentifier FID =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "prefix-len@3", 3);
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -80,8 +80,8 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     // result
                     private final AMutableInt32 res = new AMutableInt32(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt32> int32Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
+                    private final ISerializerDeserializer<AInt32> int32Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -115,8 +115,8 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             throw new TypeMismatchException(getIdentifier(), 2, data[offset],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
-                        SimilarityFilters similarityFilters = similarityFiltersCache.get(similarityThreshold, data,
-                                offset, len);
+                        SimilarityFilters similarityFilters =
+                                similarityFiltersCache.get(similarityThreshold, data, offset, len);
 
                         int prefixLength = similarityFilters.getPrefixLength(length);
                         res.setValue(prefixLength);

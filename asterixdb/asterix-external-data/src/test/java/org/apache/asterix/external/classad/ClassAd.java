@@ -105,8 +105,8 @@ public class ClassAd extends ExprTree {
         specialAttrNames.add(ATTR_PARENT);
     }
 
-    public static final FunctionCall curr_time_expr = FunctionCall.createFunctionCall("time",
-            new ExprList(new ClassAdObjectPool()), new ClassAdObjectPool());
+    public static final FunctionCall curr_time_expr =
+            FunctionCall.createFunctionCall("time", new ExprList(new ClassAdObjectPool()), new ClassAdObjectPool());
 
     private ClassAd alternateScope;
     private final Map<CaseInsensitiveString, ExprTree> attrList;

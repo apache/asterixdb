@@ -41,8 +41,8 @@ public class DmlTest {
     private static final String[] ASTERIX_DATA_DIRS = new String[] { "nc1data", "nc2data" };
     private static final String PATH_ACTUAL = "dmltest" + File.separator;
     private static final String SEPARATOR = File.separator;
-    private static final String PATH_BASE = "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR + "dmlts"
-            + SEPARATOR;
+    private static final String PATH_BASE =
+            "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR + "dmlts" + SEPARATOR;
     private static final String PATH_SCRIPTS = PATH_BASE + "scripts" + SEPARATOR;
     private static final String LOAD_FOR_ENLIST_FILE = PATH_SCRIPTS + "load-cust.aql";
 
@@ -60,12 +60,12 @@ public class DmlTest {
         outdir.mkdirs();
 
         integrationUtil.init(true, AsterixHyracksIntegrationUtil.DEFAULT_CONF_FILE);
-        Reader loadReader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(LOAD_FOR_ENLIST_FILE), "UTF-8"));
-        AsterixJavaClient asterixLoad = new AsterixJavaClient(
-                (ICcApplicationContext) integrationUtil.cc.getApplicationContext(),
-                integrationUtil.getHyracksClientConnection(), loadReader, ERR, new AqlCompilationProvider(),
-                new DefaultStatementExecutorFactory(), new StorageComponentProvider());
+        Reader loadReader =
+                new BufferedReader(new InputStreamReader(new FileInputStream(LOAD_FOR_ENLIST_FILE), "UTF-8"));
+        AsterixJavaClient asterixLoad =
+                new AsterixJavaClient((ICcApplicationContext) integrationUtil.cc.getApplicationContext(),
+                        integrationUtil.getHyracksClientConnection(), loadReader, ERR, new AqlCompilationProvider(),
+                        new DefaultStatementExecutorFactory(), new StorageComponentProvider());
         try {
             asterixLoad.compile(true, false, false, false, false, true, false);
         } catch (AsterixException e) {

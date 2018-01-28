@@ -36,7 +36,8 @@ public enum NoOpOperationCallbackFactory
     INSTANCE;
 
     @Override
-    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable) {
+    public ISearchOperationCallback createSearchOperationCallback(long resourceId, IHyracksTaskContext ctx,
+            IOperatorNodePushable operatorNodePushable) {
         return NoOpOperationCallback.INSTANCE;
     }
 

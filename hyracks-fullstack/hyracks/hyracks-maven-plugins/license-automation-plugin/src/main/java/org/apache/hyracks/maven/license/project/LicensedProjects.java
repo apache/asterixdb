@@ -38,7 +38,7 @@ public class LicensedProjects {
 
     @JsonCreator
     public LicensedProjects(@JsonProperty("license") LicenseSpec license,
-                            @JsonProperty("projects") Set<Project> projects) {
+            @JsonProperty("projects") Set<Project> projects) {
         this.license = license;
         this.projects.addAll(projects);
     }

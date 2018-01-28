@@ -186,8 +186,8 @@ public class SimilarityFiltersJaccard implements SimilarityFilters {
      * @return
      */
     public boolean passPositionFilter(int noGramsCommon, int positionX, int lengthX, int positionY, int lengthY) {
-        return getIntersectUpperBound(noGramsCommon, positionX, positionY, lengthX, lengthY) >= getIntersectLowerBound(
-                lengthX, lengthY);
+        return getIntersectUpperBound(noGramsCommon, positionX, positionY, lengthX,
+                lengthY) >= getIntersectLowerBound(lengthX, lengthY);
     }
 
     public float passSimilarityFilter(final int[] tokensX, int startX, int lengthX, final int prefixLengthX,
@@ -208,9 +208,9 @@ public class SimilarityFiltersJaccard implements SimilarityFilters {
             }
         } else {
             if (intersectionSizePrefix + lengthProbe - prefixLengthY >= intersectSizeLowerBound) {
-                intersectSize = intersectionSizePrefix
-                        + SimilarityMetric.getIntersectSize(tokensX, startX + intersectionSizePrefix, lengthX
-                                - intersectionSizePrefix, tokensY, startY + prefixLengthY, lengthY - prefixLengthY);
+                intersectSize = intersectionSizePrefix + SimilarityMetric.getIntersectSize(tokensX,
+                        startX + intersectionSizePrefix, lengthX - intersectionSizePrefix, tokensY,
+                        startY + prefixLengthY, lengthY - prefixLengthY);
             }
         }
 
@@ -268,8 +268,8 @@ public class SimilarityFiltersJaccard implements SimilarityFilters {
 
     public boolean passSuffixFilter(int[] tokensX, int tokensStartX, int tokensLengthX, int positionX, int[] tokensY,
             int tokensStartY, int tokensLengthY, int positionY) {
-        int hammingMax = tokensLengthX + tokensLengthY - 2
-                * (int) Math.ceil(simThr100 / (100 + simThr100) * (tokensLengthX + tokensLengthY))
+        int hammingMax = tokensLengthX + tokensLengthY
+                - 2 * (int) Math.ceil(simThr100 / (100 + simThr100) * (tokensLengthX + tokensLengthY))
                 - (positionX + 1 + positionY + 1 - 2);
         int hamming = getSuffixFilter(tokensX, tokensStartX + positionX + 1, tokensLengthX - positionX - 1, tokensY,
                 tokensStartY + positionY + 1, tokensLengthY - positionY - 1, hammingMax, 1);

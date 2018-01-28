@@ -263,8 +263,8 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         AqlPlusExpressionToPlanTranslator translator = new AqlPlusExpressionToPlanTranslator(metadataProvider, counter);
         context.setVarCounter(counter.get());
 
-        LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
-                context, context);
+        LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor =
+                new LogicalOperatorDeepCopyWithNewVariablesVisitor(context, context);
 
         translator.addOperatorToMetaScope(new Identifier("#LEFT"), leftInputOp);
         translator.addVariableToMetaScope(new Identifier("$$LEFT"), leftInputVar);

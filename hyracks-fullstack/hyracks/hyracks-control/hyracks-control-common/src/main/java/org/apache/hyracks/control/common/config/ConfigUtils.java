@@ -150,25 +150,23 @@ public class ConfigUtils {
         return value;
     }
 
-    public static String getString(Ini ini, org.apache.hyracks.api.config.Section section,
-                                   IOption option, String defaultValue) {
+    public static String getString(Ini ini, org.apache.hyracks.api.config.Section section, IOption option,
+            String defaultValue) {
         return getString(ini, section.sectionName(), option.ini(), defaultValue);
     }
 
     public static void addConfigToJSON(ObjectNode o, IApplicationConfig cfg,
-                                       org.apache.hyracks.api.config.Section... sections) {
+            org.apache.hyracks.api.config.Section... sections) {
         ArrayNode configArray = o.putArray("config");
         for (org.apache.hyracks.api.config.Section section : cfg.getSections(Arrays.asList(sections)::contains)) {
             ObjectNode sectionNode = configArray.addObject();
             Map<String, Object> sectionConfig = getSectionOptionsForJSON(cfg, section, option -> true);
-            sectionNode.put("section", section.sectionName())
-                    .putPOJO("properties", sectionConfig);
+            sectionNode.put("section", section.sectionName()).putPOJO("properties", sectionConfig);
         }
     }
 
     public static Map<String, Object> getSectionOptionsForJSON(IApplicationConfig cfg,
-                                                                org.apache.hyracks.api.config.Section section,
-                                                                Predicate<IOption> selector) {
+            org.apache.hyracks.api.config.Section section, Predicate<IOption> selector) {
         Map<String, Object> sectionConfig = new TreeMap<>();
         for (IOption option : cfg.getOptions(section)) {
             if (selector.test(option)) {

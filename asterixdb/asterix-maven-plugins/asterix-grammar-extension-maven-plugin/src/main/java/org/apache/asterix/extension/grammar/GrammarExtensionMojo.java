@@ -61,8 +61,8 @@ public class GrammarExtensionMojo extends AbstractMojo {
     private static final char OPEN_PAREN = '(';
     private static final char CLOSE_PAREN = ')';
     private static final char SEMICOLON = ';';
-    private static final List<Character> SIG_SPECIAL_CHARS = Arrays
-            .asList(new Character[] { '(', ')', ':', '<', '>', ';', '.' });
+    private static final List<Character> SIG_SPECIAL_CHARS =
+            Arrays.asList(new Character[] { '(', ')', ':', '<', '>', ';', '.' });
     private static final String KWCLASS = "class";
     private static final String KWIMPORT = "import";
     private static final String KWUNIMPORT = "unimport";
@@ -80,8 +80,8 @@ public class GrammarExtensionMojo extends AbstractMojo {
     private static final String WITH = "with";
     private static final String OPTION_TRUE = "true";
     private static final String OPTION_FALSE = "false";
-    private static final List<String> KEYWORDS = Arrays
-            .asList(new String[] { KWCLASS, KWIMPORT, KWPACKAGE, PARSER_BEGIN, PARSER_END });
+    private static final List<String> KEYWORDS =
+            Arrays.asList(new String[] { KWCLASS, KWIMPORT, KWPACKAGE, PARSER_BEGIN, PARSER_END });
     private static final List<String> EXTENSIONKEYWORDS =
             Arrays.asList(new String[] { KWIMPORT, KWUNIMPORT, NEWPRODUCTION, NEW_AT_THE_END_PRODUCTION,
                     NEW_AT_THE_END_CLASS_DEFINITION, OVERRIDEPRODUCTION, MERGEPRODUCTION });
@@ -974,8 +974,8 @@ public class GrammarExtensionMojo extends AbstractMojo {
         int after = block.indexOf(AFTER);
         if (before >= 0) {
             // before exists
-            amendments[beforeIndex] = block.substring(before + BEFORE.length(),
-                    (after >= 0) ? after : block.length() - 1);
+            amendments[beforeIndex] =
+                    block.substring(before + BEFORE.length(), (after >= 0) ? after : block.length() - 1);
             if (amendments[beforeIndex].trim().length() == 0) {
                 amendments[beforeIndex] = null;
             }

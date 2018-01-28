@@ -112,7 +112,8 @@ public class CancellationTestExecutor extends TestExecutor {
             queryCount.increment();
             return false;
         } else {
-            System.err.println("Expected to find one of the following in error text:\n+++++\n" + expectedErrors + "\n+++++");
+            System.err.println(
+                    "Expected to find one of the following in error text:\n+++++\n" + expectedErrors + "\n+++++");
             return true;
         }
     }

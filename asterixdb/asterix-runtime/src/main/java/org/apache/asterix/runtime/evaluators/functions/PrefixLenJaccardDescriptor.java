@@ -78,8 +78,8 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                     // result
                     private final AMutableInt32 res = new AMutableInt32(0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt32> int32Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT32);
+                    private final ISerializerDeserializer<AInt32> int32Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

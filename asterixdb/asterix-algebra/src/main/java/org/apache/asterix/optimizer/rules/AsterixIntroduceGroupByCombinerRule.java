@@ -47,14 +47,14 @@ public class AsterixIntroduceGroupByCombinerRule extends AbstractIntroduceGroupB
         SelectOperator selectNonSystemNull;
 
         if (aggregateVarsProducedByCombiner.size() == 1) {
-            ILogicalExpression isSystemNullTest = new ScalarFunctionCallExpression(finfoEq,
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(
-                            aggregateVarsProducedByCombiner.get(0))));
+            ILogicalExpression isSystemNullTest =
+                    new ScalarFunctionCallExpression(finfoEq, new MutableObject<ILogicalExpression>(
+                            new VariableReferenceExpression(aggregateVarsProducedByCombiner.get(0))));
             IFunctionInfo finfoNot = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.NOT);
-            ScalarFunctionCallExpression nonSystemNullTest = new ScalarFunctionCallExpression(finfoNot,
-                    new MutableObject<ILogicalExpression>(isSystemNullTest));
-            selectNonSystemNull = new SelectOperator(new MutableObject<ILogicalExpression>(nonSystemNullTest), false,
-                    null);
+            ScalarFunctionCallExpression nonSystemNullTest =
+                    new ScalarFunctionCallExpression(finfoNot, new MutableObject<ILogicalExpression>(isSystemNullTest));
+            selectNonSystemNull =
+                    new SelectOperator(new MutableObject<ILogicalExpression>(nonSystemNullTest), false, null);
         } else {
             List<Mutable<ILogicalExpression>> isSystemNullTestList = new ArrayList<Mutable<ILogicalExpression>>();
             for (LogicalVariable aggVar : aggregateVarsProducedByCombiner) {

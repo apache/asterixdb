@@ -136,8 +136,8 @@ public class ClusterLifecycleListener implements IClusterLifecycleListener {
                 case REMOVE_NODE:
                     nodesToRemove.addAll(((RemoveNodeWork) w).getNodesToBeRemoved());
                     nodeRemovalRequests.add(w);
-                    RemoveNodeWorkResponse response = new RemoveNodeWorkResponse((RemoveNodeWork) w,
-                            Status.IN_PROGRESS);
+                    RemoveNodeWorkResponse response =
+                            new RemoveNodeWorkResponse((RemoveNodeWork) w, Status.IN_PROGRESS);
                     pendingWorkResponses.add(response);
                     break;
             }

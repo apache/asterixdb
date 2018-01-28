@@ -64,8 +64,8 @@ public abstract class DataSource implements IDataSource<DataSourceId> {
         }
     }
 
-    public DataSource(DataSourceId id, IAType itemType, IAType metaItemType, byte datasourceType,
-            INodeDomain domain) throws AlgebricksException {
+    public DataSource(DataSourceId id, IAType itemType, IAType metaItemType, byte datasourceType, INodeDomain domain)
+            throws AlgebricksException {
         this.id = id;
         this.itemType = itemType;
         this.metaItemType = metaItemType;

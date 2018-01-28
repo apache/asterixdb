@@ -119,9 +119,9 @@ public class RebalanceUtil {
 
             if (!targetNcNames.isEmpty()) {
                 // Creates a node group for rebalance.
-                String nodeGroupName = DatasetUtil
-                        .createNodeGroupForNewDataset(sourceDataset.getDataverseName(), sourceDataset.getDatasetName(),
-                                sourceDataset.getRebalanceCount() + 1, targetNcNames, metadataProvider);
+                String nodeGroupName = DatasetUtil.createNodeGroupForNewDataset(sourceDataset.getDataverseName(),
+                        sourceDataset.getDatasetName(), sourceDataset.getRebalanceCount() + 1, targetNcNames,
+                        metadataProvider);
                 // The target dataset for rebalance.
                 targetDataset = sourceDataset.getTargetDatasetForRebalance(nodeGroupName);
 
@@ -338,8 +338,7 @@ public class RebalanceUtil {
             Dataset target) throws AlgebricksException {
         int[] primaryKeyFields = getPrimaryKeyPermutationForUpsert(target);
         return new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                new IPushRuntimeFactory[] {
-                        target.getCommitRuntimeFactory(metadataProvider, primaryKeyFields, true) },
+                new IPushRuntimeFactory[] { target.getCommitRuntimeFactory(metadataProvider, primaryKeyFields, true) },
                 new RecordDescriptor[] { target.getPrimaryRecordDescriptor(metadataProvider) });
     }
 
@@ -405,9 +404,9 @@ public class RebalanceUtil {
             dropDatasetFiles(dataset, metadataProvider, hcc);
 
             // drop dataset entry from metadata
-            runMetadataTransaction(metadataProvider, () -> MetadataManager.INSTANCE
-                    .dropDataset(metadataProvider.getMetadataTxnContext(), dataset.getDataverseName(),
-                            dataset.getDatasetName()));
+            runMetadataTransaction(metadataProvider,
+                    () -> MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(),
+                            dataset.getDataverseName(), dataset.getDatasetName()));
             MetadataManager.INSTANCE.commitTransaction(metadataProvider.getMetadataTxnContext());
             // try to drop the dataset's node group
             runMetadataTransaction(metadataProvider, () -> tryDropDatasetNodegroup(dataset, metadataProvider));

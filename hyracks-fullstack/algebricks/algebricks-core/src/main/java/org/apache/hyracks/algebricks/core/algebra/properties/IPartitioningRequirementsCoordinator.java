@@ -46,55 +46,57 @@ public interface IPartitioningRequirementsCoordinator {
         }
     };
 
-    public static IPartitioningRequirementsCoordinator EQCLASS_PARTITIONING_COORDINATOR = new IPartitioningRequirementsCoordinator() {
+    public static IPartitioningRequirementsCoordinator EQCLASS_PARTITIONING_COORDINATOR =
+            new IPartitioningRequirementsCoordinator() {
 
-        @Override
-        public Pair<Boolean, IPartitioningProperty> coordinateRequirements(IPartitioningProperty rqdpp,
-                IPartitioningProperty firstDeliveredPartitioning, ILogicalOperator op, IOptimizationContext context)
-                throws AlgebricksException {
-            if (firstDeliveredPartitioning != null && rqdpp != null
-                    && firstDeliveredPartitioning.getPartitioningType() == rqdpp.getPartitioningType()) {
-                switch (rqdpp.getPartitioningType()) {
-                    case UNORDERED_PARTITIONED: {
-                        UnorderedPartitionedProperty upp1 = (UnorderedPartitionedProperty) firstDeliveredPartitioning;
-                        Set<LogicalVariable> set1 = upp1.getColumnSet();
-                        UnorderedPartitionedProperty uppreq = (UnorderedPartitionedProperty) rqdpp;
-                        Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
-                        Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
-                        Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
+                @Override
+                public Pair<Boolean, IPartitioningProperty> coordinateRequirements(IPartitioningProperty rqdpp,
+                        IPartitioningProperty firstDeliveredPartitioning, ILogicalOperator op,
+                        IOptimizationContext context) throws AlgebricksException {
+                    if (firstDeliveredPartitioning != null && rqdpp != null
+                            && firstDeliveredPartitioning.getPartitioningType() == rqdpp.getPartitioningType()) {
+                        switch (rqdpp.getPartitioningType()) {
+                            case UNORDERED_PARTITIONED: {
+                                UnorderedPartitionedProperty upp1 =
+                                        (UnorderedPartitionedProperty) firstDeliveredPartitioning;
+                                Set<LogicalVariable> set1 = upp1.getColumnSet();
+                                UnorderedPartitionedProperty uppreq = (UnorderedPartitionedProperty) rqdpp;
+                                Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
+                                Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
+                                Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
 
-                        // coordinate from an existing partition property
-                        // (firstDeliveredPartitioning)
-                        for (LogicalVariable v : set1) {
-                            EquivalenceClass ecFirst = eqmap.get(v);
-                            for (LogicalVariable r : uppreq.getColumnSet()) {
-                                EquivalenceClass ec = eqmap.get(r);
-                                if (ecFirst == ec) {
-                                    covered.add(v);
-                                    modifuppreq.add(r);
-                                    break;
+                                // coordinate from an existing partition property
+                                // (firstDeliveredPartitioning)
+                                for (LogicalVariable v : set1) {
+                                    EquivalenceClass ecFirst = eqmap.get(v);
+                                    for (LogicalVariable r : uppreq.getColumnSet()) {
+                                        EquivalenceClass ec = eqmap.get(r);
+                                        if (ecFirst == ec) {
+                                            covered.add(v);
+                                            modifuppreq.add(r);
+                                            break;
+                                        }
+                                    }
                                 }
+
+                                if (!covered.equals(set1)) {
+                                    throw new AlgebricksException("Could not modify " + rqdpp
+                                            + " to agree with partitioning property " + firstDeliveredPartitioning
+                                            + " delivered by previous input operator.");
+                                }
+                                UnorderedPartitionedProperty upp2 =
+                                        new UnorderedPartitionedProperty(modifuppreq, rqdpp.getNodeDomain());
+                                return new Pair<Boolean, IPartitioningProperty>(false, upp2);
+                            }
+                            case ORDERED_PARTITIONED: {
+                                throw new NotImplementedException();
                             }
                         }
-
-                        if (!covered.equals(set1)) {
-                            throw new AlgebricksException("Could not modify " + rqdpp
-                                    + " to agree with partitioning property " + firstDeliveredPartitioning
-                                    + " delivered by previous input operator.");
-                        }
-                        UnorderedPartitionedProperty upp2 = new UnorderedPartitionedProperty(modifuppreq,
-                                rqdpp.getNodeDomain());
-                        return new Pair<Boolean, IPartitioningProperty>(false, upp2);
                     }
-                    case ORDERED_PARTITIONED: {
-                        throw new NotImplementedException();
-                    }
+                    return new Pair<Boolean, IPartitioningProperty>(true, rqdpp);
                 }
-            }
-            return new Pair<Boolean, IPartitioningProperty>(true, rqdpp);
-        }
 
-    };
+            };
 
     public Pair<Boolean, IPartitioningProperty> coordinateRequirements(IPartitioningProperty requirements,
             IPartitioningProperty firstDeliveredPartitioning, ILogicalOperator op, IOptimizationContext context)

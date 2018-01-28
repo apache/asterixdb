@@ -65,8 +65,8 @@ public class NodeControllerRemoteProxy implements INodeController {
             List<TaskAttemptDescriptor> taskDescriptors, Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies,
             Set<JobFlag> flags, Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId)
             throws Exception {
-        StartTasksFunction stf = new StartTasksFunction(deploymentId, jobId, planBytes,
-                taskDescriptors, connectorPolicies, flags, jobParameters, deployedJobSpecId);
+        StartTasksFunction stf = new StartTasksFunction(deploymentId, jobId, planBytes, taskDescriptors,
+                connectorPolicies, flags, jobParameters, deployedJobSpecId);
         ipcHandle.send(-1, stf, null);
     }
 
@@ -84,8 +84,7 @@ public class NodeControllerRemoteProxy implements INodeController {
 
     @Override
     public void reportPartitionAvailability(PartitionId pid, NetworkAddress networkAddress) throws Exception {
-        ReportPartitionAvailabilityFunction rpaf = new ReportPartitionAvailabilityFunction(
-                pid, networkAddress);
+        ReportPartitionAvailabilityFunction rpaf = new ReportPartitionAvailabilityFunction(pid, networkAddress);
         ipcHandle.send(-1, rpaf, null);
     }
 
@@ -127,8 +126,7 @@ public class NodeControllerRemoteProxy implements INodeController {
 
     @Override
     public void sendApplicationMessageToNC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception {
-        SendApplicationMessageFunction fn = new SendApplicationMessageFunction(data,
-                deploymentId, nodeId);
+        SendApplicationMessageFunction fn = new SendApplicationMessageFunction(data, deploymentId, nodeId);
         ipcHandle.send(-1, fn, null);
     }
 

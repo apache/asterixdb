@@ -34,6 +34,7 @@ public interface ITupleWriterFactory extends Serializable {
      *            the IHyracksTaskContext
      * @return a tuple writer instance
      */
-    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition) throws HyracksDataException;
+    public ITupleWriter getTupleWriter(IHyracksTaskContext ctx, int partition, int nPartition)
+            throws HyracksDataException;
 
 }

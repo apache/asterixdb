@@ -59,8 +59,7 @@ public class SequentialFirstRuleCheckFixpointRuleController extends AbstractRule
         if (ruleCollection instanceof List) {
             rules = (List<IAlgebraicRewriteRule>) ruleCollection;
         } else {
-            throw AlgebricksException.create(ErrorCode.RULECOLLECTION_NOT_INSTANCE_OF_LIST,
-                    this.getClass().getName());
+            throw AlgebricksException.create(ErrorCode.RULECOLLECTION_NOT_INSTANCE_OF_LIST, this.getClass().getName());
         }
 
         if (rules.isEmpty()) {

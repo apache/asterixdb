@@ -46,9 +46,7 @@ public class LoadFileDirective implements TemplateDirectiveModel {
     private static final String PARAM_DEFAULT_TEXT = "defaultOnMissing";
 
     @Override
-    public void execute(Environment env,
-                        Map params, TemplateModel[] loopVars,
-                        TemplateDirectiveBody body)
+    public void execute(Environment env, Map params, TemplateModel[] loopVars, TemplateDirectiveBody body)
             throws TemplateException, IOException {
 
         String fileParam = null;
@@ -91,15 +89,14 @@ public class LoadFileDirective implements TemplateDirectiveModel {
             }
         }
         if (fileParam == null) {
-            throw new TemplateModelException(
-                    "The required \"" + PARAM_FILE + "\" parameter"
-                            + "is missing.");
+            throw new TemplateModelException("The required \"" + PARAM_FILE + "\" parameter" + "is missing.");
         }
         if (body != null) {
             throw new TemplateModelException("Body is not supported by this directive");
         }
         Writer out = env.getOut();
-        File baseDir = ((FileTemplateLoader)((Configuration)env.getTemplate().getParent()).getTemplateLoader()).baseDir;
+        File baseDir =
+                ((FileTemplateLoader) ((Configuration) env.getTemplate().getParent()).getTemplateLoader()).baseDir;
         File file = new File(baseDir, fileParam);
         if (file.exists()) {
             if (trimParam) {
@@ -108,7 +105,7 @@ public class LoadFileDirective implements TemplateDirectiveModel {
             } else {
                 IOUtils.copy(new FileInputStream(file), out, StandardCharsets.UTF_8);
             }
-        } else if (defaultParam != null ) {
+        } else if (defaultParam != null) {
             out.append(defaultParam).append("\n");
         } else {
             throw new IOException("File not found: " + file);

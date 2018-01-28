@@ -72,8 +72,8 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
                     private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private final AMutablePoint aPoint = new AMutablePoint(0, 0);
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<APoint> pointSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.APOINT);
+                    private final ISerializerDeserializer<APoint> pointSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.APOINT);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

@@ -89,8 +89,8 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
             installLibDir.mkdir();
         }
         // copy the library file into the directory
-        File destinationDir = new File(
-                installLibDir.getAbsolutePath() + File.separator + dvName + File.separator + libName);
+        File destinationDir =
+                new File(installLibDir.getAbsolutePath() + File.separator + dvName + File.separator + libName);
         FileUtils.deleteQuietly(destinationDir);
         destinationDir.mkdirs();
         try {

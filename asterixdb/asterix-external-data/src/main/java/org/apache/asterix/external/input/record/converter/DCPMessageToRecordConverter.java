@@ -56,8 +56,8 @@ public class DCPMessageToRecordConverter implements IRecordToRecordWithMetadataA
 
     public DCPMessageToRecordConverter() {
         this.value = new CharArrayRecord();
-        this.recordWithMetadata = new RecordWithMetadataAndPK<>(value, CB_META_TYPES,
-                RecordUtil.FULLY_OPEN_RECORD_TYPE, PK_INDICATOR, PK_INDEXES, PK_TYPES);
+        this.recordWithMetadata = new RecordWithMetadataAndPK<>(value, CB_META_TYPES, RecordUtil.FULLY_OPEN_RECORD_TYPE,
+                PK_INDICATOR, PK_INDEXES, PK_TYPES);
     }
 
     @Override

@@ -47,7 +47,6 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectFactory;
 
-
 public class JTypeObjectFactory implements IObjectFactory<IJObject, IAType> {
 
     public static final JTypeObjectFactory INSTANCE = new JTypeObjectFactory();

@@ -72,23 +72,23 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
     private final IScalarEvaluator argEval;
 
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer int8Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT8);
+    protected ISerializerDeserializer int8Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer int16Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT16);
+    protected ISerializerDeserializer int16Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT16);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer int32Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    protected ISerializerDeserializer int32Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer int64Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT64);
+    protected ISerializerDeserializer int64Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer floatSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AFLOAT);
+    protected ISerializerDeserializer floatSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
     @SuppressWarnings("rawtypes")
-    protected ISerializerDeserializer doubleSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADOUBLE);
+    protected ISerializerDeserializer doubleSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
     // The function identifier, used for error messages.
     private final FunctionIdentifier funcID;

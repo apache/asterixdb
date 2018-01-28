@@ -34,8 +34,8 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 public abstract class AbstractTripleStringBoolEval extends AbstractTripleStringEval {
 
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer boolSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    private ISerializerDeserializer boolSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public AbstractTripleStringBoolEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, FunctionIdentifier funcID)

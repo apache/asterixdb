@@ -71,8 +71,8 @@ public class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSi
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
-        this.firstNormalizerComputer = firstNormalizerFactory == null ? null
-                : firstNormalizerFactory.createNormalizedKeyComputer();
+        this.firstNormalizerComputer =
+                firstNormalizerFactory == null ? null : firstNormalizerFactory.createNormalizedKeyComputer();
         this.spillableTableFactory = spillableTableFactory;
         this.inRecordDescriptor = inRecordDescriptor;
         this.outRecordDescriptor = outRecordDescriptor;

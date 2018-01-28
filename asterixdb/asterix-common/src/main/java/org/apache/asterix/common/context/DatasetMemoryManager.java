@@ -109,9 +109,9 @@ public class DatasetMemoryManager implements IDatasetMemoryManager {
 
     @Override
     public int getNumPages(int datasetId) {
-        return MetadataIndexImmutableProperties.isMetadataDataset(datasetId) ?
-                storageProperties.getMetadataMemoryComponentNumPages() :
-                storageProperties.getMemoryComponentNumPages();
+        return MetadataIndexImmutableProperties.isMetadataDataset(datasetId)
+                ? storageProperties.getMetadataMemoryComponentNumPages()
+                : storageProperties.getMemoryComponentNumPages();
     }
 
     private long getTotalSize(int datasetId) {

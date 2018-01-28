@@ -60,8 +60,8 @@ public class SimilarityMetricJaccard extends SimilarityMetric implements IGeneri
         // apply length filter
         int lengthLowerBound = (int) Math.ceil(simThresh * firstList.size());
 
-        boolean passesLengthFilter = (lengthLowerBound <= secondList.size())
-                && (secondList.size() <= 1.0f / simThresh * firstList.size());
+        boolean passesLengthFilter =
+                (lengthLowerBound <= secondList.size()) && (secondList.size() <= 1.0f / simThresh * firstList.size());
         if (!passesLengthFilter) {
             return -1f;
         }

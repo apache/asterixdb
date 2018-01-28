@@ -39,7 +39,8 @@ public class InvertedIndexTokenizingTupleIterator {
     protected final IBinaryTokenizer tokenizer;
     protected ITupleReference inputTuple;
 
-    public InvertedIndexTokenizingTupleIterator(int tokensFieldCount, int invListFieldCount, IBinaryTokenizer tokenizer) {
+    public InvertedIndexTokenizingTupleIterator(int tokensFieldCount, int invListFieldCount,
+            IBinaryTokenizer tokenizer) {
         this.invListFieldCount = invListFieldCount;
         this.tupleBuilder = new ArrayTupleBuilder(tokensFieldCount + invListFieldCount);
         this.tupleReference = new ArrayTupleReference();

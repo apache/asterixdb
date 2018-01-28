@@ -92,7 +92,7 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     }
 
     @Override
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode jop = om.createObjectNode();
         jop.put("id", String.valueOf(getOperatorId()));

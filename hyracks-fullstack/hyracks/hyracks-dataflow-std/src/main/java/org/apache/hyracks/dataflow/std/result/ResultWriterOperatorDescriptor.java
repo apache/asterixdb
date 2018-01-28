@@ -76,8 +76,8 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
         PrintStream printStream = new PrintStream(frameOutputStream);
 
         final RecordDescriptor outRecordDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
-        final IResultSerializer resultSerializer = resultSerializerFactory.createResultSerializer(outRecordDesc,
-                printStream);
+        final IResultSerializer resultSerializer =
+                resultSerializerFactory.createResultSerializer(outRecordDesc, printStream);
 
         final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(outRecordDesc);
 

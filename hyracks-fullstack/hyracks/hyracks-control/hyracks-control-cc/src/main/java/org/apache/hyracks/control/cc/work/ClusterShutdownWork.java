@@ -41,7 +41,7 @@ public class ClusterShutdownWork extends SynchronizableWork {
     private final IResultCallback<Boolean> callback;
 
     public ClusterShutdownWork(ClusterControllerService ncs, boolean terminateNCService,
-                               IResultCallback<Boolean> callback) {
+            IResultCallback<Boolean> callback) {
         this.ccs = ncs;
         this.terminateNCService = terminateNCService;
         this.callback = callback;
@@ -77,8 +77,8 @@ public class ClusterShutdownWork extends SynchronizableWork {
                         /*
                          * best effort - just exit, user will have to kill misbehaving NCs
                          */
-                        LOGGER.error("Clean shutdown of NCs timed out- giving up; unresponsive nodes: " +
-                                shutdownStatus.getRemainingNodes());
+                        LOGGER.error("Clean shutdown of NCs timed out- giving up; unresponsive nodes: "
+                                + shutdownStatus.getRemainingNodes());
                     }
                     callback.setValue(cleanShutdown);
                     ccs.stop(terminateNCService);
@@ -97,8 +97,8 @@ public class ClusterShutdownWork extends SynchronizableWork {
             LOGGER.info("Notifying NC " + nodeId + " to shutdown...");
             ncState.getNodeController().shutdown(terminateNCService);
         } catch (Exception e) {
-            LOGGER.log(Level.INFO,
-                    "Exception shutting down NC " + nodeId + " (possibly dead?), continuing shutdown...", e);
+            LOGGER.log(Level.INFO, "Exception shutting down NC " + nodeId + " (possibly dead?), continuing shutdown...",
+                    e);
         }
     }
 }

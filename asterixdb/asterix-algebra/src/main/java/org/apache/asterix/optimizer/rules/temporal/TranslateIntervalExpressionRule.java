@@ -106,66 +106,66 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_MET_BY)) {
             exprRef.setValue(getEqualExpr(getIntervalStartExpr(interval1), getIntervalEndExpr(interval2)));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_STARTS)) {
-            ILogicalExpression startExpr = getEqualExpr(getIntervalStartExpr(interval1),
-                    getIntervalStartExpr(interval2));
-            ILogicalExpression endExpr = getLessThanOrEqualExpr(getIntervalEndExpr(interval1),
-                    getIntervalEndExpr(interval2));
+            ILogicalExpression startExpr =
+                    getEqualExpr(getIntervalStartExpr(interval1), getIntervalStartExpr(interval2));
+            ILogicalExpression endExpr =
+                    getLessThanOrEqualExpr(getIntervalEndExpr(interval1), getIntervalEndExpr(interval2));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_STARTED_BY)) {
-            ILogicalExpression startExpr = getEqualExpr(getIntervalStartExpr(interval1),
-                    getIntervalStartExpr(interval2));
-            ILogicalExpression endExpr = getLessThanOrEqualExpr(getIntervalEndExpr(interval2),
-                    getIntervalEndExpr(interval1));
+            ILogicalExpression startExpr =
+                    getEqualExpr(getIntervalStartExpr(interval1), getIntervalStartExpr(interval2));
+            ILogicalExpression endExpr =
+                    getLessThanOrEqualExpr(getIntervalEndExpr(interval2), getIntervalEndExpr(interval1));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_ENDS)) {
             ILogicalExpression endExpr = getEqualExpr(getIntervalEndExpr(interval1), getIntervalEndExpr(interval2));
-            ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval1),
-                    getIntervalStartExpr(interval2));
+            ILogicalExpression startExpr =
+                    getLessThanOrEqualExpr(getIntervalStartExpr(interval1), getIntervalStartExpr(interval2));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_ENDED_BY)) {
             ILogicalExpression endExpr = getEqualExpr(getIntervalEndExpr(interval1), getIntervalEndExpr(interval2));
-            ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval2),
-                    getIntervalStartExpr(interval1));
+            ILogicalExpression startExpr =
+                    getLessThanOrEqualExpr(getIntervalStartExpr(interval2), getIntervalStartExpr(interval1));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_BEFORE)) {
             exprRef.setValue(getLessThanExpr(getIntervalEndExpr(interval1), getIntervalStartExpr(interval2)));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_AFTER)) {
             exprRef.setValue(getGreaterThanExpr(getIntervalStartExpr(interval1), getIntervalEndExpr(interval2)));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_OVERLAPS)) {
-            ILogicalExpression expr1 = getLessThanExpr(getIntervalStartExpr(interval1),
-                    getIntervalStartExpr(interval2));
+            ILogicalExpression expr1 =
+                    getLessThanExpr(getIntervalStartExpr(interval1), getIntervalStartExpr(interval2));
             ILogicalExpression expr2 = getGreaterThanExpr(getIntervalEndExpr(interval2), getIntervalEndExpr(interval1));
-            ILogicalExpression expr3 = getGreaterThanExpr(getIntervalEndExpr(interval1),
-                    getIntervalStartExpr(interval2));
+            ILogicalExpression expr3 =
+                    getGreaterThanExpr(getIntervalEndExpr(interval1), getIntervalStartExpr(interval2));
             exprRef.setValue(getAndExpr(getAndExpr(expr1, expr2), expr3));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_OVERLAPPED_BY)) {
-            ILogicalExpression expr1 = getLessThanExpr(getIntervalStartExpr(interval2),
-                    getIntervalStartExpr(interval1));
+            ILogicalExpression expr1 =
+                    getLessThanExpr(getIntervalStartExpr(interval2), getIntervalStartExpr(interval1));
             ILogicalExpression expr2 = getGreaterThanExpr(getIntervalEndExpr(interval1), getIntervalEndExpr(interval2));
-            ILogicalExpression expr3 = getGreaterThanExpr(getIntervalEndExpr(interval2),
-                    getIntervalStartExpr(interval1));
+            ILogicalExpression expr3 =
+                    getGreaterThanExpr(getIntervalEndExpr(interval2), getIntervalStartExpr(interval1));
             exprRef.setValue(getAndExpr(getAndExpr(expr1, expr2), expr3));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_OVERLAPPING)) {
-            ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval1),
-                    getIntervalEndExpr(interval2));
-            ILogicalExpression endExpr = getGreaterThanOrEqualExpr(getIntervalEndExpr(interval1),
-                    getIntervalStartExpr(interval2));
-            ILogicalExpression startPointExpr = getNotEqualExpr(getIntervalEndExpr(interval1),
-                    getIntervalStartExpr(interval2));
-            ILogicalExpression endPointExpr = getNotEqualExpr(getIntervalStartExpr(interval1),
-                    getIntervalEndExpr(interval2));
+            ILogicalExpression startExpr =
+                    getLessThanOrEqualExpr(getIntervalStartExpr(interval1), getIntervalEndExpr(interval2));
+            ILogicalExpression endExpr =
+                    getGreaterThanOrEqualExpr(getIntervalEndExpr(interval1), getIntervalStartExpr(interval2));
+            ILogicalExpression startPointExpr =
+                    getNotEqualExpr(getIntervalEndExpr(interval1), getIntervalStartExpr(interval2));
+            ILogicalExpression endPointExpr =
+                    getNotEqualExpr(getIntervalStartExpr(interval1), getIntervalEndExpr(interval2));
             exprRef.setValue(getAndExpr(getAndExpr(startExpr, endExpr), getAndExpr(startPointExpr, endPointExpr)));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_COVERS)) {
-            ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval1),
-                    getIntervalStartExpr(interval2));
-            ILogicalExpression endExpr = getGreaterThanOrEqualExpr(getIntervalEndExpr(interval1),
-                    getIntervalEndExpr(interval2));
+            ILogicalExpression startExpr =
+                    getLessThanOrEqualExpr(getIntervalStartExpr(interval1), getIntervalStartExpr(interval2));
+            ILogicalExpression endExpr =
+                    getGreaterThanOrEqualExpr(getIntervalEndExpr(interval1), getIntervalEndExpr(interval2));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.INTERVAL_COVERED_BY)) {
-            ILogicalExpression startExpr = getLessThanOrEqualExpr(getIntervalStartExpr(interval2),
-                    getIntervalStartExpr(interval1));
-            ILogicalExpression endExpr = getGreaterThanOrEqualExpr(getIntervalEndExpr(interval2),
-                    getIntervalEndExpr(interval1));
+            ILogicalExpression startExpr =
+                    getLessThanOrEqualExpr(getIntervalStartExpr(interval2), getIntervalStartExpr(interval1));
+            ILogicalExpression endExpr =
+                    getGreaterThanOrEqualExpr(getIntervalEndExpr(interval2), getIntervalEndExpr(interval1));
             exprRef.setValue(getAndExpr(startExpr, endExpr));
         } else {
             return false;

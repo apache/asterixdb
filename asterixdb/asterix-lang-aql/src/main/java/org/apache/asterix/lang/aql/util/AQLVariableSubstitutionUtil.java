@@ -32,8 +32,8 @@ public class AQLVariableSubstitutionUtil {
 
     public static ILangExpression substituteVariable(ILangExpression expression,
             Map<VariableExpr, Expression> varExprMap) throws CompilationException {
-        AQLCloneAndSubstituteVariablesVisitor visitor = new AQLCloneAndSubstituteVariablesVisitor(
-                new LangRewritingContext(0));
+        AQLCloneAndSubstituteVariablesVisitor visitor =
+                new AQLCloneAndSubstituteVariablesVisitor(new LangRewritingContext(0));
         VariableSubstitutionEnvironment env = new VariableSubstitutionEnvironment(varExprMap);
         return expression.accept(visitor, env).first;
     }

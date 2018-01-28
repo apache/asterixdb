@@ -66,8 +66,8 @@ public class CurrentDateDescriptor extends AbstractScalarFunctionDynamicDescript
                     private DataOutput out = resultStorage.getDataOutput();
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATE);
+                    private ISerializerDeserializer<ADate> dateSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
                     private AMutableDate aDate = new AMutableDate(0);
 
                     @Override

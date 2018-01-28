@@ -837,8 +837,8 @@ class LangExpressionToPlanTranslator
         if (gc.hasGroupVar()) {
             VariableExpr groupVar = gc.getGroupVar();
             LogicalVariable groupLogicalVar = context.newVar();
-            ILogicalPlan nestedPlan = createNestedPlanWithAggregate(groupLogicalVar,
-                    BuiltinFunctions.LISTIFY, new VariableReferenceExpression(groupRecordVar),
+            ILogicalPlan nestedPlan = createNestedPlanWithAggregate(groupLogicalVar, BuiltinFunctions.LISTIFY,
+                    new VariableReferenceExpression(groupRecordVar),
                     new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(gOp))));
             gOp.getNestedPlans().add(nestedPlan);
             context.setVar(groupVar, groupLogicalVar);
@@ -851,8 +851,8 @@ class LangExpressionToPlanTranslator
                 Pair<ILogicalExpression, Mutable<ILogicalOperator>> listifyInput = langExprToAlgExpression(withExpr,
                         new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(gOp))));
                 LogicalVariable withLogicalVar = context.newVar();
-                ILogicalPlan nestedPlan = createNestedPlanWithAggregate(withLogicalVar,
-                        BuiltinFunctions.LISTIFY, listifyInput.first, listifyInput.second);
+                ILogicalPlan nestedPlan = createNestedPlanWithAggregate(withLogicalVar, BuiltinFunctions.LISTIFY,
+                        listifyInput.first, listifyInput.second);
                 gOp.getNestedPlans().add(nestedPlan);
                 context.setVar(withVar, withLogicalVar);
             }

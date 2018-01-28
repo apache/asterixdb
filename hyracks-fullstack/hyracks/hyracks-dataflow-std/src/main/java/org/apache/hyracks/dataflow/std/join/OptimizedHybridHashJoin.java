@@ -110,8 +110,7 @@ public class OptimizedHybridHashJoin {
     private int[] probePSizeInTups;
 
     public OptimizedHybridHashJoin(IHyracksTaskContext ctx, int memSizeInFrames, int numOfPartitions,
-            String probeRelName,
-            String buildRelName, int[] probeKeys, int[] buildKeys, IBinaryComparator[] comparators,
+            String probeRelName, String buildRelName, int[] probeKeys, int[] buildKeys, IBinaryComparator[] comparators,
             RecordDescriptor probeRd, RecordDescriptor buildRd, ITuplePartitionComputer probeHpc,
             ITuplePartitionComputer buildHpc, IPredicateEvaluator predEval, boolean isLeftOuter,
             IMissingWriterFactory[] nullWriterFactories1) {
@@ -259,8 +258,8 @@ public class OptimizedHybridHashJoin {
                 break;
         }
         try {
-            for (int pid = spilledStatus.nextSetBit(0); pid >= 0
-                    && pid < numOfPartitions; pid = spilledStatus.nextSetBit(pid + 1)) {
+            for (int pid = spilledStatus.nextSetBit(0); pid >= 0 && pid < numOfPartitions; pid =
+                    spilledStatus.nextSetBit(pid + 1)) {
                 if (bufferManager.getNumTuples(pid) > 0) {
                     bufferManager.flushPartition(pid, getSpillWriterOrCreateNewOneIfNotExist(pid, whichSide));
                     bufferManager.clearPartition(pid);
@@ -293,16 +292,15 @@ public class OptimizedHybridHashJoin {
 
         // For partitions in main memory, we deduct their size from the free space.
         int inMemTupCount = 0;
-        for (int p = spilledStatus.nextClearBit(0); p >= 0
-                && p < numOfPartitions; p = spilledStatus.nextClearBit(p + 1)) {
+        for (int p = spilledStatus.nextClearBit(0); p >= 0 && p < numOfPartitions; p =
+                spilledStatus.nextClearBit(p + 1)) {
             freeSpace -= bufferManager.getPhysicalSize(p);
             inMemTupCount += buildPSizeInTups[p];
         }
 
         // Calculates the expected hash table size for the given number of tuples in main memory
         // and deducts it from the free space.
-        long hashTableByteSizeForInMemTuples = SerializableHashTable.getExpectedTableByteSize(inMemTupCount,
-                frameSize);
+        long hashTableByteSizeForInMemTuples = SerializableHashTable.getExpectedTableByteSize(inMemTupCount, frameSize);
         freeSpace -= hashTableByteSizeForInMemTuples;
 
         // In the case where free space is less than zero after considering the hash table size,
@@ -317,8 +315,9 @@ public class OptimizedHybridHashJoin {
             int pidToSpill = selectSinglePartitionToSpill(freeSpace, inMemTupCount, frameSize);
             if (pidToSpill >= 0) {
                 // There is a suitable one. We spill that partition to the disk.
-                long hashTableSizeDecrease = -SerializableHashTable.calculateByteSizeDeltaForTableSizeChange(
-                        inMemTupCount, -buildPSizeInTups[pidToSpill], frameSize);
+                long hashTableSizeDecrease =
+                        -SerializableHashTable.calculateByteSizeDeltaForTableSizeChange(inMemTupCount,
+                                -buildPSizeInTups[pidToSpill], frameSize);
                 freeSpace = freeSpace + bufferManager.getPhysicalSize(pidToSpill) + hashTableSizeDecrease;
                 inMemTupCount -= buildPSizeInTups[pidToSpill];
                 spillPartition(pidToSpill);
@@ -327,8 +326,8 @@ public class OptimizedHybridHashJoin {
             } else {
                 // There is no single suitable partition. So, we need to spill multiple partitions to the disk
                 // in order to accommodate the hash table.
-                for (int p = spilledStatus.nextClearBit(0); p >= 0
-                        && p < numOfPartitions; p = spilledStatus.nextClearBit(p + 1)) {
+                for (int p = spilledStatus.nextClearBit(0); p >= 0 && p < numOfPartitions; p =
+                        spilledStatus.nextClearBit(p + 1)) {
                     int spaceToBeReturned = bufferManager.getPhysicalSize(p);
                     int numberOfTuplesToBeSpilled = buildPSizeInTups[p];
                     if (spaceToBeReturned == 0 || numberOfTuplesToBeSpilled == 0) {
@@ -340,9 +339,9 @@ public class OptimizedHybridHashJoin {
                     // Since the number of tuples in memory has been decreased,
                     // the hash table size will be decreased, too.
                     // We put minus since the method returns a negative value to represent a newly reclaimed space.
-                    long expectedHashTableSizeDecrease = -SerializableHashTable
-                            .calculateByteSizeDeltaForTableSizeChange(inMemTupCount, -numberOfTuplesToBeSpilled,
-                                    frameSize);
+                    long expectedHashTableSizeDecrease =
+                            -SerializableHashTable.calculateByteSizeDeltaForTableSizeChange(inMemTupCount,
+                                    -numberOfTuplesToBeSpilled, frameSize);
                     freeSpace = freeSpace + spaceToBeReturned + expectedHashTableSizeDecrease;
                     // Adjusts the hash table size
                     inMemTupCount -= numberOfTuplesToBeSpilled;
@@ -356,8 +355,7 @@ public class OptimizedHybridHashJoin {
         // If more partitions have been spilled to the disk, calculate the expected hash table size again
         // before bringing some partitions to main memory.
         if (moreSpilled) {
-            hashTableByteSizeForInMemTuples = SerializableHashTable.getExpectedTableByteSize(inMemTupCount,
-                    frameSize);
+            hashTableByteSizeForInMemTuples = SerializableHashTable.getExpectedTableByteSize(inMemTupCount, frameSize);
         }
 
         // Brings back some partitions if there is enough free space.
@@ -387,8 +385,8 @@ public class OptimizedHybridHashJoin {
         long minSpaceAfterSpill = (long) memSizeInFrames * frameSize;
         int minSpaceAfterSpillPartID = -1;
 
-        for (int p = spilledStatus.nextClearBit(0); p >= 0
-                && p < numOfPartitions; p = spilledStatus.nextClearBit(p + 1)) {
+        for (int p = spilledStatus.nextClearBit(0); p >= 0 && p < numOfPartitions; p =
+                spilledStatus.nextClearBit(p + 1)) {
             if (buildPSizeInTups[p] == 0 || bufferManager.getPhysicalSize(p) == 0) {
                 continue;
             }
@@ -408,8 +406,8 @@ public class OptimizedHybridHashJoin {
     }
 
     private int selectPartitionsToReload(long freeSpace, int pid, int inMemTupCount) {
-        for (int i = spilledStatus.nextSetBit(pid); i >= 0
-                && i < numOfPartitions; i = spilledStatus.nextSetBit(i + 1)) {
+        for (int i = spilledStatus.nextSetBit(pid); i >= 0 && i < numOfPartitions; i =
+                spilledStatus.nextSetBit(i + 1)) {
             int spilledTupleCount = buildPSizeInTups[i];
             // Expected hash table size increase after reloading this partition
             long expectedHashTableByteSizeIncrease = SerializableHashTable.calculateByteSizeDeltaForTableSizeChange(
@@ -452,10 +450,10 @@ public class OptimizedHybridHashJoin {
 
     private void createInMemoryJoiner(int inMemTupCount) throws HyracksDataException {
         ISerializableTable table = new SerializableHashTable(inMemTupCount, ctx, bufferManagerForHashTable);
-        this.inMemJoiner = new InMemoryHashJoin(ctx, new FrameTupleAccessor(probeRd), probeHpc,
-                new FrameTupleAccessor(buildRd), buildRd, buildHpc,
-                new FrameTuplePairComparator(probeKeys, buildKeys, comparators), isLeftOuter, nonMatchWriters, table,
-                predEvaluator, isReversed, bufferManagerForHashTable);
+        this.inMemJoiner =
+                new InMemoryHashJoin(ctx, new FrameTupleAccessor(probeRd), probeHpc, new FrameTupleAccessor(buildRd),
+                        buildRd, buildHpc, new FrameTuplePairComparator(probeKeys, buildKeys, comparators), isLeftOuter,
+                        nonMatchWriters, table, predEvaluator, isReversed, bufferManagerForHashTable);
     }
 
     private void loadDataInMemJoin() throws HyracksDataException {
@@ -632,8 +630,8 @@ public class OptimizedHybridHashJoin {
         buf.append("(A) Spilled partitions" + "\n");
         int spilledTupleCount = 0;
         int spilledPartByteSize = 0;
-        for (int pid = spilledStatus.nextSetBit(0); pid >= 0
-                && pid < numOfPartitions; pid = spilledStatus.nextSetBit(pid + 1)) {
+        for (int pid = spilledStatus.nextSetBit(0); pid >= 0 && pid < numOfPartitions; pid =
+                spilledStatus.nextSetBit(pid + 1)) {
             if (whichSide == SIDE.BUILD) {
                 spilledTupleCount += buildPSizeInTups[pid];
                 spilledPartByteSize += buildRFWriters[pid].getFileSize();
@@ -653,8 +651,8 @@ public class OptimizedHybridHashJoin {
         buf.append("(B) In-memory partitions" + "\n");
         int inMemoryTupleCount = 0;
         int inMemoryPartByteSize = 0;
-        for (int pid = spilledStatus.nextClearBit(0); pid >= 0
-                && pid < numOfPartitions; pid = spilledStatus.nextClearBit(pid + 1)) {
+        for (int pid = spilledStatus.nextClearBit(0); pid >= 0 && pid < numOfPartitions; pid =
+                spilledStatus.nextClearBit(pid + 1)) {
             if (whichSide == SIDE.BUILD) {
                 inMemoryTupleCount += buildPSizeInTups[pid];
                 inMemoryPartByteSize += bufferManager.getPhysicalSize(pid);

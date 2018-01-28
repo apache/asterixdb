@@ -124,7 +124,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
             return new ExternalGroupBuildOperatorNodePushable(ctx, new TaskId(getActivityId(), partition), tableSize,
                     fileSize, keyFields, framesLimit, comparatorFactories, firstNormalizerFactory,
                     partialAggregatorFactory, recordDescProvider.getInputRecordDescriptor(getActivityId(), 0),
@@ -142,7 +142,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-                        throws HyracksDataException {
+                throws HyracksDataException {
             return new ExternalGroupWriteOperatorNodePushable(ctx,
                     new TaskId(new ActivityId(getOperatorId(), AGGREGATE_ACTIVITY_ID), partition),
                     spillableTableFactory, partialRecDesc, outRecDesc, framesLimit, keyFields, firstNormalizerFactory,

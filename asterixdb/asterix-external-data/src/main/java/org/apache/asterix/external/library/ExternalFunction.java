@@ -56,8 +56,7 @@ public abstract class ExternalFunction implements IExternalFunction {
     protected final JavaFunctionHelper functionHelper;
 
     public ExternalFunction(IExternalFunctionInfo finfo, IScalarEvaluatorFactory args[], IHyracksTaskContext context,
-            IApplicationContext appCtx)
-            throws HyracksDataException {
+            IApplicationContext appCtx) throws HyracksDataException {
         this.finfo = finfo;
         this.evaluatorFactories = args;
         argumentEvaluators = new IScalarEvaluator[args.length];
@@ -78,8 +77,7 @@ public abstract class ExternalFunction implements IExternalFunction {
             externalFunctionFactory = (IFunctionFactory) clazz.newInstance();
             externalFunction = externalFunctionFactory.getExternalFunction();
         } catch (Exception e) {
-            throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNABLE_TO_LOAD_CLASS, e,
-                    classname);
+            throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNABLE_TO_LOAD_CLASS, e, classname);
         }
     }
 

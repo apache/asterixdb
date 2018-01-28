@@ -144,7 +144,8 @@ public class InsertPipelineExample {
                                                         // B-Tree tuple, etc.
         IFileSplitProvider primarySplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.primaryBTreeName);
 
-        IIndexDataflowHelperFactory primaryHelperFactory = new IndexDataflowHelperFactory(storageManager, primarySplitProvider);
+        IIndexDataflowHelperFactory primaryHelperFactory =
+                new IndexDataflowHelperFactory(storageManager, primarySplitProvider);
 
         // create operator descriptor
         TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert =

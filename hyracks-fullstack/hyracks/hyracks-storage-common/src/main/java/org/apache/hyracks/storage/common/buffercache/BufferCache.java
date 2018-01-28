@@ -1307,21 +1307,17 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 finishQueue();
                 if (cycleCount > MAX_PIN_ATTEMPT_CYCLES) {
                     cycleCount = 0; // suppress warning below
-                    throw new HyracksDataException(
-                            "Unable to find free page in buffer cache after " + MAX_PIN_ATTEMPT_CYCLES
-                                    + " cycles (buffer cache undersized?)" + (DEBUG
-                                            ? " ; " + (masterPinCount.get() - startingPinCount)
-                                                    + " successful pins since start of cycle"
-                                            : ""));
+                    throw new HyracksDataException("Unable to find free page in buffer cache after "
+                            + MAX_PIN_ATTEMPT_CYCLES + " cycles (buffer cache undersized?)"
+                            + (DEBUG ? " ; " + (masterPinCount.get() - startingPinCount)
+                                    + " successful pins since start of cycle" : ""));
                 }
             }
         } finally {
             if (cycleCount > PIN_ATTEMPT_CYCLES_WARNING_THRESHOLD && LOGGER.isWarnEnabled()) {
                 LOGGER.warn("Took " + cycleCount + " cycles to find free page in buffer cache.  (buffer cache "
-                        + "undersized?)" + (DEBUG
-                                ? " ; " + (masterPinCount.get() - startingPinCount)
-                                        + " successful pins since start of cycle"
-                                : ""));
+                        + "undersized?)" + (DEBUG ? " ; " + (masterPinCount.get() - startingPinCount)
+                                + " successful pins since start of cycle" : ""));
             }
         }
     }

@@ -97,8 +97,8 @@ public class MaterializedPartitionWriter implements IFrameWriter {
         }
         if (!failed) {
             manager.registerPartition(pid, ctx.getJobletContext().getJobId().getCcId(), taId,
-                    new MaterializedPartition(ctx, fRef, executor, ctx.getIoManager()),
-                    PartitionState.COMMITTED, taId.getAttempt() == 0 ? false : true);
+                    new MaterializedPartition(ctx, fRef, executor, ctx.getIoManager()), PartitionState.COMMITTED,
+                    taId.getAttempt() == 0 ? false : true);
 
         }
     }

@@ -74,7 +74,7 @@ public final class ABoolean implements IAObject {
     }
 
     @Override
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         return new ObjectMapper().createObjectNode().put("ABoolean", bVal);
     }
 }

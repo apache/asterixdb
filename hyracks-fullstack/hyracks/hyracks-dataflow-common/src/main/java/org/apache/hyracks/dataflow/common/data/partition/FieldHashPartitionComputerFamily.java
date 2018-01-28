@@ -30,7 +30,8 @@ public class FieldHashPartitionComputerFamily implements ITuplePartitionComputer
     private final int[] hashFields;
     private final IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories;
 
-    public FieldHashPartitionComputerFamily(int[] hashFields, IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories) {
+    public FieldHashPartitionComputerFamily(int[] hashFields,
+            IBinaryHashFunctionFamily[] hashFunctionGeneratorFactories) {
         this.hashFields = hashFields;
         this.hashFunctionGeneratorFactories = hashFunctionGeneratorFactories;
     }
@@ -52,8 +53,8 @@ public class FieldHashPartitionComputerFamily implements ITuplePartitionComputer
                     IBinaryHashFunction hashFn = hashFunctions[j];
                     int fStart = accessor.getFieldStartOffset(tIndex, fIdx);
                     int fEnd = accessor.getFieldEndOffset(tIndex, fIdx);
-                    int fh = hashFn
-                            .hash(accessor.getBuffer().array(), startOffset + slotLength + fStart, fEnd - fStart);
+                    int fh = hashFn.hash(accessor.getBuffer().array(), startOffset + slotLength + fStart,
+                            fEnd - fStart);
                     h += fh;
                 }
                 if (h < 0) {

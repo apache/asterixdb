@@ -95,8 +95,7 @@ public class ToBooleanDescriptor extends AbstractScalarFunctionDynamicDescriptor
                                 setInteger(UTF8StringUtil.getStringLength(bytes, offset + 1), result);
                                 break;
                             case ARRAY:
-                                setInteger(AOrderedListSerializerDeserializer.getNumberOfItems(bytes, offset),
-                                        result);
+                                setInteger(AOrderedListSerializerDeserializer.getNumberOfItems(bytes, offset), result);
                                 break;
                             case MULTISET:
                                 setInteger(AUnorderedListSerializerDeserializer.getNumberOfItems(bytes, offset),

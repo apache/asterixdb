@@ -73,7 +73,6 @@ public class RecordUtil {
      */
     public static int computeNullBitmapSize(ARecordType recordType) {
         return NonTaggedFormatUtil.hasOptionalField(recordType)
-                ? (int) Math.ceil(recordType.getFieldNames().length / 4.0)
-                : 0;
+                ? (int) Math.ceil(recordType.getFieldNames().length / 4.0) : 0;
     }
 }

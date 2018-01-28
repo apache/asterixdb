@@ -70,9 +70,9 @@ public class NestedLoopJoin {
         if (memSize < 3) {
             throw new HyracksDataException("Not enough memory is available for Nested Loop Join");
         }
-        this.outerBufferMngr = new VariableFrameMemoryManager(
-                new VariableFramePool(ctx, ctx.getInitialFrameSize() * (memSize - 2)),
-                FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.LAST_FIT, memSize - 2));
+        this.outerBufferMngr =
+                new VariableFrameMemoryManager(new VariableFramePool(ctx, ctx.getInitialFrameSize() * (memSize - 2)),
+                        FrameFreeSlotPolicyFactory.createFreeSlotPolicy(EnumFreeSlotPolicy.LAST_FIT, memSize - 2));
 
         this.predEvaluator = predEval;
         this.isReversed = false;
@@ -90,8 +90,8 @@ public class NestedLoopJoin {
             missingTupleBuilder = null;
         }
 
-        FileReference file = ctx.getJobletContext()
-                .createManagedWorkspaceFile(this.getClass().getSimpleName() + this.toString());
+        FileReference file =
+                ctx.getJobletContext().createManagedWorkspaceFile(this.getClass().getSimpleName() + this.toString());
         runFileWriter = new RunFileWriter(file, ctx.getIoManager());
         runFileWriter.open();
     }

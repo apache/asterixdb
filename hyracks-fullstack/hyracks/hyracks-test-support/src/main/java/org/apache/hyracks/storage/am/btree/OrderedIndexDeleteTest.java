@@ -54,8 +54,8 @@ public abstract class OrderedIndexDeleteTest extends OrderedIndexTestDriver {
             } else if (fieldSerdes[0] instanceof UTF8StringSerializerDeserializer) {
                 orderedIndexTestUtils.insertStringTuples(ctx, numTuplesToInsert, false, getRandom());
             }
-            int numTuplesPerDeleteRound = (int) Math
-                    .ceil((float) ctx.getCheckTuples().size() / (float) numDeleteRounds);
+            int numTuplesPerDeleteRound =
+                    (int) Math.ceil((float) ctx.getCheckTuples().size() / (float) numDeleteRounds);
             for (int j = 0; j < numDeleteRounds; j++) {
                 orderedIndexTestUtils.deleteTuples(ctx, numTuplesPerDeleteRound, getRandom());
                 orderedIndexTestUtils.checkPointSearches(ctx);

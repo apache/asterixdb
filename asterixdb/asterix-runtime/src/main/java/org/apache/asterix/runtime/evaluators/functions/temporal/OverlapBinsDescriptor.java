@@ -220,8 +220,8 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                             + ((binStartChronon < 0
                                                     && binStartChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0)
                                                             ? -1 : 0);
-                                    binEndChronon = binEndChronon / GregorianCalendarSystem.CHRONON_OF_DAY
-                                            + ((binEndChronon < 0
+                                    binEndChronon =
+                                            binEndChronon / GregorianCalendarSystem.CHRONON_OF_DAY + ((binEndChronon < 0
                                                     && binEndChronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) ? -1
                                                             : 0);
                                     aInterval.setValue(binStartChronon, binEndChronon, intervalTypeTag);

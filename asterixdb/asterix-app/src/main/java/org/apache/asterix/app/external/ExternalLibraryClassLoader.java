@@ -23,7 +23,8 @@ import java.net.URLClassLoader;
 
 public class ExternalLibraryClassLoader extends URLClassLoader {
 
-    private static final ClassLoader bootClassLoader = new ClassLoader(null){};
+    private static final ClassLoader bootClassLoader = new ClassLoader(null) {
+    };
 
     public ExternalLibraryClassLoader(URL[] urls, ClassLoader parentClassLoader) {
         super(urls, parentClassLoader);

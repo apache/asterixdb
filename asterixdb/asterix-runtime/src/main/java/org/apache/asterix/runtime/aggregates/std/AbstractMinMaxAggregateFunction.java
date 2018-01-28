@@ -68,8 +68,8 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
             return;
         }
         eval.evaluate(tuple, inputVal);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
+        ATypeTag typeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
         if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
             processNull();
             return;
@@ -81,8 +81,8 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
             // First value encountered. Set type, comparator, and initial value.
             aggType = typeTag;
             // Set comparator.
-            IBinaryComparatorFactory cmpFactory = BinaryComparatorFactoryProvider.INSTANCE
-                    .getBinaryComparatorFactory(aggType, isMin);
+            IBinaryComparatorFactory cmpFactory =
+                    BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(aggType, isMin);
             cmp = cmpFactory.createBinaryComparator();
             // Initialize min value.
             outputVal.assign(inputVal);

@@ -63,14 +63,15 @@ public class MicroPreclusteredGroupByPOperator extends AbstractPreclusteredGroup
         int fdColumns[] = getFdColumns(gby, inputSchemas[0]);
         // compile subplans and set the gby op. schema accordingly
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], gby, opSchema, context);
-        IAggregatorDescriptorFactory aggregatorFactory = new NestedPlansAccumulatingAggregatorFactory(subplans, keys,
-                fdColumns);
+        IAggregatorDescriptorFactory aggregatorFactory =
+                new NestedPlansAccumulatingAggregatorFactory(subplans, keys, fdColumns);
 
-        IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
-                columnList, env, context);
-        RecordDescriptor recordDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
-        RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op.getInputs().get(0).getValue()),
-                inputSchemas[0], context);
+        IBinaryComparatorFactory[] comparatorFactories =
+                JobGenHelper.variablesToAscBinaryComparatorFactories(columnList, env, context);
+        RecordDescriptor recordDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
+        RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(
+                context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
         MicroPreClusteredGroupRuntimeFactory runtime = new MicroPreClusteredGroupRuntimeFactory(keys,
                 comparatorFactories, aggregatorFactory, inputRecordDesc, recordDescriptor, null);
         builder.contributeMicroOperator(gby, runtime, recordDescriptor);

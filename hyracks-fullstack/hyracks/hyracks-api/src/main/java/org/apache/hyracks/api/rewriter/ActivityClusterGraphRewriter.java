@@ -48,8 +48,8 @@ import org.apache.hyracks.api.rewriter.runtime.SuperActivity;
  * @author yingyib
  */
 public class ActivityClusterGraphRewriter {
-    private static final String ONE_TO_ONE_CONNECTOR = "org.apache.hyracks.dataflow.std.connectors."
-            + "OneToOneConnectorDescriptor";
+    private static final String ONE_TO_ONE_CONNECTOR =
+            "org.apache.hyracks.dataflow.std.connectors." + "OneToOneConnectorDescriptor";
 
     /**
      * rewrite an activity cluster graph to eliminate
@@ -90,8 +90,8 @@ public class ActivityClusterGraphRewriter {
                 replacedBlockers = new HashSet<>();
                 for (ActivityId blocker : blockers) {
                     replacedBlockers.add(invertedAid2SuperAidMap.get(blocker));
-                    ActivityCluster dependingAc = ac.getActivityClusterGraph().getActivityMap()
-                            .get(invertedAid2SuperAidMap.get(blocker));
+                    ActivityCluster dependingAc =
+                            ac.getActivityClusterGraph().getActivityMap().get(invertedAid2SuperAidMap.get(blocker));
                     if (!ac.getDependencies().contains(dependingAc)) {
                         ac.getDependencies().add(dependingAc);
                     }
@@ -122,8 +122,8 @@ public class ActivityClusterGraphRewriter {
         Map<ActivityId, IActivity> activities = ac.getActivityMap();
         Map<ActivityId, List<IConnectorDescriptor>> activityInputMap = ac.getActivityInputMap();
         Map<ActivityId, List<IConnectorDescriptor>> activityOutputMap = ac.getActivityOutputMap();
-        Map<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> connectorActivityMap = ac
-                .getConnectorActivityMap();
+        Map<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> connectorActivityMap =
+                ac.getConnectorActivityMap();
         ActivityClusterGraph acg = ac.getActivityClusterGraph();
         Map<ActivityId, IActivity> startActivities = new HashMap<>();
         Map<ActivityId, SuperActivity> superActivities = new HashMap<>();
@@ -177,8 +177,8 @@ public class ActivityClusterGraphRewriter {
                 List<IConnectorDescriptor> outputConnectors = activityOutputMap.get(expendingActivity.getActivityId());
                 if (outputConnectors != null) {
                     for (IConnectorDescriptor outputConn : outputConnectors) {
-                        Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>> endPoints = connectorActivityMap
-                                .get(outputConn.getConnectorId());
+                        Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>> endPoints =
+                                connectorActivityMap.get(outputConn.getConnectorId());
                         IActivity newActivity = endPoints.getRight().getLeft();
                         SuperActivity existingSuperActivity = invertedActivitySuperActivityMap.get(newActivity);
                         if (outputConn.getClass().getName().contains(ONE_TO_ONE_CONNECTOR)) {

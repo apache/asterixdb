@@ -45,8 +45,8 @@ public class SimilarityFiltersCache {
             bbis.setByteBuffer(ByteBuffer.wrap(similarityNameBytes), startOffset + 1);
             String similarityName = utf8SerDer.deserialize(dis);
             similarityNameBytesCached = Arrays.copyOfRange(similarityNameBytes, startOffset, len);
-            similarityFiltersCached = SimilarityFiltersFactory.getSimilarityFilters(similarityName,
-                    similarityThreshold);
+            similarityFiltersCached =
+                    SimilarityFiltersFactory.getSimilarityFilters(similarityName, similarityThreshold);
         }
         return similarityFiltersCached;
     }

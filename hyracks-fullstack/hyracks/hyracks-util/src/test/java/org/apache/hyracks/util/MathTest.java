@@ -32,9 +32,9 @@ public class MathTest {
         Random random = new Random(System.currentTimeMillis());
         for (int i = 0; i < 31; i++) {
             assertTrue(MathUtil.log2Floor((int) Math.pow(2, i)) == i);
-            for(int x = 0; x < 10; x++){
+            for (int x = 0; x < 10; x++) {
                 float extra = random.nextFloat();
-                while (extra >= 1.0){
+                while (extra >= 1.0) {
                     extra = random.nextFloat();
                 }
                 assertTrue(MathUtil.log2Floor((int) Math.pow(2, i + extra)) == i);

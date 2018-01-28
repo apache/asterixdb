@@ -25,7 +25,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
-public enum TestOperationCallback implements ISearchOperationCallback,IModificationOperationCallback {
+public enum TestOperationCallback implements ISearchOperationCallback, IModificationOperationCallback {
     INSTANCE;
 
     private static final int RANDOM_SEED = 50;

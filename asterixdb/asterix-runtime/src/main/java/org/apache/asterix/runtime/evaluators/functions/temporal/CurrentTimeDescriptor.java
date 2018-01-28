@@ -68,8 +68,8 @@ public class CurrentTimeDescriptor extends AbstractScalarFunctionDynamicDescript
                     private DataOutput out = resultStorage.getDataOutput();
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ATime> timeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ATIME);
+                    private ISerializerDeserializer<ATime> timeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
                     private AMutableTime aTime = new AMutableTime(0);
 
                     @Override

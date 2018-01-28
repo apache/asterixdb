@@ -140,8 +140,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     // NULL. Note that string type can also process empty field as an
                     // empty string
                     if (!NonTaggedFormatUtil.isOptional(recordType.getFieldTypes()[i])) {
-                        throw new RuntimeDataException(ErrorCode.PARSER_DELIMITED_NONOPTIONAL_NULL,
-                                cursor.recordCount, cursor.fieldCount);
+                        throw new RuntimeDataException(ErrorCode.PARSER_DELIMITED_NONOPTIONAL_NULL, cursor.recordCount,
+                                cursor.fieldCount);
                     }
                     fieldValueBufferOutput.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 } else {
@@ -152,8 +152,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                         cursor.fEnd -= cursor.doubleQuoteCount;
                         cursor.isDoubleQuoteIncludedInThisField = false;
                     }
-                    valueParsers[i]
-                            .parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart, fieldValueBufferOutput);
+                    valueParsers[i].parse(cursor.buffer, cursor.fStart, cursor.fEnd - cursor.fStart,
+                            fieldValueBufferOutput);
                     areAllNullFields = false;
                 }
                 if (fldIds[i] < 0) {

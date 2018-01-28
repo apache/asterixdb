@@ -51,8 +51,7 @@ public class FrameManager implements IHyracksFrameMgrContext {
         }
         if (bytes > FrameConstants.MAX_FRAMESIZE) {
             throw new HyracksDataException(
-                    "Unable to allocate frame larger than:" + FrameConstants.MAX_FRAMESIZE
-                            + " bytes");
+                    "Unable to allocate frame larger than:" + FrameConstants.MAX_FRAMESIZE + " bytes");
         }
         ByteBuffer buffer = ByteBuffer.allocate(bytes);
         FrameHelper.serializeFrameSize(buffer, bytes / minFrameSize);
@@ -67,8 +66,8 @@ public class FrameManager implements IHyracksFrameMgrContext {
             return allocateFrame(newSizeInBytes);
         } else {
             if (newSizeInBytes > FrameConstants.MAX_FRAMESIZE) {
-                throw new HyracksDataException("Unable to allocate frame of size bigger than: "
-                        + FrameConstants.MAX_FRAMESIZE + " bytes");
+                throw new HyracksDataException(
+                        "Unable to allocate frame of size bigger than: " + FrameConstants.MAX_FRAMESIZE + " bytes");
             }
             ByteBuffer buffer = allocateFrame(newSizeInBytes);
             int limit = Math.min(newSizeInBytes, tobeDeallocate.capacity());

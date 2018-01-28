@@ -512,8 +512,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             boolean isLetter = Character.isLetter(originalChar);
 
             // Make the first character into upper case while the later ones into lower case.
-            char resultChar = toUpperCase && isLetter ? Character.toUpperCase(originalChar) : (isLetter ? Character
-                    .toLowerCase(originalChar) : originalChar);
+            char resultChar = toUpperCase && isLetter ? Character.toUpperCase(originalChar)
+                    : (isLetter ? Character.toLowerCase(originalChar) : originalChar);
             builder.appendChar(resultChar);
             byteIndex += src.charSize(srcStart + byteIndex);
 

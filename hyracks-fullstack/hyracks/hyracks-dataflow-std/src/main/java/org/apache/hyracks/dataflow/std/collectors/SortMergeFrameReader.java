@@ -65,8 +65,8 @@ public class SortMergeFrameReader implements IFrameReader {
             }
             List<IFrameReader> batch = new ArrayList<IFrameReader>(nSenders);
             pbm.getNextBatch(batch, nSenders);
-            merger = new RunMergingFrameReader(ctx, batch, inFrames, sortFields,
-                    comparators, nmkComputer, recordDescriptor);
+            merger = new RunMergingFrameReader(ctx, batch, inFrames, sortFields, comparators, nmkComputer,
+                    recordDescriptor);
         } else {
             // multi level merge.
             throw new HyracksDataException("Not yet supported");

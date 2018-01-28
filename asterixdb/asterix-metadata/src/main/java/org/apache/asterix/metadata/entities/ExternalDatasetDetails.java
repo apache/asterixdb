@@ -89,12 +89,12 @@ public class ExternalDatasetDetails implements IDatasetDetails {
         externalRecordBuilder.reset(MetadataRecordTypes.EXTERNAL_DETAILS_RECORDTYPE);
         AMutableString aString = new AMutableString("");
 
-        ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ASTRING);
-        ISerializerDeserializer<ADateTime> dateTimeSerde = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ADATETIME);
-        ISerializerDeserializer<AInt32> intSerde = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.AINT32);
+        ISerializerDeserializer<AString> stringSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+        ISerializerDeserializer<ADateTime> dateTimeSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
+        ISerializerDeserializer<AInt32> intSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
 
         // write field 0
         fieldValue.reset();

@@ -26,8 +26,8 @@ import org.apache.hyracks.api.job.JobSpecification;
 
 public class PartitionConstraintHelper {
     public static void addPartitionCountConstraint(JobSpecification spec, IOperatorDescriptor op, int count) {
-        spec.addUserConstraint(new Constraint(new PartitionCountExpression(op.getOperatorId()), new ConstantExpression(
-                count)));
+        spec.addUserConstraint(
+                new Constraint(new PartitionCountExpression(op.getOperatorId()), new ConstantExpression(count)));
     }
 
     public static void addAbsoluteLocationConstraint(JobSpecification spec, IOperatorDescriptor op,

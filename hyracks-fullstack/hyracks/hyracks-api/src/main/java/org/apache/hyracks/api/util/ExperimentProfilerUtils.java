@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class ExperimentProfilerUtils {
-    public static void printToOutputFile(StringBuffer sb, FileOutputStream fos) throws IllegalStateException,
-            IOException {
+    public static void printToOutputFile(StringBuffer sb, FileOutputStream fos)
+            throws IllegalStateException, IOException {
         fos.write(sb.toString().getBytes());
     }
 

@@ -66,8 +66,8 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private IPointable inputArg = new VoidPointable();
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private ISerializerDeserializer<AInt64> int64Serde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable resultPointable)
@@ -83,8 +83,8 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 result.setValue(len);
                                 int64Serde.serialize(result, out);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0,
-                                        serString[offset], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                             resultPointable.set(resultStorage);
                         } catch (IOException e1) {

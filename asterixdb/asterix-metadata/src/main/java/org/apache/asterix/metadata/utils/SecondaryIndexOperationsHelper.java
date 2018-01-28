@@ -147,19 +147,19 @@ public abstract class SecondaryIndexOperationsHelper {
         SecondaryIndexOperationsHelper indexOperationsHelper;
         switch (index.getIndexType()) {
             case BTREE:
-                indexOperationsHelper = new SecondaryBTreeOperationsHelper(dataset, index, physOptConf,
-                        metadataProvider);
+                indexOperationsHelper =
+                        new SecondaryBTreeOperationsHelper(dataset, index, physOptConf, metadataProvider);
                 break;
             case RTREE:
-                indexOperationsHelper = new SecondaryRTreeOperationsHelper(dataset, index, physOptConf,
-                        metadataProvider);
+                indexOperationsHelper =
+                        new SecondaryRTreeOperationsHelper(dataset, index, physOptConf, metadataProvider);
                 break;
             case SINGLE_PARTITION_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX:
-                indexOperationsHelper = new SecondaryInvertedIndexOperationsHelper(dataset, index, physOptConf,
-                        metadataProvider);
+                indexOperationsHelper =
+                        new SecondaryInvertedIndexOperationsHelper(dataset, index, physOptConf, metadataProvider);
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, index.getIndexType());
@@ -264,7 +264,6 @@ public abstract class SecondaryIndexOperationsHelper {
     }
 
     protected abstract void setSecondaryRecDescAndComparators() throws AlgebricksException;
-
 
     protected AlgebricksMetaOperatorDescriptor createAssignOp(JobSpecification spec, int numSecondaryKeyFields,
             RecordDescriptor secondaryRecDesc) throws AlgebricksException {

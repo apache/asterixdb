@@ -73,8 +73,8 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
 
     protected final AMutableFloat aFloat = new AMutableFloat(0);
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<AFloat> floatSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AFLOAT);
+    protected final ISerializerDeserializer<AFloat> floatSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
 
     protected ATypeTag firstTypeTag;
     protected ATypeTag secondTypeTag;
@@ -107,15 +107,15 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
         firstOrdListEval.evaluate(tuple, argPtr1);
         secondOrdListEval.evaluate(tuple, argPtr2);
 
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
+        firstTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
+        secondTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
 
-        firstItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
-        secondItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
+        firstItemTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
+        secondItemTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
 
         if (!checkArgTypes(firstTypeTag, secondTypeTag)) {
             result.set(resultStorage);
@@ -229,10 +229,10 @@ public class SimilarityJaccardEvaluator implements IScalarEvaluator {
             return;
         }
 
-        IBinaryHashFunction putHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE
-                .createBinaryHashFunction(buildItemTypeTag, ignoreCase);
-        IBinaryHashFunction getHashFunc = ListItemBinaryHashFunctionFactory.INSTANCE
-                .createBinaryHashFunction(probeItemTypeTag, ignoreCase);
+        IBinaryHashFunction putHashFunc =
+                ListItemBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction(buildItemTypeTag, ignoreCase);
+        IBinaryHashFunction getHashFunc =
+                ListItemBinaryHashFunctionFactory.INSTANCE.createBinaryHashFunction(probeItemTypeTag, ignoreCase);
         IBinaryComparator cmp = ListItemBinaryComparatorFactory.INSTANCE.createBinaryComparator(buildItemTypeTag,
                 probeItemTypeTag, ignoreCase);
         hashMap = new BinaryHashMap(hashTableSize, TABLE_FRAME_SIZE, putHashFunc, getHashFunc, cmp);

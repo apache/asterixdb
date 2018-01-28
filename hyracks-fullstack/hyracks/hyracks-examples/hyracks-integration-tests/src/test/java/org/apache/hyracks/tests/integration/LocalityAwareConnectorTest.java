@@ -125,18 +125,20 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
         int[] keyFields = new int[] { 0 };
         int tableSize = 8;
 
-        ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, fileSize / spec.getFrameSize() + 1,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
-                        new FloatSumFieldAggregatorFactory(5, false) }),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
-                        new FloatSumFieldAggregatorFactory(3, false) }),
-                outputRec, outputRec, new HashSpillableTableFactory(
-                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
+        ExternalGroupOperatorDescriptor grouper =
+                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields,
+                        fileSize / spec.getFrameSize() + 1,
+                        new IBinaryComparatorFactory[] {
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                        new UTF8StringNormalizedKeyComputerFactory(),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
+                                new FloatSumFieldAggregatorFactory(5, false) }),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
+                                new FloatSumFieldAggregatorFactory(3, false) }),
+                        outputRec, outputRec, new HashSpillableTableFactory(
+                                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, "asterix-005", "asterix-006");
 
@@ -190,18 +192,20 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
         int[] keyFields = new int[] { 0 };
         int tableSize = 8;
 
-        ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, fileSize / spec.getFrameSize() + 1,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                new UTF8StringNormalizedKeyComputerFactory(),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
-                        new FloatSumFieldAggregatorFactory(5, false) }),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
-                        new FloatSumFieldAggregatorFactory(3, false) }),
-                outputRec, outputRec, new HashSpillableTableFactory(
-                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
+        ExternalGroupOperatorDescriptor grouper =
+                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields,
+                        fileSize / spec.getFrameSize() + 1,
+                        new IBinaryComparatorFactory[] {
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                        new UTF8StringNormalizedKeyComputerFactory(),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
+                                new FloatSumFieldAggregatorFactory(5, false) }),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
+                                new FloatSumFieldAggregatorFactory(3, false) }),
+                        outputRec, outputRec, new HashSpillableTableFactory(
+                                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, "asterix-005", "asterix-006");
 

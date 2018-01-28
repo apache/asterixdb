@@ -91,7 +91,7 @@ public class LicenseUtil {
     private static void doTrim(Writer out, BufferedReader reader, int extraPadding, int wrapLength) throws IOException {
         boolean head = true;
         int empty = 0;
-        for (String line = reader.readLine(); line != null; line = reader.readLine() ) {
+        for (String line = reader.readLine(); line != null; line = reader.readLine()) {
             if ("".equals(line.trim())) {
                 if (!head) {
                     empty++;
@@ -136,7 +136,7 @@ public class LicenseUtil {
                 continue;
             }
             String fullyTrimmed = line.trim();
-            freeSpaces = Math.min(freeSpaces,  rightTrimmed.length() - fullyTrimmed.length());
+            freeSpaces = Math.min(freeSpaces, rightTrimmed.length() - fullyTrimmed.length());
             maxLineLength = Math.max(maxLineLength, fullyTrimmed.length());
         }
         return new ImmutablePair<>(freeSpaces, maxLineLength);

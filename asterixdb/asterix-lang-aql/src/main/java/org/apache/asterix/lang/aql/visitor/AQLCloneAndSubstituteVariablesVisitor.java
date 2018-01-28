@@ -93,8 +93,8 @@ public class AQLCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteVar
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(DistinctClause dc,
             VariableSubstitutionEnvironment env) throws CompilationException {
-        List<Expression> exprList = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(dc.getDistinctByExpr(), env,
-                this);
+        List<Expression> exprList =
+                VariableCloneAndSubstitutionUtil.visitAndCloneExprList(dc.getDistinctByExpr(), env, this);
         DistinctClause dc2 = new DistinctClause(exprList);
         return new Pair<ILangExpression, VariableSubstitutionEnvironment>(dc2, env);
     }

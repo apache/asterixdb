@@ -265,8 +265,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                     pendingWriteEventsCounter.decrement();
                 }
                 BitSet pendingChannelCreditsBitmap = cSet.getPendingChannelCreditsBitmap();
-                for (int j = pendingChannelCreditsBitmap.nextSetBit(0); j >= 0; j = pendingChannelCreditsBitmap
-                        .nextSetBit(j)) {
+                for (int j = pendingChannelCreditsBitmap.nextSetBit(0); j >= 0; j =
+                        pendingChannelCreditsBitmap.nextSetBit(j)) {
                     writerState.command.setChannelId(j);
                     writerState.command.setCommandType(MuxDemuxCommand.CommandType.ADD_CREDITS);
                     ChannelControlBlock ccb = cSet.getCCB(j);

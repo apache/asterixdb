@@ -99,7 +99,7 @@ public class TweetGenerator {
         outputBuffer.limit(32 * 1024);
     }
 
-    public boolean generateNextBatch(int numTweets) throws IOException{
+    public boolean generateNextBatch(int numTweets) throws IOException {
         boolean moreData = tweetIterator.hasNext();
         if (!moreData) {
             if (outputBuffer.position() > 0) {

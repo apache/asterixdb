@@ -139,7 +139,7 @@ public class VariableUtilities {
 
     public static void substituteVariables(ILogicalOperator op,
             List<Pair<LogicalVariable, LogicalVariable>> oldVarNewVarMapHistory, ITypingContext ctx)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         for (Pair<LogicalVariable, LogicalVariable> entry : oldVarNewVarMapHistory) {
             VariableUtilities.substituteVariables(op, entry.first, entry.second, ctx);
         }
@@ -165,8 +165,8 @@ public class VariableUtilities {
 
     public static void substituteVariables(ILogicalOperator op, LogicalVariable v1, LogicalVariable v2,
             boolean goThroughNts, ITypingContext ctx) throws AlgebricksException {
-        ILogicalOperatorVisitor<Void, Pair<LogicalVariable, LogicalVariable>> visitor = new SubstituteVariableVisitor(
-                goThroughNts, ctx);
+        ILogicalOperatorVisitor<Void, Pair<LogicalVariable, LogicalVariable>> visitor =
+                new SubstituteVariableVisitor(goThroughNts, ctx);
         op.accept(visitor, new Pair<LogicalVariable, LogicalVariable>(v1, v2));
     }
 

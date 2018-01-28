@@ -52,8 +52,8 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
             final Map<List<Integer>, List<String>> pathToNCs = new HashMap<List<Integer>, List<String>>();
             for (String NC : NCs) {
                 List<Integer> path = new ArrayList<>();
-                String ipAddress = InetAddress.getByAddress(
-                        ncNameToNcInfos.get(NC).getNetworkAddress().lookupIpAddress()).getHostAddress();
+                String ipAddress = InetAddress
+                        .getByAddress(ncNameToNcInfos.get(NC).getNetworkAddress().lookupIpAddress()).getHostAddress();
                 topology.lookupNetworkTerminal(ipAddress, path);
                 if (path.isEmpty()) {
                     // if the hyracks nc is not in the defined cluster
@@ -64,8 +64,8 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
                 ncs.add(NC);
             }
 
-            final TreeMap<List<Integer>, IntWritable> availableIpsToSlots = new TreeMap<List<Integer>, IntWritable>(
-                    (l1, l2) -> {
+            final TreeMap<List<Integer>, IntWritable> availableIpsToSlots =
+                    new TreeMap<List<Integer>, IntWritable>((l1, l2) -> {
                         int commonLength = Math.min(l1.size(), l2.size());
                         for (int i = 0; i < commonLength; i++) {
                             int value1 = l1.get(i);
@@ -80,8 +80,9 @@ public class RackAwareNcCollectionBuilder implements INcCollectionBuilder {
             for (int i = 0; i < workloads.length; i++) {
                 if (workloads[i] < slotLimit) {
                     List<Integer> path = new ArrayList<Integer>();
-                    String ipAddress = InetAddress.getByAddress(
-                            ncNameToNcInfos.get(NCs[i]).getNetworkAddress().lookupIpAddress()).getHostAddress();
+                    String ipAddress =
+                            InetAddress.getByAddress(ncNameToNcInfos.get(NCs[i]).getNetworkAddress().lookupIpAddress())
+                                    .getHostAddress();
                     topology.lookupNetworkTerminal(ipAddress, path);
                     if (path.isEmpty()) {
                         // if the hyracks nc is not in the defined cluster

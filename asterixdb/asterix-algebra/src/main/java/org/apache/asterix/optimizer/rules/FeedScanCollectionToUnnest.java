@@ -63,9 +63,9 @@ public class FeedScanCollectionToUnnest implements IAlgebraicRewriteRule {
         UnnestOperator unnest = (UnnestOperator) op;
         ILogicalExpression unnestExpr = unnest.getExpressionRef().getValue();
         if (needsScanCollection(unnestExpr, op)) {
-            ILogicalExpression newExpr = new UnnestingFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
-                    new MutableObject<ILogicalExpression>(unnestExpr));
+            ILogicalExpression newExpr =
+                    new UnnestingFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
+                            new MutableObject<ILogicalExpression>(unnestExpr));
             unnest.getExpressionRef().setValue(newExpr);
             context.addToDontApplySet(this, op);
             return true;

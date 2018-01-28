@@ -586,16 +586,15 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      *             If the callback factory could not be created
      */
     public IModificationOperationCallbackFactory getModificationCallbackFactory(
-            IStorageComponentProvider componentProvider, Index index, IndexOperation op,
-            int[] primaryKeyFields) throws AlgebricksException {
+            IStorageComponentProvider componentProvider, Index index, IndexOperation op, int[] primaryKeyFields)
+            throws AlgebricksException {
         if (index.isPrimaryIndex()) {
             return op == IndexOperation.UPSERT ? new UpsertOperationCallbackFactory(getDatasetId(), primaryKeyFields,
-                            componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
-                            index.resourceType())
+                    componentProvider.getTransactionSubsystemProvider(), Operation.get(op), index.resourceType())
                     : op == IndexOperation.DELETE || op == IndexOperation.INSERT
-                            ? new PrimaryIndexModificationOperationCallbackFactory(getDatasetId(),
-                                    primaryKeyFields, componentProvider.getTransactionSubsystemProvider(),
-                                    Operation.get(op), index.resourceType())
+                            ? new PrimaryIndexModificationOperationCallbackFactory(getDatasetId(), primaryKeyFields,
+                                    componentProvider.getTransactionSubsystemProvider(), Operation.get(op),
+                                    index.resourceType())
                             : NoOpOperationCallbackFactory.INSTANCE;
         } else {
             return op == IndexOperation.DELETE || op == IndexOperation.INSERT || op == IndexOperation.UPSERT
@@ -656,8 +655,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public IPushRuntimeFactory getCommitRuntimeFactory(MetadataProvider metadataProvider,
             int[] primaryKeyFieldPermutation, boolean isSink) throws AlgebricksException {
         int[] datasetPartitions = getDatasetPartitions(metadataProvider);
-        return new CommitRuntimeFactory(datasetId, primaryKeyFieldPermutation,
-                metadataProvider.isWriteTransaction(), datasetPartitions, isSink);
+        return new CommitRuntimeFactory(datasetId, primaryKeyFieldPermutation, metadataProvider.isWriteTransaction(),
+                datasetPartitions, isSink);
     }
 
     public IFrameOperationCallbackFactory getFrameOpCallbackFactory() {

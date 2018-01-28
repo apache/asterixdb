@@ -76,8 +76,8 @@ public class LicensingIT {
     @Test
     public void ensureNoMissingLicenses() throws IOException {
         for (String licenseArtifactName : getLicenseArtifactNames()) {
-            final File licenseFile = new File(
-                    FileUtil.joinPath(installerDir, pathToLicensingFiles(), licenseArtifactName));
+            final File licenseFile =
+                    new File(FileUtil.joinPath(installerDir, pathToLicensingFiles(), licenseArtifactName));
             List<String> badLines = new ArrayList<>();
             for (String line : FileUtils.readLines(licenseFile, StandardCharsets.UTF_8)) {
                 if (line.matches("^\\s*MISSING:.*")) {

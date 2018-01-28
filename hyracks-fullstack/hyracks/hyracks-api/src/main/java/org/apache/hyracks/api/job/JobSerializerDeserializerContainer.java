@@ -27,7 +27,8 @@ import org.apache.hyracks.api.deployment.DeploymentId;
 public class JobSerializerDeserializerContainer implements IJobSerializerDeserializerContainer {
 
     private IJobSerializerDeserializer defaultJobSerDe = new JobSerializerDeserializer();
-    private Map<DeploymentId, IJobSerializerDeserializer> jobSerializerDeserializerMap = new ConcurrentHashMap<DeploymentId, IJobSerializerDeserializer>();
+    private Map<DeploymentId, IJobSerializerDeserializer> jobSerializerDeserializerMap =
+            new ConcurrentHashMap<DeploymentId, IJobSerializerDeserializer>();
 
     @Override
     public synchronized IJobSerializerDeserializer getJobSerializerDeserializer(DeploymentId deploymentId) {
@@ -39,7 +40,8 @@ public class JobSerializerDeserializerContainer implements IJobSerializerDeseria
     }
 
     @Override
-    public synchronized void addJobSerializerDeserializer(DeploymentId deploymentId, IJobSerializerDeserializer jobSerDe) {
+    public synchronized void addJobSerializerDeserializer(DeploymentId deploymentId,
+            IJobSerializerDeserializer jobSerDe) {
         jobSerializerDeserializerMap.put(deploymentId, jobSerDe);
     }
 

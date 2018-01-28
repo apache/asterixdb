@@ -54,8 +54,8 @@ public class HilbertDoubleComparator implements ILinearizeComparator {
     private IntArrayList stateStack = new IntArrayList(1000, 200);
     private DoubleArrayList boundsStack = new DoubleArrayList(2000, 400);
 
-    private IPrimitiveValueProvider valueProvider = DoublePrimitiveValueProviderFactory.INSTANCE
-            .createPrimitiveValueProvider();
+    private IPrimitiveValueProvider valueProvider =
+            DoublePrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
 
     private double[] a;
     private double[] b;

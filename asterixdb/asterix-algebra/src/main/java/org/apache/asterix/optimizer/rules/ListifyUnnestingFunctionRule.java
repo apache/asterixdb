@@ -118,13 +118,12 @@ public class ListifyUnnestingFunctionRule implements IAlgebraicRewriteRule {
         // Listify the dataset into one collection.
         LogicalVariable aggVar = context.newVar();
         Mutable<ILogicalExpression> aggArgExprRef = new MutableObject<>(new VariableReferenceExpression(unnestVar));
-        ILogicalExpression aggExpr = new AggregateFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.LISTIFY), false, new ArrayList<>(
-                        Collections.singletonList(aggArgExprRef)));
+        ILogicalExpression aggExpr =
+                new AggregateFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.LISTIFY), false,
+                        new ArrayList<>(Collections.singletonList(aggArgExprRef)));
         AggregateOperator aggregateOperator = new AggregateOperator(new ArrayList<>(Collections.singletonList(aggVar)),
                 new ArrayList<>(Collections.singletonList(new MutableObject<>(aggExpr))));
         aggregateOperator.getInputs().add(new MutableObject<>(unnestOperator));
-
 
         // Adds the aggregate operator as the root of the subplan.
         subplanOperator.setRootOp(new MutableObject<>(aggregateOperator));

@@ -97,7 +97,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private final INCServiceContext serviceCtx;
     private final INcApplicationContext appCtx;
 
-
     public RecoveryManager(ITransactionSubsystem txnSubsystem, INCServiceContext serviceCtx) {
         this.serviceCtx = serviceCtx;
         this.txnSubsystem = txnSubsystem;
@@ -414,8 +413,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         long minFirstLSN = logMgr.getAppendLSN();
         if (!openIndexList.isEmpty()) {
             for (IIndex index : openIndexList) {
-                AbstractLSMIOOperationCallback ioCallback = (AbstractLSMIOOperationCallback) ((ILSMIndex) index)
-                        .getIOOperationCallback();
+                AbstractLSMIOOperationCallback ioCallback =
+                        (AbstractLSMIOOperationCallback) ((ILSMIndex) index).getIOOperationCallback();
                 if (!((AbstractLSMIndex) index).isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()) {
                     firstLSN = ioCallback.getFirstLSN();
                     minFirstLSN = Math.min(minFirstLSN, firstLSN);
@@ -583,9 +582,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         if (activePartitions.contains(logRecord.getResourcePartition())) {
                             undoLSNSet = jobLoserEntity2LSNsMap.get(tempKeyTxnEntityId);
                             if (undoLSNSet == null) {
-                                loserEntity = new TxnEntityId(logTxnId, logRecord.getDatasetId(),
-                                        logRecord.getPKHashValue(), logRecord.getPKValue(), logRecord.getPKValueSize(),
-                                        true);
+                                loserEntity =
+                                        new TxnEntityId(logTxnId, logRecord.getDatasetId(), logRecord.getPKHashValue(),
+                                                logRecord.getPKValue(), logRecord.getPKValueSize(), true);
                                 undoLSNSet = new LinkedList<>();
                                 jobLoserEntity2LSNsMap.put(loserEntity, undoLSNSet);
                             }
@@ -680,8 +679,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     private static void undo(ILogRecord logRecord, IDatasetLifecycleManager datasetLifecycleManager) {
         try {
-            ILSMIndex index = (ILSMIndex) datasetLifecycleManager.getIndex(logRecord.getDatasetId(),
-                    logRecord.getResourceId());
+            ILSMIndex index =
+                    (ILSMIndex) datasetLifecycleManager.getIndex(logRecord.getDatasetId(), logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.INSERT_BYTE) {
                 indexAccessor.forceDelete(logRecord.getNewValue());

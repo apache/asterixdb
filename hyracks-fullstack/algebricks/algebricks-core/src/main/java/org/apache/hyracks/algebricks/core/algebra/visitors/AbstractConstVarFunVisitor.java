@@ -39,7 +39,8 @@ public abstract class AbstractConstVarFunVisitor<R, T> implements ILogicalExpres
         return visitFunctionCallExpression(expr, arg);
     }
 
-    public R visitStatefulFunctionCallExpression(StatefulFunctionCallExpression expr, T arg) throws AlgebricksException {
+    public R visitStatefulFunctionCallExpression(StatefulFunctionCallExpression expr, T arg)
+            throws AlgebricksException {
         return visitFunctionCallExpression(expr, arg);
     }
 

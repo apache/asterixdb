@@ -33,7 +33,8 @@ public class UTF8StringBuilder extends AbstractVarLenObjectBuilder {
         }
     }
 
-    public void appendUtf8StringPointable(UTF8StringPointable src, int byteStartOffset, int byteLength) throws IOException {
+    public void appendUtf8StringPointable(UTF8StringPointable src, int byteStartOffset, int byteLength)
+            throws IOException {
         out.write(src.getByteArray(), byteStartOffset, byteLength);
     }
 

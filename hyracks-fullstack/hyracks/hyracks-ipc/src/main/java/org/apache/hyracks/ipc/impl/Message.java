@@ -103,8 +103,8 @@ class Message {
         int length = msgSize - HEADER_SIZE;
         try {
             IPayloadSerializerDeserializer serde = ipcHandle.getIPCSystem().getSerializerDeserializer();
-            payload = flag == ERROR ? serde.deserializeException(buffer, length) : serde.deserializeObject(buffer,
-                    length);
+            payload = flag == ERROR ? serde.deserializeException(buffer, length)
+                    : serde.deserializeObject(buffer, length);
         } finally {
             buffer.position(finalPosition);
         }

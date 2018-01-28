@@ -51,7 +51,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 public class InlineSingleReferenceVariablesRule extends InlineVariablesRule {
 
     // Maps from variable to a list of operators using that variable.
-    protected Map<LogicalVariable, List<ILogicalOperator>> usedVarsMap = new HashMap<LogicalVariable, List<ILogicalOperator>>();
+    protected Map<LogicalVariable, List<ILogicalOperator>> usedVarsMap =
+            new HashMap<LogicalVariable, List<ILogicalOperator>>();
     protected List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
 
     @Override

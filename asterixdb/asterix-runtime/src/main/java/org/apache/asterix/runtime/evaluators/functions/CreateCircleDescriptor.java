@@ -75,8 +75,8 @@ public class CreateCircleDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private AMutablePoint aPoint = new AMutablePoint(0, 0);
                     private AMutableCircle aCircle = new AMutableCircle(null, 0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ACircle> circleSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ACIRCLE);
+                    private ISerializerDeserializer<ACircle> circleSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ACIRCLE);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

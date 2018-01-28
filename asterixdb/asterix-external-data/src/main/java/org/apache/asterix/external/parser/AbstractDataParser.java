@@ -110,35 +110,35 @@ public abstract class AbstractDataParser implements IDataParser {
 
     // Serializers
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ADouble> doubleSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADOUBLE);
+    protected ISerializerDeserializer<ADouble> doubleSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
-            .getAStringSerializerDeserializer();
+    protected ISerializerDeserializer<AString> stringSerde =
+            SerializerDeserializerProvider.INSTANCE.getAStringSerializerDeserializer();
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ABinary> binarySerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABINARY);
+    protected ISerializerDeserializer<ABinary> binarySerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABINARY);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AFloat> floatSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AFLOAT);
+    protected ISerializerDeserializer<AFloat> floatSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt8> int8Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT8);
+    protected ISerializerDeserializer<AInt8> int8Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt16> int16Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT16);
+    protected ISerializerDeserializer<AInt16> int16Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT16);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt32> int32Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT32);
+    protected ISerializerDeserializer<AInt32> int32Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT64);
+    protected ISerializerDeserializer<AInt64> int64Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    protected ISerializerDeserializer<ABoolean> booleanSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
+    protected ISerializerDeserializer<ANull> nullSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
     protected final HexParser hexParser = new HexParser();
     protected final Base64Parser base64Parser = new Base64Parser();
@@ -147,23 +147,23 @@ public abstract class AbstractDataParser implements IDataParser {
     // (xxxxxxxx-xxxx-xxxx-xxxxxxxxxxxx) when parsing the data.
     // Thus, we need to call UUID.fromStringToAMutableUUID() to convert it to the internal representation (byte []).
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<AUUID> uuidSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AUUID);
+    protected ISerializerDeserializer<AUUID> uuidSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AUUID);
 
     // To avoid race conditions, the serdes for temporal and spatial data types needs to be one per parser
     // ^^^^^^^^^^^^^^^^^^^^^^^^ ??? then why all these serdes are static?
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<ATime> timeSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ATIME);
+    protected static final ISerializerDeserializer<ATime> timeSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADATE);
+    protected static final ISerializerDeserializer<ADate> dateSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<ADateTime> datetimeSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADATETIME);
+    protected static final ISerializerDeserializer<ADateTime> datetimeSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<ADuration> durationSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ADURATION);
+    protected static final ISerializerDeserializer<ADuration> durationSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADURATION);
     @SuppressWarnings("unchecked")
     protected static final ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
@@ -171,23 +171,23 @@ public abstract class AbstractDataParser implements IDataParser {
     protected static final ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<APoint> pointSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.APOINT);
+    protected final static ISerializerDeserializer<APoint> pointSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.APOINT);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<APoint3D> point3DSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.APOINT3D);
+    protected final static ISerializerDeserializer<APoint3D> point3DSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.APOINT3D);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<ACircle> circleSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ACIRCLE);
+    protected final static ISerializerDeserializer<ACircle> circleSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ACIRCLE);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<ARectangle> rectangleSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ARECTANGLE);
+    protected final static ISerializerDeserializer<ARectangle> rectangleSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ARECTANGLE);
     @SuppressWarnings("unchecked")
-    protected final static ISerializerDeserializer<ALine> lineSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ALINE);
+    protected final static ISerializerDeserializer<ALine> lineSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ALINE);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<AInterval> intervalSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINTERVAL);
+    protected static final ISerializerDeserializer<AInterval> intervalSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINTERVAL);
 
     protected String filename;
 
@@ -224,8 +224,8 @@ public abstract class AbstractDataParser implements IDataParser {
             }
         }
         long chrononTimeInMs = ADateParserFactory.parseDatePart(datetime, 0, timeOffset);
-        chrononTimeInMs += ATimeParserFactory.parseTimePart(datetime, timeOffset + 1,
-                datetime.length() - timeOffset - 1);
+        chrononTimeInMs +=
+                ATimeParserFactory.parseTimePart(datetime, timeOffset + 1, datetime.length() - timeOffset - 1);
         aDateTime.setValue(chrononTimeInMs);
         datetimeSerde.serialize(aDateTime, out);
     }

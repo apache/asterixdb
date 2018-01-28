@@ -20,5 +20,8 @@
 package org.apache.hyracks.storage.am.common.ophelpers;
 
 public enum FindTupleMode {
-    INCLUSIVE, EXCLUSIVE, EXCLUSIVE_ERROR_IF_EXISTS, EXACT
+    INCLUSIVE,
+    EXCLUSIVE,
+    EXCLUSIVE_ERROR_IF_EXISTS,
+    EXACT
 }

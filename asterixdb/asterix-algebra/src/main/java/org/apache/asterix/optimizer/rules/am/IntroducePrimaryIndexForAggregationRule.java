@@ -123,21 +123,20 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
         }
         context.addToDontApplySet(this, opRef.getValue());
         // find the data scan or unnest map
-        Pair<Mutable<ILogicalOperator>,Mutable<ILogicalOperator>> scanAndAssignOpRef =
-                findScanAndAssignOperator(localAggregateOperator,context.getMetadataProvider());
+        Pair<Mutable<ILogicalOperator>, Mutable<ILogicalOperator>> scanAndAssignOpRef =
+                findScanAndAssignOperator(localAggregateOperator, context.getMetadataProvider());
         if (scanAndAssignOpRef == null) {
             return false;
         }
         // find its primary index and replace datascan
-        boolean transformed =
-                replaceDatascan(localAggregateOperator,scanAndAssignOpRef, context);
+        boolean transformed = replaceDatascan(localAggregateOperator, scanAndAssignOpRef, context);
         if (transformed) {
             OperatorPropertiesUtil.typeOpRec(opRef, context);
         }
         return transformed;
     }
 
-    private Pair<Mutable<ILogicalOperator>,Mutable<ILogicalOperator>> findScanAndAssignOperator(
+    private Pair<Mutable<ILogicalOperator>, Mutable<ILogicalOperator>> findScanAndAssignOperator(
             ILogicalOperator localAggregateOperator, IMetadataProvider metadataProvider) throws AlgebricksException {
         Mutable<ILogicalOperator> scanOpRef = localAggregateOperator.getInputs().get(0);
         Mutable<ILogicalOperator> assignOpRef = null;
@@ -148,8 +147,8 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             scanOpRef = scanOpRef.getValue().getInputs().get(0);
         }
         // next operator must be datascan or unnest map using the dataset
-        if (scanOpRef.getValue().getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN &&
-                scanOpRef.getValue().getOperatorTag() != LogicalOperatorTag.UNNEST_MAP) {
+        if (scanOpRef.getValue().getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN
+                && scanOpRef.getValue().getOperatorTag() != LogicalOperatorTag.UNNEST_MAP) {
             return null;
         }
         if (scanOpRef.getValue().getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
@@ -159,31 +158,31 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             if (logicalExpression.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                 return null;
             }
-            AbstractFunctionCallExpression functionCallExpression = (AbstractFunctionCallExpression)logicalExpression;
+            AbstractFunctionCallExpression functionCallExpression = (AbstractFunctionCallExpression) logicalExpression;
             if (functionCallExpression.getFunctionIdentifier() != BuiltinFunctions.INDEX_SEARCH) {
                 return null;
             }
-            String indexName = ConstantExpressionUtil.getStringArgument(functionCallExpression,0);
-            String dataverseName = ConstantExpressionUtil.getStringArgument(functionCallExpression,2);
-            String datasetName = ConstantExpressionUtil.getStringArgument(functionCallExpression,3);
-            Index index = ((MetadataProvider)metadataProvider).getIndex(dataverseName, datasetName, indexName);
+            String indexName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 0);
+            String dataverseName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 2);
+            String datasetName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 3);
+            Index index = ((MetadataProvider) metadataProvider).getIndex(dataverseName, datasetName, indexName);
             if (!index.isPrimaryIndex()) {
                 return null;
             }
         }
-        return Pair.of(scanOpRef,assignOpRef);
+        return Pair.of(scanOpRef, assignOpRef);
     }
 
     private boolean replaceDatascan(AggregateOperator localAggregateOperator,
-            Pair<Mutable<ILogicalOperator>,Mutable<ILogicalOperator>> scanAndAssignOpRef, IOptimizationContext context)
+            Pair<Mutable<ILogicalOperator>, Mutable<ILogicalOperator>> scanAndAssignOpRef, IOptimizationContext context)
             throws AlgebricksException {
         /* find the primary index */
         Mutable<ILogicalOperator> scanOperatorRef = scanAndAssignOpRef.getLeft();
         Mutable<ILogicalOperator> assignOperatorRef = scanAndAssignOpRef.getRight();
         AbstractScanOperator scanOperator = (AbstractScanOperator) scanOperatorRef.getValue();
         BTreeJobGenParams originalBTreeParameters = new BTreeJobGenParams();
-        Pair<Dataset,Index> datasetAndIndex = findDatasetAndSecondaryPrimaryIndex(scanOperator,originalBTreeParameters,
-                context);
+        Pair<Dataset, Index> datasetAndIndex =
+                findDatasetAndSecondaryPrimaryIndex(scanOperator, originalBTreeParameters, context);
         if (datasetAndIndex == null) {
             return false;
         }
@@ -194,8 +193,8 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             /////// check usage of variables produced by scan operator in parents ///////
             Set<LogicalVariable> variablesProducedByScanOp = getVariablesProducedByScanOp(scanOperator,
                     dataset.getPrimaryKeys().size(), scanOperator.getVariables().size());
-            boolean variablesAreUsed = scanOperatorVariablesAreUsed(localAggregateOperator, assignOperatorRef,
-                    variablesProducedByScanOp);
+            boolean variablesAreUsed =
+                    scanOperatorVariablesAreUsed(localAggregateOperator, assignOperatorRef, variablesProducedByScanOp);
             if (variablesAreUsed) {
                 return false;
             }
@@ -206,8 +205,8 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
                 retainInput = AccessMethodUtils.retainInputs(scanOperator.getVariables(), scanOperator, parents);
                 newBTreeParameters = new BTreeJobGenParams(primaryIndex.getIndexName(), DatasetConfig.IndexType.BTREE,
                         dataset.getDataverseName(), dataset.getDatasetName(), retainInput,
-                        scanOperator.getInputs().get(0).getValue().getExecutionMode() ==
-                        AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
+                        scanOperator.getInputs().get(0).getValue()
+                                .getExecutionMode() == AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
                 List<LogicalVariable> empty = new ArrayList<>();
                 newBTreeParameters.setLowKeyInclusive(true);
                 newBTreeParameters.setHighKeyInclusive(true);
@@ -227,9 +226,9 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
                 newBTreeParameters.setHighKeyVarList(originalBTreeParameters.getHighKeyVarList(), 0,
                         originalBTreeParameters.getHighKeyVarList().size());
             }
-            ARecordType recordType = (ARecordType) ((MetadataProvider)context.getMetadataProvider()).findType(dataset);
+            ARecordType recordType = (ARecordType) ((MetadataProvider) context.getMetadataProvider()).findType(dataset);
             ARecordType metaRecordType =
-                    (ARecordType) ((MetadataProvider)context.getMetadataProvider()).findMetaType(dataset);
+                    (ARecordType) ((MetadataProvider) context.getMetadataProvider()).findMetaType(dataset);
             // create the operator that will replace the dataset scan/search
             AbstractUnnestMapOperator primaryIndexUnnestOperator =
                     (AbstractUnnestMapOperator) AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
@@ -256,7 +255,7 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
      * @return The dataset and its primary index
      * @throws AlgebricksException when there is a problem getting the dataset or its indexes from the metadata
      */
-    private Pair<Dataset,Index> findDatasetAndSecondaryPrimaryIndex(AbstractScanOperator scanOperator,
+    private Pair<Dataset, Index> findDatasetAndSecondaryPrimaryIndex(AbstractScanOperator scanOperator,
             BTreeJobGenParams originalBTreeParameters, IOptimizationContext context) throws AlgebricksException {
         // #1. get the dataset
         Dataset dataset;
@@ -271,20 +270,20 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
         } else {
             // case 2: dataset range search
             AbstractFunctionCallExpression primaryIndexFunctionCall =
-                    (AbstractFunctionCallExpression) ((UnnestMapOperator)scanOperator).getExpressionRef().getValue();
+                    (AbstractFunctionCallExpression) ((UnnestMapOperator) scanOperator).getExpressionRef().getValue();
             originalBTreeParameters.readFromFuncArgs(primaryIndexFunctionCall.getArguments());
             if (originalBTreeParameters.isEqCondition()) {
                 return null;
             }
-            dataset = ((MetadataProvider)context.getMetadataProvider()).findDataset(
-                    originalBTreeParameters.getDataverseName(), originalBTreeParameters.getDatasetName());
+            dataset = ((MetadataProvider) context.getMetadataProvider())
+                    .findDataset(originalBTreeParameters.getDataverseName(), originalBTreeParameters.getDatasetName());
         }
         // #2. get all indexes and look for the primary one
-        List<Index> indexes = ((MetadataProvider)context.getMetadataProvider()).getDatasetIndexes(
-                dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> indexes = ((MetadataProvider) context.getMetadataProvider())
+                .getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
         for (Index index : indexes) {
             if (index.getKeyFieldNames().isEmpty()) {
-                return Pair.of(dataset,index);
+                return Pair.of(dataset, index);
             }
         }
         return null;

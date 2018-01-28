@@ -127,8 +127,7 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
 
         ILogicalExpression cExp = new ConstantExpression(new AsterixConstantValue(list));
         Mutable<ILogicalExpression> mutCExp = new MutableObject<>(cExp);
-        IFunctionInfo scanFctInfo = BuiltinFunctions
-                .getAsterixFunctionInfo(BuiltinFunctions.SCAN_COLLECTION);
+        IFunctionInfo scanFctInfo = BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.SCAN_COLLECTION);
         UnnestingFunctionCallExpression scanExp = new UnnestingFunctionCallExpression(scanFctInfo, mutCExp);
         LogicalVariable scanVar = context.newVar();
         UnnestOperator unn = new UnnestOperator(scanVar, new MutableObject<>(scanExp));
@@ -186,9 +185,10 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
         return asSelectOperator(op.getValue());
     }
 
-    private static AbstractFunctionCallExpression asFunctionCallExpression(ILogicalExpression ex, FunctionIdentifier fi) {
-        AbstractFunctionCallExpression fctCall = (ex.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL ? (AbstractFunctionCallExpression) ex
-                : null);
+    private static AbstractFunctionCallExpression asFunctionCallExpression(ILogicalExpression ex,
+            FunctionIdentifier fi) {
+        AbstractFunctionCallExpression fctCall = (ex.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
+                ? (AbstractFunctionCallExpression) ex : null);
         if (fctCall != null && (fi == null || fctCall.getFunctionIdentifier().equals(fi)))
             return fctCall;
         return null;

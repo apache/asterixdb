@@ -162,15 +162,15 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
             for (int i = 0; i < comparatorFactories.length; ++i) {
                 comparators[i] = comparatorFactories[i].createBinaryComparator();
             }
-            final IMissingWriter[] nullWriters1 = isLeftOuter ? new IMissingWriter[nonMatchWriterFactories.length]
-                    : null;
+            final IMissingWriter[] nullWriters1 =
+                    isLeftOuter ? new IMissingWriter[nonMatchWriterFactories.length] : null;
             if (isLeftOuter) {
                 for (int i = 0; i < nonMatchWriterFactories.length; i++) {
                     nullWriters1[i] = nonMatchWriterFactories[i].createMissingWriter();
                 }
             }
-            final IPredicateEvaluator predEvaluator = (predEvaluatorFactory == null ? null
-                    : predEvaluatorFactory.createPredicateEvaluator());
+            final IPredicateEvaluator predEvaluator =
+                    (predEvaluatorFactory == null ? null : predEvaluatorFactory.createPredicateEvaluator());
 
             final int memSizeInBytes = memSizeInFrames * ctx.getInitialFrameSize();
             final IDeallocatableFramePool framePool = new DeallocatableFramePool(ctx, memSizeInBytes);
@@ -181,10 +181,10 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
 
                 @Override
                 public void open() throws HyracksDataException {
-                    ITuplePartitionComputer hpc0 = new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories)
-                            .createPartitioner();
-                    ITuplePartitionComputer hpc1 = new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories)
-                            .createPartitioner();
+                    ITuplePartitionComputer hpc0 =
+                            new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories).createPartitioner();
+                    ITuplePartitionComputer hpc1 =
+                            new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories).createPartitioner();
                     state = new HashBuildTaskState(ctx.getJobletContext().getJobId(),
                             new TaskId(getActivityId(), partition));
                     ISerializableTable table = new SerializableHashTable(tableSize, ctx, bufferManager);

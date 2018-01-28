@@ -155,8 +155,7 @@ public class VariableTupleMemoryManagerTest extends AbstractTupleMemoryManagerTe
     }
 
     private ByteBuffer deleteRandomSelectedTuples(Map<Integer, Integer> map, Map<TuplePointer, Integer> mapInserted,
-            int minNumOfRecordTobeDeleted)
-            throws HyracksDataException {
+            int minNumOfRecordTobeDeleted) throws HyracksDataException {
         ByteBuffer buffer = ByteBuffer.allocate(Common.BUDGET);
         FixedSizeFrame frame = new FixedSizeFrame(buffer);
         FrameTupleAppender appender = new FrameTupleAppender();

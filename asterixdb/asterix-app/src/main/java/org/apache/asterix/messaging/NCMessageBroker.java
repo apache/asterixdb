@@ -59,8 +59,8 @@ public class NCMessageBroker implements INCMessageBroker {
         appContext = (INcApplicationContext) ncs.getApplicationContext();
         maxMsgSize = messagingProperties.getFrameSize();
         int messagingMemoryBudget = messagingProperties.getFrameSize() * messagingProperties.getFrameCount();
-        messagingFramePool = new ConcurrentFramePool(ncs.getId(), messagingMemoryBudget,
-                messagingProperties.getFrameSize());
+        messagingFramePool =
+                new ConcurrentFramePool(ncs.getId(), messagingMemoryBudget, messagingProperties.getFrameSize());
         receivedMsgsQ = new LinkedBlockingQueue<>();
         futureIdGenerator = new AtomicLong();
         futureMap = new LongObjectHashMap<>();
@@ -79,8 +79,7 @@ public class NCMessageBroker implements INCMessageBroker {
     }
 
     @Override
-    public void sendMessageToNC(String nodeId, INcAddressedMessage message)
-            throws Exception {
+    public void sendMessageToNC(String nodeId, INcAddressedMessage message) throws Exception {
         IChannelControlBlock messagingChannel = ncs.getMessagingNetworkManager().getMessagingChannel(nodeId);
         sendMessageToChannel(messagingChannel, message);
     }
@@ -161,8 +160,7 @@ public class NCMessageBroker implements INCMessageBroker {
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     if (LOGGER.isWarnEnabled() && msg != null) {
-                        LOGGER.log(Level.WARN, "Could not process message : "
-                                + msg, e);
+                        LOGGER.log(Level.WARN, "Could not process message : " + msg, e);
                     } else {
                         if (LOGGER.isWarnEnabled()) {
                             LOGGER.log(Level.WARN, "Could not process message", e);

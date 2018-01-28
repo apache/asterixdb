@@ -68,8 +68,8 @@ public class DurationFromMonthsDescriptor extends AbstractScalarFunctionDynamicD
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADuration> durationSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADURATION);
+                    private ISerializerDeserializer<ADuration> durationSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADURATION);
 
                     AMutableDuration aDuration = new AMutableDuration(0, 0);
 

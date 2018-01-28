@@ -155,8 +155,8 @@ public class IntersectOperator extends AbstractLogicalOperator {
             Object expectedType = expected.getVarType(expectedVariables.get(i));
             Object actualType = actual.getVarType(actualVariables.get(i));
             if (!expectedType.equals(actualType)) {
-                AlgebricksConfig.ALGEBRICKS_LOGGER.warn(
-                        "Type of two variables are not equal." + expectedVariables.get(i) + " is of type: "
+                AlgebricksConfig.ALGEBRICKS_LOGGER
+                        .warn("Type of two variables are not equal." + expectedVariables.get(i) + " is of type: "
                                 + expectedType + actualVariables.get(i) + " is of type: " + actualType);
             }
         }

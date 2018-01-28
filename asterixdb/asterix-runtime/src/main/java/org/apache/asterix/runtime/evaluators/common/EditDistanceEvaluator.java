@@ -59,8 +59,8 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     protected int editDistance = 0;
     protected final AMutableInt64 aInt64 = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT64);
+    protected final ISerializerDeserializer<AInt64> int64Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
     protected ATypeTag itemTypeTag;
 
     protected ATypeTag firstTypeTag;
@@ -76,11 +76,11 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         firstStringEval.evaluate(tuple, argPtr1);
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
+        firstTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
         secondStringEval.evaluate(tuple, argPtr2);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
+        secondTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
 
         if (!checkArgTypes(firstTypeTag, secondTypeTag)) {
             result.set(resultStorage);
@@ -96,8 +96,7 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
         result.set(resultStorage);
     }
 
-    protected int computeResult(IPointable left, IPointable right, ATypeTag argType)
-            throws HyracksDataException {
+    protected int computeResult(IPointable left, IPointable right, ATypeTag argType) throws HyracksDataException {
         byte[] leftBytes = left.getByteArray();
         int leftStartOffset = left.getStartOffset();
         byte[] rightBytes = right.getByteArray();

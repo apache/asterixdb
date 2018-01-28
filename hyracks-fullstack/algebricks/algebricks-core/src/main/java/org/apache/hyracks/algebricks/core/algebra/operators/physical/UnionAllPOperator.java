@@ -62,12 +62,12 @@ public class UnionAllPOperator extends AbstractPhysicalOperator {
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
-        StructuralPropertiesVector pv0 = OperatorPropertiesUtil.checkUnpartitionedAndGetPropertiesVector(op,
-                new StructuralPropertiesVector(new RandomPartitioningProperty(context.getComputationNodeDomain()),
-                        null));
-        StructuralPropertiesVector pv1 = OperatorPropertiesUtil.checkUnpartitionedAndGetPropertiesVector(op,
-                new StructuralPropertiesVector(new RandomPartitioningProperty(context.getComputationNodeDomain()),
-                        null));
+        StructuralPropertiesVector pv0 =
+                OperatorPropertiesUtil.checkUnpartitionedAndGetPropertiesVector(op, new StructuralPropertiesVector(
+                        new RandomPartitioningProperty(context.getComputationNodeDomain()), null));
+        StructuralPropertiesVector pv1 =
+                OperatorPropertiesUtil.checkUnpartitionedAndGetPropertiesVector(op, new StructuralPropertiesVector(
+                        new RandomPartitioningProperty(context.getComputationNodeDomain()), null));
         return new PhysicalRequirements(new StructuralPropertiesVector[] { pv0, pv1 },
                 IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }

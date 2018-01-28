@@ -181,8 +181,8 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             ITupleReference tuple = cursor.getTuple();
             writeTupleToOutput(tuple);
             if (appendIndexFilter) {
-                writeFilterTupleToOutput(((ILSMIndexCursor)cursor).getFilterMinTuple());
-                writeFilterTupleToOutput(((ILSMIndexCursor)cursor).getFilterMaxTuple());
+                writeFilterTupleToOutput(((ILSMIndexCursor) cursor).getFilterMinTuple());
+                writeFilterTupleToOutput(((ILSMIndexCursor) cursor).getFilterMaxTuple());
             }
             FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         }

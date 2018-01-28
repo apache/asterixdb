@@ -327,10 +327,10 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                                 }
                                 break;
                             default:
-                                throw new TypeMismatchException(BuiltinFunctions.CREATE_MBR, 0,
-                                        data0[startOffset0], ATypeTag.SERIALIZED_POINT_TYPE_TAG,
-                                        ATypeTag.SERIALIZED_LINE_TYPE_TAG, ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
-                                        ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG, ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
+                                throw new TypeMismatchException(BuiltinFunctions.CREATE_MBR, 0, data0[startOffset0],
+                                        ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_POLYGON_TYPE_TAG, ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
+                                        ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                         }
                     } else {
                         throw new NotImplementedException(dimension + "D is not supported");

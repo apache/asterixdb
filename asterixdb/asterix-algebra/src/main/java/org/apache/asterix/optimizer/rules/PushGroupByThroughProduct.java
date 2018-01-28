@@ -77,8 +77,10 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
         }
         GroupByOperator gby = (GroupByOperator) op1;
 
-        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorToPush = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
-        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorNotToPush = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorToPush =
+                new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
+        List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorNotToPush =
+                new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
 
         Mutable<ILogicalOperator> opLeftRef = join.getInputs().get(0);
         ILogicalOperator opLeft = opLeftRef.getValue();
@@ -110,7 +112,7 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
     private void push(Mutable<ILogicalOperator> opRefGby, Mutable<ILogicalOperator> opRefJoin, int branch,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorToPush,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> decorNotToPush, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         GroupByOperator gby = (GroupByOperator) opRefGby.getValue();
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) opRefJoin.getValue();
         gby.getDecorList().clear();

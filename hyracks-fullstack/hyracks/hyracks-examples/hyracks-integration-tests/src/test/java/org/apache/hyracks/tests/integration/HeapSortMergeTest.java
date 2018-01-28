@@ -81,11 +81,13 @@ public class HeapSortMergeTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID, NC2_ID);
 
         int outputLimit = 5; // larger than the total record numbers.
-        TopKSorterOperatorDescriptor sorter = new TopKSorterOperatorDescriptor(spec, 4, outputLimit, new int[] { 1, 0 },
-                (INormalizedKeyComputerFactory) null,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                ordersDesc);
+        TopKSorterOperatorDescriptor sorter =
+                new TopKSorterOperatorDescriptor(spec, 4, outputLimit, new int[] { 1, 0 },
+                        (INormalizedKeyComputerFactory) null,
+                        new IBinaryComparatorFactory[] {
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                        ordersDesc);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID, NC2_ID);
 
@@ -145,11 +147,13 @@ public class HeapSortMergeTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID, NC2_ID);
 
         int outputLimit = 20;
-        TopKSorterOperatorDescriptor sorter = new TopKSorterOperatorDescriptor(spec, 4, outputLimit, new int[] { 1, 0 },
-                (INormalizedKeyComputerFactory) null,
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                ordersDesc);
+        TopKSorterOperatorDescriptor sorter =
+                new TopKSorterOperatorDescriptor(spec, 4, outputLimit, new int[] { 1, 0 },
+                        (INormalizedKeyComputerFactory) null,
+                        new IBinaryComparatorFactory[] {
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                        ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID, NC2_ID);
 
         LimitOperatorDescriptor filter = new LimitOperatorDescriptor(spec, ordersDesc, outputLimit);

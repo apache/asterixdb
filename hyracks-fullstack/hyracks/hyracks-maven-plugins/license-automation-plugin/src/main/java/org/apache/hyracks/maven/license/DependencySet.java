@@ -27,7 +27,7 @@ public class DependencySet {
     @SuppressWarnings("unused") // set by Maven configuration
     private String location;
 
-    @SuppressWarnings({"unused", "MismatchedQueryAndUpdateOfCollection"}) // set by Maven configuration
+    @SuppressWarnings({ "unused", "MismatchedQueryAndUpdateOfCollection" }) // set by Maven configuration
     private List<String> includes;
 
     private List<Pattern> patterns;

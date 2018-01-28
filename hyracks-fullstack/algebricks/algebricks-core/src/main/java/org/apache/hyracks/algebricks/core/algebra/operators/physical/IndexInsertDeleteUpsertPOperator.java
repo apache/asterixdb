@@ -96,8 +96,8 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
         for (int i = 0; i < numOfAdditionalNonFilteringFields; i++) {
             scanVariables.add(new LogicalVariable(-1));
         }
-        IPhysicalPropertiesVector r = dataSourceIndex.getDataSource().getPropertiesProvider()
-                .computePropertiesVector(scanVariables);
+        IPhysicalPropertiesVector r =
+                dataSourceIndex.getDataSource().getPropertiesProvider().computePropertiesVector(scanVariables);
         r.getLocalProperties().clear();
         IPhysicalPropertiesVector[] requirements = new IPhysicalPropertiesVector[1];
         requirements[0] = r;

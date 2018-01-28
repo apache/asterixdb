@@ -171,8 +171,8 @@ public class ClusterControllerService implements IControllerService {
         final ClusterTopology topology = computeClusterTopology(ccConfig);
         ccContext = new ClusterControllerContext(topology);
         sweeper = new DeadNodeSweeper();
-        datasetDirectoryService = new DatasetDirectoryService(ccConfig.getResultTTL(),
-                ccConfig.getResultSweepThreshold());
+        datasetDirectoryService =
+                new DatasetDirectoryService(ccConfig.getResultTTL(), ccConfig.getResultSweepThreshold());
 
         deploymentRunMap = new HashMap<>();
         stateDumpRunMap = new HashMap<>();
@@ -208,9 +208,9 @@ public class ClusterControllerService implements IControllerService {
         clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.getClusterListenPort()), ccIPCI,
                 new CCNCFunctions.SerializerDeserializer());
         IIPCI ciIPCI = new ClientInterfaceIPCI(this, jobIdFactory);
-        clientIPC = new IPCSystem(
-                new InetSocketAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort()), ciIPCI,
-                new JavaSerializationBasedPayloadSerializerDeserializer());
+        clientIPC =
+                new IPCSystem(new InetSocketAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort()),
+                        ciIPCI, new JavaSerializationBasedPayloadSerializerDeserializer());
         webServer = new WebServer(this, ccConfig.getConsoleListenPort());
         clusterIPC.start();
         clientIPC.start();
@@ -238,9 +238,9 @@ public class ClusterControllerService implements IControllerService {
 
         // Job manager is in charge of job lifecycle management.
         try {
-            Constructor<?> jobManagerConstructor = this.getClass().getClassLoader()
-                    .loadClass(ccConfig.getJobManagerClass())
-                    .getConstructor(CCConfig.class, ClusterControllerService.class, IJobCapacityController.class);
+            Constructor<?> jobManagerConstructor =
+                    this.getClass().getClassLoader().loadClass(ccConfig.getJobManagerClass()).getConstructor(
+                            CCConfig.class, ClusterControllerService.class, IJobCapacityController.class);
             jobManager = (IJobManager) jobManagerConstructor.newInstance(ccConfig, this, jobCapacityController);
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException
                 | InvocationTargetException e) {
@@ -272,8 +272,8 @@ public class ClusterControllerService implements IControllerService {
 
     private void connectNCs() {
         getNCServices().forEach((key, value) -> {
-            final TriggerNCWork triggerWork = new TriggerNCWork(ClusterControllerService.this, value.getHostString(),
-                    value.getPort(), key);
+            final TriggerNCWork triggerWork =
+                    new TriggerNCWork(ClusterControllerService.this, value.getHostString(), value.getPort(), key);
             executor.submit(triggerWork);
         });
     }
@@ -428,8 +428,8 @@ public class ClusterControllerService implements IControllerService {
 
         @Override
         public void getIPAddressNodeMap(Map<InetAddress, Set<String>> map) throws HyracksDataException {
-            GetIpAddressNodeNameMapWork ginmw = new GetIpAddressNodeNameMapWork(
-                    ClusterControllerService.this.getNodeManager(), map);
+            GetIpAddressNodeNameMapWork ginmw =
+                    new GetIpAddressNodeNameMapWork(ClusterControllerService.this.getNodeManager(), map);
             try {
                 workQueue.scheduleAndSync(ginmw);
             } catch (Exception e) {

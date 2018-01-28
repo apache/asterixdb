@@ -70,5 +70,4 @@ public class StringRTrim2Descriptor extends AbstractScalarFunctionDynamicDescrip
         };
     }
 
-
 }

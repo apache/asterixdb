@@ -332,7 +332,8 @@ public class ClassAdUnitTester {
 
         System.out.println("Testing the ClassAd class...");
 
-        String input_basic = "[ A = 3; B = 4.0; C = \"babyzilla\"; D = true; E = {1}; F = [ AA = 3; ]; G =\"deleteme\";]";
+        String input_basic =
+                "[ A = 3; B = 4.0; C = \"babyzilla\"; D = true; E = {1}; F = [ AA = 3; ]; G =\"deleteme\";]";
         ClassAd basic = new ClassAd(objectPool);
         AMutableInt64 i = new AMutableInt64(0);
         MutableBoolean b = new MutableBoolean();
@@ -380,7 +381,8 @@ public class ClassAdUnitTester {
         basic = null;
 
         /* ----- Test GetExternalReferences ----- */
-        String inputRef = "[ Rank=Member(\"LCG-2_1_0\",other.Environment) ? other.Time/seconds : other.Time/minutes; minutes=60; ]";
+        String inputRef =
+                "[ Rank=Member(\"LCG-2_1_0\",other.Environment) ? other.Time/seconds : other.Time/minutes; minutes=60; ]";
         TreeSet<String> refs = new TreeSet<String>();
         ExprTree rank;
 
@@ -431,7 +433,8 @@ public class ClassAdUnitTester {
 
         // This ClassAd may cause problems. Perhaps a memory leak.
         // This test is only useful when run under valgrind.
-        String memoryProblemClassad = "[ Updates = [status = \"request_completed\"; timestamp = absTime(\"2004-12-16T18:10:59-0600]\")] ]";
+        String memoryProblemClassad =
+                "[ Updates = [status = \"request_completed\"; timestamp = absTime(\"2004-12-16T18:10:59-0600]\")] ]";
         c = parser.parseClassAd(memoryProblemClassad);
 
         /* ----- Test Parsing multiple ClassAds ----- */
@@ -441,11 +444,9 @@ public class ClassAdUnitTester {
         AMutableInt32 offset = new AMutableInt32(0);
 
         parser.parseClassAd(twoClassads, classad1, offset);
-        test("Have good offset #1", offset.getIntegerValue() == 10, "Test Parsing multiple ClassAds 1",
-                results);
+        test("Have good offset #1", offset.getIntegerValue() == 10, "Test Parsing multiple ClassAds 1", results);
         parser.parseClassAd(twoClassads, classad2, offset);
-        test("Have good offset #2", offset.getIntegerValue() == 20, "Test Parsing multiple ClassAds 2",
-                results);
+        test("Have good offset #2", offset.getIntegerValue() == 20, "Test Parsing multiple ClassAds 2", results);
 
         /* ----- Test chained ClassAds ----- */
         // classad1 and classad2 from above test are used.

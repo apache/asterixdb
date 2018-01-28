@@ -69,8 +69,8 @@ public class GetYearMonthDurationDescriptor extends AbstractScalarFunctionDynami
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
-                                    BuiltinType.AYEARMONTHDURATION);
+                            SerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
 
                     AMutableYearMonthDuration aYearMonthDuration = new AMutableYearMonthDuration(0);
 

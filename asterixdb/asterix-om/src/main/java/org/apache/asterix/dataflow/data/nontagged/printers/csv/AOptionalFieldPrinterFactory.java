@@ -46,8 +46,8 @@ public class AOptionalFieldPrinterFactory implements IPrinterFactory {
 
             @Override
             public void init() throws HyracksDataException {
-                nullPrinter = (CSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING))
-                        .createPrinter();
+                nullPrinter =
+                        (CSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(BuiltinType.AMISSING)).createPrinter();
                 fieldPrinter = (CSVPrinterFactoryProvider.INSTANCE.getPrinterFactory(unionType.getActualType()))
                         .createPrinter();
             }

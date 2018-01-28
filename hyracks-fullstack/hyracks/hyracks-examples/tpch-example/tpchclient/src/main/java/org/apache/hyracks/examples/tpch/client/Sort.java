@@ -87,13 +87,13 @@ public class Sort {
     }
 
     static int[] SortFields = new int[] { 1, 0 };
-    static IBinaryComparatorFactory[] SortFieldsComparatorFactories = new IBinaryComparatorFactory[] {
-            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
-            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
+    static IBinaryComparatorFactory[] SortFieldsComparatorFactories =
+            new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+                    PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
 
-    static IBinaryHashFunctionFactory[] orderBinaryHashFunctionFactories = new IBinaryHashFunctionFactory[] {
-            PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
-            PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) };
+    static IBinaryHashFunctionFactory[] orderBinaryHashFunctionFactories =
+            new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
+                    PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) };
 
     public static void main(String[] args) throws Exception {
         Options options = new Options();
@@ -107,8 +107,8 @@ public class Sort {
         IHyracksClientConnection hcc = new HyracksConnection(options.host, options.port);
 
         JobSpecification job = createJob(parseFileSplits(options.inFileOrderSplits),
-                parseFileSplits(options.outFileSplits),
-                options.memBufferAlg, options.frameLimit, options.frameSize, options.topK, options.usingHeapSorter);
+                parseFileSplits(options.outFileSplits), options.memBufferAlg, options.frameLimit, options.frameSize,
+                options.topK, options.usingHeapSorter);
 
         long start = System.currentTimeMillis();
         JobId jobId = hcc.startJob(job,
@@ -156,8 +156,8 @@ public class Sort {
 
         spec.connect(
                 new MToNPartitioningMergingConnectorDescriptor(spec,
-                        new FieldHashPartitionComputerFactory(SortFields, orderBinaryHashFunctionFactories),
-                        SortFields, SortFieldsComparatorFactories, new UTF8StringNormalizedKeyComputerFactory()),
+                        new FieldHashPartitionComputerFactory(SortFields, orderBinaryHashFunctionFactories), SortFields,
+                        SortFieldsComparatorFactories, new UTF8StringNormalizedKeyComputerFactory()),
                 sorter, 0, printer, 0);
 
         spec.addRoot(printer);

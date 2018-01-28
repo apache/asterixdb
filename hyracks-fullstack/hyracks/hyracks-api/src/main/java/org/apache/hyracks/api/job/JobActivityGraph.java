@@ -55,7 +55,8 @@ public class JobActivityGraph implements Serializable {
         connectorRecordDescriptorMap = new HashMap<ConnectorDescriptorId, RecordDescriptor>();
         activityInputMap = new HashMap<ActivityId, List<IConnectorDescriptor>>();
         activityOutputMap = new HashMap<ActivityId, List<IConnectorDescriptor>>();
-        connectorActivityMap = new HashMap<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>>();
+        connectorActivityMap =
+                new HashMap<ConnectorDescriptorId, Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>>();
         blocked2blockerMap = new HashMap<ActivityId, Set<ActivityId>>();
     }
 

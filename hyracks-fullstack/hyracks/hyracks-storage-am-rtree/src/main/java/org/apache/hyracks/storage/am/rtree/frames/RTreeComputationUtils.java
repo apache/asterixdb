@@ -71,8 +71,8 @@ public class RTreeComputationUtils {
             double pHigh1, pLow1;
             if (tupleToBeInserted != null) {
                 int c = cmp.getComparators()[i].compare(tuple1.getFieldData(i), tuple1.getFieldStart(i),
-                        tuple1.getFieldLength(i), tupleToBeInserted.getFieldData(i),
-                        tupleToBeInserted.getFieldStart(i), tupleToBeInserted.getFieldLength(i));
+                        tuple1.getFieldLength(i), tupleToBeInserted.getFieldData(i), tupleToBeInserted.getFieldStart(i),
+                        tupleToBeInserted.getFieldLength(i));
                 if (c < 0) {
                     pLow1 = keyValueProviders[i].getValue(tuple1.getFieldData(i), tuple1.getFieldStart(i));
                 } else {
@@ -81,8 +81,8 @@ public class RTreeComputationUtils {
                 }
 
                 c = cmp.getComparators()[j].compare(tuple1.getFieldData(j), tuple1.getFieldStart(j),
-                        tuple1.getFieldLength(j), tupleToBeInserted.getFieldData(j),
-                        tupleToBeInserted.getFieldStart(j), tupleToBeInserted.getFieldLength(j));
+                        tuple1.getFieldLength(j), tupleToBeInserted.getFieldData(j), tupleToBeInserted.getFieldStart(j),
+                        tupleToBeInserted.getFieldLength(j));
                 if (c > 0) {
                     pHigh1 = keyValueProviders[j].getValue(tuple1.getFieldData(j), tuple1.getFieldStart(j));
                 } else {
@@ -124,16 +124,16 @@ public class RTreeComputationUtils {
         int maxFieldPos = cmp.getKeyFieldCount() / 2;
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;
-            int c = cmp.getComparators()[i]
-                    .compare(tuple1.getFieldData(i), tuple1.getFieldStart(i), tuple1.getFieldLength(i),
-                            tuple2.getFieldData(i), tuple2.getFieldStart(i), tuple2.getFieldLength(i));
+            int c = cmp.getComparators()[i].compare(tuple1.getFieldData(i), tuple1.getFieldStart(i),
+                    tuple1.getFieldLength(i), tuple2.getFieldData(i), tuple2.getFieldStart(i),
+                    tuple2.getFieldLength(i));
             if (c > 0) {
                 return false;
             }
 
-            c = cmp.getComparators()[j]
-                    .compare(tuple1.getFieldData(j), tuple1.getFieldStart(j), tuple1.getFieldLength(j),
-                            tuple2.getFieldData(j), tuple2.getFieldStart(j), tuple2.getFieldLength(j));
+            c = cmp.getComparators()[j].compare(tuple1.getFieldData(j), tuple1.getFieldStart(j),
+                    tuple1.getFieldLength(j), tuple2.getFieldData(j), tuple2.getFieldStart(j),
+                    tuple2.getFieldLength(j));
             if (c < 0) {
                 return false;
             }

@@ -19,5 +19,5 @@
 
 package org.apache.hyracks.dataflow.std.structures;
 
-public interface IResetableComparable<T> extends IResetable<T>, Comparable<T>{
+public interface IResetableComparable<T> extends IResetable<T>, Comparable<T> {
 }

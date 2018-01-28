@@ -48,11 +48,13 @@ public class APointPartialBinaryComparatorFactory implements IBinaryComparatorFa
                             ADoubleSerializerDeserializer.getDouble(b2,
                                     s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.X) - 1));
                     if (c == 0) {
-                        return Double.compare(
-                                ADoubleSerializerDeserializer.getDouble(b1,
-                                        s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1),
-                                ADoubleSerializerDeserializer.getDouble(b2,
-                                        s2 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1));
+                        return Double
+                                .compare(
+                                        ADoubleSerializerDeserializer.getDouble(
+                                                b1, s1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y)
+                                                        - 1),
+                                        ADoubleSerializerDeserializer.getDouble(b2, s2
+                                                + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y) - 1));
                     }
                     return c;
                 } catch (HyracksDataException hex) {

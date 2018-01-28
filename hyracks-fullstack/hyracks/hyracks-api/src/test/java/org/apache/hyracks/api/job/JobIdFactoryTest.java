@@ -74,7 +74,7 @@ public class JobIdFactoryTest {
         JobIdFactory factory = new JobIdFactory(ccId);
         AtomicLong theId = (AtomicLong) idField.get(factory);
         Assert.assertEquals(expected, theId.get());
-        theId.set((((long)1 << 48) - 1) | expected);
+        theId.set((((long) 1 << 48) - 1) | expected);
         JobId jobId = factory.create();
         Assert.assertEquals(ccId, jobId.getCcId());
         Assert.assertEquals(JobId.MAX_ID, jobId.getIdOnly());

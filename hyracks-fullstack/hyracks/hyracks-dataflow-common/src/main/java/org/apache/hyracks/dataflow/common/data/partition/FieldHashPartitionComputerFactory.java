@@ -55,8 +55,8 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
                     IBinaryHashFunction hashFn = hashFunctions[j];
                     int fStart = accessor.getFieldStartOffset(tIndex, fIdx);
                     int fEnd = accessor.getFieldEndOffset(tIndex, fIdx);
-                    int fh = hashFn
-                            .hash(accessor.getBuffer().array(), startOffset + slotLength + fStart, fEnd - fStart);
+                    int fh = hashFn.hash(accessor.getBuffer().array(), startOffset + slotLength + fStart,
+                            fEnd - fStart);
                     h = h * 31 + fh;
                 }
                 if (h < 0) {

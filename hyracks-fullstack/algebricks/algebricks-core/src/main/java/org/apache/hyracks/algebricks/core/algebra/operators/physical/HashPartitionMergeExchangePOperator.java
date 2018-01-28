@@ -82,8 +82,8 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        IPartitioningProperty p = new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(partitionFields),
-                domain);
+        IPartitioningProperty p =
+                new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(partitionFields), domain);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         List<ILocalStructuralProperty> op2Locals = op2.getDeliveredPhysicalProperties().getLocalProperties();
         List<ILocalStructuralProperty> locals = new ArrayList<ILocalStructuralProperty>();
@@ -108,8 +108,8 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
             columns.add(new OrderColumn(var, oc.getOrder()));
         }
         orderProps.add(new LocalOrderProperty(columns));
-        StructuralPropertiesVector[] r = new StructuralPropertiesVector[] { new StructuralPropertiesVector(null,
-                orderProps) };
+        StructuralPropertiesVector[] r =
+                new StructuralPropertiesVector[] { new StructuralPropertiesVector(null, orderProps) };
         return new PhysicalRequirements(r, IPartitioningRequirementsCoordinator.NO_COORDINATION);
     }
 
@@ -155,8 +155,8 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
             j++;
         }
 
-        IConnectorDescriptor conn = new MToNPartitioningMergingConnectorDescriptor(spec, tpcf, sortFields,
-                comparatorFactories, nkcf);
+        IConnectorDescriptor conn =
+                new MToNPartitioningMergingConnectorDescriptor(spec, tpcf, sortFields, comparatorFactories, nkcf);
         return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
     }
 

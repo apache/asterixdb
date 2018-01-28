@@ -129,15 +129,15 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
-        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
-                propagatedSchema, context);
+        RecordDescriptor recDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
         conditionInputSchemas[0] = propagatedSchema;
         IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(join.getCondition().getValue(),
                 context.getTypeEnvironment(op), conditionInputSchemas, context);
-        ITuplePairComparatorFactory comparatorFactory = new TuplePairEvaluatorFactory(cond,
-                context.getBinaryBooleanInspectorFactory());
+        ITuplePairComparatorFactory comparatorFactory =
+                new TuplePairEvaluatorFactory(cond, context.getBinaryBooleanInspectorFactory());
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc = null;
 
@@ -212,8 +212,8 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
                 int innerIndex) throws HyracksDataException {
             compositeTupleRef.reset(outerAccessor, outerIndex, innerAccessor, innerIndex);
             condEvaluator.evaluate(compositeTupleRef, p);
-            boolean result = binaryBooleanInspector.getBooleanValue(p.getByteArray(), p.getStartOffset(),
-                    p.getLength());
+            boolean result =
+                    binaryBooleanInspector.getBooleanValue(p.getByteArray(), p.getStartOffset(), p.getLength());
             if (result) {
                 return 0;
             } else {

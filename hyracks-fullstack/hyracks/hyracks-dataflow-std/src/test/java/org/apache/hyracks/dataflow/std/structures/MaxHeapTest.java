@@ -97,7 +97,7 @@ public class MaxHeapTest extends AbstracHeapTest {
             maxHeap.peekMax(peekI);
             maxHeap.getMax(maxI);
             assertTrue(peekI.compareTo(maxI) == 0);
-            assertEquals(  i++, capacity - 1 - maxI.i);
+            assertEquals(i++, capacity - 1 - maxI.i);
         }
     }
 }

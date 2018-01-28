@@ -68,8 +68,8 @@ public class DayTimeDurationComparatorDescriptor extends AbstractScalarFunctionD
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ABoolean> boolSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+                    private ISerializerDeserializer<ABoolean> boolSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {

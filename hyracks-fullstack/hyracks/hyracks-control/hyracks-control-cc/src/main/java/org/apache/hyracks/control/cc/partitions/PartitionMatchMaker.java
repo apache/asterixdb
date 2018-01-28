@@ -49,7 +49,8 @@ public class PartitionMatchMaker {
 
     public List<Pair<PartitionDescriptor, PartitionRequest>> registerPartitionDescriptor(
             PartitionDescriptor partitionDescriptor) {
-        List<Pair<PartitionDescriptor, PartitionRequest>> matches = new ArrayList<Pair<PartitionDescriptor, PartitionRequest>>();
+        List<Pair<PartitionDescriptor, PartitionRequest>> matches =
+                new ArrayList<Pair<PartitionDescriptor, PartitionRequest>>();
         PartitionId pid = partitionDescriptor.getPartitionId();
         boolean matched = false;
         List<PartitionRequest> requests = partitionRequests.get(pid);

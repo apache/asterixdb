@@ -39,7 +39,6 @@ public class LSMRTreeWithAntiMatterTuplesOperatorTestHelper extends LSMTreeOpera
     public static final boolean IS_POINT_MBR = false;
     public static final boolean DURABLE = true;
 
-
     public LSMRTreeWithAntiMatterTuplesOperatorTestHelper(IOManager ioManager) {
         super(ioManager);
     }

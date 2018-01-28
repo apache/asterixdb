@@ -23,7 +23,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-
 import org.apache.asterix.lexergenerator.LexerNode;
 import org.apache.asterix.lexergenerator.rules.RuleEpsilon;
 
@@ -94,6 +93,6 @@ public class LexerNodeAppendNodeTest {
         node.append(node2);
         // TODO
         // assertEquals(" ( A_clone! A_clone!  || A_clone!  ) ", node.toString());
-  }
+    }
 
 }

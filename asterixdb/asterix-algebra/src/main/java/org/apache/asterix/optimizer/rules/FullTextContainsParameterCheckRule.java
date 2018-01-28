@@ -80,7 +80,6 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
         return modified;
     }
 
-
     /**
      * This visitor class handles actual checking and transformation.
      */

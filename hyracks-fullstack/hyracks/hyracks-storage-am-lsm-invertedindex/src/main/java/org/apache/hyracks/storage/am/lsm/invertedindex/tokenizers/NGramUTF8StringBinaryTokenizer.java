@@ -79,8 +79,9 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
                 tokenCount++; // assume found
                 int offset = 0;
                 for (int j = 0; j < gramLength; j++) {
-                    if (Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, currentTokenStart + offset))
-                            != Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, tmpIndex + offset))) {
+                    if (Character
+                            .toLowerCase(UTF8StringUtil.charAt(sentenceBytes, currentTokenStart + offset)) != Character
+                                    .toLowerCase(UTF8StringUtil.charAt(sentenceBytes, tmpIndex + offset))) {
                         tokenCount--;
                         break;
                     }

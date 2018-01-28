@@ -118,9 +118,8 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                         SqlppVariableUtil.toUserDefinedVariableName(varName).getValue());
             default:
                 // More than one possibilities.
-                throw new CompilationException(
-                        "Cannot resolve ambiguous alias reference for undefined identifier " + SqlppVariableUtil
-                                .toUserDefinedVariableName(varName).getValue() + " in " + localVars);
+                throw new CompilationException("Cannot resolve ambiguous alias reference for undefined identifier "
+                        + SqlppVariableUtil.toUserDefinedVariableName(varName).getValue() + " in " + localVars);
         }
     }
 
@@ -159,10 +158,9 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                     + " because there is no dataverse declared, nor an alias with name " + datasetName + "!");
         }
         //If no available dataset nor in-scope variable to resolve to, we throw an error.
-        throw new CompilationException(
-                "Cannot find dataset " + datasetName + " in dataverse " + (dataverseName == null ?
-                        defaultDataverseName :
-                        dataverseName) + " nor an alias with name " + datasetName + "!");
+        throw new CompilationException("Cannot find dataset " + datasetName + " in dataverse "
+                + (dataverseName == null ? defaultDataverseName : dataverseName) + " nor an alias with name "
+                + datasetName + "!");
     }
 
     // For a From/Join/UNNEST/Quantifiers binding expression, we resolve the undefined identifier reference as
@@ -175,8 +173,8 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
 
     private boolean datasetExists(String dataverseName, String datasetName) throws CompilationException {
         try {
-            return metadataProvider.findDataset(dataverseName, datasetName) != null || fullyQualifiedDatasetNameExists(
-                    datasetName);
+            return metadataProvider.findDataset(dataverseName, datasetName) != null
+                    || fullyQualifiedDatasetNameExists(datasetName);
         } catch (AlgebricksException e) {
             throw new CompilationException(e);
         }

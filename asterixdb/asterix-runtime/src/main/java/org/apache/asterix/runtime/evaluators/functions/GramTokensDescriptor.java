@@ -56,8 +56,8 @@ public class GramTokensDescriptor extends AbstractScalarFunctionDynamicDescripto
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 ITokenFactory tokenFactory = new UTF8NGramTokenFactory();
-                NGramUTF8StringBinaryTokenizer tokenizer = new NGramUTF8StringBinaryTokenizer(3, true, true, true,
-                        tokenFactory);
+                NGramUTF8StringBinaryTokenizer tokenizer =
+                        new NGramUTF8StringBinaryTokenizer(3, true, true, true, tokenFactory);
                 return new GramTokensEvaluator(args, ctx, tokenizer, BuiltinType.ASTRING);
             }
         };

@@ -47,8 +47,8 @@ public class ResultSerializerFactoryProvider implements IResultSerializerFactory
 
             @Override
             public IResultSerializer createResultSerializer(RecordDescriptor inputRecordDesc, PrintStream printStream) {
-                final IAWriter writer = writerFactory.createWriter(fields, printStream, printerFactories,
-                        inputRecordDesc);
+                final IAWriter writer =
+                        writerFactory.createWriter(fields, printStream, printerFactories, inputRecordDesc);
 
                 return new IResultSerializer() {
                     private static final long serialVersionUID = 1L;

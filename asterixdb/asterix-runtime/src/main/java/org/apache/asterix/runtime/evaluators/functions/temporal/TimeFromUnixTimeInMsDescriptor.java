@@ -70,8 +70,8 @@ public class TimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDynami
 
                     // possible output types
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ATime> timeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ATIME);
+                    private ISerializerDeserializer<ATime> timeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
 
                     private AMutableTime aTime = new AMutableTime(0);
 

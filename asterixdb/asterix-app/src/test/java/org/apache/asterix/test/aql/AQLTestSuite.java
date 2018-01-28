@@ -29,10 +29,11 @@ import org.apache.asterix.lang.aql.parser.ParseException;
 import org.apache.commons.lang3.StringUtils;
 
 public class AQLTestSuite extends TestSuite {
-    private static String AQLTS_PATH = StringUtils.join(new String[] { "src", "test", "resources", "parserts",
-            "queries" + File.separator }, File.separator);
-    private static String AQLTS_SQL_LIKE_PATH = StringUtils.join(new String[] { "src", "test", "resources", "parserts",
-            "queries-sql-like" + File.separator }, File.separator);
+    private static String AQLTS_PATH = StringUtils
+            .join(new String[] { "src", "test", "resources", "parserts", "queries" + File.separator }, File.separator);
+    private static String AQLTS_SQL_LIKE_PATH = StringUtils.join(
+            new String[] { "src", "test", "resources", "parserts", "queries-sql-like" + File.separator },
+            File.separator);
 
     public static Test suite() throws ParseException, UnsupportedEncodingException, FileNotFoundException {
         File testData = new File(AQLTS_PATH);

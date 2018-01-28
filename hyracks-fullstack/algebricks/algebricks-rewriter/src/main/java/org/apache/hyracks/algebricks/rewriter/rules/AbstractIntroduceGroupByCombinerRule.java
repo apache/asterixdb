@@ -212,7 +212,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
 
     private Pair<Boolean, ILogicalPlan> tryToPushSubplan(ILogicalPlan nestedPlan, GroupByOperator oldGbyOp,
             GroupByOperator newGbyOp, BookkeepingInfo bi, List<LogicalVariable> gbyVars, IOptimizationContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         List<Mutable<ILogicalOperator>> pushedRoots = new ArrayList<Mutable<ILogicalOperator>>();
         Set<SimilarAggregatesInfo> toReplaceSet = new HashSet<SimilarAggregatesInfo>();
         for (Mutable<ILogicalOperator> r : nestedPlan.getRoots()) {
@@ -272,7 +272,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
     private boolean tryToPushRoot(Mutable<ILogicalOperator> root, GroupByOperator oldGbyOp, GroupByOperator newGbyOp,
             BookkeepingInfo bi, List<LogicalVariable> gbyVars, IOptimizationContext context,
             List<Mutable<ILogicalOperator>> toPushAccumulate, Set<SimilarAggregatesInfo> toReplaceSet)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) root.getValue();
         if (op1.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
@@ -399,8 +399,7 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
      * @return the bottom-most reference of a select operator
      */
     private Mutable<ILogicalOperator> findBottomOpRefStayInOldGby(GroupByOperator nestedGby,
-            Mutable<ILogicalOperator> currentOpRef)
-            throws AlgebricksException {
+            Mutable<ILogicalOperator> currentOpRef) throws AlgebricksException {
         Set<LogicalVariable> usedVarsInNestedGby = new HashSet<>();
         // Collects used variables in nested pipelines.
         for (ILogicalPlan nestedPlan : nestedGby.getNestedPlans()) {

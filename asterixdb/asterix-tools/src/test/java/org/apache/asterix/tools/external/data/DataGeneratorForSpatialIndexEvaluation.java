@@ -34,7 +34,8 @@ import org.apache.asterix.external.generator.DataGenerator;
 
 public class DataGeneratorForSpatialIndexEvaluation {
 
-    private static final String DUMMY_SIZE_ADJUSTER = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    private static final String DUMMY_SIZE_ADJUSTER =
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
     private RandomDateGenerator randDateGen;
 
@@ -209,12 +210,11 @@ public class DataGeneratorForSpatialIndexEvaluation {
                             : (date.getMonth() + random.nextInt(endDate.getMonth() - date.getMonth()))
                     : random.nextInt(12) + 1;
 
-            int day = (year == endDate.getYear())
-                    ? month == endDate.getMonth()
+            int day =
+                    (year == endDate.getYear()) ? month == endDate.getMonth()
                             ? date.getDay() == endDate.getDay() ? endDate.getDay()
                                     : date.getDay() + random.nextInt(endDate.getDay() - date.getDay())
-                            : random.nextInt(28) + 1
-                    : random.nextInt(28) + 1;
+                            : random.nextInt(28) + 1 : random.nextInt(28) + 1;
             recentDate.reset(month, day, year);
             return recentDate;
         }
@@ -887,8 +887,8 @@ public class DataGeneratorForSpatialIndexEvaluation {
     }
 
     public static void main(String[] args) throws Exception {
-        DataGeneratorForSpatialIndexEvaluation dg = new DataGeneratorForSpatialIndexEvaluation(
-                new InitializationInfo());
+        DataGeneratorForSpatialIndexEvaluation dg =
+                new DataGeneratorForSpatialIndexEvaluation(new InitializationInfo());
         TweetMessageIterator tmi = dg.new TweetMessageIterator(1, new GULongIDGenerator(0, (byte) 0));
         int len = 0;
         int count = 0;

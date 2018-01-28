@@ -123,7 +123,8 @@ public class TestExecutor {
     private static final Pattern HTTP_PARAM_PATTERN = Pattern.compile("param (\\w+)=(.*)", Pattern.MULTILINE);
     private static final Pattern HTTP_BODY_PATTERN = Pattern.compile("body=(.*)", Pattern.MULTILINE);
     private static final Pattern HTTP_STATUSCODE_PATTERN = Pattern.compile("statuscode (.*)", Pattern.MULTILINE);
-    private static final Pattern MAX_RESULT_READS_PATTERN = Pattern.compile("maxresultreads=(\\d+)(\\D|$)", Pattern.MULTILINE);
+    private static final Pattern MAX_RESULT_READS_PATTERN =
+            Pattern.compile("maxresultreads=(\\d+)(\\D|$)", Pattern.MULTILINE);
     public static final int TRUNCATE_THRESHOLD = 16384;
 
     public static final String DELIVERY_ASYNC = "async";
@@ -1003,7 +1004,7 @@ public class TestExecutor {
                         ctx.extension(), cUnit.getOutputDir().getCompare());
                 break;
             case "server": // (start <test server name> <port>
-                           // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
+                               // [<arg1>][<arg2>][<arg3>]...|stop (<port>|all))
                 try {
                     lines = statement.trim().split("\n");
                     String[] command = lines[lines.length - 1].trim().split(" ");
@@ -1051,7 +1052,7 @@ public class TestExecutor {
                 }
                 break;
             case "lib": // expected format <dataverse-name> <library-name>
-                        // <library-directory>
+                            // <library-directory>
                         // TODO: make this case work well with entity names containing spaces by
                         // looking for \"
                 lines = statement.split("\n");

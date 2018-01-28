@@ -48,8 +48,8 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
     protected OrderedListBuilder listBuilder;
     protected ArrayBackedValueStorage inputVal;
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    protected final ISerializerDeserializer<ABoolean> booleanSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
     protected final AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "list");
 
     public SimilarityJaccardCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
@@ -68,15 +68,15 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
         secondOrdListEval.evaluate(tuple, argPtr2);
         jaccThreshEval.evaluate(tuple, jaccThreshPointable);
 
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
+        firstTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
+        secondTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
 
-        firstItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
-        secondItemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
+        firstItemTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
+        secondItemTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
 
         jaccThresh = AFloatSerializerDeserializer.getFloat(jaccThreshPointable.getByteArray(),
                 jaccThreshPointable.getStartOffset() + TYPE_INDICATOR_SIZE);

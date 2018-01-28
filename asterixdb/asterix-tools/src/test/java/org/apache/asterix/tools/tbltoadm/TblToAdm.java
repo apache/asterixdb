@@ -29,7 +29,8 @@ public class TblToAdm {
     private static final String SEPARATOR_STRING = "\\|\\s*";
     private static final char SEPARATOR_CHAR = '|';
 
-    private static void convertFile(String inputFileName, String outputFileName, String scmFileName) throws IOException {
+    private static void convertFile(String inputFileName, String outputFileName, String scmFileName)
+            throws IOException {
         File scmFile = new File(scmFileName);
         File inFile = new File(inputFileName);
         File outFile = new File(outputFileName);

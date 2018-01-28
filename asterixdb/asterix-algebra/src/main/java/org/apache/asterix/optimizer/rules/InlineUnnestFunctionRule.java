@@ -65,8 +65,8 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
             return false;
         }
         UnnestOperator unnestOperator = (UnnestOperator) op1;
-        AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) unnestOperator.getExpressionRef()
-                .getValue();
+        AbstractFunctionCallExpression expr =
+                (AbstractFunctionCallExpression) unnestOperator.getExpressionRef().getValue();
         //we only inline for the scan-collection function
         if (expr.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
             return false;
@@ -96,10 +96,11 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
      */
     private void inlineVariable(LogicalVariable usedVar, UnnestOperator unnestOp) throws AlgebricksException {
         AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) unnestOp.getExpressionRef().getValue();
-        List<Pair<AbstractFunctionCallExpression, Integer>> parentAndIndexList = new ArrayList<Pair<AbstractFunctionCallExpression, Integer>>();
+        List<Pair<AbstractFunctionCallExpression, Integer>> parentAndIndexList =
+                new ArrayList<Pair<AbstractFunctionCallExpression, Integer>>();
         getParentFunctionExpression(usedVar, expr, parentAndIndexList);
-        ILogicalExpression usedVarOrginExpr = findUsedVarOrigin(usedVar, unnestOp,
-                (AbstractLogicalOperator) unnestOp.getInputs().get(0).getValue());
+        ILogicalExpression usedVarOrginExpr =
+                findUsedVarOrigin(usedVar, unnestOp, (AbstractLogicalOperator) unnestOp.getInputs().get(0).getValue());
         if (usedVarOrginExpr != null) {
             for (Pair<AbstractFunctionCallExpression, Integer> parentAndIndex : parentAndIndexList) {
                 //we only rewrite the top scan-collection function
@@ -160,8 +161,8 @@ public class InlineUnnestFunctionRule implements IAlgebraicRewriteRule {
             }
         } else {
             for (Mutable<ILogicalOperator> child : currentOp.getInputs()) {
-                ILogicalExpression expr = findUsedVarOrigin(usedVar, currentOp,
-                        (AbstractLogicalOperator) child.getValue());
+                ILogicalExpression expr =
+                        findUsedVarOrigin(usedVar, currentOp, (AbstractLogicalOperator) child.getValue());
                 if (expr != null) {
                     ret = expr;
                 }

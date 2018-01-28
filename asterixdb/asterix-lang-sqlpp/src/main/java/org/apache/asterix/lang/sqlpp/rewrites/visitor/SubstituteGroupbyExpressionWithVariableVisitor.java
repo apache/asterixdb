@@ -60,8 +60,8 @@ public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlp
             SubstituteGroupbyExpressionVisitor visitor = new SubstituteGroupbyExpressionVisitor(context, map);
 
             // Rewrites LET/HAVING/SELECT clauses.
-            if(selectBlock.hasLetClausesAfterGroupby()){
-                for(LetClause letClause : selectBlock.getLetListAfterGroupby()){
+            if (selectBlock.hasLetClausesAfterGroupby()) {
+                for (LetClause letClause : selectBlock.getLetListAfterGroupby()) {
                     letClause.accept(this, arg);
                 }
             }

@@ -31,7 +31,7 @@ public class LexerNodeAppendRuleTest {
         LexerNode node = new LexerNode();
         node.appendTokenName(token_name);
         assertEquals(token_tostring, node.toString());
-        assertEquals(token_return,   node.toJava());
+        assertEquals(token_return, node.toJava());
     }
 
     @Test
@@ -39,11 +39,9 @@ public class LexerNodeAppendRuleTest {
         LexerNode node = new LexerNode();
         node.append(rule);
         node.appendTokenName(token_name);
-        assertEquals(rule_name+token_tostring, node.toString());
-        assertEquals(rule_match+"{"
-                        +"\n"+rule_action
-                        +"\n"+token_return
-                     +"}"+token_parseerror, node.toJava());
+        assertEquals(rule_name + token_tostring, node.toString());
+        assertEquals(rule_match + "{" + "\n" + rule_action + "\n" + token_return + "}" + token_parseerror,
+                node.toJava());
     }
 
     @Test
@@ -52,14 +50,8 @@ public class LexerNodeAppendRuleTest {
         node.append(rule);
         node.append(rule2);
         node.appendTokenName(token_name);
-        assertEquals(rule_name+rule2_name+token_tostring, node.toString());
-        assertEquals(rule_match+"{"
-                        +"\n"+rule_action
-                        +"\n"+rule2_match+"{"
-                            +"\n"+rule2_action
-                            +"\n"+token_return
-                        +"}"
-                        +token_parseerror
-                     +"}"+token_parseerror, node.toJava());
+        assertEquals(rule_name + rule2_name + token_tostring, node.toString());
+        assertEquals(rule_match + "{" + "\n" + rule_action + "\n" + rule2_match + "{" + "\n" + rule2_action + "\n"
+                + token_return + "}" + token_parseerror + "}" + token_parseerror, node.toJava());
     }
 }

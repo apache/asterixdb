@@ -236,8 +236,8 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         }
         if (testForNull == null) {
             testForNull = context.newVar();
-            AssignOperator tmpAsgn = new AssignOperator(testForNull,
-                    new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+            AssignOperator tmpAsgn =
+                    new AssignOperator(testForNull, new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
             tmpAsgn.getInputs().add(new MutableObject<ILogicalOperator>(rightRef.getValue()));
             rightRef.setValue(tmpAsgn);
             context.computeAndSetTypeEnvironmentForOperator(tmpAsgn);
@@ -247,10 +247,10 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         ILogicalExpression isNullTest = new ScalarFunctionCallExpression(finfoEq,
                 new MutableObject<ILogicalExpression>(new VariableReferenceExpression(testForNull)));
         IFunctionInfo finfoNot = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.NOT);
-        ScalarFunctionCallExpression nonNullTest = new ScalarFunctionCallExpression(finfoNot,
-                new MutableObject<ILogicalExpression>(isNullTest));
-        SelectOperator selectNonNull = new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest), false,
-                null);
+        ScalarFunctionCallExpression nonNullTest =
+                new ScalarFunctionCallExpression(finfoNot, new MutableObject<ILogicalExpression>(isNullTest));
+        SelectOperator selectNonNull =
+                new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest), false, null);
         GroupByOperator g = new GroupByOperator();
         Mutable<ILogicalOperator> newSubplanRef = new MutableObject<ILogicalOperator>(subplan);
         NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(g));

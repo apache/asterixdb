@@ -68,8 +68,8 @@ public class AdapterFactoryProvider {
             Map<String, String> configuration, ARecordType recordType, int[] ridFields, boolean retainInput,
             boolean retainMissing, IMissingWriterFactory missingWriterFactory)
             throws HyracksDataException, AlgebricksException {
-        LookupAdapterFactory<?> adapterFactory = new LookupAdapterFactory<>(recordType, ridFields, retainInput,
-                retainMissing, missingWriterFactory);
+        LookupAdapterFactory<?> adapterFactory =
+                new LookupAdapterFactory<>(recordType, ridFields, retainInput, retainMissing, missingWriterFactory);
         adapterFactory.configure(serviceCtx, configuration);
         return adapterFactory;
     }

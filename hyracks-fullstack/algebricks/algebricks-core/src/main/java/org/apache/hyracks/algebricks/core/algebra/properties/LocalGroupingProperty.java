@@ -114,8 +114,8 @@ public class LocalGroupingProperty extends AbstractGroupingProperty implements I
             return null;
         }
         int numColumns = newColumns.size();
-        List<LogicalVariable> newOrderEnforcer = preferredOrderEnforcer.size() > numColumns ? preferredOrderEnforcer
-                .subList(0, numColumns) : preferredOrderEnforcer;
+        List<LogicalVariable> newOrderEnforcer = preferredOrderEnforcer.size() > numColumns
+                ? preferredOrderEnforcer.subList(0, numColumns) : preferredOrderEnforcer;
         return new LocalGroupingProperty(newColumns, newOrderEnforcer);
     }
 }

@@ -46,7 +46,8 @@ public interface IHyracksJobBuilder {
     /**
      * inputs are numbered starting from 0
      */
-    public void contributeGraphEdge(ILogicalOperator src, int srcOutputIndex, ILogicalOperator dest, int destInputIndex);
+    public void contributeGraphEdge(ILogicalOperator src, int srcOutputIndex, ILogicalOperator dest,
+            int destInputIndex);
 
     public void contributeConnector(ILogicalOperator exchgOp, IConnectorDescriptor conn);
 

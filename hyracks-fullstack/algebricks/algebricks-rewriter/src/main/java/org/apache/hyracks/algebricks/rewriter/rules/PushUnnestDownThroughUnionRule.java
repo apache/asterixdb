@@ -79,11 +79,11 @@ public class PushUnnestDownThroughUnionRule implements IAlgebraicRewriteRule {
         }
 
         LogicalVariable unnestVar1 = context.newVar();
-        UnnestOperator unnest1 = new UnnestOperator(unnestVar1, new MutableObject<ILogicalExpression>(unnestOpRef
-                .getExpressionRef().getValue().cloneExpression()));
+        UnnestOperator unnest1 = new UnnestOperator(unnestVar1,
+                new MutableObject<ILogicalExpression>(unnestOpRef.getExpressionRef().getValue().cloneExpression()));
         LogicalVariable unnestVar2 = context.newVar();
-        UnnestOperator unnest2 = new UnnestOperator(unnestVar2, new MutableObject<ILogicalExpression>(unnestOpRef
-                .getExpressionRef().getValue().cloneExpression()));
+        UnnestOperator unnest2 = new UnnestOperator(unnestVar2,
+                new MutableObject<ILogicalExpression>(unnestOpRef.getExpressionRef().getValue().cloneExpression()));
 
         //Getting the two topmost branched and adding them as an input to the unnests:
         Mutable<ILogicalOperator> branch1 = unionAbstractOp.getInputs().get(0);
@@ -110,10 +110,11 @@ public class PushUnnestDownThroughUnionRule implements IAlgebraicRewriteRule {
         context.computeAndSetTypeEnvironmentForOperator(unnest2);
 
         //creating a new union operator with the updated logical variables
-        List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap = new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>(
-                1);
-        Triple<LogicalVariable, LogicalVariable, LogicalVariable> union_triple_vars = new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(
-                unnestVar1, unnestVar2, unnestOpRef.getVariables().get(0));
+        List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap =
+                new ArrayList<Triple<LogicalVariable, LogicalVariable, LogicalVariable>>(1);
+        Triple<LogicalVariable, LogicalVariable, LogicalVariable> union_triple_vars =
+                new Triple<LogicalVariable, LogicalVariable, LogicalVariable>(unnestVar1, unnestVar2,
+                        unnestOpRef.getVariables().get(0));
         varMap.add(union_triple_vars);
         UnionAllOperator unionOpFinal = new UnionAllOperator(varMap);
 

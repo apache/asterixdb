@@ -47,8 +47,8 @@ public class QueryCancellationServletTest {
     @Test
     public void testDelete() throws Exception {
         // Creates a query cancellation servlet.
-        QueryCancellationServlet cancellationServlet = new QueryCancellationServlet(new ConcurrentHashMap<>(),
-                new String[] { "/" });
+        QueryCancellationServlet cancellationServlet =
+                new QueryCancellationServlet(new ConcurrentHashMap<>(), new String[] { "/" });
         // Adds mocked Hyracks client connection into the servlet context.
         IHyracksClientConnection mockHcc = mock(IHyracksClientConnection.class);
         cancellationServlet.ctx().put(ServletConstants.HYRACKS_CONNECTION_ATTR, mockHcc);

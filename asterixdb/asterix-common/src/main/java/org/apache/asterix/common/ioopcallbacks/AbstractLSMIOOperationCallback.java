@@ -125,9 +125,9 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
             if (oldComponents == null) {
                 throw new IllegalStateException("Merge must have old components");
             }
-            LongPointable markerLsn = LongPointable.FACTORY.createPointable(ComponentUtils
-                    .getLong(oldComponents.get(0).getMetadata(), ComponentUtils.MARKER_LSN_KEY,
-                            ComponentUtils.NOT_FOUND));
+            LongPointable markerLsn =
+                    LongPointable.FACTORY.createPointable(ComponentUtils.getLong(oldComponents.get(0).getMetadata(),
+                            ComponentUtils.MARKER_LSN_KEY, ComponentUtils.NOT_FOUND));
             newComponent.getMetadata().put(ComponentUtils.MARKER_LSN_KEY, markerLsn);
         } else if (opType == LSMIOOperationType.FLUSH) {
             // advance memory component indexes
@@ -182,8 +182,8 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         if (mergedComponents == null || mergedComponents.isEmpty()) {
             return null;
         }
-        return LSMComponentIdUtils
-                .union(mergedComponents.get(0).getId(), mergedComponents.get(mergedComponents.size() - 1).getId());
+        return LSMComponentIdUtils.union(mergedComponents.get(0).getId(),
+                mergedComponents.get(mergedComponents.size() - 1).getId());
 
     }
 

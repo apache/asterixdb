@@ -57,8 +57,8 @@ public class RecordIdReader {
 
     public RecordId read(int index) throws HyracksDataException {
         tupleStartOffset = tupleAccessor.getTupleStartOffset(index) + fieldSlotsLength;
-        int fileNumberStartOffset = tupleAccessor.getFieldStartOffset(index,
-                ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]);
+        int fileNumberStartOffset =
+                tupleAccessor.getFieldStartOffset(index, ridFields[IndexingConstants.FILE_NUMBER_FIELD_INDEX]);
         frameBuffer = tupleAccessor.getBuffer();
         if (frameBuffer.get(tupleStartOffset + fileNumberStartOffset) == MISSING_BYTE) {
             return null;

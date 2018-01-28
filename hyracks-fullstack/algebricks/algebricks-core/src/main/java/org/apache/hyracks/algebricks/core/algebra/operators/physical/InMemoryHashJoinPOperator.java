@@ -87,8 +87,8 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
         int[] keysLeft = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
         int[] keysRight = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IBinaryHashFunctionFactory[] hashFunFactories = JobGenHelper
-                .variablesToBinaryHashFunctionFactories(keysLeftBranch, env, context);
+        IBinaryHashFunctionFactory[] hashFunFactories =
+                JobGenHelper.variablesToBinaryHashFunctionFactories(keysLeftBranch, env, context);
         IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[keysLeft.length];
         int i = 0;
         IBinaryComparatorFactoryProvider bcfp = context.getBinaryComparatorFactoryProvider();
@@ -97,13 +97,13 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
             comparatorFactories[i++] = bcfp.getBinaryComparatorFactory(t, true);
         }
 
-        IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider = context
-                .getPredicateEvaluatorFactoryProvider();
+        IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider =
+                context.getPredicateEvaluatorFactoryProvider();
         IPredicateEvaluatorFactory predEvaluatorFactory = (predEvaluatorFactoryProvider == null ? null
                 : predEvaluatorFactoryProvider.getPredicateEvaluatorFactory(keysLeft, keysRight));
 
-        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
-                propagatedSchema, context);
+        RecordDescriptor recDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IOperatorDescriptor opDesc = null;
 

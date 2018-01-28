@@ -144,7 +144,6 @@ public class AqlPlusExpressionToPlanTranslator extends AqlExpressionToPlanTransl
         return new Pair<ILogicalOperator, LogicalVariable>(a, var);
     }
 
-
     public void addVariableToMetaScope(Identifier id, LogicalVariable var) {
         metaScopeExp.put(id, var);
     }

@@ -56,12 +56,12 @@ public class VSizeFrameSortMergeTest extends AbstractIntegrationTest {
             new ManagedFileSplit(NC1_ID, "data" + File.separator + "tpch0.001" + File.separator + "orders-part1.tbl"),
             new ManagedFileSplit(NC2_ID, "data" + File.separator + "tpch0.001" + File.separator + "orders-part2.tbl") };
     IFileSplitProvider ordersSplitProvider = new ConstantFileSplitProvider(ordersSplits);
-    RecordDescriptor ordersDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
-            new UTF8StringSerializerDeserializer() });
+    RecordDescriptor ordersDesc =
+            new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
+                    new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer() });
 
     @Test
     public void sortNormalMergeTest() throws Exception {
@@ -84,34 +84,37 @@ public class VSizeFrameSortMergeTest extends AbstractIntegrationTest {
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
                         UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE,
-                        UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'), ordersDesc);
+                        UTF8StringParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE }, '|'),
+                ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID, NC2_ID);
 
         spec.setFrameSize(frameSize);
-        ExternalSortOperatorDescriptor sorter = new ExternalSortOperatorDescriptor(spec, frameLimit, new int[] { 1, 0 },
-                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) }, ordersDesc);
+        ExternalSortOperatorDescriptor sorter =
+                new ExternalSortOperatorDescriptor(spec, frameLimit, new int[] { 1, 0 },
+                        new IBinaryComparatorFactory[] {
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                        ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID, NC2_ID);
 
         String path = getClass().getSimpleName() + aInteger.getAndIncrement() + ".tmp";
 
-        IFileSplitProvider outputSplitProvider = new ConstantFileSplitProvider(
-                new FileSplit[] { new ManagedFileSplit(NC1_ID, path) });
+        IFileSplitProvider outputSplitProvider =
+                new ConstantFileSplitProvider(new FileSplit[] { new ManagedFileSplit(NC1_ID, path) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outputSplitProvider, "|");
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, printer, NC1_ID);
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
 
-        spec.connect(
-                new MToNPartitioningMergingConnectorDescriptor(spec, new FieldHashPartitionComputerFactory(new int[] {
-                        1, 0 }, new IBinaryHashFunctionFactory[] {
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
-                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }), new int[] { 1, 0 },
-                        new IBinaryComparatorFactory[] {
-                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
-                                PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
-                        new UTF8StringNormalizedKeyComputerFactory()), sorter, 0, printer, 0);
+        spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, new FieldHashPartitionComputerFactory(
+                new int[] { 1, 0 },
+                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
+                        PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }),
+                new int[] { 1, 0 },
+                new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY),
+                        PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) },
+                new UTF8StringNormalizedKeyComputerFactory()), sorter, 0, printer, 0);
 
         spec.addRoot(printer);
         runTest(spec);

@@ -58,50 +58,39 @@ import org.junit.Test;
 
 public abstract class AbstractExternalGroupbyTest {
 
-    ISerializerDeserializer[] inFields = new ISerializerDeserializer[] {
-            IntegerSerializerDeserializer.INSTANCE,
-            new UTF8StringSerializerDeserializer(),
-    };
+    ISerializerDeserializer[] inFields = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+            new UTF8StringSerializerDeserializer(), };
 
-    ISerializerDeserializer[] aggrFields = new ISerializerDeserializer[] {
-            new UTF8StringSerializerDeserializer(),  // key
-            IntegerSerializerDeserializer.INSTANCE,     // sum
-            IntegerSerializerDeserializer.INSTANCE,     // count
-            FloatSerializerDeserializer.INSTANCE,       // avg
+    ISerializerDeserializer[] aggrFields = new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(), // key
+            IntegerSerializerDeserializer.INSTANCE, // sum
+            IntegerSerializerDeserializer.INSTANCE, // count
+            FloatSerializerDeserializer.INSTANCE, // avg
     };
 
     RecordDescriptor inRecordDesc = new RecordDescriptor(inFields);
 
     RecordDescriptor outputRec = new RecordDescriptor(aggrFields);
 
-    IBinaryComparatorFactory[] comparatorFactories = new IBinaryComparatorFactory[] {
-            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
+    IBinaryComparatorFactory[] comparatorFactories =
+            new IBinaryComparatorFactory[] { PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY) };
 
     INormalizedKeyComputerFactory normalizedKeyComputerFactory = new UTF8StringNormalizedKeyComputerFactory();
 
     IAggregatorDescriptorFactory partialAggrInPlace = new MultiFieldsAggregatorFactory(
-            new IFieldAggregateDescriptorFactory[] {
-                    new IntSumFieldAggregatorFactory(0, false),
-                    new CountFieldAggregatorFactory(false),
-                    new AvgFieldGroupAggregatorFactory(0, false) });
+            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(0, false),
+                    new CountFieldAggregatorFactory(false), new AvgFieldGroupAggregatorFactory(0, false) });
 
     IAggregatorDescriptorFactory finalAggrInPlace = new MultiFieldsAggregatorFactory(
-            new IFieldAggregateDescriptorFactory[] {
-                    new IntSumFieldAggregatorFactory(1, false),
-                    new IntSumFieldAggregatorFactory(2, false),
-                    new AvgFieldMergeAggregatorFactory(3, false) });
+            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                    new IntSumFieldAggregatorFactory(2, false), new AvgFieldMergeAggregatorFactory(3, false) });
 
     IAggregatorDescriptorFactory partialAggrInState = new MultiFieldsAggregatorFactory(
-            new IFieldAggregateDescriptorFactory[] {
-                    new IntSumFieldAggregatorFactory(0, true),
-                    new CountFieldAggregatorFactory(true),
-                    new AvgFieldGroupAggregatorFactory(0, true) });
+            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(0, true),
+                    new CountFieldAggregatorFactory(true), new AvgFieldGroupAggregatorFactory(0, true) });
 
     IAggregatorDescriptorFactory finalAggrInState = new MultiFieldsAggregatorFactory(
-            new IFieldAggregateDescriptorFactory[] {
-                    new IntSumFieldAggregatorFactory(1, true),
-                    new IntSumFieldAggregatorFactory(2, true),
-                    new AvgFieldMergeAggregatorFactory(3, true) });
+            new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, true),
+                    new IntSumFieldAggregatorFactory(2, true), new AvgFieldMergeAggregatorFactory(3, true) });
 
     int[] keyFields = new int[] { 1 };
     int[] keyFieldsAfterPartial = new int[] { 0 };
@@ -213,17 +202,15 @@ public abstract class AbstractExternalGroupbyTest {
 
     protected abstract IOperatorNodePushable getMerger();
 
-    private void testBuildAndMerge(int tableSize, int numFrames, int frameSize, int minDataSize,
-            int minRecordSize, int maxRecordSize,
-            Map<Integer, String> specialData)
-            throws HyracksDataException {
+    private void testBuildAndMerge(int tableSize, int numFrames, int frameSize, int minDataSize, int minRecordSize,
+            int maxRecordSize, Map<Integer, String> specialData) throws HyracksDataException {
 
         IHyracksTaskContext ctx = TestUtils.create(frameSize);
         initial(ctx, tableSize, numFrames);
         ArrayList<IFrame> input = new ArrayList<>();
         Map<Integer, String> keyValueMap = new HashMap<>();
-        AbstractRunGeneratorTest
-                .prepareData(ctx, input, minDataSize, minRecordSize, maxRecordSize, specialData, keyValueMap);
+        AbstractRunGeneratorTest.prepareData(ctx, input, minDataSize, minRecordSize, maxRecordSize, specialData,
+                keyValueMap);
 
         ResultValidateWriter writer = new ResultValidateWriter(keyValueMap);
 

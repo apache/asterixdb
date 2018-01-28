@@ -113,8 +113,8 @@ public class RegExpMatcher {
             StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
             // ! object creation !
             String inputPatternString = lastPatternPtr.toString();
-            String patternString = patternGenerator == null ? inputPatternString : patternGenerator
-                    .toRegExpPatternString(inputPatternString);
+            String patternString = patternGenerator == null ? inputPatternString
+                    : patternGenerator.toRegExpPatternString(inputPatternString);
             if (newFlag) {
                 pattern = Pattern.compile(patternString, StringEvaluatorUtils.toFlag(flagPtr.toString()));
 
@@ -167,8 +167,8 @@ public class RegExpMatcher {
      */
     public String replace(UTF8StringPointable replaceStrPtr) {
         // Sets up a new replacement string if necessary.
-        final boolean newReplace = replaceStrPtr != null
-                && (replaceStr == null || lastReplaceStrPtr.compareTo(replaceStrPtr) != 0);
+        final boolean newReplace =
+                replaceStrPtr != null && (replaceStr == null || lastReplaceStrPtr.compareTo(replaceStrPtr) != 0);
         if (newReplace) {
             StringEvaluatorUtils.copyResetUTF8Pointable(replaceStrPtr, lastReplaceStorage, lastReplaceStrPtr);
             replaceStr = replaceStrPtr.toString();

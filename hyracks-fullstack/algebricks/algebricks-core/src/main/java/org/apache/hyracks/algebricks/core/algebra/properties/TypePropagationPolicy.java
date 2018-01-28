@@ -71,8 +71,8 @@ public abstract class TypePropagationPolicy {
             // found in both inner and outer branches. Fix computeOutputTypeEnvironment() in ProjectOperator
             // and investigate why many test queries fail if only live variables' types are propagated.
             for (int i = n - 1; i >= 0; i--) {
-                Object t = typeEnvs[i].getTypeEnv().getVarType(var, nonNullVariableList,
-                        correlatedNullableVariableLists);
+                Object t =
+                        typeEnvs[i].getTypeEnv().getVarType(var, nonNullVariableList, correlatedNullableVariableLists);
                 if (t == null) {
                     continue;
                 }

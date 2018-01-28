@@ -65,8 +65,8 @@ public class AsterixHyracksIntegrationUtil {
 
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
-    public static final String DEFAULT_CONF_FILE = joinPath(getProjectPath().toString(), "src", "test", "resources",
-            "cc.conf");
+    public static final String DEFAULT_CONF_FILE =
+            joinPath(getProjectPath().toString(), "src", "test", "resources", "cc.conf");
     private static final String DEFAULT_STORAGE_PATH = joinPath("target", "io", "dir");
     private static String storagePath = DEFAULT_STORAGE_PATH;
 
@@ -135,8 +135,8 @@ public class AsterixHyracksIntegrationUtil {
                 ncConfigManager = new ConfigManager(new String[] { "-config-file", confFile });
             }
             ncApplication.registerConfig(ncConfigManager);
-            nodeControllers.add(new NodeControllerService(fixupIODevices(createNCConfig(nodeId, ncConfigManager)),
-                    ncApplication));
+            nodeControllers.add(
+                    new NodeControllerService(fixupIODevices(createNCConfig(nodeId, ncConfigManager)), ncApplication));
         }
 
         opts.stream().forEach(opt -> configManager.set(opt.getLeft(), opt.getRight()));

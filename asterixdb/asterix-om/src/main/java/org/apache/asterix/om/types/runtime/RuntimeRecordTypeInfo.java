@@ -53,10 +53,10 @@ public class RuntimeRecordTypeInfo {
     private ARecordType cachedRecType = null;
 
     public RuntimeRecordTypeInfo() {
-        fieldNameComparator = new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY)
-                .createBinaryComparator();
-        fieldNameHashFunction = new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY)
-                .createBinaryHashFunction();
+        fieldNameComparator =
+                new PointableBinaryComparatorFactory(UTF8StringPointable.FACTORY).createBinaryComparator();
+        fieldNameHashFunction =
+                new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY).createBinaryHashFunction();
         writer = new UTF8StringWriter();
     }
 
@@ -88,8 +88,8 @@ public class RuntimeRecordTypeInfo {
                     serializedFieldNameOffsets[i] = baaos.size();
                     writer.writeUTF8(fieldNames[i], dos);
                     length = baaos.size() - serializedFieldNameOffsets[i];
-                    hashCodeIndexPairs[i] = fieldNameHashFunction.hash(baaos.getByteArray(),
-                            serializedFieldNameOffsets[i], length);
+                    hashCodeIndexPairs[i] =
+                            fieldNameHashFunction.hash(baaos.getByteArray(), serializedFieldNameOffsets[i], length);
                     hashCodeIndexPairs[i] = hashCodeIndexPairs[i] << 32;
                     hashCodeIndexPairs[i] = hashCodeIndexPairs[i] | i;
                 }

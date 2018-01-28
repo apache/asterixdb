@@ -73,11 +73,11 @@ public class SimilarityJaccardPrefixCheckDescriptor extends AbstractScalarFuncti
         private final OrderedListBuilder listBuilder;
         private ArrayBackedValueStorage inputVal;
         @SuppressWarnings("unchecked")
-        private final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+        private final ISerializerDeserializer<ABoolean> booleanSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
         @SuppressWarnings("unchecked")
-        private final ISerializerDeserializer<AFloat> floatSerde = SerializerDeserializerProvider.INSTANCE
-                .getSerializerDeserializer(BuiltinType.AFLOAT);
+        private final ISerializerDeserializer<AFloat> floatSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
         private final AMutableFloat aFloat = new AMutableFloat(0);
 
         private final AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "list");

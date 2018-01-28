@@ -89,7 +89,7 @@ class ResourceGroup {
     }
 
     public String toString() {
-        return "{ id : " + hashCode() + ", first : " + TypeUtil.Global.toString(firstResourceIndex.get()) + ", " +
-                "waiters : " + (hasWaiters() ? "true" : "false") + " }";
+        return "{ id : " + hashCode() + ", first : " + TypeUtil.Global.toString(firstResourceIndex.get()) + ", "
+                + "waiters : " + (hasWaiters() ? "true" : "false") + " }";
     }
 }

@@ -43,8 +43,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractCountAggregateFunction implements IAggregateEvaluator {
     private AMutableInt64 result = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
-    private ISerializerDeserializer<AInt64> int64Serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.AINT64);
+    private ISerializerDeserializer<AInt64> int64Serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
     private IPointable inputVal = new VoidPointable();
     private IScalarEvaluator eval;
     protected long cnt;
@@ -64,8 +64,8 @@ public abstract class AbstractCountAggregateFunction implements IAggregateEvalua
     @Override
     public void step(IFrameTupleReference tuple) throws HyracksDataException {
         eval.evaluate(tuple, inputVal);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
+        ATypeTag typeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
         // Ignore SYSTEM_NULL.
         if (typeTag == ATypeTag.NULL || typeTag == ATypeTag.MISSING) {
             processNull();

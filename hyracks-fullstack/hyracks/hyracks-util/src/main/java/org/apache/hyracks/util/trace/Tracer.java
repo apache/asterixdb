@@ -38,8 +38,8 @@ public class Tracer implements ITracer {
 
     protected static final Level TRACE_LOG_LEVEL = Level.INFO;
     protected static final String CAT = "Tracer";
-    protected static final ThreadLocal<DateFormat> DATE_FORMAT = ThreadLocal
-            .withInitial(() -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
+    protected static final ThreadLocal<DateFormat> DATE_FORMAT =
+            ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 
     protected final Logger traceLog;
     protected long categories;

@@ -369,8 +369,8 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         return newObjs;
     }
 
-    private List<Pair<IOrder, Mutable<ILogicalExpression>>>
-            deepCopyOrderAndExpression(List<Pair<IOrder, Mutable<ILogicalExpression>>> ordersAndExprs) {
+    private List<Pair<IOrder, Mutable<ILogicalExpression>>> deepCopyOrderAndExpression(
+            List<Pair<IOrder, Mutable<ILogicalExpression>>> ordersAndExprs) {
         List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrdersAndExprs = new ArrayList<>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> pair : ordersAndExprs) {
             newOrdersAndExprs.add(new Pair<>(pair.first, deepCopyExpressionRef(pair.second)));

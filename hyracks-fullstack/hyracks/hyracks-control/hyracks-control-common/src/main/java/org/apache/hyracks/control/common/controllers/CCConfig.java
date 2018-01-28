@@ -60,17 +60,14 @@ public class CCConfig extends ControllerConfig {
         RESULT_TTL(LONG, 86400000L), // TODO(mblow): add time unit
         RESULT_SWEEP_THRESHOLD(LONG, 60000L), // TODO(mblow): add time unit
         @SuppressWarnings("RedundantCast") // not redundant- false positive from IDEA
-        ROOT_DIR(STRING, (Function<IApplicationConfig, String>) appConfig ->
-                FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR),
-                        "ClusterControllerService"), "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() +
-                ">/ClusterControllerService"),
+        ROOT_DIR(STRING, (Function<IApplicationConfig, String>) appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "ClusterControllerService"), "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/ClusterControllerService"),
         CLUSTER_TOPOLOGY(STRING),
         JOB_QUEUE_CLASS(STRING, "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue"),
         JOB_QUEUE_CAPACITY(INTEGER, 4096),
         JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager"),
         ENFORCE_FRAME_WRITER_PROTOCOL(BOOLEAN, false),
         CORES_MULTIPLIER(INTEGER, 3),
-        CONTROLLER_ID(SHORT, (short)0x0000);
+        CONTROLLER_ID(SHORT, (short) 0x0000);
 
         private final IOptionType parser;
         private Object defaultValue;
@@ -93,7 +90,7 @@ public class CCConfig extends ControllerConfig {
         }
 
         <T> Option(IOptionType<T> parser, Function<IApplicationConfig, T> defaultValue,
-                   String defaultValueDescription) {
+                String defaultValueDescription) {
             this.parser = parser;
             this.defaultValue = defaultValue;
             this.defaultValueDescription = defaultValueDescription;

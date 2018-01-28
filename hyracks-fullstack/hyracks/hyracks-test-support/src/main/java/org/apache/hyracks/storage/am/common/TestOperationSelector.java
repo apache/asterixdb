@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.common;
 
 import org.apache.hyracks.storage.am.common.datagen.ProbabilityHelper;
 
-
 public class TestOperationSelector {
 
     public static enum TestOperation {

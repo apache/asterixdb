@@ -56,8 +56,8 @@ public abstract class AbstractRTreeDeleteTest extends AbstractRTreeTestDriver {
             } else if (fieldSerdes[0] instanceof DoubleSerializerDeserializer) {
                 rTreeTestUtils.insertDoubleTuples(ctx, numTuplesToInsert, getRandom());
             }
-            int numTuplesPerDeleteRound = (int) Math
-                    .ceil((float) ctx.getCheckTuples().size() / (float) numDeleteRounds);
+            int numTuplesPerDeleteRound =
+                    (int) Math.ceil((float) ctx.getCheckTuples().size() / (float) numDeleteRounds);
             for (int j = 0; j < numDeleteRounds; j++) {
                 rTreeTestUtils.deleteTuples(ctx, numTuplesPerDeleteRound, getRandom());
                 rTreeTestUtils.checkScan(ctx);

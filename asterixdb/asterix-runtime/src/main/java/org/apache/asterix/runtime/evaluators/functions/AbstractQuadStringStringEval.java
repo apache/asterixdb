@@ -59,8 +59,8 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
 
     private AMutableString resultBuffer = new AMutableString("");
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer strSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ASTRING);
+    private ISerializerDeserializer strSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
     private final UTF8StringPointable strPtr1st = new UTF8StringPointable();
     private final UTF8StringPointable strPtr2nd = new UTF8StringPointable();

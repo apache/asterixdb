@@ -51,25 +51,21 @@ public class UnionTest extends AbstractIntegrationTest {
     public static JobSpecification createUnionJobSpec() throws Exception {
         JobSpecification spec = new JobSpecification();
 
-        IFileSplitProvider splitProvider = new ConstantFileSplitProvider(new FileSplit[] {
-                new ManagedFileSplit(NC2_ID, "data" + File.separator + "words.txt"),
-                new ManagedFileSplit(NC1_ID, "data" + File.separator + "nc1" + File.separator + "words.txt") });
+        IFileSplitProvider splitProvider = new ConstantFileSplitProvider(
+                new FileSplit[] { new ManagedFileSplit(NC2_ID, "data" + File.separator + "words.txt"),
+                        new ManagedFileSplit(NC1_ID, "data" + File.separator + "nc1" + File.separator + "words.txt") });
 
-        RecordDescriptor desc = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
+        RecordDescriptor desc =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
-        FileScanOperatorDescriptor csvScanner01 = new FileScanOperatorDescriptor(
-                spec,
-                splitProvider,
-                new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','),
-                desc);
+        FileScanOperatorDescriptor csvScanner01 =
+                new FileScanOperatorDescriptor(spec, splitProvider, new DelimitedDataTupleParserFactory(
+                        new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','), desc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner01, NC2_ID, NC1_ID);
 
-        FileScanOperatorDescriptor csvScanner02 = new FileScanOperatorDescriptor(
-                spec,
-                splitProvider,
-                new DelimitedDataTupleParserFactory(new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','),
-                desc);
+        FileScanOperatorDescriptor csvScanner02 =
+                new FileScanOperatorDescriptor(spec, splitProvider, new DelimitedDataTupleParserFactory(
+                        new IValueParserFactory[] { UTF8StringParserFactory.INSTANCE }, ','), desc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, csvScanner02, NC2_ID, NC1_ID);
 
         UnionAllOperatorDescriptor unionAll = new UnionAllOperatorDescriptor(spec, 2, desc);

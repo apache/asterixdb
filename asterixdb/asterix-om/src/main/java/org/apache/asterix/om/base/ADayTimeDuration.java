@@ -41,7 +41,7 @@ public class ADayTimeDuration implements IAObject {
      * @see org.apache.hyracks.api.dataflow.value.JSONSerializable#toJSON()
      */
     @Override
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode json = om.createObjectNode();
 

@@ -59,25 +59,25 @@ public class RecordFieldsUtil {
     private final static AString nestedName = new AString("nested");
     private final static AString listName = new AString("list");
 
-    private IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool = new ListObjectPool<IARecordBuilder, ATypeTag>(
-            new RecordBuilderFactory());
-    private IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool = new ListObjectPool<IAsterixListBuilder, ATypeTag>(
-            new ListBuilderFactory());
-    private IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool = new ListObjectPool<IMutableValueStorage, ATypeTag>(
-            new AbvsBuilderFactory());
-    private IObjectPool<IPointable, ATypeTag> recordPointablePool = new ListObjectPool<IPointable, ATypeTag>(
-            ARecordPointable.ALLOCATOR);
-    private IObjectPool<IPointable, ATypeTag> listPointablePool = new ListObjectPool<IPointable, ATypeTag>(
-            AListPointable.ALLOCATOR);
+    private IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool =
+            new ListObjectPool<IARecordBuilder, ATypeTag>(new RecordBuilderFactory());
+    private IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool =
+            new ListObjectPool<IAsterixListBuilder, ATypeTag>(new ListBuilderFactory());
+    private IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
+            new ListObjectPool<IMutableValueStorage, ATypeTag>(new AbvsBuilderFactory());
+    private IObjectPool<IPointable, ATypeTag> recordPointablePool =
+            new ListObjectPool<IPointable, ATypeTag>(ARecordPointable.ALLOCATOR);
+    private IObjectPool<IPointable, ATypeTag> listPointablePool =
+            new ListObjectPool<IPointable, ATypeTag>(AListPointable.ALLOCATOR);
 
     private final static AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "fields");
     //Better not be a static object.
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<AString> stringSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ASTRING);
+    protected final ISerializerDeserializer<AString> stringSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    protected final ISerializerDeserializer<ABoolean> booleanSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     private final static ARecordType openType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
 
@@ -175,8 +175,7 @@ public class RecordFieldsUtil {
         orderedListBuilder.write(out, true);
     }
 
-    public void addNameField(IValueReference nameArg, IARecordBuilder fieldRecordBuilder)
-            throws HyracksDataException {
+    public void addNameField(IValueReference nameArg, IARecordBuilder fieldRecordBuilder) throws HyracksDataException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
 
         fieldAbvs.reset();
@@ -184,8 +183,7 @@ public class RecordFieldsUtil {
         fieldRecordBuilder.addField(fieldAbvs, nameArg);
     }
 
-    public void addFieldType(byte tagId, IARecordBuilder fieldRecordBuilder)
-            throws HyracksDataException {
+    public void addFieldType(byte tagId, IARecordBuilder fieldRecordBuilder) throws HyracksDataException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 
@@ -201,8 +199,7 @@ public class RecordFieldsUtil {
         fieldRecordBuilder.addField(fieldAbvs, valueAbvs);
     }
 
-    public void addIsOpenField(boolean isOpen, IARecordBuilder fieldRecordBuilder)
-            throws HyracksDataException {
+    public void addIsOpenField(boolean isOpen, IARecordBuilder fieldRecordBuilder) throws HyracksDataException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
 

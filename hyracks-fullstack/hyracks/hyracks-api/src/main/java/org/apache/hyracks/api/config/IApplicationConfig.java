@@ -60,38 +60,38 @@ public interface IApplicationConfig {
     }
 
     default long getLong(IOption option) {
-        return (long)get(option);
+        return (long) get(option);
     }
 
     default int getInt(IOption option) {
-        return (int)get(option);
+        return (int) get(option);
     }
 
     default short getShort(IOption option) {
-        return (short)get(option);
+        return (short) get(option);
     }
 
     default String getString(IOption option) {
-        return (String)get(option);
+        return (String) get(option);
     }
 
     default boolean getBoolean(IOption option) {
-        return (boolean)get(option);
+        return (boolean) get(option);
     }
 
     default Level getLoggingLevel(IOption option) {
-        return (Level)get(option);
+        return (Level) get(option);
     }
 
     default double getDouble(IOption option) {
-        return (double)get(option);
+        return (double) get(option);
     }
 
-    default String [] getStringArray(IOption option) {
-        return (String [])get(option);
+    default String[] getStringArray(IOption option) {
+        return (String[]) get(option);
     }
 
     default URL getURL(IOption option) {
-        return (URL)get(option);
+        return (URL) get(option);
     }
 }

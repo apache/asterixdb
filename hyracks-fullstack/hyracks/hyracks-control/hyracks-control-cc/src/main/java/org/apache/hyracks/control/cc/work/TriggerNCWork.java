@@ -54,6 +54,7 @@ public class TriggerNCWork extends AbstractWork {
         this.ncPort = ncPort;
         this.ncId = ncId;
     }
+
     @Override
     public final void run() {
         ccs.getExecutor().execute(() -> {
@@ -68,8 +69,8 @@ public class TriggerNCWork extends AbstractWork {
                     return;
                     // QQQ Should probably have an ACK here
                 } catch (IOException e) {
-                    LOGGER.log(Level.WARN, "Failed to contact NC service at " + ncHost + ":" + ncPort
-                            + "; will retry", e);
+                    LOGGER.log(Level.WARN, "Failed to contact NC service at " + ncHost + ":" + ncPort + "; will retry",
+                            e);
                 }
                 try {
                     Thread.sleep(5000);

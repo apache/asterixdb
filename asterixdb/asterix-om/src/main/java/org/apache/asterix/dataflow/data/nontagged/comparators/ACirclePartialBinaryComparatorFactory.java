@@ -49,24 +49,24 @@ public class ACirclePartialBinaryComparatorFactory implements IBinaryComparatorF
                     int c = Double
                             .compare(
                                     ADoubleSerializerDeserializer.getDouble(
-                                            b1,
-                                            s1
-                                                    + ACircleSerializerDeserializer
-                                                            .getCenterPointCoordinateOffset(Coordinate.X) - 1),
-                                    ADoubleSerializerDeserializer.getDouble(
-                                            b2,
-                                            s2
-                                                    + ACircleSerializerDeserializer
-                                                            .getCenterPointCoordinateOffset(Coordinate.X) - 1));
+                                            b1, s1 + ACircleSerializerDeserializer
+                                                    .getCenterPointCoordinateOffset(Coordinate.X) - 1),
+                                    ADoubleSerializerDeserializer.getDouble(b2, s2
+                                            + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.X)
+                                            - 1));
                     if (c == 0) {
                         // center.y
-                        c = Double.compare(
-                                ADoubleSerializerDeserializer.getDouble(b1,
-                                        s1 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y)
-                                                - 1),
-                                ADoubleSerializerDeserializer.getDouble(b2,
-                                        s2 + ACircleSerializerDeserializer.getCenterPointCoordinateOffset(Coordinate.Y)
-                                                - 1));
+                        c = Double
+                                .compare(
+                                        ADoubleSerializerDeserializer.getDouble(b1,
+                                                s1 + ACircleSerializerDeserializer
+                                                        .getCenterPointCoordinateOffset(Coordinate.Y) - 1),
+                                        ADoubleSerializerDeserializer
+                                                .getDouble(
+                                                        b2, s2
+                                                                + ACircleSerializerDeserializer
+                                                                        .getCenterPointCoordinateOffset(Coordinate.Y)
+                                                                - 1));
                         if (c == 0) {
                             // radius
                             return Double.compare(

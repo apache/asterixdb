@@ -45,8 +45,8 @@ public class CheckpointManager extends AbstractCheckpointManager {
     @Override
     public synchronized void doSharpCheckpoint() throws HyracksDataException {
         LOGGER.info("Starting sharp checkpoint...");
-        final IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getApplicationContext()
-                .getDatasetLifecycleManager();
+        final IDatasetLifecycleManager datasetLifecycleManager =
+                txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
         datasetLifecycleManager.flushAllDatasets();
         capture(SHARP_CHECKPOINT_LSN, true);
         txnSubsystem.getLogManager().renewLogFiles();
@@ -66,8 +66,8 @@ public class CheckpointManager extends AbstractCheckpointManager {
         boolean checkpointSucceeded = minFirstLSN >= checkpointTargetLSN;
         if (!checkpointSucceeded) {
             // Flush datasets with indexes behind target checkpoint LSN
-            IDatasetLifecycleManager datasetLifecycleManager = txnSubsystem.getApplicationContext()
-                    .getDatasetLifecycleManager();
+            IDatasetLifecycleManager datasetLifecycleManager =
+                    txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
             datasetLifecycleManager.scheduleAsyncFlushForLaggingDatasets(checkpointTargetLSN);
         }
         capture(minFirstLSN, false);

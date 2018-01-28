@@ -56,7 +56,8 @@ public class InMemoryStableSortPOperator extends AbstractStableSortPOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
-        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
+        RecordDescriptor recDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         int n = sortColumns.length;
         int[] sortFields = new int[n];
         IBinaryComparatorFactory[] comps = new IBinaryComparatorFactory[n];

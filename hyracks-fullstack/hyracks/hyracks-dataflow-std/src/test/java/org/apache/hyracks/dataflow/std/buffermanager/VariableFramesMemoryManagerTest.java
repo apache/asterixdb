@@ -157,12 +157,12 @@ public class VariableFramesMemoryManagerTest {
             framesMemoryManager.getFrame(i, info);
             fta.reset(info.getBuffer(), info.getStartOffset(), info.getLength());
             for (int t = 0; t < fta.getTupleCount(); t++) {
-                int id = parseTuple(fta.getBuffer(), fta.getTupleStartOffset(t) + fta.getFieldSlotsLength() + fta
-                        .getFieldStartOffset(t, 0));
+                int id = parseTuple(fta.getBuffer(),
+                        fta.getTupleStartOffset(t) + fta.getFieldSlotsLength() + fta.getFieldStartOffset(t, 0));
                 //                System.out.println("frameid:" + i + ",tuple:" + t + ",has id:" + id + ",length:" +
                 //                        (fta.getTupleEndOffset(t) - fta.getTupleStartOffset(t) - fta.getFieldSlotsLength()));
-                assertTrue(tupleSet.remove(id) == fta.getTupleEndOffset(t) - fta.getTupleStartOffset(t) - fta
-                        .getFieldSlotsLength());
+                assertTrue(tupleSet.remove(id) == fta.getTupleEndOffset(t) - fta.getTupleStartOffset(t)
+                        - fta.getFieldSlotsLength());
             }
         }
         assertTrue(tupleSet.isEmpty());

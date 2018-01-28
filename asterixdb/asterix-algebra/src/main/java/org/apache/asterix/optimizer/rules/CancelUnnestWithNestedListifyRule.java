@@ -186,8 +186,8 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             return false;
         }
 
-        AbstractLogicalOperator nestedPlanRoot = (AbstractLogicalOperator) gby.getNestedPlans().get(0).getRoots().get(0)
-                .getValue();
+        AbstractLogicalOperator nestedPlanRoot =
+                (AbstractLogicalOperator) gby.getNestedPlans().get(0).getRoots().get(0).getValue();
         if (nestedPlanRoot.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
             return false;
         }

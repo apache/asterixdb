@@ -34,7 +34,7 @@ public class PartitionedInMemoryInvertedIndexOpContext extends InMemoryInvertedI
 
     protected void setTokenizingTupleIterator() {
         IBinaryTokenizer tokenizer = getTokenizerFactory().createTokenizer();
-        setTupleIter(new PartitionedInvertedIndexTokenizingTupleIterator(tokenCmpFactories.length, btree.getFieldCount()
-                - tokenCmpFactories.length, tokenizer));
+        setTupleIter(new PartitionedInvertedIndexTokenizingTupleIterator(tokenCmpFactories.length,
+                btree.getFieldCount() - tokenCmpFactories.length, tokenizer));
     }
 }

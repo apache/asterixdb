@@ -73,8 +73,7 @@ public class TestTypedAdapter extends FeedAdapter {
         } else {
         }
         if (LOGGER.isWarnEnabled()) {
-            LOGGER.warn(
-                    "Could not obtain input stream for parsing from adapter " + this + "[" + partition + "]");
+            LOGGER.warn("Could not obtain input stream for parsing from adapter " + this + "[" + partition + "]");
         }
     }
 

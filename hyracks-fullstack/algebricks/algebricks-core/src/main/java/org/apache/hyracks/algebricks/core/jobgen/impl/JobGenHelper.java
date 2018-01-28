@@ -96,7 +96,7 @@ public final class JobGenHelper {
 
     public static IBinaryHashFunctionFactory[] variablesToBinaryHashFunctionFactories(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         IBinaryHashFunctionFactory[] funFactories = new IBinaryHashFunctionFactory[varLogical.size()];
         int i = 0;
         IBinaryHashFunctionFactoryProvider bhffProvider = context.getBinaryHashFunctionFactoryProvider();
@@ -109,7 +109,7 @@ public final class JobGenHelper {
 
     public static IBinaryHashFunctionFamily[] variablesToBinaryHashFunctionFamilies(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         IBinaryHashFunctionFamily[] funFamilies = new IBinaryHashFunctionFamily[varLogical.size()];
         int i = 0;
         IBinaryHashFunctionFamilyProvider bhffProvider = context.getBinaryHashFunctionFamilyProvider();
@@ -122,7 +122,7 @@ public final class JobGenHelper {
 
     public static IBinaryComparatorFactory[] variablesToAscBinaryComparatorFactories(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         IBinaryComparatorFactory[] compFactories = new IBinaryComparatorFactory[varLogical.size()];
         IBinaryComparatorFactoryProvider bcfProvider = context.getBinaryComparatorFactoryProvider();
         int i = 0;
@@ -146,7 +146,7 @@ public final class JobGenHelper {
 
     public static INormalizedKeyComputerFactory variablesToAscNormalizedKeyComputerFactory(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
-                    throws AlgebricksException {
+            throws AlgebricksException {
         INormalizedKeyComputerFactoryProvider nkcfProvider = context.getNormalizedKeyComputerFactoryProvider();
         if (nkcfProvider == null)
             return null;

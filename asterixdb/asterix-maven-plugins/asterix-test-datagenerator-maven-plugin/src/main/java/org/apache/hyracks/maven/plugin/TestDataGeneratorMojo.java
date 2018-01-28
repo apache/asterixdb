@@ -55,7 +55,6 @@ public class TestDataGeneratorMojo extends AbstractMojo {
      */
     File outputDir;
 
-
     /**
      * @parameter default-value="${maven.test.skip}"
      */

@@ -26,12 +26,12 @@ public interface IClusterManagementWork {
     }
 
     enum ClusterState {
-        UNUSABLE,       // one or more cluster partitions are inactive or max id resources have not been reported
-        PENDING,        // the metadata node has not yet joined & initialized
-        RECOVERING,     // global recovery has not yet completed
-        ACTIVE,         // cluster is ACTIVE and ready for requests
-        REBALANCING,    // replication is processing failbacks
-        SHUTTING_DOWN   // a shutdown request has been received, and is underway
+        UNUSABLE, // one or more cluster partitions are inactive or max id resources have not been reported
+        PENDING, // the metadata node has not yet joined & initialized
+        RECOVERING, // global recovery has not yet completed
+        ACTIVE, // cluster is ACTIVE and ready for requests
+        REBALANCING, // replication is processing failbacks
+        SHUTTING_DOWN // a shutdown request has been received, and is underway
     }
 
     WorkType getClusterManagementWorkType();

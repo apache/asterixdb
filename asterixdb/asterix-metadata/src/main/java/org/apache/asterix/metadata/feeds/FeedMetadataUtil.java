@@ -275,8 +275,7 @@ public class FeedMetadataUtil {
         }
     }
 
-    public static ARecordType getOutputType(IFeed feed, String fqOutputType)
-            throws AlgebricksException {
+    public static ARecordType getOutputType(IFeed feed, String fqOutputType) throws AlgebricksException {
         ARecordType outputType = null;
 
         if (fqOutputType == null) {

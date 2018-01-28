@@ -130,8 +130,7 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                         }
                     }
                     if (allClosed) {
-                        expr.setFunctionInfo(
-                                FunctionUtil.getFunctionInfo(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
+                        expr.setFunctionInfo(FunctionUtil.getFunctionInfo(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR));
                         GlobalConfig.ASTERIX_LOGGER.trace("Switching to CLOSED record constructor in " + expr + ".\n");
                         changed = true;
                     }

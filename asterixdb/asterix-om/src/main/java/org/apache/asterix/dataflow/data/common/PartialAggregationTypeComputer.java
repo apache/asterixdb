@@ -38,8 +38,8 @@ public class PartialAggregationTypeComputer implements IPartialAggregationTypeCo
         if (partialFid.equals(BuiltinFunctions.SERIAL_GLOBAL_AVG)) {
             partialFid = BuiltinFunctions.SERIAL_LOCAL_AVG;
         }
-        AggregateFunctionCallExpression partialAgg = BuiltinFunctions.makeAggregateFunctionExpression(partialFid,
-                agg.getArguments());
+        AggregateFunctionCallExpression partialAgg =
+                BuiltinFunctions.makeAggregateFunctionExpression(partialFid, agg.getArguments());
         return getTypeForFunction(partialAgg, env, metadataProvider);
     }
 

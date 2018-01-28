@@ -36,8 +36,11 @@ public class ExternalProperties extends AbstractProperties {
         ACTIVE_PORT(INTEGER, 19003, "The listen port of the active server"),
         NC_API_PORT(INTEGER, 19004, "The listen port of the node controller API server"),
         LOG_LEVEL(LEVEL, Level.WARN, "The logging level for master and slave processes"),
-        MAX_WAIT_ACTIVE_CLUSTER(INTEGER, 60, "The max pending time (in seconds) for cluster startup. After the " +
-                "threshold, if the cluster still is not up and running, it is considered unavailable"),
+        MAX_WAIT_ACTIVE_CLUSTER(
+                INTEGER,
+                60,
+                "The max pending time (in seconds) for cluster startup. After the "
+                        + "threshold, if the cluster still is not up and running, it is considered unavailable"),
         CC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the cluster controller process by managix"),
         NC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the node controller process(es) by managix");
 

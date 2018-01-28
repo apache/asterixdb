@@ -36,26 +36,39 @@ public class TransactionProperties extends AbstractProperties {
 
     public enum Option implements IOption {
         TXN_LOG_BUFFER_NUMPAGES(INTEGER, 8, "The number of pages in the transaction log tail"),
-        TXN_LOG_BUFFER_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE),
+        TXN_LOG_BUFFER_PAGESIZE(
+                INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(128, KILOBYTE),
                 "The page size (in bytes) for transaction log buffer"),
-        TXN_LOG_PARTITIONSIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(256L, MEGABYTE),
+        TXN_LOG_PARTITIONSIZE(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(256L, MEGABYTE),
                 "The maximum size (in bytes) of each transaction log file"),
-        TXN_LOG_CHECKPOINT_LSNTHRESHOLD(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(64, MEGABYTE),
-                "The checkpoint threshold (in terms of LSNs (log sequence numbers) that have been written to the " +
-                        "transaction log, i.e., the length of the transaction log) for transaction logs"),
-        TXN_LOG_CHECKPOINT_POLLFREQUENCY(INTEGER, 120,
-                "The frequency (in seconds) the checkpoint thread should check to see if a checkpoint should be written"
-        ),
+        TXN_LOG_CHECKPOINT_LSNTHRESHOLD(
+                INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(64, MEGABYTE),
+                "The checkpoint threshold (in terms of LSNs (log sequence numbers) that have been written to the "
+                        + "transaction log, i.e., the length of the transaction log) for transaction logs"),
+        TXN_LOG_CHECKPOINT_POLLFREQUENCY(
+                INTEGER,
+                120,
+                "The frequency (in seconds) the checkpoint thread should check to see if a checkpoint should be written"),
         TXN_LOG_CHECKPOINT_HISTORY(INTEGER, 0, "The number of checkpoints to keep in the transaction log"),
-        TXN_LOCK_ESCALATIONTHRESHOLD(INTEGER, 1000,
+        TXN_LOCK_ESCALATIONTHRESHOLD(
+                INTEGER,
+                1000,
                 "The maximum number of entity locks to obtain before upgrading to a dataset lock"),
-        TXN_LOCK_SHRINKTIMER(INTEGER, 5000,
+        TXN_LOCK_SHRINKTIMER(
+                INTEGER,
+                5000,
                 "The time (in milliseconds) where under utilization of resources will trigger a shrink phase"),
         TXN_LOCK_TIMEOUT_WAITTHRESHOLD(INTEGER, 60000, "Time out (in milliseconds) of waiting for a lock"),
         TXN_LOCK_TIMEOUT_SWEEPTHRESHOLD(INTEGER, 10000, "Interval (in milliseconds) for checking lock timeout"),
         TXN_COMMITPROFILER_ENABLED(BOOLEAN, false, "Enable output of commit profiler logs"),
         TXN_COMMITPROFILER_REPORTINTERVAL(INTEGER, 5, "Interval (in seconds) to report commit profiler logs"),
-        TXN_JOB_RECOVERY_MEMORYSIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(64L, MEGABYTE),
+        TXN_JOB_RECOVERY_MEMORYSIZE(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(64L, MEGABYTE),
                 "The memory budget (in bytes) used for recovery");
 
         private final IOptionType type;

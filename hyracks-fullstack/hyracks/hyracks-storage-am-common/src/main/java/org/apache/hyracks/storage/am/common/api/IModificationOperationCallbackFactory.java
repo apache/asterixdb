@@ -28,7 +28,6 @@ import org.apache.hyracks.storage.common.LocalResource;
 
 @FunctionalInterface
 public interface IModificationOperationCallbackFactory extends Serializable {
-    IModificationOperationCallback createModificationOperationCallback(LocalResource resource,
-            IHyracksTaskContext ctx, IOperatorNodePushable operatorNodePushable)
-            throws HyracksDataException;
+    IModificationOperationCallback createModificationOperationCallback(LocalResource resource, IHyracksTaskContext ctx,
+            IOperatorNodePushable operatorNodePushable) throws HyracksDataException;
 }

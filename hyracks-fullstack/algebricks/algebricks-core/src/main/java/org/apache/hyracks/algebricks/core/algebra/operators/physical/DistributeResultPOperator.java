@@ -100,11 +100,11 @@ public class DistributeResultPOperator extends AbstractPhysicalOperator {
         RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
 
-        IPrinterFactory[] pf = JobGenHelper.mkPrinterFactories(inputSchemas[0], context.getTypeEnvironment(op),
-                context, columns);
+        IPrinterFactory[] pf =
+                JobGenHelper.mkPrinterFactories(inputSchemas[0], context.getTypeEnvironment(op), context, columns);
 
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = mp.getResultHandleRuntime(
-                resultOp.getDataSink(), columns, pf, inputDesc, true, spec);
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints =
+                mp.getResultHandleRuntime(resultOp.getDataSink(), columns, pf, inputDesc, true, spec);
 
         builder.contributeHyracksOperator(resultOp, runtimeAndConstraints.first);
         ILogicalOperator src = resultOp.getInputs().get(0).getValue();

@@ -108,8 +108,8 @@ public class WordTokenizerTest {
     public void testWordTokenizerWithCountedHashedUTF8Tokens() throws IOException {
 
         HashedUTF8WordTokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
-        DelimitedUTF8StringBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(false, false,
-                tokenFactory);
+        DelimitedUTF8StringBinaryTokenizer tokenizer =
+                new DelimitedUTF8StringBinaryTokenizer(false, false, tokenFactory);
 
         tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
@@ -140,8 +140,8 @@ public class WordTokenizerTest {
     public void testWordTokenizerWithHashedUTF8Tokens() throws IOException {
 
         HashedUTF8WordTokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
-        DelimitedUTF8StringBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false,
-                tokenFactory);
+        DelimitedUTF8StringBinaryTokenizer tokenizer =
+                new DelimitedUTF8StringBinaryTokenizer(true, false, tokenFactory);
 
         tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 
@@ -172,8 +172,8 @@ public class WordTokenizerTest {
     public void testWordTokenizerWithUTF8Tokens() throws IOException {
 
         UTF8WordTokenFactory tokenFactory = new UTF8WordTokenFactory();
-        DelimitedUTF8StringBinaryTokenizer tokenizer = new DelimitedUTF8StringBinaryTokenizer(true, false,
-                tokenFactory);
+        DelimitedUTF8StringBinaryTokenizer tokenizer =
+                new DelimitedUTF8StringBinaryTokenizer(true, false, tokenFactory);
 
         tokenizer.reset(inputBuffer, 0, inputBuffer.length);
 

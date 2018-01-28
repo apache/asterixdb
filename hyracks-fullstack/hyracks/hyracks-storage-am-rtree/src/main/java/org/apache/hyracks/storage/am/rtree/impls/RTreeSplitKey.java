@@ -35,8 +35,7 @@ public class RTreeSplitKey implements ISplitKey {
 
     public int keySize = 0;
 
-    public RTreeSplitKey(ITreeIndexTupleReference leftTuple,
-            ITreeIndexTupleReference rightTuple) {
+    public RTreeSplitKey(ITreeIndexTupleReference leftTuple, ITreeIndexTupleReference rightTuple) {
         this.leftTuple = leftTuple;
         this.rightTuple = rightTuple;
     }
@@ -114,8 +113,7 @@ public class RTreeSplitKey implements ISplitKey {
         rightPageBuf.putInt(keySize, page);
     }
 
-    public ISplitKey duplicate(ITreeIndexTupleReference copyLeftTuple,
-            ITreeIndexTupleReference copyRightTuple) {
+    public ISplitKey duplicate(ITreeIndexTupleReference copyLeftTuple, ITreeIndexTupleReference copyRightTuple) {
         RTreeSplitKey copy = new RTreeSplitKey(copyLeftTuple, copyRightTuple);
         copy.leftPageData = leftPageData.clone();
         copy.leftPageBuf = ByteBuffer.wrap(copy.leftPageData);

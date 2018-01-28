@@ -248,8 +248,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         Map<Expression, Expression> varExprMap = new HashMap<>();
         for (LetClause lc : letClauses) {
             // inline let variables one by one iteratively.
-            lc.setBindingExpr(SqlppRewriteUtil.substituteExpression(lc.getBindingExpr(),
-                    varExprMap, context));
+            lc.setBindingExpr(SqlppRewriteUtil.substituteExpression(lc.getBindingExpr(), varExprMap, context));
             varExprMap.put(lc.getVarExpr(), lc.getBindingExpr());
         }
         return varExprMap;

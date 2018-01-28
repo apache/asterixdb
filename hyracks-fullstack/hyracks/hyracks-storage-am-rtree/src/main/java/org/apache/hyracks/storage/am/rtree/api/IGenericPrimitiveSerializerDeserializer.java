@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.rtree.api;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 
-public interface IGenericPrimitiveSerializerDeserializer<T> extends
-        ISerializerDeserializer<T> {
+public interface IGenericPrimitiveSerializerDeserializer<T> extends ISerializerDeserializer<T> {
     public double getValue(byte[] bytes, int offset);
 }

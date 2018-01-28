@@ -126,8 +126,8 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         // since we are sure that the output of UNIONALL operator is used
         // afterwards.
         if (opRef.getValue().getOperatorTag() == LogicalOperatorTag.UNIONALL) {
-            Iterator<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> iter = ((UnionAllOperator) opRef
-                    .getValue()).getVariableMappings().iterator();
+            Iterator<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> iter =
+                    ((UnionAllOperator) opRef.getValue()).getVariableMappings().iterator();
             while (iter.hasNext()) {
                 Triple<LogicalVariable, LogicalVariable, LogicalVariable> varMapping = iter.next();
                 survivedUnionSourceVarSet.add(varMapping.first);
@@ -240,8 +240,8 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
     }
 
     private boolean removeUnusedVarsFromUnionAll(UnionAllOperator unionOp, Set<LogicalVariable> toRemove) {
-        Iterator<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> iter = unionOp.getVariableMappings()
-                .iterator();
+        Iterator<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> iter =
+                unionOp.getVariableMappings().iterator();
         boolean modified = false;
         if (toRemove != null && !toRemove.isEmpty()) {
             while (iter.hasNext()) {
@@ -361,8 +361,8 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                     } else {
                         // A decor var mapping can have a variable reference expression without a new variable
                         // definition, which is for rebinding the referred variable.
-                        VariableReferenceExpression varExpr = (VariableReferenceExpression) decorMapping.second
-                                .getValue();
+                        VariableReferenceExpression varExpr =
+                                (VariableReferenceExpression) decorMapping.second.getValue();
                         LogicalVariable reboundDecorVar = varExpr.getVariableReference();
                         assignVarsSetInThisOp.add(reboundDecorVar);
                     }

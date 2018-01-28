@@ -80,8 +80,8 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ADATE);
+                    private ISerializerDeserializer<ADate> dateSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
 
                     private AMutableDate aDate = new AMutableDate(0);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();

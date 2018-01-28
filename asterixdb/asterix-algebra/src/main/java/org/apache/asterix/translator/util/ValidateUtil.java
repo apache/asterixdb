@@ -178,9 +178,9 @@ public class ValidateUtil {
      *            the type of the index that its key fields is being validated
      * @throws AlgebricksException
      */
-    public static void validateKeyFields(ARecordType recType, ARecordType metaRecType,
-            List<List<String>> keyFieldNames, List<Integer> keySourceIndicators, List<IAType> keyFieldTypes,
-            IndexType indexType) throws AlgebricksException {
+    public static void validateKeyFields(ARecordType recType, ARecordType metaRecType, List<List<String>> keyFieldNames,
+            List<Integer> keySourceIndicators, List<IAType> keyFieldTypes, IndexType indexType)
+            throws AlgebricksException {
         List<IAType> fieldTypes =
                 KeyFieldTypeUtil.getKeyTypes(recType, metaRecType, keyFieldNames, keySourceIndicators);
         int pos = 0;

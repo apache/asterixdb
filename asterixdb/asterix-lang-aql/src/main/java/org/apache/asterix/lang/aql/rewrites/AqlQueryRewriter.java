@@ -123,8 +123,8 @@ class AqlQueryRewriter implements IQueryRewriter {
             declaredFunctions.addAll(storedFunctionDecls);
         }
         if (!declaredFunctions.isEmpty()) {
-            AQLInlineUdfsVisitor visitor = new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(),
-                    declaredFunctions, metadataProvider);
+            AQLInlineUdfsVisitor visitor =
+                    new AQLInlineUdfsVisitor(context, new AQLRewriterFactory(), declaredFunctions, metadataProvider);
             while (topStatement.accept(visitor, declaredFunctions)) {
                 // loop until no more changes
             }

@@ -41,8 +41,8 @@ public class AObjectDescBinaryComparatorFactory implements IBinaryComparatorFact
             // INTERVAL
             // Interval asc and desc comparator factories are not the inverse of each other.
             // Thus, we need to specify the interval desc comparator factory for descending comparisons.
-            final IBinaryComparator descIntervalComp = AIntervalDescPartialBinaryComparatorFactory.INSTANCE
-                    .createBinaryComparator();
+            final IBinaryComparator descIntervalComp =
+                    AIntervalDescPartialBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
             @Override
             public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) throws HyracksDataException {

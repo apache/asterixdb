@@ -35,20 +35,16 @@ public class NCServiceConfig {
      * If an option is specified both in the config file and on the command line, the config file
      * version will take precedence.
      */
-    @Option(name = "-config-file", required = false,
-            usage = "Local NC configuration file (default: none)")
+    @Option(name = "-config-file", required = false, usage = "Local NC configuration file (default: none)")
     public String configFile = null;
 
-    @Option(name = "-address", required = false,
-            usage = "Address to listen on for connections from CC (default: all addresses)")
+    @Option(name = "-address", required = false, usage = "Address to listen on for connections from CC (default: all addresses)")
     public String address = null;
 
-    @Option(name = "-port", required = false,
-            usage = "Port to listen on for connections from CC (default: 9090)")
+    @Option(name = "-port", required = false, usage = "Port to listen on for connections from CC (default: 9090)")
     public int port = 9090;
 
-    @Option(name = "-logdir", required = false,
-            usage = "Directory to log NC output ('-' for stdout of NC service; default: $app.home/logs)")
+    @Option(name = "-logdir", required = false, usage = "Directory to log NC output ('-' for stdout of NC service; default: $app.home/logs)")
     public String logdir = null;
 
     private Ini ini = null;

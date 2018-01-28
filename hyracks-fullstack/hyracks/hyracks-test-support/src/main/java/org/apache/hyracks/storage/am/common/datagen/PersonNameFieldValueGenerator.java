@@ -40,8 +40,7 @@ public class PersonNameFieldValueGenerator implements IFieldValueGenerator<Strin
     private List<String> firstNames = new ArrayList<>();
     private List<String> lastNames = new ArrayList<>();
 
-    public PersonNameFieldValueGenerator(Random rnd, double middleInitialProb)
-            throws IOException {
+    public PersonNameFieldValueGenerator(Random rnd, double middleInitialProb) throws IOException {
         this.rnd = rnd;
         this.middleInitialProb = middleInitialProb;
         initNames();

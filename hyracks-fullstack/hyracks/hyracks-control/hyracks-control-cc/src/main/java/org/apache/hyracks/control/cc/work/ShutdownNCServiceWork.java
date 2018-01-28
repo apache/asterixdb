@@ -47,6 +47,7 @@ public class ShutdownNCServiceWork extends SynchronizableWork {
         this.ncPort = ncPort;
         this.ncId = ncId;
     }
+
     @Override
     public final void doRun() {
         LOGGER.info("Connecting to NC service '" + ncId + "' at " + ncHost + ":" + ncPort);

@@ -54,7 +54,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -98,8 +99,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
                 continue;
             }
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-            FunctionIdentifier funcIdent = BuiltinFunctions.getAggregateFunction(funcExpr
-                    .getFunctionIdentifier());
+            FunctionIdentifier funcIdent = BuiltinFunctions.getAggregateFunction(funcExpr.getFunctionIdentifier());
             if (funcIdent == null) {
                 // Recursively look in func args.
                 if (containsAggregate(funcExpr.getArguments())) {
@@ -169,8 +169,8 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         return applied;
     }
 
-    private boolean pushAggregateFunction(AggregateOperator aggOp, AssignOperator assignOp, IOptimizationContext context)
-            throws AlgebricksException {
+    private boolean pushAggregateFunction(AggregateOperator aggOp, AssignOperator assignOp,
+            IOptimizationContext context) throws AlgebricksException {
         Mutable<ILogicalOperator> opRef3 = aggOp.getInputs().get(0);
         AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getValue();
         // If there's a group by below the agg, then we want to have the agg pushed into the group by
@@ -204,23 +204,23 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
             return false;
         }
 
-        AbstractFunctionCallExpression aggOpExpr = (AbstractFunctionCallExpression) aggOp.getExpressions().get(0)
-                .getValue();
+        AbstractFunctionCallExpression aggOpExpr =
+                (AbstractFunctionCallExpression) aggOp.getExpressions().get(0).getValue();
         aggOp.getExpressions().clear();
         aggOp.getVariables().clear();
 
         for (Mutable<ILogicalExpression> srcAssignExprRef : srcAssignExprRefs) {
-            AbstractFunctionCallExpression assignFuncExpr = (AbstractFunctionCallExpression) srcAssignExprRef
-                    .getValue();
-            FunctionIdentifier aggFuncIdent = BuiltinFunctions.getAggregateFunction(assignFuncExpr
-                    .getFunctionIdentifier());
+            AbstractFunctionCallExpression assignFuncExpr =
+                    (AbstractFunctionCallExpression) srcAssignExprRef.getValue();
+            FunctionIdentifier aggFuncIdent =
+                    BuiltinFunctions.getAggregateFunction(assignFuncExpr.getFunctionIdentifier());
 
             // Push the agg func into the agg op.
 
             List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<Mutable<ILogicalExpression>>();
             aggArgs.add(aggOpExpr.getArguments().get(0));
-            AggregateFunctionCallExpression aggFuncExpr = BuiltinFunctions.makeAggregateFunctionExpression(
-                    aggFuncIdent, aggArgs);
+            AggregateFunctionCallExpression aggFuncExpr =
+                    BuiltinFunctions.makeAggregateFunctionExpression(aggFuncIdent, aggArgs);
             LogicalVariable newVar = context.newVar();
             aggOp.getVariables().add(newVar);
             aggOp.getExpressions().add(new MutableObject<ILogicalExpression>(aggFuncExpr));
@@ -249,8 +249,7 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
                 continue;
             }
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-            FunctionIdentifier funcIdent = BuiltinFunctions.getAggregateFunction(funcExpr
-                    .getFunctionIdentifier());
+            FunctionIdentifier funcIdent = BuiltinFunctions.getAggregateFunction(funcExpr.getFunctionIdentifier());
             if (funcIdent == null) {
                 // Recursively look in func args.
                 if (fingAggFuncExprRef(funcExpr.getArguments(), aggVar, srcAssignExprRefs) == false) {

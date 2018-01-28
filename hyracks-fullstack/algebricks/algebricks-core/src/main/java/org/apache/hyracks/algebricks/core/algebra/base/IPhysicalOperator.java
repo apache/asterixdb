@@ -53,7 +53,7 @@ public interface IPhysicalOperator {
 
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-                    throws AlgebricksException;
+            throws AlgebricksException;
 
     public void disableJobGenBelowMe();
 

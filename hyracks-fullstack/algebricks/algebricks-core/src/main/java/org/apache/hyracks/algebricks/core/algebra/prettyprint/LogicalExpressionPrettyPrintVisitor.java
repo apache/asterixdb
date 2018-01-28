@@ -27,48 +27,40 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionC
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
 
-
 public class LogicalExpressionPrettyPrintVisitor implements ILogicalExpressionVisitor<String, Integer> {
 
     @Override
-    public String visitConstantExpression(ConstantExpression expr, Integer indent)
+    public String visitConstantExpression(ConstantExpression expr, Integer indent) throws AlgebricksException {
+        return expr.toString();
+    }
+
+    @Override
+    public String visitVariableReferenceExpression(VariableReferenceExpression expr, Integer indent)
             throws AlgebricksException {
         return expr.toString();
     }
 
     @Override
-    public String visitVariableReferenceExpression(
-            VariableReferenceExpression expr, Integer indent)
+    public String visitAggregateFunctionCallExpression(AggregateFunctionCallExpression expr, Integer indent)
             throws AlgebricksException {
         return expr.toString();
     }
 
     @Override
-    public String visitAggregateFunctionCallExpression(
-            AggregateFunctionCallExpression expr, Integer indent)
+    public String visitScalarFunctionCallExpression(ScalarFunctionCallExpression expr, Integer indent)
             throws AlgebricksException {
         return expr.toString();
     }
 
     @Override
-    public String visitScalarFunctionCallExpression(
-            ScalarFunctionCallExpression expr, Integer indent)
+    public String visitStatefulFunctionCallExpression(StatefulFunctionCallExpression expr, Integer indent)
             throws AlgebricksException {
         return expr.toString();
     }
 
     @Override
-    public String visitStatefulFunctionCallExpression(
-            StatefulFunctionCallExpression expr, Integer indent)
-            throws AlgebricksException {
-        return expr.toString();
-    }
-
-    @Override
-    public String visitUnnestingFunctionCallExpression(
-            UnnestingFunctionCallExpression expr, Integer indent)
+    public String visitUnnestingFunctionCallExpression(UnnestingFunctionCallExpression expr, Integer indent)
             throws AlgebricksException {
         return expr.toString();
     }
 }
-

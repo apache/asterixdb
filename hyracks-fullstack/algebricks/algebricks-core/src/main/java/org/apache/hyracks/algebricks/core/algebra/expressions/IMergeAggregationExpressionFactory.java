@@ -24,6 +24,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public interface IMergeAggregationExpressionFactory {
-    ILogicalExpression createMergeAggregation(LogicalVariable originalAggVariable, ILogicalExpression expr, IOptimizationContext env)
-            throws AlgebricksException;
+    ILogicalExpression createMergeAggregation(LogicalVariable originalAggVariable, ILogicalExpression expr,
+            IOptimizationContext env) throws AlgebricksException;
 }

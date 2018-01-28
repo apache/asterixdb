@@ -58,8 +58,8 @@ public abstract class AbstractTaskLifecycleWork extends AbstractHeartbeatWork {
             Map<ActivityId, ActivityCluster> activityClusterMap = run.getActivityClusterGraph().getActivityMap();
             ActivityCluster ac = activityClusterMap.get(tid.getActivityId());
             if (ac != null) {
-                Map<ActivityId, ActivityPlan> taskStateMap = run.getActivityClusterPlanMap().get(ac.getId())
-                        .getActivityPlanMap();
+                Map<ActivityId, ActivityPlan> taskStateMap =
+                        run.getActivityClusterPlanMap().get(ac.getId()).getActivityPlanMap();
                 Task[] taskStates = taskStateMap.get(tid.getActivityId()).getTasks();
                 if (taskStates != null && taskStates.length > tid.getPartition()) {
                     Task ts = taskStates[tid.getPartition()];

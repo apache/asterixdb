@@ -104,15 +104,15 @@ public class IndexDropOperatorNodePushableTest {
             List<List<String>> partitioningKeys = new ArrayList<>();
             partitioningKeys.add(Collections.singletonList("key"));
             Dataset dataset = new Dataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
-                    NoMergePolicyFactory.NAME, null,
-                    new InternalDatasetDetails(null, InternalDatasetDetails.PartitioningStrategy.HASH, partitioningKeys,
-                            null, null, null, false, null),
+                    NoMergePolicyFactory.NAME,
+                    null, new InternalDatasetDetails(null, InternalDatasetDetails.PartitioningStrategy.HASH,
+                            partitioningKeys, null, null, null, false, null),
                     null, DatasetConfig.DatasetType.INTERNAL, DATASET_ID, 0);
             // create dataset
             TestNodeController.PrimaryIndexInfo indexInfo = nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE,
                     META_TYPE, null, storageManager, KEY_INDEXES, KEY_INDICATORS_LIST, 0);
-            IndexDataflowHelperFactory helperFactory = new IndexDataflowHelperFactory(nc.getStorageManager(),
-                    indexInfo.getFileSplitProvider());
+            IndexDataflowHelperFactory helperFactory =
+                    new IndexDataflowHelperFactory(nc.getStorageManager(), indexInfo.getFileSplitProvider());
             JobId jobId = nc.newJobId();
             IHyracksTaskContext ctx = nc.createTestContext(jobId, 0, true);
             IIndexDataflowHelper dataflowHelper = helperFactory.create(ctx.getJobletContext().getServiceContext(), 0);
@@ -153,10 +153,10 @@ public class IndexDropOperatorNodePushableTest {
             MetadataManager.INSTANCE.commitTransaction(mdTxn);
             FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(appCtx.getClusterStateManager(), dataset,
                     indexName, Arrays.asList("asterix_nc1"));
-            final ConstantFileSplitProvider constantFileSplitProvider = new ConstantFileSplitProvider(
-                    Arrays.copyOfRange(splits, 0, 1));
-            IndexDataflowHelperFactory helperFactory = new IndexDataflowHelperFactory(nc.getStorageManager(),
-                    constantFileSplitProvider);
+            final ConstantFileSplitProvider constantFileSplitProvider =
+                    new ConstantFileSplitProvider(Arrays.copyOfRange(splits, 0, 1));
+            IndexDataflowHelperFactory helperFactory =
+                    new IndexDataflowHelperFactory(nc.getStorageManager(), constantFileSplitProvider);
             JobId jobId = nc.newJobId();
             IHyracksTaskContext ctx = nc.createTestContext(jobId, 0, true);
             IIndexDataflowHelper dataflowHelper = helperFactory.create(ctx.getJobletContext().getServiceContext(), 0);
@@ -172,8 +172,8 @@ public class IndexDropOperatorNodePushableTest {
         // open the index to make it in-use
         dataflowHelper.open();
         // try to drop in-use index (should fail)
-        IndexDropOperatorNodePushable dropInUseOp = new IndexDropOperatorNodePushable(helperFactory,
-                EnumSet.noneOf(DropOption.class), ctx, 0);
+        IndexDropOperatorNodePushable dropInUseOp =
+                new IndexDropOperatorNodePushable(helperFactory, EnumSet.noneOf(DropOption.class), ctx, 0);
         try {
             dropInUseOp.initialize();
         } catch (HyracksDataException e) {
@@ -212,8 +212,8 @@ public class IndexDropOperatorNodePushableTest {
     private void dropNonExisting(IHyracksTaskContext ctx, IndexDataflowHelperFactory helperFactory) throws Exception {
         dropFailed.set(false);
         // Dropping non-existing index
-        IndexDropOperatorNodePushable dropNonExistingOp = new IndexDropOperatorNodePushable(helperFactory,
-                EnumSet.noneOf(DropOption.class), ctx, 0);
+        IndexDropOperatorNodePushable dropNonExistingOp =
+                new IndexDropOperatorNodePushable(helperFactory, EnumSet.noneOf(DropOption.class), ctx, 0);
         try {
             dropNonExistingOp.initialize();
         } catch (HyracksDataException e) {
@@ -228,8 +228,8 @@ public class IndexDropOperatorNodePushableTest {
             throws Exception {
         // Dropping non-existing index with if exists option should be successful
         dropFailed.set(false);
-        IndexDropOperatorNodePushable dropNonExistingWithIfExistsOp = new IndexDropOperatorNodePushable(helperFactory,
-                EnumSet.of(DropOption.IF_EXISTS), ctx, 0);
+        IndexDropOperatorNodePushable dropNonExistingWithIfExistsOp =
+                new IndexDropOperatorNodePushable(helperFactory, EnumSet.of(DropOption.IF_EXISTS), ctx, 0);
         try {
             dropNonExistingWithIfExistsOp.initialize();
         } catch (HyracksDataException e) {

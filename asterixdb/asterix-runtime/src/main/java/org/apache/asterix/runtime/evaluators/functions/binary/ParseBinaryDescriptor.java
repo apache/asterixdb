@@ -70,8 +70,8 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                 return new AbstractBinaryScalarEvaluator(ctx, args) {
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ABinary> binarySerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ABINARY);
+                    private ISerializerDeserializer<ABinary> binarySerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABINARY);
 
                     private AMutableBinary aBinary = new AMutableBinary(new byte[0], 0, 0);
                     private final UTF8StringPointable stringPointable = new UTF8StringPointable();

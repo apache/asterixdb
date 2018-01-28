@@ -96,10 +96,10 @@ public class FixReplicateOperatorOutputsRule implements IAlgebraicRewriteRule {
 
         // when done with the whole plan, check that all replicate operators have been fixed
         // if there is one that has not been completely fixed, it indicates that one "old" parent couldn't be found
-        if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT ||
-                op.getOperatorTag() == LogicalOperatorTag.SINK ||
-                (op.getOperatorTag() == LogicalOperatorTag.DELEGATE_OPERATOR &&
-                        ((DelegateOperator) op).getDelegate() instanceof CommitOperator)) {
+        if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT
+                || op.getOperatorTag() == LogicalOperatorTag.SINK
+                || (op.getOperatorTag() == LogicalOperatorTag.DELEGATE_OPERATOR
+                        && ((DelegateOperator) op).getDelegate() instanceof CommitOperator)) {
             for (Map.Entry<AbstractReplicateOperator, MutableInt> entry : replicateOperators.entrySet()) {
                 if (entry.getKey().getOutputs().size() != entry.getValue().getValue()) {
                     throw new AlgebricksException(ErrorCode.ASTERIX, ErrorCode.COMPILATION_FAILED_DUE_TO_REPLICATE_OP);
@@ -109,8 +109,8 @@ public class FixReplicateOperatorOutputsRule implements IAlgebraicRewriteRule {
         }
 
         // rewrite/fix only replicate operators
-        if ((op.getOperatorTag() != LogicalOperatorTag.REPLICATE && op.getOperatorTag() != LogicalOperatorTag.SPLIT) ||
-                context.checkIfInDontApplySet(this, opRef.getValue())) {
+        if ((op.getOperatorTag() != LogicalOperatorTag.REPLICATE && op.getOperatorTag() != LogicalOperatorTag.SPLIT)
+                || context.checkIfInDontApplySet(this, opRef.getValue())) {
             return false;
         }
         AbstractReplicateOperator replicateOperator = (AbstractReplicateOperator) op;

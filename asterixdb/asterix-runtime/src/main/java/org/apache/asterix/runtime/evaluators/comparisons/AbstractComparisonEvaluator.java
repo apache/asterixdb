@@ -52,11 +52,11 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     private ComparisonHelper ch = new ComparisonHelper();
 
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ABoolean> serde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    protected ISerializerDeserializer<ABoolean> serde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
     @SuppressWarnings("unchecked")
-    protected ISerializerDeserializer<ANull> nullSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ANULL);
+    protected ISerializerDeserializer<ANull> nullSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
     public AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
             IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext context) throws HyracksDataException {

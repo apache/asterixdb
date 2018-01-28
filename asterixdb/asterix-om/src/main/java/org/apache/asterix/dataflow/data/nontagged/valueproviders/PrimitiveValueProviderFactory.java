@@ -39,12 +39,12 @@ public class PrimitiveValueProviderFactory implements IPrimitiveValueProviderFac
     @Override
     public IPrimitiveValueProvider createPrimitiveValueProvider() {
         return new IPrimitiveValueProvider() {
-            final IPrimitiveValueProvider intProvider = IntegerPrimitiveValueProviderFactory.INSTANCE
-                    .createPrimitiveValueProvider();
-            final IPrimitiveValueProvider floatProvider = FloatPrimitiveValueProviderFactory.INSTANCE
-                    .createPrimitiveValueProvider();
-            final IPrimitiveValueProvider doubleProvider = DoublePrimitiveValueProviderFactory.INSTANCE
-                    .createPrimitiveValueProvider();
+            final IPrimitiveValueProvider intProvider =
+                    IntegerPrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
+            final IPrimitiveValueProvider floatProvider =
+                    FloatPrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
+            final IPrimitiveValueProvider doubleProvider =
+                    DoublePrimitiveValueProviderFactory.INSTANCE.createPrimitiveValueProvider();
 
             @Override
             public double getValue(byte[] bytes, int offset) {

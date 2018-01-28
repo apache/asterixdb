@@ -134,8 +134,8 @@ public class Groupby {
         createPartitionConstraint(spec, fileScanner, inSplits);
 
         // Output: each unique string with an integer count
-        RecordDescriptor outDesc = new RecordDescriptor(
-                new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
+        RecordDescriptor outDesc =
+                new RecordDescriptor(new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE,
                         // IntegerSerializerDeserializer.INSTANCE,
                         IntegerSerializerDeserializer.INSTANCE });
 
@@ -187,9 +187,9 @@ public class Groupby {
         spec.connect(scanGroupConnDef2, fileScanner, 0, grouper, 0);
 
         IFileSplitProvider outSplitProvider = new ConstantFileSplitProvider(outSplits);
-        AbstractSingleActivityOperatorDescriptor writer = outPlain ? new PlainFileWriterOperatorDescriptor(spec,
-                outSplitProvider, "|")
-                : new FrameFileWriterOperatorDescriptor(spec, outSplitProvider);
+        AbstractSingleActivityOperatorDescriptor writer =
+                outPlain ? new PlainFileWriterOperatorDescriptor(spec, outSplitProvider, "|")
+                        : new FrameFileWriterOperatorDescriptor(spec, outSplitProvider);
         createPartitionConstraint(spec, writer, outSplits);
         IConnectorDescriptor groupOutConn = new OneToOneConnectorDescriptor(spec);
         spec.connect(groupOutConn, grouper, 0, writer, 0);

@@ -298,9 +298,8 @@ public class LSMHarness implements ILSMHarness {
                     if (!inactiveDiskComponents.isEmpty()) {
                         for (ILSMDiskComponent inactiveComp : inactiveDiskComponents) {
                             if (inactiveComp.getFileReferenceCount() == 1) {
-                                inactiveDiskComponentsToBeDeleted =
-                                        inactiveDiskComponentsToBeDeleted == null ? new LinkedList<>()
-                                                : inactiveDiskComponentsToBeDeleted;
+                                inactiveDiskComponentsToBeDeleted = inactiveDiskComponentsToBeDeleted == null
+                                        ? new LinkedList<>() : inactiveDiskComponentsToBeDeleted;
                                 inactiveDiskComponentsToBeDeleted.add(inactiveComp);
                             }
                         }
@@ -627,8 +626,8 @@ public class LSMHarness implements ILSMHarness {
             boolean failedOperation = false;
             try {
                 newComponent = lsmIndex.merge(operation);
-                operation.getCallback()
-                        .afterOperation(LSMIOOperationType.MERGE, ctx.getComponentHolder(), newComponent);
+                operation.getCallback().afterOperation(LSMIOOperationType.MERGE, ctx.getComponentHolder(),
+                        newComponent);
                 newComponent.markAsValid(lsmIndex.isDurable());
             } catch (Throwable e) { // NOSONAR: Log and re-throw
                 failedOperation = true;
@@ -808,8 +807,7 @@ public class LSMHarness implements ILSMHarness {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     if (LOGGER.isWarnEnabled()) {
-                        LOGGER.log(Level.WARN, "Ignoring interrupt while waiting for lagging merge on " + lsmIndex,
-                                e);
+                        LOGGER.log(Level.WARN, "Ignoring interrupt while waiting for lagging merge on " + lsmIndex, e);
                     }
                 }
             }

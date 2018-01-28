@@ -94,8 +94,7 @@ public class DeployedJobService {
 
         LOGGER.log(Level.INFO,
                 "Deployed Job execution completed for " + entityId.getExtensionName() + " " + entityId.getDataverse()
-                        + "."
-                        + entityId.getEntityName() + ". Took " + executionMilliseconds + " milliseconds ");
+                        + "." + entityId.getEntityName() + ". Took " + executionMilliseconds + " milliseconds ");
 
         return executionMilliseconds;
 

@@ -35,7 +35,7 @@ public class BTreePageSizePerf {
     public static void main(String[] args) throws Exception {
         // Disable logging so we can better see the output times.
         Enumeration<String> loggers = LogManager.getLogManager().getLoggerNames();
-        while(loggers.hasMoreElements()) {
+        while (loggers.hasMoreElements()) {
             String loggerName = loggers.nextElement();
             Logger logger = LogManager.getLogManager().getLogger(loggerName);
             logger.setLevel(Level.OFF);
@@ -45,10 +45,12 @@ public class BTreePageSizePerf {
         int batchSize = 10000;
         int numBatches = numTuples / batchSize;
 
-        ISerializerDeserializer[] fieldSerdes = new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] fieldSerdes =
+                new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE };
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes, 30);
 
-        IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
+        IBinaryComparatorFactory[] cmpFactories =
+                SerdeUtils.serdesToComparatorFactories(fieldSerdes, fieldSerdes.length);
 
         runExperiment(numBatches, batchSize, 1024, 100000, fieldSerdes, cmpFactories, typeTraits);
         runExperiment(numBatches, batchSize, 2048, 100000, fieldSerdes, cmpFactories, typeTraits);
@@ -61,7 +63,9 @@ public class BTreePageSizePerf {
         runExperiment(numBatches, batchSize, 262144, 391, fieldSerdes, cmpFactories, typeTraits);
     }
 
-    private static void runExperiment(int numBatches, int batchSize, int pageSize, int numPages, ISerializerDeserializer[] fieldSerdes, IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] typeTraits) throws Exception {
+    private static void runExperiment(int numBatches, int batchSize, int pageSize, int numPages,
+            ISerializerDeserializer[] fieldSerdes, IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] typeTraits)
+            throws Exception {
         System.out.println("PAGE SIZE: " + pageSize);
         System.out.println("NUM PAGES: " + numPages);
         System.out.println("MEMORY: " + (pageSize * numPages));
@@ -72,7 +76,8 @@ public class BTreePageSizePerf {
         runner.init();
         int numThreads = 1;
         for (int i = 0; i < repeats; i++) {
-            DataGenThread dataGen = new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, 30, 50, 10, false);
+            DataGenThread dataGen =
+                    new DataGenThread(numThreads, numBatches, batchSize, fieldSerdes, 30, 50, 10, false);
             dataGen.start();
             times[i] = runner.runExperiment(dataGen, numThreads);
             System.out.println("TIME " + i + ": " + times[i] + "ms");

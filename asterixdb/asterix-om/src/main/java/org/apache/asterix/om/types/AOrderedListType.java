@@ -77,7 +77,7 @@ public class AOrderedListType extends AbstractCollectionType {
     }
 
     @Override
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode type = om.createObjectNode();
         type.put("type", AOrderedListType.class.getName());

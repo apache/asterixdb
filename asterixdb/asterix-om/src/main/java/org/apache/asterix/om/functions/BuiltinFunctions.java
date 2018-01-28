@@ -149,395 +149,395 @@ public class BuiltinFunctions {
     private static final Map<IFunctionInfo, SpatialFilterKind> spatialFilterFunctions = new HashMap<>();
 
     public static final FunctionIdentifier TYPE_OF = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "type-of", 1);
-    public static final FunctionIdentifier GET_HANDLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-handle", 2);
-    public static final FunctionIdentifier GET_DATA = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-data",
-            2);
+    public static final FunctionIdentifier GET_HANDLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-handle", 2);
+    public static final FunctionIdentifier GET_DATA =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-data", 2);
 
-    public static final FunctionIdentifier GET_ITEM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-item",
-            2);
-    public static final FunctionIdentifier ANY_COLLECTION_MEMBER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "any-collection-member", 1);
+    public static final FunctionIdentifier GET_ITEM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-item", 2);
+    public static final FunctionIdentifier ANY_COLLECTION_MEMBER =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "any-collection-member", 1);
     public static final FunctionIdentifier LISTIFY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "listify", 1);
     public static final FunctionIdentifier LEN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "len", 1);
 
-    public static final FunctionIdentifier CONCAT_NON_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "concat-non-null", FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier EMPTY_STREAM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "empty-stream", 0);
-    public static final FunctionIdentifier NON_EMPTY_STREAM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "non-empty-stream", 0);
+    public static final FunctionIdentifier CONCAT_NON_NULL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "concat-non-null", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier EMPTY_STREAM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "empty-stream", 0);
+    public static final FunctionIdentifier NON_EMPTY_STREAM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "non-empty-stream", 0);
     public static final FunctionIdentifier ORDERED_LIST_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "ordered-list-constructor", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier UNORDERED_LIST_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "unordered-list-constructor", FunctionIdentifier.VARARGS);
 
-    public static final FunctionIdentifier DEEP_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "deep-equal", 2);
+    public static final FunctionIdentifier DEEP_EQUAL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "deep-equal", 2);
 
     // objects
-    public static final FunctionIdentifier RECORD_MERGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "object-merge", 2);
-    public static final FunctionIdentifier REMOVE_FIELDS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "object-remove-fields", 2);
-    public static final FunctionIdentifier ADD_FIELDS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "object-add-fields", 2);
+    public static final FunctionIdentifier RECORD_MERGE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-merge", 2);
+    public static final FunctionIdentifier REMOVE_FIELDS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-remove-fields", 2);
+    public static final FunctionIdentifier ADD_FIELDS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-add-fields", 2);
 
     public static final FunctionIdentifier CLOSED_RECORD_CONSTRUCTOR = new FunctionIdentifier(
             FunctionConstants.ASTERIX_NS, "closed-object-constructor", FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier OPEN_RECORD_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "open-object-constructor", FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier FIELD_ACCESS_BY_INDEX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "field-access-by-index", 2);
-    public static final FunctionIdentifier FIELD_ACCESS_BY_NAME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "field-access-by-name", 2);
-    public static final FunctionIdentifier FIELD_ACCESS_NESTED = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "field-access-nested", 2);
-    public static final FunctionIdentifier GET_RECORD_FIELDS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-object-fields", 1);
-    public static final FunctionIdentifier GET_RECORD_FIELD_VALUE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-object-field-value", 2);
-    public static final FunctionIdentifier RECORD_PAIRS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "object-pairs", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier OPEN_RECORD_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "open-object-constructor", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier FIELD_ACCESS_BY_INDEX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "field-access-by-index", 2);
+    public static final FunctionIdentifier FIELD_ACCESS_BY_NAME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "field-access-by-name", 2);
+    public static final FunctionIdentifier FIELD_ACCESS_NESTED =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "field-access-nested", 2);
+    public static final FunctionIdentifier GET_RECORD_FIELDS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-object-fields", 1);
+    public static final FunctionIdentifier GET_RECORD_FIELD_VALUE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-object-field-value", 2);
+    public static final FunctionIdentifier RECORD_PAIRS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-pairs", FunctionIdentifier.VARARGS);
 
     // numeric
-    public static final FunctionIdentifier NUMERIC_UNARY_MINUS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-unary-minus", 1);
-    public static final FunctionIdentifier NUMERIC_SUBTRACT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-subtract", 2);
-    public static final FunctionIdentifier NUMERIC_MULTIPLY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-multiply", 2);
-    public static final FunctionIdentifier NUMERIC_DIVIDE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-divide", 2);
-    public static final FunctionIdentifier NUMERIC_MOD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-mod", 2);
-    public static final FunctionIdentifier NUMERIC_IDIV = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "numeric-idiv", 2);
+    public static final FunctionIdentifier NUMERIC_UNARY_MINUS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-unary-minus", 1);
+    public static final FunctionIdentifier NUMERIC_SUBTRACT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-subtract", 2);
+    public static final FunctionIdentifier NUMERIC_MULTIPLY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-multiply", 2);
+    public static final FunctionIdentifier NUMERIC_DIVIDE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-divide", 2);
+    public static final FunctionIdentifier NUMERIC_MOD =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-mod", 2);
+    public static final FunctionIdentifier NUMERIC_IDIV =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "numeric-idiv", 2);
     public static final FunctionIdentifier CARET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "caret", 2);
     public static final FunctionIdentifier NUMERIC_ABS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "abs", 1);
-    public static final FunctionIdentifier NUMERIC_ACOS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "acos",
-            1);
-    public static final FunctionIdentifier NUMERIC_ASIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "asin",
-            1);
-    public static final FunctionIdentifier NUMERIC_ATAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "atan",
-            1);
-    public static final FunctionIdentifier NUMERIC_ATAN2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "atan2",
-            2);
+    public static final FunctionIdentifier NUMERIC_ACOS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "acos", 1);
+    public static final FunctionIdentifier NUMERIC_ASIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "asin", 1);
+    public static final FunctionIdentifier NUMERIC_ATAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "atan", 1);
+    public static final FunctionIdentifier NUMERIC_ATAN2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "atan2", 2);
     public static final FunctionIdentifier NUMERIC_COS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cos", 1);
     public static final FunctionIdentifier NUMERIC_SIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sin", 1);
     public static final FunctionIdentifier NUMERIC_TAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "tan", 1);
     public static final FunctionIdentifier NUMERIC_EXP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "exp", 1);
     public static final FunctionIdentifier NUMERIC_LN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ln", 1);
     public static final FunctionIdentifier NUMERIC_LOG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "log", 1);
-    public static final FunctionIdentifier NUMERIC_SQRT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sqrt",
-            1);
-    public static final FunctionIdentifier NUMERIC_SIGN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sign",
-            1);
+    public static final FunctionIdentifier NUMERIC_SQRT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sqrt", 1);
+    public static final FunctionIdentifier NUMERIC_SIGN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sign", 1);
 
-    public static final FunctionIdentifier NUMERIC_CEILING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "ceiling", 1);
-    public static final FunctionIdentifier NUMERIC_FLOOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "floor",
-            1);
-    public static final FunctionIdentifier NUMERIC_ROUND = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round",
-            1);
-    public static final FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "round-half-to-even", 1);
-    public static final FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "round-half-to-even", 2);
-    public static final FunctionIdentifier NUMERIC_TRUNC = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "trunc",
-            2);
+    public static final FunctionIdentifier NUMERIC_CEILING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ceiling", 1);
+    public static final FunctionIdentifier NUMERIC_FLOOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "floor", 1);
+    public static final FunctionIdentifier NUMERIC_ROUND =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round", 1);
+    public static final FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round-half-to-even", 1);
+    public static final FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round-half-to-even", 2);
+    public static final FunctionIdentifier NUMERIC_TRUNC =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "trunc", 2);
 
     // binary functions
-    public static final FunctionIdentifier BINARY_LENGTH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "binary-length", 1);
-    public static final FunctionIdentifier PARSE_BINARY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "parse-binary", 2);
-    public static final FunctionIdentifier PRINT_BINARY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "print-binary", 2);
-    public static final FunctionIdentifier BINARY_CONCAT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "binary-concat", 1);
-    public static final FunctionIdentifier SUBBINARY_FROM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sub-binary", 2);
-    public static final FunctionIdentifier SUBBINARY_FROM_TO = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sub-binary", 3);
-    public static final FunctionIdentifier FIND_BINARY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "find-binary", 2);
-    public static final FunctionIdentifier FIND_BINARY_FROM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "find-binary", 3);
+    public static final FunctionIdentifier BINARY_LENGTH =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "binary-length", 1);
+    public static final FunctionIdentifier PARSE_BINARY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "parse-binary", 2);
+    public static final FunctionIdentifier PRINT_BINARY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "print-binary", 2);
+    public static final FunctionIdentifier BINARY_CONCAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "binary-concat", 1);
+    public static final FunctionIdentifier SUBBINARY_FROM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sub-binary", 2);
+    public static final FunctionIdentifier SUBBINARY_FROM_TO =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sub-binary", 3);
+    public static final FunctionIdentifier FIND_BINARY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "find-binary", 2);
+    public static final FunctionIdentifier FIND_BINARY_FROM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "find-binary", 3);
     // String funcitons
-    public static final FunctionIdentifier STRING_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "string-equal", 2);
-    public static final FunctionIdentifier STRING_MATCHES = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "matches", 2);
-    public static final FunctionIdentifier STRING_MATCHES_WITH_FLAG = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "matches", 3);
-    public static final FunctionIdentifier STRING_REGEXP_LIKE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "regexp-like", 2);
-    public static final FunctionIdentifier STRING_REGEXP_LIKE_WITH_FLAG = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "regexp-like", 3);
-    public static final FunctionIdentifier STRING_REGEXP_POSITION = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "regexp-position", 2);
-    public static final FunctionIdentifier STRING_REGEXP_POSITION_WITH_FLAG = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "regexp-position", 3);
-    public static final FunctionIdentifier STRING_LOWERCASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "lowercase", 1);
-    public static final FunctionIdentifier STRING_UPPERCASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "uppercase", 1);
-    public static final FunctionIdentifier STRING_INITCAP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "initcap", 1);
-    public static final FunctionIdentifier STRING_TRIM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "trim",
-            1);
-    public static final FunctionIdentifier STRING_LTRIM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ltrim",
-            1);
-    public static final FunctionIdentifier STRING_RTRIM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rtrim",
-            1);
-    public static final FunctionIdentifier STRING_TRIM2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "trim",
-            2);
-    public static final FunctionIdentifier STRING_LTRIM2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "ltrim", 2);
-    public static final FunctionIdentifier STRING_RTRIM2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "rtrim", 2);
-    public static final FunctionIdentifier STRING_POSITION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "position", 2);
-    public static final FunctionIdentifier STRING_REPLACE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "replace", 3);
-    public static final FunctionIdentifier STRING_REPLACE_WITH_FLAG = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "replace", 4);
-    public static final FunctionIdentifier STRING_LENGTH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "string-length", 1);
-    public static final FunctionIdentifier STRING_LIKE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "like",
-            2);
-    public static final FunctionIdentifier STRING_CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "contains", 2);
-    public static final FunctionIdentifier STRING_STARTS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "starts-with", 2);
-    public static final FunctionIdentifier STRING_ENDS_WITH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "ends-with", 2);
-    public static final FunctionIdentifier SUBSTRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring",
-            3);
-    public static final FunctionIdentifier SUBSTRING2 = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "substring", 2);
-    public static final FunctionIdentifier SUBSTRING_BEFORE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "substring-before", 2);
-    public static final FunctionIdentifier SUBSTRING_AFTER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "substring-after", 2);
-    public static final FunctionIdentifier STRING_TO_CODEPOINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "string-to-codepoint", 1);
-    public static final FunctionIdentifier CODEPOINT_TO_STRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "codepoint-to-string", 1);
-    public static final FunctionIdentifier STRING_CONCAT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "string-concat", 1);
-    public static final FunctionIdentifier STRING_JOIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "string-join", 2);
-    public static final FunctionIdentifier STRING_REPEAT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "repeat", 2);
-    public static final FunctionIdentifier STRING_SPLIT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "split",
-            2);
+    public static final FunctionIdentifier STRING_EQUAL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-equal", 2);
+    public static final FunctionIdentifier STRING_MATCHES =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "matches", 2);
+    public static final FunctionIdentifier STRING_MATCHES_WITH_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "matches", 3);
+    public static final FunctionIdentifier STRING_REGEXP_LIKE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-like", 2);
+    public static final FunctionIdentifier STRING_REGEXP_LIKE_WITH_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-like", 3);
+    public static final FunctionIdentifier STRING_REGEXP_POSITION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-position", 2);
+    public static final FunctionIdentifier STRING_REGEXP_POSITION_WITH_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-position", 3);
+    public static final FunctionIdentifier STRING_LOWERCASE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lowercase", 1);
+    public static final FunctionIdentifier STRING_UPPERCASE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "uppercase", 1);
+    public static final FunctionIdentifier STRING_INITCAP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "initcap", 1);
+    public static final FunctionIdentifier STRING_TRIM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "trim", 1);
+    public static final FunctionIdentifier STRING_LTRIM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ltrim", 1);
+    public static final FunctionIdentifier STRING_RTRIM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rtrim", 1);
+    public static final FunctionIdentifier STRING_TRIM2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "trim", 2);
+    public static final FunctionIdentifier STRING_LTRIM2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ltrim", 2);
+    public static final FunctionIdentifier STRING_RTRIM2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rtrim", 2);
+    public static final FunctionIdentifier STRING_POSITION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "position", 2);
+    public static final FunctionIdentifier STRING_REPLACE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "replace", 3);
+    public static final FunctionIdentifier STRING_REPLACE_WITH_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "replace", 4);
+    public static final FunctionIdentifier STRING_LENGTH =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-length", 1);
+    public static final FunctionIdentifier STRING_LIKE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "like", 2);
+    public static final FunctionIdentifier STRING_CONTAINS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "contains", 2);
+    public static final FunctionIdentifier STRING_STARTS_WITH =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "starts-with", 2);
+    public static final FunctionIdentifier STRING_ENDS_WITH =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ends-with", 2);
+    public static final FunctionIdentifier SUBSTRING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring", 3);
+    public static final FunctionIdentifier SUBSTRING2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring", 2);
+    public static final FunctionIdentifier SUBSTRING_BEFORE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring-before", 2);
+    public static final FunctionIdentifier SUBSTRING_AFTER =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "substring-after", 2);
+    public static final FunctionIdentifier STRING_TO_CODEPOINT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-to-codepoint", 1);
+    public static final FunctionIdentifier CODEPOINT_TO_STRING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "codepoint-to-string", 1);
+    public static final FunctionIdentifier STRING_CONCAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-concat", 1);
+    public static final FunctionIdentifier STRING_JOIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-join", 2);
+    public static final FunctionIdentifier STRING_REPEAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "repeat", 2);
+    public static final FunctionIdentifier STRING_SPLIT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "split", 2);
 
     public static final FunctionIdentifier DATASET = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset", 1);
-    public static final FunctionIdentifier FEED_COLLECT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "feed-collect", 6);
-    public static final FunctionIdentifier FEED_INTERCEPT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "feed-intercept", 1);
+    public static final FunctionIdentifier FEED_COLLECT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "feed-collect", 6);
+    public static final FunctionIdentifier FEED_INTERCEPT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "feed-intercept", 1);
 
-    public static final FunctionIdentifier INDEX_SEARCH = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "index-search", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier INDEX_SEARCH =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "index-search", FunctionIdentifier.VARARGS);
 
-    public static final FunctionIdentifier MAKE_FIELD_INDEX_HANDLE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "make-field-index-handle", 2);
-    public static final FunctionIdentifier MAKE_FIELD_NESTED_HANDLE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "make-field-nested-handle", 3);
-    public static final FunctionIdentifier MAKE_FIELD_NAME_HANDLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "make-field-name-handle", 1);
+    public static final FunctionIdentifier MAKE_FIELD_INDEX_HANDLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "make-field-index-handle", 2);
+    public static final FunctionIdentifier MAKE_FIELD_NESTED_HANDLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "make-field-nested-handle", 3);
+    public static final FunctionIdentifier MAKE_FIELD_NAME_HANDLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "make-field-name-handle", 1);
 
     public static final FunctionIdentifier AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg", 1);
     public static final FunctionIdentifier COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count", 1);
     public static final FunctionIdentifier SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sum", 1);
-    public static final FunctionIdentifier LOCAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-local-sum", 1);
+    public static final FunctionIdentifier LOCAL_SUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sum", 1);
     public static final FunctionIdentifier MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max", 1);
-    public static final FunctionIdentifier LOCAL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-local-max", 1);
+    public static final FunctionIdentifier LOCAL_MAX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-max", 1);
     public static final FunctionIdentifier MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min", 1);
-    public static final FunctionIdentifier LOCAL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-local-min", 1);
-    public static final FunctionIdentifier GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-global-avg", 1);
-    public static final FunctionIdentifier INTERMEDIATE_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-intermediate-avg", 1);
-    public static final FunctionIdentifier LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-local-avg", 1);
-    public static final FunctionIdentifier FIRST_ELEMENT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-first-element", 1);
-    public static final FunctionIdentifier LOCAL_FIRST_ELEMENT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-local-first-element", 1);
+    public static final FunctionIdentifier LOCAL_MIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-min", 1);
+    public static final FunctionIdentifier GLOBAL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-avg", 1);
+    public static final FunctionIdentifier INTERMEDIATE_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-avg", 1);
+    public static final FunctionIdentifier LOCAL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-avg", 1);
+    public static final FunctionIdentifier FIRST_ELEMENT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-first-element", 1);
+    public static final FunctionIdentifier LOCAL_FIRST_ELEMENT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-first-element", 1);
 
     public static final FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg", 1);
-    public static final FunctionIdentifier SCALAR_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "count",
-            1);
+    public static final FunctionIdentifier SCALAR_COUNT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "count", 1);
     public static final FunctionIdentifier SCALAR_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sum", 1);
     public static final FunctionIdentifier SCALAR_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "max", 1);
     public static final FunctionIdentifier SCALAR_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "min", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "global-avg", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "local-avg", 1);
-    public static final FunctionIdentifier SCALAR_FIRST_ELEMENT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "first-element", 1);
+    public static final FunctionIdentifier SCALAR_GLOBAL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-avg", 1);
+    public static final FunctionIdentifier SCALAR_LOCAL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-avg", 1);
+    public static final FunctionIdentifier SCALAR_FIRST_ELEMENT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "first-element", 1);
 
     // serializable aggregate functions
-    public static final FunctionIdentifier SERIAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "avg-serial", 1);
-    public static final FunctionIdentifier SERIAL_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "count-serial", 1);
-    public static final FunctionIdentifier SERIAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sum-serial", 1);
-    public static final FunctionIdentifier SERIAL_LOCAL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "local-sum-serial", 1);
-    public static final FunctionIdentifier SERIAL_GLOBAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "global-avg-serial", 1);
-    public static final FunctionIdentifier SERIAL_LOCAL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "local-avg-serial", 1);
-    public static final FunctionIdentifier SERIAL_INTERMEDIATE_AVG = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "intermediate-avg-serial", 1);
+    public static final FunctionIdentifier SERIAL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg-serial", 1);
+    public static final FunctionIdentifier SERIAL_COUNT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "count-serial", 1);
+    public static final FunctionIdentifier SERIAL_SUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sum-serial", 1);
+    public static final FunctionIdentifier SERIAL_LOCAL_SUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sum-serial", 1);
+    public static final FunctionIdentifier SERIAL_GLOBAL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-avg-serial", 1);
+    public static final FunctionIdentifier SERIAL_LOCAL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-avg-serial", 1);
+    public static final FunctionIdentifier SERIAL_INTERMEDIATE_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-avg-serial", 1);
 
     // distinct aggregate functions
 
-    public static final FunctionIdentifier COUNT_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-count-distinct", 1);
-    public static final FunctionIdentifier SCALAR_COUNT_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "count-distinct", 1);
-    public static final FunctionIdentifier SUM_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-sum-distinct", 1);
-    public static final FunctionIdentifier SCALAR_SUM_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sum-distinct", 1);
-    public static final FunctionIdentifier AVG_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-avg-distinct", 1);
-    public static final FunctionIdentifier SCALAR_AVG_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "avg-distinct", 1);
-    public static final FunctionIdentifier MAX_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-max-distinct", 1);
-    public static final FunctionIdentifier SCALAR_MAX_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "max-distinct", 1);
-    public static final FunctionIdentifier MIN_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-min-distinct", 1);
-    public static final FunctionIdentifier SCALAR_MIN_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "min-distinct", 1);
+    public static final FunctionIdentifier COUNT_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count-distinct", 1);
+    public static final FunctionIdentifier SCALAR_COUNT_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "count-distinct", 1);
+    public static final FunctionIdentifier SUM_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sum-distinct", 1);
+    public static final FunctionIdentifier SCALAR_SUM_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sum-distinct", 1);
+    public static final FunctionIdentifier AVG_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg-distinct", 1);
+    public static final FunctionIdentifier SCALAR_AVG_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg-distinct", 1);
+    public static final FunctionIdentifier MAX_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-max-distinct", 1);
+    public static final FunctionIdentifier SCALAR_MAX_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "max-distinct", 1);
+    public static final FunctionIdentifier MIN_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min-distinct", 1);
+    public static final FunctionIdentifier SCALAR_MIN_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "min-distinct", 1);
 
     // sql aggregate functions
-    public static final FunctionIdentifier SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-avg",
-            1);
-    public static final FunctionIdentifier INTERMEDIATE_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "intermediate-agg-sql-avg", 1);
-    public static final FunctionIdentifier SQL_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-sql-count", 1);
-    public static final FunctionIdentifier SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-sum",
-            1);
-    public static final FunctionIdentifier LOCAL_SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-local-sql-sum", 1);
-    public static final FunctionIdentifier SQL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-max",
-            1);
-    public static final FunctionIdentifier LOCAL_SQL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-local-sql-max", 1);
-    public static final FunctionIdentifier SQL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-min",
-            1);
-    public static final FunctionIdentifier LOCAL_SQL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-local-sql-min", 1);
-    public static final FunctionIdentifier GLOBAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-global-sql-avg", 1);
-    public static final FunctionIdentifier LOCAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-local-sql-avg", 1);
+    public static final FunctionIdentifier SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-avg", 1);
+    public static final FunctionIdentifier INTERMEDIATE_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-agg-sql-avg", 1);
+    public static final FunctionIdentifier SQL_COUNT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-count", 1);
+    public static final FunctionIdentifier SQL_SUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-sum", 1);
+    public static final FunctionIdentifier LOCAL_SQL_SUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-sum", 1);
+    public static final FunctionIdentifier SQL_MAX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-max", 1);
+    public static final FunctionIdentifier LOCAL_SQL_MAX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-max", 1);
+    public static final FunctionIdentifier SQL_MIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-min", 1);
+    public static final FunctionIdentifier LOCAL_SQL_MIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-min", 1);
+    public static final FunctionIdentifier GLOBAL_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-avg", 1);
+    public static final FunctionIdentifier LOCAL_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-avg", 1);
 
-    public static final FunctionIdentifier SCALAR_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sql-avg", 1);
-    public static final FunctionIdentifier SCALAR_SQL_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sql-count", 1);
-    public static final FunctionIdentifier SCALAR_SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sql-sum", 1);
-    public static final FunctionIdentifier SCALAR_SQL_MAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sql-max", 1);
-    public static final FunctionIdentifier SCALAR_SQL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sql-min", 1);
-    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "global-sql-avg", 1);
-    public static final FunctionIdentifier SCALAR_LOCAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "local-sql-avg", 1);
+    public static final FunctionIdentifier SCALAR_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-avg", 1);
+    public static final FunctionIdentifier SCALAR_SQL_COUNT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-count", 1);
+    public static final FunctionIdentifier SCALAR_SQL_SUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-sum", 1);
+    public static final FunctionIdentifier SCALAR_SQL_MAX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-max", 1);
+    public static final FunctionIdentifier SCALAR_SQL_MIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-min", 1);
+    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-avg", 1);
+    public static final FunctionIdentifier SCALAR_LOCAL_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-avg", 1);
 
     // serializable sql aggregate functions
-    public static final FunctionIdentifier SERIAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sql-avg-serial", 1);
-    public static final FunctionIdentifier SERIAL_SQL_COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sql-count-serial", 1);
-    public static final FunctionIdentifier SERIAL_SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sql-sum-serial", 1);
-    public static final FunctionIdentifier SERIAL_LOCAL_SQL_SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "local-sql-sum-serial", 1);
-    public static final FunctionIdentifier SERIAL_GLOBAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "global-sql-avg-serial", 1);
-    public static final FunctionIdentifier SERIAL_INTERMEDIATE_SQL_AVG = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "intermediate-sql-avg-serial", 1);
-    public static final FunctionIdentifier SERIAL_LOCAL_SQL_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "local-sql-avg-serial", 1);
+    public static final FunctionIdentifier SERIAL_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-avg-serial", 1);
+    public static final FunctionIdentifier SERIAL_SQL_COUNT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-count-serial", 1);
+    public static final FunctionIdentifier SERIAL_SQL_SUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-sum-serial", 1);
+    public static final FunctionIdentifier SERIAL_LOCAL_SQL_SUM =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-sum-serial", 1);
+    public static final FunctionIdentifier SERIAL_GLOBAL_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-avg-serial", 1);
+    public static final FunctionIdentifier SERIAL_INTERMEDIATE_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-sql-avg-serial", 1);
+    public static final FunctionIdentifier SERIAL_LOCAL_SQL_AVG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-avg-serial", 1);
 
     // distinct sql aggregate functions
-    public static final FunctionIdentifier SQL_COUNT_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-sql-count-distinct", 1);
-    public static final FunctionIdentifier SCALAR_SQL_COUNT_DISTINCT = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "sql-count-distinct", 1);
-    public static final FunctionIdentifier SQL_SUM_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-sql-sum-distinct", 1);
-    public static final FunctionIdentifier SCALAR_SQL_SUM_DISTINCT = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "sql-sum-distinct", 1);
-    public static final FunctionIdentifier SQL_AVG_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-sql-avg-distinct", 1);
-    public static final FunctionIdentifier SCALAR_SQL_AVG_DISTINCT = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "sql-avg-distinct", 1);
-    public static final FunctionIdentifier SQL_MAX_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-sql-max-distinct", 1);
-    public static final FunctionIdentifier SCALAR_SQL_MAX_DISTINCT = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "sql-max-distinct", 1);
-    public static final FunctionIdentifier SQL_MIN_DISTINCT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "agg-sql-min-distinct", 1);
-    public static final FunctionIdentifier SCALAR_SQL_MIN_DISTINCT = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "sql-min-distinct", 1);
+    public static final FunctionIdentifier SQL_COUNT_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-count-distinct", 1);
+    public static final FunctionIdentifier SCALAR_SQL_COUNT_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-count-distinct", 1);
+    public static final FunctionIdentifier SQL_SUM_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-sum-distinct", 1);
+    public static final FunctionIdentifier SCALAR_SQL_SUM_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-sum-distinct", 1);
+    public static final FunctionIdentifier SQL_AVG_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-avg-distinct", 1);
+    public static final FunctionIdentifier SCALAR_SQL_AVG_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-avg-distinct", 1);
+    public static final FunctionIdentifier SQL_MAX_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-max-distinct", 1);
+    public static final FunctionIdentifier SCALAR_SQL_MAX_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-max-distinct", 1);
+    public static final FunctionIdentifier SQL_MIN_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-min-distinct", 1);
+    public static final FunctionIdentifier SCALAR_SQL_MIN_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-min-distinct", 1);
 
-    public static final FunctionIdentifier SCAN_COLLECTION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "scan-collection", 1);
-    public static final FunctionIdentifier SUBSET_COLLECTION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "subset-collection", 3);
+    public static final FunctionIdentifier SCAN_COLLECTION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "scan-collection", 1);
+    public static final FunctionIdentifier SUBSET_COLLECTION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "subset-collection", 3);
 
     public static final FunctionIdentifier RANGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2);
 
     // fuzzy functions:
-    public static final FunctionIdentifier FUZZY_EQ = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "fuzzy-eq",
-            2);
+    public static final FunctionIdentifier FUZZY_EQ =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "fuzzy-eq", 2);
 
-    public static final FunctionIdentifier PREFIX_LEN_JACCARD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "prefix-len-jaccard", 2);
+    public static final FunctionIdentifier PREFIX_LEN_JACCARD =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "prefix-len-jaccard", 2);
 
-    public static final FunctionIdentifier SIMILARITY_JACCARD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "similarity-jaccard", 2);
-    public static final FunctionIdentifier SIMILARITY_JACCARD_CHECK = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "similarity-jaccard-check", 3);
-    public static final FunctionIdentifier SIMILARITY_JACCARD_SORTED = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "similarity-jaccard-sorted", 2);
-    public static final FunctionIdentifier SIMILARITY_JACCARD_SORTED_CHECK = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "similarity-jaccard-sorted-check", 3);
-    public static final FunctionIdentifier SIMILARITY_JACCARD_PREFIX = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "similarity-jaccard-prefix", 6);
-    public static final FunctionIdentifier SIMILARITY_JACCARD_PREFIX_CHECK = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "similarity-jaccard-prefix-check", 6);
+    public static final FunctionIdentifier SIMILARITY_JACCARD =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity-jaccard", 2);
+    public static final FunctionIdentifier SIMILARITY_JACCARD_CHECK =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity-jaccard-check", 3);
+    public static final FunctionIdentifier SIMILARITY_JACCARD_SORTED =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity-jaccard-sorted", 2);
+    public static final FunctionIdentifier SIMILARITY_JACCARD_SORTED_CHECK =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity-jaccard-sorted-check", 3);
+    public static final FunctionIdentifier SIMILARITY_JACCARD_PREFIX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity-jaccard-prefix", 6);
+    public static final FunctionIdentifier SIMILARITY_JACCARD_PREFIX_CHECK =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity-jaccard-prefix-check", 6);
 
-    public static final FunctionIdentifier EDIT_DISTANCE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "edit-distance", 2);
-    public static final FunctionIdentifier EDIT_DISTANCE_CHECK = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "edit-distance-check", 3);
-    public static final FunctionIdentifier EDIT_DISTANCE_LIST_IS_FILTERABLE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "edit-distance-list-is-filterable", 2);
-    public static final FunctionIdentifier EDIT_DISTANCE_STRING_IS_FILTERABLE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "edit-distance-string-is-filterable", 4);
-    public static final FunctionIdentifier EDIT_DISTANCE_CONTAINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "edit-distance-contains", 3);
+    public static final FunctionIdentifier EDIT_DISTANCE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "edit-distance", 2);
+    public static final FunctionIdentifier EDIT_DISTANCE_CHECK =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "edit-distance-check", 3);
+    public static final FunctionIdentifier EDIT_DISTANCE_LIST_IS_FILTERABLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "edit-distance-list-is-filterable", 2);
+    public static final FunctionIdentifier EDIT_DISTANCE_STRING_IS_FILTERABLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "edit-distance-string-is-filterable", 4);
+    public static final FunctionIdentifier EDIT_DISTANCE_CONTAINS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "edit-distance-contains", 3);
 
     // full-text
     public static final FunctionIdentifier FULLTEXT_CONTAINS =
@@ -547,271 +547,269 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ftcontains", 2);
 
     // tokenizers:
-    public static final FunctionIdentifier WORD_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "word-tokens", 1);
-    public static final FunctionIdentifier HASHED_WORD_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "hashed-word-tokens", 1);
-    public static final FunctionIdentifier COUNTHASHED_WORD_TOKENS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "counthashed-word-tokens", 1);
-    public static final FunctionIdentifier GRAM_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "gram-tokens", 3);
-    public static final FunctionIdentifier HASHED_GRAM_TOKENS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "hashed-gram-tokens", 3);
-    public static final FunctionIdentifier COUNTHASHED_GRAM_TOKENS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "counthashed-gram-tokens", 3);
+    public static final FunctionIdentifier WORD_TOKENS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "word-tokens", 1);
+    public static final FunctionIdentifier HASHED_WORD_TOKENS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "hashed-word-tokens", 1);
+    public static final FunctionIdentifier COUNTHASHED_WORD_TOKENS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "counthashed-word-tokens", 1);
+    public static final FunctionIdentifier GRAM_TOKENS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "gram-tokens", 3);
+    public static final FunctionIdentifier HASHED_GRAM_TOKENS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "hashed-gram-tokens", 3);
+    public static final FunctionIdentifier COUNTHASHED_GRAM_TOKENS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "counthashed-gram-tokens", 3);
 
     public static final FunctionIdentifier TID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "tid", 0);
     public static final FunctionIdentifier GTID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "gtid", 0);
 
     // constructors:
-    public static final FunctionIdentifier BOOLEAN_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "boolean", 1);
-    public static final FunctionIdentifier STRING_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "string", 1);
-    public static final FunctionIdentifier BINARY_HEX_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "hex", 1);
-    public static final FunctionIdentifier BINARY_BASE64_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "base64", 1);
-    public static final FunctionIdentifier INT8_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "int8", 1);
-    public static final FunctionIdentifier INT16_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "int16", 1);
-    public static final FunctionIdentifier INT32_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "int32", 1);
-    public static final FunctionIdentifier INT64_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "int64", 1);
-    public static final FunctionIdentifier FLOAT_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "float", 1);
-    public static final FunctionIdentifier DOUBLE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "double", 1);
-    public static final FunctionIdentifier POINT_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "point", 1);
-    public static final FunctionIdentifier POINT3D_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "point3d", 1);
-    public static final FunctionIdentifier LINE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "line", 1);
-    public static final FunctionIdentifier CIRCLE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "circle", 1);
-    public static final FunctionIdentifier RECTANGLE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "rectangle", 1);
-    public static final FunctionIdentifier POLYGON_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "polygon", 1);
-    public static final FunctionIdentifier TIME_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "time", 1);
-    public static final FunctionIdentifier DATE_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "date", 1);
-    public static final FunctionIdentifier DATETIME_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "datetime", 1);
-    public static final FunctionIdentifier DURATION_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "duration", 1);
-    public static final FunctionIdentifier UUID_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "uuid", 1);
+    public static final FunctionIdentifier BOOLEAN_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "boolean", 1);
+    public static final FunctionIdentifier STRING_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string", 1);
+    public static final FunctionIdentifier BINARY_HEX_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "hex", 1);
+    public static final FunctionIdentifier BINARY_BASE64_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "base64", 1);
+    public static final FunctionIdentifier INT8_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int8", 1);
+    public static final FunctionIdentifier INT16_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int16", 1);
+    public static final FunctionIdentifier INT32_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int32", 1);
+    public static final FunctionIdentifier INT64_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int64", 1);
+    public static final FunctionIdentifier FLOAT_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "float", 1);
+    public static final FunctionIdentifier DOUBLE_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "double", 1);
+    public static final FunctionIdentifier POINT_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "point", 1);
+    public static final FunctionIdentifier POINT3D_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "point3d", 1);
+    public static final FunctionIdentifier LINE_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "line", 1);
+    public static final FunctionIdentifier CIRCLE_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "circle", 1);
+    public static final FunctionIdentifier RECTANGLE_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rectangle", 1);
+    public static final FunctionIdentifier POLYGON_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "polygon", 1);
+    public static final FunctionIdentifier TIME_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "time", 1);
+    public static final FunctionIdentifier DATE_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date", 1);
+    public static final FunctionIdentifier DATETIME_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime", 1);
+    public static final FunctionIdentifier DURATION_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration", 1);
+    public static final FunctionIdentifier UUID_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "uuid", 1);
 
-    public static final FunctionIdentifier YEAR_MONTH_DURATION_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "year-month-duration", 1);
-    public static final FunctionIdentifier DAY_TIME_DURATION_CONSTRUCTOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "day-time-duration", 1);
+    public static final FunctionIdentifier YEAR_MONTH_DURATION_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "year-month-duration", 1);
+    public static final FunctionIdentifier DAY_TIME_DURATION_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-time-duration", 1);
 
-    public static final FunctionIdentifier INTERVAL_CONSTRUCTOR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval", 2);
-    public static final FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval-start-from-date", 2);
-    public static final FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_TIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval-start-from-time", 2);
-    public static final FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATETIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "interval-start-from-datetime", 2);
-    public static final FunctionIdentifier INTERVAL_BEFORE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-before", 2);
-    public static final FunctionIdentifier INTERVAL_AFTER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-after", 2);
-    public static final FunctionIdentifier INTERVAL_MEETS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-meets", 2);
-    public static final FunctionIdentifier INTERVAL_MET_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-met-by", 2);
-    public static final FunctionIdentifier INTERVAL_OVERLAPS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-overlaps", 2);
-    public static final FunctionIdentifier INTERVAL_OVERLAPPED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-overlapped-by", 2);
-    public static final FunctionIdentifier INTERVAL_OVERLAPPING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-overlapping", 2);
-    public static final FunctionIdentifier INTERVAL_STARTS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-starts", 2);
-    public static final FunctionIdentifier INTERVAL_STARTED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-started-by", 2);
-    public static final FunctionIdentifier INTERVAL_COVERS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-covers", 2);
-    public static final FunctionIdentifier INTERVAL_COVERED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-covered-by", 2);
-    public static final FunctionIdentifier INTERVAL_ENDS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-ends", 2);
-    public static final FunctionIdentifier INTERVAL_ENDED_BY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-ended-by", 2);
-    public static final FunctionIdentifier CURRENT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "current-time", 0);
-    public static final FunctionIdentifier CURRENT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "current-date", 0);
-    public static final FunctionIdentifier CURRENT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "current-datetime", 0);
-    public static final FunctionIdentifier DURATION_EQUAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "duration-equal", 2);
-    public static final FunctionIdentifier YEAR_MONTH_DURATION_GREATER_THAN = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "year-month-duration-greater-than", 2);
-    public static final FunctionIdentifier YEAR_MONTH_DURATION_LESS_THAN = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "year-month-duration-less-than", 2);
-    public static final FunctionIdentifier DAY_TIME_DURATION_GREATER_THAN = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "day-time-duration-greater-than", 2);
-    public static final FunctionIdentifier DAY_TIME_DURATION_LESS_THAN = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "day-time-duration-less-than", 2);
-    public static final FunctionIdentifier DURATION_FROM_MONTHS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "duration-from-months", 1);
-    public static final FunctionIdentifier MONTHS_FROM_YEAR_MONTH_DURATION = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "months-from-year-month-duration", 1);
-    public static final FunctionIdentifier DURATION_FROM_MILLISECONDS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "duration-from-ms", 1);
-    public static final FunctionIdentifier MILLISECONDS_FROM_DAY_TIME_DURATION = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "ms-from-day-time-duration", 1);
+    public static final FunctionIdentifier INTERVAL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval", 2);
+    public static final FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-start-from-date", 2);
+    public static final FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_TIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-start-from-time", 2);
+    public static final FunctionIdentifier INTERVAL_CONSTRUCTOR_START_FROM_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-start-from-datetime", 2);
+    public static final FunctionIdentifier INTERVAL_BEFORE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-before", 2);
+    public static final FunctionIdentifier INTERVAL_AFTER =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-after", 2);
+    public static final FunctionIdentifier INTERVAL_MEETS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-meets", 2);
+    public static final FunctionIdentifier INTERVAL_MET_BY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-met-by", 2);
+    public static final FunctionIdentifier INTERVAL_OVERLAPS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-overlaps", 2);
+    public static final FunctionIdentifier INTERVAL_OVERLAPPED_BY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-overlapped-by", 2);
+    public static final FunctionIdentifier INTERVAL_OVERLAPPING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-overlapping", 2);
+    public static final FunctionIdentifier INTERVAL_STARTS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-starts", 2);
+    public static final FunctionIdentifier INTERVAL_STARTED_BY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-started-by", 2);
+    public static final FunctionIdentifier INTERVAL_COVERS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-covers", 2);
+    public static final FunctionIdentifier INTERVAL_COVERED_BY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-covered-by", 2);
+    public static final FunctionIdentifier INTERVAL_ENDS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-ends", 2);
+    public static final FunctionIdentifier INTERVAL_ENDED_BY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-ended-by", 2);
+    public static final FunctionIdentifier CURRENT_TIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-time", 0);
+    public static final FunctionIdentifier CURRENT_DATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-date", 0);
+    public static final FunctionIdentifier CURRENT_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-datetime", 0);
+    public static final FunctionIdentifier DURATION_EQUAL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration-equal", 2);
+    public static final FunctionIdentifier YEAR_MONTH_DURATION_GREATER_THAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "year-month-duration-greater-than", 2);
+    public static final FunctionIdentifier YEAR_MONTH_DURATION_LESS_THAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "year-month-duration-less-than", 2);
+    public static final FunctionIdentifier DAY_TIME_DURATION_GREATER_THAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-time-duration-greater-than", 2);
+    public static final FunctionIdentifier DAY_TIME_DURATION_LESS_THAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-time-duration-less-than", 2);
+    public static final FunctionIdentifier DURATION_FROM_MONTHS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration-from-months", 1);
+    public static final FunctionIdentifier MONTHS_FROM_YEAR_MONTH_DURATION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "months-from-year-month-duration", 1);
+    public static final FunctionIdentifier DURATION_FROM_MILLISECONDS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration-from-ms", 1);
+    public static final FunctionIdentifier MILLISECONDS_FROM_DAY_TIME_DURATION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ms-from-day-time-duration", 1);
 
-    public static final FunctionIdentifier GET_YEAR_MONTH_DURATION = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-year-month-duration", 1);
-    public static final FunctionIdentifier GET_DAY_TIME_DURATION = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-day-time-duration", 1);
-    public static final FunctionIdentifier DURATION_FROM_INTERVAL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "duration-from-interval", 1);
+    public static final FunctionIdentifier GET_YEAR_MONTH_DURATION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-year-month-duration", 1);
+    public static final FunctionIdentifier GET_DAY_TIME_DURATION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-day-time-duration", 1);
+    public static final FunctionIdentifier DURATION_FROM_INTERVAL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration-from-interval", 1);
 
     // spatial
-    public static final FunctionIdentifier CREATE_POINT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-point", 2);
-    public static final FunctionIdentifier CREATE_LINE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-line", 2);
-    public static final FunctionIdentifier CREATE_POLYGON = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-polygon", 1);
-    public static final FunctionIdentifier CREATE_CIRCLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-circle", 2);
-    public static final FunctionIdentifier CREATE_RECTANGLE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-rectangle", 2);
-    public static final FunctionIdentifier SPATIAL_INTERSECT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "spatial-intersect", 2);
-    public static final FunctionIdentifier SPATIAL_AREA = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "spatial-area", 1);
-    public static final FunctionIdentifier SPATIAL_DISTANCE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "spatial-distance", 2);
-    public static final FunctionIdentifier CREATE_MBR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-mbr", 3);
-    public static final FunctionIdentifier SPATIAL_CELL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "spatial-cell", 4);
-    public static final FunctionIdentifier SWITCH_CASE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "switch-case", FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier SLEEP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "sleep", 2);
-    public static final FunctionIdentifier INJECT_FAILURE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "inject-failure", 2);
-    public static final FunctionIdentifier FLOW_RECORD = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "flow-object", 1);
-    public static final FunctionIdentifier CAST_TYPE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "cast", 1);
-    public static final FunctionIdentifier CAST_TYPE_LAX = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "cast-lax", 1);
+    public static final FunctionIdentifier CREATE_POINT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-point", 2);
+    public static final FunctionIdentifier CREATE_LINE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-line", 2);
+    public static final FunctionIdentifier CREATE_POLYGON =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-polygon", 1);
+    public static final FunctionIdentifier CREATE_CIRCLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-circle", 2);
+    public static final FunctionIdentifier CREATE_RECTANGLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-rectangle", 2);
+    public static final FunctionIdentifier SPATIAL_INTERSECT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-intersect", 2);
+    public static final FunctionIdentifier SPATIAL_AREA =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-area", 1);
+    public static final FunctionIdentifier SPATIAL_DISTANCE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-distance", 2);
+    public static final FunctionIdentifier CREATE_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-mbr", 3);
+    public static final FunctionIdentifier SPATIAL_CELL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-cell", 4);
+    public static final FunctionIdentifier SWITCH_CASE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "switch-case", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier SLEEP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sleep", 2);
+    public static final FunctionIdentifier INJECT_FAILURE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "inject-failure", 2);
+    public static final FunctionIdentifier FLOW_RECORD =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "flow-object", 1);
+    public static final FunctionIdentifier CAST_TYPE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast", 1);
+    public static final FunctionIdentifier CAST_TYPE_LAX =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast-lax", 1);
 
-    public static final FunctionIdentifier CREATE_UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-uuid", 0);
+    public static final FunctionIdentifier CREATE_UUID =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-uuid", 0);
     public static final FunctionIdentifier UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "uuid", 0);
-    public static final FunctionIdentifier CREATE_QUERY_UID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "create-query-uid", 0);
+    public static final FunctionIdentifier CREATE_QUERY_UID =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-query-uid", 0);
 
     // Spatial and temporal type accessors
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-year", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MONTH = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-month", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_DAY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-day", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_HOUR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-hour", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-minute", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_SEC = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-second", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MILLISEC = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-millisecond", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-interval-start", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-interval-end", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START_DATETIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-interval-start-datetime", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END_DATETIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-interval-end-datetime", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START_DATE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-interval-start-date", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END_DATE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-interval-end-date", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START_TIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-interval-start-time", 1);
-    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END_TIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-interval-end-time", 1);
-    public static final FunctionIdentifier INTERVAL_BIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "interval-bin", 3);
-    public static final FunctionIdentifier OVERLAP_BINS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "overlap-bins", 3);
-    public static final FunctionIdentifier GET_OVERLAPPING_INTERVAL = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-overlapping-interval", 2);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-year", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MONTH =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-month", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_DAY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-day", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_HOUR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-hour", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-minute", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_SEC =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-second", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_MILLISEC =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-millisecond", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-interval-start", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-interval-end", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-interval-start-datetime", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-interval-end-datetime", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START_DATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-interval-start-date", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END_DATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-interval-end-date", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_START_TIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-interval-start-time", 1);
+    public static final FunctionIdentifier ACCESSOR_TEMPORAL_INTERVAL_END_TIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-interval-end-time", 1);
+    public static final FunctionIdentifier INTERVAL_BIN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-bin", 3);
+    public static final FunctionIdentifier OVERLAP_BINS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "overlap-bins", 3);
+    public static final FunctionIdentifier GET_OVERLAPPING_INTERVAL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-overlapping-interval", 2);
 
     // Temporal functions
-    public static final FunctionIdentifier UNIX_TIME_FROM_DATE_IN_DAYS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "unix-time-from-date-in-days", 1);
-    public final static FunctionIdentifier UNIX_TIME_FROM_TIME_IN_MS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "unix-time-from-time-in-ms", 1);
-    public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_MS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-ms", 1);
-    public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_SECS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-secs", 1);
-    public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "date-from-unix-time-in-days", 1);
-    public static final FunctionIdentifier DATE_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-date-from-datetime", 1);
-    public static final FunctionIdentifier TIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "time-from-unix-time-in-ms", 1);
-    public static final FunctionIdentifier TIME_FROM_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "get-time-from-datetime", 1);
-    public static final FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-ms", 1);
-    public static final FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_SECS = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-secs", 1);
-    public static final FunctionIdentifier DATETIME_FROM_DATE_TIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "datetime-from-date-time", 2);
-    public static final FunctionIdentifier CALENDAR_DURATION_FROM_DATETIME = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "calendar-duration-from-datetime", 2);
-    public static final FunctionIdentifier CALENDAR_DURATION_FROM_DATE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "calendar-duration-from-date", 2);
-    public static final FunctionIdentifier ADJUST_TIME_FOR_TIMEZONE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "adjust-time-for-timezone", 2);
-    public static final FunctionIdentifier ADJUST_DATETIME_FOR_TIMEZONE = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "adjust-datetime-for-timezone", 2);
-    public static final FunctionIdentifier DAY_OF_WEEK = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "day-of-week", 1);
-    public static final FunctionIdentifier PARSE_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "parse-date", 2);
-    public static final FunctionIdentifier PARSE_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "parse-time", 2);
-    public static final FunctionIdentifier PARSE_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "parse-datetime", 2);
-    public static final FunctionIdentifier PRINT_DATE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "print-date", 2);
-    public static final FunctionIdentifier PRINT_TIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "print-time", 2);
-    public static final FunctionIdentifier PRINT_DATETIME = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "print-datetime", 2);
+    public static final FunctionIdentifier UNIX_TIME_FROM_DATE_IN_DAYS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-date-in-days", 1);
+    public final static FunctionIdentifier UNIX_TIME_FROM_TIME_IN_MS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-time-in-ms", 1);
+    public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_MS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-ms", 1);
+    public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_SECS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-secs", 1);
+    public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date-from-unix-time-in-days", 1);
+    public static final FunctionIdentifier DATE_FROM_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-date-from-datetime", 1);
+    public static final FunctionIdentifier TIME_FROM_UNIX_TIME_IN_MS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "time-from-unix-time-in-ms", 1);
+    public static final FunctionIdentifier TIME_FROM_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-time-from-datetime", 1);
+    public static final FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-ms", 1);
+    public static final FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_SECS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-secs", 1);
+    public static final FunctionIdentifier DATETIME_FROM_DATE_TIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-from-date-time", 2);
+    public static final FunctionIdentifier CALENDAR_DURATION_FROM_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "calendar-duration-from-datetime", 2);
+    public static final FunctionIdentifier CALENDAR_DURATION_FROM_DATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "calendar-duration-from-date", 2);
+    public static final FunctionIdentifier ADJUST_TIME_FOR_TIMEZONE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "adjust-time-for-timezone", 2);
+    public static final FunctionIdentifier ADJUST_DATETIME_FOR_TIMEZONE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "adjust-datetime-for-timezone", 2);
+    public static final FunctionIdentifier DAY_OF_WEEK =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-of-week", 1);
+    public static final FunctionIdentifier PARSE_DATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "parse-date", 2);
+    public static final FunctionIdentifier PARSE_TIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "parse-time", 2);
+    public static final FunctionIdentifier PARSE_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "parse-datetime", 2);
+    public static final FunctionIdentifier PRINT_DATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "print-date", 2);
+    public static final FunctionIdentifier PRINT_TIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "print-time", 2);
+    public static final FunctionIdentifier PRINT_DATETIME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "print-datetime", 2);
 
-    public static final FunctionIdentifier GET_POINT_X_COORDINATE_ACCESSOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-x", 1);
-    public static final FunctionIdentifier GET_POINT_Y_COORDINATE_ACCESSOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-y", 1);
-    public static final FunctionIdentifier GET_CIRCLE_RADIUS_ACCESSOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-radius", 1);
-    public static final FunctionIdentifier GET_CIRCLE_CENTER_ACCESSOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-center", 1);
-    public static final FunctionIdentifier GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR = new FunctionIdentifier(
-            FunctionConstants.ASTERIX_NS, "get-points", 1);
+    public static final FunctionIdentifier GET_POINT_X_COORDINATE_ACCESSOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-x", 1);
+    public static final FunctionIdentifier GET_POINT_Y_COORDINATE_ACCESSOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-y", 1);
+    public static final FunctionIdentifier GET_CIRCLE_RADIUS_ACCESSOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-radius", 1);
+    public static final FunctionIdentifier GET_CIRCLE_CENTER_ACCESSOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-center", 1);
+    public static final FunctionIdentifier GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-points", 1);
 
     public static final FunctionIdentifier EQ = AlgebricksBuiltinFunctions.EQ;
     public static final FunctionIdentifier LE = AlgebricksBuiltinFunctions.LE;
@@ -825,32 +823,32 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier NUMERIC_ADD = AlgebricksBuiltinFunctions.NUMERIC_ADD;
     public static final FunctionIdentifier IS_MISSING = AlgebricksBuiltinFunctions.IS_MISSING;
     public static final FunctionIdentifier IS_NULL = AlgebricksBuiltinFunctions.IS_NULL;
-    public static final FunctionIdentifier IS_UNKNOWN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "is-unknown", 1);
-    public static final FunctionIdentifier IS_BOOLEAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "is-boolean", 1);
-    public static final FunctionIdentifier IS_NUMBER = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-number",
-            1);
-    public static final FunctionIdentifier IS_STRING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-string",
-            1);
-    public static final FunctionIdentifier IS_ARRAY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-array",
-            1);
-    public static final FunctionIdentifier IS_OBJECT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-object",
-            1);
+    public static final FunctionIdentifier IS_UNKNOWN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-unknown", 1);
+    public static final FunctionIdentifier IS_BOOLEAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-boolean", 1);
+    public static final FunctionIdentifier IS_NUMBER =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-number", 1);
+    public static final FunctionIdentifier IS_STRING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-string", 1);
+    public static final FunctionIdentifier IS_ARRAY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-array", 1);
+    public static final FunctionIdentifier IS_OBJECT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-object", 1);
 
-    public static final FunctionIdentifier IS_SYSTEM_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "is-system-null", 1);
-    public static final FunctionIdentifier CHECK_UNKNOWN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "check-unknown", 1);
-    public static final FunctionIdentifier COLLECTION_TO_SEQUENCE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "collection-to-sequence", 1);
+    public static final FunctionIdentifier IS_SYSTEM_NULL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-system-null", 1);
+    public static final FunctionIdentifier CHECK_UNKNOWN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "check-unknown", 1);
+    public static final FunctionIdentifier COLLECTION_TO_SEQUENCE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "collection-to-sequence", 1);
 
-    public static final FunctionIdentifier IF_MISSING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "if-missing", FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier IF_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "if-null", FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier IF_MISSING_OR_NULL = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "if-missing-or-null", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier IF_MISSING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-missing", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier IF_NULL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-null", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier IF_MISSING_OR_NULL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-missing-or-null", FunctionIdentifier.VARARGS);
 
     public static final FunctionIdentifier TO_BOOLEAN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-boolean", 1);
@@ -861,16 +859,16 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier TO_BIGINT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-bigint", 1);
 
-    public static final FunctionIdentifier EXTERNAL_LOOKUP = new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-            "external-lookup", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier EXTERNAL_LOOKUP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "external-lookup", FunctionIdentifier.VARARGS);
 
     public static final FunctionIdentifier GET_JOB_PARAMETER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-job-param", 1);
 
-    public static final FunctionIdentifier META = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "meta",
-            FunctionIdentifier.VARARGS);
-    public static final FunctionIdentifier META_KEY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "meta-key",
-            FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier META =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "meta", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier META_KEY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "meta-key", FunctionIdentifier.VARARGS);
 
     public static IFunctionInfo getAsterixFunctionInfo(FunctionIdentifier fid) {
         return registeredFunctions.get(fid);
@@ -1534,8 +1532,8 @@ public class BuiltinFunctions {
     }
 
     public static boolean isBuiltinCompilerFunction(FunctionSignature signature, boolean includePrivateFunctions) {
-        FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, signature.getName(),
-                signature.getArity());
+        FunctionIdentifier fi =
+                new FunctionIdentifier(FunctionConstants.ASTERIX_NS, signature.getName(), signature.getArity());
         IFunctionInfo finfo = getAsterixFunctionInfo(fi);
         if (builtinPublicFunctionsSet.keySet().contains(finfo)
                 || (includePrivateFunctions && builtinPrivateFunctionsSet.keySet().contains(finfo))) {
@@ -1701,8 +1699,7 @@ public class BuiltinFunctions {
     }
 
     static {
-        spatialFilterFunctions.put(getAsterixFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
-                SpatialFilterKind.SI);
+        spatialFilterFunctions.put(getAsterixFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT), SpatialFilterKind.SI);
     }
 
     public static boolean isGlobalAggregateFunction(FunctionIdentifier fi) {

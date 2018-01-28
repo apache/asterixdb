@@ -35,7 +35,8 @@ public class VirtualFreePageManagerTest {
 
     private final int NUM_PAGES = 100;
 
-    private void testInMemoryFreePageManager(VirtualFreePageManager virtualFreePageManager) throws HyracksDataException {
+    private void testInMemoryFreePageManager(VirtualFreePageManager virtualFreePageManager)
+            throws HyracksDataException {
         // The first two pages are reserved for the BTree's metadata page and
         // root page.
         int capacity = NUM_PAGES - 2;

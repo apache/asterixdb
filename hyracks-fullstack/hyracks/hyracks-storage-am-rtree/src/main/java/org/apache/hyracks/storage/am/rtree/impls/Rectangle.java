@@ -64,13 +64,13 @@ public class Rectangle {
     public void enlarge(ITupleReference tupleToBeInserted, IPrimitiveValueProvider[] valueProviders) {
         for (int i = 0; i < getDim(); i++) {
             int j = getDim() + i;
-            double low = valueProviders[i].getValue(tupleToBeInserted.getFieldData(i),
-                    tupleToBeInserted.getFieldStart(i));
+            double low =
+                    valueProviders[i].getValue(tupleToBeInserted.getFieldData(i), tupleToBeInserted.getFieldStart(i));
             if (getLow(i) > low) {
                 setLow(i, low);
             }
-            double high = valueProviders[j].getValue(tupleToBeInserted.getFieldData(j),
-                    tupleToBeInserted.getFieldStart(j));
+            double high =
+                    valueProviders[j].getValue(tupleToBeInserted.getFieldData(j), tupleToBeInserted.getFieldStart(j));
             if (getHigh(i) < high) {
                 setHigh(i, high);
             }
@@ -84,8 +84,8 @@ public class Rectangle {
         for (int i = 0; i < getDim(); i++) {
             int j = getDim() + i;
 
-            double low = valueProviders[i].getValue(tupleToBeInserted.getFieldData(i),
-                    tupleToBeInserted.getFieldStart(i));
+            double low =
+                    valueProviders[i].getValue(tupleToBeInserted.getFieldData(i), tupleToBeInserted.getFieldStart(i));
             double lowAfterEnlargement;
             if (getLow(i) > low) {
                 lowAfterEnlargement = low;
@@ -93,8 +93,8 @@ public class Rectangle {
                 lowAfterEnlargement = getLow(i);
             }
 
-            double high = valueProviders[j].getValue(tupleToBeInserted.getFieldData(j),
-                    tupleToBeInserted.getFieldStart(j));
+            double high =
+                    valueProviders[j].getValue(tupleToBeInserted.getFieldData(j), tupleToBeInserted.getFieldStart(j));
             double highAfterEnlargement;
             if (getHigh(i) < high) {
                 highAfterEnlargement = high;

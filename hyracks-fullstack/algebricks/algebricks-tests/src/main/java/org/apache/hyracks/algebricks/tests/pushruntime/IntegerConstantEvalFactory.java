@@ -48,7 +48,7 @@ public class IntegerConstantEvalFactory implements IScalarEvaluatorFactory {
             private ArrayBackedValueStorage buf = new ArrayBackedValueStorage();
 
             {
-                    IntegerSerializerDeserializer.INSTANCE.serialize(value, buf.getDataOutput());
+                IntegerSerializerDeserializer.INSTANCE.serialize(value, buf.getDataOutput());
             }
 
             @Override

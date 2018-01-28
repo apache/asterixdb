@@ -214,7 +214,7 @@ public class ResultState implements IStateObject {
                     initReadFileHandle();
                 }
                 readSize = ioManager.syncRead(readFileHandle, offset, buffer);
-                if (readSize < 0){
+                if (readSize < 0) {
                     throw new HyracksDataException("Premature end of file");
                 }
             }

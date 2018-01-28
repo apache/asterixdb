@@ -71,8 +71,8 @@ public class DurationFromIntervalDescriptor extends AbstractScalarFunctionDynami
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(
-                                    BuiltinType.ADAYTIMEDURATION);
+                            SerializerDeserializerProvider.INSTANCE
+                                    .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
 
                     private AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
 

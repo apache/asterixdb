@@ -146,9 +146,8 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
         if (state == SystemState.CORRUPTED) {
             //need to perform local recovery for node partitions
-            LocalRecoveryTask rt = new LocalRecoveryTask(
-                    Arrays.asList(clusterManager.getNodePartitions(nodeId)).stream()
-                            .map(ClusterPartition::getPartitionId).collect(Collectors.toSet()));
+            LocalRecoveryTask rt = new LocalRecoveryTask(Arrays.asList(clusterManager.getNodePartitions(nodeId))
+                    .stream().map(ClusterPartition::getPartitionId).collect(Collectors.toSet()));
             tasks.add(rt);
         }
         if (replicationEnabled) {

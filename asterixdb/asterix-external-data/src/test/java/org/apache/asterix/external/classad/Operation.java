@@ -529,8 +529,8 @@ public class Operation extends ExprTree {
         }
 
         // do evaluation
-        sig = privateDoOperation(opKind.getIntegerValue(), val1, val2, val3, valid1, valid2, valid3, result,
-                state, objectPool);
+        sig = privateDoOperation(opKind.getIntegerValue(), val1, val2, val3, valid1, valid2, valid3, result, state,
+                objectPool);
 
         // delete trees which were not significant
         if (valid1 && 0 != (sig & SigValues.SIG_CHLD1.ordinal())) {
@@ -553,8 +553,7 @@ public class Operation extends ExprTree {
         // corresponding value is UNDEFINED or ERROR, propagate only that tree
         if (isStrictOperator(opKind.getIntegerValue())) {
             // strict unary operators:  unary -, unary +, !, ~, ()
-            if (opKind.getIntegerValue() == OpKind_UNARY_MINUS_OP
-                    || opKind.getIntegerValue() == OpKind_UNARY_PLUS_OP
+            if (opKind.getIntegerValue() == OpKind_UNARY_MINUS_OP || opKind.getIntegerValue() == OpKind_UNARY_PLUS_OP
                     || opKind.getIntegerValue() == OpKind_LOGICAL_NOT_OP
                     || opKind.getIntegerValue() == OpKind_BITWISE_NOT_OP
                     || opKind.getIntegerValue() == OpKind_PARENTHESES_OP) {
@@ -588,15 +587,13 @@ public class Operation extends ExprTree {
             }
         } else {
             // non-strict operators
-            if (opKind.getIntegerValue() == OpKind_IS_OP
-                    || opKind.getIntegerValue() == OpKind_ISNT_OP) {
+            if (opKind.getIntegerValue() == OpKind_IS_OP || opKind.getIntegerValue() == OpKind_ISNT_OP) {
                 // the operation is *always* significant for IS and ISNT
                 tree.setInnerTree(createOperation(opKind.getIntegerValue(), t1, t2, objectPool));
                 return (true);
             }
             // other non-strict binary operators
-            if (opKind.getIntegerValue() == OpKind_LOGICAL_AND_OP
-                    || opKind.getIntegerValue() == OpKind_LOGICAL_OR_OP) {
+            if (opKind.getIntegerValue() == OpKind_LOGICAL_AND_OP || opKind.getIntegerValue() == OpKind_LOGICAL_OR_OP) {
                 if ((SigValues.values()[sig].ordinal() & SigValues.SIG_CHLD1.ordinal()) != 0
                         && (SigValues.values()[sig].ordinal() & SigValues.SIG_CHLD2.ordinal()) != 0) {
                     tree.setInnerTree(createOperation(opKind.getIntegerValue(), t1, t2, objectPool));
@@ -765,16 +762,15 @@ public class Operation extends ExprTree {
         }
 
         // cannot collapse values due to dissimilar ops
-        if ((op1.getIntegerValue() != OpKind_NO_OP || op2.getIntegerValue() != OpKind_NO_OP)
-                && !op.equals(op1) && !op.equals(op1)) {
+        if ((op1.getIntegerValue() != OpKind_NO_OP || op2.getIntegerValue() != OpKind_NO_OP) && !op.equals(op1)
+                && !op.equals(op1)) {
             // at least one of them returned a value and a tree, and parent does
             // not share the same operation with either child
             ExprTreeHolder newOp1 = objectPool.mutableExprPool.get();
             ExprTreeHolder newOp2 = objectPool.mutableExprPool.get();
 
             if (op1.getIntegerValue() != OpKind_NO_OP) {
-                newOp1.setInnerTree(
-                        Operation.createOperation(op1.getIntegerValue(), val1, tree1, objectPool));
+                newOp1.setInnerTree(Operation.createOperation(op1.getIntegerValue(), val1, tree1, objectPool));
             } else if (tree1.getInnerTree() != null) {
                 newOp1.setInnerTree(tree1.getInnerTree());
             } else {
@@ -782,8 +778,7 @@ public class Operation extends ExprTree {
             }
 
             if (op2.getIntegerValue() != OpKind_NO_OP) {
-                newOp2.setInnerTree(
-                        Operation.createOperation(op2.getIntegerValue(), val2, tree2, objectPool));
+                newOp2.setInnerTree(Operation.createOperation(op2.getIntegerValue(), val2, tree2, objectPool));
             } else if (tree2.getInnerTree() != null) {
                 newOp2.setInnerTree(tree2);
             } else {
@@ -820,8 +815,7 @@ public class Operation extends ExprTree {
             // leftson makes a tree,value contribution
             if (tree2.getInnerTree() == null) {
                 // rightson makes a value contribution
-                privateDoOperation(op.getIntegerValue(), val1, val2, dummy, true, true, false, val,
-                        objectPool);
+                privateDoOperation(op.getIntegerValue(), val1, val2, dummy, true, true, false, val, objectPool);
                 tree.setInnerTree(tree1);
                 return true;
             } else {
@@ -840,8 +834,7 @@ public class Operation extends ExprTree {
             // rightson makes a tree,value contribution
             if (tree1.getInnerTree() == null) {
                 // leftson makes a value contribution
-                privateDoOperation(op.getIntegerValue(), val1, val2, dummy, true, true, false, val,
-                        objectPool);
+                privateDoOperation(op.getIntegerValue(), val1, val2, dummy, true, true, false, val, objectPool);
                 tree.setInnerTree(tree2);
                 return true;
             } else {

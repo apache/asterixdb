@@ -88,8 +88,8 @@ public class ByteArrayPointable extends AbstractPointable implements IHashable, 
         int thisArrayStart = this.getContentStartOffset();
         int thatArrayStart = thatStart + getNumberBytesToStoreMeta(thatArrayLen);
 
-        for (int thisIndex = 0, thatIndex = 0;
-             thisIndex < thisArrayLen && thatIndex < thatArrayLen; ++thisIndex, ++thatIndex) {
+        for (int thisIndex = 0, thatIndex = 0; thisIndex < thisArrayLen
+                && thatIndex < thatArrayLen; ++thisIndex, ++thatIndex) {
             if (this.bytes[thisArrayStart + thisIndex] != thatBytes[thatArrayStart + thatIndex]) {
                 return (0xff & this.bytes[thisArrayStart + thisIndex]) - (0xff & thatBytes[thatArrayStart + thatIndex]);
             }

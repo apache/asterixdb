@@ -108,8 +108,8 @@ public abstract class TreeIndexTestUtils {
         CheckTuple checkTuple = createCheckTuple(fieldSerdes.length, numKeys);
         int fieldCount = Math.min(fieldSerdes.length, tuple.getFieldCount());
         for (int i = 0; i < fieldCount; i++) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i),
-                    tuple.getFieldLength(i));
+            ByteArrayInputStream inStream =
+                    new ByteArrayInputStream(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
             DataInput dataIn = new DataInputStream(inStream);
             Comparable fieldObj = (Comparable) fieldSerdes[i].deserialize(dataIn);
             checkTuple.appendField(fieldObj);
@@ -142,8 +142,8 @@ public abstract class TreeIndexTestUtils {
                 while (diskOrderCursor.hasNext()) {
                     diskOrderCursor.next();
                     ITupleReference tuple = diskOrderCursor.getTuple();
-                    CheckTuple checkTuple = createCheckTupleFromTuple(tuple, ctx.getFieldSerdes(),
-                            ctx.getKeyFieldCount());
+                    CheckTuple checkTuple =
+                            createCheckTupleFromTuple(tuple, ctx.getFieldSerdes(), ctx.getKeyFieldCount());
                     if (!checkDiskOrderScanResult(tuple, checkTuple, ctx)) {
                         fail("Disk-order scan returned unexpected answer: " + checkTuple.toString());
                     }
@@ -315,8 +315,8 @@ public abstract class TreeIndexTestUtils {
             throws HyracksDataException {
         int fieldCount = ctx.getFieldCount();
         int numTuples = checkTuples.size();
-        ArrayTupleBuilder tupleBuilder = filtered ? new ArrayTupleBuilder(fieldCount + 1)
-                : new ArrayTupleBuilder(fieldCount);
+        ArrayTupleBuilder tupleBuilder =
+                filtered ? new ArrayTupleBuilder(fieldCount + 1) : new ArrayTupleBuilder(fieldCount);
         ArrayTupleReference tuple = new ArrayTupleReference();
         // Perform bulk load.
         IIndexBulkLoader bulkLoader = ctx.getIndex().createBulkLoader(0.7f, false, numTuples, false);

@@ -32,8 +32,8 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.util.BinaryEntry;
 
 class RecordDeepEqualityChecker {
-    private final Pair<IVisitablePointable, Boolean> nestedVisitorArg = new Pair<IVisitablePointable, Boolean>(null,
-            false);
+    private final Pair<IVisitablePointable, Boolean> nestedVisitorArg =
+            new Pair<IVisitablePointable, Boolean>(null, false);
     private final DeepEqualityVisitorHelper deepEqualityVisitorHelper = new DeepEqualityVisitorHelper();
     private DeepEqualityVisitor visitor;
     private BinaryEntry keyEntry = new BinaryEntry();

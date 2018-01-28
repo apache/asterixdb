@@ -87,12 +87,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     private static final List<FunctionIdentifier> FUNC_IDENTIFIERS =
-            Collections.unmodifiableList(Arrays.asList(
-                    AlgebricksBuiltinFunctions.EQ,
-                    AlgebricksBuiltinFunctions.LE,
-                    AlgebricksBuiltinFunctions.GE,
-                    AlgebricksBuiltinFunctions.LT,
-                    AlgebricksBuiltinFunctions.GT));
+            Collections.unmodifiableList(Arrays.asList(AlgebricksBuiltinFunctions.EQ, AlgebricksBuiltinFunctions.LE,
+                    AlgebricksBuiltinFunctions.GE, AlgebricksBuiltinFunctions.LT, AlgebricksBuiltinFunctions.GT));
 
     public static final BTreeAccessMethod INSTANCE = new BTreeAccessMethod();
 
@@ -105,9 +101,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     public boolean analyzeFuncExprArgsAndUpdateAnalysisCtx(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
-        boolean matches =
-                AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVarAndUpdateAnalysisCtx(
-                        funcExpr, analysisCtx, context, typeEnvironment);
+        boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVarAndUpdateAnalysisCtx(funcExpr,
+                analysisCtx, context, typeEnvironment);
         if (!matches) {
             matches = AccessMethodUtils.analyzeFuncExprArgsForTwoVarsAndUpdateAnalysisCtx(funcExpr, analysisCtx);
         }
@@ -131,13 +126,13 @@ public class BTreeAccessMethod implements IAccessMethod {
         SelectOperator select = (SelectOperator) selectRef.getValue();
         Mutable<ILogicalExpression> conditionRef = select.getCondition();
 
-        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(conditionRef, subTree, null, chosenIndex,
-                analysisCtx,
-                AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(), subTree.getDataSourceRef().getValue(),
-                        afterSelectRefs),
-                false, subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
-                        .getExecutionMode() == ExecutionMode.UNPARTITIONED,
-                context);
+        ILogicalOperator primaryIndexUnnestOp =
+                createSecondaryToPrimaryPlan(conditionRef, subTree, null, chosenIndex, analysisCtx,
+                        AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(),
+                                subTree.getDataSourceRef().getValue(), afterSelectRefs),
+                        false, subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
+                                .getExecutionMode() == ExecutionMode.UNPARTITIONED,
+                        context);
 
         if (primaryIndexUnnestOp == null) {
             return false;

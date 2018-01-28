@@ -63,8 +63,8 @@ public class IPCTest {
         final Executor executor = Executors.newCachedThreadPool();
         IIPCI ipci = new IIPCI() {
             @Override
-            public void deliverIncomingMessage(final IIPCHandle handle, final long mid, long rmid,
-                    final Object payload, Exception exception) {
+            public void deliverIncomingMessage(final IIPCHandle handle, final long mid, long rmid, final Object payload,
+                    Exception exception) {
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {

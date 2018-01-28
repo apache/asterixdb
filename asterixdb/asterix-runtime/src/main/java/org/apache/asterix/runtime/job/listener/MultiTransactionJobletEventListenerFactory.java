@@ -94,8 +94,7 @@ public class MultiTransactionJobletEventListenerFactory implements IJobEventList
                             new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL);
                     for (TxnId subTxnId : txnIdMap.values()) {
                         ((INcApplicationContext) jobletContext.getServiceContext().getApplicationContext())
-                                .getTransactionSubsystem().getTransactionManager()
-                                .beginTransaction(subTxnId, options);
+                                .getTransactionSubsystem().getTransactionManager().beginTransaction(subTxnId, options);
                     }
                 } catch (ACIDException e) {
                     throw new Error(e);

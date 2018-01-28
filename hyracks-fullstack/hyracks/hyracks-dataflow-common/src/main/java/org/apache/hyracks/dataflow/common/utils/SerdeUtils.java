@@ -112,7 +112,8 @@ public class SerdeUtils {
         return f.createBinaryComparator();
     }
 
-    public static IBinaryComparatorFactory[] serdesToComparatorFactories(ISerializerDeserializer[] serdes, int numSerdes) {
+    public static IBinaryComparatorFactory[] serdesToComparatorFactories(ISerializerDeserializer[] serdes,
+            int numSerdes) {
         IBinaryComparatorFactory[] comparatorsFactories = new IBinaryComparatorFactory[numSerdes];
         for (int i = 0; i < numSerdes; i++) {
             comparatorsFactories[i] = serdeToComparatorFactory(serdes[i]);

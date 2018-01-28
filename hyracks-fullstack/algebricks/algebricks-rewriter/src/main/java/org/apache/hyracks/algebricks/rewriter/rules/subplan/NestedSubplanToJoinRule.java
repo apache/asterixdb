@@ -109,8 +109,8 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
              **/
             Mutable<ILogicalExpression> expr = new MutableObject<ILogicalExpression>(ConstantExpression.TRUE);
             Mutable<ILogicalOperator> nestedRootRef = nestedRoots.get(0);
-            ILogicalOperator join = new InnerJoinOperator(expr, new MutableObject<ILogicalOperator>(subplanInput),
-                    nestedRootRef);
+            ILogicalOperator join =
+                    new InnerJoinOperator(expr, new MutableObject<ILogicalOperator>(subplanInput), nestedRootRef);
 
             /** rewrite the nested tuple source to be empty tuple source */
             rewriteNestedTupleSource(nestedRootRef, context);

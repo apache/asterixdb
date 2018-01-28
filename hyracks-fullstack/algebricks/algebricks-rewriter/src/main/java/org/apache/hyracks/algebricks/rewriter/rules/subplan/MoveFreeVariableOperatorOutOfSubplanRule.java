@@ -125,7 +125,7 @@ public class MoveFreeVariableOperatorOutOfSubplanRule extends AbstractDecorrelat
             LogicalOperatorTag operatorTag = currentOperator.getOperatorTag();
             if (operatorTag == LogicalOperatorTag.AGGREGATE || operatorTag == LogicalOperatorTag.RUNNINGAGGREGATE
                     || operatorTag == LogicalOperatorTag.GROUP) {
-                        return false;
+                return false;
             }
             if (operatorTag == LogicalOperatorTag.PROJECT) {
                 Set<LogicalVariable> producedVars = new HashSet<>();

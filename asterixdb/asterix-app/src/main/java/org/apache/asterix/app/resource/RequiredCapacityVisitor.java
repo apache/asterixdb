@@ -314,8 +314,8 @@ public class RequiredCapacityVisitor implements ILogicalOperatorVisitor<Void, Vo
             addOutputBuffer(op);
             return;
         }
-        stageMemorySoFar += 2L * MAX_BUFFER_PER_CONNECTION * numComputationPartitions * numComputationPartitions
-                * frameSize;
+        stageMemorySoFar +=
+                2L * MAX_BUFFER_PER_CONNECTION * numComputationPartitions * numComputationPartitions * frameSize;
         clusterCapacity.setAggregatedMemoryByteSize(stageMemorySoFar);
     }
 

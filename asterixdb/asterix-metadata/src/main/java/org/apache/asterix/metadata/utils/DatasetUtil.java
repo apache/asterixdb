@@ -350,9 +350,8 @@ public class DatasetUtil {
         int[] highKeyFields = null;
         ITransactionSubsystemProvider txnSubsystemProvider = TransactionSubsystemProvider.INSTANCE;
         ISearchOperationCallbackFactory searchCallbackFactory = new PrimaryIndexInstantSearchOperationCallbackFactory(
-                dataset.getDatasetId(),
-                        dataset.getPrimaryBloomFilterFields(), txnSubsystemProvider,
-                        IRecoveryManager.ResourceType.LSM_BTREE);
+                dataset.getDatasetId(), dataset.getPrimaryBloomFilterFields(), txnSubsystemProvider,
+                IRecoveryManager.ResourceType.LSM_BTREE);
         IndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec,
@@ -557,8 +556,7 @@ public class DatasetUtil {
         if (i > 0 && i < datasetArg.length() - 1) {
             first = datasetArg.substring(0, i);
             second = datasetArg.substring(i + 1);
-        }
-        else {
+        } else {
             first = metadata.getDefaultDataverse() == null ? null : metadata.getDefaultDataverse().getDataverseName();
             second = datasetArg;
         }

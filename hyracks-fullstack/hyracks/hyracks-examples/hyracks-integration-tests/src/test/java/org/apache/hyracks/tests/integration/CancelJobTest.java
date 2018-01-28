@@ -230,8 +230,8 @@ public class CancelJobTest extends AbstractMultiNCIntegrationTest {
         FileSplit[] ordersSplits = new FileSplit[] { new ManagedFileSplit(ASTERIX_IDS[0],
                 "data" + File.separator + "tpch0.001" + File.separator + "orders-part1.tbl") };
         IFileSplitProvider ordersSplitsProvider = new ConstantFileSplitProvider(ordersSplits);
-        RecordDescriptor recordDesc = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
+        RecordDescriptor recordDesc =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer(),
                         new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                         new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
                         new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),

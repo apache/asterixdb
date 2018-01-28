@@ -33,19 +33,30 @@ import org.apache.hyracks.util.StorageUtil;
 public class CompilerProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        COMPILER_SORTMEMORY(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
+        COMPILER_SORTMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a sort operator instance in a partition"),
-        COMPILER_JOINMEMORY(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
+        COMPILER_JOINMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a join operator instance in a partition"),
-        COMPILER_GROUPMEMORY(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
+        COMPILER_GROUPMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a group by operator instance in a partition"),
-        COMPILER_FRAMESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(32, KILOBYTE),
+        COMPILER_FRAMESIZE(
+                INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(32, KILOBYTE),
                 "The page size (in bytes) for computation"),
-        COMPILER_PARALLELISM(INTEGER, COMPILER_PARALLELISM_AS_STORAGE, "The degree of parallelism for query " +
-                "execution. Zero means to use the storage parallelism as the query execution parallelism, while " +
-                "other integer values dictate the number of query execution parallel partitions. The system will " +
-                "fall back to use the number of all available CPU cores in the cluster as the degree of parallelism " +
-                "if the number set by a user is too large or too small"),
+        COMPILER_PARALLELISM(
+                INTEGER,
+                COMPILER_PARALLELISM_AS_STORAGE,
+                "The degree of parallelism for query "
+                        + "execution. Zero means to use the storage parallelism as the query execution parallelism, while "
+                        + "other integer values dictate the number of query execution parallel partitions. The system will "
+                        + "fall back to use the number of all available CPU cores in the cluster as the degree of parallelism "
+                        + "if the number set by a user is too large or too small"),
         COMPILER_PREGELIX_HOME(STRING, "~/pregelix", "Pregelix installation root directory");
 
         private final IOptionType type;
@@ -83,6 +94,7 @@ public class CompilerProperties extends AbstractProperties {
             return this == COMPILER_PREGELIX_HOME;
         }
     }
+
     public static final String COMPILER_SORTMEMORY_KEY = Option.COMPILER_SORTMEMORY.ini();
 
     public static final String COMPILER_GROUPMEMORY_KEY = Option.COMPILER_GROUPMEMORY.ini();

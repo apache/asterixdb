@@ -88,14 +88,14 @@ public class AssignPOperator extends AbstractPhysicalOperator {
         // TODO push projections into the operator
         int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
 
-        AssignRuntimeFactory runtime = new AssignRuntimeFactory(outColumns, evalFactories, projectionList,
-                flushFramesRapidly);
+        AssignRuntimeFactory runtime =
+                new AssignRuntimeFactory(outColumns, evalFactories, projectionList, flushFramesRapidly);
 
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         if (cardinalityConstraint > 0) {
-            AlgebricksCountPartitionConstraint countConstraint = new AlgebricksCountPartitionConstraint(
-                    cardinalityConstraint);
+            AlgebricksCountPartitionConstraint countConstraint =
+                    new AlgebricksCountPartitionConstraint(cardinalityConstraint);
             builder.contributeMicroOperator(assign, runtime, recDesc, countConstraint);
         } else {
             builder.contributeMicroOperator(assign, runtime, recDesc);
@@ -118,7 +118,6 @@ public class AssignPOperator extends AbstractPhysicalOperator {
     public void setCardinalityConstraint(int cardinality) {
         this.cardinalityConstraint = cardinality;
     }
-
 
     @Override
     public boolean expensiveThanMaterialization() {

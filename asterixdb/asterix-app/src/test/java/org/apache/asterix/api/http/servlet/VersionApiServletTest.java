@@ -62,7 +62,6 @@ public class VersionApiServletTest {
         SqlppExecutionTest.tearDown();
     }
 
-
     @Test
     public void testGet() throws Exception {
         // Configures a test version api servlet.

@@ -32,14 +32,11 @@ import java.util.Map;
 public class StreamRecordReaderProviderTest {
 
     @Test
-    public void Test() throws AsterixException{
-        List<String> recordReaderFormats = Arrays.asList(
-                ExternalDataConstants.FORMAT_LINE_SEPARATED,
-                ExternalDataConstants.FORMAT_ADM,
-                ExternalDataConstants.FORMAT_JSON,
-                ExternalDataConstants.FORMAT_SEMISTRUCTURED,
-                ExternalDataConstants.FORMAT_DELIMITED_TEXT,
-                ExternalDataConstants.FORMAT_CSV);
+    public void Test() throws AsterixException {
+        List<String> recordReaderFormats =
+                Arrays.asList(ExternalDataConstants.FORMAT_LINE_SEPARATED, ExternalDataConstants.FORMAT_ADM,
+                        ExternalDataConstants.FORMAT_JSON, ExternalDataConstants.FORMAT_SEMISTRUCTURED,
+                        ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_CSV);
         Map<String, String> config = new HashMap<>();
         for (String format : recordReaderFormats) {
             config.clear();

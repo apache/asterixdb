@@ -87,7 +87,8 @@ public class TwitterUtil {
     public static double[][] getBoundingBoxes(String locationValue) throws AsterixException {
         double[][] locations = null;
 
-        String coordRegex = "^((((\\-?\\d+\\.\\d+),\\s*){3}(\\-?\\d+\\.\\d+)|\\w+);\\s*)*(((\\-?\\d+\\.\\d+),\\s*){3}(\\-?\\d+\\.\\d+)|\\w+)$";
+        String coordRegex =
+                "^((((\\-?\\d+\\.\\d+),\\s*){3}(\\-?\\d+\\.\\d+)|\\w+);\\s*)*(((\\-?\\d+\\.\\d+),\\s*){3}(\\-?\\d+\\.\\d+)|\\w+)$";
         Pattern p = Pattern.compile(coordRegex);
         Matcher m = p.matcher(locationValue);
 

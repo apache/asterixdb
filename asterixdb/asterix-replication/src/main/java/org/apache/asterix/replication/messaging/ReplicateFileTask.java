@@ -74,8 +74,8 @@ public class ReplicateFileTask implements IReplicaTask {
             // receive actual file
             final Path filePath = Paths.get(resourceDir.toString(), localPath.getFile().getName());
             Files.createFile(filePath);
-            try (RandomAccessFile fileOutputStream = new RandomAccessFile(filePath.toFile(),
-                    "rw"); FileChannel fileChannel = fileOutputStream.getChannel()) {
+            try (RandomAccessFile fileOutputStream = new RandomAccessFile(filePath.toFile(), "rw");
+                    FileChannel fileChannel = fileOutputStream.getChannel()) {
                 fileOutputStream.setLength(size);
                 NetworkingUtil.downloadFile(fileChannel, worker.getChannel());
                 fileChannel.force(true);

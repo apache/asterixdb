@@ -40,11 +40,10 @@ public class AsterixHelperExecution {
     protected AsterixHelperExecution() {
     }
 
-    @SuppressWarnings({
-            "squid:S106", // use of System.err
+    @SuppressWarnings({ "squid:S106", // use of System.err
             "squid:S1166" // rethrow or log exception
     })
-    public int execute(String [] argArray) throws IOException {
+    public int execute(String[] argArray) throws IOException {
         Args args = createArgs();
         CmdLineParser parser = createParser(args);
         try {
@@ -59,8 +58,8 @@ public class AsterixHelperExecution {
                 return command.execute();
             }
         } catch (CmdLineException e) {
-            System.err.println("ERROR: " + e.getMessage() + "\n\n"
-                    + "Usage: " + getHelperCommandName() + " [options] <command>");
+            System.err.println(
+                    "ERROR: " + e.getMessage() + "\n\n" + "Usage: " + getHelperCommandName() + " [options] <command>");
 
             printUsageDetails(parser, System.err);
             return 99;

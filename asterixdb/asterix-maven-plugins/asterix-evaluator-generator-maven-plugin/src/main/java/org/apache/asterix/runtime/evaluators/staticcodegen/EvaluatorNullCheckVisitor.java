@@ -31,8 +31,8 @@ public class EvaluatorNullCheckVisitor extends ClassVisitor {
             + "IFrameTupleReference;Lorg/apache/hyracks/data/std/api/IPointable;)V";
     private final static String EVALUATE = "evaluate";
     private final static MethodIdentifier METHOD_IDENTIFIER = new MethodIdentifier(EVALUATE, EVALUATE_DESC, null);
-    private final static String TYPE_CHECKER_CLASS = "org/apache/asterix/runtime/evaluators/staticcodegen/"
-            + "TypeChecker";
+    private final static String TYPE_CHECKER_CLASS =
+            "org/apache/asterix/runtime/evaluators/staticcodegen/" + "TypeChecker";
     private final static String TYPE_CHECKER_DESC = "L" + TYPE_CHECKER_CLASS + ";";
     private final static String TYPE_CHECKER_NAME = "typeChecker";
     private final static String IS_NULL = "isNull";

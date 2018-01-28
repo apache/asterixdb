@@ -43,7 +43,7 @@ public interface FrameConstants {
     /**
      * Indicate the total size of the meta data.
      */
-    int META_DATA_LEN = SIZE_LEN  + TUPLE_START_OFFSET;
+    int META_DATA_LEN = SIZE_LEN + TUPLE_START_OFFSET;
 
     boolean DEBUG_FRAME_IO = false;
 

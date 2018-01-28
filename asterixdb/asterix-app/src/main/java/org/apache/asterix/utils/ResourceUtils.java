@@ -54,8 +54,7 @@ public class ResourceUtils {
      */
     public static IClusterCapacity getRequiredCapacity(ILogicalPlan plan,
             AlgebricksAbsolutePartitionConstraint computationLocations, int sortFrameLimit, int groupFrameLimit,
-            int joinFrameLimit, int frameSize)
-            throws AlgebricksException {
+            int joinFrameLimit, int frameSize) throws AlgebricksException {
         // Creates a cluster capacity visitor.
         IClusterCapacity clusterCapacity = new ClusterCapacity();
         RequiredCapacityVisitor visitor = new RequiredCapacityVisitor(computationLocations.getLocations().length,

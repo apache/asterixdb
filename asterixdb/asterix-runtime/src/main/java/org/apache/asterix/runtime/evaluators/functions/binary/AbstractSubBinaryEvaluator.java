@@ -54,10 +54,10 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
         }
 
         try {
-            ATypeTag argTag0 = ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0]
-                    .getStartOffset()]];
-            ATypeTag argTag1 = ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1]
-                    .getStartOffset()]];
+            ATypeTag argTag0 =
+                    ATypeTag.VALUE_TYPE_MAPPING[pointables[0].getByteArray()[pointables[0].getStartOffset()]];
+            ATypeTag argTag1 =
+                    ATypeTag.VALUE_TYPE_MAPPING[pointables[1].getByteArray()[pointables[1].getStartOffset()]];
             checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAGS, argTag0, argTag1);
 
             byteArrayPointable.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1,
@@ -68,8 +68,8 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
             int subStart;
 
             // strange SQL index convention
-            subStart = ATypeHierarchy.getIntegerValue(BuiltinFunctions.SUBBINARY_FROM.getName(), 1, startBytes,
-                    offset) - 1;
+            subStart = ATypeHierarchy.getIntegerValue(BuiltinFunctions.SUBBINARY_FROM.getName(), 1, startBytes, offset)
+                    - 1;
 
             int totalLength = byteArrayPointable.getContentLength();
             int subLength = getSubLength(tuple);

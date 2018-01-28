@@ -92,7 +92,11 @@ public class UTF8StringUtilTest {
         return r2 == 0;
     }
 
-    enum OPTION {STANDARD, RAW_BYTE, LOWERCASE}
+    enum OPTION {
+        STANDARD,
+        RAW_BYTE,
+        LOWERCASE
+    }
 
     public void testCompare(String str1, String str2, OPTION option) throws IOException {
         byte[] buffer1 = writeStringToBytes(str1);

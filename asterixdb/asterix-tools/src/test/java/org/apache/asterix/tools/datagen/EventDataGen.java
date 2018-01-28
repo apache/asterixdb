@@ -49,12 +49,12 @@ public class EventDataGen {
             "Lake St.", "Hill St.", "Park St.", "View St." };
     private static final int MIN_STREET_NUM = 1;
     private static final int MAX_STREET_NUM = 10000;
-    private static final String[] CITIES = { "Seattle", "Irvine", "Laguna Beach", "Los Angeles", "San Clemente",
-            "Huntington Beach", "Portland" };
+    private static final String[] CITIES =
+            { "Seattle", "Irvine", "Laguna Beach", "Los Angeles", "San Clemente", "Huntington Beach", "Portland" };
     private static final int MIN_ZIP = 100000;
     private static final int MAX_ZIP = 999999;
-    private static final String[] LAT_LONGS = { "47,-122", "33,-117", "33,-117", "34,-118", "33,-117", "33,-117",
-            "45,-122" };
+    private static final String[] LAT_LONGS =
+            { "47,-122", "33,-117", "33,-117", "34,-118", "33,-117", "33,-117", "45,-122" };
 
     private static final int MIN_MEMBERSHIPS = 1;
     private static final int MAX_MEMBERSHIPS = 10;
@@ -87,8 +87,8 @@ public class EventDataGen {
             firstNameIdx = Math.abs(rndValue.nextInt()) % firstNames.length;
             lastNameIdx = Math.abs(rndValue.nextInt()) % lastNames.length;
             // name = firstNames[firstNameIx] + " " + lastNames[lastNameIx];
-            numInterests = Math.abs((rndValue.nextInt()) % (MAX_USER_INTERESTS - MIN_USER_INTERESTS))
-                    + MIN_USER_INTERESTS;
+            numInterests =
+                    Math.abs((rndValue.nextInt()) % (MAX_USER_INTERESTS - MIN_USER_INTERESTS)) + MIN_USER_INTERESTS;
             for (int i = 0; i < numInterests; i++) {
                 interests[i] = Math.abs(rndValue.nextInt()) % INTERESTS.length;
             }
@@ -107,8 +107,8 @@ public class EventDataGen {
                         + MEMBER_SINCE_MIN_YEAR;
                 int msMo = Math.abs(rndValue.nextInt()) % 12 + 1;
                 int msDay = Math.abs(rndValue.nextInt()) % 28 + 1;
-                member_since_date[i] = msYear + "-" + (msMo < 10 ? "0" : "") + msMo + "-" + (msDay < 10 ? "0" : "")
-                        + msDay;
+                member_since_date[i] =
+                        msYear + "-" + (msMo < 10 ? "0" : "") + msMo + "-" + (msDay < 10 ? "0" : "") + msDay;
             }
         }
 
@@ -218,14 +218,14 @@ public class EventDataGen {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
-            System.err
-                    .println("MUST PROVIDE 2 PARAMETERS, 1. output directory path and 2. number of records to generate.");
+            System.err.println(
+                    "MUST PROVIDE 2 PARAMETERS, 1. output directory path and 2. number of records to generate.");
             System.exit(1);
         }
         String outputFile = args[0];
         int numRecords = Integer.parseInt(args[1]);
-        Writer userFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile + File.separator
-                + "user.adm")));
+        Writer userFile = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(outputFile + File.separator + "user.adm")));
         EventDataGen dgen = new EventDataGen();
         dgen.init();
         for (int i = 0; i < numRecords; i++) {

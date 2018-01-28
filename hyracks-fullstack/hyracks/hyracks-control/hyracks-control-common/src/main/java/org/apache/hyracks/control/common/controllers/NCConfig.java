@@ -50,7 +50,7 @@ public class NCConfig extends ControllerConfig {
         NCSERVICE_PORT(INTEGER, 9090),
         CLUSTER_ADDRESS(STRING, (String) null),
         CLUSTER_PORT(INTEGER, 1099),
-        CLUSTER_CONTROLLER_ID(SHORT, (short)0x0000),
+        CLUSTER_CONTROLLER_ID(SHORT, (short) 0x0000),
         CLUSTER_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
         CLUSTER_PUBLIC_PORT(INTEGER, CLUSTER_LISTEN_PORT),
         NODE_ID(STRING, (String) null),

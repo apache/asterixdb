@@ -45,8 +45,7 @@ public interface INCMessageBroker extends IMessageBroker {
      * @param message
      * @throws Exception
      */
-    public void sendMessageToNC(String nodeId, INcAddressedMessage message)
-            throws Exception;
+    public void sendMessageToNC(String nodeId, INcAddressedMessage message) throws Exception;
 
     /**
      * Queue a message to this {@link INCMessageBroker} for processing

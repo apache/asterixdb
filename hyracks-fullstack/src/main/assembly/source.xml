@@ -24,24 +24,9 @@
       <directory>${project.basedir}</directory>
       <outputDirectory>/</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
-      <includes>
-        <include>**/LICENSE</include>
-        <include>**/NOTICE</include>
-        <include>**/README</include>
-        <include>**/src/**</include>
-        <include>**/results/**</include>
-        <include>**/pom.xml</include>
-        <include>**/build*.xml</include>
-        <include>**/findbugs*.xml</include>
-        <include>**/*.tbl</include>
-        <include>**/*.tsv</include>
-        <include>**/*.js</include>
-        <include>**/*.txt</include>
-        <include>**/*.piglet</include>
-        <include>**/*.ddl</include>
-      </includes>
       <excludes>
-        <exclude>**/${project.build.directory}/**</exclude>
+        <exclude>${project.build.directory}/**</exclude>
+        <exclude>release.properties</exclude>
       </excludes>
     </fileSet>
   </fileSets>

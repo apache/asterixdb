@@ -207,7 +207,8 @@ public class ClusterStateManagerTest {
         Mockito.when(iccServiceContext.getAppConfig()).thenReturn(applicationConfig);
         Mockito.when(ccApplicationContext.getServiceContext()).thenReturn(iccServiceContext);
 
-        NcLifecycleCoordinator coordinator = new NcLifecycleCoordinator(ccApplicationContext.getServiceContext(), false);
+        NcLifecycleCoordinator coordinator =
+                new NcLifecycleCoordinator(ccApplicationContext.getServiceContext(), false);
         coordinator.bindTo(csm);
         Mockito.when(ccApplicationContext.getNcLifecycleCoordinator()).thenReturn(coordinator);
 

@@ -32,8 +32,7 @@ public class IndexCreateOperatorDescriptor extends AbstractSingleActivityOperato
     private static final long serialVersionUID = 1L;
     private final IIndexBuilderFactory indexBuilderFactory;
 
-    public IndexCreateOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IIndexBuilderFactory indexBuilderFactory) {
+    public IndexCreateOperatorDescriptor(IOperatorDescriptorRegistry spec, IIndexBuilderFactory indexBuilderFactory) {
         super(spec, 0, 0);
         this.indexBuilderFactory = indexBuilderFactory;
     }

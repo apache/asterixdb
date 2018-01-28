@@ -117,8 +117,8 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
 
                             // Gets the string length of the source string.
                             int inputStringLen = UTF8StringUtil.getUTFLength(srcString, srcOffset + 1);
-                            int inputStringStart = srcOffset + 1
-                                    + UTF8StringUtil.getNumBytesToStoreLength(inputStringLen);
+                            int inputStringStart =
+                                    srcOffset + 1 + UTF8StringUtil.getNumBytesToStoreLength(inputStringLen);
                             // Gets the string length of the pattern string.
                             int inputPatternLen = UTF8StringUtil.getUTFLength(patternString, patternOffset + 1);
                             // Handles the case that the pattern is "".
@@ -128,8 +128,8 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             listBuilder.reset(intListType);
                             int itemStrStart = 0;
                             int nextMatchStart;
-                            while (itemStrStart < inputStringLen && (nextMatchStart = UTF8StringPointable
-                                    .find(argStrPtr, argPatternPtr, false, itemStrStart)) >= 0) {
+                            while (itemStrStart < inputStringLen && (nextMatchStart =
+                                    UTF8StringPointable.find(argStrPtr, argPatternPtr, false, itemStrStart)) >= 0) {
                                 // Adds an item string.
                                 addItemString(srcString, inputStringStart, itemStrStart,
                                         emptyStringPattern ? nextMatchStart + 1 : nextMatchStart);

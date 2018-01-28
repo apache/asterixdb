@@ -196,7 +196,7 @@ public class AUnionType extends AbstractComplexType {
     }
 
     @Override
-    public ObjectNode toJSON()  {
+    public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode type = om.createObjectNode();
         type.put("type", AUnionType.class.getName());

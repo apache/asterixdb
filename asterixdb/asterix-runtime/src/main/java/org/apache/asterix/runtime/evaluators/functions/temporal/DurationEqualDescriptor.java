@@ -69,8 +69,8 @@ public class DurationEqualDescriptor extends AbstractScalarFunctionDynamicDescri
                     private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ABoolean> boolSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+                    private ISerializerDeserializer<ABoolean> boolSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -96,10 +96,10 @@ public class DurationEqualDescriptor extends AbstractScalarFunctionDynamicDescri
                                 offset0 + 1) == ADurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1))
                                 && (ADurationSerializerDeserializer.getYearMonth(bytes0,
                                         offset0 + 1) == ADurationSerializerDeserializer.getYearMonth(bytes1,
-                                                    offset1 + 1))) {
-                                boolSerde.serialize(ABoolean.TRUE, out);
+                                                offset1 + 1))) {
+                            boolSerde.serialize(ABoolean.TRUE, out);
                         } else {
-                                boolSerde.serialize(ABoolean.FALSE, out);
+                            boolSerde.serialize(ABoolean.FALSE, out);
                         }
                         result.set(resultStorage);
                     }

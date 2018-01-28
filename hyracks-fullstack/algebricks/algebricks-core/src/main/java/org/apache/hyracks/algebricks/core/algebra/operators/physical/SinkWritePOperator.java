@@ -91,17 +91,18 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
             LogicalVariable v = varRef.getVariableReference();
             columns[i++] = inputSchemas[0].findVariable(v);
         }
-        RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
-        RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0],
-                context);
+        RecordDescriptor recDesc =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
+        RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(
+                context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
 
-        IPrinterFactory[] pf = JobGenHelper.mkPrinterFactories(inputSchemas[0], context.getTypeEnvironment(op),
-                context, columns);
+        IPrinterFactory[] pf =
+                JobGenHelper.mkPrinterFactories(inputSchemas[0], context.getTypeEnvironment(op), context, columns);
 
         IMetadataProvider<?, ?> mp = context.getMetadataProvider();
 
-        Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> runtime = mp.getWriteFileRuntime(write.getDataSink(),
-                columns, pf, inputDesc);
+        Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> runtime =
+                mp.getWriteFileRuntime(write.getDataSink(), columns, pf, inputDesc);
 
         builder.contributeMicroOperator(write, runtime.first, recDesc, runtime.second);
         ILogicalOperator src = write.getInputs().get(0).getValue();

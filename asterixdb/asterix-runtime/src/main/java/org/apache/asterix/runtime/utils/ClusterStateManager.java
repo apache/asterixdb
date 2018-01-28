@@ -277,8 +277,8 @@ public class ClusterStateManager implements IClusterStateManager {
                 clusterActiveLocations.add(p.getActiveNodeId());
             }
         }
-        clusterPartitionConstraint = new AlgebricksAbsolutePartitionConstraint(
-                clusterActiveLocations.toArray(new String[] {}));
+        clusterPartitionConstraint =
+                new AlgebricksAbsolutePartitionConstraint(clusterActiveLocations.toArray(new String[] {}));
     }
 
     @Override
@@ -443,8 +443,8 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     private void updateNodeConfig(String nodeId, Map<IOption, Object> configuration) {
-        ConfigManager configManager = ((ConfigManagerApplicationConfig) appCtx.getServiceContext().getAppConfig())
-                .getConfigManager();
+        ConfigManager configManager =
+                ((ConfigManagerApplicationConfig) appCtx.getServiceContext().getAppConfig()).getConfigManager();
         configuration.forEach((key, value) -> {
             if (key.section() == Section.NC) {
                 configManager.set(nodeId, key, value);

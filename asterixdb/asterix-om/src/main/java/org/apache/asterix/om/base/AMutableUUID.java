@@ -27,9 +27,9 @@ public class AMutableUUID extends AUUID {
         if (tokenImage.length() != UUID_CHARS) {
             throw new HyracksDataException("This is not a correct UUID value: " + tokenImage);
         }
-        byte [] hexBytes = new byte[UUID_CHARS];
+        byte[] hexBytes = new byte[UUID_CHARS];
         for (int i = 0; i < tokenImage.length(); i++) {
-            hexBytes[i] = (byte)tokenImage.charAt(i);
+            hexBytes[i] = (byte) tokenImage.charAt(i);
         }
         parseUUIDHexBytes(hexBytes, 0);
     }
@@ -68,9 +68,9 @@ public class AMutableUUID extends AUUID {
     }
 
     // Calculate a long value from a hex string.
-    private static void decodeBytesFromHex(byte[] hexArray, int hexArrayOffset, byte[] outputArray, int outputOffset, int length)
-            throws HyracksDataException {
-        for (int i = hexArrayOffset; i < hexArrayOffset + length; ) {
+    private static void decodeBytesFromHex(byte[] hexArray, int hexArrayOffset, byte[] outputArray, int outputOffset,
+            int length) throws HyracksDataException {
+        for (int i = hexArrayOffset; i < hexArrayOffset + length;) {
             int hi = transformHexCharToInt(hexArray[i++]);
             outputArray[outputOffset++] = (byte) (hi << 4 | transformHexCharToInt(hexArray[i++]));
         }

@@ -43,8 +43,8 @@ public class MetadataTest {
     private TestCaseContext tcCtx;
 
     private static final String PATH_ACTUAL = "target" + File.separator + "mdtest" + File.separator;
-    private static final String PATH_BASE = StringUtils
-            .join(new String[] { "src", "test", "resources", "metadata" + File.separator }, File.separator);
+    private static final String PATH_BASE =
+            StringUtils.join(new String[] { "src", "test", "resources", "metadata" + File.separator }, File.separator);
     protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
 
     private static final TestExecutor testExecutor = new TestExecutor();

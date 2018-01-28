@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.search;
 
 public class ConjunctiveEditDistanceSearchModifier extends EditDistanceSearchModifier {
 
-
     public ConjunctiveEditDistanceSearchModifier(int gramLength, int edThresh) {
         super(gramLength, edThresh);
     }

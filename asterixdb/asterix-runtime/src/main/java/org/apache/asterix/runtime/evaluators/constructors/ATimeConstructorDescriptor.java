@@ -70,8 +70,8 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     private AMutableTime aTime = new AMutableTime(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ATime> timeSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.ATIME);
+                    private ISerializerDeserializer<ATime> timeSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
@@ -97,8 +97,8 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                             ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 }
 
-                                int chrononTimeInMs = ATimeParserFactory.parseTimePart(serString, startOffset,
-                                        stringLength);
+                                int chrononTimeInMs =
+                                        ATimeParserFactory.parseTimePart(serString, startOffset, stringLength);
 
                                 if (chrononTimeInMs < 0) {
                                     chrononTimeInMs += GregorianCalendarSystem.CHRONON_OF_DAY;

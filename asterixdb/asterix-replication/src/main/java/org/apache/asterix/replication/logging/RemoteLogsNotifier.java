@@ -66,8 +66,8 @@ class RemoteLogsNotifier implements Runnable {
                     case LogType.ABORT:
                         // send ACK to requester
                         logRecord.getReplicationWorker().getChannel().socket().getOutputStream()
-                                .write((nodeId + ReplicationProtocol.LOG_REPLICATION_ACK + logRecord.getTxnId() + System
-                                        .lineSeparator()).getBytes());
+                                .write((nodeId + ReplicationProtocol.LOG_REPLICATION_ACK + logRecord.getTxnId()
+                                        + System.lineSeparator()).getBytes());
                         break;
                     case LogType.FLUSH:
                         checkpointReplicaIndexes(logRecord, logRecord.getDatasetId());

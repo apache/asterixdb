@@ -219,8 +219,7 @@ public class ARecordPointable extends AbstractPointable {
     // Closed field accessors.
     // -----------------------
 
-    public void getClosedFieldValue(ARecordType recordType, int fieldId, DataOutput dOut)
-            throws IOException {
+    public void getClosedFieldValue(ARecordType recordType, int fieldId, DataOutput dOut) throws IOException {
         if (isClosedFieldNull(recordType, fieldId)) {
             dOut.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
         } else if (isClosedFieldMissing(recordType, fieldId)) {
@@ -286,8 +285,7 @@ public class ARecordPointable extends AbstractPointable {
     // Open field accessors.
     // -----------------------
 
-    public void getOpenFieldValue(ARecordType recordType, int fieldId, DataOutput dOut)
-            throws IOException {
+    public void getOpenFieldValue(ARecordType recordType, int fieldId, DataOutput dOut) throws IOException {
         dOut.write(bytes, getOpenFieldValueOffset(recordType, fieldId), getOpenFieldValueSize(recordType, fieldId));
     }
 

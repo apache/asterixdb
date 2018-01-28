@@ -56,7 +56,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         operatorExpr.setExprList(newExprList);
         OperatorType opType = operatorExpr.getOpList().get(0);
         switch (opType) {
-        // There can only be one LIKE/NOT_LIKE/IN/NOT_IN in an operator expression (according to the grammar).
+            // There can only be one LIKE/NOT_LIKE/IN/NOT_IN in an operator expression (according to the grammar).
             case LIKE:
             case NOT_LIKE:
                 return processLikeOperator(operatorExpr, opType);
@@ -99,12 +99,14 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         comparison.setCurrentop(true);
         if (opType == OperatorType.IN) {
             comparison.addOperator(OperatorType.EQ);
-            return new QuantifiedExpression(Quantifier.SOME, new ArrayList<>(
-                    Collections.singletonList(new QuantifiedPair(bindingVar, collectionExpr))), comparison);
+            return new QuantifiedExpression(Quantifier.SOME,
+                    new ArrayList<>(Collections.singletonList(new QuantifiedPair(bindingVar, collectionExpr))),
+                    comparison);
         } else {
             comparison.addOperator(OperatorType.NEQ);
-            return new QuantifiedExpression(Quantifier.EVERY, new ArrayList<>(
-                    Collections.singletonList(new QuantifiedPair(bindingVar, collectionExpr))), comparison);
+            return new QuantifiedExpression(Quantifier.EVERY,
+                    new ArrayList<>(Collections.singletonList(new QuantifiedPair(bindingVar, collectionExpr))),
+                    comparison);
         }
     }
 

@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.api.dataflow.value;
 
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface JSONSerializable {
@@ -27,5 +26,5 @@ public interface JSONSerializable {
      *
      * @return A om.createObjectNode instance representing this Java object.
      */
-    public ObjectNode toJSON() ;
+    public ObjectNode toJSON();
 }

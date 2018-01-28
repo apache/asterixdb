@@ -40,7 +40,8 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class CountVarToCountOneRule implements IAlgebraicRewriteRule {
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -80,7 +81,8 @@ public class CountVarToCountOneRule implements IAlgebraicRewriteRule {
         if (exp3.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
             return false;
         }
-        if (((AbstractLogicalOperator) agg.getInputs().get(0).getValue()).getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
+        if (((AbstractLogicalOperator) agg.getInputs().get(0).getValue())
+                .getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
             return false;
         }
         fun.getArguments().get(0).setValue(new ConstantExpression(new AsterixConstantValue(new AInt64(1L))));

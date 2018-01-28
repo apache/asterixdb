@@ -64,7 +64,8 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
     }
 
     @Override
-    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         return false;
     }
 
@@ -108,7 +109,7 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
                     foundTarget = false;
                     break;
                 }
-                if(child.getOperatorTag() == LogicalOperatorTag.GROUP){
+                if (child.getOperatorTag() == LogicalOperatorTag.GROUP) {
                     foundTarget = false;
                     break;
                 }
@@ -137,8 +138,8 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
                     return false;
                 }
             }
-            List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = deepCopyOrderAndExpression(sourceOrderOp
-                    .getOrderExpressions());
+            List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs =
+                    deepCopyOrderAndExpression(sourceOrderOp.getOrderExpressions());
             OrderOperator newOrderOp = new OrderOperator(orderExprs);
             context.addToDontApplySet(this, newOrderOp);
             inputs.set(i, new MutableObject<ILogicalOperator>(newOrderOp));
@@ -155,15 +156,17 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
     }
 
     private Mutable<ILogicalExpression> deepCopyExpressionRef(Mutable<ILogicalExpression> oldExpr) {
-        return new MutableObject<ILogicalExpression>(((AbstractLogicalExpression) oldExpr.getValue()).cloneExpression());
+        return new MutableObject<ILogicalExpression>(
+                ((AbstractLogicalExpression) oldExpr.getValue()).cloneExpression());
     }
 
     private List<Pair<IOrder, Mutable<ILogicalExpression>>> deepCopyOrderAndExpression(
             List<Pair<IOrder, Mutable<ILogicalExpression>>> ordersAndExprs) {
-        List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrdersAndExprs = new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
+        List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrdersAndExprs =
+                new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
         for (Pair<IOrder, Mutable<ILogicalExpression>> pair : ordersAndExprs)
-            newOrdersAndExprs.add(new Pair<IOrder, Mutable<ILogicalExpression>>(pair.first,
-                    deepCopyExpressionRef(pair.second)));
+            newOrdersAndExprs
+                    .add(new Pair<IOrder, Mutable<ILogicalExpression>>(pair.first, deepCopyExpressionRef(pair.second)));
         return newOrdersAndExprs;
     }
 }

@@ -48,27 +48,31 @@ public class APolygonPartialBinaryComparatorFactory implements IBinaryComparator
                 try {
                     short pointCount1 = AInt16SerializerDeserializer.getShort(b1,
                             s1 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1);
-                    int c = Short.compare(
-                            pointCount1,
-                            AInt16SerializerDeserializer.getShort(b2,
-                                    s2 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1));
+                    int c = Short.compare(pointCount1, AInt16SerializerDeserializer.getShort(b2,
+                            s2 + APolygonSerializerDeserializer.getNumberOfPointsOffset() - 1));
 
                     if (c == 0) {
                         int ci = 0;
                         for (int i = 0; i < pointCount1; i++) {
-                            ci = Double.compare(
-                                    DoublePointable.getDouble(b1, s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X)
-                                    - 1),
-                                    DoublePointable.getDouble(b2, s1 + APolygonSerializerDeserializer.getCoordinateOffset(i, Coordinate.X)
-                                    - 1));
+                            ci = Double
+                                    .compare(
+                                            DoublePointable.getDouble(b1,
+                                                    s1 + APolygonSerializerDeserializer.getCoordinateOffset(i,
+                                                            Coordinate.X) - 1),
+                                            DoublePointable.getDouble(b2, s1 + APolygonSerializerDeserializer
+                                                    .getCoordinateOffset(i, Coordinate.X) - 1));
                             if (ci == 0) {
-                                ci = Double.compare(
-                                        DoublePointable.getDouble(b1, s1
-                                        + APolygonSerializerDeserializer.getCoordinateOffset(i,
-                                                Coordinate.Y) - 1),
-                                        DoublePointable.getDouble(b2, s1
-                                        + APolygonSerializerDeserializer.getCoordinateOffset(i,
-                                                Coordinate.Y) - 1));
+                                ci = Double
+                                        .compare(
+                                                DoublePointable.getDouble(b1,
+                                                        s1 + APolygonSerializerDeserializer.getCoordinateOffset(i,
+                                                                Coordinate.Y) - 1),
+                                                DoublePointable
+                                                        .getDouble(
+                                                                b2, s1
+                                                                        + APolygonSerializerDeserializer
+                                                                                .getCoordinateOffset(i, Coordinate.Y)
+                                                                        - 1));
                                 if (ci == 0) {
                                     continue;
                                 }

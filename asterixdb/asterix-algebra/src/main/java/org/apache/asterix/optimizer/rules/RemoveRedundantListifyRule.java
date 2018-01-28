@@ -142,8 +142,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
-        if (((AbstractFunctionCallExpression) expr)
-                .getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
+        if (((AbstractFunctionCallExpression) expr).getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
             return false;
         }
         AbstractFunctionCallExpression functionCall = (AbstractFunctionCallExpression) expr;

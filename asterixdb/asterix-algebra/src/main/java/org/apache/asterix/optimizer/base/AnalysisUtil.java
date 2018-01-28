@@ -110,8 +110,7 @@ public class AnalysisUtil {
         if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression fc = (AbstractFunctionCallExpression) expr;
             FunctionIdentifier fid = fc.getFunctionIdentifier();
-            if (fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX)
-                    || fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)
+            if (fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_INDEX) || fid.equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)
                     || fid.equals(BuiltinFunctions.FIELD_ACCESS_NESTED)) {
                 return true;
             }

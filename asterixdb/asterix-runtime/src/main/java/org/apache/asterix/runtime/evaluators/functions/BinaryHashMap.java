@@ -57,9 +57,8 @@ public class BinaryHashMap {
     private int nextOff;
     private int size;
 
-
-    public BinaryHashMap(int tableSize, int frameSize, IBinaryHashFunction putHashFunc,
-            IBinaryHashFunction getHashFunc, IBinaryComparator cmp) {
+    public BinaryHashMap(int tableSize, int frameSize, IBinaryHashFunction putHashFunc, IBinaryHashFunction getHashFunc,
+            IBinaryComparator cmp) {
         listHeads = new long[tableSize];
         this.frameSize = frameSize;
         this.putHashFunc = putHashFunc;
@@ -198,8 +197,8 @@ public class BinaryHashMap {
     }
 
     public class BinaryHashMapIterator implements Iterator<Pair<BinaryEntry, BinaryEntry>> {
-        private final Pair<BinaryEntry, BinaryEntry> val = new Pair<BinaryEntry, BinaryEntry>(new BinaryEntry(),
-                new BinaryEntry());
+        private final Pair<BinaryEntry, BinaryEntry> val =
+                new Pair<BinaryEntry, BinaryEntry>(new BinaryEntry(), new BinaryEntry());
         private int listHeadIndex;
         private ByteBuffer frame;
         private int frameIndex;

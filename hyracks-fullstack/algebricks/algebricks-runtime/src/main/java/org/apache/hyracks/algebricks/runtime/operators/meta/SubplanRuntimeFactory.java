@@ -73,8 +73,8 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
         RecordDescriptor pipelineOutputRecordDescriptor = null;
 
-        final PipelineAssembler pa = new PipelineAssembler(pipeline, 1, 1, inputRecordDesc,
-                pipelineOutputRecordDescriptor);
+        final PipelineAssembler pa =
+                new PipelineAssembler(pipeline, 1, 1, inputRecordDesc, pipelineOutputRecordDescriptor);
         final IMissingWriter[] nullWriters = new IMissingWriter[missingWriterFactories.length];
         for (int i = 0; i < missingWriterFactories.length; i++) {
             nullWriters[i] = missingWriterFactories[i].createMissingWriter();

@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.control.nc.io.profiling;
 
-public class IOCounterDefault implements IIOCounter{
+public class IOCounterDefault implements IIOCounter {
 
     @Override
     public long getReads() {

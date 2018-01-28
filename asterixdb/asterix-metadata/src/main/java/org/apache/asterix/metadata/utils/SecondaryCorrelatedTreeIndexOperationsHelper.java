@@ -263,8 +263,8 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
 
         LSMSecondaryIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp =
                 new LSMSecondaryIndexBulkLoadOperatorDescriptor(spec, taggedSecondaryRecDesc, primaryIndexHelperFactory,
-                        secondaryIndexHelperFactory, fieldPermutation, NUM_TAG_FIELDS, numSecondaryKeys,
-                        numPrimaryKeys, hasBuddyBtree);
+                        secondaryIndexHelperFactory, fieldPermutation, NUM_TAG_FIELDS, numSecondaryKeys, numPrimaryKeys,
+                        hasBuddyBtree);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);
         return treeIndexBulkLoadOp;
@@ -274,9 +274,8 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
             MetadataProvider metadataProvider, RecordDescriptor outRecDesc) throws AlgebricksException {
         ITransactionSubsystemProvider txnSubsystemProvider = TransactionSubsystemProvider.INSTANCE;
         ISearchOperationCallbackFactory searchCallbackFactory = new PrimaryIndexInstantSearchOperationCallbackFactory(
-                dataset.getDatasetId(),
-                        dataset.getPrimaryBloomFilterFields(), txnSubsystemProvider,
-                        IRecoveryManager.ResourceType.LSM_BTREE);
+                dataset.getDatasetId(), dataset.getPrimaryBloomFilterFields(), txnSubsystemProvider,
+                IRecoveryManager.ResourceType.LSM_BTREE);
         IndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
         LSMBTreeDiskComponentScanOperatorDescriptor primaryScanOp = new LSMBTreeDiskComponentScanOperatorDescriptor(

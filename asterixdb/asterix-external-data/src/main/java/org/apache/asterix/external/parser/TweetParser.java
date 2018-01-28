@@ -48,12 +48,12 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class TweetParser extends AbstractDataParser implements IRecordDataParser<String> {
-    private final IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool = new ListObjectPool<>(
-            new RecordBuilderFactory());
-    private final IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool = new ListObjectPool<>(
-            new ListBuilderFactory());
-    private final IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool = new ListObjectPool<>(
-            new AbvsBuilderFactory());
+    private final IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool =
+            new ListObjectPool<>(new RecordBuilderFactory());
+    private final IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool =
+            new ListObjectPool<>(new ListBuilderFactory());
+    private final IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
+            new ListObjectPool<>(new AbvsBuilderFactory());
     private ARecordType recordType;
     private UTF8StringWriter utf8Writer = new UTF8StringWriter();
 

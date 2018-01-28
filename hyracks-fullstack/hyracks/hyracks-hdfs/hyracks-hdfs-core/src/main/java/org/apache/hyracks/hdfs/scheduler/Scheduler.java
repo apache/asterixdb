@@ -130,8 +130,8 @@ public class Scheduler {
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, ClusterTopology topology)
             throws HyracksException {
         this(ncNameToNcInfos);
-        this.ncCollectionBuilder = topology == null ? new IPProximityNcCollectionBuilder()
-                : new RackAwareNcCollectionBuilder(topology);
+        this.ncCollectionBuilder =
+                topology == null ? new IPProximityNcCollectionBuilder() : new RackAwareNcCollectionBuilder(topology);
     }
 
     /**
@@ -276,7 +276,7 @@ public class Scheduler {
      */
     private void scheduleLocalSlots(InputSplit[] splits, int[] workloads, String[] locations, int slots, Random random,
             boolean[] scheduled, final Map<String, IntWritable> locationToNumSplits)
-                    throws IOException, UnknownHostException {
+            throws IOException, UnknownHostException {
         /** scheduling candidates will be ordered inversely according to their popularity */
         PriorityQueue<String> scheduleCadndiates = new PriorityQueue<String>(3, new Comparator<String>() {
 

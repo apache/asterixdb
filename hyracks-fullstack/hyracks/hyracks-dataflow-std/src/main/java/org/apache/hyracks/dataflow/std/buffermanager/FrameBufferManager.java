@@ -59,4 +59,3 @@ public class FrameBufferManager implements IFrameBufferManager {
     }
 
 }
-

@@ -25,7 +25,8 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 public class ARectanglePartialBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
 
-    public final static ARectanglePartialBinaryComparatorFactory INSTANCE = new ARectanglePartialBinaryComparatorFactory();
+    public final static ARectanglePartialBinaryComparatorFactory INSTANCE =
+            new ARectanglePartialBinaryComparatorFactory();
 
     private ARectanglePartialBinaryComparatorFactory() {
     }

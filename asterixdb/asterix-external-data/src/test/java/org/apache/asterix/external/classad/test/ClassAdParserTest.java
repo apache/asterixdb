@@ -58,7 +58,7 @@ public class ClassAdParserTest extends TestCase {
             ClassAdObjectPool objectPool = new ClassAdObjectPool();
             ClassAd pAd = new ClassAd(objectPool);
             String szInput;
-            String[] files = new String[] {"/classad/testdata.txt"};
+            String[] files = new String[] { "/classad/testdata.txt" };
             BufferedReader infile = null;
             for (String path : files) {
                 infile = Files.newBufferedReader(

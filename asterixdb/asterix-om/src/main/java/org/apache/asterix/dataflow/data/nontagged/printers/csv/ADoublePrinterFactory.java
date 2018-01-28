@@ -29,8 +29,7 @@ public class ADoublePrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final ADoublePrinterFactory INSTANCE = new ADoublePrinterFactory();
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> PrintTools.printDouble(b, s,
-            ps);
+    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> PrintTools.printDouble(b, s, ps);
 
     @Override
     public IPrinter createPrinter() {

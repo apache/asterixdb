@@ -29,8 +29,8 @@ public class AFloatPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
     public static final AFloatPrinterFactory INSTANCE = new AFloatPrinterFactory();
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> PrintTools.printFloatForJson(b,
-            s, ps);
+    public static final IPrinter PRINTER =
+            (byte[] b, int s, int l, PrintStream ps) -> PrintTools.printFloatForJson(b, s, ps);
 
     @Override
     public IPrinter createPrinter() {

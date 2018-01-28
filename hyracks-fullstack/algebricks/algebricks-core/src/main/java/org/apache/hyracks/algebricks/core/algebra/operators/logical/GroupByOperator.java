@@ -296,9 +296,8 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
     // The groupAll flag can only be set if group by columns are empty.
     private void checkGroupAll(boolean groupAll) {
         if (groupAll && !gByList.isEmpty()) {
-            throw new IllegalStateException(
-                    "Conflicting parameters for GROUP BY: there should be no GROUP BY keys "
-                            + "when the GROUP ALL flag is set to true");
+            throw new IllegalStateException("Conflicting parameters for GROUP BY: there should be no GROUP BY keys "
+                    + "when the GROUP ALL flag is set to true");
         }
     }
 }

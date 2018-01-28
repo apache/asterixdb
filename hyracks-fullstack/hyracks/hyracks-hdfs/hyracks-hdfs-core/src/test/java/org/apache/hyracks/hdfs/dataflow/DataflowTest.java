@@ -73,7 +73,6 @@ public class DataflowTest extends TestCase {
     private static final String PATH_TO_HADOOP_CONF = FileUtil.joinPath(TEST_RESOURCES, "hadoop", "conf");
     protected static final String BUILD_DIR = FileUtil.joinPath("target", "build");
 
-
     private static final String DATA_PATH = FileUtil.joinPath(TEST_RESOURCES, "data", "customer.tbl");
     protected static final String HDFS_INPUT_PATH = "/customer/";
     protected static final String HDFS_OUTPUT_PATH = "/customer_result/";
@@ -151,11 +150,11 @@ public class DataflowTest extends TestCase {
 
         String[] readSchedule = scheduler.getLocationConstraints(splits);
         JobSpecification jobSpec = new JobSpecification();
-        RecordDescriptor recordDesc = new RecordDescriptor(
-                new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
+        RecordDescriptor recordDesc =
+                new RecordDescriptor(new ISerializerDeserializer[] { new UTF8StringSerializerDeserializer() });
 
-        String[] locations = new String[] { HyracksUtils.NC1_ID, HyracksUtils.NC1_ID, HyracksUtils.NC2_ID,
-                HyracksUtils.NC2_ID };
+        String[] locations =
+                new String[] { HyracksUtils.NC1_ID, HyracksUtils.NC1_ID, HyracksUtils.NC2_ID, HyracksUtils.NC2_ID };
         HDFSReadOperatorDescriptor readOperator = new HDFSReadOperatorDescriptor(jobSpec, recordDesc, conf, splits,
                 readSchedule, new TextKeyValueParserFactory());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, readOperator, locations);
@@ -164,19 +163,21 @@ public class DataflowTest extends TestCase {
                 new IBinaryComparatorFactory[] { RawBinaryComparatorFactory.INSTANCE }, recordDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, sortOperator, locations);
 
-        HDFSWriteOperatorDescriptor writeOperator = new HDFSWriteOperatorDescriptor(jobSpec, conf,
-                new TextTupleWriterFactory());
+        HDFSWriteOperatorDescriptor writeOperator =
+                new HDFSWriteOperatorDescriptor(jobSpec, conf, new TextTupleWriterFactory());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(jobSpec, writeOperator, HyracksUtils.NC1_ID);
 
         jobSpec.connect(new OneToOneConnectorDescriptor(jobSpec), readOperator, 0, sortOperator, 0);
-        jobSpec.connect(new MToNPartitioningMergingConnectorDescriptor(jobSpec, new FieldHashPartitionComputerFactory(
-                new int[] { 0 }, new IBinaryHashFunctionFactory[] { RawBinaryHashFunctionFactory.INSTANCE }),
-                new int[] { 0 }, new IBinaryComparatorFactory[] { RawBinaryComparatorFactory.INSTANCE }, null),
+        jobSpec.connect(
+                new MToNPartitioningMergingConnectorDescriptor(jobSpec,
+                        new FieldHashPartitionComputerFactory(new int[] { 0 },
+                                new IBinaryHashFunctionFactory[] { RawBinaryHashFunctionFactory.INSTANCE }),
+                        new int[] { 0 }, new IBinaryComparatorFactory[] { RawBinaryComparatorFactory.INSTANCE }, null),
                 sortOperator, 0, writeOperator, 0);
         jobSpec.addRoot(writeOperator);
 
-        IHyracksClientConnection client = new HyracksConnection(HyracksUtils.CC_HOST,
-                HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT);
+        IHyracksClientConnection client =
+                new HyracksConnection(HyracksUtils.CC_HOST, HyracksUtils.TEST_HYRACKS_CC_CLIENT_PORT);
         JobId jobId = client.startJob(jobSpec);
         client.waitForCompletion(jobId);
 
@@ -195,8 +196,8 @@ public class DataflowTest extends TestCase {
         Path actual = new Path(ACTUAL_RESULT_DIR);
         dfs.copyToLocalFile(result, actual);
 
-        TestUtils.compareWithResult(new File(FileUtil.joinPath(EXPECTED_RESULT_PATH, "part-0")), new File(
-                FileUtil.joinPath(ACTUAL_RESULT_DIR, "customer_result", "part-0")));
+        TestUtils.compareWithResult(new File(FileUtil.joinPath(EXPECTED_RESULT_PATH, "part-0")),
+                new File(FileUtil.joinPath(ACTUAL_RESULT_DIR, "customer_result", "part-0")));
         return true;
     }
 

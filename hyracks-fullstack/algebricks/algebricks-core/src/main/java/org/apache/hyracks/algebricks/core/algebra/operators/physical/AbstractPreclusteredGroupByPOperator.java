@@ -155,7 +155,6 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         Set<LogicalVariable> gbvars = new ListSet<>(columnList);
         LocalGroupingProperty groupProp = new LocalGroupingProperty(gbvars, new ArrayList<>(columnList));
 
-
         boolean goon = true;
         for (ILogicalPlan p : gby.getNestedPlans()) {
             // try to propagate secondary order requirements from nested
@@ -232,8 +231,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
                     tl.add(((VariableReferenceExpression) decorPair.second.getValue()).getVariableReference());
                     fdList.add(new FunctionalDependency(hd, tl));
                 }
-                if (allOk && PropertiesUtil.matchLocalProperties(localProps, props,
-                        new HashMap<>(), fdList)) {
+                if (allOk && PropertiesUtil.matchLocalProperties(localProps, props, new HashMap<>(), fdList)) {
                     localProps = props;
                 }
             }
@@ -242,8 +240,7 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         IPartitioningProperty pp = null;
         AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
         if (aop.getExecutionMode() == ExecutionMode.PARTITIONED) {
-            pp = new UnorderedPartitionedProperty(new ListSet<>(columnList),
-                    context.getComputationNodeDomain());
+            pp = new UnorderedPartitionedProperty(new ListSet<>(columnList), context.getComputationNodeDomain());
         }
         pv[0] = new StructuralPropertiesVector(pp, localProps);
         return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);

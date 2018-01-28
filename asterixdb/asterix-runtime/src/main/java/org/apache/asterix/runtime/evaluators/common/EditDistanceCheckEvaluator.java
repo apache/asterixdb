@@ -50,8 +50,8 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     protected final OrderedListBuilder listBuilder;
     protected ArrayBackedValueStorage listItemVal;
     @SuppressWarnings("unchecked")
-    protected final ISerializerDeserializer<ABoolean> booleanSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    protected final ISerializerDeserializer<ABoolean> booleanSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public EditDistanceCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
             throws HyracksDataException {
@@ -65,11 +65,11 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         resultStorage.reset();
         firstStringEval.evaluate(tuple, argPtr1);
-        firstTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
+        firstTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset()]);
         secondStringEval.evaluate(tuple, argPtr2);
-        secondTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
+        secondTypeTag =
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset()]);
         edThreshEval.evaluate(tuple, argPtrThreshold);
 
         if (!checkArgTypes(firstTypeTag, secondTypeTag)) {
@@ -92,8 +92,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     }
 
     @Override
-    protected int computeResult(IPointable left, IPointable right, ATypeTag argType)
-            throws HyracksDataException {
+    protected int computeResult(IPointable left, IPointable right, ATypeTag argType) throws HyracksDataException {
         byte[] leftBytes = left.getByteArray();
         int leftStartOffset = left.getStartOffset();
         byte[] rightBytes = right.getByteArray();

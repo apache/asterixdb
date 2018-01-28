@@ -94,9 +94,8 @@ class ClientInterfaceIPCI implements IIPCI {
             case DESTROY_JOB:
                 HyracksClientInterfaceFunctions.UndeployJobSpecFunction dsjf =
                         (HyracksClientInterfaceFunctions.UndeployJobSpecFunction) fn;
-                ccs.getWorkQueue()
-                        .schedule(new UndeployJobSpecWork(ccs, dsjf.getDeployedJobSpecId(),
-                                new IPCResponder<>(handle, mid)));
+                ccs.getWorkQueue().schedule(
+                        new UndeployJobSpecWork(ccs, dsjf.getDeployedJobSpecId(), new IPCResponder<>(handle, mid)));
                 break;
             case CANCEL_JOB:
                 HyracksClientInterfaceFunctions.CancelJobFunction cjf =

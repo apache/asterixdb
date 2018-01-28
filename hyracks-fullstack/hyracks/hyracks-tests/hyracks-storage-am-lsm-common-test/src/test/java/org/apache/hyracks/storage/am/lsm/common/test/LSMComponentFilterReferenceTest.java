@@ -49,7 +49,7 @@ public class LSMComponentFilterReferenceTest {
         byte[] serFilter = filter.getByteArray();
         LSMComponentFilterReference deserFilter = new LSMComponentFilterReference(
                 new TypeAwareTupleWriter((new ITypeTraits[] { IntegerPointable.TYPE_TRAITS })));
-        deserFilter.set(serFilter,0,20);
+        deserFilter.set(serFilter, 0, 20);
         Assert.assertTrue(deserFilter.isMaxTupleSet() && deserFilter.isMinTupleSet());
         Assert.assertEquals(
                 TupleUtils.deserializeTuple(deserFilter.getMinTuple(),

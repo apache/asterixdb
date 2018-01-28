@@ -89,8 +89,8 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
         // TODO push projections into the operator
         int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
 
-        RunningAggregateRuntimeFactory runtime = new RunningAggregateRuntimeFactory(outColumns, runningAggFuns,
-                projectionList);
+        RunningAggregateRuntimeFactory runtime =
+                new RunningAggregateRuntimeFactory(outColumns, runningAggFuns, projectionList);
 
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);

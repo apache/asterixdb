@@ -394,8 +394,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         if (op.getOperation() == Kind.UPSERT) {
             buffer.append(" out: ([record-before-upsert:" + op.getBeforeOpRecordVar()
                     + ((op.getBeforeOpAdditionalNonFilteringVars() != null)
-                            ? (", additional-before-upsert: " + op.getBeforeOpAdditionalNonFilteringVars())
-                            : "")
+                            ? (", additional-before-upsert: " + op.getBeforeOpAdditionalNonFilteringVars()) : "")
                     + "]) ");
         }
         if (op.isBulkload()) {

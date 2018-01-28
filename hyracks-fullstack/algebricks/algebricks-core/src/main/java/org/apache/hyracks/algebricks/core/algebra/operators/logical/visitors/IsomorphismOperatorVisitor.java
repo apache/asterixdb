@@ -77,7 +77,8 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boolean, ILogicalOperator> {
 
-    private final Map<LogicalVariable, LogicalVariable> variableMapping = new HashMap<LogicalVariable, LogicalVariable>();
+    private final Map<LogicalVariable, LogicalVariable> variableMapping =
+            new HashMap<LogicalVariable, LogicalVariable>();
 
     public IsomorphismOperatorVisitor() {
     }
@@ -89,9 +90,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         AggregateOperator aggOpArg = (AggregateOperator) copyAndSubstituteVar(op, arg);
-        boolean isomorphic = VariableUtilities.varListEqualUnordered(
-                getPairList(op.getVariables(), op.getExpressions()),
-                getPairList(aggOpArg.getVariables(), aggOpArg.getExpressions()));
+        boolean isomorphic =
+                VariableUtilities.varListEqualUnordered(getPairList(op.getVariables(), op.getExpressions()),
+                        getPairList(aggOpArg.getVariables(), aggOpArg.getExpressions()));
         return isomorphic;
     }
 
@@ -103,9 +104,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         RunningAggregateOperator aggOpArg = (RunningAggregateOperator) copyAndSubstituteVar(op, arg);
-        boolean isomorphic = VariableUtilities.varListEqualUnordered(
-                getPairList(op.getVariables(), op.getExpressions()),
-                getPairList(aggOpArg.getVariables(), aggOpArg.getExpressions()));
+        boolean isomorphic =
+                VariableUtilities.varListEqualUnordered(getPairList(op.getVariables(), op.getExpressions()),
+                        getPairList(aggOpArg.getVariables(), aggOpArg.getExpressions()));
         return isomorphic;
     }
 
@@ -142,8 +143,10 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         GroupByOperator gbyOpArg = (GroupByOperator) copyAndSubstituteVar(op, arg);
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> keyListsArg = gbyOpArg.getGroupByList();
 
-        List<Pair<LogicalVariable, ILogicalExpression>> listLeft = new ArrayList<Pair<LogicalVariable, ILogicalExpression>>();
-        List<Pair<LogicalVariable, ILogicalExpression>> listRight = new ArrayList<Pair<LogicalVariable, ILogicalExpression>>();
+        List<Pair<LogicalVariable, ILogicalExpression>> listLeft =
+                new ArrayList<Pair<LogicalVariable, ILogicalExpression>>();
+        List<Pair<LogicalVariable, ILogicalExpression>> listRight =
+                new ArrayList<Pair<LogicalVariable, ILogicalExpression>>();
 
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> pair : keyLists) {
             listLeft.add(new Pair<LogicalVariable, ILogicalExpression>(pair.first, pair.second.getValue()));
@@ -249,9 +252,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         AssignOperator assignOpArg = (AssignOperator) copyAndSubstituteVar(op, arg);
-        boolean isomorphic = VariableUtilities.varListEqualUnordered(
-                getPairList(op.getVariables(), op.getExpressions()),
-                getPairList(assignOpArg.getVariables(), assignOpArg.getExpressions()));
+        boolean isomorphic =
+                VariableUtilities.varListEqualUnordered(getPairList(op.getVariables(), op.getExpressions()),
+                        getPairList(assignOpArg.getVariables(), assignOpArg.getExpressions()));
         return isomorphic;
     }
 
@@ -659,7 +662,8 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
 
     public List<Pair<LogicalVariable, ILogicalExpression>> getPairList(List<LogicalVariable> vars,
             List<Mutable<ILogicalExpression>> exprs) throws AlgebricksException {
-        List<Pair<LogicalVariable, ILogicalExpression>> list = new ArrayList<Pair<LogicalVariable, ILogicalExpression>>();
+        List<Pair<LogicalVariable, ILogicalExpression>> list =
+                new ArrayList<Pair<LogicalVariable, ILogicalExpression>>();
         if (vars.size() != exprs.size()) {
             throw new AlgebricksException("variable list size does not equal to expression list size ");
         }

@@ -87,8 +87,8 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
     public void computeDeliveredProperties(ILogicalOperator iop, IOptimizationContext context)
             throws AlgebricksException {
         IntersectOperator op = (IntersectOperator) iop;
-        IPartitioningProperty pp = op.getInputs().get(0).getValue().getDeliveredPhysicalProperties()
-                .getPartitioningProperty();
+        IPartitioningProperty pp =
+                op.getInputs().get(0).getValue().getDeliveredPhysicalProperties().getPartitioningProperty();
 
         HashMap<LogicalVariable, LogicalVariable> varMaps = new HashMap<>(op.getOutputVars().size());
         for (int i = 0; i < op.getOutputVars().size(); i++) {
@@ -114,9 +114,8 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
         int nInput = logicalOp.getNumInput();
         int[][] compareFields = new int[nInput][];
 
-        IBinaryComparatorFactory[] comparatorFactories = JobGenHelper
-                .variablesToAscBinaryComparatorFactories(logicalOp.getCompareVariables(0),
-                        context.getTypeEnvironment(op), context);
+        IBinaryComparatorFactory[] comparatorFactories = JobGenHelper.variablesToAscBinaryComparatorFactories(
+                logicalOp.getCompareVariables(0), context.getTypeEnvironment(op), context);
 
         INormalizedKeyComputerFactoryProvider nkcfProvider = context.getNormalizedKeyComputerFactoryProvider();
         INormalizedKeyComputerFactory nkcf = null;
@@ -147,9 +146,8 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
 
         IntersectOperatorDescriptor opDescriptor;
         try {
-            opDescriptor =
-                    new IntersectOperatorDescriptor(spec, nInput, compareFields, extraFields, nkcf, comparatorFactories,
-                            recordDescriptor);
+            opDescriptor = new IntersectOperatorDescriptor(spec, nInput, compareFields, extraFields, nkcf,
+                    comparatorFactories, recordDescriptor);
         } catch (HyracksException e) {
             throw new AlgebricksException(e);
         }

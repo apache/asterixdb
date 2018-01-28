@@ -82,8 +82,8 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
                 expectedPartitions.set(i);
             }
         }
-        NonDeterministicChannelReader channelReader = new NonDeterministicChannelReader(nProducerPartitions,
-                expectedPartitions);
+        NonDeterministicChannelReader channelReader =
+                new NonDeterministicChannelReader(nProducerPartitions, expectedPartitions);
         NonDeterministicFrameReader frameReader = new NonDeterministicFrameReader(channelReader);
         return new PartitionCollector(ctx, getConnectorId(), receiverIndex, expectedPartitions, frameReader,
                 channelReader);

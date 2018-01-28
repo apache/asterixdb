@@ -40,8 +40,8 @@ public class GetJobInfoWork extends SynchronizableWork {
     protected void doRun() throws Exception {
         try {
             JobRun run = jobManager.get(jobId);
-            JobInfo info = (run != null) ? new JobInfo(run.getJobId(), run.getStatus(), run.getOperatorLocations())
-                    : null;
+            JobInfo info =
+                    (run != null) ? new JobInfo(run.getJobId(), run.getStatus(), run.getOperatorLocations()) : null;
             callback.setValue(info);
         } catch (Exception e) {
             callback.setException(e);

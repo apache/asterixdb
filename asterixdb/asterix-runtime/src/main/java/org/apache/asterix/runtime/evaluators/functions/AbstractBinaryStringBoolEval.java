@@ -35,8 +35,8 @@ public abstract class AbstractBinaryStringBoolEval extends AbstractBinaryStringE
 
     // For outputting results.
     @SuppressWarnings({ "rawtypes" })
-    private ISerializerDeserializer boolSerde = SerializerDeserializerProvider.INSTANCE
-            .getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    private ISerializerDeserializer boolSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public AbstractBinaryStringBoolEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
             IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws HyracksDataException {

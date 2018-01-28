@@ -38,7 +38,8 @@ public class FrameHelper {
     }
 
     public static void serializeFrameSize(ByteBuffer outputFrame, int start, int numberOfMinFrame) {
-        IntSerDeUtils.putInt(outputFrame.array(), start + FrameConstants.META_DATA_FRAME_COUNT_OFFSET, numberOfMinFrame);
+        IntSerDeUtils.putInt(outputFrame.array(), start + FrameConstants.META_DATA_FRAME_COUNT_OFFSET,
+                numberOfMinFrame);
     }
 
     public static int deserializeNumOfMinFrame(ByteBuffer frame) {

@@ -99,8 +99,8 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                         fRefCopy = fRef;
                     }
                     writer.open();
-                    IFileHandle readHandle = fRefCopy == null ? null :
-                            ioManager.open(fRefCopy, IIOManager.FileReadWriteMode.READ_ONLY,
+                    IFileHandle readHandle = fRefCopy == null ? null
+                            : ioManager.open(fRefCopy, IIOManager.FileReadWriteMode.READ_ONLY,
                                     IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
                     try {
                         if (readHandle == null) {

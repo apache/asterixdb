@@ -62,10 +62,12 @@ public class RTreePolicy implements IRTreePolicy {
 
     @Override
     public void split(ITreeIndexFrame leftFrame, ByteBuffer buf, ITreeIndexFrame rightFrame, ISlotManager slotManager,
-            ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey) throws HyracksDataException {
+            ITreeIndexTupleReference frameTuple, ITupleReference tuple, ISplitKey splitKey)
+            throws HyracksDataException {
         RTreeSplitKey rTreeSplitKey = ((RTreeSplitKey) splitKey);
         RTreeTypeAwareTupleWriter rTreeTupleWriterLeftFrame = ((RTreeTypeAwareTupleWriter) tupleWriter);
-        RTreeTypeAwareTupleWriter rTreeTupleWriterRightFrame = ((RTreeTypeAwareTupleWriter) rightFrame.getTupleWriter());
+        RTreeTypeAwareTupleWriter rTreeTupleWriterRightFrame =
+                ((RTreeTypeAwareTupleWriter) rightFrame.getTupleWriter());
 
         RTreeNSMFrame leftRTreeFrame = ((RTreeNSMFrame) leftFrame);
 
@@ -75,10 +77,10 @@ public class RTreePolicy implements IRTreePolicy {
         for (int i = 0; i < maxFieldPos; i++) {
             int j = maxFieldPos + i;
             frameTuple.resetByTupleIndex(leftRTreeFrame, 0);
-            double leastLowerValue = keyValueProviders[i].getValue(frameTuple.getFieldData(i),
-                    frameTuple.getFieldStart(i));
-            double greatestUpperValue = keyValueProviders[j].getValue(frameTuple.getFieldData(j),
-                    frameTuple.getFieldStart(j));
+            double leastLowerValue =
+                    keyValueProviders[i].getValue(frameTuple.getFieldData(i), frameTuple.getFieldStart(i));
+            double greatestUpperValue =
+                    keyValueProviders[j].getValue(frameTuple.getFieldData(j), frameTuple.getFieldStart(j));
             double leastUpperValue = leastLowerValue;
             double greatestLowerValue = greatestUpperValue;
             int leastUpperIndex = 0;
@@ -88,16 +90,16 @@ public class RTreePolicy implements IRTreePolicy {
             int tupleCount = leftRTreeFrame.getTupleCount();
             for (int k = 1; k < tupleCount; ++k) {
                 frameTuple.resetByTupleIndex(leftRTreeFrame, k);
-                double lowerValue = keyValueProviders[i].getValue(frameTuple.getFieldData(i),
-                        frameTuple.getFieldStart(i));
+                double lowerValue =
+                        keyValueProviders[i].getValue(frameTuple.getFieldData(i), frameTuple.getFieldStart(i));
                 if (lowerValue > greatestLowerValue) {
                     greatestLowerIndex = k;
                     cmpFrameTuple.resetByTupleIndex(leftRTreeFrame, k);
                     greatestLowerValue = keyValueProviders[i].getValue(cmpFrameTuple.getFieldData(i),
                             cmpFrameTuple.getFieldStart(i));
                 }
-                double higherValue = keyValueProviders[j].getValue(frameTuple.getFieldData(j),
-                        frameTuple.getFieldStart(j));
+                double higherValue =
+                        keyValueProviders[j].getValue(frameTuple.getFieldData(j), frameTuple.getFieldStart(j));
                 if (higherValue < leastUpperValue) {
                     leastUpperIndex = k;
                     cmpFrameTuple.resetByTupleIndex(leftRTreeFrame, k);
@@ -169,8 +171,8 @@ public class RTreePolicy implements IRTreePolicy {
         ((UnorderedSlotManager) slotManager).deleteEmptySlots();
 
         // maintain space information
-        buf.putInt(totalFreeSpaceOff, buf.getInt(totalFreeSpaceOff) + totalBytes
-                + (slotManager.getSlotSize() * numOfDeletedTuples));
+        buf.putInt(totalFreeSpaceOff,
+                buf.getInt(totalFreeSpaceOff) + totalBytes + (slotManager.getSlotSize() * numOfDeletedTuples));
 
         // compact both pages
         rightFrame.compact();
@@ -196,7 +198,8 @@ public class RTreePolicy implements IRTreePolicy {
 
         splitKey.initData(splitKeySize);
         leftRTreeFrame.adjustMBR();
-        rTreeTupleWriterLeftFrame.writeTupleFields(leftRTreeFrame.getMBRTuples(), 0, rTreeSplitKey.getLeftPageBuffer(), 0);
+        rTreeTupleWriterLeftFrame.writeTupleFields(leftRTreeFrame.getMBRTuples(), 0, rTreeSplitKey.getLeftPageBuffer(),
+                0);
         rTreeSplitKey.getLeftTuple().resetByTupleOffset(rTreeSplitKey.getLeftPageBuffer().array(), 0);
 
         ((IRTreeFrame) rightFrame).adjustMBR();

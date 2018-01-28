@@ -68,7 +68,7 @@ public class SinkPOperator extends AbstractPhysicalOperator {
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
-      return emptyUnaryRequirements(op.getInputs().size());
+        return emptyUnaryRequirements(op.getInputs().size());
     }
 
     @Override

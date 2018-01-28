@@ -108,8 +108,8 @@ public class AlgebricksException extends Exception {
     @Override
     public String getMessage() {
         if (msgCache == null) {
-            msgCache = new CachedMessage(
-                    ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), params));
+            msgCache =
+                    new CachedMessage(ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), params));
         }
         return msgCache.message;
     }

@@ -42,8 +42,7 @@ public abstract class AbstractSlotManager implements ISlotManager {
 
     @Override
     public int getSlotEndOff() {
-        return frame.getBuffer().capacity()
-                - (frame.getTupleCount() * slotSize);
+        return frame.getBuffer().capacity() - (frame.getTupleCount() * slotSize);
     }
 
     @Override

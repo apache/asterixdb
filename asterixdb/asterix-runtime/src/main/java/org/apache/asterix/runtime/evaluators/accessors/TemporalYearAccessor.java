@@ -80,8 +80,8 @@ public class TemporalYearAccessor extends AbstractScalarFunctionDynamicDescripto
 
                     // for output: type integer
                     @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AInt64> intSerde = SerializerDeserializerProvider.INSTANCE
-                            .getSerializerDeserializer(BuiltinType.AINT64);
+                    private final ISerializerDeserializer<AInt64> intSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
                     private final AMutableInt64 aMutableInt64 = new AMutableInt64(0);
 
                     @Override

@@ -136,8 +136,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
 
     // Maps live variables at <code>subplanInputOperator</code> to variables in
     // the flattened nested plan.
-    private final LinkedHashMap<LogicalVariable, LogicalVariable> subplanInputVarToCurrentVarMap = new
-            LinkedHashMap<>();
+    private final LinkedHashMap<LogicalVariable, LogicalVariable> subplanInputVarToCurrentVarMap =
+            new LinkedHashMap<>();
 
     // Maps variables in the flattened nested plan to live variables at
     // <code>subplannputOperator</code>.
@@ -288,15 +288,13 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             if (!correlatedKeyVars.contains(inputLiveVar)) {
                 recordConstructorArgs.add(new MutableObject<>(new ConstantExpression(
                         new AsterixConstantValue(new AString(Integer.toString(inputLiveVar.getId()))))));
-                recordConstructorArgs
-                        .add(new MutableObject<>(new VariableReferenceExpression(inputLiveVar)));
+                recordConstructorArgs.add(new MutableObject<>(new VariableReferenceExpression(inputLiveVar)));
             }
         }
         LogicalVariable recordVar = context.newVar();
-        Mutable<ILogicalExpression> recordExprRef = new MutableObject<ILogicalExpression>(
-                new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR),
-                        recordConstructorArgs));
+        Mutable<ILogicalExpression> recordExprRef =
+                new MutableObject<ILogicalExpression>(new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), recordConstructorArgs));
         AssignOperator assignOp = new AssignOperator(recordVar, recordExprRef);
         return new Pair<>(assignOp, recordVar);
     }
@@ -363,13 +361,11 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     private Pair<ILogicalOperator, LogicalVariable> createUnnestForAggregatedList(LogicalVariable aggVar) {
         LogicalVariable unnestVar = context.newVar();
         // Creates an unnest function expression.
-        Mutable<ILogicalExpression> unnestArg = new MutableObject<>(
-                new VariableReferenceExpression(aggVar));
+        Mutable<ILogicalExpression> unnestArg = new MutableObject<>(new VariableReferenceExpression(aggVar));
         List<Mutable<ILogicalExpression>> unnestArgList = new ArrayList<>();
         unnestArgList.add(unnestArg);
-        Mutable<ILogicalExpression> unnestExpr = new MutableObject<>(
-                new UnnestingFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION), unnestArgList));
+        Mutable<ILogicalExpression> unnestExpr = new MutableObject<>(new UnnestingFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION), unnestArgList));
         ILogicalOperator unnestOp = new UnnestOperator(unnestVar, unnestExpr);
         return new Pair<>(unnestOp, unnestVar);
     }
@@ -414,15 +410,15 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         if (op.getDataSourceReference().getValue() != subplanOperator) {
             return op;
         }
-        LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor = new LogicalOperatorDeepCopyWithNewVariablesVisitor(
-                context, context);
+        LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor =
+                new LogicalOperatorDeepCopyWithNewVariablesVisitor(context, context);
         ILogicalOperator copiedInputOperator = deepCopyVisitor.deepCopy(subplanInputOperator);
 
         // Updates the primary key info in the copied plan segment.
         Map<LogicalVariable, LogicalVariable> varMap = deepCopyVisitor.getInputToOutputVariableMapping();
         addPrimaryKeys(varMap);
-        Pair<ILogicalOperator, Set<LogicalVariable>> primaryOpAndVars = EquivalenceClassUtils
-                .findOrCreatePrimaryKeyOpAndVariables(copiedInputOperator, true, context);
+        Pair<ILogicalOperator, Set<LogicalVariable>> primaryOpAndVars =
+                EquivalenceClassUtils.findOrCreatePrimaryKeyOpAndVariables(copiedInputOperator, true, context);
         correlatedKeyVars.clear();
         correlatedKeyVars.addAll(primaryOpAndVars.second);
         // Update key variables and input-output-var mapping.

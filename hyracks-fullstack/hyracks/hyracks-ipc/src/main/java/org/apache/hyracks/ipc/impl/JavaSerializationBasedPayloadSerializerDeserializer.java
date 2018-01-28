@@ -55,8 +55,8 @@ public class JavaSerializationBasedPayloadSerializerDeserializer implements IPay
     }
 
     private Object deserialize(ByteBuffer buffer, int length) throws Exception {
-        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(buffer.array(), buffer.position(),
-                length));
+        ObjectInputStream ois =
+                new ObjectInputStream(new ByteArrayInputStream(buffer.array(), buffer.position(), length));
         Object object = ois.readObject();
         ois.close();
         return object;

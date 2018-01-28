@@ -27,7 +27,7 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-@SuppressWarnings({"rawtypes", "unchecked" })
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class TupleGenerator {
     protected final ISerializerDeserializer[] fieldSerdes;
     protected final IFieldValueGenerator[] fieldGens;
