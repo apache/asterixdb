@@ -143,47 +143,4 @@ public class SearchResult {
         return numResults;
     }
 
-    // TODO: This code may help to clean up the core list-merging algorithms.
-    /*
-    public SearchResultCursor getCursor() {
-        cursor.reset();
-        return cursor;
-    }
-
-    public class SearchResultCursor {
-        private int bufferIndex;
-        private int resultIndex;
-        private int frameResultIndex;
-        private ByteBuffer currentBuffer;
-
-        public void reset() {
-            bufferIndex = 0;
-            resultIndex = 0;
-            frameResultIndex = 0;
-            currentBuffer = buffers.get(0);
-            resultFrameTupleAcc.reset(currentBuffer);
-        }
-
-        public boolean hasNext() {
-            return resultIndex < numResults;
-        }
-
-        public void next() {
-            resultTuple.reset(currentBuffer.array(), resultFrameTupleAcc.getTupleStartOffset(frameResultIndex));
-            if (frameResultIndex < resultFrameTupleAcc.getTupleCount()) {
-                frameResultIndex++;
-            } else {
-                bufferIndex++;
-                currentBuffer = buffers.get(bufferIndex);
-                resultFrameTupleAcc.reset(currentBuffer);
-                frameResultIndex = 0;
-            }
-            resultIndex++;
-        }
-
-        public ITupleReference getTuple() {
-            return resultTuple;
-        }
-    }
-    */
 }

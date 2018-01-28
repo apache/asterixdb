@@ -20,6 +20,10 @@
 package org.apache.hyracks.util;
 
 public class MathUtil {
+
+    private MathUtil() {
+    }
+
     /**
      * Fast way to calculate the log2(x). Note: x should be >= 1.
      *
@@ -44,7 +48,7 @@ public class MathUtil {
             log |= 4;
         }
 
-        if (n > 0b11) {
+        if (n > 3) {
             n >>>= 2;
             log |= 2;
         }
