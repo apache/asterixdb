@@ -19,7 +19,11 @@
 
 package org.apache.asterix.utils;
 
-import org.apache.asterix.app.resource.RequiredCapacityVisitor;
+import java.util.List;
+
+import org.apache.asterix.app.resource.OperatorResourcesComputer;
+import org.apache.asterix.app.resource.PlanStage;
+import org.apache.asterix.app.resource.PlanStagesGenerator;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -54,16 +58,30 @@ public class ResourceUtils {
         final int sortFrameLimit = physicalOptimizationConfig.getMaxFramesExternalSort();
         final int groupFrameLimit = physicalOptimizationConfig.getMaxFramesForGroupBy();
         final int joinFrameLimit = physicalOptimizationConfig.getMaxFramesForJoin();
-
-        // Creates a cluster capacity visitor.
-        IClusterCapacity clusterCapacity = new ClusterCapacity();
-        RequiredCapacityVisitor visitor = new RequiredCapacityVisitor(computationLocations.getLocations().length,
-                sortFrameLimit, groupFrameLimit, joinFrameLimit, frameSize, clusterCapacity);
-
-        // There could be only one root operator for a top-level query plan.
-        ILogicalOperator rootOp = plan.getRoots().get(0).getValue();
-        rootOp.accept(visitor, null);
-        return clusterCapacity;
+        final List<PlanStage> planStages = getStages(plan);
+        return getStageBasedRequiredCapacity(planStages, computationLocations.getLocations().length, sortFrameLimit,
+                groupFrameLimit, joinFrameLimit, frameSize);
     }
 
+    public static List<PlanStage> getStages(ILogicalPlan plan) throws AlgebricksException {
+        // There could be only one root operator for a top-level query plan.
+        final ILogicalOperator rootOp = plan.getRoots().get(0).getValue();
+        final PlanStagesGenerator stagesGenerator = new PlanStagesGenerator();
+        rootOp.accept(stagesGenerator, null);
+        return stagesGenerator.getStages();
+    }
+
+    public static IClusterCapacity getStageBasedRequiredCapacity(List<PlanStage> stages, int computationLocations,
+            int sortFrameLimit, int groupFrameLimit, int joinFrameLimit, int frameSize) {
+        final OperatorResourcesComputer computer = new OperatorResourcesComputer(computationLocations, sortFrameLimit,
+                groupFrameLimit, joinFrameLimit, frameSize);
+        final IClusterCapacity clusterCapacity = new ClusterCapacity();
+        final Long maxRequiredMemory = stages.stream().mapToLong(stage -> stage.getRequiredMemory(computer)).max()
+                .orElseThrow(IllegalStateException::new);
+        clusterCapacity.setAggregatedMemoryByteSize(maxRequiredMemory);
+        final Integer maxRequireCores = stages.stream().mapToInt(stage -> stage.getRequiredCores(computer)).max()
+                .orElseThrow(IllegalStateException::new);
+        clusterCapacity.setAggregatedCores(maxRequireCores);
+        return clusterCapacity;
+    }
 }

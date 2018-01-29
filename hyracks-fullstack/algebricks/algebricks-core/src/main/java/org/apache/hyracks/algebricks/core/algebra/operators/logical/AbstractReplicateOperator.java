@@ -109,4 +109,12 @@ public abstract class AbstractReplicateOperator extends AbstractLogicalOperator 
         return false;
     }
 
+    public boolean isMaterialized(ILogicalOperator op) {
+        for (int i = 0; i < outputs.size(); i++) {
+            if (outputs.get(i).getValue() == op) {
+                return outputMaterializationFlags[i];
+            }
+        }
+        return false;
+    }
 }
