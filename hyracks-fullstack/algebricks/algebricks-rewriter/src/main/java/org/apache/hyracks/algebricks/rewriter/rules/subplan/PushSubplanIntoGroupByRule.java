@@ -139,6 +139,10 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
                 while (upperSubplanRootRefIterator.hasNext()) {
                     Mutable<ILogicalOperator> rootOpRef = upperSubplanRootRefIterator.next();
 
+                    if (downToNts(rootOpRef) == null) {
+                        continue;
+                    }
+
                     // Collects free variables in the root operator of a nested plan and its descent.
                     Set<LogicalVariable> freeVars = new ListSet<>();
                     OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) rootOpRef.getValue(),
@@ -154,6 +158,9 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
                             // Sets the nts for a original subplan.
                             Mutable<ILogicalOperator> originalGbyRootOpRef = gbyNestedPlan.getRoots().get(rootIndex);
                             Mutable<ILogicalOperator> originalGbyNtsRef = downToNts(originalGbyRootOpRef);
+                            if (originalGbyNtsRef == null) {
+                                continue;
+                            }
                             NestedTupleSourceOperator originalNts =
                                     (NestedTupleSourceOperator) originalGbyNtsRef.getValue();
                             originalNts.setDataSourceReference(new MutableObject<>(gby));
@@ -265,11 +272,13 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
     }
 
     private Mutable<ILogicalOperator> downToNts(Mutable<ILogicalOperator> opRef) {
-        Mutable<ILogicalOperator> currentOpRef = opRef;
-        while (currentOpRef.getValue().getInputs().size() > 0) {
-            currentOpRef = currentOpRef.getValue().getInputs().get(0);
+        List<Mutable<ILogicalOperator>> leafOps = OperatorManipulationUtil.findLeafDescendantsOrSelf(opRef);
+        if (leafOps.size() == 1) {
+            Mutable<ILogicalOperator> leafOp = leafOps.get(0);
+            if (leafOp.getValue().getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+                return leafOp;
+            }
         }
-        return currentOpRef;
+        return null;
     }
-
 }

@@ -18,7 +18,10 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.util;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -202,7 +205,7 @@ public class OperatorManipulationUtil {
     public static Pair<ILogicalOperator, Map<LogicalVariable, LogicalVariable>> deepCopyWithNewVars(
             ILogicalOperator root, IOptimizationContext ctx) throws AlgebricksException {
         LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor =
-                new LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx, null, true);
+                new LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx, ctx, true);
         ILogicalOperator newRoot = deepCopyVisitor.deepCopy(root);
         return Pair.of(newRoot, deepCopyVisitor.getInputToOutputVariableMapping());
     }
@@ -327,4 +330,45 @@ public class OperatorManipulationUtil {
         return false;
     }
 
+    /**
+     * Returns all descendants of an operator that are leaf operators
+     *
+     * @param opRef given operator
+     * @return list containing all leaf descendants
+     */
+    public static List<Mutable<ILogicalOperator>> findLeafDescendantsOrSelf(Mutable<ILogicalOperator> opRef) {
+        List<Mutable<ILogicalOperator>> result = Collections.emptyList();
+
+        Deque<Mutable<ILogicalOperator>> queue = new ArrayDeque<>();
+        queue.add(opRef);
+        Mutable<ILogicalOperator> currentOpRef;
+        while ((currentOpRef = queue.pollLast()) != null) {
+            List<Mutable<ILogicalOperator>> inputs = currentOpRef.getValue().getInputs();
+            if (inputs.isEmpty()) {
+                if (result.isEmpty()) {
+                    result = new ArrayList<>();
+                }
+                result.add(currentOpRef);
+            } else {
+                queue.addAll(inputs);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Find operator in a given list of operator references
+     *
+     * @param list list to search in
+     * @param op   operator to find
+     * @return operator position in the given list or {@code -1} if not found
+     */
+    public static int indexOf(List<Mutable<ILogicalOperator>> list, ILogicalOperator op) {
+        for (int i = 0, ln = list.size(); i < ln; i++) {
+            if (list.get(i).getValue() == op) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }

@@ -410,7 +410,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
     public Void visit(IndexAccessor ia, Collection<VariableExpr> freeVars) throws CompilationException {
         ia.getExpr().accept(this, freeVars);
         if (ia.getIndexExpr() != null) {
-            ia.getIndexExpr();
+            ia.getIndexExpr().accept(this, freeVars);
         }
         return null;
     }

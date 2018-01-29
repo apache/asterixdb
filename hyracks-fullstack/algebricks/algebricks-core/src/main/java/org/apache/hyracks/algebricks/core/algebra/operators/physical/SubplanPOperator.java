@@ -89,18 +89,18 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
         if (subplan.getNestedPlans().size() != 1) {
             throw new NotImplementedException("Subplan currently works only for one nested plan with one root.");
         }
-        AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], subplan, opSchema, context);
-        assert subplans.length == 1;
-        AlgebricksPipeline np = subplans[0];
+        List<List<AlgebricksPipeline>> subplans = compileSubplansImpl(inputSchemas[0], subplan, opSchema, context);
+        assert subplans.size() == 1;
+        List<AlgebricksPipeline> np = subplans.get(0);
         RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
-        IMissingWriterFactory[] missingWriterFactories = new IMissingWriterFactory[np.getOutputWidth()];
+        IMissingWriterFactory[] missingWriterFactories = new IMissingWriterFactory[np.get(0).getOutputWidth()];
         for (int i = 0; i < missingWriterFactories.length; i++) {
             missingWriterFactories[i] = context.getMissingWriterFactory();
         }
-        SubplanRuntimeFactory runtime = new SubplanRuntimeFactory(np, missingWriterFactories, inputRecordDesc, null);
-
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
+        SubplanRuntimeFactory runtime =
+                new SubplanRuntimeFactory(np, missingWriterFactories, inputRecordDesc, recDesc, null);
         builder.contributeMicroOperator(subplan, runtime, recDesc);
 
         ILogicalOperator src = op.getInputs().get(0).getValue();

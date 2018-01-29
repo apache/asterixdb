@@ -27,10 +27,15 @@ public class AlgebricksPipeline implements Serializable {
     private static final long serialVersionUID = 1L;
     private final IPushRuntimeFactory[] runtimeFactories;
     private final RecordDescriptor[] recordDescriptors;
+    private final IPushRuntimeFactory[] outputRuntimeFactories;
+    private final int[] outputPositions;
 
-    public AlgebricksPipeline(IPushRuntimeFactory[] runtimeFactories, RecordDescriptor[] recordDescriptors) {
+    public AlgebricksPipeline(IPushRuntimeFactory[] runtimeFactories, RecordDescriptor[] recordDescriptors,
+            IPushRuntimeFactory[] outputRuntimeFactories, int[] outputPositions) {
         this.runtimeFactories = runtimeFactories;
         this.recordDescriptors = recordDescriptors;
+        this.outputRuntimeFactories = outputRuntimeFactories;
+        this.outputPositions = outputPositions;
         // this.projectedColumns = projectedColumns;
     }
 
@@ -46,8 +51,15 @@ public class AlgebricksPipeline implements Serializable {
         return recordDescriptors[recordDescriptors.length - 1].getFieldCount();
     }
 
+    public IPushRuntimeFactory[] getOutputRuntimeFactories() {
+        return outputRuntimeFactories;
+    }
+
+    public int[] getOutputPositions() {
+        return outputPositions;
+    }
+
     // public int[] getProjectedColumns() {
     // return projectedColumns;
     // }
-
 }

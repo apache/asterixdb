@@ -168,7 +168,7 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
         // should enforce protocol
         boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
         for (int i = runtimeFactories.length - 1; i >= 0; i--) {
-            IPushRuntime newRuntime = runtimeFactories[i].createPushRuntime(ctx);
+            IPushRuntime newRuntime = runtimeFactories[i].createPushRuntime(ctx)[0];
             newRuntime = enforce ? EnforcePushRuntime.enforce(newRuntime) : newRuntime;
             start = enforce ? EnforcePushRuntime.enforce(start) : start;
             newRuntime.setOutputFrameWriter(0, start, recordDescriptors[i]);

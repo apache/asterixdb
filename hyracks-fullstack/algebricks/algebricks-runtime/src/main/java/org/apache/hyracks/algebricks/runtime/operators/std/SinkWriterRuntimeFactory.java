@@ -67,11 +67,11 @@ public class SinkWriterRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
+    public IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
             PrintStream filePrintStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
             IAWriter w = writerFactory.createWriter(fields, filePrintStream, printerFactories, inputRecordDesc);
-            return new SinkWriterRuntime(w, filePrintStream, inputRecordDesc, true);
+            return new IPushRuntime[] { new SinkWriterRuntime(w, filePrintStream, inputRecordDesc, true) };
         } catch (IOException e) {
             throw new HyracksDataException(e);
         }

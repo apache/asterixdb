@@ -56,9 +56,9 @@ public class PrinterRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) {
+    public IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) {
         IAWriter w = PrinterBasedWriterFactory.INSTANCE.createWriter(printColumns, System.out, printerFactories,
                 inputRecordDesc);
-        return new SinkWriterRuntime(w, System.out, inputRecordDesc);
+        return new IPushRuntime[] { new SinkWriterRuntime(w, System.out, inputRecordDesc) };
     }
 }

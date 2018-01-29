@@ -16,13 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.runtime.base;
 
-import java.io.Serializable;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+create type TType as open
+{ id: bigint };
 
-public interface IPushRuntimeFactory extends Serializable {
-    IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException;
-}
+create dataset TData (TType) primary key id;

@@ -235,7 +235,7 @@ public class TestNodeController {
                 }
                 IPushRuntime assignOp =
                         new AssignRuntimeFactory(outColumns, secondaryFieldAccessEvalFactories, projectionList, true)
-                                .createPushRuntime(ctx);
+                                .createPushRuntime(ctx)[0];
                 insertOp.setOutputFrameWriter(0, assignOp, primaryIndexInfo.rDesc);
                 assignOp.setInputRecordDescriptor(0, primaryIndexInfo.rDesc);
                 SecondaryIndexInfo secondaryIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, secondaryIndex);
@@ -270,7 +270,7 @@ public class TestNodeController {
             NoMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties, int[] filterFields,
             int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
             StorageComponentProvider storageComponentProvider) throws HyracksDataException, AlgebricksException {
-        IPushRuntime emptyTupleOp = new EmptyTupleSourceRuntimeFactory().createPushRuntime(ctx);
+        IPushRuntime emptyTupleOp = new EmptyTupleSourceRuntimeFactory().createPushRuntime(ctx)[0];
         JobSpecification spec = new JobSpecification();
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicyFactory, mergePolicyProperties, filterFields, primaryKeyIndexes, primaryKeyIndicators);

@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
@@ -439,7 +440,7 @@ public class PushRuntimeTest {
         RecordDescriptor aggDesc =
                 new RecordDescriptor(new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
         AlgebricksPipeline pipeline = new AlgebricksPipeline(new IPushRuntimeFactory[] { nts, agg },
-                new RecordDescriptor[] { ntsDesc, aggDesc });
+                new RecordDescriptor[] { ntsDesc, aggDesc }, null, null);
         NestedPlansAccumulatingAggregatorFactory npaaf = new NestedPlansAccumulatingAggregatorFactory(
                 new AlgebricksPipeline[] { pipeline }, new int[] { 3 }, new int[] {});
         RecordDescriptor gbyDesc = new RecordDescriptor(new ISerializerDeserializer[] {
@@ -780,10 +781,10 @@ public class PushRuntimeTest {
                 new RecordDescriptor(new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
 
         AlgebricksPipeline pipeline = new AlgebricksPipeline(new IPushRuntimeFactory[] { nts, assign2, project1 },
-                new RecordDescriptor[] { assign1Desc, assign2Desc, project1Desc });
+                new RecordDescriptor[] { assign1Desc, assign2Desc, project1Desc }, null, null);
 
-        SubplanRuntimeFactory subplan = new SubplanRuntimeFactory(pipeline,
-                new IMissingWriterFactory[] { NoopMissingWriterFactory.INSTANCE }, assign1Desc, null);
+        SubplanRuntimeFactory subplan = new SubplanRuntimeFactory(Collections.singletonList(pipeline),
+                new IMissingWriterFactory[] { NoopMissingWriterFactory.INSTANCE }, assign1Desc, null, null);
 
         RecordDescriptor subplanDesc = new RecordDescriptor(new ISerializerDeserializer[] {
                 IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE });
@@ -851,7 +852,7 @@ public class PushRuntimeTest {
         RecordDescriptor aggDesc =
                 new RecordDescriptor(new ISerializerDeserializer[] { IntegerSerializerDeserializer.INSTANCE });
         AlgebricksPipeline pipeline = new AlgebricksPipeline(new IPushRuntimeFactory[] { nts, agg },
-                new RecordDescriptor[] { ntsDesc, aggDesc });
+                new RecordDescriptor[] { ntsDesc, aggDesc }, null, null);
         NestedPlansAccumulatingAggregatorFactory npaaf = new NestedPlansAccumulatingAggregatorFactory(
                 new AlgebricksPipeline[] { pipeline }, new int[] { 3 }, new int[] {});
         RecordDescriptor gbyDesc = new RecordDescriptor(new ISerializerDeserializer[] {

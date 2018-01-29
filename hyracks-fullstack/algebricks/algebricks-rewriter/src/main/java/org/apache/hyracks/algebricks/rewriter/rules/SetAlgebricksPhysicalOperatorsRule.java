@@ -67,6 +67,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.IntersectPO
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.LeftOuterUnnestPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroPreSortedDistinctByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroPreclusteredGroupByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.MicroUnionAllPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedTupleSourcePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreSortedDistinctByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
@@ -200,11 +201,11 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     break;
                 }
                 case INNERJOIN: {
-                    JoinUtils.setJoinAlgorithmAndExchangeAlgo((InnerJoinOperator) op, context);
+                    JoinUtils.setJoinAlgorithmAndExchangeAlgo((InnerJoinOperator) op, topLevelOp, context);
                     break;
                 }
                 case LEFTOUTERJOIN: {
-                    JoinUtils.setJoinAlgorithmAndExchangeAlgo((LeftOuterJoinOperator) op, context);
+                    JoinUtils.setJoinAlgorithmAndExchangeAlgo((LeftOuterJoinOperator) op, topLevelOp, context);
                     break;
                 }
                 case LIMIT: {
@@ -259,11 +260,19 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     break;
                 }
                 case UNIONALL: {
-                    op.setPhysicalOperator(new UnionAllPOperator());
+                    if (topLevelOp) {
+                        op.setPhysicalOperator(new UnionAllPOperator());
+                    } else {
+                        op.setPhysicalOperator(new MicroUnionAllPOperator());
+                    }
                     break;
                 }
                 case INTERSECT: {
-                    op.setPhysicalOperator(new IntersectPOperator());
+                    if (topLevelOp) {
+                        op.setPhysicalOperator(new IntersectPOperator());
+                    } else {
+                        throw new IllegalStateException("Micro operator not implemented for: " + op.getOperatorTag());
+                    }
                     break;
                 }
                 case UNNEST: {

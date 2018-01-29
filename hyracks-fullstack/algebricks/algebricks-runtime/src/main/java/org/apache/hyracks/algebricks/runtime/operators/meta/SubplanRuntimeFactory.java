@@ -20,9 +20,11 @@ package org.apache.hyracks.algebricks.runtime.operators.meta;
 
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
+import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputPushRuntime;
@@ -41,16 +43,21 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
     private static final long serialVersionUID = 1L;
 
-    private final AlgebricksPipeline pipeline;
+    private final List<AlgebricksPipeline> pipelines;
+
     private final RecordDescriptor inputRecordDesc;
+
+    private final RecordDescriptor outputRecordDesc;
+
     private final IMissingWriterFactory[] missingWriterFactories;
 
-    public SubplanRuntimeFactory(AlgebricksPipeline pipeline, IMissingWriterFactory[] missingWriterFactories,
-            RecordDescriptor inputRecordDesc, int[] projectionList) {
+    public SubplanRuntimeFactory(List<AlgebricksPipeline> pipelines, IMissingWriterFactory[] missingWriterFactories,
+            RecordDescriptor inputRecordDesc, RecordDescriptor outputRecordDesc, int[] projectionList) {
         super(projectionList);
-        this.pipeline = pipeline;
+        this.pipelines = pipelines;
         this.missingWriterFactories = missingWriterFactories;
         this.inputRecordDesc = inputRecordDesc;
+        this.outputRecordDesc = outputRecordDesc;
         if (projectionList != null) {
             throw new NotImplementedException();
         }
@@ -60,8 +67,12 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Subplan { \n");
-        for (IPushRuntimeFactory f : pipeline.getRuntimeFactories()) {
-            sb.append("  " + f.toString() + ";\n");
+        for (AlgebricksPipeline pipeline : pipelines) {
+            sb.append('{');
+            for (IPushRuntimeFactory f : pipeline.getRuntimeFactories()) {
+                sb.append("  ").append(f).append(";\n");
+            }
+            sb.append('}');
         }
         sb.append("}");
         return sb.toString();
@@ -70,110 +81,177 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
     @Override
     public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws HyracksDataException {
+        return new SubplanPushRuntime(ctx);
+    }
 
-        RecordDescriptor pipelineOutputRecordDescriptor = null;
+    private class SubplanPushRuntime extends AbstractOneInputOneOutputOneFramePushRuntime {
 
-        final PipelineAssembler pa =
-                new PipelineAssembler(pipeline, 1, 1, inputRecordDesc, pipelineOutputRecordDescriptor);
-        final IMissingWriter[] nullWriters = new IMissingWriter[missingWriterFactories.length];
-        for (int i = 0; i < missingWriterFactories.length; i++) {
-            nullWriters[i] = missingWriterFactories[i].createMissingWriter();
+        final IHyracksTaskContext ctx;
+
+        final NestedTupleSourceRuntime[] startOfPipelines;
+
+        boolean first;
+
+        SubplanPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
+            this.ctx = ctx;
+            this.first = true;
+
+            IMissingWriter[] missingWriters = new IMissingWriter[missingWriterFactories.length];
+            for (int i = 0; i < missingWriterFactories.length; i++) {
+                missingWriters[i] = missingWriterFactories[i].createMissingWriter();
+            }
+
+            int pipelineCount = pipelines.size();
+            startOfPipelines = new NestedTupleSourceRuntime[pipelineCount];
+            PipelineAssembler[] pipelineAssemblers = new PipelineAssembler[pipelineCount];
+            for (int i = 0; i < pipelineCount; i++) {
+                AlgebricksPipeline pipeline = pipelines.get(i);
+                RecordDescriptor pipelineLastRecordDescriptor =
+                        pipeline.getRecordDescriptors()[pipeline.getRecordDescriptors().length - 1];
+
+                RecordDescriptor outputRecordDescriptor;
+                IFrameWriter outputWriter;
+                if (i == 0) {
+                    // primary pipeline
+                    outputWriter = new TupleOuterProduct(pipelineLastRecordDescriptor, missingWriters);
+                    outputRecordDescriptor = SubplanRuntimeFactory.this.outputRecordDesc;
+                } else {
+                    // secondary pipeline
+                    IPushRuntime outputPushRuntime = linkSecondaryPipeline(pipeline, pipelineAssemblers, i);
+                    if (outputPushRuntime == null) {
+                        throw new IllegalStateException("Invalid pipeline");
+                    }
+                    outputPushRuntime.setInputRecordDescriptor(0, pipelineLastRecordDescriptor);
+                    outputWriter = outputPushRuntime;
+                    outputRecordDescriptor = pipelineLastRecordDescriptor;
+                }
+
+                PipelineAssembler pa = new PipelineAssembler(pipeline, 1, 1, inputRecordDesc, outputRecordDescriptor);
+                startOfPipelines[i] = (NestedTupleSourceRuntime) pa.assemblePipeline(outputWriter, ctx);
+                pipelineAssemblers[i] = pa;
+            }
         }
 
-        return new AbstractOneInputOneOutputOneFramePushRuntime() {
+        IPushRuntime linkSecondaryPipeline(AlgebricksPipeline pipeline, PipelineAssembler[] pipelineAssemblers,
+                int pipelineAssemblersCount) {
+            IPushRuntimeFactory[] outputRuntimeFactories = pipeline.getOutputRuntimeFactories();
+            if (outputRuntimeFactories == null || outputRuntimeFactories.length != 1) {
+                throw new IllegalStateException();
+            }
+            IPushRuntimeFactory outRuntimeFactory = outputRuntimeFactories[0];
+            int outputPosition = pipeline.getOutputPositions()[0];
+            for (int i = 0; i < pipelineAssemblersCount; i++) {
+                IPushRuntime[] p = pipelineAssemblers[i].getPushRuntime(outRuntimeFactory);
+                if (p != null) {
+                    return p[outputPosition];
+                }
+            }
+            return null;
+        }
 
-            /**
-             * Computes the outer product between a given tuple and the frames
-             * passed.
-             */
-            class TupleOuterProduct implements IFrameWriter {
+        @Override
+        public void open() throws HyracksDataException {
+            writer.open();
+            if (first) {
+                first = false;
+                initAccessAppendRef(ctx);
+            }
+        }
 
-                private boolean smthWasWritten = false;
-                private FrameTupleAccessor ta = new FrameTupleAccessor(
-                        pipeline.getRecordDescriptors()[pipeline.getRecordDescriptors().length - 1]);
-                private ArrayTupleBuilder tb = new ArrayTupleBuilder(
-                        nullWriters.length + SubplanRuntimeFactory.this.inputRecordDesc.getFieldCount());
+        @Override
+        public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+            tAccess.reset(buffer);
+            int nTuple = tAccess.getTupleCount();
+            for (int t = 0; t < nTuple; t++) {
+                tRef.reset(tAccess, t);
 
-                @Override
-                public void open() throws HyracksDataException {
-                    smthWasWritten = false;
+                for (NestedTupleSourceRuntime nts : startOfPipelines) {
+                    nts.writeTuple(buffer, t);
                 }
 
-                @Override
-                public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    ta.reset(buffer);
-                    int nTuple = ta.getTupleCount();
-                    for (int t = 0; t < nTuple; t++) {
-                        appendConcat(tRef.getFrameTupleAccessor(), tRef.getTupleIndex(), ta, t);
+                int n = 0;
+                try {
+                    for (; n < startOfPipelines.length; n++) {
+                        NestedTupleSourceRuntime nts = startOfPipelines[n];
+                        try {
+                            nts.open();
+                        } catch (Exception e) {
+                            nts.fail();
+                            throw e;
+                        }
                     }
-                    smthWasWritten = true;
-                }
-
-                @Override
-                public void close() throws HyracksDataException {
-                    if (!smthWasWritten && !failed) {
-                        // the case when we need to write nulls
-                        appendNullsToTuple();
-                        appendToFrameFromTupleBuilder(tb);
-                    }
-                }
-
-                @Override
-                public void fail() throws HyracksDataException {
-                    // writer.fail() is called by the outer class' writer.fail().
-                }
-
-                private void appendNullsToTuple() throws HyracksDataException {
-                    tb.reset();
-                    int n0 = tRef.getFieldCount();
-                    for (int f = 0; f < n0; f++) {
-                        tb.addField(tRef.getFrameTupleAccessor(), tRef.getTupleIndex(), f);
-                    }
-                    DataOutput dos = tb.getDataOutput();
-                    for (int i = 0; i < nullWriters.length; i++) {
-                        nullWriters[i].writeMissing(dos);
-                        tb.addFieldEndOffset();
+                } finally {
+                    for (int i = n - 1; i >= 0; i--) {
+                        startOfPipelines[i].close();
                     }
                 }
             }
+        }
 
-            IFrameWriter endPipe = new TupleOuterProduct();
+        @Override
+        public void flush() throws HyracksDataException {
+            writer.flush();
+        }
 
-            NestedTupleSourceRuntime startOfPipeline = (NestedTupleSourceRuntime) pa.assemblePipeline(endPipe, ctx);
+        /**
+         * Computes the outer product between a given tuple and the frames
+         * passed.
+         */
+        class TupleOuterProduct implements IFrameWriter {
 
-            boolean first = true;
+            private boolean smthWasWritten;
+            private final FrameTupleAccessor ta;
+            private final ArrayTupleBuilder tb;
+            private final IMissingWriter[] missingWriters;
+
+            private TupleOuterProduct(RecordDescriptor recordDescriptor, IMissingWriter[] missingWriters) {
+                ta = new FrameTupleAccessor(recordDescriptor);
+                tb = new ArrayTupleBuilder(
+                        missingWriters.length + SubplanRuntimeFactory.this.inputRecordDesc.getFieldCount());
+                this.missingWriters = missingWriters;
+            }
 
             @Override
             public void open() throws HyracksDataException {
-                writer.open();
-                if (first) {
-                    first = false;
-                    initAccessAppendRef(ctx);
-                }
+                smthWasWritten = false;
             }
 
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                tAccess.reset(buffer);
-                int nTuple = tAccess.getTupleCount();
+                ta.reset(buffer);
+                int nTuple = ta.getTupleCount();
                 for (int t = 0; t < nTuple; t++) {
-                    tRef.reset(tAccess, t);
-                    startOfPipeline.writeTuple(buffer, t);
-                    try {
-                        startOfPipeline.open();
-                    } catch (Exception e) {
-                        startOfPipeline.fail();
-                        throw e;
-                    } finally {
-                        startOfPipeline.close();
-                    }
+                    appendConcat(tRef.getFrameTupleAccessor(), tRef.getTupleIndex(), ta, t);
+                }
+                smthWasWritten = true;
+            }
+
+            @Override
+            public void close() throws HyracksDataException {
+                if (!smthWasWritten && !failed) {
+                    // the case when we need to write nulls
+                    appendNullsToTuple();
+                    appendToFrameFromTupleBuilder(tb);
                 }
             }
 
             @Override
-            public void flush() throws HyracksDataException {
-                writer.flush();
+            public void fail() throws HyracksDataException {
+                // writer.fail() is called by the outer class' writer.fail().
             }
-        };
+
+            private void appendNullsToTuple() throws HyracksDataException {
+                tb.reset();
+                int n0 = tRef.getFieldCount();
+                for (int f = 0; f < n0; f++) {
+                    tb.addField(tRef.getFrameTupleAccessor(), tRef.getTupleIndex(), f);
+                }
+                DataOutput dos = tb.getDataOutput();
+                for (IMissingWriter missingWriter : missingWriters) {
+                    missingWriter.writeMissing(dos);
+                    tb.addFieldEndOffset();
+                }
+            }
+        }
     }
 }

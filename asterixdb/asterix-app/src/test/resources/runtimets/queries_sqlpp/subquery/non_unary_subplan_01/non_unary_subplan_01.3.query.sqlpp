@@ -16,13 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.runtime.base;
 
-import java.io.Serializable;
+use test;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-public interface IPushRuntimeFactory extends Serializable {
-    IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException;
-}
+select x,
+array_sum((
+   select value a.f
+   from g as p
+   union all
+   select value a.f
+   from g as w
+)) s
+from TData as a
+group by a.x as x group as g
+order by x
+;

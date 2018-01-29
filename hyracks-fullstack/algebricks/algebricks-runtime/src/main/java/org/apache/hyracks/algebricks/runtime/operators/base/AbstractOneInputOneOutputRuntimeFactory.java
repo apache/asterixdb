@@ -34,8 +34,8 @@ public abstract class AbstractOneInputOneOutputRuntimeFactory implements IPushRu
     }
 
     @Override
-    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
-        return createOneOutputPushRuntime(ctx);
+    public IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
+        return new IPushRuntime[] { createOneOutputPushRuntime(ctx) };
     }
 
     public abstract AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx)

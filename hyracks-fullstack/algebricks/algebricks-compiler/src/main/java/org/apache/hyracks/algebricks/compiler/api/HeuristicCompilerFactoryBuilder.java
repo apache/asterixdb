@@ -104,7 +104,7 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                                 clusterLocations);
 
                         PlanCompiler pc = new PlanCompiler(context);
-                        return pc.compilePlan(plan, null, jobEventListenerFactory);
+                        return pc.compilePlan(plan, jobEventListenerFactory);
                     }
                 };
             }

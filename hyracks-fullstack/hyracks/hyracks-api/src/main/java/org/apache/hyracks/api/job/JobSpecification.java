@@ -89,6 +89,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private transient int connectorIdCounter;
 
+    private transient List<IOperatorDescriptor> metaOps;
+
     // This constructor uses the default frame size. It is for test purposes only.
     // For other use cases, use the one which sets the frame size.
     public JobSpecification() {
@@ -306,6 +308,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public IClusterCapacity getRequiredClusterCapacity() {
         return requiredClusterCapacity;
+    }
+
+    public void setMetaOps(List<IOperatorDescriptor> metaOps) {
+        this.metaOps = metaOps;
+    }
+
+    public List<IOperatorDescriptor> getMetaOps() {
+        return metaOps;
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {

@@ -6430,6 +6430,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="subquery">
+      <compilation-unit name="non_unary_subplan_01">
+        <output-dir compare="Text">non_unary_subplan_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
       <compilation-unit name="query-ASTERIXDB-1571">
         <output-dir compare="Text">query-ASTERIXDB-1571</output-dir>
       </compilation-unit>

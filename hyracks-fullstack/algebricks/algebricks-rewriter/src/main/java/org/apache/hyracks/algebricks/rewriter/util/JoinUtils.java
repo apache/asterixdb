@@ -51,8 +51,11 @@ public class JoinUtils {
     private JoinUtils() {
     }
 
-    public static void setJoinAlgorithmAndExchangeAlgo(AbstractBinaryJoinOperator op, IOptimizationContext context)
-            throws AlgebricksException {
+    public static void setJoinAlgorithmAndExchangeAlgo(AbstractBinaryJoinOperator op, boolean topLevelOp,
+            IOptimizationContext context) throws AlgebricksException {
+        if (!topLevelOp) {
+            throw new IllegalStateException("Micro operator not implemented for: " + op.getOperatorTag());
+        }
         List<LogicalVariable> sideLeft = new LinkedList<>();
         List<LogicalVariable> sideRight = new LinkedList<>();
         List<LogicalVariable> varsLeft = op.getInputs().get(0).getValue().getSchema();

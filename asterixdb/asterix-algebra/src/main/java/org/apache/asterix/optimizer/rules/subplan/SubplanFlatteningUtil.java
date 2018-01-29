@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules.subplan;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -208,7 +209,7 @@ class SubplanFlatteningUtil {
         if (!OperatorManipulationUtil.ancestorOfOperators(
                 subplanOp.getNestedPlans().get(0).getRoots().get(0).getValue(),
                 // we don't need to check recursively for this special rewriting.
-                ImmutableSet.of(LogicalOperatorTag.INNERJOIN, LogicalOperatorTag.LEFTOUTERJOIN))) {
+                EnumSet.of(LogicalOperatorTag.INNERJOIN, LogicalOperatorTag.LEFTOUTERJOIN))) {
             return new Pair<Boolean, ILogicalOperator>(false, null);
         }
         SubplanSpecialFlatteningCheckVisitor visitor = new SubplanSpecialFlatteningCheckVisitor();

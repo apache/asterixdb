@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
@@ -97,7 +99,7 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
 
     /**
      * @return labels (0 or 1) for each input and output indicating the dependency between them.
-     *         The edges labeled as 1 must wait for the edges with label 0.
+     * The edges labeled as 1 must wait for the edges with label 0.
      */
     @Override
     public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
@@ -118,47 +120,61 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
     protected AlgebricksPipeline[] compileSubplans(IOperatorSchema outerPlanSchema,
             AbstractOperatorWithNestedPlans npOp, IOperatorSchema opSchema, JobGenContext context)
             throws AlgebricksException {
-        AlgebricksPipeline[] subplans = new AlgebricksPipeline[npOp.getNestedPlans().size()];
+        List<List<AlgebricksPipeline>> subplans = compileSubplansImpl(outerPlanSchema, npOp, opSchema, context);
+        int n = subplans.size();
+        AlgebricksPipeline[] result = new AlgebricksPipeline[n];
+        for (int i = 0; i < n; i++) {
+            List<AlgebricksPipeline> subplanOps = subplans.get(i);
+            if (subplanOps.size() != 1) {
+                throw new AlgebricksException("Attempting to construct a nested plan with " + subplanOps.size()
+                        + " operator descriptors. Currently, nested plans can only consist in linear pipelines of "
+                        + "micro operators.");
+            }
+            result[i] = subplanOps.get(0);
+        }
+        return result;
+    }
+
+    protected List<List<AlgebricksPipeline>> compileSubplansImpl(IOperatorSchema outerPlanSchema,
+            AbstractOperatorWithNestedPlans npOp, IOperatorSchema opSchema, JobGenContext context)
+            throws AlgebricksException {
+        List<List<AlgebricksPipeline>> subplans = new ArrayList<>(npOp.getNestedPlans().size());
         PlanCompiler pc = new PlanCompiler(context);
-        int i = 0;
         for (ILogicalPlan p : npOp.getNestedPlans()) {
-            subplans[i++] = buildPipelineWithProjection(p, outerPlanSchema, npOp, opSchema, pc);
+            subplans.add(buildPipelineWithProjection(p, outerPlanSchema, npOp, opSchema, pc));
         }
         return subplans;
     }
 
-    private AlgebricksPipeline buildPipelineWithProjection(ILogicalPlan p, IOperatorSchema outerPlanSchema,
+    private List<AlgebricksPipeline> buildPipelineWithProjection(ILogicalPlan p, IOperatorSchema outerPlanSchema,
             AbstractOperatorWithNestedPlans npOp, IOperatorSchema opSchema, PlanCompiler pc)
             throws AlgebricksException {
         if (p.getRoots().size() > 1) {
             throw new NotImplementedException("Nested plans with several roots are not supported.");
         }
-        JobSpecification nestedJob = pc.compilePlan(p, outerPlanSchema, null);
+        JobSpecification nestedJob = pc.compileNestedPlan(p, outerPlanSchema);
         ILogicalOperator topOpInSubplan = p.getRoots().get(0).getValue();
         JobGenContext context = pc.getContext();
         IOperatorSchema topOpInSubplanScm = context.getSchema(topOpInSubplan);
         opSchema.addAllVariables(topOpInSubplanScm);
 
         Map<OperatorDescriptorId, IOperatorDescriptor> opMap = nestedJob.getOperatorMap();
-        if (opMap.size() != 1) {
-            throw new AlgebricksException("Attempting to construct a nested plan with " + opMap.size()
-                    + " operator descriptors. Currently, nested plans can only consist in linear pipelines of Asterix micro operators.");
-        }
-
-        for (Map.Entry<OperatorDescriptorId, IOperatorDescriptor> opEntry : opMap.entrySet()) {
-            IOperatorDescriptor opd = opEntry.getValue();
-            if (!(opd instanceof AlgebricksMetaOperatorDescriptor)) {
-                throw new AlgebricksException(
-                        "Can only generate Hyracks jobs for pipelinable Asterix nested plans, not for "
-                                + opd.getClass().getName());
+        List<? extends IOperatorDescriptor> metaOps = nestedJob.getMetaOps();
+        if (opMap.size() != metaOps.size()) {
+            for (IOperatorDescriptor opd : opMap.values()) {
+                if (!(opd instanceof AlgebricksMetaOperatorDescriptor)) {
+                    throw new AlgebricksException(
+                            "Can only generate jobs for pipelinable nested plans, not for " + opd.getClass().getName());
+                }
             }
-            AlgebricksMetaOperatorDescriptor amod = (AlgebricksMetaOperatorDescriptor) opd;
-
-            return amod.getPipeline();
-            // we suppose that the top operator in the subplan already does the
-            // projection for us
+            throw new IllegalStateException("Unexpected nested plan");
         }
 
-        throw new IllegalStateException();
+        List<AlgebricksPipeline> result = new ArrayList<>(metaOps.size());
+        for (IOperatorDescriptor opd : metaOps) {
+            AlgebricksMetaOperatorDescriptor amod = (AlgebricksMetaOperatorDescriptor) opd;
+            result.add(amod.getPipeline());
+        }
+        return result;
     }
 }

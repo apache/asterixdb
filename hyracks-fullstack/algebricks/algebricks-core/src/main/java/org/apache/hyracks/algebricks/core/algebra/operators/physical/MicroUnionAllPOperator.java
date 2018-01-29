@@ -16,29 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import org.apache.hyracks.algebricks.runtime.operators.union.MicroUnionAllRuntimeFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.dataflow.std.union.UnionAllOperatorDescriptor;
 
-public class UnionAllPOperator extends AbstractUnionAllPOperator {
+public class MicroUnionAllPOperator extends AbstractUnionAllPOperator {
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
-        return PhysicalOperatorTag.UNION_ALL;
+        return PhysicalOperatorTag.MICRO_UNION_ALL;
     }
 
     @Override
     public boolean isMicroOperator() {
-        return false;
+        return true;
     }
 
     @Override
@@ -48,9 +48,8 @@ public class UnionAllPOperator extends AbstractUnionAllPOperator {
         RecordDescriptor recordDescriptor =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
 
-        UnionAllOperatorDescriptor opDesc =
-                new UnionAllOperatorDescriptor(builder.getJobSpec(), op.getInputs().size(), recordDescriptor);
-        contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
+        MicroUnionAllRuntimeFactory runtime = new MicroUnionAllRuntimeFactory(op.getInputs().size());
+        builder.contributeMicroOperator(op, runtime, recordDescriptor);
 
         super.contributeRuntimeOperator(builder, context, op, opSchema, inputSchemas, outerPlanSchema);
     }

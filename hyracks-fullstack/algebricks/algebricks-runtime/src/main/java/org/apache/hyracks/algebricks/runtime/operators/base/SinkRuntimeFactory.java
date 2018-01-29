@@ -38,8 +38,8 @@ public class SinkRuntimeFactory implements IPushRuntimeFactory {
     }
 
     @Override
-    public IPushRuntime createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
-        return new AbstractOneInputSinkPushRuntime() {
+    public IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
+        return new IPushRuntime[] { new AbstractOneInputSinkPushRuntime() {
 
             @Override
             public void open() throws HyracksDataException {
@@ -61,7 +61,6 @@ public class SinkRuntimeFactory implements IPushRuntimeFactory {
             public void flush() throws HyracksDataException {
                 // flush() is meaningless for sink operators
             }
-        };
+        } };
     }
-
 }
