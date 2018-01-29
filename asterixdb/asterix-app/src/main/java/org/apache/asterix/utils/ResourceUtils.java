@@ -24,6 +24,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.job.resource.ClusterCapacity;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
 
@@ -40,21 +41,20 @@ public class ResourceUtils {
      *            a given query plan.
      * @param computationLocations,
      *            the partitions for computation.
-     * @param sortFrameLimit,
-     *            the frame limit for one sorter partition.
-     * @param groupFrameLimit,
-     *            the frame limit for one group-by partition.
-     * @param joinFrameLimit
-     *            the frame limit for one joiner partition.
-     * @param frameSize
-     *            the frame size used in query execution.
+     * @param physicalOptimizationConfig,
+     *            a PhysicalOptimizationConfig.
      * @return the required cluster capacity for executing the query.
      * @throws AlgebricksException
      *             if the query plan is malformed.
      */
     public static IClusterCapacity getRequiredCapacity(ILogicalPlan plan,
-            AlgebricksAbsolutePartitionConstraint computationLocations, int sortFrameLimit, int groupFrameLimit,
-            int joinFrameLimit, int frameSize) throws AlgebricksException {
+            AlgebricksAbsolutePartitionConstraint computationLocations,
+            PhysicalOptimizationConfig physicalOptimizationConfig) throws AlgebricksException {
+        final int frameSize = physicalOptimizationConfig.getFrameSize();
+        final int sortFrameLimit = physicalOptimizationConfig.getMaxFramesExternalSort();
+        final int groupFrameLimit = physicalOptimizationConfig.getMaxFramesForGroupBy();
+        final int joinFrameLimit = physicalOptimizationConfig.getMaxFramesForJoin();
+
         // Creates a cluster capacity visitor.
         IClusterCapacity clusterCapacity = new ClusterCapacity();
         RequiredCapacityVisitor visitor = new RequiredCapacityVisitor(computationLocations.getLocations().length,

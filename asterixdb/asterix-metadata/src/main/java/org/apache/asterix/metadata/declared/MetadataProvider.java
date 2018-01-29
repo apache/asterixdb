@@ -355,8 +355,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throws AlgebricksException {
         DataSource source = findDataSource(dataSourceId);
         Dataset dataset = ((DatasetDataSource) source).getDataset();
-        String indexName = indexId;
-        Index secondaryIndex = getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+        Index secondaryIndex = getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexId);
         return (secondaryIndex != null)
                 ? new DataSourceIndex(secondaryIndex, dataset.getDataverseName(), dataset.getDatasetName(), this)
                 : null;
@@ -381,26 +380,19 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             List<LogicalVariable> projectVariables, boolean projectPushed, List<LogicalVariable> minFilterVars,
             List<LogicalVariable> maxFilterVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
             JobGenContext context, JobSpecification jobSpec, Object implConfig) throws AlgebricksException {
-        try {
-            return ((DataSource) dataSource).buildDatasourceScanRuntime(this, dataSource, scanVariables,
-                    projectVariables, projectPushed, minFilterVars, maxFilterVars, opSchema, typeEnv, context, jobSpec,
-                    implConfig);
-        } catch (AsterixException e) {
-            throw new AlgebricksException(e);
-        }
+        return ((DataSource) dataSource).buildDatasourceScanRuntime(this, dataSource, scanVariables, projectVariables,
+                projectPushed, minFilterVars, maxFilterVars, opSchema, typeEnv, context, jobSpec, implConfig);
     }
 
     protected Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildLoadableDatasetScan(
             JobSpecification jobSpec, IAdapterFactory adapterFactory, RecordDescriptor rDesc)
             throws AlgebricksException {
         ExternalScanOperatorDescriptor dataScanner = new ExternalScanOperatorDescriptor(jobSpec, rDesc, adapterFactory);
-        AlgebricksPartitionConstraint constraint;
         try {
-            constraint = adapterFactory.getPartitionConstraint();
+            return new Pair<>(dataScanner, adapterFactory.getPartitionConstraint());
         } catch (Exception e) {
             throw new AlgebricksException(e);
         }
-        return new Pair<>(dataScanner, constraint);
     }
 
     public Dataverse findDataverse(String dataverseName) throws AlgebricksException {
