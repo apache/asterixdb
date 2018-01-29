@@ -163,8 +163,7 @@ public class ExternalFunctionCompilerUtil {
                     @Override
                     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
                             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
-
-                        return new AUnorderedListType(type, type.getTypeName());
+                        return new AUnorderedListType(((AUnorderedListType) type).getItemType(), type.getTypeName());
                     }
 
                 };
