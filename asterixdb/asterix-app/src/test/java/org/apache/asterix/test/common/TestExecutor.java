@@ -126,6 +126,8 @@ public class TestExecutor {
     private static final Pattern MAX_RESULT_READS_PATTERN =
             Pattern.compile("maxresultreads=(\\d+)(\\D|$)", Pattern.MULTILINE);
     public static final int TRUNCATE_THRESHOLD = 16384;
+    public static final Set<String> NON_CANCELLABLE =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList("store", "validate")));
 
     public static final String DELIVERY_ASYNC = "async";
     public static final String DELIVERY_DEFERRED = "deferred";
@@ -1221,7 +1223,7 @@ public class TestExecutor {
             }
             final URI uri = getEndpoint(Servlets.QUERY_SERVICE);
             if (DELIVERY_IMMEDIATE.equals(delivery)) {
-                resultStream = executeQueryService(statement, fmt, uri, params, true, null, true);
+                resultStream = executeQueryService(statement, fmt, uri, params, true, null, isCancellable(reqType));
                 resultStream = METRICS_QUERY_TYPE.equals(reqType) ? ResultExtractor.extractMetrics(resultStream)
                         : ResultExtractor.extract(resultStream);
             } else {
@@ -1831,5 +1833,9 @@ public class TestExecutor {
         public String getTarget() {
             return target;
         }
+    }
+
+    private static boolean isCancellable(String type) {
+        return !NON_CANCELLABLE.contains(type);
     }
 }
