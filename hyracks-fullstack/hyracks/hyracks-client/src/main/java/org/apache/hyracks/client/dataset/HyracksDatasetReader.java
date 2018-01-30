@@ -23,75 +23,59 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.channels.IInputChannel;
+import org.apache.hyracks.api.channels.IInputChannelMonitor;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.dataset.DatasetDirectoryRecord;
 import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
-import org.apache.hyracks.api.dataset.IDatasetInputChannelMonitor;
 import org.apache.hyracks.api.dataset.IHyracksDatasetDirectoryServiceConnection;
 import org.apache.hyracks.api.dataset.IHyracksDatasetReader;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.client.net.ClientNetworkManager;
 import org.apache.hyracks.comm.channels.DatasetNetworkInputChannel;
+import org.apache.hyracks.util.annotations.NotThreadSafe;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// TODO(madhusudancs): Should this implementation be moved to org.apache.hyracks.client?
+@NotThreadSafe
 public class HyracksDatasetReader implements IHyracksDatasetReader {
+
     private static final Logger LOGGER = LogManager.getLogger();
-
-    private final IHyracksDatasetDirectoryServiceConnection datasetDirectoryServiceConnection;
-
+    private static final int NUM_READ_BUFFERS = 1;
+    private final IHyracksDatasetDirectoryServiceConnection datasetDirectory;
     private final ClientNetworkManager netManager;
-
     private final IHyracksCommonContext datasetClientCtx;
-
-    private JobId jobId;
-
-    private ResultSetId resultSetId;
-
+    private final JobId jobId;
+    private final ResultSetId resultSetId;
     private DatasetDirectoryRecord[] knownRecords;
+    private DatasetInputChannelMonitor[] monitors;
+    private DatasetInputChannelMonitor currentRecordMonitor;
+    private DatasetNetworkInputChannel currentRecordChannel;
+    private int currentRecord;
 
-    private IDatasetInputChannelMonitor[] monitors;
-
-    private int lastReadPartition;
-
-    private IDatasetInputChannelMonitor lastMonitor;
-
-    private DatasetNetworkInputChannel resultChannel;
-
-    private static int NUM_READ_BUFFERS = 1;
-
-    public HyracksDatasetReader(IHyracksDatasetDirectoryServiceConnection datasetDirectoryServiceConnection,
+    public HyracksDatasetReader(IHyracksDatasetDirectoryServiceConnection datasetDirectory,
             ClientNetworkManager netManager, IHyracksCommonContext datasetClientCtx, JobId jobId,
-            ResultSetId resultSetId) throws Exception {
-        this.datasetDirectoryServiceConnection = datasetDirectoryServiceConnection;
+            ResultSetId resultSetId) {
+        this.datasetDirectory = datasetDirectory;
         this.netManager = netManager;
         this.datasetClientCtx = datasetClientCtx;
         this.jobId = jobId;
         this.resultSetId = resultSetId;
-        knownRecords = null;
-        monitors = null;
-        lastReadPartition = -1;
-        lastMonitor = null;
-        resultChannel = null;
+        currentRecord = -1;
     }
 
     @Override
     public Status getResultStatus() {
         try {
-            return datasetDirectoryServiceConnection.getDatasetResultStatus(jobId, resultSetId);
+            return datasetDirectory.getDatasetResultStatus(jobId, resultSetId);
         } catch (HyracksDataException e) {
             if (e.getErrorCode() != ErrorCode.NO_RESULT_SET) {
                 LOGGER.log(Level.WARN, "Exception retrieving result set for job " + jobId, e);
@@ -102,107 +86,55 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
         return null;
     }
 
-    private DatasetDirectoryRecord getRecord(int partition) throws Exception {
-        while (knownRecords == null || knownRecords[partition] == null) {
-            knownRecords =
-                    datasetDirectoryServiceConnection.getDatasetResultLocations(jobId, resultSetId, knownRecords);
-        }
-        return knownRecords[partition];
-    }
-
-    private boolean nextPartition() throws HyracksDataException {
-        ++lastReadPartition;
-        try {
-            DatasetDirectoryRecord record = getRecord(lastReadPartition);
-            while (record.getEmpty() && (++lastReadPartition) < knownRecords.length) {
-                record = getRecord(lastReadPartition);
-            }
-            if (lastReadPartition == knownRecords.length) {
-                return false;
-            }
-            resultChannel = new DatasetNetworkInputChannel(netManager, getSocketAddress(record), jobId, resultSetId,
-                    lastReadPartition, NUM_READ_BUFFERS);
-            lastMonitor = getMonitor(lastReadPartition);
-            resultChannel.registerMonitor(lastMonitor);
-            resultChannel.open(datasetClientCtx);
-            return true;
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
-        }
-    }
-
     @Override
     public int read(IFrame frame) throws HyracksDataException {
         frame.reset();
-        ByteBuffer readBuffer;
         int readSize = 0;
-
-        if (lastReadPartition == -1) {
-            if (!nextPartition()) {
-                return readSize;
-            }
+        if (isFirstRead() && !hasNextRecord()) {
+            return readSize;
         }
-
-        while (readSize < frame.getFrameSize()
-                && !((lastReadPartition == knownRecords.length - 1) && isPartitionReadComplete(lastMonitor))) {
-            waitForNextFrame(lastMonitor);
-            if (isPartitionReadComplete(lastMonitor)) {
-                knownRecords[lastReadPartition].readEOS();
-                resultChannel.close();
-                if ((lastReadPartition == knownRecords.length - 1) || !nextPartition()) {
+        // read until frame is full or all dataset records have been read
+        while (readSize < frame.getFrameSize()) {
+            if (currentRecordMonitor.hasMoreFrames()) {
+                final ByteBuffer readBuffer = currentRecordChannel.getNextBuffer();
+                if (readBuffer == null) {
+                    throw new IllegalStateException("Unexpected empty frame");
+                }
+                currentRecordMonitor.notifyFrameRead();
+                if (readSize == 0) {
+                    final int nBlocks = FrameHelper.deserializeNumOfMinFrame(readBuffer);
+                    frame.ensureFrameSize(frame.getMinSize() * nBlocks);
+                    frame.getBuffer().clear();
+                }
+                frame.getBuffer().put(readBuffer);
+                currentRecordChannel.recycleBuffer(readBuffer);
+                readSize = frame.getBuffer().position();
+            } else {
+                currentRecordChannel.close();
+                if (currentRecordMonitor.failed()) {
+                    throw HyracksDataException.create(ErrorCode.FAILED_TO_READ_RESULT, jobId);
+                }
+                if (isLastRecord() || !hasNextRecord()) {
                     break;
                 }
-            } else {
-                readBuffer = resultChannel.getNextBuffer();
-                lastMonitor.notifyFrameRead();
-                if (readBuffer != null) {
-                    if (readSize <= 0) {
-                        int nBlocks = FrameHelper.deserializeNumOfMinFrame(readBuffer);
-                        frame.ensureFrameSize(frame.getMinSize() * nBlocks);
-                        frame.getBuffer().clear();
-                        frame.getBuffer().put(readBuffer);
-                        resultChannel.recycleBuffer(readBuffer);
-                        readSize = frame.getBuffer().position();
-                    } else {
-                        frame.getBuffer().put(readBuffer);
-                        resultChannel.recycleBuffer(readBuffer);
-                        readSize = frame.getBuffer().position();
-                    }
-                }
             }
         }
-
         frame.getBuffer().flip();
         return readSize;
     }
 
-    private static void waitForNextFrame(IDatasetInputChannelMonitor monitor) throws HyracksDataException {
-        synchronized (monitor) {
-            while (monitor.getNFramesAvailable() <= 0 && !monitor.eosReached() && !monitor.failed()) {
-                try {
-                    monitor.wait();
-                } catch (InterruptedException e) {
-                    throw new HyracksDataException(e);
-                }
-            }
-        }
-        if (monitor.failed()) {
-            throw new HyracksDataException("Job Failed.");
+    private SocketAddress getSocketAddress(DatasetDirectoryRecord record) throws HyracksDataException {
+        try {
+            final NetworkAddress netAddr = record.getNetworkAddress();
+            return new InetSocketAddress(InetAddress.getByAddress(netAddr.lookupIpAddress()), netAddr.getPort());
+        } catch (UnknownHostException e) {
+            throw HyracksDataException.create(e);
         }
     }
 
-    private boolean isPartitionReadComplete(IDatasetInputChannelMonitor monitor) {
-        return (monitor.getNFramesAvailable() <= 0) && (monitor.eosReached());
-    }
-
-    private SocketAddress getSocketAddress(DatasetDirectoryRecord addr) throws UnknownHostException {
-        NetworkAddress netAddr = addr.getNetworkAddress();
-        return new InetSocketAddress(InetAddress.getByAddress(netAddr.lookupIpAddress()), netAddr.getPort());
-    }
-
-    private IDatasetInputChannelMonitor getMonitor(int partition) throws HyracksException {
+    private DatasetInputChannelMonitor getMonitor(int partition) {
         if (knownRecords == null || knownRecords[partition] == null) {
-            throw new HyracksException("Accessing monitors before the obtaining the corresponding addresses.");
+            throw new IllegalStateException("Accessing monitors before obtaining the corresponding addresses");
         }
         if (monitors == null) {
             monitors = new DatasetInputChannelMonitor[knownRecords.length];
@@ -213,56 +145,100 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
         return monitors[partition];
     }
 
-    private class DatasetInputChannelMonitor implements IDatasetInputChannelMonitor {
-        private final AtomicInteger nAvailableFrames;
+    private boolean hasNextRecord() throws HyracksDataException {
+        currentRecord++;
+        DatasetDirectoryRecord record = getRecord(currentRecord);
+        // skip empty records
+        while (record.isEmpty() && ++currentRecord < knownRecords.length) {
+            record = getRecord(currentRecord);
+        }
+        if (currentRecord == knownRecords.length) {
+            // exhausted all known records
+            return false;
+        }
+        requestRecordData(record);
+        return true;
+    }
 
-        private final AtomicBoolean eos;
+    private DatasetDirectoryRecord getRecord(int recordNum) throws HyracksDataException {
+        try {
+            while (knownRecords == null || knownRecords[recordNum] == null) {
+                knownRecords = datasetDirectory.getDatasetResultLocations(jobId, resultSetId, knownRecords);
+            }
+            return knownRecords[recordNum];
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
+    }
 
-        private final AtomicBoolean failed;
+    private void requestRecordData(DatasetDirectoryRecord record) throws HyracksDataException {
+        currentRecordChannel = new DatasetNetworkInputChannel(netManager, getSocketAddress(record), jobId, resultSetId,
+                currentRecord, NUM_READ_BUFFERS);
+        currentRecordMonitor = getMonitor(currentRecord);
+        currentRecordChannel.registerMonitor(currentRecordMonitor);
+        currentRecordChannel.open(datasetClientCtx);
+    }
 
-        public DatasetInputChannelMonitor() {
-            nAvailableFrames = new AtomicInteger(0);
-            eos = new AtomicBoolean(false);
-            failed = new AtomicBoolean(false);
+    private boolean isFirstRead() {
+        return currentRecord == -1;
+    }
+
+    private boolean isLastRecord() {
+        return knownRecords != null && currentRecord == knownRecords.length - 1;
+    }
+
+    private static class DatasetInputChannelMonitor implements IInputChannelMonitor {
+
+        private int availableFrames;
+        private boolean eos;
+        private boolean failed;
+
+        DatasetInputChannelMonitor() {
+            eos = false;
+            failed = false;
         }
 
         @Override
         public synchronized void notifyFailure(IInputChannel channel) {
-            failed.set(true);
+            failed = true;
             notifyAll();
         }
 
         @Override
         public synchronized void notifyDataAvailability(IInputChannel channel, int nFrames) {
-            nAvailableFrames.addAndGet(nFrames);
+            availableFrames += nFrames;
             notifyAll();
         }
 
         @Override
         public synchronized void notifyEndOfStream(IInputChannel channel) {
-            eos.set(true);
+            eos = true;
             notifyAll();
         }
 
-        @Override
-        public synchronized boolean eosReached() {
-            return eos.get();
+        synchronized boolean failed() {
+            return failed;
         }
 
-        @Override
-        public synchronized boolean failed() {
-            return failed.get();
+        synchronized void notifyFrameRead() {
+            availableFrames--;
+            notifyAll();
         }
 
-        @Override
-        public synchronized int getNFramesAvailable() {
-            return nAvailableFrames.get();
+        synchronized boolean hasMoreFrames() throws HyracksDataException {
+            while (!failed && !eos && availableFrames == 0) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
+                }
+            }
+            return !failed && !isFullyConsumed();
         }
 
-        @Override
-        public synchronized void notifyFrameRead() {
-            nAvailableFrames.decrementAndGet();
+        private synchronized boolean isFullyConsumed() {
+            return availableFrames == 0 && eos;
         }
-
     }
 }

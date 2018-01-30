@@ -58,7 +58,7 @@ public class DatasetDirectoryRecord implements Serializable {
         this.empty = empty;
     }
 
-    public boolean getEmpty() {
+    public boolean isEmpty() {
         return empty;
     }
 

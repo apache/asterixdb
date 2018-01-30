@@ -52,7 +52,7 @@
     <test-case FilePath="async-deferred">
         <compilation-unit name="async-exhausted-result">
             <output-dir compare="Text">async-exhausted-result</output-dir>
-            <expected-error>Job Failed</expected-error>
+            <expected-error>HYR0093</expected-error>
         </compilation-unit>
     </test-case>
 </test-group>
