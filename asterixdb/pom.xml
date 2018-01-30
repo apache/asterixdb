@@ -417,6 +417,19 @@
                     <ignore />
                   </action>
                 </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                   <groupId>net.revelc.code.formatter</groupId>
+                   <artifactId>formatter-maven-plugin</artifactId>
+                   <versionRange>[2.0.1,)</versionRange>
+                   <goals>
+                       <goal>format</goal>
+                   </goals>
+                   </pluginExecutionFilter>
+                   <action>
+                       <ignore></ignore>
+                   </action>
+                </pluginExecution>
               </pluginExecutions>
             </lifecycleMappingMetadata>
           </configuration>
