@@ -187,9 +187,9 @@ public class TestExecutor {
         return path.delete();
     }
 
-    public void runScriptAndCompareWithResult(File scriptFile, PrintWriter print, File expectedFile, File actualFile,
+    public void runScriptAndCompareWithResult(File scriptFile, File expectedFile, File actualFile,
             ComparisonEnum compare) throws Exception {
-        System.err.println("Expected results file: " + expectedFile.toString());
+        LOGGER.info("Expected results file: {} ", expectedFile);
         BufferedReader readerExpected =
                 new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));
         BufferedReader readerActual =
@@ -255,7 +255,7 @@ public class TestExecutor {
                 throw createLineChangedException(scriptFile, "<EOF>", lineActual, num);
             }
         } catch (Exception e) {
-            System.err.println("Actual results file: " + actualFile.toString());
+            LOGGER.info("Actual results file: {}", actualFile);
             throw e;
         } finally {
             readerExpected.close();
@@ -946,8 +946,7 @@ public class TestExecutor {
                         + "_qar.adm");
                 writeOutputToFile(qarFile, resultStream);
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
-                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), qbcFile, qarFile,
-                        ComparisonEnum.TEXT);
+                runScriptAndCompareWithResult(testFile, qbcFile, qarFile, ComparisonEnum.TEXT);
                 break;
             case "txneu": // eu represents erroneous update
                 try {
@@ -955,12 +954,11 @@ public class TestExecutor {
                 } catch (Exception e) {
                     // An exception is expected.
                     failed = true;
-                    System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
+                    LOGGER.info("testFile {} raised an (expected) exception", testFile, e.toString());
                 }
                 if (!failed) {
-                    throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception" + "is expected.");
+                    throw new Exception("Test \"" + testFile + "\" FAILED; an exception was expected");
                 }
-                System.err.println("...but that was expected.");
                 break;
             case "script":
                 try {
@@ -970,7 +968,7 @@ public class TestExecutor {
                         throw new Exception(output);
                     }
                 } catch (Exception e) {
-                    throw new Exception("Test \"" + testFile + "\" FAILED!\n", e);
+                    throw new Exception("Test \"" + testFile + "\" FAILED!", e);
                 }
                 break;
             case "sleep":
@@ -983,12 +981,11 @@ public class TestExecutor {
                 } catch (Exception e) {
                     // expected error happens
                     failed = true;
-                    System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
+                    LOGGER.info("testFile {} raised an (expected) exception", testFile, e.toString());
                 }
                 if (!failed) {
-                    throw new Exception("Test \"" + testFile + "\" FAILED!\n  An exception is expected.");
+                    throw new Exception("Test \"" + testFile + "\" FAILED; an exception was expected");
                 }
-                System.err.println("...but that was expected.");
                 break;
             case "get":
             case "post":
@@ -1186,17 +1183,14 @@ public class TestExecutor {
         } else {
             if (expectedResultFile == null) {
                 if (testFile.getName().startsWith(DIAGNOSE)) {
-                    System.err.println("Diagnostic Output:");
-                    IOUtils.copy(resultStream, System.err);
-                    System.err.println();
+                    LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, StandardCharsets.UTF_8));
                 } else {
                     Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
                             + ", filectxs.size: " + numResultFiles);
                 }
             } else {
                 writeOutputToFile(actualResultFile, resultStream);
-                runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile,
-                        actualResultFile, compare);
+                runScriptAndCompareWithResult(testFile, expectedResultFile, actualResultFile, compare);
             }
         }
         queryCount.increment();
@@ -1240,9 +1234,7 @@ public class TestExecutor {
         }
         if (actualResultFile == null) {
             if (testFile.getName().startsWith(DIAGNOSE)) {
-                System.err.println("Diagnostic Output:");
-                IOUtils.copy(resultStream, System.err);
-                System.err.println();
+                LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, StandardCharsets.UTF_8));
             } else {
                 Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
                         + ", filectxs.size: " + numResultFiles);
@@ -1257,8 +1249,7 @@ public class TestExecutor {
                         + ", filectxs.size: " + numResultFiles);
             }
         }
-        runScriptAndCompareWithResult(testFile, new PrintWriter(System.err), expectedResultFile, actualResultFile,
-                compare);
+        runScriptAndCompareWithResult(testFile, expectedResultFile, actualResultFile, compare);
         if (!reqType.equals("validate")) {
             queryCount.increment();
         }
@@ -1543,28 +1534,26 @@ public class TestExecutor {
                         queryCount.setValue(savedQueryCounts[numOfFiles]);
                     }
                 } catch (Exception e) {
-                    System.err.println("testFile " + testFile.toString() + " raised an exception: " + e);
                     numOfErrors++;
-                    if (isUnExpected(e, expectedErrors, numOfErrors, queryCount)) {
-                        e.printStackTrace();
-                        System.err.println("...Unexpected!");
+                    boolean unexpected = isUnExpected(e, expectedErrors, numOfErrors, queryCount);
+                    if (unexpected) {
+                        LOGGER.error("testFile {} raised an unexpected exception", testFile, e);
                         if (failedGroup != null) {
                             failedGroup.getTestCase().add(testCaseCtx.getTestCase());
                         }
                         fail(true, testCaseCtx, cUnit, testFileCtxs, pb, testFile, e);
+                    } else {
+                        LOGGER.info("testFile {} raised an (expected) exception", testFile, e.toString());
                     }
-                } finally {
-                    if (numOfFiles == testFileCtxs.size()) {
-                        if (numOfErrors < cUnit.getExpectedError().size()) {
-                            System.err.println("...Unexpected!");
-                            Exception e = new Exception(
-                                    "Test \"" + cUnit.getName() + "\" FAILED!\nExpected error was not thrown...");
-                            System.err.println(e);
-                            throw e;
-                        }
-                        LOGGER.info("[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName()
-                                + " PASSED ");
+                }
+                if (numOfFiles == testFileCtxs.size()) {
+                    if (numOfErrors < cUnit.getExpectedError().size()) {
+                        LOGGER.error("Test {} failed to raise (an) expected exception(s)", cUnit.getName());
+                        throw new Exception(
+                                "Test \"" + cUnit.getName() + "\" FAILED; expected exception was not thrown...");
                     }
+                    LOGGER.info(
+                            "[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " PASSED ");
                 }
             }
         }
@@ -1576,8 +1565,7 @@ public class TestExecutor {
             try {
                 // execute diagnostic files
                 Map<String, Object> variableCtx = new HashMap<>();
-                for (ListIterator<TestFileContext> iter = testFileCtxs.listIterator(); iter.hasNext();) {
-                    TestFileContext ctx = iter.next();
+                for (TestFileContext ctx : testFileCtxs) {
                     if (ctx.getFile().getName().startsWith(TestExecutor.DIAGNOSE)) {
                         // execute the file
                         final File file = ctx.getFile();
@@ -1601,11 +1589,9 @@ public class TestExecutor {
             // Get the expected exception
             expectedError = expectedErrors.get(numOfErrors - 1);
             if (e.toString().contains(expectedError)) {
-                System.err.println("...but that was expected.");
                 return false;
             } else {
-                System.err
-                        .println("Expected to find the following in error text:\n+++++\n" + expectedError + "\n+++++");
+                LOGGER.error("Expected to find the following in error text: +++++{}+++++", expectedError);
                 return true;
             }
         }

@@ -24,6 +24,9 @@
     <File name="InfoLog" fileName="target/info.log">
         <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </File>
+    <Console name="ConsoleTest" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
+    </Console>
   </Appenders>
   <Loggers>
     <Root level="WARN">
@@ -35,8 +38,13 @@
     <Logger name="org.apache.asterix" level="INFO" additivity="false">
       <AppenderRef ref="InfoLog"/>
     </Logger>
-    <Logger name="org.apache.asterix.test" level="WARN">
-      <AppenderRef ref="Console"/>
+    <Logger name="org.apache.hyracks.test" level="INFO" additivity="false">
+      <AppenderRef ref="ConsoleTest"/>
+      <AppenderRef ref="InfoLog"/>
+    </Logger>
+    <Logger name="org.apache.asterix.test" level="INFO" additivity="false">
+      <AppenderRef ref="ConsoleTest"/>
+      <AppenderRef ref="InfoLog"/>
     </Logger>
   </Loggers>
 </Configuration>
