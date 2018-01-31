@@ -22,6 +22,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 public class LSMBTreeFlushOperation extends FlushOperation {
     private final FileReference bloomFilterFlushTarget;
@@ -34,5 +35,10 @@ public class LSMBTreeFlushOperation extends FlushOperation {
 
     public FileReference getBloomFilterTarget() {
         return bloomFilterFlushTarget;
+    }
+
+    @Override
+    public LSMComponentFileReferences getComponentFiles() {
+        return new LSMComponentFileReferences(target, null, bloomFilterFlushTarget);
     }
 }

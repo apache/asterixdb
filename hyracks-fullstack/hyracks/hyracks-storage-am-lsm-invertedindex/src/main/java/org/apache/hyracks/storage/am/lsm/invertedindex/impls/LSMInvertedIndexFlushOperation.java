@@ -23,6 +23,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 public class LSMInvertedIndexFlushOperation extends FlushOperation {
     private final FileReference deletedKeysBTreeFlushTarget;
@@ -42,5 +43,10 @@ public class LSMInvertedIndexFlushOperation extends FlushOperation {
 
     public FileReference getBloomFilterTarget() {
         return bloomFilterFlushTarget;
+    }
+
+    @Override
+    public LSMComponentFileReferences getComponentFiles() {
+        return new LSMComponentFileReferences(target, deletedKeysBTreeFlushTarget, bloomFilterFlushTarget);
     }
 }

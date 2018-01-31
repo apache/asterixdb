@@ -104,6 +104,11 @@ class TracedIOOperation implements ILSMIOOperation {
     public ILSMIndexAccessor getAccessor() {
         return ioOp.getAccessor();
     }
+
+    @Override
+    public LSMComponentFileReferences getComponentFiles() {
+        return ioOp.getComponentFiles();
+    }
 }
 
 class ComparableTracedIOOperation extends TracedIOOperation implements Comparable<ILSMIOOperation> {
@@ -132,4 +137,5 @@ class ComparableTracedIOOperation extends TracedIOOperation implements Comparabl
                 + other.getClass().getSimpleName() + " in " + getClass().getSimpleName());
         return Integer.signum(hashCode() - other.hashCode());
     }
+
 }

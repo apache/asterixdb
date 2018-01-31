@@ -49,4 +49,8 @@ public final class LSMComponentFileReferences {
     public FileReference getBloomFilterFileReference() {
         return bloomFilterFileReference;
     }
+
+    public FileReference[] getFileReferences() {
+        return new FileReference[] { insertIndexFileReference, deleteIndexFileReference, bloomFilterFileReference };
+    }
 }

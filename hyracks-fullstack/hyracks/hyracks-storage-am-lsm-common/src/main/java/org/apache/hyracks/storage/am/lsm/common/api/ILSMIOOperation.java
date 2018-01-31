@@ -23,6 +23,7 @@ import java.util.concurrent.Callable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 
 public interface ILSMIOOperation extends Callable<Boolean> {
 
@@ -67,4 +68,9 @@ public interface ILSMIOOperation extends Callable<Boolean> {
      * @return the accessor of the operation
      */
     ILSMIndexAccessor getAccessor();
+
+    /**
+     * @return the component files produced by this operation
+     */
+    LSMComponentFileReferences getComponentFiles();
 }

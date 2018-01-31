@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.MergeOperation;
 import org.apache.hyracks.storage.common.IIndexCursor;
 
@@ -43,5 +44,10 @@ public class LSMInvertedIndexMergeOperation extends MergeOperation {
 
     public FileReference getBloomFilterTarget() {
         return bloomFilterMergeTarget;
+    }
+
+    @Override
+    public LSMComponentFileReferences getComponentFiles() {
+        return new LSMComponentFileReferences(target, deletedKeysBTreeMergeTarget, bloomFilterMergeTarget);
     }
 }
