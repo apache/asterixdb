@@ -6,7 +6,7 @@ FunctionCall test.substring@2[
     Variable [ Name=$a ]
     Field=name
   ]
-  LiteralExpr [LONG] [4]
+  LiteralExpr [LONG] [3]
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[

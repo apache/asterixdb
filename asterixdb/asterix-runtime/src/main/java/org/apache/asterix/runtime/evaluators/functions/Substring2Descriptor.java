@@ -26,10 +26,11 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -43,12 +44,17 @@ import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescriptor {
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new Substring2Descriptor();
+        }
+
+        @Override
+        public IFunctionTypeInferer createFunctionTypeInferer() {
+            return FunctionTypeInferers.SET_STRING_OFFSET;
         }
     };
 
@@ -56,6 +62,8 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
+
+            private final int baseOffset = stringOffset;
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
@@ -78,7 +86,8 @@ public class Substring2Descriptor extends AbstractScalarFunctionDynamicDescripto
 
                         byte[] bytes = argStart.getByteArray();
                         int offset = argStart.getStartOffset();
-                        int start = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset) - 1;
+                        int start = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset)
+                                - baseOffset;
                         bytes = argString.getByteArray();
                         offset = argString.getStartOffset();
                         int len = argString.getLength();

@@ -22,7 +22,7 @@ use tpch;
 
 declare function q22_customer_tmp() {
 (
-    SELECT c.c_acctbal AS c_acctbal, c.c_custkey AS c_custkey, substring(c.c_phone,1,2) AS cntrycode
+    SELECT c.c_acctbal AS c_acctbal, c.c_custkey AS c_custkey, substring(c.c_phone,0,2) AS cntrycode
     FROM  Customer AS c
 )
 };

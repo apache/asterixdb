@@ -55,7 +55,7 @@ CREATE EXTERNAL DATASET Orders(OrderType) USING `localfs`
 
 WITH q22_customer_tmp AS
 (
-    SELECT c_acctbal, c_custkey, substring(c_phone,1,2) AS cntrycode
+    SELECT c_acctbal, c_custkey, substring(c_phone,0,2) AS cntrycode
     FROM  Customer
 )
 ,

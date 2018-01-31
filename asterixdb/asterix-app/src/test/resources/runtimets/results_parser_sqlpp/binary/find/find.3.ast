@@ -11,7 +11,7 @@ OrderedListConstructor [
       ]
     ]
     =
-    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [0]
   ]
   OperatorExpr [
     FunctionCall test.find-binary@2[
@@ -23,7 +23,7 @@ OrderedListConstructor [
       ]
     ]
     =
-    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [0]
   ]
   OperatorExpr [
     FunctionCall test.find-binary@3[
@@ -36,7 +36,7 @@ OrderedListConstructor [
       LiteralExpr [LONG] [1]
     ]
     =
-    LiteralExpr [LONG] [5]
+    LiteralExpr [LONG] [4]
   ]
   OperatorExpr [
     FunctionCall test.find-binary@3[
@@ -46,7 +46,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabb]
       ]
-      LiteralExpr [LONG] [0]
+      - LiteralExpr [LONG] [1]
     ]
     =
     FunctionCall test.find-binary@2[
@@ -68,7 +68,7 @@ OrderedListConstructor [
       ]
     ]
     =
-    LiteralExpr [LONG] [0]
+    - LiteralExpr [LONG] [1]
   ]
   OperatorExpr [
     FunctionCall test.find-binary@2[
@@ -80,7 +80,7 @@ OrderedListConstructor [
       ]
     ]
     =
-    LiteralExpr [LONG] [3]
+    LiteralExpr [LONG] [2]
   ]
   OperatorExpr [
     FunctionCall test.find-binary@2[
@@ -92,7 +92,7 @@ OrderedListConstructor [
       ]
     ]
     =
-    LiteralExpr [LONG] [0]
+    - LiteralExpr [LONG] [1]
   ]
   FunctionCall test.find-binary@2[
     FunctionCall test.hex@1[

@@ -21,7 +21,7 @@ USE TinySocial;
 
 SELECT  user.name AS uname,
         user.alias AS alias,
-        substring(message.message, 30) AS msg
+        substring(message.message, 29) AS msg
 FROM FacebookMessages AS message,
      FacebookUsers AS user
 WHERE message.`author-id` = user.id and

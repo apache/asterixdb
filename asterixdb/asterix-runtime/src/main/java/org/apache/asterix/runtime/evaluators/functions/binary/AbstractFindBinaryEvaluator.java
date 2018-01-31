@@ -35,8 +35,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEvaluator {
 
     private static final ATypeTag[] EXPECTED_INPUT_TAG = { ATypeTag.BINARY, ATypeTag.BINARY };
-    protected String functionName;
-    protected AMutableInt64 result = new AMutableInt64(-1);
+    protected final int baseOffset;
+    protected final String functionName;
+    protected final AMutableInt64 result = new AMutableInt64(-1);
     protected final ByteArrayPointable textPtr = new ByteArrayPointable();
     protected final ByteArrayPointable wordPtr = new ByteArrayPointable();
 
@@ -45,8 +46,9 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
     public AbstractFindBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
-            String functionName) throws HyracksDataException {
+            int baseOffset, String functionName) throws HyracksDataException {
         super(context, copyEvaluatorFactories);
+        this.baseOffset = baseOffset;
         this.functionName = functionName;
     }
 
@@ -64,9 +66,9 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
         checkTypeMachingThrowsIfNot(functionName, EXPECTED_INPUT_TAG, textTag, wordTag);
         textPtr.set(pointables[0].getByteArray(), pointables[0].getStartOffset() + 1, pointables[0].getLength() - 1);
         wordPtr.set(pointables[1].getByteArray(), pointables[0].getStartOffset() + 1, pointables[1].getLength() - 1);
-        result.setValue(1L + indexOf(textPtr.getByteArray(), textPtr.getContentStartOffset(),
-                textPtr.getContentLength(), wordPtr.getByteArray(), wordPtr.getContentStartOffset(),
-                wordPtr.getContentLength(), fromOffset));
+        int pos = indexOf(textPtr.getByteArray(), textPtr.getContentStartOffset(), textPtr.getContentLength(),
+                wordPtr.getByteArray(), wordPtr.getContentStartOffset(), wordPtr.getContentLength(), fromOffset);
+        result.setValue(pos < 0 ? pos : pos + baseOffset);
         intSerde.serialize(result, dataOutput);
         resultPointable.set(resultStorage);
     }

@@ -42,7 +42,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [0]
       FunctionCall test.binary-length@1[
         FunctionCall test.hex@1[
           LiteralExpr [STRING] [aabbccdd]
@@ -59,7 +59,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [1]
       LiteralExpr [LONG] [1]
     ]
     =
@@ -72,7 +72,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [1]
     ]
     =
     FunctionCall test.hex@1[
@@ -84,7 +84,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      LiteralExpr [LONG] [5]
+      LiteralExpr [LONG] [4]
       LiteralExpr [LONG] [0]
     ]
     =
@@ -97,7 +97,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      LiteralExpr [LONG] [4]
+      LiteralExpr [LONG] [3]
       LiteralExpr [LONG] [1]
     ]
     =
@@ -110,7 +110,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [1]
       LiteralExpr [LONG] [2]
     ]
     =
@@ -147,7 +147,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      LiteralExpr [LONG] [1]
+      LiteralExpr [LONG] [0]
       LiteralExpr [LONG] [256]
     ]
     =
@@ -160,7 +160,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [1]
       LiteralExpr [LONG] [256]
     ]
     =
@@ -173,7 +173,7 @@ OrderedListConstructor [
       FunctionCall test.hex@1[
         LiteralExpr [STRING] [aabbccdd]
       ]
-      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [1]
       - LiteralExpr [LONG] [1]
     ]
     =

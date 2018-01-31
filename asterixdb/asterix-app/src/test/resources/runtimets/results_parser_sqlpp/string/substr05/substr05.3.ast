@@ -6,7 +6,7 @@ FunctionCall test.substring@3[
     Variable [ Name=$a ]
     Field=name
   ]
-  LiteralExpr [LONG] [4]
+  LiteralExpr [LONG] [3]
   OperatorExpr [
     FunctionCall test.string-length@1[
       FieldAccessor [

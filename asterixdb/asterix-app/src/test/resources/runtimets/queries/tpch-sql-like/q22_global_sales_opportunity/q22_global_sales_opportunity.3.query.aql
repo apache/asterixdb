@@ -23,7 +23,7 @@ declare function q22_customer_tmp() {
   select {
     "c_acctbal": $c.c_acctbal,
     "c_custkey": $c.c_custkey,
-    "cntrycode": substring($c.c_phone, 1, 2)
+    "cntrycode": substring($c.c_phone, 0, 2)
   }
 }
 

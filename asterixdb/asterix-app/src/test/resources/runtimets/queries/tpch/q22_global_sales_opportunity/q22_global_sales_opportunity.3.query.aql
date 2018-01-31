@@ -23,7 +23,7 @@ declare function q22_customer_tmp() {
   return {
     "c_acctbal": $c.c_acctbal,
     "c_custkey": $c.c_custkey,
-    "cntrycode": substring($c.c_phone, 1, 2)
+    "cntrycode": substring($c.c_phone, 0, 2)
   }
 }
 
@@ -37,7 +37,7 @@ where $ct.c_acctbal > $avg
 group by $cntrycode := $ct.cntrycode with $ct
 order by $cntrycode
 return {
-  "cntrycode": $cntrycode, 
-  "numcust": count($ct), 
+  "cntrycode": $cntrycode,
+  "numcust": count($ct),
   "totacctbal": sum(for $i in $ct return $i.c_acctbal)
 }

@@ -20,4 +20,4 @@
 use test;
 
 
-{'result1':test.substring('HEllow',2)};
+{'result1':test.substring('HEllow',1)};

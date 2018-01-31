@@ -30,7 +30,7 @@ declare function q22_customer_tmp() {
 (
     SELECT c.c_acctbal AS c_acctbal, c.c_custkey AS c_custkey, phone_substr AS cntrycode
     FROM  Customer AS c
-    WITH  phone_substr AS substring(c.c_phone,1,2)
+    WITH  phone_substr AS substring(c.c_phone,0,2)
     WHERE phone_substr = '13' OR phone_substr = '31' OR phone_substr = '23' OR phone_substr = '29'
           OR phone_substr = '30' OR phone_substr = '18' OR phone_substr = '17'
 )

@@ -25,7 +25,7 @@
 use test;
 
 
-select element test.substring(a.name,4)
+select element test.substring(a.name,3)
 from  testdst as a
 order by a.name
 ;

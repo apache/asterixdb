@@ -22,7 +22,7 @@ use tpch;
 
 declare function q22_customer_tmp() {
 (
-    select element {'c_acctbal':c.c_acctbal,'c_custkey':c.c_custkey,'cntrycode':SUBSTR(c.c_phone,1,2)}
+    select element {'c_acctbal':c.c_acctbal,'c_custkey':c.c_custkey,'cntrycode':SUBSTR(c.c_phone,0,2)}
     from  Customer as c
 )
 };

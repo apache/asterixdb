@@ -6,7 +6,7 @@ RecordConstructor [
     :
     FunctionCall test.substring@2[
       LiteralExpr [STRING] [HEllow]
-      LiteralExpr [LONG] [2]
+      LiteralExpr [LONG] [1]
     ]
   )
 ]

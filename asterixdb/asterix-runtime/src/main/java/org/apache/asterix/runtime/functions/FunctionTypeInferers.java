@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.functions;
 
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -53,16 +54,24 @@ public final class FunctionTypeInferers {
 
     public static final IFunctionTypeInferer SET_EXPRESSION_TYPE = new IFunctionTypeInferer() {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             fd.setImmutableStates(context.getType(expr));
+        }
+    };
+
+    public static final IFunctionTypeInferer SET_STRING_OFFSET = new IFunctionTypeInferer() {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) {
+            fd.setImmutableStates(compilerProps.getStringOffset());
         }
     };
 
     public static final class CastTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
             IAType rt = TypeCastUtils.getRequiredType(funcExpr);
             IAType it = (IAType) context.getType(funcExpr.getArguments().get(0).getValue());
@@ -72,8 +81,8 @@ public final class FunctionTypeInferers {
 
     public static final class DeepEqualityTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
             IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());
             IAType type1 = (IAType) context.getType(f.getArguments().get(1).getValue());
@@ -83,8 +92,8 @@ public final class FunctionTypeInferers {
 
     public static final class FieldAccessByIndexTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
             IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
             switch (t.getTypeTag()) {
@@ -112,8 +121,8 @@ public final class FunctionTypeInferers {
 
     public static final class FieldAccessNestedTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
             IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
             AOrderedList fieldPath =
@@ -141,8 +150,8 @@ public final class FunctionTypeInferers {
 
     public static final class GetRecordFieldsTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
             IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
             ATypeTag typeTag = t.getTypeTag();
@@ -158,8 +167,8 @@ public final class FunctionTypeInferers {
 
     public static final class GetRecordFieldValueTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
             IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
             ATypeTag typeTag = t.getTypeTag();
@@ -175,8 +184,8 @@ public final class FunctionTypeInferers {
 
     public static final class OpenRecordConstructorTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             ARecordType rt = (ARecordType) context.getType(expr);
             fd.setImmutableStates(rt, computeOpenFields((AbstractFunctionCallExpression) expr, rt));
         }
@@ -204,8 +213,8 @@ public final class FunctionTypeInferers {
 
     public static final class RecordAddFieldsTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
             IAType outType = (IAType) context.getType(expr);
             IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());
@@ -223,8 +232,8 @@ public final class FunctionTypeInferers {
 
     public static final class RecordMergeTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
             IAType outType = (IAType) context.getType(expr);
             IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());
@@ -235,8 +244,8 @@ public final class FunctionTypeInferers {
 
     public static final class RecordPairsTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
             IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
             ATypeTag typeTag = t.getTypeTag();
@@ -252,8 +261,8 @@ public final class FunctionTypeInferers {
 
     public static final class RecordRemoveFieldsTypeInferer implements IFunctionTypeInferer {
         @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context)
-                throws AlgebricksException {
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
             IAType outType = (IAType) context.getType(expr);
             IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());

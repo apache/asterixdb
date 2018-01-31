@@ -36,13 +36,15 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
 
     private ByteArrayPointable byteArrayPointable = new ByteArrayPointable();
     private byte[] metaBuffer = new byte[5];
+    protected final int baseOffset;
     protected final String functionName;
 
     private static final ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.INTEGER };
 
     public AbstractSubBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
-            String functionName) throws HyracksDataException {
+            int baseOffset, String functionName) throws HyracksDataException {
         super(context, copyEvaluatorFactories);
+        this.baseOffset = baseOffset;
         this.functionName = functionName;
     }
 
@@ -67,9 +69,8 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
 
             int subStart;
 
-            // strange SQL index convention
             subStart = ATypeHierarchy.getIntegerValue(BuiltinFunctions.SUBBINARY_FROM.getName(), 1, startBytes, offset)
-                    - 1;
+                    - baseOffset;
 
             int totalLength = byteArrayPointable.getContentLength();
             int subLength = getSubLength(tuple);
@@ -78,7 +79,10 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
                 subStart = 0;
             }
 
-            if (subStart >= totalLength || subLength < 0) {
+            if (subStart >= totalLength) {
+                subStart = 0;
+                subLength = 0;
+            } else if (subLength < 0) {
                 subLength = 0;
             } else if (subLength > totalLength // for the IntMax case
                     || subStart + subLength > totalLength) {
@@ -88,6 +92,7 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
             dataOutput.write(ATypeTag.BINARY.serialize());
             int metaLength = VarLenIntEncoderDecoder.encode(subLength, metaBuffer, 0);
             dataOutput.write(metaBuffer, 0, metaLength);
+
             dataOutput.write(byteArrayPointable.getByteArray(), byteArrayPointable.getContentStartOffset() + subStart,
                     subLength);
         } catch (IOException e) {

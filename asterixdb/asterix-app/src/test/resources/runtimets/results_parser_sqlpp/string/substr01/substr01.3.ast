@@ -5,7 +5,7 @@ RecordConstructor [
     :
     FunctionCall null.substring@2[
       LiteralExpr [STRING] [Hello World]
-      LiteralExpr [LONG] [10]
+      LiteralExpr [LONG] [9]
     ]
   )
   (
@@ -13,7 +13,7 @@ RecordConstructor [
     :
     FunctionCall null.substring@2[
       LiteralExpr [STRING] [This is a test string]
-      LiteralExpr [LONG] [21]
+      LiteralExpr [LONG] [20]
     ]
   )
   (
@@ -21,7 +21,7 @@ RecordConstructor [
     :
     FunctionCall null.substring@2[
       LiteralExpr [STRING] [This is a test string]
-      LiteralExpr [LONG] [22]
+      LiteralExpr [LONG] [21]
     ]
   )
   (
@@ -50,7 +50,7 @@ RecordConstructor [
           LiteralExpr [STRING] [This is a another test string]
         ]
       ]
-      LiteralExpr [LONG] [21]
+      LiteralExpr [LONG] [20]
     ]
   )
   (
@@ -59,11 +59,15 @@ RecordConstructor [
     FunctionCall null.substring@2[
       LiteralExpr [STRING] [UC Irvine]
       OperatorExpr [
-        FunctionCall null.string-length@1[
-          LiteralExpr [STRING] [UC Irvine]
+        OperatorExpr [
+          FunctionCall null.string-length@1[
+            LiteralExpr [STRING] [UC Irvine]
+          ]
+          /
+          LiteralExpr [LONG] [2]
         ]
-        /
-        LiteralExpr [LONG] [2]
+        -
+        LiteralExpr [LONG] [1]
       ]
     ]
   )

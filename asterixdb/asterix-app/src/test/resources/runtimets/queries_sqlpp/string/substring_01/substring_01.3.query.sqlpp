@@ -20,6 +20,6 @@
 use test;
 
 
-select element test.substring(x,2,3)
+select element test.substring(x,1,3)
 from  ['foobar'] as x
 ;

@@ -29,4 +29,4 @@ use dataverse test;
 
 for $a in dataset('testdst')
 order by $a.name
-return substring($a.name, 4, string-length($a.name) - 3);
+return substring($a.name, 3, string-length($a.name) - 3);

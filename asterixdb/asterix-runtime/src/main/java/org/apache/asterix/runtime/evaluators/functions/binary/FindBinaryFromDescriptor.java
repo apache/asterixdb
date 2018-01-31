@@ -22,8 +22,10 @@ package org.apache.asterix.runtime.evaluators.functions.binary;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.AbstractStringOffsetConfigurableDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -31,13 +33,18 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class FindBinaryFromDescriptor extends AbstractStringOffsetConfigurableDescriptor {
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new FindBinaryFromDescriptor();
+        }
+
+        @Override
+        public IFunctionTypeInferer createFunctionTypeInferer() {
+            return FunctionTypeInferers.SET_STRING_OFFSET;
         }
     };
 
@@ -51,13 +58,15 @@ public class FindBinaryFromDescriptor extends AbstractScalarFunctionDynamicDescr
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
+            private final int baseOffset = stringOffset;
+
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractFindBinaryEvaluator(ctx, args, getIdentifier().getName()) {
+                return new AbstractFindBinaryEvaluator(ctx, args, baseOffset, getIdentifier().getName()) {
                     @Override
                     protected int getFromOffset(IFrameTupleReference tuple) throws HyracksDataException {
                         return ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 2,
-                                pointables[2].getByteArray(), pointables[2].getStartOffset());
+                                pointables[2].getByteArray(), pointables[2].getStartOffset()) - baseOffset;
                     }
                 };
             }

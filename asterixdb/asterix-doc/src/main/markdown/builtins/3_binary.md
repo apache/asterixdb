@@ -97,7 +97,7 @@
   * Arguments:
     * `binary` : a `binary` to be extracted,
     * `offset` : a `tinyint`, `smallint`, `integer`, or `bigint` value
-       as the starting offset of the sub binary in `binary`,
+       as the starting offset of the sub binary in `binary` (starting at 0),
     * `length` : (Optional) a `tinyint`, `smallint`, `integer`, or `bigint` value
                   as the length of the sub binary.
   * Return Value:

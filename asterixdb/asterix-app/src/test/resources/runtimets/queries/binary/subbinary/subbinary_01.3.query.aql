@@ -24,18 +24,18 @@ let $r1 := sub-binary(hex(''),0) = hex('')
 let $r2 := sub-binary(hex(''),1) = hex('')
 let $r3 := sub-binary(hex(''),-1) = hex('')
 
-let $r4 := sub-binary($x, 1, binary-length($x)) = $x
-let $r5 := sub-binary($x, 2, 1) = hex('bb')
-let $r6 := sub-binary($x, 2) = hex('bbccdd')
-let $r7 := sub-binary($x, 5, 0) = hex('')
-let $r8 := sub-binary($x, 4, 1) = hex('dd')
-let $r9 := sub-binary($x, 2, 2) = hex('bbcc') 
+let $r4 := sub-binary($x, 0, binary-length($x)) = $x
+let $r5 := sub-binary($x, 1, 1) = hex('bb')
+let $r6 := sub-binary($x, 1) = hex('bbccdd')
+let $r7 := sub-binary($x, 4, 0) = hex('')
+let $r8 := sub-binary($x, 3, 1) = hex('dd')
+let $r9 := sub-binary($x, 1, 2) = hex('bbcc')
 
 let $r10 := sub-binary($x, 0) = $x
 let $r11 := sub-binary($x, -1) = $x
-let $r12 := sub-binary($x, 1, 256) = $x
-let $r13 := sub-binary($x, 2, 256) = hex('bbccdd')
-let $r14 := sub-binary($x, 2, -1) = hex('')
+let $r12 := sub-binary($x, 0, 256) = $x
+let $r13 := sub-binary($x, 1, 256) = hex('bbccdd')
+let $r14 := sub-binary($x, 1, -1) = hex('')
 
 return  [ $r1 ,$r2 ,$r3 ,$r4 ,$r5 , $r6 , $r7 , $r8 , $r9 , $r10 , $r11 , $r12 , $r13 , $r14 ]
 

@@ -82,14 +82,14 @@ declare function q22_customer_tmp() {
 (
     select element {'c_acctbal':c.c_acctbal,'c_custkey':c.c_custkey,'cntrycode':phone_substr}
     from  Customer as c
-    with  phone_substr as tpch.substring(c.c_phone,1,2)
+    with  phone_substr as tpch.substring(c.c_phone,0,2)
     where ((phone_substr = '13') or (phone_substr = '31') or (phone_substr = '23') or (phone_substr = '29') or (phone_substr = '30') or (phone_substr = '18') or (phone_substr = '17'))
 )
 };
 with  avg as tpch.coll_avg((
       select element c.c_acctbal
       from  Customer as c
-      with  phone_substr as tpch.substring(c.c_phone,1,2)
+      with  phone_substr as tpch.substring(c.c_phone,0,2)
       where ((c.c_acctbal > 0.0) and ((phone_substr = '13') or (phone_substr = '31') or (phone_substr = '23') or (phone_substr = '29') or (phone_substr = '30') or (phone_substr = '18') or (phone_substr = '17')))
   ))
 select element {'cntrycode':cntrycode,'numcust':tpch.coll_count(g),'totacctbal':tpch.coll_sum((

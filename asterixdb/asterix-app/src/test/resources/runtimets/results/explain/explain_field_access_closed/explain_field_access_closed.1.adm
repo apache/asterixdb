@@ -28,7 +28,7 @@ distribute result [$$35]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   project ([$$33, $$36])
                   -- STREAM_PROJECT  |PARTITIONED|
-                    assign [$$36, $$33] <- [substring($$e.getField(1), 1), $$e.getField(2)]
+                    assign [$$36, $$33] <- [substring($$e.getField(1), 0), $$e.getField(2)]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$e])
                       -- STREAM_PROJECT  |PARTITIONED|

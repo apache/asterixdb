@@ -27,7 +27,7 @@ FunctionDecl q22_customer_tmp([]) {
             Variable [ Name=$c ]
             Field=c_phone
           ]
-          LiteralExpr [LONG] [1]
+          LiteralExpr [LONG] [0]
           LiteralExpr [LONG] [2]
         ]
       )

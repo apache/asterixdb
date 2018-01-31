@@ -19,4 +19,4 @@
 use dataverse test;
 
 for $x in ["foobar"]
-return substring($x, 2, 3)
+return substring($x, 1, 3)

@@ -72,12 +72,12 @@ create type CustomerType as closed {
 
 create dataset Orders(OrderType)
   primary key o_orderkey;
-create dataset Customer(CustomerType) 
+create dataset Customer(CustomerType)
   primary key c_custkey;
 
 declare function q22_customer_tmp() {
   for $c in dataset('Customer')
-  let $phone_substr := substring($c.c_phone, 1, 2)
+  let $phone_substr := substring($c.c_phone, 0, 2)
   where $phone_substr = '13'
     or $phone_substr = '31'
     or $phone_substr = '23'
@@ -94,7 +94,7 @@ declare function q22_customer_tmp() {
 
 let $avg := avg(
   for $c in dataset('Customer')
-  let $phone_substr := substring($c.c_phone, 1, 2)
+  let $phone_substr := substring($c.c_phone, 0, 2)
   where $c.c_acctbal > 0.00
     and ($phone_substr = '13'
     or $phone_substr = '31'

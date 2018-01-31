@@ -22,6 +22,6 @@ USE gby;
 FROM Employee e
     JOIN Incentive i ON e.job_category = i.job_category
     JOIN SuperStars s ON e.id = s.id
-GROUP BY substr(e.department_id, 1)
-SELECT substr(e.department_id, 1), SUM(e.salary + i.bonus);
+GROUP BY substr(e.department_id, 0)
+SELECT substr(e.department_id, 0), SUM(e.salary + i.bonus);
 

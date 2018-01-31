@@ -24,13 +24,13 @@
  */
 
 let $str1:="Hello World"
-let $str2:=substring($str1,10)
+let $str2:=substring($str1,9)
 
 let $str3:="This is a test string"
-let $str4:=substring($str3,21)
+let $str4:=substring($str3,20)
 
 let $str5:="This is a test string"
-let $str6:=substring($str5,22)
+let $str6:=substring($str5,21)
 
 let $str7:="This is a test string"
 let $str8:=substring($str7,0)
@@ -40,7 +40,7 @@ let $str10:=substring($str9,-1)
 
 let $str11:="This is a test string"
 let $str12:="This is a another test string"
-let $str13:=substring(string-concat([$str11,$str12]),21)
+let $str13:=substring(string-concat([$str11,$str12]),20)
 
-let $str14:=substring("UC Irvine",string-length("UC Irvine")/2)
+let $str14:=substring("UC Irvine",string-length("UC Irvine")/2 - 1)
 return { "str2":$str2,"str4":$str4,"str6":$str6,"str8":$str8,"str10":$str10,"str13":$str13,"str14":$str14}

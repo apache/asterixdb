@@ -21,7 +21,7 @@
 USE tpcds;
 
 SELECT
-   SUBSTR(w.w_warehouse_name,1,20)
+   SUBSTR(w.w_warehouse_name,0,20)
   ,sm.sm_type
   ,web.web_name
   ,SUM(CASE WHEN (ws.ws_ship_date_sk - ws.ws_sold_date_sk) <= 30 THEN 1 ELSE 0 END)  AS c30_days
@@ -45,10 +45,10 @@ AND ws.ws_warehouse_sk   = w.w_warehouse_sk
 AND ws.ws_ship_mode_sk   = sm.sm_ship_mode_sk
 AND ws.ws_web_site_sk    = web.web_site_sk
 GROUP BY
-   SUBSTR(w.w_warehouse_name,1,20)
+   SUBSTR(w.w_warehouse_name,0,20)
   ,sm.sm_type
   ,web.web_name
-ORDER BY SUBSTR(w.w_warehouse_name,1,20)
+ORDER BY SUBSTR(w.w_warehouse_name,0,20)
         ,sm_type
        ,web_name
 LIMIT 100;

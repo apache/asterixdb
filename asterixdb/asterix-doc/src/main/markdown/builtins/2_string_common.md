@@ -211,8 +211,8 @@
     * `string` : a `string` that might contain the pattern,
     * `string_pattern` : a pattern `string` to be matched.
  * Return Value:
-    * the first position that `string_pattern` appears within `string`,
-      or -1 if it does not appear,
+    * the first position that `string_pattern` appears within `string`
+      (starting at 0), or -1 if it does not appear,
     * `missing` if any argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value,
     * any other non-string input value will cause a type error.
@@ -306,8 +306,8 @@
     * `string_flag` : (Optional) a `string` with flags to be used during regular expression matching.
         * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
  * Return Value:
-    * the first position that the regular expression `string_pattern` appears in `string`,
-      or -1 if it does not appear.
+    * the first position that the regular expression `string_pattern` appears in `string`
+      (starting at 0), or -1 if it does not appear.
     * `missing` if any argument is a `missing` value,
     * `null` if any argument is a `null` value but no argument is a `missing` value,
     * any other non-string input value will cause a type error.
@@ -363,7 +363,7 @@
  * Returns a string formed by repeating the input `string` `n` times.
  * Arguments:
     * `string` : a `string` to be repeated,
-    * `offset` : an `tinyint`/`smallint`/`integer`/`bigint` value as the starting offset of the substring in `string`.
+    * `n` : an `tinyint`/`smallint`/`integer`/`bigint` value - how many times the string should be repeated.
  * Return Value:
     * a string that repeats the input `string` `n` times,
     * `missing` if any argument is a `missing` value,
@@ -471,7 +471,8 @@
  * Returns the substring from the given string `string` based on the given start offset `offset` with the optional `length`.
  * Arguments:
     * `string` : a `string` to be extracted,
-    * `offset` : an `tinyint`/`smallint`/`integer`/`bigint` value as the starting offset of the substring in `string`,
+    * `offset` : an `tinyint`/`smallint`/`integer`/`bigint` value as the starting offset of the substring in `string`
+                 (starting at 0),
     * `length` : (Optional) an an `tinyint`/`smallint`/`integer`/`bigint` value as the length of the substring.
  * Return Value:
     * a `string` that represents the substring,

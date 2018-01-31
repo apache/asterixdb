@@ -16,7 +16,7 @@ FunctionCall TinySocial.substring@2[
     Variable [ Name=$message ]
     Field=message
   ]
-  LiteralExpr [LONG] [30]
+  LiteralExpr [LONG] [29]
 ]
 msg
 ]
@@ -78,7 +78,7 @@ Orderby
       Variable [ Name=$message ]
       Field=message
     ]
-    LiteralExpr [LONG] [30]
+    LiteralExpr [LONG] [29]
   ]
   ASC
 
