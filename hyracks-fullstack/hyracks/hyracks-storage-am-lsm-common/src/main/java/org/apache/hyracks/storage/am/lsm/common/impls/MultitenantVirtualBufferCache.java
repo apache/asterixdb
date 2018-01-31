@@ -108,7 +108,15 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     public synchronized void open() throws HyracksDataException {
         ++openCount;
         if (openCount == 1) {
-            vbc.open();
+            boolean failed = true;
+            try {
+                vbc.open();
+                failed = false;
+            } finally {
+                if (failed) {
+                    openCount--;
+                }
+            }
         }
     }
 

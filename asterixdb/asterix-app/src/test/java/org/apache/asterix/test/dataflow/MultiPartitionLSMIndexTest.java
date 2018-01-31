@@ -189,8 +189,8 @@ public class MultiPartitionLSMIndexTest {
         }
         // allow all operations
         for (int i = 0; i < NUM_PARTITIONS; i++) {
-            ComponentRollbackTest.allowAllOps(primaryLsmBtrees[i]);
-            ComponentRollbackTest.allowAllOps(secondaryLsmBtrees[i]);
+            StorageTestUtils.allowAllOps(primaryLsmBtrees[i]);
+            StorageTestUtils.allowAllOps(secondaryLsmBtrees[i]);
             actors[i].add(new Request(Request.Action.INSERT_OPEN));
         }
     }
@@ -224,9 +224,9 @@ public class MultiPartitionLSMIndexTest {
             }
             ensureDone(actors[0]);
             // search now and ensure partition 0 has all the records
-            ComponentRollbackTest.searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+            StorageTestUtils.searchAndAssertCount(nc, 0, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
             // and that partition 1 has no records
-            ComponentRollbackTest.searchAndAssertCount(nc, 1, dataset, storageManager, 0);
+            StorageTestUtils.searchAndAssertCount(nc, 1, dataset, storageManager, 0);
             // and that partition 0 has numFlushes disk components
             Assert.assertEquals(totalNumOfComponents, primaryLsmBtrees[0].getDiskComponents().size());
             // and that partition 1 has no disk components
@@ -655,7 +655,7 @@ public class MultiPartitionLSMIndexTest {
                         if (tupleAppender.getTupleCount() > 0) {
                             tupleAppender.write(insertOps[partition], true);
                         }
-                        ComponentRollbackTest.waitForOperations(primaryLsmBtrees[partition]);
+                        StorageTestUtils.waitForOperations(primaryLsmBtrees[partition]);
                         break;
                     default:
                         break;

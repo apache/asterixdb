@@ -45,7 +45,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.test.common.TestHelper;
-import org.apache.asterix.test.dataflow.ComponentRollbackTest.Searcher;
+import org.apache.asterix.test.dataflow.StorageTestUtils.Searcher;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -147,7 +147,7 @@ public class SearchCursorComponentSwitchTest {
     }
 
     void unblockSearch(TestLsmBtree lsmBtree) {
-        lsmBtree.addSearchCallback(ComponentRollbackTest.ALLOW_CALLBACK);
+        lsmBtree.addSearchCallback(StorageTestUtils.ALLOW_CALLBACK);
         lsmBtree.allowSearch(1);
     }
 
@@ -155,7 +155,7 @@ public class SearchCursorComponentSwitchTest {
     public void testCursorSwitchSucceed() {
         try {
             // allow all operations
-            ComponentRollbackTest.allowAllOps(lsmBtree);
+            StorageTestUtils.allowAllOps(lsmBtree);
             // except search
             lsmBtree.clearSearchCallbacks();
             insertOp.open();
@@ -170,7 +170,7 @@ public class SearchCursorComponentSwitchTest {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
                     }
-                    ComponentRollbackTest.flush(dsLifecycleMgr, lsmBtree, dataset, false);
+                    StorageTestUtils.flush(dsLifecycleMgr, lsmBtree, dataset, false);
                 }
                 ITupleReference tuple = tupleGenerator.next();
                 DataflowUtils.addTupleToFrame(tupleAppender, tuple, insertOp);
@@ -183,7 +183,7 @@ public class SearchCursorComponentSwitchTest {
             firstSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
             // wait till firstSearcher enter the components
             firstSearcher.waitUntilEntered();
-            ComponentRollbackTest.flush(dsLifecycleMgr, lsmBtree, dataset, false);
+            StorageTestUtils.flush(dsLifecycleMgr, lsmBtree, dataset, false);
             nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // unblock the search
             unblockSearch(lsmBtree);
@@ -201,7 +201,7 @@ public class SearchCursorComponentSwitchTest {
     public void testCursorSwitchFails() {
         try {
             // allow all operations
-            ComponentRollbackTest.allowAllOps(lsmBtree);
+            StorageTestUtils.allowAllOps(lsmBtree);
             // except search
             lsmBtree.clearSearchCallbacks();
             insertOp.open();
@@ -216,7 +216,7 @@ public class SearchCursorComponentSwitchTest {
                     if (tupleAppender.getTupleCount() > 0) {
                         tupleAppender.write(insertOp, true);
                     }
-                    ComponentRollbackTest.flush(dsLifecycleMgr, lsmBtree, dataset, false);
+                    StorageTestUtils.flush(dsLifecycleMgr, lsmBtree, dataset, false);
                 }
                 ITupleReference tuple = tupleGenerator.next();
                 DataflowUtils.addTupleToFrame(tupleAppender, tuple, insertOp);
@@ -229,7 +229,7 @@ public class SearchCursorComponentSwitchTest {
             firstSearcher = new Searcher(nc, 0, dataset, storageManager, lsmBtree, TOTAL_NUM_OF_RECORDS);
             // wait till firstSearcher enter the components
             firstSearcher.waitUntilEntered();
-            ComponentRollbackTest.flush(dsLifecycleMgr, lsmBtree, dataset, false);
+            StorageTestUtils.flush(dsLifecycleMgr, lsmBtree, dataset, false);
             nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
             // merge all components
             ILSMIndexAccessor mergeAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
@@ -255,7 +255,7 @@ public class SearchCursorComponentSwitchTest {
             throws HyracksDataException, AlgebricksException {
         nc.newJobId();
         TestTupleCounterFrameWriter countOp =
-                ComponentRollbackTest.create(nc.getSearchOutputDesc(KEY_TYPES, RECORD_TYPE, META_TYPE),
+                StorageTestUtils.create(nc.getSearchOutputDesc(KEY_TYPES, RECORD_TYPE, META_TYPE),
                         Collections.emptyList(), Collections.emptyList(), false);
         IPushRuntime emptyTupleOp = nc.getFullScanPipeline(countOp, ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE,
                 new NoMergePolicyFactory(), null, null, KEY_INDEXES, KEY_INDICATORS_LIST, storageManager);

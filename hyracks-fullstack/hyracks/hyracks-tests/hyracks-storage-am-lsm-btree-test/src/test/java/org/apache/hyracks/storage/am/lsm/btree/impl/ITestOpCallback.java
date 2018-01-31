@@ -18,8 +18,10 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.impl;
 
-public interface ITestOpCallback<T> {
-    void before(T t);
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-    void after();
+public interface ITestOpCallback<T> {
+    void before(T t) throws HyracksDataException;
+
+    void after() throws HyracksDataException;
 }
