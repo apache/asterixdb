@@ -66,7 +66,7 @@ public interface INcApplicationContext extends IApplicationContext {
 
     IResourceIdFactory getResourceIdFactory();
 
-    ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID);
+    ILSMOperationTracker getPrimaryOperationTracker(int datasetID, int partition);
 
     void initialize(boolean initialRun) throws IOException, ACIDException, AlgebricksException;
 

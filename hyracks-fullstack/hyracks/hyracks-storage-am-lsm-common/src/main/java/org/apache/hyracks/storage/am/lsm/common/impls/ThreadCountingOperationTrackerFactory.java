@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import org.apache.hyracks.storage.common.IResource;
 
 public class ThreadCountingOperationTrackerFactory implements ILSMOperationTrackerFactory {
 
@@ -32,7 +33,7 @@ public class ThreadCountingOperationTrackerFactory implements ILSMOperationTrack
     }
 
     @Override
-    public ILSMOperationTracker getOperationTracker(INCServiceContext ctx) {
+    public ILSMOperationTracker getOperationTracker(INCServiceContext ctx, IResource resource) {
         return new ThreadCountingTracker();
     }
 }

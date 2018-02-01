@@ -135,7 +135,7 @@ public class LSMBTreeUtil {
             int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean durable,
-            IMetadataPageManagerFactory freePageManagerFactory, ITracer tracer) {
+            IMetadataPageManagerFactory freePageManagerFactory, ITracer tracer) throws HyracksDataException {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory =
                 new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, false, false);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory =
@@ -187,8 +187,8 @@ public class LSMBTreeUtil {
             IBufferCache diskBufferCache, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            int[] buddyBTreeFields, boolean durable, IMetadataPageManagerFactory freePageManagerFactory,
-            ITracer tracer) {
+            int[] buddyBTreeFields, boolean durable, IMetadataPageManagerFactory freePageManagerFactory, ITracer tracer)
+            throws HyracksDataException {
         ITypeTraits[] buddyBtreeTypeTraits = new ITypeTraits[buddyBTreeFields.length];
         IBinaryComparatorFactory[] buddyBtreeCmpFactories = new IBinaryComparatorFactory[buddyBTreeFields.length];
         for (int i = 0; i < buddyBtreeTypeTraits.length; i++) {

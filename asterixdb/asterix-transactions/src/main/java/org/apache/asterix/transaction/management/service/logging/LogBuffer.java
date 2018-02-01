@@ -222,7 +222,7 @@ public class LogBuffer implements ILogBuffer {
                         txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableTxnId);
                         txnSubsystem.getLockManager().unlock(reusableDatasetId, logRecord.getPKHashValue(),
                                 LockMode.ANY, txnCtx);
-                        txnCtx.notifyEntityCommitted();
+                        txnCtx.notifyEntityCommitted(logRecord.getResourcePartition());
                         if (txnSubsystem.getTransactionProperties().isCommitProfilerEnabled()) {
                             txnSubsystem.incrementEntityCommitCount();
                         }

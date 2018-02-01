@@ -33,9 +33,9 @@ public class TestPrimaryIndexOperationTracker extends PrimaryIndexOperationTrack
 
     private final List<ITestOpCallback<Void>> callbacks = new ArrayList<>();
 
-    public TestPrimaryIndexOperationTracker(int datasetID, ILogManager logManager, DatasetInfo dsInfo,
+    public TestPrimaryIndexOperationTracker(int datasetID, int partition, ILogManager logManager, DatasetInfo dsInfo,
             ILSMComponentIdGenerator idGenerator) {
-        super(datasetID, logManager, dsInfo, idGenerator);
+        super(datasetID, partition, logManager, dsInfo, idGenerator);
     }
 
     public void addCallback(ITestOpCallback<Void> callback) {

@@ -94,7 +94,8 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             ILSMDiskComponentFactory bulkLoadComponentFactory, ILSMDiskComponentFactory transactionComponentFactory,
             double bloomFilterFalsePositiveRate, IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean durable, ITracer tracer) {
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean durable, ITracer tracer)
+            throws HyracksDataException {
         super(ioManager, insertLeafFrameFactory, deleteLeafFrameFactory, bufferCache, fileManager, componentFactory,
                 bulkLoadComponentFactory, bloomFilterFalsePositiveRate, cmpFactories, mergePolicy, opTracker,
                 ioScheduler, ioOpCallbackFactory, false, durable, tracer);

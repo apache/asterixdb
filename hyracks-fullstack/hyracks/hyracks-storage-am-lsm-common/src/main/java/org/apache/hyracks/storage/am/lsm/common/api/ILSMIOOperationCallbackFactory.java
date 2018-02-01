@@ -21,14 +21,16 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.IResource;
 
 public interface ILSMIOOperationCallbackFactory extends Serializable {
     /**
-     * Initialize the callback factory with the given ncCtx
+     * Initialize the callback factory with the given ncCtx and resource
      *
      * @param ncCtx
      */
-    void initialize(INCServiceContext ncCtx);
+    void initialize(INCServiceContext ncCtx, IResource resource);
 
-    ILSMIOOperationCallback createIoOpCallback(ILSMIndex index);
+    ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) throws HyracksDataException;
 }

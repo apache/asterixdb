@@ -75,17 +75,19 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      * creates (if necessary) and returns the primary index operation tracker of a dataset.
      *
      * @param datasetId
+     * @param partition
      * @return
      */
-    PrimaryIndexOperationTracker getOperationTracker(int datasetId);
+    PrimaryIndexOperationTracker getOperationTracker(int datasetId, int partition);
 
     /**
      * creates (if necessary) and returns the component Id generator of a dataset.
      *
      * @param datasetId
+     * @param partition
      * @return
      */
-    ILSMComponentIdGenerator getComponentIdGenerator(int datasetId);
+    ILSMComponentIdGenerator getComponentIdGenerator(int datasetId, int partition);
 
     /**
      * creates (if necessary) and returns the dataset virtual buffer caches.

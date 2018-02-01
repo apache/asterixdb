@@ -170,7 +170,7 @@ public class LogManagerTest {
         final TransactionOptions options = new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL);
         final ITransactionManager transactionManager = ncAppCtx.getTransactionSubsystem().getTransactionManager();
         final ITransactionContext txnCtx = transactionManager.beginTransaction(txnId, options);
-        txnCtx.register(resourceId, index, NoOpOperationCallback.INSTANCE, true);
+        txnCtx.register(resourceId, 0, index, NoOpOperationCallback.INSTANCE, true);
         return txnCtx;
     }
 

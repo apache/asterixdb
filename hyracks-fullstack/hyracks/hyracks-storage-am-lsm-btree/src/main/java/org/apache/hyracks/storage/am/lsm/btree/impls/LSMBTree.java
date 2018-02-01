@@ -125,7 +125,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             double bloomFilterFalsePositiveRate, IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
             ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, boolean durable,
-            ITracer tracer) {
+            ITracer tracer) throws HyracksDataException {
         super(ioManager, bufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
                 ioOpCallbackFactory, componentFactory, bulkLoadComponentFactory, durable, tracer);
         this.insertLeafFrameFactory = insertLeafFrameFactory;

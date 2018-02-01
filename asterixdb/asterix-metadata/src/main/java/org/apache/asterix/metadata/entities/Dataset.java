@@ -42,6 +42,7 @@ import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
@@ -818,6 +819,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     protected int[] getDatasetPartitions(MetadataProvider metadataProvider) throws AlgebricksException {
         FileSplit[] splitsForDataset =
                 metadataProvider.splitsForIndex(metadataProvider.getMetadataTxnContext(), this, getDatasetName());
-        return IntStream.range(0, splitsForDataset.length).toArray();
+        int[] partitions = new int[splitsForDataset.length];
+        for (int i = 0; i < partitions.length; i++) {
+            partitions[i] = StoragePathUtil.getPartitionNumFromRelativePath(splitsForDataset[i].getPath());
+        }
+        return partitions;
     }
 }

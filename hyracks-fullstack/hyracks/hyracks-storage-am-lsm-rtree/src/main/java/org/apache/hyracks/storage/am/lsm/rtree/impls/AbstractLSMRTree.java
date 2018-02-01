@@ -127,7 +127,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             ILinearizeComparatorFactory linearizer, int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean durable,
-            boolean isPointMBR, ITracer tracer) {
+            boolean isPointMBR, ITracer tracer) throws HyracksDataException {
         super(ioManager, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
                 ioScheduler, ioOpCallbackFactory, componentFactory, componentFactory, durable, tracer);
         this.rtreeInteriorFrameFactory = rtreeInteriorFrameFactory;

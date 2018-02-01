@@ -68,7 +68,7 @@ public class UpsertOperationCallbackFactory extends AbstractOperationCallbackFac
             IModificationOperationCallback modCallback = new UpsertOperationCallback(new DatasetId(datasetId),
                     primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem, resource.getId(),
                     aResource.getPartition(), resourceType, indexOp);
-            txnCtx.register(resource.getId(), index, modCallback, true);
+            txnCtx.register(resource.getId(), aResource.getPartition(), index, modCallback, true);
             return modCallback;
         } catch (ACIDException e) {
             throw new HyracksDataException(e);

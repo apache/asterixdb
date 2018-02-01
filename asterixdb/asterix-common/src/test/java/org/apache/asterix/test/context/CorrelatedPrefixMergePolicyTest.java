@@ -22,15 +22,14 @@ package org.apache.asterix.test.context;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicy;
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.IndexInfo;
+import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
@@ -59,6 +58,8 @@ public class CorrelatedPrefixMergePolicyTest extends TestCase {
     private final int MAX_COMPONENT_COUNT = 3;
 
     private final int DATASET_ID = 1;
+
+    private long nextResourceId = 0;
 
     @Test
     public void testBasic() {
@@ -183,19 +184,15 @@ public class CorrelatedPrefixMergePolicyTest extends TestCase {
         }
     }
 
-    private ILSMMergePolicy mockMergePolicy(IndexInfo... indexes) {
+    private ILSMMergePolicy mockMergePolicy(IndexInfo... indexInfos) {
         Map<String, String> properties = new HashMap<>();
         properties.put("max-tolerance-component-count", String.valueOf(MAX_COMPONENT_COUNT));
         properties.put("max-mergable-component-size", String.valueOf(MAX_COMPONENT_SIZE));
 
-        Set<IndexInfo> indexInfos = new HashSet<>();
-        for (IndexInfo info : indexes) {
-            indexInfos.add(info);
+        DatasetInfo dsInfo = new DatasetInfo(DATASET_ID);
+        for (IndexInfo index : indexInfos) {
+            dsInfo.addIndex(index.getResourceId(), index);
         }
-
-        DatasetInfo dsInfo = Mockito.mock(DatasetInfo.class);
-        Mockito.when(dsInfo.getDatsetIndexInfos()).thenReturn(indexInfos);
-
         IDatasetLifecycleManager manager = Mockito.mock(IDatasetLifecycleManager.class);
         Mockito.when(manager.getDatasetInfo(DATASET_ID)).thenReturn(dsInfo);
 
@@ -238,8 +235,16 @@ public class CorrelatedPrefixMergePolicyTest extends TestCase {
 
         Mockito.when(index.createAccessor(Mockito.any(IIndexAccessParameters.class))).thenReturn(accessor);
         Mockito.when(index.isPrimaryIndex()).thenReturn(isPrimary);
+        if (isPrimary) {
+            PrimaryIndexOperationTracker opTracker = Mockito.mock(PrimaryIndexOperationTracker.class);
+            Mockito.when(opTracker.getPartition()).thenReturn(partition);
+            Mockito.when(index.getOperationTracker()).thenReturn(opTracker);
+        }
         final LocalResource localResource = Mockito.mock(LocalResource.class);
-        return new IndexInfo(index, DATASET_ID, localResource, partition);
+        Mockito.when(localResource.getId()).thenReturn(nextResourceId++);
+        IndexInfo indexInfo = new IndexInfo(index, DATASET_ID, localResource, partition);
+        indexInfo.setOpen(true);
+        return indexInfo;
     }
 
 }

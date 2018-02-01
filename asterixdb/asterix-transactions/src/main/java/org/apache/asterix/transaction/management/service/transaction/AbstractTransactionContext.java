@@ -118,7 +118,7 @@ public abstract class AbstractTransactionContext implements ITransactionContext 
     }
 
     @Override
-    public void register(long resourceId, ILSMIndex index, IModificationOperationCallback callback,
+    public void register(long resourceId, int partition, ILSMIndex index, IModificationOperationCallback callback,
             boolean primaryIndex) {
         synchronized (txnOpTrackers) {
             if (!txnOpTrackers.containsKey(resourceId)) {

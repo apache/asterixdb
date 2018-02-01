@@ -109,15 +109,15 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private ILSMMergePolicyFactory metadataMergePolicyFactory;
     private final INCServiceContext ncServiceContext;
     private final IResourceIdFactory resourceIdFactory;
-    private CompilerProperties compilerProperties;
-    private ExternalProperties externalProperties;
-    private MetadataProperties metadataProperties;
-    private StorageProperties storageProperties;
-    private TransactionProperties txnProperties;
-    private ActiveProperties activeProperties;
-    private BuildProperties buildProperties;
-    private ReplicationProperties replicationProperties;
-    private MessagingProperties messagingProperties;
+    private final CompilerProperties compilerProperties;
+    private final ExternalProperties externalProperties;
+    private final MetadataProperties metadataProperties;
+    private final StorageProperties storageProperties;
+    private final TransactionProperties txnProperties;
+    private final ActiveProperties activeProperties;
+    private final BuildProperties buildProperties;
+    private final ReplicationProperties replicationProperties;
+    private final MessagingProperties messagingProperties;
     private final NodeProperties nodeProperties;
     private ExecutorService threadExecutor;
     private IDatasetMemoryManager datasetMemoryManager;
@@ -373,8 +373,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public ILSMOperationTracker getLSMBTreeOperationTracker(int datasetID) {
-        return datasetLifecycleManager.getOperationTracker(datasetID);
+    public ILSMOperationTracker getPrimaryOperationTracker(int datasetID, int partition) {
+        return datasetLifecycleManager.getOperationTracker(datasetID, partition);
     }
 
     @Override

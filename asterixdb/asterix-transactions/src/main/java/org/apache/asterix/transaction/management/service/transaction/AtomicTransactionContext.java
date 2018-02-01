@@ -44,9 +44,9 @@ public class AtomicTransactionContext extends AbstractTransactionContext {
     }
 
     @Override
-    public void register(long resourceId, ILSMIndex index, IModificationOperationCallback callback,
+    public void register(long resourceId, int partition, ILSMIndex index, IModificationOperationCallback callback,
             boolean primaryIndex) {
-        super.register(resourceId, index, callback, primaryIndex);
+        super.register(resourceId, partition, index, callback, primaryIndex);
         synchronized (txnOpTrackers) {
             if (primaryIndex && !opTrackers.containsKey(resourceId)) {
                 opTrackers.put(resourceId, index.getOperationTracker());
@@ -67,7 +67,7 @@ public class AtomicTransactionContext extends AbstractTransactionContext {
     }
 
     @Override
-    public void notifyEntityCommitted() {
+    public void notifyEntityCommitted(int partition) {
         throw new IllegalStateException("Unexpected entity commit in atomic transaction");
     }
 

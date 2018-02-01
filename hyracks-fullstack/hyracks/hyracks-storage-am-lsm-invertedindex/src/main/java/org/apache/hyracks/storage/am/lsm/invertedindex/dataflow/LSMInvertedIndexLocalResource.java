@@ -87,19 +87,19 @@ public class LSMInvertedIndexLocalResource extends LsmResource {
         IBufferCache bufferCache = storageManager.getBufferCache(serviceCtx);
         ILSMMergePolicy mergePolicy = mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx);
         ILSMIOOperationScheduler ioScheduler = ioSchedulerProvider.getIoScheduler(serviceCtx);
-        ioOpCallbackFactory.initialize(serviceCtx);
+        ioOpCallbackFactory.initialize(serviceCtx, this);
         if (isPartitioned) {
             return InvertedIndexUtils.createPartitionedLSMInvertedIndex(ioManager, virtualBufferCaches, typeTraits,
                     cmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory, bufferCache,
                     file.getAbsolutePath(), bloomFilterFalsePositiveRate, mergePolicy,
-                    opTrackerProvider.getOperationTracker(serviceCtx), ioScheduler, ioOpCallbackFactory,
+                    opTrackerProvider.getOperationTracker(serviceCtx, this), ioScheduler, ioOpCallbackFactory,
                     invertedIndexFields, filterTypeTraits, filterCmpFactories, filterFields,
                     filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,
                     metadataPageManagerFactory);
         } else {
             return InvertedIndexUtils.createLSMInvertedIndex(ioManager, virtualBufferCaches, typeTraits, cmpFactories,
                     tokenTypeTraits, tokenCmpFactories, tokenizerFactory, bufferCache, file.getAbsolutePath(),
-                    bloomFilterFalsePositiveRate, mergePolicy, opTrackerProvider.getOperationTracker(serviceCtx),
+                    bloomFilterFalsePositiveRate, mergePolicy, opTrackerProvider.getOperationTracker(serviceCtx, this),
                     ioScheduler, ioOpCallbackFactory, invertedIndexFields, filterTypeTraits, filterCmpFactories,
                     filterFields, filterFieldsForNonBulkLoadOps, invertedIndexFieldsForNonBulkLoadOps, durable,
                     metadataPageManagerFactory);

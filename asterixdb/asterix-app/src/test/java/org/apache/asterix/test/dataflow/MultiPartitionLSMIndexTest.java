@@ -251,7 +251,7 @@ public class MultiPartitionLSMIndexTest {
 
     /**
      * This test update partition 0, schedule flush and modify partition 1
-     * Then ensure that in partition 1, primary and secondary have different component ids
+     * Then ensure that in partition 1, primary and secondary have the same component ids
      */
     @Test
     public void testAllocateWhileFlushIsScheduled() {
@@ -400,7 +400,8 @@ public class MultiPartitionLSMIndexTest {
             AtomicBoolean arrivedAtSchduleFlush = new AtomicBoolean(false);
             AtomicBoolean finishedSchduleFlush = new AtomicBoolean(false);
             MutableBoolean proceedToScheduleFlush = new MutableBoolean(false);
-            addOpTrackerCallback(primaryLsmBtrees[0], new ITestOpCallback<Void>() {
+            // keep track of the flush of partition 1 since partitions 0 and 1 are flushed seperately
+            addOpTrackerCallback(primaryLsmBtrees[1], new ITestOpCallback<Void>() {
                 @Override
                 public void before(Void t) {
                     synchronized (arrivedAtSchduleFlush) {

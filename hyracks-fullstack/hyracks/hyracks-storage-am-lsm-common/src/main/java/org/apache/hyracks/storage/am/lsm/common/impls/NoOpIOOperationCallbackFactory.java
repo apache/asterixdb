@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
+import org.apache.hyracks.storage.common.IResource;
 
 public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
     INSTANCE;
@@ -39,7 +40,7 @@ public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFac
     }
 
     @Override
-    public void initialize(INCServiceContext ncCtx) {
+    public void initialize(INCServiceContext ncCtx, IResource resource) {
         // No op
     }
 

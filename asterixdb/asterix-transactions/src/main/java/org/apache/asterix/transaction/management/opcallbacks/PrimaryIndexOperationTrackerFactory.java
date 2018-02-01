@@ -21,9 +21,12 @@ package org.apache.asterix.transaction.management.opcallbacks;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
+import org.apache.hyracks.storage.common.IResource;
 
 public class PrimaryIndexOperationTrackerFactory implements ILSMOperationTrackerFactory {
 
@@ -36,10 +39,12 @@ public class PrimaryIndexOperationTrackerFactory implements ILSMOperationTracker
     }
 
     @Override
-    public ILSMOperationTracker getOperationTracker(INCServiceContext ctx) {
+    public ILSMOperationTracker getOperationTracker(INCServiceContext ctx, IResource resource)
+            throws HyracksDataException {
         IDatasetLifecycleManager dslcManager =
                 ((INcApplicationContext) ctx.getApplicationContext()).getDatasetLifecycleManager();
-        return dslcManager.getOperationTracker(datasetId);
+        int partition = StoragePathUtil.getPartitionNumFromRelativePath(resource.getPath());
+        return dslcManager.getOperationTracker(datasetId, partition);
     }
 
 }

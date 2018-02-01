@@ -69,7 +69,7 @@ public class SecondaryIndexModificationOperationCallbackFactory extends Abstract
             IModificationOperationCallback modCallback = new SecondaryIndexModificationOperationCallback(
                     new DatasetId(datasetId), primaryKeyFields, txnCtx, txnSubsystem.getLockManager(), txnSubsystem,
                     resource.getId(), aResource.getPartition(), resourceType, indexOp);
-            txnCtx.register(resource.getId(), index, modCallback, false);
+            txnCtx.register(resource.getId(), aResource.getPartition(), index, modCallback, false);
             return modCallback;
         } catch (ACIDException e) {
             throw HyracksDataException.create(e);

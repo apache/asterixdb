@@ -20,19 +20,22 @@ package org.apache.asterix.test.dataflow;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Map;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.context.DatasetResource;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import org.apache.hyracks.storage.common.IResource;
 
 public class TestPrimaryIndexOperationTrackerFactory extends PrimaryIndexOperationTrackerFactory {
 
     private static final long serialVersionUID = 1L;
-    private int datasetId;
+    private final int datasetId;
 
     public TestPrimaryIndexOperationTrackerFactory(int datasetId) {
         super(datasetId);
@@ -40,17 +43,19 @@ public class TestPrimaryIndexOperationTrackerFactory extends PrimaryIndexOperati
     }
 
     @Override
-    public ILSMOperationTracker getOperationTracker(INCServiceContext ctx) {
+    public ILSMOperationTracker getOperationTracker(INCServiceContext ctx, IResource resource) {
         try {
             INcApplicationContext appCtx = (INcApplicationContext) ctx.getApplicationContext();
             DatasetLifecycleManager dslcManager = (DatasetLifecycleManager) appCtx.getDatasetLifecycleManager();
             DatasetResource dsr = dslcManager.getDatasetLifecycle(datasetId);
-            PrimaryIndexOperationTracker opTracker = dsr.getOpTracker();
+            int partition = StoragePathUtil.getPartitionNumFromRelativePath(resource.getPath());
+            PrimaryIndexOperationTracker opTracker = dslcManager.getOperationTracker(datasetId, partition);
             if (!(opTracker instanceof TestPrimaryIndexOperationTracker)) {
-                Field opTrackerField = DatasetResource.class.getDeclaredField("datasetPrimaryOpTracker");
-                opTracker = new TestPrimaryIndexOperationTracker(datasetId,
-                        appCtx.getTransactionSubsystem().getLogManager(), dsr.getDatasetInfo(), dsr.getIdGenerator());
-                setFinal(opTrackerField, dsr, opTracker);
+                Field opTrackersField = DatasetResource.class.getDeclaredField("datasetPrimaryOpTrackers");
+                opTracker = new TestPrimaryIndexOperationTracker(datasetId, partition,
+                        appCtx.getTransactionSubsystem().getLogManager(), dsr.getDatasetInfo(),
+                        dslcManager.getComponentIdGenerator(datasetId, partition));
+                replaceMapEntry(opTrackersField, dsr, partition, opTracker);
             }
             return opTracker;
         } catch (Exception e) {
@@ -64,5 +69,15 @@ public class TestPrimaryIndexOperationTrackerFactory extends PrimaryIndexOperati
         modifiersField.setAccessible(true);
         modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
         field.set(obj, newValue);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    static void replaceMapEntry(Field field, Object obj, Object key, Object value)
+            throws Exception, IllegalAccessException {
+        field.setAccessible(true);
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        Map map = (Map) field.get(obj);
+        map.put(key, value);
     }
 }

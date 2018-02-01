@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.commons.lang3.tuple.Pair;
@@ -92,10 +91,10 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
         ILSMComponent leftComponent = immutableComponents.get(mergeableIndexes.getLeft());
         ILSMComponent rightComponent = immutableComponents.get(mergeableIndexes.getRight());
         ILSMComponentId targetId = LSMComponentIdUtils.union(leftComponent.getId(), rightComponent.getId());
-        Set<IndexInfo> indexInfos = datasetLifecycleManager.getDatasetInfo(datasetId).getDatsetIndexInfos();
-        int partition = getIndexPartition(index, indexInfos);
-        triggerScheduledMerge(targetId,
-                indexInfos.stream().filter(info -> info.getPartition() == partition).collect(Collectors.toSet()));
+        int partition = ((PrimaryIndexOperationTracker) index.getOperationTracker()).getPartition();
+        Set<ILSMIndex> indexes =
+                datasetLifecycleManager.getDatasetInfo(datasetId).getDatasetPartitionOpenIndexes(partition);
+        triggerScheduledMerge(targetId, indexes);
         return true;
     }
 
@@ -107,11 +106,8 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
      * @param indexInfos
      * @throws HyracksDataException
      */
-    private void triggerScheduledMerge(ILSMComponentId targetId, Set<IndexInfo> indexInfos)
-            throws HyracksDataException {
-        for (IndexInfo info : indexInfos) {
-            ILSMIndex lsmIndex = info.getIndex();
-
+    private void triggerScheduledMerge(ILSMComponentId targetId, Set<ILSMIndex> indexes) throws HyracksDataException {
+        for (ILSMIndex lsmIndex : indexes) {
             List<ILSMDiskComponent> immutableComponents = new ArrayList<>(lsmIndex.getDiskComponents());
             if (isMergeOngoing(immutableComponents)) {
                 continue;
@@ -131,14 +127,5 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
             ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             accessor.scheduleMerge(lsmIndex.getIOOperationCallback(), mergableComponents);
         }
-    }
-
-    private int getIndexPartition(ILSMIndex index, Set<IndexInfo> indexInfos) {
-        for (IndexInfo info : indexInfos) {
-            if (info.getIndex() == index) {
-                return info.getPartition();
-            }
-        }
-        return -1;
     }
 }

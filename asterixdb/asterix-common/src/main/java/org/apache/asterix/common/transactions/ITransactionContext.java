@@ -38,11 +38,13 @@ public interface ITransactionContext {
      * transaction.
      *
      * @param resourceId
+     * @param partition
      * @param index
      * @param callback
      * @param primaryIndex
      */
-    void register(long resourceId, ILSMIndex index, IModificationOperationCallback callback, boolean primaryIndex);
+    void register(long resourceId, int partition, ILSMIndex index, IModificationOperationCallback callback,
+            boolean primaryIndex);
 
     /**
      * Gets the unique transaction id.
@@ -135,8 +137,10 @@ public interface ITransactionContext {
      * Called to notify the transaction that an entity commit
      * log belonging to this transaction has been flushed to
      * disk.
+     *
+     * @param partition
      */
-    void notifyEntityCommitted();
+    void notifyEntityCommitted(int partition);
 
     /**
      * Called after an operation is performed on index

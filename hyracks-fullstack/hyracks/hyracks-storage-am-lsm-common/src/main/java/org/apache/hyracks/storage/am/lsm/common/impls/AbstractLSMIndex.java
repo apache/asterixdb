@@ -112,7 +112,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMDiskComponentFactory componentFactory,
             ILSMDiskComponentFactory bulkLoadComponentFactory, ILSMComponentFilterFrameFactory filterFrameFactory,
             LSMComponentFilterManager filterManager, int[] filterFields, boolean durable,
-            IComponentFilterHelper filterHelper, int[] treeFields, ITracer tracer) {
+            IComponentFilterHelper filterHelper, int[] treeFields, ITracer tracer) throws HyracksDataException {
         this.ioManager = ioManager;
         this.virtualBufferCaches = virtualBufferCaches;
         this.diskBufferCache = diskBufferCache;
@@ -146,7 +146,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
             double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILSMDiskComponentFactory componentFactory, ILSMDiskComponentFactory bulkLoadComponentFactory,
-            boolean durable, ITracer tracer) {
+            boolean durable, ITracer tracer) throws HyracksDataException {
         this.ioManager = ioManager;
         this.diskBufferCache = diskBufferCache;
         this.fileManager = fileManager;

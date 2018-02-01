@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
+import org.apache.hyracks.storage.common.IResource;
 
 /**
  * A default implementation of {@link ILSMComponentIdGeneratorFactory}.
@@ -32,7 +33,7 @@ public class LSMComponentIdGeneratorFactory implements ILSMComponentIdGeneratorF
     private static final long serialVersionUID = 1L;
 
     @Override
-    public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx) {
+    public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx, IResource resource) {
         return new LSMComponentIdGenerator();
     }
 

@@ -66,13 +66,13 @@ public class ExternalRTreeLocalResource extends LSMRTreeLocalResource {
     public IIndex createInstance(INCServiceContext ncServiceCtx) throws HyracksDataException {
         IIOManager ioManager = ncServiceCtx.getIoManager();
         FileReference fileRef = ioManager.resolve(path);
-        ioOpCallbackFactory.initialize(ncServiceCtx);
+        ioOpCallbackFactory.initialize(ncServiceCtx, this);
         return LSMRTreeUtils.createExternalRTree(ioManager, fileRef, storageManager.getBufferCache(ncServiceCtx),
                 typeTraits, cmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 bloomFilterFalsePositiveRate, mergePolicyFactory.createMergePolicy(mergePolicyProperties, ncServiceCtx),
-                opTrackerProvider.getOperationTracker(ncServiceCtx), ioSchedulerProvider.getIoScheduler(ncServiceCtx),
-                ioOpCallbackFactory, linearizeCmpFactory, buddyBTreeFields, durable, isPointMBR,
-                metadataPageManagerFactory, ncServiceCtx.getTracer());
+                opTrackerProvider.getOperationTracker(ncServiceCtx, this),
+                ioSchedulerProvider.getIoScheduler(ncServiceCtx), ioOpCallbackFactory, linearizeCmpFactory,
+                buddyBTreeFields, durable, isPointMBR, metadataPageManagerFactory, ncServiceCtx.getTracer());
 
     }
 }

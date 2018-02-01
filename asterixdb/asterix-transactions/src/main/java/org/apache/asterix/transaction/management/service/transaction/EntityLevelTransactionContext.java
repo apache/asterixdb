@@ -18,11 +18,15 @@
  */
 package org.apache.asterix.transaction.management.service.transaction;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.TxnId;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
@@ -32,30 +36,36 @@ import org.apache.hyracks.util.annotations.ThreadSafe;
 @ThreadSafe
 public class EntityLevelTransactionContext extends AbstractTransactionContext {
 
-    private PrimaryIndexOperationTracker primaryIndexOpTracker;
-    private IModificationOperationCallback primaryIndexCallback;
-    private final AtomicInteger pendingOps;
+    private final Map<Integer, Pair<PrimaryIndexOperationTracker, IModificationOperationCallback>> primaryIndexTrackers;
+    private final Map<Long, AtomicInteger> resourcePendingOps;
+    private final Map<Integer, AtomicInteger> partitionPendingOps;
 
     public EntityLevelTransactionContext(TxnId txnId) {
         super(txnId);
-        pendingOps = new AtomicInteger(0);
+        this.primaryIndexTrackers = new HashMap<>();
+        this.resourcePendingOps = new HashMap<>();
+        this.partitionPendingOps = new HashMap<>();
     }
 
     @Override
-    public void register(long resourceId, ILSMIndex index, IModificationOperationCallback callback,
+    public void register(long resourceId, int partition, ILSMIndex index, IModificationOperationCallback callback,
             boolean primaryIndex) {
-        super.register(resourceId, index, callback, primaryIndex);
+        super.register(resourceId, partition, index, callback, primaryIndex);
         synchronized (txnOpTrackers) {
-            if (primaryIndex && primaryIndexOpTracker == null) {
-                primaryIndexCallback = callback;
-                primaryIndexOpTracker = (PrimaryIndexOperationTracker) index.getOperationTracker();
+            AtomicInteger pendingOps = partitionPendingOps.computeIfAbsent(partition, p -> new AtomicInteger(0));
+            resourcePendingOps.put(resourceId, pendingOps);
+            if (primaryIndex) {
+                Pair<PrimaryIndexOperationTracker, IModificationOperationCallback> pair =
+                        new Pair<PrimaryIndexOperationTracker, IModificationOperationCallback>(
+                                (PrimaryIndexOperationTracker) index.getOperationTracker(), callback);
+                primaryIndexTrackers.put(partition, pair);
             }
         }
     }
 
     @Override
     public void beforeOperation(long resourceId) {
-        pendingOps.incrementAndGet();
+        resourcePendingOps.get(resourceId).incrementAndGet();
     }
 
     @Override
@@ -64,9 +74,11 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
     }
 
     @Override
-    public void notifyEntityCommitted() {
+    public void notifyEntityCommitted(int partition) {
         try {
-            primaryIndexOpTracker.completeOperation(null, LSMOperationType.MODIFICATION, null, primaryIndexCallback);
+            Pair<PrimaryIndexOperationTracker, IModificationOperationCallback> pair =
+                    primaryIndexTrackers.get(partition);
+            pair.first.completeOperation(null, LSMOperationType.MODIFICATION, null, pair.second);
         } catch (HyracksDataException e) {
             throw new ACIDException(e);
         }
@@ -74,13 +86,15 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
 
     @Override
     public void afterOperation(long resourceId) {
-        pendingOps.decrementAndGet();
+        resourcePendingOps.get(resourceId).decrementAndGet();
     }
 
     @Override
     protected void cleanupForAbort() {
-        if (primaryIndexOpTracker != null) {
-            primaryIndexOpTracker.cleanupNumActiveOperationsForAbortedJob(pendingOps.get());
+        for (Entry<Integer, Pair<PrimaryIndexOperationTracker, IModificationOperationCallback>> e : primaryIndexTrackers
+                .entrySet()) {
+            AtomicInteger pendingOps = partitionPendingOps.get(e.getKey());
+            e.getValue().first.cleanupNumActiveOperationsForAbortedJob(pendingOps.get());
         }
     }
 

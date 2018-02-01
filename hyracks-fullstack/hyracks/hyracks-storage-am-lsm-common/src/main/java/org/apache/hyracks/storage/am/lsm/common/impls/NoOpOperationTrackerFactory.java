@@ -25,6 +25,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
+import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 /**
@@ -43,7 +44,7 @@ public class NoOpOperationTrackerFactory implements ILSMOperationTrackerFactory 
     }
 
     @Override
-    public ILSMOperationTracker getOperationTracker(INCServiceContext ctx) {
+    public ILSMOperationTracker getOperationTracker(INCServiceContext ctx, IResource resource) {
         return tracker;
     }
 

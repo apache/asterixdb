@@ -89,8 +89,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             ILSMDiskComponentFactory bulkLoadComponentFactory, double bloomFilterFalsePositiveRate,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, IBinaryComparatorFactory[] btreeCmpFactories,
-            IBinaryComparatorFactory[] buddyBtreeCmpFactories, int[] buddyBTreeFields, boolean durable,
-            ITracer tracer) {
+            IBinaryComparatorFactory[] buddyBtreeCmpFactories, int[] buddyBTreeFields, boolean durable, ITracer tracer)
+            throws HyracksDataException {
         super(ioManager, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
                 ioScheduler, ioOpCallbackFactory, componentFactory, bulkLoadComponentFactory, durable, tracer);
         this.btreeCmpFactories = btreeCmpFactories;

@@ -37,9 +37,8 @@ public class DatasetLocalResourceFactory implements IResourceFactory {
 
     @Override
     public IResource createResource(FileReference fileRef) {
-        IResource resource = resourceFactory.createResource(fileRef);
-        // Currently, we get the partition number from the relative path
         int partition = StoragePathUtil.getPartitionNumFromRelativePath(fileRef.getRelativePath());
+        IResource resource = resourceFactory.createResource(fileRef);
         return new DatasetLocalResource(datasetId, partition, resource);
     }
 }

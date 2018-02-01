@@ -30,6 +30,9 @@ import org.apache.logging.log4j.Logger;
 
 public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     private static final Logger LOGGER = LogManager.getLogger();
+    // partition -> index
+    private final Map<Integer, Set<IndexInfo>> partitionIndexes;
+    // resourceID -> index
     private final Map<Long, IndexInfo> indexes;
     private final int datasetID;
     private int numActiveIOOps;
@@ -40,6 +43,7 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     private boolean durable;
 
     public DatasetInfo(int datasetID) {
+        this.partitionIndexes = new HashMap<>();
         this.indexes = new HashMap<>();
         this.setLastAccess(-1);
         this.datasetID = datasetID;
@@ -69,26 +73,17 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         notifyAll();
     }
 
-    public synchronized Set<ILSMIndex> getDatasetIndexes() {
-        Set<ILSMIndex> datasetIndexes = new HashSet<>();
-        for (IndexInfo iInfo : getIndexes().values()) {
-            if (iInfo.isOpen()) {
-                datasetIndexes.add(iInfo.getIndex());
+    public synchronized Set<ILSMIndex> getDatasetPartitionOpenIndexes(int partition) {
+        Set<ILSMIndex> indexSet = new HashSet<>();
+        Set<IndexInfo> partitionIndexInfos = this.partitionIndexes.get(partition);
+        if (partitionIndexInfos != null) {
+            for (IndexInfo iInfo : partitionIndexInfos) {
+                if (iInfo.isOpen()) {
+                    indexSet.add(iInfo.getIndex());
+                }
             }
         }
-
-        return datasetIndexes;
-    }
-
-    public synchronized Set<IndexInfo> getDatsetIndexInfos() {
-        Set<IndexInfo> infos = new HashSet<>();
-        for (IndexInfo iInfo : getIndexes().values()) {
-            if (iInfo.isOpen()) {
-                infos.add(iInfo);
-            }
-        }
-
-        return infos;
+        return indexSet;
     }
 
     @Override
@@ -158,6 +153,18 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
 
     public Map<Long, IndexInfo> getIndexes() {
         return indexes;
+    }
+
+    public synchronized void addIndex(long resourceID, IndexInfo indexInfo) {
+        indexes.put(resourceID, indexInfo);
+        partitionIndexes.computeIfAbsent(indexInfo.getPartition(), partition -> new HashSet<>()).add(indexInfo);
+    }
+
+    public synchronized void removeIndex(long resourceID) {
+        IndexInfo info = indexes.remove(resourceID);
+        if (info != null) {
+            partitionIndexes.get(info.getPartition()).remove(info);
+        }
     }
 
     public boolean isRegistered() {

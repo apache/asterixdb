@@ -21,9 +21,12 @@ package org.apache.asterix.common.context;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
+import org.apache.hyracks.storage.common.IResource;
 
 /**
  * This factory implementation is used by AsterixDB layer so that indexes of a dataset (/partition)
@@ -41,10 +44,12 @@ public class DatasetLSMComponentIdGeneratorFactory implements ILSMComponentIdGen
     }
 
     @Override
-    public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx) {
+    public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx, IResource resource)
+            throws HyracksDataException {
         IDatasetLifecycleManager dslcManager =
                 ((INcApplicationContext) serviceCtx.getApplicationContext()).getDatasetLifecycleManager();
-        return dslcManager.getComponentIdGenerator(datasetId);
+        int partition = StoragePathUtil.getPartitionNumFromRelativePath(resource.getPath());
+        return dslcManager.getComponentIdGenerator(datasetId, partition);
     }
 
 }

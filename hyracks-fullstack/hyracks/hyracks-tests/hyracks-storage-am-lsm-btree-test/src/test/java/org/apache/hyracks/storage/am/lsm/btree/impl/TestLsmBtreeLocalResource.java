@@ -67,11 +67,11 @@ public class TestLsmBtreeLocalResource extends LSMBTreeLocalResource {
                 vbcs.add(i, new TestVirtualBufferCache(vbc));
             }
         }
-        ioOpCallbackFactory.initialize(serviceCtx);
+        ioOpCallbackFactory.initialize(serviceCtx, this);
         return TestLsmBtreeUtil.createLSMTree(ioManager, vbcs, file, storageManager.getBufferCache(serviceCtx),
                 typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
-                opTrackerProvider.getOperationTracker(serviceCtx), ioSchedulerProvider.getIoScheduler(serviceCtx),
+                opTrackerProvider.getOperationTracker(serviceCtx, this), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory, isPrimary, filterTypeTraits, filterCmpFactories, btreeFields, filterFields,
                 durable, metadataPageManagerFactory, false, serviceCtx.getTracer());
     }

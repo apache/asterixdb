@@ -42,6 +42,7 @@ import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.junit.After;
 import org.junit.Assert;
@@ -203,8 +204,10 @@ public class MetadataTxnTest {
                 ((INcApplicationContext) integrationUtil.ncs[0].getApplicationContext()).getDatasetLifecycleManager();
         int maxMetadatasetId = 14;
         for (int i = 1; i <= maxMetadatasetId; i++) {
-            if (datasetLifecycleManager.getIndex(i, i) != null) {
-                final PrimaryIndexOperationTracker opTracker = datasetLifecycleManager.getOperationTracker(i);
+            ILSMIndex index = (ILSMIndex) datasetLifecycleManager.getIndex(i, i);
+            if (index != null) {
+                final PrimaryIndexOperationTracker opTracker =
+                        (PrimaryIndexOperationTracker) index.getOperationTracker();
                 Assert.assertEquals(0, opTracker.getNumActiveOperations());
             }
         }

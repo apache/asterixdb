@@ -24,11 +24,13 @@ import java.io.ObjectStreamException;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
+import org.apache.hyracks.storage.common.IResource;
 
 public abstract class AbstractLSMIndexIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
@@ -38,17 +40,20 @@ public abstract class AbstractLSMIndexIOOperationCallbackFactory implements ILSM
 
     protected transient INCServiceContext ncCtx;
 
+    protected transient IResource resource;
+
     public AbstractLSMIndexIOOperationCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory) {
         this.idGeneratorFactory = idGeneratorFactory;
     }
 
     @Override
-    public void initialize(INCServiceContext ncCtx) {
+    public void initialize(INCServiceContext ncCtx, IResource resource) {
         this.ncCtx = ncCtx;
+        this.resource = resource;
     }
 
-    protected ILSMComponentIdGenerator getComponentIdGenerator() {
-        return idGeneratorFactory.getComponentIdGenerator(ncCtx);
+    protected ILSMComponentIdGenerator getComponentIdGenerator() throws HyracksDataException {
+        return idGeneratorFactory.getComponentIdGenerator(ncCtx, resource);
     }
 
     protected IIndexCheckpointManagerProvider getIndexCheckpointManagerProvider() {
@@ -60,7 +65,7 @@ public abstract class AbstractLSMIndexIOOperationCallbackFactory implements ILSM
             private static final long serialVersionUID = 1L;
 
             @Override
-            public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx) {
+            public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx, IResource resource) {
                 // used for backward compatibility
                 // if idGeneratorFactory is not set for legacy lsm indexes, we return a default
                 // component id generator which always generates the missing component id.
