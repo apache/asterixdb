@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.storage.IReplicaManager;
@@ -35,6 +36,7 @@ import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.LocalResource;
 
 public class ReplicaManager implements IReplicaManager {
 
@@ -92,5 +94,30 @@ public class ReplicaManager implements IReplicaManager {
         final IRecoveryManager recoveryManager = appCtx.getTransactionSubsystem().getRecoveryManager();
         recoveryManager.replayReplicaPartitionLogs(Stream.of(partition).collect(Collectors.toSet()), true);
         partitions.add(partition);
+    }
+
+    @Override
+    public void release(int partition) throws HyracksDataException {
+        if (!partitions.contains(partition)) {
+            return;
+        }
+        final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
+        datasetLifecycleManager.flushDataset(appCtx.getReplicationManager().getReplicationStrategy());
+        closePartitionResources(partition);
+        final List<IPartitionReplica> partitionReplicas = getReplicas(partition);
+        for (IPartitionReplica replica : partitionReplicas) {
+            appCtx.getReplicationManager().unregister(replica);
+        }
+        partitions.remove(partition);
+    }
+
+    private void closePartitionResources(int partition) throws HyracksDataException {
+        final PersistentLocalResourceRepository resourceRepository =
+                (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
+        final Map<Long, LocalResource> partitionResources = resourceRepository.getPartitionResources(partition);
+        final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
+        for (LocalResource resource : partitionResources.values()) {
+            datasetLifecycleManager.close(resource.getPath());
+        }
     }
 }

@@ -62,4 +62,13 @@ public interface IReplicaManager {
      * @param partition
      */
     void promote(int partition) throws HyracksDataException;
+
+    /**
+     * Releases a partition by flushing all its resources to disk
+     * then removing all partition replicas.
+     *
+     * @param partition
+     * @throws HyracksDataException
+     */
+    void release(int partition) throws HyracksDataException;
 }

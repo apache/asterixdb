@@ -96,6 +96,9 @@ public class StorageApiServlet extends AbstractServlet {
             case "/promote":
                 processPromote(request, response);
                 break;
+            case "/release":
+                processRelease(request, response);
+                break;
             default:
                 sendError(response, HttpResponseStatus.NOT_FOUND);
                 break;
@@ -173,6 +176,16 @@ public class StorageApiServlet extends AbstractServlet {
             return;
         }
         appCtx.getReplicaManager().promote(Integer.valueOf(partition));
+        response.setStatus(HttpResponseStatus.OK);
+    }
+
+    private void processRelease(IServletRequest request, IServletResponse response) throws HyracksDataException {
+        final String partition = request.getParameter("partition");
+        if (partition == null) {
+            response.setStatus(HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
+        appCtx.getReplicaManager().release(Integer.valueOf(partition));
         response.setStatus(HttpResponseStatus.OK);
     }
 }

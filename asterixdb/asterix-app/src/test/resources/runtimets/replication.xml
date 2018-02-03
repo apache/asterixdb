@@ -44,5 +44,10 @@
         <output-dir compare="Text">flushed_component</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="replication">
+      <compilation-unit name="release_partition">
+        <output-dir compare="Text">release_partition</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
