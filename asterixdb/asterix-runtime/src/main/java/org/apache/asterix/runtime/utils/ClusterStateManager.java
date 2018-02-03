@@ -32,10 +32,10 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -73,6 +73,7 @@ public class ClusterStateManager implements IClusterStateManager {
     private Set<String> participantNodes = new HashSet<>();
     private INcLifecycleCoordinator lifecycleCoordinator;
     private ICcApplicationContext appCtx;
+    private ClusterPartition metadataPartition;
 
     @Override
     public void setCcAppCtx(ICcApplicationContext appCtx) {
@@ -80,6 +81,7 @@ public class ClusterStateManager implements IClusterStateManager {
         node2PartitionsMap = appCtx.getMetadataProperties().getNodePartitions();
         clusterPartitions = appCtx.getMetadataProperties().getClusterPartitions();
         currentMetadataNode = appCtx.getMetadataProperties().getMetadataNodeName();
+        metadataPartition = node2PartitionsMap.get(currentMetadataNode)[0];
         lifecycleCoordinator = appCtx.getNcLifecycleCoordinator();
         lifecycleCoordinator.bindTo(this);
     }
@@ -121,16 +123,18 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public void updateMetadataNode(String nodeId, boolean active) {
+    public synchronized void updateMetadataNode(String nodeId, boolean active) {
         currentMetadataNode = nodeId;
         metadataNodeActive = active;
         if (active) {
+            metadataPartition.setActiveNodeId(currentMetadataNode);
             LOGGER.info(String.format("Metadata node %s is now active", currentMetadataNode));
         }
+        notifyAll();
     }
 
     @Override
-    public synchronized void updateNodePartitions(String nodeId, boolean active) throws HyracksDataException {
+    public synchronized void updateNodePartitions(String nodeId, boolean active) {
         if (active) {
             participantNodes.add(nodeId);
         } else {
@@ -306,11 +310,7 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized ClusterPartition[] getClusterPartitons() {
-        ArrayList<ClusterPartition> partitons = new ArrayList<>();
-        for (ClusterPartition partition : clusterPartitions.values()) {
-            partitons.add(partition);
-        }
-        return partitons.toArray(new ClusterPartition[] {});
+        return clusterPartitions.values().toArray(new ClusterPartition[] {});
     }
 
     @Override
@@ -440,6 +440,16 @@ public class ClusterStateManager implements IClusterStateManager {
 
     public synchronized Set<String> getNodesPendingRemoval() {
         return new HashSet<>(pendingRemoval);
+    }
+
+    @Override
+    public synchronized void setMetadataPartitionId(ClusterPartition partition) {
+        metadataPartition = partition;
+    }
+
+    @Override
+    public synchronized ClusterPartition getMetadataPartition() {
+        return metadataPartition;
     }
 
     private void updateNodeConfig(String nodeId, Map<IOption, Object> configuration) {

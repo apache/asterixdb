@@ -20,6 +20,8 @@ package org.apache.asterix.metadata.utils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
@@ -71,20 +73,11 @@ public class SplitsAndConstraintsUtil {
             String indexName, List<String> nodes) {
         final String relPath = StoragePathUtil.prepareDataverseIndexName(dataset.getDataverseName(),
                 dataset.getDatasetName(), indexName, dataset.getRebalanceCount());
-        List<FileSplit> splits = new ArrayList<>();
-        for (String nd : nodes) {
-            int numPartitions = clusterStateManager.getNodePartitionsCount(nd);
-            ClusterPartition[] nodePartitions = clusterStateManager.getNodePartitions(nd);
-            // currently this case is never executed since the metadata group doesn't exists
-            if (dataset.getNodeGroupName().compareTo(MetadataConstants.METADATA_NODEGROUP_NAME) == 0) {
-                numPartitions = 1;
-            }
-
-            for (int k = 0; k < numPartitions; k++) {
-                File f = new File(StoragePathUtil.prepareStoragePartitionPath(nodePartitions[k].getPartitionId()),
-                        relPath);
-                splits.add(StoragePathUtil.getFileSplitForClusterPartition(nodePartitions[k], f.getPath()));
-            }
+        final List<ClusterPartition> datasetPartitions = getDatasetPartitions(clusterStateManager, dataset, nodes);
+        final List<FileSplit> splits = new ArrayList<>();
+        for (ClusterPartition partition : datasetPartitions) {
+            File f = new File(StoragePathUtil.prepareStoragePartitionPath(partition.getPartitionId()), relPath);
+            splits.add(StoragePathUtil.getFileSplitForClusterPartition(partition, f.getPath()));
         }
         return splits.toArray(new FileSplit[] {});
     }
@@ -93,5 +86,18 @@ public class SplitsAndConstraintsUtil {
             IClusterStateManager clusterStateManager, String dataverse) {
         FileSplit[] splits = getDataverseSplits(clusterStateManager, dataverse);
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
+    }
+
+    private static List<ClusterPartition> getDatasetPartitions(IClusterStateManager clusterStateManager,
+            Dataset dataset, List<String> nodes) {
+        if (dataset.getNodeGroupName().compareTo(MetadataConstants.METADATA_NODEGROUP_NAME) == 0) {
+            return Collections.singletonList(clusterStateManager.getMetadataPartition());
+        }
+        final List<ClusterPartition> datasetPartitions = new ArrayList<>();
+        for (String node : nodes) {
+            final ClusterPartition[] nodePartitions = clusterStateManager.getNodePartitions(node);
+            datasetPartitions.addAll(Arrays.asList(nodePartitions));
+        }
+        return datasetPartitions;
     }
 }

@@ -231,6 +231,7 @@ public class ClusterStateManagerTest {
     private MetadataProperties mockMetadataProperties() {
         SortedMap<Integer, ClusterPartition> clusterPartitions = Collections.synchronizedSortedMap(new TreeMap<>());
         Map<String, ClusterPartition[]> nodePartitionsMap = new ConcurrentHashMap<>();
+        nodePartitionsMap.put(METADATA_NODE, new ClusterPartition[] { new ClusterPartition(0, METADATA_NODE, 0) });
         MetadataProperties metadataProperties = Mockito.mock(MetadataProperties.class);
         Mockito.when(metadataProperties.getMetadataNodeName()).thenReturn(METADATA_NODE);
         Mockito.when(metadataProperties.getClusterPartitions()).thenReturn(clusterPartitions);

@@ -224,4 +224,18 @@ public interface IClusterStateManager {
     boolean cancelRemovePending(String nodeId);
 
     Map<String, Map<IOption, Object>> getActiveNcConfiguration();
+
+    /**
+     * Sets the cluster partition in which metadata datasets stored
+     *
+     * @param partition
+     */
+    void setMetadataPartitionId(ClusterPartition partition);
+
+    /**
+     * Gets the cluster partition in which metadata datasets are stored
+     *
+     * @return The metadata cluster partitions
+     */
+    ClusterPartition getMetadataPartition();
 }
