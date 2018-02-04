@@ -73,6 +73,4 @@ public interface IClusterController {
     void getNodeControllerInfos() throws Exception;
 
     void notifyThreadDump(String nodeId, String requestId, String threadDumpJSON) throws Exception;
-
-    CcId getCcId();
 }

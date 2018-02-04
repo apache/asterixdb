@@ -199,22 +199,20 @@ public class NCApplication extends BaseNCApplication {
                 && (nodeProperties.isInitialRun() || nodeProperties.isVirtualNc())) {
             state = SystemState.BOOTSTRAPPING;
         }
-        // Request registration tasks from CC
-        // TODO (mblow): multicc
+        // Request registration tasks from CC (we only do this from our primary CC, in the case of multiple CCs)
         final NodeControllerService ncControllerService = (NodeControllerService) ncServiceCtx.getControllerService();
-        RegistrationTasksRequestMessage.send(ncControllerService.getPrimaryClusterController().getCcId(),
-                ncControllerService, NodeStatus.BOOTING, state);
+        RegistrationTasksRequestMessage.send(ncControllerService.getPrimaryCcId(), ncControllerService,
+                NodeStatus.BOOTING, state);
         startupCompleted = true;
     }
 
     @Override
     public void onRegisterNode(CcId ccId) throws Exception {
-        // TODO (mblow): multicc
-        if (startupCompleted && ccId.equals(((NodeControllerService) ncServiceCtx.getControllerService())
-                .getPrimaryClusterController().getCcId())) {
+        if (startupCompleted) {
             /*
              * If the node completed its startup before, then this is a re-registration with
-             * the CC and therefore the system state should be HEALTHY and the node status is ACTIVE
+             * the primary (or supplemental) CC and therefore the system state should be HEALTHY and the node status
+             * is ACTIVE
              */
             RegistrationTasksRequestMessage.send(ccId, (NodeControllerService) ncServiceCtx.getControllerService(),
                     NodeStatus.ACTIVE, SystemState.HEALTHY);

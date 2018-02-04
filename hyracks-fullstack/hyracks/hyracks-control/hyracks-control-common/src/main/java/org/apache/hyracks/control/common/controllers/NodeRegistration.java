@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
@@ -72,13 +73,15 @@ public final class NodeRegistration implements Serializable {
 
     private final NodeCapacity capacity;
 
-    private final long maxJobId;
+    private final int registrationId;
+
+    private static final AtomicInteger nextRegistrationId = new AtomicInteger();
 
     public NodeRegistration(InetSocketAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
             NetworkAddress datasetPort, String osName, String arch, String osVersion, int nProcessors, String vmName,
             String vmVersion, String vmVendor, String classpath, String libraryPath, String bootClasspath,
             List<String> inputArguments, Map<String, String> systemProperties, HeartbeatSchema hbSchema,
-            NetworkAddress messagingPort, NodeCapacity capacity, int pid, long maxJobId) {
+            NetworkAddress messagingPort, NodeCapacity capacity, int pid) {
         this.ncAddress = ncAddress;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
@@ -100,7 +103,7 @@ public final class NodeRegistration implements Serializable {
         this.messagingPort = messagingPort;
         this.capacity = capacity;
         this.pid = pid;
-        this.maxJobId = maxJobId;
+        this.registrationId = nextRegistrationId.getAndIncrement();
     }
 
     public InetSocketAddress getNodeControllerAddress() {
@@ -187,7 +190,7 @@ public final class NodeRegistration implements Serializable {
         return pid;
     }
 
-    public long getMaxJobId() {
-        return maxJobId;
+    public int getRegistrationId() {
+        return registrationId;
     }
 }

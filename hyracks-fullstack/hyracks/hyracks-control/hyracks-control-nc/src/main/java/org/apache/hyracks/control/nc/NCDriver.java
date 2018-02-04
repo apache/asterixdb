@@ -53,7 +53,7 @@ public class NCDriver {
             LOGGER.log(Level.DEBUG, "Exception parsing command line: " + Arrays.toString(args), e);
             System.exit(2);
         } catch (Exception e) {
-            LOGGER.log(Level.DEBUG, "Exiting NCDriver due to exception", e);
+            LOGGER.error("Exiting NCDriver due to exception", e);
             System.exit(1);
         }
     }

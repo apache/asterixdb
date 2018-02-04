@@ -19,12 +19,16 @@
 package org.apache.hyracks.control.common.config;
 
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class OptionTypes {
@@ -40,6 +44,11 @@ public class OptionTypes {
                 throw new IllegalArgumentException("The given value: " + result1 + " is not within the int range.");
             }
             return (int) result1;
+        }
+
+        @Override
+        public Integer parse(JsonNode node) {
+            return node.isNull() ? null : parse(node.asText());
         }
 
         @Override
@@ -65,6 +74,11 @@ public class OptionTypes {
         }
 
         @Override
+        public Long parse(JsonNode node) {
+            return node.isNull() ? null : parse(node.asText());
+        }
+
+        @Override
         public Class<Long> targetType() {
             return Long.class;
         }
@@ -84,10 +98,19 @@ public class OptionTypes {
         @Override
         public Short parse(String s) {
             int value = Integer.decode(s);
-            if (Integer.highestOneBit(value) > 16) {
-                throw new IllegalArgumentException("The given value " + s + " is too big for a short");
+            return validateShort(value);
+        }
+
+        private Short validateShort(int value) {
+            if (value > Short.MAX_VALUE || value < Short.MIN_VALUE) {
+                throw new IllegalArgumentException("The given value " + value + " does not fit in a short");
             }
             return (short) value;
+        }
+
+        @Override
+        public Short parse(JsonNode node) {
+            return node.isNull() ? null : validateShort(node.asInt());
         }
 
         @Override
@@ -108,6 +131,11 @@ public class OptionTypes {
         }
 
         @Override
+        public Integer parse(JsonNode node) {
+            return node.isNull() ? null : node.asInt();
+        }
+
+        @Override
         public Class<Integer> targetType() {
             return Integer.class;
         }
@@ -122,6 +150,11 @@ public class OptionTypes {
         @Override
         public Double parse(String s) {
             return Double.parseDouble(s);
+        }
+
+        @Override
+        public Double parse(JsonNode node) {
+            return node.isNull() ? null : node.asDouble();
         }
 
         @Override
@@ -142,6 +175,11 @@ public class OptionTypes {
         }
 
         @Override
+        public String parse(JsonNode node) {
+            return node.isNull() ? null : node.asText();
+        }
+
+        @Override
         public Class<String> targetType() {
             return String.class;
         }
@@ -159,6 +197,11 @@ public class OptionTypes {
         }
 
         @Override
+        public Long parse(JsonNode node) {
+            return node.isNull() ? null : node.asLong();
+        }
+
+        @Override
         public Class<Long> targetType() {
             return Long.class;
         }
@@ -173,6 +216,11 @@ public class OptionTypes {
         @Override
         public Boolean parse(String s) {
             return Boolean.parseBoolean(s);
+        }
+
+        @Override
+        public Boolean parse(JsonNode node) {
+            return node.isNull() ? null : node.asBoolean();
         }
 
         @Override
@@ -197,6 +245,11 @@ public class OptionTypes {
                 throw new IllegalArgumentException("Unrecognized logging level: " + s);
             }
             return level;
+        }
+
+        @Override
+        public Level parse(JsonNode node) {
+            return node.isNull() ? null : parse(node.asText());
         }
 
         @Override
@@ -227,6 +280,20 @@ public class OptionTypes {
         }
 
         @Override
+        public String[] parse(JsonNode node) {
+            if (node.isNull()) {
+                return null;
+            }
+            List<String> strings = new ArrayList<>();
+            if (node instanceof ArrayNode) {
+                node.elements().forEachRemaining(n -> strings.add(n.asText()));
+                return strings.toArray(new String[strings.size()]);
+            } else {
+                return parse(node.asText());
+            }
+        }
+
+        @Override
         public Class<String[]> targetType() {
             return String[].class;
         }
@@ -250,6 +317,11 @@ public class OptionTypes {
             } catch (MalformedURLException e) {
                 throw new IllegalArgumentException(e);
             }
+        }
+
+        @Override
+        public java.net.URL parse(JsonNode node) {
+            return node.isNull() ? null : parse(node.asText());
         }
 
         @Override

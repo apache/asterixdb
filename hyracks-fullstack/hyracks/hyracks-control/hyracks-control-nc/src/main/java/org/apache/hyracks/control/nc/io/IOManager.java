@@ -41,6 +41,7 @@ import org.apache.hyracks.api.io.IIOFuture;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.util.file.FileUtil;
 
 public class IOManager implements IIOManager {
     /*
@@ -72,7 +73,11 @@ public class IOManager implements IIOManager {
         workspaces = new ArrayList<>();
         for (IODeviceHandle d : ioDevices) {
             if (d.getWorkspace() != null) {
-                new File(d.getMount(), d.getWorkspace()).mkdirs();
+                try {
+                    FileUtil.forceMkdirs(new File(d.getMount(), d.getWorkspace()));
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                }
                 workspaces.add(d);
             }
         }

@@ -16,27 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.transaction.management.service.transaction;
+package org.apache.asterix.common.transactions;
 
-import java.util.concurrent.atomic.AtomicLong;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
-import org.apache.asterix.common.transactions.TxnId;
+public interface ITxnIdFactory {
+    /**
+     * Creates a new unique transaction id.  The implementation must ensure this id is unique within the cluster
+     *
+     * @return the new transaction id
+     */
+    TxnId create() throws AlgebricksException;
 
-/**
- * Represents a factory to generate unique transaction IDs.
- */
-public class TxnIdFactory {
-
-    private static final AtomicLong id = new AtomicLong();
-
-    private TxnIdFactory() {
-    }
-
-    public static TxnId create() {
-        return new TxnId(id.incrementAndGet());
-    }
-
-    public static void ensureMinimumId(long id) {
-        TxnIdFactory.id.updateAndGet(current -> Math.max(current, id));
-    }
+    /**
+     * Ensure that future transaction ids are larger than the supplied id
+     *
+     * @param id
+     *            the value to ensure future created transaction ids are larger than
+     */
+    void ensureMinimumId(long id) throws AlgebricksException;
 }

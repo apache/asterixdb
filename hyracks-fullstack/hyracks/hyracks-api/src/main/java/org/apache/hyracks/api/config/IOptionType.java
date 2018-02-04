@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface IOptionType<T> {
@@ -25,6 +26,11 @@ public interface IOptionType<T> {
      * @throws IllegalArgumentException when the supplied string cannot be interpreted
      */
     T parse(String s);
+
+    /**
+     * @throws IllegalArgumentException when the supplied JSON node cannot be interpreted
+     */
+    T parse(JsonNode node);
 
     Class<T> targetType();
 

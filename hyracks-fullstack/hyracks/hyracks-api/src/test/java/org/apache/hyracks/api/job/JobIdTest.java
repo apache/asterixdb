@@ -19,23 +19,26 @@
 package org.apache.hyracks.api.job;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hyracks.api.control.CcId;
+import org.apache.hyracks.api.control.CcIdPartitionedLongFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class JobIdFactoryTest {
+public class JobIdTest {
 
     private static Field idField;
 
     @BeforeClass
     public static void setup() throws NoSuchFieldException {
-        idField = JobIdFactory.class.getDeclaredField("id");
+        idField = CcIdPartitionedLongFactory.class.getDeclaredField("id");
         idField.setAccessible(true);
     }
 
@@ -77,7 +80,7 @@ public class JobIdFactoryTest {
         theId.set((((long) 1 << 48) - 1) | expected);
         JobId jobId = factory.create();
         Assert.assertEquals(ccId, jobId.getCcId());
-        Assert.assertEquals(JobId.MAX_ID, jobId.getIdOnly());
+        Assert.assertEquals(CcIdPartitionedLongFactory.MAX_ID, jobId.getIdOnly());
         jobId = factory.create();
         Assert.assertEquals(ccId, jobId.getCcId());
         Assert.assertEquals(0, jobId.getIdOnly());
@@ -113,6 +116,20 @@ public class JobIdFactoryTest {
             CcId.valueOf(0x10000);
             Assert.assertTrue("expected exception", false);
         } catch (IllegalArgumentException e) {
+        }
+    }
+
+    @Test
+    public void testParse() throws HyracksDataException {
+        for (int ccId : Arrays.asList(0xFFFF, 0, (int) Short.MAX_VALUE)) {
+            JobIdFactory factory = new JobIdFactory(CcId.valueOf(ccId));
+            for (int i = 0; i < 1000; i++) {
+                final JobId jobId = factory.create();
+                Assert.assertEquals(jobId.getId(), JobId.parse(jobId.toString()).getId());
+                Assert.assertEquals(jobId, JobId.parse(jobId.toString()));
+                Assert.assertFalse(jobId.toString(), jobId.toString().contains("-"));
+                System.err.println(jobId.toString());
+            }
         }
     }
 }

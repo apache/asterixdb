@@ -20,6 +20,7 @@ package org.apache.hyracks.control.nc.application;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
@@ -50,7 +51,7 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
 
     public NCServiceContext(NodeControllerService ncs, ServerContext serverCtx, IOManager ioManager, String nodeId,
             MemoryManager memoryManager, ILifeCycleComponentManager lifeCyclecomponentManager,
-            IApplicationConfig appConfig) throws IOException {
+            IApplicationConfig appConfig) {
         super(serverCtx, appConfig, new HyracksThreadFactory(nodeId));
         this.lccm = lifeCyclecomponentManager;
         this.nodeId = nodeId;
@@ -59,6 +60,7 @@ public class NCServiceContext extends ServiceContext implements INCServiceContex
         this.ncs = ncs;
         this.sdh = lccm::dumpState;
         this.tracer = new Tracer(nodeId, ncs.getConfiguration().getTraceCategories(), new TraceCategoryRegistry());
+        this.distributedState = new ConcurrentHashMap<>();
     }
 
     @Override

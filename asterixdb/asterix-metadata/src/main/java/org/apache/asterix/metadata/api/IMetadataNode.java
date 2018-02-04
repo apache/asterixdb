@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.transactions.ITxnIdBlockProvider;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
@@ -51,7 +52,28 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
  * lock/access metadata shall always go through the MetadataManager, and should
  * never call methods on the MetadataNode directly for any reason.
  */
-public interface IMetadataNode extends Remote, Serializable {
+public interface IMetadataNode extends Remote, Serializable, ITxnIdBlockProvider {
+
+    /**
+     * Allocates a block of transaction ids of specified block size
+     *
+     * @param maxId
+     *            The txn id to ensure future txn ids are larger than
+     * @throws ACIDException
+     * @throws RemoteException
+     */
+    void ensureMinimumTxnId(long maxId) throws ACIDException, RemoteException;
+
+    /**
+     * Allocates a block of transaction ids of specified block size
+     *
+     * @param blockSize
+     *            The size of the transaction id block to reserve
+     * @return the start of the reserved block
+     * @throws ACIDException
+     * @throws RemoteException
+     */
+    long reserveTxnIdBlock(int blockSize) throws ACIDException, RemoteException;
 
     /**
      * Begins a local transaction against the metadata.

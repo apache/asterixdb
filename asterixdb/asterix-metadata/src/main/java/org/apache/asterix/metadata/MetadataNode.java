@@ -132,6 +132,7 @@ public class MetadataNode implements IMetadataNode {
     private IDatasetLifecycleManager datasetLifecycleManager;
     private ITransactionSubsystem transactionSubsystem;
     private int metadataStoragePartition;
+    private transient BulkTxnIdFactory txnIdFactory;
     // core only
     private transient MetadataTupleTranslatorProvider tupleTranslatorProvider;
     // extension only
@@ -157,6 +158,17 @@ public class MetadataNode implements IMetadataNode {
                 }
             }
         }
+        this.txnIdFactory = new BulkTxnIdFactory();
+    }
+
+    @Override
+    public void ensureMinimumTxnId(long maxId) throws ACIDException, RemoteException {
+        txnIdFactory.ensureMinimumId(maxId);
+    }
+
+    @Override
+    public long reserveTxnIdBlock(int blockSize) throws ACIDException, RemoteException {
+        return txnIdFactory.reserveIdBlock(blockSize);
     }
 
     @Override

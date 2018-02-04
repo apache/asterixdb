@@ -18,10 +18,14 @@
  */
 package org.apache.hyracks.api.client;
 
+import org.apache.hyracks.api.control.CcId;
+
 import java.io.Serializable;
 
 public class ClusterControllerInfo implements Serializable {
     private static final long serialVersionUID = 1L;
+
+    private final CcId ccId;
 
     private final String clientNetAddress;
 
@@ -29,10 +33,15 @@ public class ClusterControllerInfo implements Serializable {
 
     private final int webPort;
 
-    public ClusterControllerInfo(String clientNetAddress, int clientNetPort, int webPort) {
+    public ClusterControllerInfo(CcId ccId, String clientNetAddress, int clientNetPort, int webPort) {
+        this.ccId = ccId;
         this.clientNetAddress = clientNetAddress;
         this.clientNetPort = clientNetPort;
         this.webPort = webPort;
+    }
+
+    public CcId getCcId() {
+        return ccId;
     }
 
     public int getWebPort() {

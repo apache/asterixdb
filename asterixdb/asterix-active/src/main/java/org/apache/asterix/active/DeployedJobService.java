@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.asterix.transaction.management.service.transaction.TxnIdFactory;
+import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobId;
@@ -48,13 +48,15 @@ public class DeployedJobService {
 
     //Starts running a deployed job specification periodically with an interval of "duration" seconds
     public static ScheduledExecutorService startRepetitiveDeployedJobSpec(DeployedJobSpecId distributedId,
-            IHyracksClientConnection hcc, long duration, Map<byte[], byte[]> jobParameters, EntityId entityId) {
+            IHyracksClientConnection hcc, long duration, Map<byte[], byte[]> jobParameters, EntityId entityId,
+            ITxnIdFactory txnIdFactory) {
         ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(POOL_SIZE);
         scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (!runRepetitiveDeployedJobSpec(distributedId, hcc, jobParameters, duration, entityId)) {
+                    if (!runRepetitiveDeployedJobSpec(distributedId, hcc, jobParameters, duration, entityId,
+                            txnIdFactory)) {
                         scheduledExecutorService.shutdown();
                     }
                 } catch (Exception e) {
@@ -67,8 +69,9 @@ public class DeployedJobService {
     }
 
     public static boolean runRepetitiveDeployedJobSpec(DeployedJobSpecId distributedId, IHyracksClientConnection hcc,
-            Map<byte[], byte[]> jobParameters, long duration, EntityId entityId) throws Exception {
-        long executionMilliseconds = runDeployedJobSpec(distributedId, hcc, jobParameters, entityId);
+            Map<byte[], byte[]> jobParameters, long duration, EntityId entityId, ITxnIdFactory txnIdFactory)
+            throws Exception {
+        long executionMilliseconds = runDeployedJobSpec(distributedId, hcc, jobParameters, entityId, txnIdFactory);
         if (executionMilliseconds > duration && LOGGER.isErrorEnabled()) {
             LOGGER.log(Level.ERROR,
                     "Periodic job for " + entityId.getExtensionName() + " " + entityId.getDataverse() + "."
@@ -81,12 +84,12 @@ public class DeployedJobService {
     }
 
     public synchronized static long runDeployedJobSpec(DeployedJobSpecId distributedId, IHyracksClientConnection hcc,
-            Map<byte[], byte[]> jobParameters, EntityId entityId) throws Exception {
+            Map<byte[], byte[]> jobParameters, EntityId entityId, ITxnIdFactory txnIdFactory) throws Exception {
         JobId jobId;
         long startTime = Instant.now().toEpochMilli();
 
         //Add the Asterix Transaction Id to the map
-        jobParameters.put(TRANSACTION_ID_PARAMETER_NAME, String.valueOf(TxnIdFactory.create().getId()).getBytes());
+        jobParameters.put(TRANSACTION_ID_PARAMETER_NAME, String.valueOf(txnIdFactory.create().getId()).getBytes());
         jobId = hcc.startJob(distributedId, jobParameters);
 
         hcc.waitForCompletion(jobId);

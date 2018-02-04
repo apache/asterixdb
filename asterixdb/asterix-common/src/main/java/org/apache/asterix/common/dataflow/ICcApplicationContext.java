@@ -21,6 +21,7 @@ package org.apache.asterix.common.dataflow;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INodeJobTracker;
+import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ExtensionProperties;
@@ -121,4 +122,9 @@ public interface ICcApplicationContext extends IApplicationContext {
      * @return the node job tracker
      */
     INodeJobTracker getNodeJobTracker();
+
+    /**
+     * @return the transaction id factory
+     */
+    ITxnIdFactory getTxnIdFactory();
 }

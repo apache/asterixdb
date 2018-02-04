@@ -19,15 +19,36 @@
 package org.apache.hyracks.util.file;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class FileUtil {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Object LOCK = new Object();
 
     private FileUtil() {
     }
 
     public static String joinPath(String... elements) {
         return joinPath(File.separatorChar, elements);
+    }
+
+    public static void forceMkdirs(File dir) throws IOException {
+        File canonicalDir = dir.getCanonicalFile();
+        try {
+            FileUtils.forceMkdir(canonicalDir);
+        } catch (IOException e) {
+            LOGGER.warn("failure to create directory {}, retrying", dir, e);
+            synchronized (LOCK) {
+                FileUtils.forceMkdir(canonicalDir);
+            }
+        }
+
     }
 
     static String joinPath(char separatorChar, String... elements) {

@@ -47,6 +47,7 @@ public class MetadataNodeRequestMessage extends CcIdentifiedMessage
             if (export) {
                 appContext.initializeMetadata(false);
                 appContext.exportMetadataNodeStub();
+                appContext.bindMetadataNodeStub(getCcId());
             } else {
                 appContext.unexportMetadataNodeStub();
             }

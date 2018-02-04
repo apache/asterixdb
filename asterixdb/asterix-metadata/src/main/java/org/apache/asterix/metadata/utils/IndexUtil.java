@@ -35,7 +35,6 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.transaction.management.service.transaction.TxnIdFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -161,8 +160,9 @@ public class IndexUtil {
      *            the metadata provider.
      * @return the AsterixDB job id for transaction management.
      */
-    public static void bindJobEventListener(JobSpecification spec, MetadataProvider metadataProvider) {
-        TxnId txnId = TxnIdFactory.create();
+    public static void bindJobEventListener(JobSpecification spec, MetadataProvider metadataProvider)
+            throws AlgebricksException {
+        TxnId txnId = metadataProvider.getTxnIdFactory().create();
         metadataProvider.setTxnId(txnId);
         boolean isWriteTransaction = metadataProvider.isWriteTransaction();
         IJobletEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(txnId, isWriteTransaction);

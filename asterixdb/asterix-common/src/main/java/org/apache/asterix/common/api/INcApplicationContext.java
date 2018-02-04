@@ -31,6 +31,7 @@ import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -103,6 +104,13 @@ public interface INcApplicationContext extends IApplicationContext {
      * @throws RemoteException
      */
     void unexportMetadataNodeStub() throws RemoteException;
+
+    /**
+     * Binds the exported metadata node to the CC's distributed state.
+     *
+     * @throws RemoteException
+     */
+    void bindMetadataNodeStub(CcId ccId) throws RemoteException;
 
     /**
      * @return instance of {@link org.apache.asterix.common.context.IStorageComponentProvider}

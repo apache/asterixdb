@@ -26,5 +26,6 @@
     <Root level="WARN">
       <AppenderRef ref="Console"/>
     </Root>
+    <Logger name="org.apache.hyracks.control.nc.service" level="INFO"/>
   </Loggers>
 </Configuration>

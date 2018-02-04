@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
@@ -1538,5 +1539,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public ICcApplicationContext getApplicationContext() {
         return appCtx;
+    }
+
+    public ITxnIdFactory getTxnIdFactory() {
+        return appCtx.getTxnIdFactory();
     }
 }

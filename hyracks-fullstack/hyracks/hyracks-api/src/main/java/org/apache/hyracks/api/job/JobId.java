@@ -22,23 +22,24 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.hyracks.api.control.CcId;
+import org.apache.hyracks.api.control.CcIdPartitionedLongFactory;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IWritable;
 
 public final class JobId implements IWritable, Serializable, Comparable {
 
-    private static final int CC_BITS = Short.SIZE;
-    static final int ID_BITS = Long.SIZE - CC_BITS;
-    static final long MAX_ID = (1L << ID_BITS) - 1;
+    private static final Pattern jobIdPattern = Pattern.compile("^JID:(\\d+)\\.(\\d+)$");
 
     public static final JobId INVALID = null;
 
     private static final long serialVersionUID = 1L;
     private long id;
-    private transient CcId ccId;
+    private transient volatile CcId ccId;
 
     public static JobId create(DataInput dis) throws IOException {
         JobId jobId = new JobId();
@@ -59,13 +60,13 @@ public final class JobId implements IWritable, Serializable, Comparable {
 
     public CcId getCcId() {
         if (ccId == null) {
-            ccId = CcId.valueOf((int) (id >>> ID_BITS));
+            ccId = CcId.valueOf((int) (id >>> CcIdPartitionedLongFactory.ID_BITS));
         }
         return ccId;
     }
 
     public long getIdOnly() {
-        return id & MAX_ID;
+        return id & CcIdPartitionedLongFactory.MAX_ID;
     }
 
     @Override
@@ -80,13 +81,17 @@ public final class JobId implements IWritable, Serializable, Comparable {
 
     @Override
     public String toString() {
-        return "JID:" + id;
+        return "JID:" + (id >>> CcIdPartitionedLongFactory.ID_BITS) + "." + getIdOnly();
     }
 
     public static JobId parse(String str) throws HyracksDataException {
-        if (str.startsWith("JID:")) {
-            str = str.substring(4);
-            return new JobId(Long.parseLong(str));
+        Matcher m = jobIdPattern.matcher(str);
+        if (m.matches()) {
+            int ccId = Integer.parseInt(m.group(1));
+            if (ccId <= 0xffff && ccId >= 0) {
+                long jobId = Long.parseLong(m.group(2)) | (long) ccId << CcIdPartitionedLongFactory.ID_BITS;
+                return new JobId(jobId);
+            }
         }
         throw HyracksDataException.create(ErrorCode.NOT_A_JOBID, str);
     }

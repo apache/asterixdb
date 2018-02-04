@@ -42,16 +42,12 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.application.ServiceContext;
 import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
-import org.apache.hyracks.control.common.work.IResultCallback;
 
 public class CCServiceContext extends ServiceContext implements ICCServiceContext {
     private final ICCContext ccContext;
 
     protected final Set<String> initPendingNodeIds;
     protected final Set<String> deinitPendingNodeIds;
-
-    protected IResultCallback<Object> initializationCallback;
-    protected IResultCallback<Object> deinitializationCallback;
 
     private List<IJobLifecycleListener> jobLifecycleListeners;
     private List<IClusterLifecycleListener> clusterLifecycleListeners;

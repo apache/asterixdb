@@ -32,19 +32,14 @@
     <Root level="WARN">
       <AppenderRef ref="InfoLog"/>
     </Root>
-    <Logger name="org.apache.hyracks" level="INFO" additivity="false">
-      <AppenderRef ref="InfoLog"/>
-    </Logger>
-    <Logger name="org.apache.asterix" level="INFO" additivity="false">
-      <AppenderRef ref="InfoLog"/>
-    </Logger>
-    <Logger name="org.apache.hyracks.test" level="INFO" additivity="false">
+    <Logger name="org.apache.hyracks.control.nc.service" level="INFO"/>
+    <Logger name="org.apache.hyracks" level="INFO"/>
+    <Logger name="org.apache.asterix" level="INFO"/>
+    <Logger name="org.apache.hyracks.test" level="INFO">
       <AppenderRef ref="ConsoleTest"/>
-      <AppenderRef ref="InfoLog"/>
     </Logger>
-    <Logger name="org.apache.asterix.test" level="INFO" additivity="false">
+    <Logger name="org.apache.asterix.test" level="INFO">
       <AppenderRef ref="ConsoleTest"/>
-      <AppenderRef ref="InfoLog"/>
     </Logger>
   </Loggers>
 </Configuration>

@@ -45,6 +45,10 @@ public class CcId implements Serializable {
         return id;
     }
 
+    public long toLongMask() {
+        return (long) id << CcIdPartitionedLongFactory.ID_BITS;
+    }
+
     @Override
     public int hashCode() {
         return id;

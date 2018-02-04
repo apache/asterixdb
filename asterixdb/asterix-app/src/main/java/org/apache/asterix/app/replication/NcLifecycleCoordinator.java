@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import org.apache.asterix.app.nc.task.BindMetadataNodeTask;
 import org.apache.asterix.app.nc.task.CheckpointTask;
+import org.apache.asterix.app.nc.task.ExportMetadataNodeTask;
 import org.apache.asterix.app.nc.task.ExternalLibrarySetupTask;
 import org.apache.asterix.app.nc.task.LocalRecoveryTask;
 import org.apache.asterix.app.nc.task.MetadataBootstrapTask;
@@ -157,21 +158,20 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             tasks.add(new MetadataBootstrapTask());
         }
         tasks.add(new ExternalLibrarySetupTask(isMetadataNode));
-        tasks.add(new ReportLocalCountersTask());
         tasks.add(new CheckpointTask());
         tasks.add(new StartLifecycleComponentsTask());
         if (isMetadataNode) {
-            tasks.add(new BindMetadataNodeTask(true));
+            tasks.add(new ExportMetadataNodeTask(true));
+            tasks.add(new BindMetadataNodeTask());
         }
+        tasks.add(new ReportLocalCountersTask());
         return tasks;
     }
 
     protected List<INCLifecycleTask> buildActiveNCRegTasks(boolean metadataNode) {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
         if (metadataNode) {
-            // need to unbind from old distributed state then rebind to new one
-            tasks.add(new BindMetadataNodeTask(false));
-            tasks.add(new BindMetadataNodeTask(true));
+            tasks.add(new BindMetadataNodeTask());
         }
         tasks.add(new ReportLocalCountersTask());
         return tasks;
@@ -182,7 +182,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         if (metadataNodeId.equals(node)) {
             return;
         }
-        // if current metadata node is active, we need to unbind its metadata proxy object
+        // if current metadata node is active, we need to unbind its metadata proxy objects
         if (clusterManager.isMetadataNodeActive()) {
             MetadataNodeRequestMessage msg = new MetadataNodeRequestMessage(false);
             try {

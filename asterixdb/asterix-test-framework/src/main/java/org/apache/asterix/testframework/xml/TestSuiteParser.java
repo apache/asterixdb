@@ -22,27 +22,28 @@ import java.io.File;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class TestSuiteParser {
-    public TestSuiteParser() {
-    }
 
-    public org.apache.asterix.testframework.xml.TestSuite parse(File testSuiteCatalog) throws Exception {
+    public TestSuite parse(File testSuiteCatalog) throws SAXException, JAXBException, ParserConfigurationException {
         SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
         saxParserFactory.setNamespaceAware(true);
         saxParserFactory.setXIncludeAware(true);
         SAXParser saxParser = saxParserFactory.newSAXParser();
         saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "file");
 
-        JAXBContext ctx = JAXBContext.newInstance(org.apache.asterix.testframework.xml.TestSuite.class);
+        JAXBContext ctx = JAXBContext.newInstance(TestSuite.class);
         Unmarshaller um = ctx.createUnmarshaller();
-        return (org.apache.asterix.testframework.xml.TestSuite) um.unmarshal(
+        return (TestSuite) um.unmarshal(
                 new SAXSource(saxParser.getXMLReader(), new InputSource(testSuiteCatalog.toURI().toString())));
     }
 }

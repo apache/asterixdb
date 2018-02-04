@@ -24,6 +24,8 @@ import java.util.function.Supplier;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INodeJobTracker;
+import org.apache.asterix.common.transactions.ILongBlockFactory;
+import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ActiveProperties;
@@ -85,12 +87,14 @@ public class CcApplicationContext implements ICcApplicationContext {
     private IMetadataLockManager mdLockManager;
     private IClusterStateManager clusterStateManager;
     private final INodeJobTracker nodeJobTracker;
+    private final ITxnIdFactory txnIdFactory;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator ftStrategy,
             IJobLifecycleListener activeLifeCycleListener, IStorageComponentProvider storageComponentProvider,
-            IMetadataLockManager mdLockManager) throws AlgebricksException, IOException {
+            IMetadataLockManager mdLockManager, Supplier<ILongBlockFactory> txnIdBlockSupplier)
+            throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
         this.libraryManager = libraryManager;
@@ -118,6 +122,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         clusterStateManager.setCcAppCtx(this);
         this.resourceIdManager = new ResourceIdManager(clusterStateManager);
         nodeJobTracker = new NodeJobTracker();
+        txnIdFactory = new CcTxnIdFactory(txnIdBlockSupplier);
     }
 
     @Override
@@ -264,5 +269,9 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public ICoordinationService getCoordinationService() {
         return NoOpCoordinationService.INSTANCE;
+    }
+
+    public ITxnIdFactory getTxnIdFactory() {
+        return txnIdFactory;
     }
 }

@@ -33,6 +33,8 @@ public class NodeParameters implements Serializable {
 
     private int profileDumpPeriod;
 
+    private int registrationId;
+
     public ClusterControllerInfo getClusterControllerInfo() {
         return ccInfo;
     }
@@ -63,5 +65,13 @@ public class NodeParameters implements Serializable {
 
     public void setProfileDumpPeriod(int profileDumpPeriod) {
         this.profileDumpPeriod = profileDumpPeriod;
+    }
+
+    public int getRegistrationId() {
+        return registrationId;
+    }
+
+    public void setRegistrationId(int registrationId) {
+        this.registrationId = registrationId;
     }
 }

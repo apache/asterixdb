@@ -16,25 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job;
 
-import org.apache.hyracks.api.control.CcId;
-import org.apache.hyracks.api.control.CcIdPartitionedLongFactory;
+package org.apache.asterix.metadata;
 
-public class JobIdFactory extends CcIdPartitionedLongFactory {
-    public JobIdFactory(CcId ccId) {
-        super(ccId);
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.asterix.common.transactions.ITxnIdFactory;
+import org.apache.asterix.common.transactions.TxnId;
+
+class BulkTxnIdFactory implements ITxnIdFactory {
+
+    private final AtomicLong maxId = new AtomicLong();
+
+    @Override
+    public TxnId create() {
+        return new TxnId(maxId.incrementAndGet());
     }
 
-    public JobId create() {
-        return new JobId(nextId());
+    public long reserveIdBlock(int blockSize) {
+        if (blockSize < 1) {
+            throw new IllegalArgumentException("block size cannot be smaller than 1, but was " + blockSize);
+        }
+        return maxId.getAndAdd(blockSize) + 1;
     }
 
-    public JobId maxJobId() {
-        return new JobId(maxId());
-    }
-
-    public void setMaxJobId(long maxJobId) {
-        ensureMinimumId(maxJobId + 1);
+    @Override
+    public void ensureMinimumId(long id) {
+        this.maxId.getAndUpdate(next -> Math.max(next, id));
     }
 }

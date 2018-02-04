@@ -24,9 +24,10 @@ import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.IResourceIdManager;
-import org.apache.asterix.transaction.management.service.transaction.TxnIdFactory;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -37,19 +38,27 @@ public class ReportLocalCountersMessage implements ICcAddressedMessage {
     private static final Logger LOGGER = LogManager.getLogger();
     private final long maxResourceId;
     private final long maxTxnId;
+    private final long maxJobId;
     private final String src;
 
-    public ReportLocalCountersMessage(String src, long maxResourceId, long maxTxnId) {
+    public ReportLocalCountersMessage(String src, long maxResourceId, long maxTxnId, long maxJobId) {
         this.src = src;
         this.maxResourceId = maxResourceId;
         this.maxTxnId = maxTxnId;
+        this.maxJobId = maxJobId;
     }
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
         IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
-        TxnIdFactory.ensureMinimumId(maxTxnId);
+        try {
+            appCtx.getTxnIdFactory().ensureMinimumId(maxTxnId);
+        } catch (AlgebricksException e) {
+            throw HyracksDataException.create(e);
+        }
         resourceIdManager.report(src, maxResourceId);
+        ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobIdFactory()
+                .setMaxJobId(maxJobId);
     }
 
     public static void send(CcId ccId, NodeControllerService ncs) throws HyracksDataException {
@@ -57,8 +66,9 @@ public class ReportLocalCountersMessage implements ICcAddressedMessage {
         long maxResourceId = Math.max(appContext.getLocalResourceRepository().maxId(),
                 MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID);
         long maxTxnId = appContext.getTransactionSubsystem().getTransactionManager().getMaxTxnId();
+        long maxJobId = ncs.getMaxJobId(ccId);
         ReportLocalCountersMessage countersMessage =
-                new ReportLocalCountersMessage(ncs.getId(), maxResourceId, maxTxnId);
+                new ReportLocalCountersMessage(ncs.getId(), maxResourceId, maxTxnId, maxJobId);
         try {
             ((INCMessageBroker) ncs.getContext().getMessageBroker()).sendMessageToCC(ccId, countersMessage);
         } catch (Exception e) {

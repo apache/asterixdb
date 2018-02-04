@@ -50,7 +50,6 @@ public class NCConfig extends ControllerConfig {
         NCSERVICE_PORT(INTEGER, 9090),
         CLUSTER_ADDRESS(STRING, (String) null),
         CLUSTER_PORT(INTEGER, 1099),
-        CLUSTER_CONTROLLER_ID(SHORT, (short) 0x0000),
         CLUSTER_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
         CLUSTER_PUBLIC_PORT(INTEGER, CLUSTER_LISTEN_PORT),
         NODE_ID(STRING, (String) null),
@@ -144,8 +143,6 @@ public class NCConfig extends ControllerConfig {
                     return "Cluster Controller port";
                 case CLUSTER_LISTEN_PORT:
                     return "IP port to bind cluster listener";
-                case CLUSTER_CONTROLLER_ID:
-                    return "16-bit (0-65535) id of the Cluster Controller";
                 case CLUSTER_PUBLIC_ADDRESS:
                     return "Public IP Address to announce cluster listener";
                 case CLUSTER_PUBLIC_PORT:
@@ -311,10 +308,6 @@ public class NCConfig extends ControllerConfig {
 
     public void setClusterPort(int clusterPort) {
         configManager.set(nodeId, Option.CLUSTER_PORT, clusterPort);
-    }
-
-    public CcId getClusterControllerId() {
-        return CcId.valueOf(appConfig.getShort(Option.CLUSTER_CONTROLLER_ID));
     }
 
     public String getClusterListenAddress() {

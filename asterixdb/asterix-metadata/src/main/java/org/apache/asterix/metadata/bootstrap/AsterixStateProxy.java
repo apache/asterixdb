@@ -58,6 +58,7 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     @Override
     public IMetadataNode waitForMetadataNode(long waitFor, TimeUnit timeUnit) throws InterruptedException {
         synchronized (this) {
+            //TODO(mblow): replace with nanoTime() to avoid being affected by system clock adjustments...
             long timeToWait = TimeUnit.MILLISECONDS.convert(waitFor, timeUnit);
             while (metadataNode == null && timeToWait > 0) {
                 long startTime = System.currentTimeMillis();

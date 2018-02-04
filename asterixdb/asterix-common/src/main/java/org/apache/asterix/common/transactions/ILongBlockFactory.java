@@ -16,25 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.job;
+package org.apache.asterix.common.transactions;
 
-import org.apache.hyracks.api.control.CcId;
-import org.apache.hyracks.api.control.CcIdPartitionedLongFactory;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
-public class JobIdFactory extends CcIdPartitionedLongFactory {
-    public JobIdFactory(CcId ccId) {
-        super(ccId);
-    }
+public interface ILongBlockFactory {
+    /**
+     * Ensures future blocks are allocated larger than the supplied value
+     *
+     * @param value
+     *            the value to ensure future blocks are larger than
+     */
+    void ensureMinimum(long value) throws AlgebricksException;
 
-    public JobId create() {
-        return new JobId(nextId());
-    }
-
-    public JobId maxJobId() {
-        return new JobId(maxId());
-    }
-
-    public void setMaxJobId(long maxJobId) {
-        ensureMinimumId(maxJobId + 1);
-    }
+    /**
+     * Allocates a block of longs of specified block size
+     *
+     * @param blockSize
+     *            The size of the block of longs to reserve
+     * @return the start of the reserved block
+     */
+    long getBlock(int blockSize) throws AlgebricksException;
 }
