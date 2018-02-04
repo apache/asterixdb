@@ -46,7 +46,7 @@ import org.apache.logging.log4j.Logger;
 
 public class VirtualBufferCache implements IVirtualBufferCache {
     private static final Logger LOGGER = LogManager.getLogger();
-
+    private static final boolean DEBUG = true;
     private final ICacheMemoryAllocator allocator;
     private final IFileMapManager fileMapManager;
     private final int pageSize;
@@ -198,6 +198,13 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         // recycle only if
         // 1. not a large page
         // 2. allocation is not above budget
+        if (DEBUG) {
+            int readCount = page.getReadLatchCount();
+            if (readCount > 0 || page.isWriteLatched()) {
+                throw new IllegalStateException("Attempt to delete a file with latched pages (read: " + readCount
+                        + ", write: " + page.isWriteLatched() + ")");
+            }
+        }
         if (used.get() < pageBudget && !page.isLargePage()) {
             page.reset();
             freePages.offer(page);
