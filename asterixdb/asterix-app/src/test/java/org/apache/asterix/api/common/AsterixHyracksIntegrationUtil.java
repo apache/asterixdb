@@ -55,6 +55,7 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.test.support.TestUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -97,12 +98,13 @@ public class AsterixHyracksIntegrationUtil {
      * @param args unused
      */
     public static void main(String[] args) throws Exception {
+        TestUtils.redirectLoggingToConsole();
         AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
         try {
             integrationUtil.run(Boolean.getBoolean("cleanup.start"), Boolean.getBoolean("cleanup.shutdown"),
                     System.getProperty("external.lib", ""), System.getProperty("conf.path", DEFAULT_CONF_FILE));
         } catch (Exception e) {
-            LOGGER.log(Level.WARN, "Unexpected exception", e);
+            LOGGER.fatal("Unexpected exception", e);
             System.exit(1);
         }
     }
@@ -125,7 +127,7 @@ public class AsterixHyracksIntegrationUtil {
         }
         final List<NodeControllerService> nodeControllers = new ArrayList<>();
         for (String nodeId : nodeNames) {
-            // mark this NC as virtual in the CC's config manager, so he doesn't try to contact NCService...
+            // mark this NC as virtual, so that the CC doesn't try to start via NCService...
             configManager.set(nodeId, NCConfig.Option.NCSERVICE_PORT, NCConfig.NCSERVICE_PORT_DISABLED);
             final INCApplication ncApplication = createNCApplication();
             ConfigManager ncConfigManager;
@@ -363,7 +365,8 @@ public class AsterixHyracksIntegrationUtil {
     private static Path getProjectPath() {
         final String targetDir = "asterix-app";
         final BiPredicate<Path, BasicFileAttributes> matcher =
-                (path, attributes) -> path.getFileName().toString().equals(targetDir) && path.toFile().isDirectory();
+                (path, attributes) -> path.getFileName().toString().equals(targetDir) && path.toFile().isDirectory()
+                        && path.toFile().list((d, n) -> n.equals("pom.xml")).length == 1;
         final Path currentPath = Paths.get(System.getProperty("user.dir"));
         try (Stream<Path> pathStream = Files.find(currentPath, 10, matcher)) {
             return pathStream.findFirst().orElse(currentPath);

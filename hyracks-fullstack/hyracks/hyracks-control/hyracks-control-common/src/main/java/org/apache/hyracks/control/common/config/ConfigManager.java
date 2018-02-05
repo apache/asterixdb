@@ -454,12 +454,10 @@ public class ConfigManager implements IConfigManager, Serializable {
 
     private Map<IOption, Object> getNodeEffectiveMap(String nodeId) {
         ensureNode(nodeId);
-        CompositeMap<IOption, Object> nodeEffectiveMap = new CompositeMap<>();
-        nodeEffectiveMap.setMutator(new NoOpMapMutator());
-        nodeEffectiveMap.addComposited(nodeSpecificDefinedMap.get(nodeId));
-        nodeEffectiveMap.addComposited(nodeSpecificDefaultMap.get(nodeId));
-        nodeEffectiveMap.addComposited(definedMap);
-        return nodeEffectiveMap;
+        return new CompositeMap<>(
+                Stream.of(nodeSpecificDefinedMap.get(nodeId), nodeSpecificDefaultMap.get(nodeId), definedMap)
+                        .toArray(Map[]::new),
+                new NoOpMapMutator());
     }
 
     public Ini toIni(boolean includeDefaults) {
@@ -570,8 +568,9 @@ public class ConfigManager implements IConfigManager, Serializable {
         }
 
         @Override
-        public void resolveCollision(CompositeMap<IOption, Object> compositeMap, Map<IOption, Object> map,
-                Map<IOption, Object> map1, Collection<IOption> collection) {
+        public void resolveCollision(CompositeMap<IOption, Object> composite, Map<IOption, Object> existing,
+                Map<IOption, Object> added, Collection<IOption> intersect) {
+            LOGGER.debug("resolveCollision: {}, {}, {}, {}", composite, existing, added, intersect);
             // no-op
         }
     }

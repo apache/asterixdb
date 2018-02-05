@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -41,6 +42,10 @@ import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.ConsoleAppender;
+import org.apache.logging.log4j.core.config.Configuration;
 
 public class TestUtils {
     public static IHyracksTaskContext create(int frameSize) {
@@ -139,5 +144,28 @@ public class TestUtils {
                             new NetworkAddress(ncAddress, dataPort), new NetworkAddress(ncAddress, messagingPort), 2));
         }
         return ncNameToNcInfos;
+    }
+
+    public static void redirectLoggingToConsole() {
+        final LoggerContext context = LoggerContext.getContext(false);
+        final Configuration config = context.getConfiguration();
+
+        Appender appender = config.getAppender("Console");
+        if (appender == null) {
+            Optional<Appender> result =
+                    config.getAppenders().values().stream().filter(a -> a instanceof ConsoleAppender).findFirst();
+            if (!result.isPresent()) {
+                System.err.println(
+                        "ERROR: cannot find appender named 'Console'; unable to find alternate ConsoleAppender!");
+            } else {
+                appender = result.get();
+                System.err.println("ERROR: cannot find appender named 'Console'; using alternate ConsoleAppender named "
+                        + appender.getName());
+            }
+        }
+        if (appender != null) {
+            config.getRootLogger().addAppender(appender, null, null);
+            context.updateLoggers();
+        }
     }
 }
