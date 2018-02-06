@@ -16,17 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.server.process;
+package org.apache.hyracks.test.server.process;
 
 import java.io.File;
 import java.util.List;
 
-import org.apache.hyracks.control.cc.CCDriver;
+import org.apache.hyracks.control.nc.service.NCService;
 
-@SuppressWarnings("squid:CommentedOutCodeLine")
-public class HyracksCCProcess extends HyracksServerProcess {
+public class HyracksNCServiceProcess extends HyracksServerProcess {
 
-    public HyracksCCProcess(File configFile, File logFile, File appHome, File workingDir) {
+    public HyracksNCServiceProcess(File configFile, File logFile, File appHome, File workingDir) {
         this.configFile = configFile;
         this.logFile = logFile;
         this.appHome = appHome;
@@ -35,13 +34,12 @@ public class HyracksCCProcess extends HyracksServerProcess {
 
     @Override
     protected String getMainClassName() {
-        return CCDriver.class.getName();
+        return NCService.class.getName();
     }
 
     @Override
     protected void addJvmArgs(List<String> cList) {
-        // CC needs more than default memory
-        cList.add("-Xmx1024m");
-        //cList.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"); //NOSONAR
+        // NCService needs little memory
+        cList.add("-Xmx128m");
     }
 }

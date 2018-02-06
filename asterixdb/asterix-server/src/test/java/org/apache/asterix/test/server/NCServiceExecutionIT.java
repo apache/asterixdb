@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.server.test;
+package org.apache.asterix.test.server;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -31,9 +31,9 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hyracks.server.process.HyracksCCProcess;
-import org.apache.hyracks.server.process.HyracksNCServiceProcess;
-import org.apache.hyracks.server.process.HyracksVirtualCluster;
+import org.apache.hyracks.test.server.process.HyracksCCProcess;
+import org.apache.hyracks.test.server.process.HyracksNCServiceProcess;
+import org.apache.hyracks.test.server.process.HyracksVirtualCluster;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

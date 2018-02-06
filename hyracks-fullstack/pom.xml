@@ -61,7 +61,7 @@
     <skipTests>false</skipTests>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     <skip.testResources>${maven.test.skip}</skip.testResources>
-    <testLog4jConfigFile>${root.dir}/src/test/resources/log4j2-test.xml</testLog4jConfigFile>
+    <testLog4jConfigFile>${root.dir}/src/test/resources/log4j2-hyracks-test.xml</testLog4jConfigFile>
     <!-- Definition of tests in various categories which may be excluded -->
     <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
     <hivesterix.perf.tests>**/hivesterix/perf/PerfTestSuite.java</hivesterix.perf.tests>

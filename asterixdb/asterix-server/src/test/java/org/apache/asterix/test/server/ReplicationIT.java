@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.server.test;
+package org.apache.asterix.test.server;
 
-import static org.apache.asterix.server.test.NCServiceExecutionIT.APP_HOME;
-import static org.apache.asterix.server.test.NCServiceExecutionIT.ASTERIX_APP_DIR;
-import static org.apache.asterix.server.test.NCServiceExecutionIT.INSTANCE_DIR;
-import static org.apache.asterix.server.test.NCServiceExecutionIT.LOG_DIR;
-import static org.apache.asterix.server.test.NCServiceExecutionIT.TARGET_DIR;
+import static org.apache.asterix.test.server.NCServiceExecutionIT.APP_HOME;
+import static org.apache.asterix.test.server.NCServiceExecutionIT.ASTERIX_APP_DIR;
+import static org.apache.asterix.test.server.NCServiceExecutionIT.INSTANCE_DIR;
+import static org.apache.asterix.test.server.NCServiceExecutionIT.LOG_DIR;
+import static org.apache.asterix.test.server.NCServiceExecutionIT.TARGET_DIR;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -38,7 +38,7 @@ import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hyracks.server.process.HyracksVirtualCluster;
+import org.apache.hyracks.test.server.process.HyracksVirtualCluster;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,21 +51,33 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class NcLifecycleIT {
+public class ReplicationIT {
 
     private static final String PATH_BASE =
-            FileUtil.joinPath("src", "test", "resources", "integrationts", "NcLifecycle");
+            FileUtil.joinPath("src", "test", "resources", "integrationts", "replication");
     private static final String CONF_DIR =
-            StringUtils.join(new String[] { TARGET_DIR, "test-classes", "NcLifecycleIT" }, File.separator);
+            StringUtils.join(new String[] { TARGET_DIR, "test-classes", "ReplicationIT" }, File.separator);
     private static final String PATH_ACTUAL = FileUtil.joinPath("target", "ittest");
     private static final Logger LOGGER = LogManager.getLogger();
     private static String reportPath = new File(FileUtil.joinPath("target", "failsafe-reports")).getAbsolutePath();
     private static final TestExecutor testExecutor = new TestExecutor();
     private static HyracksVirtualCluster cluster;
 
+    static {
+        final Map<String, InetSocketAddress> ncEndPoints = new HashMap<>();
+        final Map<String, InetSocketAddress> replicationAddress = new HashMap<>();
+        final String ip = InetAddress.getLoopbackAddress().getHostAddress();
+        ncEndPoints.put("asterix_nc1", InetSocketAddress.createUnresolved(ip, 19004));
+        ncEndPoints.put("asterix_nc2", InetSocketAddress.createUnresolved(ip, 19005));
+        replicationAddress.put("asterix_nc1", InetSocketAddress.createUnresolved(ip, 2001));
+        replicationAddress.put("asterix_nc2", InetSocketAddress.createUnresolved(ip, 2002));
+        testExecutor.setNcEndPoints(ncEndPoints);
+        testExecutor.setNcReplicationAddress(replicationAddress);
+    }
+
     private TestCaseContext tcCtx;
 
-    public NcLifecycleIT(TestCaseContext tcCtx) {
+    public ReplicationIT(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
     }
 
@@ -103,7 +115,7 @@ public class NcLifecycleIT {
         testExecutor.executeTest(PATH_ACTUAL, tcCtx, null, false);
     }
 
-    @Parameterized.Parameters(name = "NcLifecycleIT {index}: {0}")
+    @Parameterized.Parameters(name = "ReplicationIT {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = buildTestsInXml(TestCaseContext.DEFAULT_TESTSUITE_XML_NAME);
         if (testArgs.size() == 0) {

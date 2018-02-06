@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.hyracks.server.process;
+package org.apache.hyracks.test.server.process;
 
 import java.io.File;
 import java.io.IOException;

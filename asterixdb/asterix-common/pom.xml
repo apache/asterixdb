@@ -169,7 +169,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <configuration>
+        <configuration combine.children="append">
           <ignoredUnusedDeclaredDependencies>
             <ignoredUnusedDeclaredDependency>org.apache.hyracks:hyracks-storage-am-lsm-btree:*</ignoredUnusedDeclaredDependency>
             <ignoredUnusedDeclaredDependency>org.apache.hyracks:hyracks-storage-am-lsm-rtree:*</ignoredUnusedDeclaredDependency>

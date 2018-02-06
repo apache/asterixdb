@@ -12,7 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.asterix.server.test;
+package org.apache.asterix.test.server;
+
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
@@ -34,13 +41,6 @@ import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 /**
  * Runs the runtime test cases under 'asterix-app/src/test/resources/runtimets'.

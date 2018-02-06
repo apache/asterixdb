@@ -58,7 +58,7 @@
     <maven.test.skip>false</maven.test.skip>
     <skip.surefire.tests>${skipTests}</skip.surefire.tests>
     <skip.testResources>${maven.test.skip}</skip.testResources>
-    <testLog4jConfigFile>${root.dir}/asterix-app/src/test/resources/log4j2-test.xml</testLog4jConfigFile>
+    <testLog4jConfigFile>${root.dir}/asterix-app/src/test/resources/log4j2-asterixdb-test.xml</testLog4jConfigFile>
 
     <!-- Definition of tests in various categories which may be excluded -->
     <repeated.tests>**/RepeatedTest.java</repeated.tests>
@@ -998,6 +998,12 @@
         <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-server</artifactId>
         <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-server</artifactId>
+        <version>${hyracks.version}</version>
+        <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>

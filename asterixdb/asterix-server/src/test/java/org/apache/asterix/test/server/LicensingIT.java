@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.server.test;
+package org.apache.asterix.test.server;
 
 import java.io.File;
 import java.io.IOException;
