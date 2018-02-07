@@ -719,71 +719,43 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
             FlushOperation flushOp = (FlushOperation) operation;
             LOGGER.log(Level.INFO, "Flushing component with id: " + flushOp.getFlushingComponent().getId());
         }
-        ILSMDiskComponent component = null;
         try {
-            component = doFlush(operation);
-            return component;
+            return doFlush(operation);
         } catch (Exception e) {
             LOGGER.error("Fail to execute flush " + this, e);
-            // clean up component
-            try {
-                cleanUpFiles(operation);
-            } catch (HyracksDataException e1) {
-                e.addSuppressed(e1);
-            }
+            cleanUpFiles(operation, e);
             throw HyracksDataException.create(e);
         }
-
     }
 
     @Override
     public final ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException {
         ILSMIndexAccessor accessor = operation.getAccessor();
         ILSMIndexOperationContext opCtx = accessor.getOpContext();
-        ILSMDiskComponent component = null;
         try {
-            component = opCtx.getOperation() == IndexOperation.DELETE_DISK_COMPONENTS ? EmptyComponent.INSTANCE
+            return opCtx.getOperation() == IndexOperation.DELETE_DISK_COMPONENTS ? EmptyComponent.INSTANCE
                     : doMerge(operation);
-            return component;
         } catch (Exception e) {
             LOGGER.error("Fail to execute merge " + this, e);
-            // clean up component
-            try {
-                cleanUpFiles(operation);
-            } catch (HyracksDataException e1) {
-                e.addSuppressed(e1);
-            }
+            cleanUpFiles(operation, e);
             throw HyracksDataException.create(e);
         }
-
     }
 
-    protected void cleanUpFiles(ILSMIOOperation operation) throws HyracksDataException {
+    protected void cleanUpFiles(ILSMIOOperation operation, Exception e) {
         LSMComponentFileReferences componentFiles = operation.getComponentFiles();
         if (componentFiles == null) {
             return;
         }
         FileReference[] files = componentFiles.getFileReferences();
-        HyracksDataException exception = null;
         for (FileReference file : files) {
             try {
-                cleanUpFile(file);
-            } catch (HyracksDataException e) {
-                if (exception == null) {
-                    exception = e;
-                } else {
-                    exception.addSuppressed(e);
+                if (file != null) {
+                    diskBufferCache.deleteFile(file);
                 }
+            } catch (HyracksDataException hde) {
+                e.addSuppressed(hde);
             }
-        }
-        if (exception != null) {
-            throw exception;
-        }
-    }
-
-    protected void cleanUpFile(FileReference file) throws HyracksDataException {
-        if (file != null) {
-            diskBufferCache.deleteFile(file);
         }
     }
 
