@@ -87,8 +87,8 @@ public class ClusterStateDefaultParameterTest {
                 Assert.assertTrue(getValue(row) == maxHeap / 4);
                 matchCount++;
             }
-            if (row.contains("storage.memorycomponent.numpages")) {
-                Assert.assertTrue(getValue(row) == maxHeap / (131072 * 64));
+            if (row.contains("storage.max.active.writable.datasets")) {
+                Assert.assertTrue(getValue(row) == 8);
                 matchCount++;
             }
         }

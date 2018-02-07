@@ -48,10 +48,7 @@ public class RecoveryManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        // Read default test configurations
-        // Write test config file
-        integrationUtil.addOption(StorageProperties.Option.STORAGE_MEMORYCOMPONENT_GLOBALBUDGET, "128MB");
-        integrationUtil.addOption(StorageProperties.Option.STORAGE_MEMORYCOMPONENT_NUMPAGES, 32);
+        integrationUtil.addOption(StorageProperties.Option.STORAGE_MAX_ACTIVE_WRITABLE_DATASETS, 20);
         integrationUtil.setGracefulShutdown(false);
         integrationUtil.init(true, TEST_CONFIG_FILE_PATH);
     }

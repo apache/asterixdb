@@ -28,6 +28,7 @@
     "replication\.log\.buffer\.pagesize" : 131072,
     "replication\.strategy" : "none",
     "replication\.timeout" : 30,
+    "storage.max.active.writable.datasets" : 8,
     "txn\.commitprofiler\.enabled" : false,
     "txn\.commitprofiler\.reportinterval" : 5,
     "txn\.job\.recovery\.memorysize" : 67108864,

@@ -23,4 +23,5 @@ FROM range(1,2) AS x
 SELECT ELEMENT (
     WITH z AS (FROM Accounts AS y WHERE y.id=x SELECT VALUE y)
     SELECT x, z
-);
+)
+ORDER BY x;

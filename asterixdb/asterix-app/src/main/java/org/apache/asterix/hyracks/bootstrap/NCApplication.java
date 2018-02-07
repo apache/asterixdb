@@ -222,19 +222,9 @@ public class NCApplication extends BaseNCApplication {
     @Override
     public NodeCapacity getCapacity() {
         StorageProperties storageProperties = runtimeContext.getStorageProperties();
-        // Deducts the reserved buffer cache size and memory component size from the maxium heap size,
-        // and deducts one core for processing heartbeats.
-        long memorySize = Runtime.getRuntime().maxMemory() - storageProperties.getBufferCacheSize()
-                - storageProperties.getMemoryComponentGlobalBudget();
-        if (memorySize <= 0) {
-            throw new IllegalStateException("Invalid node memory configuration, more memory budgeted than available "
-                    + "in JVM. Runtime max memory: " + Runtime.getRuntime().maxMemory() + " Buffer cache size: "
-                    + storageProperties.getBufferCacheSize() + " Memory component global budget: "
-                    + storageProperties.getMemoryComponentGlobalBudget());
-        }
+        final long memorySize = storageProperties.getJobExecutionMemoryBudget();
         int allCores = Runtime.getRuntime().availableProcessors();
-        int maximumCoresForComputation = allCores > 1 ? allCores - 1 : allCores;
-        return new NodeCapacity(memorySize, maximumCoresForComputation);
+        return new NodeCapacity(memorySize, allCores);
     }
 
     private void performLocalCleanUp() throws HyracksDataException {
