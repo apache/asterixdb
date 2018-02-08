@@ -95,7 +95,13 @@ public class NCMessageBroker implements INCMessageBroker {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Received message: " + absMessage);
         }
-        absMessage.handle(appContext);
+        ncs.getExecutor().submit(() -> {
+            try {
+                absMessage.handle(appContext);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARN, "Could not process message: {}", message, e);
+            }
+        });
     }
 
     public ConcurrentFramePool getMessagingFramePool() {
@@ -105,7 +111,7 @@ public class NCMessageBroker implements INCMessageBroker {
     private void sendMessageToChannel(IChannelControlBlock ccb, INcAddressedMessage msg) throws IOException {
         byte[] serializedMsg = JavaSerializationUtils.serialize(msg);
         if (serializedMsg.length > maxMsgSize) {
-            throw new HyracksDataException("Message exceded maximum size");
+            throw new HyracksDataException("Message exceeded maximum size");
         }
         // Prepare the message buffer
         ByteBuffer msgBuffer = messagingFramePool.get();

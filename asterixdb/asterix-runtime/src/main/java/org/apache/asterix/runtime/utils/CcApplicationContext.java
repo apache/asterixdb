@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INodeJobTracker;
-import org.apache.asterix.common.transactions.ILongBlockFactory;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
@@ -93,8 +92,7 @@ public class CcApplicationContext implements ICcApplicationContext {
             ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
             IGlobalRecoveryManager globalRecoveryManager, INcLifecycleCoordinator ftStrategy,
             IJobLifecycleListener activeLifeCycleListener, IStorageComponentProvider storageComponentProvider,
-            IMetadataLockManager mdLockManager, Supplier<ILongBlockFactory> txnIdBlockSupplier)
-            throws AlgebricksException, IOException {
+            IMetadataLockManager mdLockManager) throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
         this.libraryManager = libraryManager;
@@ -122,7 +120,8 @@ public class CcApplicationContext implements ICcApplicationContext {
         clusterStateManager.setCcAppCtx(this);
         this.resourceIdManager = new ResourceIdManager(clusterStateManager);
         nodeJobTracker = new NodeJobTracker();
-        txnIdFactory = new CcTxnIdFactory(txnIdBlockSupplier);
+        txnIdFactory = new BulkTxnIdFactory();
+
     }
 
     @Override

@@ -22,9 +22,6 @@ package org.apache.hyracks.api.exceptions;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.util.ErrorMessageUtil;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * The main execution time exception type for runtime errors in a hyracks environment
@@ -32,7 +29,6 @@ import org.apache.logging.log4j.Logger;
 public class HyracksDataException extends HyracksException {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LogManager.getLogger();
 
     public static HyracksDataException create(Throwable cause) {
         if (cause instanceof HyracksDataException || cause == null) {
@@ -40,11 +36,8 @@ public class HyracksDataException extends HyracksException {
         } else if (cause instanceof Error) {
             // don't wrap errors, allow them to propagate
             throw (Error) cause;
-        } else if (cause instanceof InterruptedException && !Thread.currentThread().isInterrupted()) {
-            // TODO(mblow): why not force interrupt on current thread?
-            LOGGER.log(Level.WARN,
-                    "Wrapping an InterruptedException in HyracksDataException and current thread is not interrupted",
-                    cause);
+        } else if (cause instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
         }
         return new HyracksDataException(cause);
     }
@@ -65,10 +58,8 @@ public class HyracksDataException extends HyracksException {
             // don't suppress errors into a HyracksDataException, allow them to propagate
             th.addSuppressed(root);
             throw (Error) th;
-        } else if (th instanceof InterruptedException && !Thread.currentThread().isInterrupted()) {
-            // TODO(mblow): why not force interrupt on current thread?
-            LOGGER.log(Level.WARN, "Suppressing an InterruptedException in a HyracksDataException and current "
-                    + "thread is not interrupted", th);
+        } else if (th instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
         }
         root.addSuppressed(th);
         return root;

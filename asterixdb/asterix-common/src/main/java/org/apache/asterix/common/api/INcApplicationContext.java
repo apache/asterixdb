@@ -124,4 +124,6 @@ public interface INcApplicationContext extends IApplicationContext {
     IIndexCheckpointManagerProvider getIndexCheckpointManagerProvider();
 
     IReplicaManager getReplicaManager();
+
+    long getMaxTxnId();
 }

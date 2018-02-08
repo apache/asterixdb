@@ -35,7 +35,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.common.transactions.ILongBlockFactory;
+import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
@@ -92,7 +92,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * cluster, i.e., metadata transaction ids shall never "accidentally" overlap
  * with transaction ids of regular jobs or other metadata transactions.
  */
-public abstract class MetadataManager implements IMetadataManager, ILongBlockFactory {
+public abstract class MetadataManager implements IMetadataManager {
     private final MetadataCache cache = new MetadataCache();
     protected final Collection<IAsterixStateProxy> proxies;
     protected IMetadataNode metadataNode;
@@ -119,13 +119,19 @@ public abstract class MetadataManager implements IMetadataManager, ILongBlockFac
         this.metadataLatch = new ReentrantReadWriteLock(true);
     }
 
+    protected abstract TxnId createTxnId();
+
     @Override
     public void init() throws HyracksDataException {
         // no op
     }
 
     @Override
-    public abstract MetadataTransactionContext beginTransaction() throws RemoteException, ACIDException;
+    public MetadataTransactionContext beginTransaction() throws RemoteException {
+        TxnId txnId = createTxnId();
+        metadataNode.beginTransaction(txnId);
+        return new MetadataTransactionContext(txnId);
+    }
 
     @Override
     public void commitTransaction(MetadataTransactionContext ctx) throws RemoteException, ACIDException {
@@ -997,34 +1003,6 @@ public abstract class MetadataManager implements IMetadataManager, ILongBlockFac
         rebindMetadataNode = true;
     }
 
-    @Override
-    public void ensureMinimum(long value) throws AlgebricksException {
-        try {
-            metadataNode.ensureMinimumTxnId(value);
-        } catch (RemoteException e) {
-            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
-        }
-    }
-
-    @Override
-    public long getBlock(int blockSize) throws AlgebricksException {
-        try {
-            return metadataNode.reserveTxnIdBlock(blockSize);
-        } catch (RemoteException e) {
-            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
-        }
-    }
-
-    public static ILongBlockFactory getTxnIdBlockFactory() {
-        try {
-            INSTANCE.init();
-        } catch (HyracksDataException e) {
-            throw new IllegalStateException(e);
-        }
-        return (ILongBlockFactory) INSTANCE;
-
-    }
-
     public static void initialize(IAsterixStateProxy proxy, MetadataProperties metadataProperties,
             ICcApplicationContext appCtx) {
         INSTANCE = new CCMetadataManagerImpl(proxy, metadataProperties, appCtx);
@@ -1046,15 +1024,19 @@ public abstract class MetadataManager implements IMetadataManager, ILongBlockFac
         }
 
         @Override
-        public MetadataTransactionContext beginTransaction() throws RemoteException {
+        protected TxnId createTxnId() {
             TxnId txnId;
             try {
                 txnId = appCtx.getTxnIdFactory().create();
             } catch (AlgebricksException e) {
                 throw new ACIDException(e);
             }
-            metadataNode.beginTransaction(txnId);
-            return new MetadataTransactionContext(txnId);
+            return txnId;
+        }
+
+        @Override
+        public long getMaxTxnId() {
+            return appCtx.getTxnIdFactory().getMaxTxnId();
         }
 
         @Override
@@ -1083,15 +1065,25 @@ public abstract class MetadataManager implements IMetadataManager, ILongBlockFac
     }
 
     private static class NCMetadataManagerImpl extends MetadataManager {
+        private final ITxnIdFactory txnIdFactory;
+
         NCMetadataManagerImpl(Collection<IAsterixStateProxy> proxies, MetadataNode metadataNode) {
             super(proxies, metadataNode);
+            txnIdFactory = metadataNode.getTxnIdFactory();
         }
 
         @Override
-        public MetadataTransactionContext beginTransaction() throws RemoteException {
-            TxnId txnId = new TxnId(metadataNode.reserveTxnIdBlock(1));
-            metadataNode.beginTransaction(txnId);
-            return new MetadataTransactionContext(txnId);
+        protected TxnId createTxnId() {
+            try {
+                return txnIdFactory.create();
+            } catch (AlgebricksException e) {
+                throw new ACIDException(e);
+            }
+        }
+
+        @Override
+        public long getMaxTxnId() {
+            return txnIdFactory.getMaxTxnId();
         }
     }
 }

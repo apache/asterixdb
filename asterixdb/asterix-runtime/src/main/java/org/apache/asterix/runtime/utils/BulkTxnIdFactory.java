@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.metadata;
+package org.apache.asterix.runtime.utils;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -33,7 +33,8 @@ class BulkTxnIdFactory implements ITxnIdFactory {
         return new TxnId(maxId.incrementAndGet());
     }
 
-    public long reserveIdBlock(int blockSize) {
+    @Override
+    public long getIdBlock(int blockSize) {
         if (blockSize < 1) {
             throw new IllegalArgumentException("block size cannot be smaller than 1, but was " + blockSize);
         }
@@ -43,5 +44,10 @@ class BulkTxnIdFactory implements ITxnIdFactory {
     @Override
     public void ensureMinimumId(long id) {
         this.maxId.getAndUpdate(next -> Math.max(next, id));
+    }
+
+    @Override
+    public long getMaxTxnId() {
+        return maxId.get();
     }
 }

@@ -16,30 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.utils;
+package org.apache.asterix.metadata;
 
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 
-import org.apache.asterix.common.transactions.ILongBlockFactory;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.transactions.TxnId;
+import org.apache.asterix.runtime.message.TxnIdBlockRequest;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
  * Represents a factory to generate unique transaction IDs.
  */
-class CcTxnIdFactory implements ITxnIdFactory {
-    private static final int TXN_BLOCK_SIZE = 1024;
+class CachingTxnIdFactory implements ITxnIdFactory {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final Supplier<ILongBlockFactory> blockFactorySupplier;
+    private final INcApplicationContext appCtx;
     private volatile Block block = new Block(0, 0);
 
-    public CcTxnIdFactory(Supplier<ILongBlockFactory> blockFactorySupplier) {
-        this.blockFactorySupplier = blockFactorySupplier;
+    public CachingTxnIdFactory(INcApplicationContext appCtx) {
+        this.appCtx = appCtx;
     }
 
     @Override
@@ -50,14 +50,30 @@ class CcTxnIdFactory implements ITxnIdFactory {
             } catch (BlockExhaustedException ex) {
                 // retry
                 LOGGER.info("block exhausted; obtaining new block from supplier");
-                block = new Block(blockFactorySupplier.get().getBlock(TXN_BLOCK_SIZE), TXN_BLOCK_SIZE);
+                TxnIdBlockRequest.Block newBlock;
+                try {
+                    newBlock = TxnIdBlockRequest.send(appCtx);
+                } catch (HyracksDataException e) {
+                    throw new AlgebricksException(e);
+                }
+                block = new Block(newBlock.getStartingId(), newBlock.getBlockSize());
             }
         }
     }
 
     @Override
     public void ensureMinimumId(long id) throws AlgebricksException {
-        blockFactorySupplier.get().ensureMinimum(id);
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getIdBlock(int blockSize) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long getMaxTxnId() {
+        return block.endExclusive - 1;
     }
 
     static class Block {

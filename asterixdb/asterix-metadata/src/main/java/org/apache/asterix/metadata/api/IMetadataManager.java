@@ -724,4 +724,6 @@ public interface IMetadataManager extends IMetadataBootstrap {
 
     List<FeedConnection> getFeedConections(MetadataTransactionContext ctx, String dataverseName, String feedName)
             throws AlgebricksException;
+
+    long getMaxTxnId();
 }

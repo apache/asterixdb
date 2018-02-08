@@ -39,6 +39,7 @@ import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
+import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.transactions.ImmutableDatasetId;
 import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.common.transactions.TxnId;
@@ -132,7 +133,7 @@ public class MetadataNode implements IMetadataNode {
     private IDatasetLifecycleManager datasetLifecycleManager;
     private ITransactionSubsystem transactionSubsystem;
     private int metadataStoragePartition;
-    private transient BulkTxnIdFactory txnIdFactory;
+    private transient CachingTxnIdFactory txnIdFactory;
     // core only
     private transient MetadataTupleTranslatorProvider tupleTranslatorProvider;
     // extension only
@@ -159,21 +160,11 @@ public class MetadataNode implements IMetadataNode {
                 }
             }
         }
-        this.txnIdFactory = new BulkTxnIdFactory();
+        this.txnIdFactory = new CachingTxnIdFactory(runtimeContext);
     }
 
     public int getMetadataStoragePartition() {
         return metadataStoragePartition;
-    }
-
-    @Override
-    public void ensureMinimumTxnId(long maxId) throws ACIDException, RemoteException {
-        txnIdFactory.ensureMinimumId(maxId);
-    }
-
-    @Override
-    public long reserveTxnIdBlock(int blockSize) throws ACIDException, RemoteException {
-        return txnIdFactory.reserveIdBlock(blockSize);
     }
 
     @Override
@@ -2008,5 +1999,9 @@ public class MetadataNode implements IMetadataNode {
         } catch (HyracksDataException | ACIDException e) {
             throw new AlgebricksException(e);
         }
+    }
+
+    public ITxnIdFactory getTxnIdFactory() {
+        return txnIdFactory;
     }
 }

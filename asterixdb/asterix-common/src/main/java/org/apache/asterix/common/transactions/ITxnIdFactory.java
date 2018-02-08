@@ -28,6 +28,8 @@ public interface ITxnIdFactory {
      */
     TxnId create() throws AlgebricksException;
 
+    long getIdBlock(int blockSize);
+
     /**
      * Ensure that future transaction ids are larger than the supplied id
      *
@@ -35,4 +37,11 @@ public interface ITxnIdFactory {
      *            the value to ensure future created transaction ids are larger than
      */
     void ensureMinimumId(long id) throws AlgebricksException;
+
+    /**
+     * The highest transaction id this factory has created
+     *
+     * @return the max transaction id
+     */
+    long getMaxTxnId();
 }

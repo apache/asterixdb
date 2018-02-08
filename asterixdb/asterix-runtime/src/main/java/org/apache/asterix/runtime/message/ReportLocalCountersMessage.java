@@ -65,7 +65,7 @@ public class ReportLocalCountersMessage implements ICcAddressedMessage {
         INcApplicationContext appContext = (INcApplicationContext) ncs.getApplicationContext();
         long maxResourceId = Math.max(appContext.getLocalResourceRepository().maxId(),
                 MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID);
-        long maxTxnId = appContext.getTransactionSubsystem().getTransactionManager().getMaxTxnId();
+        long maxTxnId = appContext.getMaxTxnId();
         long maxJobId = ncs.getMaxJobId(ccId);
         ReportLocalCountersMessage countersMessage =
                 new ReportLocalCountersMessage(ncs.getId(), maxResourceId, maxTxnId, maxJobId);

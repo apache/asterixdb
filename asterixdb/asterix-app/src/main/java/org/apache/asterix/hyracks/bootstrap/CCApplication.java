@@ -178,7 +178,7 @@ public class CCApplication extends BaseCCApplication {
             throws AlgebricksException, IOException {
         return new CcApplicationContext(ccServiceCtx, getHcc(), libraryManager, () -> MetadataManager.INSTANCE,
                 globalRecoveryManager, lifecycleCoordinator, new ActiveNotificationHandler(), componentProvider,
-                new MetadataLockManager(), MetadataManager::getTxnIdBlockFactory);
+                new MetadataLockManager());
     }
 
     protected GlobalRecoveryManager createGlobalRecoveryManager() throws Exception {

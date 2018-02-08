@@ -513,4 +513,14 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     public ICoordinationService getCoordinationService() {
         return NoOpCoordinationService.INSTANCE;
     }
+
+    @Override
+    public long getMaxTxnId() {
+        if (txnSubsystem == null) {
+            throw new IllegalStateException("cannot determine max txn id before txnSubsystem is initialized!");
+        }
+
+        return Math.max(MetadataManager.INSTANCE == null ? 0 : MetadataManager.INSTANCE.getMaxTxnId(),
+                txnSubsystem.getTransactionManager().getMaxTxnId());
+    }
 }
