@@ -306,11 +306,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public double getBloomFilterFalsePositiveRate() {
-        return storageProperties.getBloomFilterFalsePositiveRate();
-    }
-
-    @Override
     public ILSMIOOperationScheduler getLSMIOScheduler() {
         return lsmIOScheduler;
     }
@@ -373,11 +368,6 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public NodeProperties getNodeProperties() {
         return nodeProperties;
-    }
-
-    @Override
-    public ILSMOperationTracker getPrimaryOperationTracker(int datasetID, int partition) {
-        return datasetLifecycleManager.getOperationTracker(datasetID, partition);
     }
 
     @Override

@@ -334,13 +334,15 @@ public class MetadataBootstrap {
                 new LSMBTreeIOOperationCallbackFactory(idGeneratorProvider);
         IStorageComponentProvider storageComponentProvider = appContext.getStorageComponentProvider();
         if (isNewUniverse()) {
+            final double bloomFilterFalsePositiveRate =
+                    appContext.getStorageProperties().getBloomFilterFalsePositiveRate();
             LSMBTreeLocalResourceFactory lsmBtreeFactory = new LSMBTreeLocalResourceFactory(
                     storageComponentProvider.getStorageManager(), typeTraits, cmpFactories, null, null, null,
                     opTrackerFactory, ioOpCallbackFactory, storageComponentProvider.getMetadataPageManagerFactory(),
                     new AsterixVirtualBufferCacheProvider(datasetId),
                     storageComponentProvider.getIoOperationSchedulerProvider(),
                     appContext.getMetadataMergePolicyFactory(), GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, true,
-                    bloomFilterKeyFields, appContext.getBloomFilterFalsePositiveRate(), true, null);
+                    bloomFilterKeyFields, bloomFilterFalsePositiveRate, true, null);
             DatasetLocalResourceFactory dsLocalResourceFactory =
                     new DatasetLocalResourceFactory(datasetId, lsmBtreeFactory);
             // TODO(amoudi) Creating the index should be done through the same code path as

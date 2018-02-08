@@ -23,7 +23,6 @@ import java.rmi.RemoteException;
 import java.util.concurrent.Executor;
 
 import org.apache.asterix.common.context.IStorageComponentProvider;
-import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
@@ -36,7 +35,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
@@ -67,15 +65,11 @@ public interface INcApplicationContext extends IApplicationContext {
 
     IResourceIdFactory getResourceIdFactory();
 
-    ILSMOperationTracker getPrimaryOperationTracker(int datasetID, int partition);
-
-    void initialize(boolean initialRun) throws IOException, ACIDException, AlgebricksException;
+    void initialize(boolean initialRun) throws IOException, AlgebricksException;
 
     void setShuttingdown(boolean b);
 
     void deinitialize() throws HyracksDataException;
-
-    double getBloomFilterFalsePositiveRate();
 
     Object getActiveManager();
 
