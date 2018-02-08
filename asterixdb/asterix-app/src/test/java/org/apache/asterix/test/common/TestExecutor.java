@@ -1308,9 +1308,11 @@ public class TestExecutor {
                         e = ee;
                     }
                     if (e instanceof ComparisonException) {
-                        LOGGER.log(Level.INFO, "Comparison failure on poll: " + e.getMessage());
+                        LOGGER.info("Comparison failure on poll: {}", e::getMessage);
+                    } else if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Received exception on poll", e);
                     } else {
-                        LOGGER.log(Level.INFO, "received exception on poll", e);
+                        LOGGER.info("Received exception on poll: {}", e::toString);
                     }
                     responsesReceived++;
                     if (isExpected(e, cUnit)) {
