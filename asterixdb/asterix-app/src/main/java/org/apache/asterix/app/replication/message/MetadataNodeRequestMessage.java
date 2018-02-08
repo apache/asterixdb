@@ -34,9 +34,11 @@ public class MetadataNodeRequestMessage extends CcIdentifiedMessage
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
     private final boolean export;
+    private final int partitionId;
 
-    public MetadataNodeRequestMessage(boolean export) {
+    public MetadataNodeRequestMessage(boolean export, int partitionId) {
         this.export = export;
+        this.partitionId = partitionId;
     }
 
     @Override
@@ -45,7 +47,7 @@ public class MetadataNodeRequestMessage extends CcIdentifiedMessage
         HyracksDataException hde = null;
         try {
             if (export) {
-                appContext.initializeMetadata(false);
+                appContext.initializeMetadata(false, partitionId);
                 appContext.exportMetadataNodeStub();
                 appContext.bindMetadataNodeStub(getCcId());
             } else {

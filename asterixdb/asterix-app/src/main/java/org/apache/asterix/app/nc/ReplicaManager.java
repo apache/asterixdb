@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.nc;
 
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,10 +36,15 @@ import org.apache.asterix.common.storage.ReplicaIdentifier;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ReplicaManager implements IReplicaManager {
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final INcApplicationContext appCtx;
     /**
@@ -60,6 +66,10 @@ public class ReplicaManager implements IReplicaManager {
         if (!partitions.contains(id.getPartition())) {
             throw new IllegalStateException(
                     "This node is not the current master of partition(" + id.getPartition() + ")");
+        }
+        if (isSelf(id)) {
+            LOGGER.info("ignoring request to add replica to ourselves");
+            return;
         }
         replicas.computeIfAbsent(id, k -> new PartitionReplica(k, appCtx));
         replicas.get(id).sync();
@@ -88,6 +98,9 @@ public class ReplicaManager implements IReplicaManager {
 
     @Override
     public synchronized void promote(int partition) throws HyracksDataException {
+        if (partitions.contains(partition)) {
+            return;
+        }
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         localResourceRepository.cleanup(partition);
@@ -119,5 +132,14 @@ public class ReplicaManager implements IReplicaManager {
         for (LocalResource resource : partitionResources.values()) {
             datasetLifecycleManager.close(resource.getPath());
         }
+    }
+
+    private boolean isSelf(ReplicaIdentifier id) {
+        IApplicationConfig appConfig = appCtx.getServiceContext().getAppConfig();
+        String host = appConfig.getString(NCConfig.Option.REPLICATION_LISTEN_ADDRESS);
+        int port = appConfig.getInt(NCConfig.Option.REPLICATION_LISTEN_PORT);
+
+        final InetSocketAddress replicaAddress = new InetSocketAddress(host, port);
+        return id.equals(ReplicaIdentifier.of(id.getPartition(), replicaAddress));
     }
 }

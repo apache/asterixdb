@@ -155,7 +155,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             tasks.add(new StartReplicationServiceTask());
         }
         if (isMetadataNode) {
-            tasks.add(new MetadataBootstrapTask());
+            tasks.add(new MetadataBootstrapTask(clusterManager.getMetadataPartition().getPartitionId()));
         }
         tasks.add(new ExternalLibrarySetupTask(isMetadataNode));
         tasks.add(new CheckpointTask());
@@ -184,7 +184,8 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         }
         // if current metadata node is active, we need to unbind its metadata proxy objects
         if (clusterManager.isMetadataNodeActive()) {
-            MetadataNodeRequestMessage msg = new MetadataNodeRequestMessage(false);
+            MetadataNodeRequestMessage msg =
+                    new MetadataNodeRequestMessage(false, clusterManager.getMetadataPartition().getPartitionId());
             try {
                 messageBroker.sendApplicationMessageToNC(msg, metadataNodeId);
                 // when the current node responses, we will bind to the new one
@@ -207,7 +208,8 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     }
 
     private void requestMetadataNodeTakeover(String node) throws HyracksDataException {
-        MetadataNodeRequestMessage msg = new MetadataNodeRequestMessage(true);
+        MetadataNodeRequestMessage msg =
+                new MetadataNodeRequestMessage(true, clusterManager.getMetadataPartition().getPartitionId());
         try {
             messageBroker.sendApplicationMessageToNC(msg, node);
         } catch (Exception e) {

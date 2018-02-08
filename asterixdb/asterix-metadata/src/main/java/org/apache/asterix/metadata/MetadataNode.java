@@ -145,11 +145,12 @@ public class MetadataNode implements IMetadataNode {
     }
 
     public void initialize(INcApplicationContext runtimeContext,
-            MetadataTupleTranslatorProvider tupleTranslatorProvider, List<IMetadataExtension> metadataExtensions) {
+            MetadataTupleTranslatorProvider tupleTranslatorProvider, List<IMetadataExtension> metadataExtensions,
+            int partitionId) {
         this.tupleTranslatorProvider = tupleTranslatorProvider;
         this.transactionSubsystem = runtimeContext.getTransactionSubsystem();
         this.datasetLifecycleManager = runtimeContext.getDatasetLifecycleManager();
-        this.metadataStoragePartition = runtimeContext.getMetadataProperties().getMetadataPartition().getPartitionId();
+        this.metadataStoragePartition = partitionId;
         if (metadataExtensions != null) {
             extensionDatasets = new HashMap<>();
             for (IMetadataExtension metadataExtension : metadataExtensions) {
@@ -159,6 +160,10 @@ public class MetadataNode implements IMetadataNode {
             }
         }
         this.txnIdFactory = new BulkTxnIdFactory();
+    }
+
+    public int getMetadataStoragePartition() {
+        return metadataStoragePartition;
     }
 
     @Override

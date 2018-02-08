@@ -668,8 +668,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     @Override
     public void stop(boolean dumpState, OutputStream os) throws IOException {
-        // Shutdown checkpoint
-        checkpointManager.doSharpCheckpoint();
     }
 
     @Override

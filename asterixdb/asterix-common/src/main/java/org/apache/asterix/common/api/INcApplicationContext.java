@@ -94,9 +94,10 @@ public interface INcApplicationContext extends IApplicationContext {
      * Initializes the metadata node and bootstraps the metadata.
      *
      * @param newUniverse
+     * @param partitionId
      * @throws Exception
      */
-    void initializeMetadata(boolean newUniverse) throws Exception;
+    void initializeMetadata(boolean newUniverse, int partitionId) throws Exception;
 
     /**
      * Unexports the metadata node from the RMI registry

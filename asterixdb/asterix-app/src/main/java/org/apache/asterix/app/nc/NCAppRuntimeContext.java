@@ -416,10 +416,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public void initializeMetadata(boolean newUniverse) throws Exception {
+    public void initializeMetadata(boolean newUniverse, int partitionId) throws Exception {
         LOGGER.info("Bootstrapping metadata");
         MetadataNode.INSTANCE.initialize(this, ncExtensionManager.getMetadataTupleTranslatorProvider(),
-                ncExtensionManager.getMetadataExtensions());
+                ncExtensionManager.getMetadataExtensions(), partitionId);
 
         //noinspection unchecked
         ConcurrentHashMap<CcId, IAsterixStateProxy> proxyMap =

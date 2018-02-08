@@ -105,11 +105,6 @@ public class MetadataProperties extends AbstractProperties {
         return accessor.getString(Option.METADATA_NODE);
     }
 
-    public ClusterPartition getMetadataPartition() {
-        // metadata partition is always the first partition on the metadata node
-        return accessor.getNodePartitions().get(getMetadataNodeName())[0];
-    }
-
     public Map<String, String[]> getStores() {
         return accessor.getStores();
     }
