@@ -18,45 +18,49 @@
  */
 package org.apache.asterix.test.base;
 
-import java.io.PrintStream;
-
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
 /*
- * Traces method entry/exit to System.out (or supplied PrintStream).  To use, add the following to your test class:
+ * Traces method entry/exit to Log4j2 at org.apache.logging.log4j.Level.WARN (or supplied) level.  To use,
+ * add the following to your test class:
  *
+ * <code>
  *   @Rule
  *   public TestRule watcher = new TestMethodTracer();
  *
  *   @Rule
- *   public TestRule watcher = new TestMethodTracer(System.err);
+ *   public TestRule watcher = new TestMethodTracer(Level.INFO);
+ * </code>
  */
 
 public class TestMethodTracer extends TestWatcher {
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final Level level;
 
-    private final PrintStream out;
-
-    public TestMethodTracer(PrintStream out) {
-        this.out = out;
+    public TestMethodTracer(Level level) {
+        this.level = level;
     }
 
     public TestMethodTracer() {
-        this(System.out);
+        this(Level.WARN);
     }
 
     @Override
     protected void starting(Description description) {
-        out.println("## " + description.getMethodName() + " START");
+        LOGGER.log(level, "### {} START", description.getMethodName());
     }
 
     @Override
     protected void failed(Throwable e, Description description) {
-        out.println("## " + description.getMethodName() + " FAILED (" + e.getClass().getName() + ")");
+        LOGGER.log(level, "### {} FAILED ({})", description.getMethodName(), e.getClass().getName());
     }
 
     @Override
     protected void succeeded(Description description) {
-        out.println("## " + description.getMethodName() + " SUCCEEDED");
+        LOGGER.log(level, "### {} SUCCEEDED", description.getMethodName());
     }
 }
