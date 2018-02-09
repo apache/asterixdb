@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.asterix</groupId>
   <artifactId>apache-asterixdb</artifactId>
-  <version>0.9.3-SNAPSHOT</version>
+  <version>0.9.4-SNAPSHOT</version>
   <packaging>pom</packaging>
   <url>https://asterixdb.apache.org/</url>
 
@@ -73,8 +73,8 @@
     <itest.excludes>${global.itest.excludes}</itest.excludes>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-    <algebricks.version>0.3.3-SNAPSHOT</algebricks.version>
-    <hyracks.version>0.3.3-SNAPSHOT</hyracks.version>
+    <algebricks.version>0.3.4-SNAPSHOT</algebricks.version>
+    <hyracks.version>0.3.4-SNAPSHOT</hyracks.version>
     <hadoop.version>2.2.0</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
   </properties>

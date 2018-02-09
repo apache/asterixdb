@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hyracks</groupId>
   <artifactId>apache-hyracks</artifactId>
-  <version>0.3.3-SNAPSHOT</version>
+  <version>0.3.4-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hyracks-ecosystem-full-stack</name>
   <url>https://asterixdb.apache.org/</url>

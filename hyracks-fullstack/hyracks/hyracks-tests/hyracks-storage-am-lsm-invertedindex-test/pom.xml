@@ -24,7 +24,7 @@
   <parent>
     <artifactId>hyracks-tests</artifactId>
     <groupId>org.apache.hyracks</groupId>
-    <version>0.3.3-SNAPSHOT</version>
+    <version>0.3.4-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 

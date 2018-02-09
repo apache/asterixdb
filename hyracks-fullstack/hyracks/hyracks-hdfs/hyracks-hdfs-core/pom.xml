@@ -25,7 +25,7 @@
   <parent>
     <artifactId>hyracks-hdfs</artifactId>
     <groupId>org.apache.hyracks</groupId>
-    <version>0.3.3-SNAPSHOT</version>
+    <version>0.3.4-SNAPSHOT</version>
   </parent>
   <properties>
     <root.dir>${basedir}/../../..</root.dir>
@@ -170,7 +170,7 @@
         <dependency>
           <groupId>org.apache.hyracks</groupId>
           <artifactId>hyracks-control-common</artifactId>
-          <version>0.3.3-SNAPSHOT</version>
+          <version>0.3.4-SNAPSHOT</version>
           <scope>test</scope>
         </dependency>
         <dependency>
