@@ -245,9 +245,11 @@ public class ExternalLibraryUtils {
                     for (String arg : fargs) {
                         args.add(arg);
                     }
-                    Function f = new Function(dataverse, libraryName + "#" + function.getName().trim(), args.size(),
-                            args, function.getReturnType().trim(), function.getDefinition().trim(),
-                            library.getLanguage().trim(), function.getFunctionType().trim(), null);
+                    FunctionSignature signature = new FunctionSignature(dataverse,
+                            libraryName + "#" + function.getName().trim(), args.size());
+                    Function f = new Function(signature, args, function.getReturnType().trim(),
+                            function.getDefinition().trim(), library.getLanguage().trim(),
+                            function.getFunctionType().trim(), null);
                     MetadataManager.INSTANCE.addFunction(mdTxnCtx, f);
                     if (LOGGER.isInfoEnabled()) {
                         LOGGER.info("Installed function: " + libraryName + "#" + function.getName().trim());

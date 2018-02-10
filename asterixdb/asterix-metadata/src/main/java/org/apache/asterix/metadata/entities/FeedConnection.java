@@ -113,13 +113,7 @@ public class FeedConnection implements IMetadataEntity<FeedConnection> {
         return feedId;
     }
 
-    public boolean containsFunction(String dataverseName, String functionName, int arity) {
-        for (FunctionSignature signature : this.appliedFunctions) {
-            if (signature.getNamespace().equals(dataverseName) && signature.getName().equals(functionName)
-                    && signature.getArity() == arity) {
-                return true;
-            }
-        }
-        return false;
+    public boolean containsFunction(FunctionSignature signature) {
+        return appliedFunctions.contains(signature);
     }
 }

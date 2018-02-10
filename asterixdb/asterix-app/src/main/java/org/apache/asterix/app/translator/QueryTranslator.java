@@ -1212,8 +1212,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             List<Function> functionsInDataverse =
                     MetadataManager.INSTANCE.getDataverseFunctions(mdTxnCtx, dataverseName);
             for (Function function : functionsInDataverse) {
-                if (checkWhetherFunctionIsBeingUsed(mdTxnCtx, function.getDataverseName(), function.getName(),
-                        function.getArity(), dataverseName)) {
+                if (isFunctionUsed(mdTxnCtx, function.getSignature(), dataverseName)) {
                     throw new MetadataException(ErrorCode.METADATA_DROP_FUCTION_IN_USE,
                             function.getDataverseName() + "." + function.getName() + "@" + function.getArity());
                 }
@@ -1667,14 +1666,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
-        String dataverse = getActiveDataverseName(cfs.getFunctionSignature().getNamespace());
-        cfs.getFunctionSignature().setNamespace(dataverse);
-        String functionName = cfs.getFunctionSignature().getName();
+        FunctionSignature signature = cfs.getFunctionSignature();
+        String dataverse = getActiveDataverseName(signature.getNamespace());
+        signature.setNamespace(dataverse);
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         MetadataLockUtil.functionStatementBegin(lockManager, metadataProvider.getLocks(), dataverse,
-                dataverse + "." + functionName);
+                dataverse + "." + signature.getName());
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
             if (dv == null) {
@@ -1696,10 +1695,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             List<List<List<String>>> dependencies = FunctionUtil.getFunctionDependencies(
                     rewriterFactory.createQueryRewriter(), cfs.getFunctionBodyExpression(), metadataProvider);
 
-            Function function = new Function(dataverse, functionName, cfs.getFunctionSignature().getArity(),
-                    cfs.getParamList(), Function.RETURNTYPE_VOID, cfs.getFunctionBody(),
-                    rewriterFactory instanceof SqlppRewriterFactory ? Function.LANGUAGE_SQLPP : Function.LANGUAGE_AQL,
-                    FunctionKind.SCALAR.toString(), dependencies);
+            final String language =
+                    rewriterFactory instanceof SqlppRewriterFactory ? Function.LANGUAGE_SQLPP : Function.LANGUAGE_AQL;
+            Function function = new Function(signature, cfs.getParamList(), Function.RETURNTYPE_VOID,
+                    cfs.getFunctionBody(), language, FunctionKind.SCALAR.toString(), dependencies);
             MetadataManager.INSTANCE.addFunction(mdTxnCtx, function);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1712,8 +1711,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected boolean checkWhetherFunctionIsBeingUsed(MetadataTransactionContext ctx, String dataverseName,
-            String functionName, int arity, String currentDataverse) throws AlgebricksException {
+    protected boolean isFunctionUsed(MetadataTransactionContext ctx, FunctionSignature signature,
+            String currentDataverse) throws AlgebricksException {
         List<Dataverse> allDataverses = MetadataManager.INSTANCE.getDataverses(ctx);
         for (Dataverse dataverse : allDataverses) {
             if (currentDataverse != null && dataverse.getDataverseName().equals(currentDataverse)) {
@@ -1724,7 +1723,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 List<FeedConnection> feedConnections = MetadataManager.INSTANCE.getFeedConections(ctx,
                         dataverse.getDataverseName(), feed.getFeedName());
                 for (FeedConnection conn : feedConnections) {
-                    if (conn.containsFunction(dataverseName, functionName, arity)) {
+                    if (conn.containsFunction(signature)) {
                         return true;
                     }
                 }
@@ -1745,8 +1744,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
             if (function == null && !stmtDropFunction.getIfExists()) {
                 throw new AlgebricksException("Unknonw function " + signature);
-            } else if (checkWhetherFunctionIsBeingUsed(mdTxnCtx, signature.getNamespace(), signature.getName(),
-                    signature.getArity(), null)) {
+            } else if (isFunctionUsed(mdTxnCtx, signature, null)) {
                 throw new MetadataException(ErrorCode.METADATA_DROP_FUCTION_IN_USE, signature);
             } else {
                 MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);

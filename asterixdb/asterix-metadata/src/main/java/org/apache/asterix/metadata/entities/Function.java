@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.entities;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 
@@ -33,9 +34,7 @@ public class Function implements IMetadataEntity<Function> {
     public static final String RETURNTYPE_VOID = "VOID";
     public static final String NOT_APPLICABLE = "N/A";
 
-    private final String dataverse;
-    private final String name;
-    private final int arity;
+    private final FunctionSignature signature;
     private final List<String> params;
     private final List<List<List<String>>> dependencies;
     private final String body;
@@ -43,16 +42,14 @@ public class Function implements IMetadataEntity<Function> {
     private final String language;
     private final String kind;
 
-    public Function(String dataverseName, String functionName, int arity, List<String> params, String returnType,
-            String functionBody, String language, String functionKind, List<List<List<String>>> dependencies) {
-        this.dataverse = dataverseName;
-        this.name = functionName;
+    public Function(FunctionSignature signature, List<String> params, String returnType, String functionBody,
+            String language, String functionKind, List<List<List<String>>> dependencies) {
+        this.signature = signature;
         this.params = params;
         this.body = functionBody;
         this.returnType = returnType == null ? RETURNTYPE_VOID : returnType;
         this.language = language;
         this.kind = functionKind;
-        this.arity = arity;
         if (dependencies == null) {
             this.dependencies = new ArrayList<>();
             this.dependencies.add(new ArrayList<>());
@@ -62,12 +59,20 @@ public class Function implements IMetadataEntity<Function> {
         }
     }
 
+    public FunctionSignature getSignature() {
+        return signature;
+    }
+
     public String getDataverseName() {
-        return dataverse;
+        return signature.getNamespace();
     }
 
     public String getName() {
-        return name;
+        return signature.getName();
+    }
+
+    public int getArity() {
+        return signature.getArity();
     }
 
     public List<String> getParams() {
@@ -88,10 +93,6 @@ public class Function implements IMetadataEntity<Function> {
 
     public String getLanguage() {
         return language;
-    }
-
-    public int getArity() {
-        return arity;
     }
 
     public String getKind() {
