@@ -244,10 +244,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                     appender.write(writer, true);
                 }
             };
-
-        } catch (Exception e) {
-            indexHelper.close();
-            throw new HyracksDataException(e);
+        } catch (Throwable e) { // NOSONAR: Re-thrown
+            throw HyracksDataException.create(e);
         }
     }
 
