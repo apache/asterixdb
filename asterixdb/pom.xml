@@ -737,6 +737,13 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>integration-tests-only</id>
+      <properties>
+        <test.includes/>
+        <failIfNoTests>false</failIfNoTests>
+      </properties>
+    </profile>
   </profiles>
 
   <modules>

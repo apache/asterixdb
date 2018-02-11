@@ -492,6 +492,22 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>asterix-gerrit-integration-tests</id>
+      <properties>
+        <test.includes/>
+        <itest.includes>**/NCServiceExecutionIT.java,**/RecoveryIT.java</itest.includes>
+        <failIfNoTests>false</failIfNoTests>
+      </properties>
+    </profile>
+    <profile>
+      <id>asterix-gerrit-verify-no-app</id>
+      <properties>
+        <test.includes/>
+        <itest.excludes>**/NCServiceExecutionIT.java,**/RecoveryIT.java</itest.excludes>
+        <failIfNoTests>false</failIfNoTests>
+      </properties>
+    </profile>
   </profiles>
   <dependencies>
     <dependency>

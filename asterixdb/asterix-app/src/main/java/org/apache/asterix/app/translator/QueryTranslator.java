@@ -18,12 +18,9 @@
  */
 package org.apache.asterix.app.translator;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +33,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
@@ -62,7 +58,6 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.DatasetConfig.TransactionState;
-import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -84,11 +79,7 @@ import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
-import org.apache.asterix.lang.common.expression.LiteralExpr;
-import org.apache.asterix.lang.common.expression.RecordConstructor;
-import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
@@ -107,7 +98,6 @@ import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.FunctionDropStatement;
-import org.apache.asterix.lang.common.statement.IDatasetDetailsDecl;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
@@ -116,7 +106,6 @@ import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.RefreshExternalDatasetStatement;
-import org.apache.asterix.lang.common.statement.RunStatement;
 import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
 import org.apache.asterix.lang.common.statement.StopFeedStatement;
@@ -126,7 +115,6 @@ import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.lang.common.util.MergePolicyUtils;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
@@ -403,9 +391,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(stmt);
                         writerFactory = (result.first != null) ? result.first : writerFactory;
                         outputFile = result.second;
-                        break;
-                    case Statement.Kind.RUN:
-                        handleRunStatement(metadataProvider, stmt, hcc);
                         break;
                     case Statement.Kind.FUNCTION_DECL:
                         // No op
@@ -2787,266 +2772,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             metadataProvider.getLocks().unlock();
         }
-    }
-
-    protected void handleRunStatement(MetadataProvider metadataProvider, Statement stmt, IHyracksClientConnection hcc)
-            throws CompilationException, Exception {
-        RunStatement runStmt = (RunStatement) stmt;
-        switch (runStmt.getSystem()) {
-            case "pregel":
-            case "pregelix":
-                handlePregelixStatement(metadataProvider, runStmt, hcc);
-                break;
-            default:
-                throw new AlgebricksException(
-                        "The system \"" + runStmt.getSystem() + "\" specified in your run statement is not supported.");
-        }
-
-    }
-
-    protected void handlePregelixStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
-        RunStatement pregelixStmt = (RunStatement) stmt;
-        boolean bActiveTxn = true;
-        String dataverseNameFrom = getActiveDataverse(pregelixStmt.getDataverseNameFrom());
-        String dataverseNameTo = getActiveDataverse(pregelixStmt.getDataverseNameTo());
-        String datasetNameFrom = pregelixStmt.getDatasetNameFrom().getValue();
-        String datasetNameTo = pregelixStmt.getDatasetNameTo().getValue();
-        String fullyQualifiedDatasetNameTo =
-                DatasetUtil.isFullyQualifiedName(datasetNameTo) ? datasetNameTo : dataverseNameTo + '.' + datasetNameTo;
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        MetadataLockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), fullyQualifiedDatasetNameTo);
-        try {
-            prepareRunExternalRuntime(metadataProvider, hcc, pregelixStmt, dataverseNameFrom, dataverseNameTo,
-                    datasetNameFrom, datasetNameTo, mdTxnCtx);
-
-            String pregelixHomeKey = "PREGELIX_HOME";
-            // Finds PREGELIX_HOME in system environment variables.
-            String pregelixHome = System.getenv(pregelixHomeKey);
-            // Finds PREGELIX_HOME in Java properties.
-            if (pregelixHome == null) {
-                pregelixHome = System.getProperty(pregelixHomeKey);
-            }
-            // Finds PREGELIX_HOME in AsterixDB configuration.
-            if (pregelixHome == null) {
-                // Since there is a default value for PREGELIX_HOME in CompilerProperties,
-                // pregelixHome can never be null.
-                pregelixHome = appCtx.getCompilerProperties().getPregelixHome();
-            }
-
-            // Constructs the pregelix command line.
-            List<String> cmd = constructPregelixCommand(pregelixStmt, dataverseNameFrom, datasetNameFrom,
-                    dataverseNameTo, datasetNameTo);
-            ProcessBuilder pb = new ProcessBuilder(cmd);
-            pb.directory(new File(pregelixHome));
-            pb.redirectErrorStream(true);
-
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            bActiveTxn = false;
-            // Executes the Pregelix command.
-            int resultState = executeExternalShellProgram(pb);
-            // Checks the return state of the external Pregelix command.
-            if (resultState != 0) {
-                throw new AlgebricksException(
-                        "Something went wrong executing your Pregelix Job. Perhaps the Pregelix cluster "
-                                + "needs to be restarted. "
-                                + "Check the following things: Are the datatypes of Asterix and Pregelix matching? "
-                                + "Is the server configuration correct (node names, buffer sizes, framesize)? "
-                                + "Check the logfiles for more details.");
-            }
-        } catch (Exception e) {
-            if (bActiveTxn) {
-                abort(e, e, mdTxnCtx);
-            }
-            throw e;
-        } finally {
-            metadataProvider.getLocks().unlock();
-        }
-    }
-
-    // Prepares to run a program on external runtime.
-    protected void prepareRunExternalRuntime(MetadataProvider metadataProvider, IHyracksClientConnection hcc,
-            RunStatement pregelixStmt, String dataverseNameFrom, String dataverseNameTo, String datasetNameFrom,
-            String datasetNameTo, MetadataTransactionContext mdTxnCtx) throws Exception {
-        // Validates the source/sink dataverses and datasets.
-        Dataset fromDataset = metadataProvider.findDataset(dataverseNameFrom, datasetNameFrom);
-        if (fromDataset == null) {
-            throw new CompilationException("The source dataset " + datasetNameFrom + " in dataverse "
-                    + dataverseNameFrom + " could not be found for the Run command");
-        }
-        Dataset toDataset = metadataProvider.findDataset(dataverseNameTo, datasetNameTo);
-        if (toDataset == null) {
-            throw new CompilationException("The sink dataset " + datasetNameTo + " in dataverse " + dataverseNameTo
-                    + " could not be found for the Run command");
-        }
-
-        try {
-            // Find the primary index of the sink dataset.
-            Index toIndex = null;
-            List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseNameTo,
-                    pregelixStmt.getDatasetNameTo().getValue());
-            for (Index index : indexes) {
-                if (index.isPrimaryIndex()) {
-                    toIndex = index;
-                    break;
-                }
-            }
-            if (toIndex == null) {
-                throw new AlgebricksException("Tried to access non-existing dataset: " + datasetNameTo);
-            }
-            // Cleans up the sink dataset -- Drop and then Create.
-            DropDatasetStatement dropStmt =
-                    new DropDatasetStatement(new Identifier(dataverseNameTo), pregelixStmt.getDatasetNameTo(), true);
-            this.handleDatasetDropStatement(metadataProvider, dropStmt, hcc, null);
-            IDatasetDetailsDecl idd = new InternalDetailsDecl(toIndex.getKeyFieldNames(),
-                    toIndex.getKeyFieldSourceIndicators(), false, null);
-            RecordConstructor withRecord = getWithRecord(toDataset);
-            DatasetDecl createToDataset = new DatasetDecl(new Identifier(dataverseNameTo),
-                    pregelixStmt.getDatasetNameTo(), new Identifier(toDataset.getItemTypeDataverseName()),
-                    new Identifier(toDataset.getItemTypeName()),
-                    new Identifier(toDataset.getMetaItemTypeDataverseName()),
-                    new Identifier(toDataset.getMetaItemTypeName()), new Identifier(toDataset.getNodeGroupName()),
-                    toDataset.getHints(), toDataset.getDatasetType(), idd, withRecord, false);
-            this.handleCreateDatasetStatement(metadataProvider, createToDataset, hcc, null);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARN, e.getMessage(), e);
-            throw new AlgebricksException("Error cleaning the result dataset. This should not happen.");
-        }
-
-        // Flushes source dataset.
-        FlushDatasetUtil.flushDataset(hcc, metadataProvider, dataverseNameFrom, datasetNameFrom);
-    }
-
-    private static RecordConstructor getWithRecord(Dataset dataset) {
-        String mergePolicy = dataset.getCompactionPolicy();
-        Map<String, String> mergePolicyProperties = dataset.getCompactionPolicyProperties();
-        if (mergePolicy.equals(GlobalConfig.DEFAULT_COMPACTION_POLICY_NAME)
-                && mergePolicyProperties.equals(GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES)) {
-            return null;
-        }
-        List<FieldBinding> mergePolicyRecordFields = new ArrayList<>(mergePolicyProperties == null ? 1 : 2);
-        mergePolicyRecordFields.add(toFieldBinding(MergePolicyUtils.MERGE_POLICY_NAME_PARAMETER_NAME, mergePolicy));
-        if (mergePolicyProperties != null) {
-            mergePolicyRecordFields.add(
-                    toFieldBinding(MergePolicyUtils.MERGE_POLICY_PARAMETERS_PARAMETER_NAME, mergePolicyProperties));
-        }
-        FieldBinding mergePolicyBinding = toFieldBinding(MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME,
-                new RecordConstructor(mergePolicyRecordFields));
-        List<FieldBinding> withRecordFields = new ArrayList<>(1);
-        withRecordFields.add(mergePolicyBinding);
-        return new RecordConstructor(withRecordFields);
-    }
-
-    private static FieldBinding toFieldBinding(String key, Map<String, String> value) {
-        List<FieldBinding> fields = new ArrayList<>(value.size());
-        for (Entry<String, String> entry : value.entrySet()) {
-            fields.add(toFieldBinding(entry.getKey(), entry.getValue()));
-        }
-        RecordConstructor record = new RecordConstructor(fields);
-        return toFieldBinding(key, record);
-    }
-
-    private static FieldBinding toFieldBinding(String key, RecordConstructor value) {
-        return new FieldBinding(new LiteralExpr(new StringLiteral(key)), value);
-    }
-
-    private static FieldBinding toFieldBinding(String key, String value) {
-        return new FieldBinding(new LiteralExpr(new StringLiteral(key)), new LiteralExpr(new StringLiteral(value)));
-    }
-
-    // Executes external shell commands.
-    protected int executeExternalShellProgram(ProcessBuilder pb)
-            throws IOException, AlgebricksException, InterruptedException {
-        Process process = pb.start();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = in.readLine()) != null) {
-                LOGGER.info(line);
-                if (line.contains("Exception") || line.contains("Error")) {
-                    LOGGER.error(line);
-                    if (line.contains("Connection refused")) {
-                        throw new AlgebricksException(
-                                "The connection to your Pregelix cluster was refused. Is it running? "
-                                        + "Is the port in the query correct?");
-                    }
-                    if (line.contains("Could not find or load main class")) {
-                        throw new AlgebricksException("The main class of your Pregelix query was not found. "
-                                + "Is the path to your .jar file correct?");
-                    }
-                    if (line.contains("ClassNotFoundException")) {
-                        throw new AlgebricksException("The vertex class of your Pregelix query was not found. "
-                                + "Does it exist? Is the spelling correct?");
-                    }
-                }
-            }
-            process.waitFor();
-        }
-        // Gets the exit value of the program.
-        return process.exitValue();
-    }
-
-    // Constructs a Pregelix command line.
-    protected List<String> constructPregelixCommand(RunStatement pregelixStmt, String fromDataverseName,
-            String fromDatasetName, String toDataverseName, String toDatasetName) {
-        // Constructs AsterixDB parameters, e.g., URL, source dataset and sink dataset.
-        ExternalProperties externalProperties = appCtx.getExternalProperties();
-        String clientIP = appCtx.getServiceContext().getCCContext().getClusterControllerInfo().getClientNetAddress();
-        StringBuilder asterixdbParameterBuilder = new StringBuilder();
-        asterixdbParameterBuilder.append(
-                "pregelix.asterixdb.url=" + "http://" + clientIP + ":" + externalProperties.getAPIServerPort() + ",");
-        asterixdbParameterBuilder.append("pregelix.asterixdb.source=true,");
-        asterixdbParameterBuilder.append("pregelix.asterixdb.sink=true,");
-        asterixdbParameterBuilder.append("pregelix.asterixdb.input.dataverse=" + fromDataverseName + ",");
-        asterixdbParameterBuilder.append("pregelix.asterixdb.input.dataset=" + fromDatasetName + ",");
-        asterixdbParameterBuilder.append("pregelix.asterixdb.output.dataverse=" + toDataverseName + ",");
-        asterixdbParameterBuilder.append("pregelix.asterixdb.output.dataset=" + toDatasetName + ",");
-        asterixdbParameterBuilder.append("pregelix.asterixdb.output.cleanup=false,");
-
-        // construct command
-        List<String> cmds = new ArrayList<>();
-        cmds.add("bin/pregelix");
-        cmds.add(pregelixStmt.getParameters().get(0)); // jar
-        cmds.add(pregelixStmt.getParameters().get(1)); // class
-
-        String customizedPregelixProperty = "-cust-prop";
-        String inputConverterClassKey = "pregelix.asterixdb.input.converterclass";
-        String inputConverterClassValue = "=org.apache.pregelix.example.converter.VLongIdInputVertexConverter,";
-        String outputConverterClassKey = "pregelix.asterixdb.output.converterclass";
-        String outputConverterClassValue = "=org.apache.pregelix.example.converter.VLongIdOutputVertexConverter,";
-        boolean custPropAdded = false;
-        boolean meetCustProp = false;
-        // User parameters.
-        for (String s : pregelixStmt.getParameters().get(2).split(" ")) {
-            if (meetCustProp) {
-                if (!s.contains(inputConverterClassKey)) {
-                    asterixdbParameterBuilder.append(inputConverterClassKey + inputConverterClassValue);
-                }
-                if (!s.contains(outputConverterClassKey)) {
-                    asterixdbParameterBuilder.append(outputConverterClassKey + outputConverterClassValue);
-                }
-                cmds.add(asterixdbParameterBuilder.toString() + s);
-                meetCustProp = false;
-                custPropAdded = true;
-                continue;
-            }
-            cmds.add(s);
-            if (s.equals(customizedPregelixProperty)) {
-                meetCustProp = true;
-            }
-        }
-
-        if (!custPropAdded) {
-            cmds.add(customizedPregelixProperty);
-            // Appends default converter classes to asterixdbParameterBuilder.
-            asterixdbParameterBuilder.append(inputConverterClassKey + inputConverterClassValue);
-            asterixdbParameterBuilder.append(outputConverterClassKey + outputConverterClassValue);
-            // Remove the last comma.
-            asterixdbParameterBuilder.delete(asterixdbParameterBuilder.length() - 1,
-                    asterixdbParameterBuilder.length());
-            cmds.add(asterixdbParameterBuilder.toString());
-        }
-        return cmds;
     }
 
     @Override

@@ -2717,21 +2717,6 @@
       </test-case>
     </test-group>
     -->
-  <!-- <test-group name="graph">
-        <test-case FilePath="graph">
-            <compilation-unit name="pregel-q01">
-                <output-dir compare="Text">pregel-q01</output-dir>
-            </compilation-unit>
-            <test-case FilePath="graph">
-            <compilation-unit name="pregel-q02">
-                <output-dir compare="Text">pregel-q02</output-dir>
-            </compilation-unit>
-            <test-case FilePath="graph">
-            <compilation-unit name="pregel-q03">
-                <output-dir compare="Text">pregel-q03</output-dir>
-            </compilation-unit>
-        </test-case>
-    </test-group> -->
   <test-group name="fulltext">
     <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-01">

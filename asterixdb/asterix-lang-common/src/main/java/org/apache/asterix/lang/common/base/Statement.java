@@ -18,13 +18,7 @@
  */
 package org.apache.asterix.lang.common.base;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 public interface Statement extends ILangExpression {
-    public static final List<Byte> KINDS = Collections.unmodifiableList(Kind.range(Kind.DATASET_DECL, Kind.RUN));
-
     /**
      * get a byte representing the statement kind.
      * Note: bytes 0x00 - 0x7f are reserved for core asterix statements
@@ -32,7 +26,7 @@ public interface Statement extends ILangExpression {
      *
      * @return kind byte
      */
-    public byte getKind();
+    byte getKind();
 
     /**
      *  get a byte representing the statement category.
@@ -40,9 +34,9 @@ public interface Statement extends ILangExpression {
      *
      * @return kind byte
      */
-    public byte getCategory();
+    byte getCategory();
 
-    public class Category {
+    class Category {
         /** no modifications */
         public static final byte QUERY = 0x01;
         /** modify data */
@@ -56,7 +50,7 @@ public interface Statement extends ILangExpression {
         }
     }
 
-    public class Kind {
+    class Kind {
         public static final byte DATASET_DECL = 0x00;
         public static final byte DATAVERSE_DECL = 0x01;
         public static final byte DATAVERSE_DROP = 0x02;
@@ -91,26 +85,11 @@ public interface Statement extends ILangExpression {
         public static final byte FUNCTION_DROP = 0x1f;
         public static final byte COMPACT = 0x20;
         public static final byte EXTERNAL_DATASET_REFRESH = 0x21;
-        public static final byte RUN = 0x22;
+        // 0x22 unused
         public static final byte EXTENSION = 0x23;
         public static final byte SUBSCRIBE_FEED = 0x24;
 
         private Kind() {
-        }
-
-        /**
-         * Generate a list of Bytes from start to end
-         *
-         * @param start
-         * @param end
-         * @return
-         */
-        private static List<Byte> range(byte start, byte end) {
-            ArrayList<Byte> bytes = new ArrayList<>();
-            for (byte b = start; b <= end; b++) {
-                bytes.add(b);
-            }
-            return bytes;
         }
     }
 }

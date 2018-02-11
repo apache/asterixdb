@@ -18,10 +18,7 @@
  */
 package org.apache.asterix.common.config;
 
-import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
-import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
-import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
-import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.control.common.config.OptionTypes.*;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
@@ -57,7 +54,6 @@ public class CompilerProperties extends AbstractProperties {
                         + "other integer values dictate the number of query execution parallel partitions. The system will "
                         + "fall back to use the number of all available CPU cores in the cluster as the degree of parallelism "
                         + "if the number set by a user is too large or too small"),
-        COMPILER_PREGELIX_HOME(STRING, "~/pregelix", "Pregelix installation root directory"),
         COMPILER_STRINGOFFSET(INTEGER, 0, "Position of a first character in a String/Binary (0 or 1)");
 
         private final IOptionType type;
@@ -92,7 +88,7 @@ public class CompilerProperties extends AbstractProperties {
 
         @Override
         public boolean hidden() {
-            return this == COMPILER_PREGELIX_HOME || this == COMPILER_STRINGOFFSET;
+            return this == COMPILER_STRINGOFFSET;
         }
     }
 
@@ -128,10 +124,6 @@ public class CompilerProperties extends AbstractProperties {
 
     public int getParallelism() {
         return accessor.getInt(Option.COMPILER_PARALLELISM);
-    }
-
-    public String getPregelixHome() {
-        return accessor.getString(Option.COMPILER_PREGELIX_HOME);
     }
 
     public int getStringOffset() {

@@ -63,10 +63,9 @@
     <skip.testResources>${maven.test.skip}</skip.testResources>
     <testLog4jConfigFile>${root.dir}/src/test/resources/log4j2-hyracks-test.xml</testLog4jConfigFile>
     <!-- Definition of tests in various categories which may be excluded -->
-    <hanging.pregelix.tests>**/pregelix/**/FailureRecovery*.java</hanging.pregelix.tests>
     <hivesterix.perf.tests>**/hivesterix/perf/PerfTestSuite.java</hivesterix.perf.tests>
     <global.test.includes>**/*TestSuite.java,**/*Test.java</global.test.includes>
-    <global.test.excludes>**/Abstract*.java,${hanging.pregelix.tests},${hivesterix.perf.tests}</global.test.excludes>
+    <global.test.excludes>**/Abstract*.java,${hivesterix.perf.tests}</global.test.excludes>
     <test.includes>${global.test.includes}</test.includes>
     <test.excludes>${global.test.excludes}</test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
@@ -545,12 +544,6 @@
 
   <profiles>
     <profile>
-      <id>hanging-pregelix-tests</id>
-      <properties>
-        <hanging.pregelix.tests />
-      </properties>
-    </profile>
-    <profile>
       <id>skip-assembly</id>
       <activation>
         <file>
@@ -665,6 +658,13 @@
       </activation>
       <properties>
         <jdk.version>1.8</jdk.version>
+      </properties>
+    </profile>
+    <profile>
+      <id>integration-tests-only</id>
+      <properties>
+        <test.includes/>
+        <failIfNoTests>false</failIfNoTests>
       </properties>
     </profile>
   </profiles>

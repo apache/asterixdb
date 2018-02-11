@@ -135,7 +135,6 @@ import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.RefreshExternalDatasetStatement;
-import org.apache.asterix.lang.common.statement.RunStatement;
 import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
@@ -390,7 +389,6 @@ Statement SingleStatement() throws ParseException:
     | stmt = ExplainStatement()
     | stmt = Query(false)
     | stmt = RefreshExternalDatasetStatement()
-    | stmt = RunStatement()
   )
   {
     return stmt;
@@ -600,27 +598,6 @@ RefreshExternalDatasetStatement RefreshExternalDatasetStatement() throws ParseEx
     redss.setDataverseName(nameComponents.first);
     redss.setDatasetName(nameComponents.second);
     return redss;
-    }
-}
-
-RunStatement RunStatement() throws ParseException:
-{
-  String system = null;
-  String tmp;
-  ArrayList<String> parameters = new  ArrayList<String>();
-  Pair<Identifier,Identifier> nameComponentsFrom = null;
-  Pair<Identifier,Identifier> nameComponentsTo = null;
-}
-{
-  <RUN> system = Identifier()<LEFTPAREN> ( tmp = Identifier() [<COMMA>]
-    {
-      parameters.add(tmp);
-    }
-  )*<RIGHTPAREN>
-  <FROM> Dataset() nameComponentsFrom  = QualifiedName()
-  <TO> Dataset() nameComponentsTo  = QualifiedName()
-    {
-      return new RunStatement(system, parameters, nameComponentsFrom.first, nameComponentsFrom.second, nameComponentsTo.first, nameComponentsTo.second);
     }
 }
 
