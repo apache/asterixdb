@@ -37,7 +37,7 @@ public class StartFeedStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Kind.START_FEED;
     }
 

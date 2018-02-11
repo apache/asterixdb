@@ -50,7 +50,7 @@ public class RefreshExternalDatasetStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.EXTERNAL_DATASET_REFRESH;
     }
 

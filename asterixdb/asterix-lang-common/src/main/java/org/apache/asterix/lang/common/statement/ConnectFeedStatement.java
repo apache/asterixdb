@@ -65,7 +65,7 @@ public class ConnectFeedStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.CONNECT_FEED;
     }
 

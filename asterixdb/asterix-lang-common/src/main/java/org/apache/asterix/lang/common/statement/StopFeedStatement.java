@@ -35,7 +35,7 @@ public class StopFeedStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Kind.STOP_FEED;
     }
 

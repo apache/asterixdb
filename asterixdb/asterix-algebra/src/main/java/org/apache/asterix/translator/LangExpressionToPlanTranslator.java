@@ -392,16 +392,16 @@ class LangExpressionToPlanTranslator
             Mutable<ILogicalExpression> varRef = new MutableObject<>(new VariableReferenceExpression(resVar));
             ILogicalOperator leafOperator;
             switch (stmt.getKind()) {
-                case Statement.Kind.INSERT:
+                case INSERT:
                     leafOperator = translateInsert(targetDatasource, varRef, varRefsForLoading,
                             additionalFilteringExpressions, assign, stmt);
                     break;
-                case Statement.Kind.UPSERT:
+                case UPSERT:
                     leafOperator = translateUpsert(targetDatasource, varRef, varRefsForLoading,
                             additionalFilteringExpressions, assign, additionalFilteringField, unnestVar, topOp, exprs,
                             resVar, additionalFilteringAssign, stmt);
                     break;
-                case Statement.Kind.DELETE:
+                case DELETE:
                     leafOperator = translateDelete(targetDatasource, varRef, varRefsForLoading,
                             additionalFilteringExpressions, assign);
                     break;

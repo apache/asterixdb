@@ -42,7 +42,7 @@ import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.NoRetryPolicyFactory;
-import org.apache.asterix.algebra.extension.IExtensionStatement;
+import org.apache.asterix.algebra.extension.ExtensionStatement;
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.api.http.server.AbstractQueryApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
@@ -290,53 +290,53 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
                 metadataProvider.setOutputFile(outputFile);
                 switch (stmt.getKind()) {
-                    case Statement.Kind.SET:
+                    case SET:
                         handleSetStatement(stmt, config);
                         break;
-                    case Statement.Kind.DATAVERSE_DECL:
+                    case DATAVERSE_DECL:
                         activeDataverse = handleUseDataverseStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.CREATE_DATAVERSE:
+                    case CREATE_DATAVERSE:
                         handleCreateDataverseStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.DATASET_DECL:
+                    case DATASET_DECL:
                         handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
-                    case Statement.Kind.CREATE_INDEX:
+                    case CREATE_INDEX:
                         handleCreateIndexStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
-                    case Statement.Kind.TYPE_DECL:
+                    case TYPE_DECL:
                         handleCreateTypeStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.NODEGROUP_DECL:
+                    case NODEGROUP_DECL:
                         handleCreateNodeGroupStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.DATAVERSE_DROP:
+                    case DATAVERSE_DROP:
                         handleDataverseDropStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.Kind.DATASET_DROP:
+                    case DATASET_DROP:
                         handleDatasetDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
-                    case Statement.Kind.INDEX_DROP:
+                    case INDEX_DROP:
                         handleIndexDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
-                    case Statement.Kind.TYPE_DROP:
+                    case TYPE_DROP:
                         handleTypeDropStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.NODEGROUP_DROP:
+                    case NODEGROUP_DROP:
                         handleNodegroupDropStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.CREATE_FUNCTION:
+                    case CREATE_FUNCTION:
                         handleCreateFunctionStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.FUNCTION_DROP:
+                    case FUNCTION_DROP:
                         handleFunctionDropStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.LOAD:
+                    case LOAD:
                         handleLoadStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.Kind.INSERT:
-                    case Statement.Kind.UPSERT:
+                    case INSERT:
+                    case UPSERT:
                         if (((InsertStatement) stmt).getReturnExpression() != null) {
                             metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
                             metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
@@ -346,34 +346,34 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleInsertUpsertStatement(metadataProvider, stmt, hcc, hdc, resultDelivery, outMetadata,
                                 stats, false, clientContextId);
                         break;
-                    case Statement.Kind.DELETE:
+                    case DELETE:
                         handleDeleteStatement(metadataProvider, stmt, hcc, false);
                         break;
-                    case Statement.Kind.CREATE_FEED:
+                    case CREATE_FEED:
                         handleCreateFeedStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.DROP_FEED:
+                    case DROP_FEED:
                         handleDropFeedStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.Kind.DROP_FEED_POLICY:
+                    case DROP_FEED_POLICY:
                         handleDropFeedPolicyStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.CONNECT_FEED:
+                    case CONNECT_FEED:
                         handleConnectFeedStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.DISCONNECT_FEED:
+                    case DISCONNECT_FEED:
                         handleDisconnectFeedStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.START_FEED:
+                    case START_FEED:
                         handleStartFeedStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.Kind.STOP_FEED:
+                    case STOP_FEED:
                         handleStopFeedStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.CREATE_FEED_POLICY:
+                    case CREATE_FEED_POLICY:
                         handleCreateFeedPolicyStatement(metadataProvider, stmt);
                         break;
-                    case Statement.Kind.QUERY:
+                    case QUERY:
                         metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
                         metadataProvider.setResultAsyncMode(
                                 resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED);
@@ -381,22 +381,22 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery, outMetadata, stats,
                                 clientContextId, ctx);
                         break;
-                    case Statement.Kind.COMPACT:
+                    case COMPACT:
                         handleCompactStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.Kind.EXTERNAL_DATASET_REFRESH:
+                    case EXTERNAL_DATASET_REFRESH:
                         handleExternalDatasetRefreshStatement(metadataProvider, stmt, hcc);
                         break;
-                    case Statement.Kind.WRITE:
+                    case WRITE:
                         Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(stmt);
                         writerFactory = (result.first != null) ? result.first : writerFactory;
                         outputFile = result.second;
                         break;
-                    case Statement.Kind.FUNCTION_DECL:
+                    case FUNCTION_DECL:
                         // No op
                         break;
-                    case Statement.Kind.EXTENSION:
-                        ((IExtensionStatement) stmt).handle(hcc, this, requestParameters, metadataProvider,
+                    case EXTENSION:
+                        ((ExtensionStatement) stmt).handle(hcc, this, requestParameters, metadataProvider,
                                 resultSetIdCounter);
                         break;
                     default:
@@ -1912,12 +1912,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String datasetName = rewrittenInsertUpsert.getDatasetName().getValue();
         CompiledInsertStatement clfrqs;
         switch (insertUpsert.getKind()) {
-            case Statement.Kind.INSERT:
+            case INSERT:
                 clfrqs = new CompiledInsertStatement(dataverseName, datasetName, rewrittenInsertUpsert.getQuery(),
                         rewrittenInsertUpsert.getVarCounter(), rewrittenInsertUpsert.getVar(),
                         rewrittenInsertUpsert.getReturnExpression());
                 break;
-            case Statement.Kind.UPSERT:
+            case UPSERT:
                 clfrqs = new CompiledUpsertStatement(dataverseName, datasetName, rewrittenInsertUpsert.getQuery(),
                         rewrittenInsertUpsert.getVarCounter(), rewrittenInsertUpsert.getVar(),
                         rewrittenInsertUpsert.getReturnExpression());

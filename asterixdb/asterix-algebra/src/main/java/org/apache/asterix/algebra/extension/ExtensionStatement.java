@@ -29,10 +29,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 /**
  * An interface that provides an extension mechanism to extend a language with additional statements
  */
-public interface IExtensionStatement extends Statement {
+public abstract class ExtensionStatement implements Statement {
 
     @Override
-    default byte getKind() {
+    public final Kind getKind() {
         return Kind.EXTENSION;
     }
 
@@ -48,7 +48,7 @@ public interface IExtensionStatement extends Statement {
      * @throws HyracksDataException
      * @throws AlgebricksException
      */
-    void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
+    public abstract void handle(IHyracksClientConnection hcc, IStatementExecutor statementExecutor,
             IRequestParameters requestParameters, MetadataProvider metadataProvider, int resultSetId)
             throws HyracksDataException, AlgebricksException;
 }

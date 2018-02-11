@@ -35,9 +35,9 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
  */
 public class CompiledStatements {
 
-    public static interface ICompiledStatement {
+    public interface ICompiledStatement {
 
-        public byte getKind();
+        Statement.Kind getKind();
     }
 
     public static class CompiledDatasetDropStatement implements ICompiledStatement {
@@ -58,7 +58,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.DATASET_DROP;
         }
     }
@@ -82,7 +82,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.CREATE_DATAVERSE;
         }
     }
@@ -99,7 +99,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.NODEGROUP_DROP;
         }
     }
@@ -128,7 +128,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.INDEX_DROP;
         }
     }
@@ -151,7 +151,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.DATAVERSE_DROP;
         }
     }
@@ -168,7 +168,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.TYPE_DROP;
         }
     }
@@ -208,7 +208,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.CREATE_INDEX;
         }
     }
@@ -252,7 +252,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.LOAD;
         }
     }
@@ -302,7 +302,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.INSERT;
         }
     }
@@ -315,7 +315,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.UPSERT;
         }
     }
@@ -349,7 +349,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.SUBSCRIBE_FEED;
         }
     }
@@ -393,7 +393,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.DELETE;
         }
 
@@ -417,7 +417,7 @@ public class CompiledStatements {
         }
 
         @Override
-        public byte getKind() {
+        public Statement.Kind getKind() {
             return Statement.Kind.COMPACT;
         }
     }

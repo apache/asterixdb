@@ -67,7 +67,7 @@ public class LoadStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.LOAD;
     }
 

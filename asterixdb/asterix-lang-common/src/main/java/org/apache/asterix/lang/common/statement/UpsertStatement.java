@@ -31,24 +31,18 @@ public class UpsertStatement extends InsertStatement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.UPSERT;
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode() + Statement.Kind.UPSERT;
+        return 31 * super.hashCode() + Statement.Kind.UPSERT.hashCode();
     }
 
     @Override
     public boolean equals(Object object) {
-        if (this == object) {
-            return true;
-        }
-        if (!(object instanceof UpsertStatement)) {
-            return false;
-        }
-        return super.equals(object);
+        return this == object || object instanceof UpsertStatement && super.equals(object);
     }
 
 }

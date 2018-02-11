@@ -119,7 +119,7 @@ public class CreateIndexStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.CREATE_INDEX;
     }
 

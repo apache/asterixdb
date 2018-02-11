@@ -36,7 +36,7 @@ public class FeedPolicyDropStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.DROP_FEED_POLICY;
     }
 

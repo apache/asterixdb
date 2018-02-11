@@ -36,8 +36,8 @@ public class EchoStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
-        return -1;
+    public Kind getKind() {
+        return Kind.EXTENSION;
     }
 
     public String getArg() {

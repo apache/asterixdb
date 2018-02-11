@@ -34,7 +34,7 @@ public class FunctionDropStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.FUNCTION_DROP;
     }
 

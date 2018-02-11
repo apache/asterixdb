@@ -61,7 +61,7 @@ public class CreateFeedStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Kind.CREATE_FEED;
     }
 

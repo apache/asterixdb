@@ -51,7 +51,7 @@ public class InsertStatement implements IReturningStatement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.INSERT;
     }
 

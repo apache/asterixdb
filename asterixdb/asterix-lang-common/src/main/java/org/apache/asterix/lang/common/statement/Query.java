@@ -101,7 +101,7 @@ public class Query implements IReturningStatement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.QUERY;
     }
 

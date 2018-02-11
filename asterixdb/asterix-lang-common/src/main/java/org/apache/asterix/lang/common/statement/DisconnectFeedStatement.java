@@ -61,7 +61,7 @@ public class DisconnectFeedStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.DISCONNECT_FEED;
     }
 

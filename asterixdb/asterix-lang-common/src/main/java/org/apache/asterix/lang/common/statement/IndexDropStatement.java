@@ -39,7 +39,7 @@ public class IndexDropStatement implements Statement {
     }
 
     @Override
-    public byte getKind() {
+    public Kind getKind() {
         return Statement.Kind.INDEX_DROP;
     }
 
