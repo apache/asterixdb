@@ -21,7 +21,6 @@ package org.apache.asterix.active;
 
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.job.IJobLifecycleListener;
 
 /**
  * Represents the notification handler for events of active entity jobs
@@ -30,10 +29,8 @@ public interface IActiveNotificationHandler {
 
     /**
      * Recover all active jobs that failed
-     *
-     * @throws HyracksDataException
      */
-    void recover() throws HyracksDataException;
+    void recover();
 
     /**
      * Set whether handler initialization has completed or not

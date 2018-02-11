@@ -68,9 +68,8 @@ public interface IActiveEntityController extends IActiveEntityEventsListener {
     /**
      * Start failure recovery
      *
-     * @throws HyracksDataException
      */
-    void recover() throws HyracksDataException;
+    void recover();
 
     /**
      * Add dataset to the list of associated datasets

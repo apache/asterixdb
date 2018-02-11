@@ -353,7 +353,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     @Override
-    public synchronized void recover() throws HyracksDataException {
+    public synchronized void recover() {
         LOGGER.log(level, "Recover is called on " + entityId);
         if (retryPolicyFactory == NoRetryPolicyFactory.INSTANCE) {
             LOGGER.log(level, "But it has no recovery policy, so it is set to permanent failure");

@@ -128,7 +128,7 @@ public class RecoveryTask {
                     if (cancelRecovery) {
                         return null;
                     }
-                    wait();
+                    listener.wait();
                 }
             }
             IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();

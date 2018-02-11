@@ -209,7 +209,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     }
 
     @Override
-    public synchronized void recover() throws HyracksDataException {
+    public synchronized void recover() {
         LOGGER.log(level, "Starting active recovery");
         for (IActiveEntityEventsListener listener : entityEventListeners.values()) {
             synchronized (listener) {
