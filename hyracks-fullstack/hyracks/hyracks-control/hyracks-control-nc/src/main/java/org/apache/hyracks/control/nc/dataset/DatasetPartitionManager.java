@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.control.nc.dataset;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
@@ -65,7 +65,7 @@ public class DatasetPartitionManager extends AbstractDatasetManager implements I
         } else {
             datasetMemoryManager = null;
         }
-        partitionResultStateMap = new LinkedHashMap<>();
+        partitionResultStateMap = new HashMap<>();
         executor.execute(new ResultStateSweeper(this, resultSweepThreshold, LOGGER));
     }
 
@@ -77,14 +77,11 @@ public class DatasetPartitionManager extends AbstractDatasetManager implements I
         synchronized (this) {
             dpw = new DatasetPartitionWriter(ctx, this, jobId, rsId, asyncMode, orderedResult, partition, nPartitions,
                     datasetMemoryManager, fileFactory, maxReads);
-
             ResultSetMap rsIdMap = partitionResultStateMap.computeIfAbsent(jobId, k -> new ResultSetMap());
-
             ResultState[] resultStates = rsIdMap.createOrGetResultStates(rsId, nPartitions);
             resultStates[partition] = dpw.getResultState();
         }
-
-        LOGGER.debug("Initialized partition writer: JobId: " + jobId + ":partition: " + partition);
+        LOGGER.debug("Initialized partition writer: JobId: {}:partition: {}", jobId, partition);
         return dpw;
     }
 
@@ -103,8 +100,8 @@ public class DatasetPartitionManager extends AbstractDatasetManager implements I
     @Override
     public void reportPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
         try {
-            LOGGER.debug("Reporting partition write completion: JobId: " + jobId + ": ResultSetId: " + rsId
-                    + ":partition: " + partition);
+            LOGGER.debug("Reporting partition write completion: JobId: {}:ResultSetId: {}:partition: {}", jobId, rsId,
+                    partition);
             ncs.getClusterController(jobId.getCcId()).reportResultPartitionWriteCompletion(jobId, rsId, partition);
         } catch (Exception e) {
             throw HyracksException.create(e);
@@ -117,11 +114,11 @@ public class DatasetPartitionManager extends AbstractDatasetManager implements I
         ResultState resultState = getResultState(jobId, resultSetId, partition);
         DatasetPartitionReader dpr = new DatasetPartitionReader(this, datasetMemoryManager, executor, resultState);
         dpr.writeTo(writer);
-        LOGGER.debug("Initialized partition reader: JobId: " + jobId + ":ResultSetId: " + resultSetId + ":partition: "
-                + partition);
+        LOGGER.debug("Initialized partition reader: JobId: {}:ResultSetId: {}:partition: {}", jobId, resultSetId,
+                partition);
     }
 
-    protected synchronized ResultState getResultState(JobId jobId, ResultSetId resultSetId, int partition)
+    private synchronized ResultState getResultState(JobId jobId, ResultSetId resultSetId, int partition)
             throws HyracksException {
         ResultSetMap rsIdMap = partitionResultStateMap.get(jobId);
         if (rsIdMap == null) {
@@ -155,13 +152,6 @@ public class DatasetPartitionManager extends AbstractDatasetManager implements I
     }
 
     @Override
-    public synchronized void abortAllReaders() {
-        for (ResultSetMap rsIdMap : partitionResultStateMap.values()) {
-            rsIdMap.abortAll();
-        }
-    }
-
-    @Override
     public synchronized void close() {
         for (JobId jobId : getJobIds()) {
             deinit(jobId);
@@ -175,7 +165,7 @@ public class DatasetPartitionManager extends AbstractDatasetManager implements I
     }
 
     @Override
-    public ResultSetMap getState(JobId jobId) {
+    public synchronized ResultSetMap getState(JobId jobId) {
         return partitionResultStateMap.get(jobId);
     }
 
@@ -191,5 +181,4 @@ public class DatasetPartitionManager extends AbstractDatasetManager implements I
             rsIdMap.closeAndDeleteAll();
         }
     }
-
 }

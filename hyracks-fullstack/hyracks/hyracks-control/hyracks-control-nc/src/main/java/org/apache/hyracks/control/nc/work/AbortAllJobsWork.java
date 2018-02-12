@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.apache.hyracks.control.nc.Joblet;
@@ -50,19 +51,18 @@ public class AbortAllJobsWork extends SynchronizableWork {
             LOGGER.log(Level.WARN, "DatasetPartitionManager is null on " + ncs.getId());
         }
         Collection<Joblet> joblets = ncs.getJobletMap().values();
-        for (Joblet ji : joblets) {
-            // TODO(mblow): should we have one jobletmap per cc?
-            if (!ji.getJobId().getCcId().equals(ccId)) {
-                continue;
-            }
-            if (dpm != null) {
-                dpm.abortReader(ji.getJobId());
-            }
-            Collection<Task> tasks = ji.getTaskMap().values();
+        // TODO(mblow): should we have one jobletmap per cc?
+        joblets.stream().filter(joblet -> joblet.getJobId().getCcId().equals(ccId)).forEach(joblet -> {
+            Collection<Task> tasks = joblet.getTaskMap().values();
             for (Task task : tasks) {
                 task.abort();
             }
-            ncs.getWorkQueue().schedule(new CleanupJobletWork(ncs, ji.getJobId(), JobStatus.FAILURE));
-        }
+            final JobId jobId = joblet.getJobId();
+            if (dpm != null) {
+                dpm.abortReader(jobId);
+                dpm.sweep(jobId);
+            }
+            ncs.getWorkQueue().schedule(new CleanupJobletWork(ncs, jobId, JobStatus.FAILURE));
+        });
     }
 }

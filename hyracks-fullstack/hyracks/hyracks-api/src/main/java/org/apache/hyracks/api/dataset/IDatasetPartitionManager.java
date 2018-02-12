@@ -39,8 +39,6 @@ public interface IDatasetPartitionManager extends IDatasetManager {
 
     void abortReader(JobId jobId);
 
-    void abortAllReaders();
-
     void close();
 
 }
