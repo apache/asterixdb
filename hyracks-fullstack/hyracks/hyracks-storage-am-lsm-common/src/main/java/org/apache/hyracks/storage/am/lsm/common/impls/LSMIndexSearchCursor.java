@@ -32,10 +32,11 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
+import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
 
-public abstract class LSMIndexSearchCursor implements ILSMIndexCursor {
+public abstract class LSMIndexSearchCursor extends EnforcedIndexCursor implements ILSMIndexCursor {
     protected static final int SWITCH_COMPONENT_CYCLE = 100;
     protected final ILSMIndexOperationContext opCtx;
     protected final boolean returnDeletedTuples;
@@ -106,7 +107,7 @@ public abstract class LSMIndexSearchCursor implements ILSMIndexCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void doClose() throws HyracksDataException {
         hasNextCallCount = 0;
         switchPossible = true;
         outputElement = null;
@@ -133,20 +134,20 @@ public abstract class LSMIndexSearchCursor implements ILSMIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean doHasNext() throws HyracksDataException {
         hasNextCallCount++;
         checkPriorityQueue();
         return !outputPriorityQueue.isEmpty();
     }
 
     @Override
-    public void next() throws HyracksDataException {
+    public void doNext() throws HyracksDataException {
         outputElement = outputPriorityQueue.poll();
         needPushElementIntoQueue = true;
     }
 
     @Override
-    public void destroy() throws HyracksDataException {
+    public void doDestroy() throws HyracksDataException {
         try {
             if (outputPriorityQueue != null) {
                 outputPriorityQueue.clear();
@@ -167,7 +168,7 @@ public abstract class LSMIndexSearchCursor implements ILSMIndexCursor {
     }
 
     @Override
-    public ITupleReference getTuple() {
+    public ITupleReference doGetTuple() {
         return outputElement.getTuple();
     }
 
@@ -191,7 +192,7 @@ public abstract class LSMIndexSearchCursor implements ILSMIndexCursor {
             outputPriorityQueue.offer(e);
             return;
         }
-        rangeCursors[cursorIndex].destroy();
+        rangeCursors[cursorIndex].close();
         if (cursorIndex == 0) {
             includeMutableComponent = false;
         }

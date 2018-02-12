@@ -37,7 +37,7 @@ public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean doHasNext() throws HyracksDataException {
         int nextLeafPage;
         if (tupleIndex >= frame.getTupleCount()) {
             nextLeafPage = frame.getNextLeaf();
@@ -99,8 +99,8 @@ public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
-        super.close();
+    public void doClose() throws HyracksDataException {
+        super.doClose();
         searchPages.clear();
     }
 }

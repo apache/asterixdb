@@ -92,85 +92,133 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         // read the file names when we open the tree.
         // The RTree should be renamed before the BTree.
         LSMRTreeMemoryComponent flushingComponent = (LSMRTreeMemoryComponent) flushOp.getFlushingComponent();
-        RTreeAccessor memRTreeAccessor =
-                flushingComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        RTreeSearchCursor rtreeScanCursor = memRTreeAccessor.createSearchCursor(false);
         SearchPredicate rtreeNullPredicate = new SearchPredicate(null, null);
-        memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
-        ILSMDiskComponent component = createDiskComponent(componentFactory, flushOp.getTarget(), null, null, true);
-        ILSMDiskComponentBulkLoader componentBulkLoader =
-                component.createBulkLoader(1.0f, false, 0L, false, false, false);
-
-        // Since the LSM-RTree is used as a secondary assumption, the
-        // primary key will be the last comparator in the BTree comparators
-        TreeTupleSorter rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getIndex().getFileId(),
-                linearizerArray, rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(),
-                flushingComponent.getIndex().getBufferCache(), comparatorFields);
-
+        ILSMDiskComponent component = null;
+        ILSMDiskComponentBulkLoader componentBulkLoader = null;
+        TreeTupleSorter rTreeTupleSorter = null;
+        TreeTupleSorter bTreeTupleSorter = null;
         boolean isEmpty = true;
+        boolean abort = true;
         try {
-            while (rtreeScanCursor.hasNext()) {
-                isEmpty = false;
-                rtreeScanCursor.next();
-                rTreeTupleSorter.insertTupleEntry(rtreeScanCursor.getPageId(), rtreeScanCursor.getTupleOffset());
+            RTreeAccessor memRTreeAccessor =
+                    flushingComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
+
+            try {
+                RTreeSearchCursor rtreeScanCursor = memRTreeAccessor.createSearchCursor(false);
+                try {
+                    memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
+                    component = createDiskComponent(componentFactory, flushOp.getTarget(), null, null, true);
+                    componentBulkLoader = component.createBulkLoader(1.0f, false, 0L, false, false, false);
+                    // Since the LSM-RTree is used as a secondary assumption, the
+                    // primary key will be the last comparator in the BTree comparators
+                    rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getIndex().getFileId(), linearizerArray,
+                            rtreeLeafFrameFactory.createFrame(), rtreeLeafFrameFactory.createFrame(),
+                            flushingComponent.getIndex().getBufferCache(), comparatorFields);
+                    try {
+                        isEmpty = scanAndSort(rtreeScanCursor, rTreeTupleSorter);
+                    } finally {
+                        rtreeScanCursor.close();
+                    }
+                } finally {
+                    rtreeScanCursor.destroy();
+                }
+            } finally {
+                memRTreeAccessor.destroy();
             }
-        } finally {
-            rtreeScanCursor.destroy();
-        }
-        if (!isEmpty) {
-            rTreeTupleSorter.sort();
-        }
-
-        // scan the memory BTree
-        BTreeAccessor memBTreeAccessor =
-                flushingComponent.getBuddyIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        BTreeRangeSearchCursor btreeScanCursor = memBTreeAccessor.createSearchCursor(false);
-        RangePredicate btreeNullPredicate = new RangePredicate(null, null, true, true, null, null);
-        memBTreeAccessor.search(btreeScanCursor, btreeNullPredicate);
-        TreeTupleSorter bTreeTupleSorter = new TreeTupleSorter(flushingComponent.getBuddyIndex().getFileId(),
-                linearizerArray, btreeLeafFrameFactory.createFrame(), btreeLeafFrameFactory.createFrame(),
-                flushingComponent.getBuddyIndex().getBufferCache(), comparatorFields);
-
-        isEmpty = true;
-        try {
-            while (btreeScanCursor.hasNext()) {
-                isEmpty = false;
-                btreeScanCursor.next();
-                bTreeTupleSorter.insertTupleEntry(btreeScanCursor.getPageId(), btreeScanCursor.getTupleOffset());
+            if (!isEmpty) {
+                rTreeTupleSorter.sort();
             }
-        } finally {
-            btreeScanCursor.destroy();
-        }
-        if (!isEmpty) {
-            bTreeTupleSorter.sort();
-        }
-
-        LSMRTreeWithAntiMatterTuplesFlushCursor cursor = new LSMRTreeWithAntiMatterTuplesFlushCursor(rTreeTupleSorter,
-                bTreeTupleSorter, comparatorFields, linearizerArray);
-        cursor.open(null, null);
-
-        try {
-            while (cursor.hasNext()) {
-                cursor.next();
-                ITupleReference frameTuple = cursor.getTuple();
-
-                componentBulkLoader.add(frameTuple);
+            // scan the memory BTree
+            RangePredicate btreeNullPredicate = new RangePredicate(null, null, true, true, null, null);
+            BTreeAccessor memBTreeAccessor =
+                    flushingComponent.getBuddyIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
+            try {
+                bTreeTupleSorter = new TreeTupleSorter(flushingComponent.getBuddyIndex().getFileId(), linearizerArray,
+                        btreeLeafFrameFactory.createFrame(), btreeLeafFrameFactory.createFrame(),
+                        flushingComponent.getBuddyIndex().getBufferCache(), comparatorFields);
+                BTreeRangeSearchCursor btreeScanCursor = memBTreeAccessor.createSearchCursor(false);
+                try {
+                    isEmpty = true;
+                    memBTreeAccessor.search(btreeScanCursor, btreeNullPredicate);
+                    try {
+                        isEmpty = scanAndSort(btreeScanCursor, bTreeTupleSorter);
+                    } finally {
+                        btreeScanCursor.close();
+                    }
+                } finally {
+                    btreeScanCursor.destroy();
+                }
+            } finally {
+                memBTreeAccessor.destroy();
             }
+            if (!isEmpty) {
+                bTreeTupleSorter.sort();
+            }
+            LSMRTreeWithAntiMatterTuplesFlushCursor cursor = new LSMRTreeWithAntiMatterTuplesFlushCursor(
+                    rTreeTupleSorter, bTreeTupleSorter, comparatorFields, linearizerArray);
+            try {
+                cursor.open(null, null);
+                try {
+                    while (cursor.hasNext()) {
+                        cursor.next();
+                        ITupleReference frameTuple = cursor.getTuple();
+                        componentBulkLoader.add(frameTuple);
+                    }
+                } finally {
+                    cursor.close();
+                }
+            } finally {
+                cursor.destroy();
+            }
+            if (component.getLSMComponentFilter() != null) {
+                List<ITupleReference> filterTuples = new ArrayList<>();
+                filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
+                filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
+                getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples);
+                getFilterManager().writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
+            }
+            flushingComponent.getMetadata().copy(component.getMetadata());
+            abort = false;
+            componentBulkLoader.end();
         } finally {
-            cursor.destroy();
+            try {
+                if (rTreeTupleSorter != null) {
+                    rTreeTupleSorter.destroy();
+                }
+            } finally {
+                try {
+                    if (bTreeTupleSorter != null) {
+                        bTreeTupleSorter.destroy();
+                    }
+                } finally {
+                    if (abort && componentBulkLoader != null) {
+                        componentBulkLoader.abort();
+                    }
+                }
+            }
         }
-
-        if (component.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<>();
-            filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
-            filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
-            getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples);
-            getFilterManager().writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
-        }
-        flushingComponent.getMetadata().copy(component.getMetadata());
-
-        componentBulkLoader.end();
         return component;
+    }
+
+    private boolean scanAndSort(RTreeSearchCursor scanCursor, TreeTupleSorter tupleSorter) throws HyracksDataException {
+        boolean isEmpty = true;
+        while (scanCursor.hasNext()) {
+            isEmpty = false;
+            scanCursor.next();
+            tupleSorter.insertTupleEntry(scanCursor.getPageId(), scanCursor.getTupleOffset());
+        }
+        return isEmpty;
+    }
+
+    private boolean scanAndSort(BTreeRangeSearchCursor scanCursor, TreeTupleSorter tupleSorter)
+            throws HyracksDataException {
+        boolean isEmpty = true;
+        while (scanCursor.hasNext()) {
+            isEmpty = false;
+            scanCursor.next();
+            tupleSorter.insertTupleEntry(scanCursor.getPageId(), scanCursor.getTupleOffset());
+        }
+        return isEmpty;
     }
 
     @Override
@@ -193,7 +241,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 componentBulkLoader.add(frameTuple);
             }
         } finally {
-            cursor.destroy();
+            cursor.close();
         }
         if (component.getLSMComponentFilter() != null) {
             List<ITupleReference> filterTuples = new ArrayList<>();

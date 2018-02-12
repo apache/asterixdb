@@ -846,16 +846,20 @@ public abstract class AbstractRTreeExamplesTest {
             LOGGER.info("Scan:");
         }
         IIndexCursor scanCursor = indexAccessor.createSearchCursor(false);
-        SearchPredicate nullPred = new SearchPredicate(null, null);
-        indexAccessor.search(scanCursor, nullPred);
         try {
-            while (scanCursor.hasNext()) {
-                scanCursor.next();
-                ITupleReference frameTuple = scanCursor.getTuple();
-                String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(rec);
+            SearchPredicate nullPred = new SearchPredicate(null, null);
+            indexAccessor.search(scanCursor, nullPred);
+            try {
+                while (scanCursor.hasNext()) {
+                    scanCursor.next();
+                    ITupleReference frameTuple = scanCursor.getTuple();
+                    String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(rec);
+                    }
                 }
+            } finally {
+                scanCursor.close();
             }
         } finally {
             scanCursor.destroy();
@@ -870,15 +874,17 @@ public abstract class AbstractRTreeExamplesTest {
             ITreeIndexAccessor treeIndexAccessor = (ITreeIndexAccessor) indexAccessor;
             TreeIndexDiskOrderScanCursor diskOrderCursor =
                     (TreeIndexDiskOrderScanCursor) treeIndexAccessor.createDiskOrderScanCursor();
-            treeIndexAccessor.diskOrderScan(diskOrderCursor);
             try {
-                while (diskOrderCursor.hasNext()) {
-                    diskOrderCursor.next();
-                    ITupleReference frameTuple = diskOrderCursor.getTuple();
-                    String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
-                    if (LOGGER.isInfoEnabled()) {
+                treeIndexAccessor.diskOrderScan(diskOrderCursor);
+                try {
+                    while (diskOrderCursor.hasNext()) {
+                        diskOrderCursor.next();
+                        ITupleReference frameTuple = diskOrderCursor.getTuple();
+                        String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
                         LOGGER.info(rec);
                     }
+                } finally {
+                    diskOrderCursor.close();
                 }
             } finally {
                 diskOrderCursor.destroy();
@@ -905,25 +911,27 @@ public abstract class AbstractRTreeExamplesTest {
             String kString = TupleUtils.printTuple(key, fieldSerdes);
             LOGGER.info("Range-Search using key: " + kString);
         }
-        IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
         MultiComparator cmp = RTreeUtils.getSearchMultiComparator(cmpFactories, key);
-
         SearchPredicate rangePred;
         if (minFilterTuple != null && maxFilterTuple != null) {
             rangePred = new SearchPredicate(key, cmp, minFilterTuple, maxFilterTuple);
         } else {
             rangePred = new SearchPredicate(key, cmp);
         }
-
-        indexAccessor.search(rangeCursor, rangePred);
+        IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
         try {
-            while (rangeCursor.hasNext()) {
-                rangeCursor.next();
-                ITupleReference frameTuple = rangeCursor.getTuple();
-                String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(rec);
+            indexAccessor.search(rangeCursor, rangePred);
+            try {
+                while (rangeCursor.hasNext()) {
+                    rangeCursor.next();
+                    ITupleReference frameTuple = rangeCursor.getTuple();
+                    String rec = TupleUtils.printTuple(frameTuple, fieldSerdes);
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info(rec);
+                    }
                 }
+            } finally {
+                rangeCursor.close();
             }
         } finally {
             rangeCursor.destroy();

@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
+import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -36,7 +37,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
-public class BTreeCountingSearchCursor implements ITreeIndexCursor {
+public class BTreeCountingSearchCursor extends EnforcedIndexCursor implements ITreeIndexCursor {
 
     private int fileId = -1;
     private ICachedPage page = null;
@@ -75,11 +76,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-        // in case open is called multiple times without closing
-        if (page != null) {
-            releasePage();
-        }
+    public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
 
         page = ((BTreeCursorInitialState) initialState).getPage();
         isPageDirty = false;
@@ -169,7 +166,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean doHasNext() throws HyracksDataException {
         // get the count for the current page
         // follow the sibling pointer until last page
         // if no more tuples on a page, then done
@@ -199,7 +196,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void next() throws HyracksDataException {
+    public void doNext() throws HyracksDataException {
         // Do nothing. Count is performed just once!
         IntegerPointable.setInteger(countBuf, 0, count);
         tupleBuilder.addField(countBuf, 0, 4);
@@ -207,7 +204,7 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void destroy() throws HyracksDataException {
+    public void doDestroy() throws HyracksDataException {
         if (page != null) {
             releasePage();
         }
@@ -220,16 +217,12 @@ public class BTreeCountingSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() {
-        try {
-            destroy();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void doClose() throws HyracksDataException {
+        doDestroy();
     }
 
     @Override
-    public ITupleReference getTuple() {
+    public ITupleReference doGetTuple() {
         return countTuple;
     }
 

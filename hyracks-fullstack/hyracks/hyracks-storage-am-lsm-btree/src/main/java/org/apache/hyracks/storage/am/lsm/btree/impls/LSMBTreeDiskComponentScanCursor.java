@@ -20,6 +20,8 @@
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.DestroyUtils;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -61,7 +63,7 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+    public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;
         cmp = lsmInitialState.getOriginalKeyComparator();
         operationalComponents = lsmInitialState.getOperationalComponents();
@@ -87,18 +89,18 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void next() throws HyracksDataException {
+    public void doNext() throws HyracksDataException {
         foundNext = false;
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean doHasNext() throws HyracksDataException {
         if (foundNext) {
             return true;
         }
-        while (super.hasNext()) {
-            super.next();
-            LSMBTreeTupleReference diskTuple = (LSMBTreeTupleReference) super.getTuple();
+        while (super.doHasNext()) {
+            super.doNext();
+            LSMBTreeTupleReference diskTuple = (LSMBTreeTupleReference) super.doGetTuple();
             if (diskTuple.isAntimatter()) {
                 if (setAntiMatterTuple(diskTuple, outputElement.getCursorIndex())) {
                     foundNext = true;
@@ -167,23 +169,28 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public ITupleReference getTuple() {
+    public ITupleReference doGetTuple() {
         return outputTuple;
     }
 
     @Override
-    public void destroy() throws HyracksDataException {
+    public void doDestroy() throws HyracksDataException {
+        Throwable failure = null;
         if (lsmHarness != null) {
-            try {
-                for (int i = 0; i < rangeCursors.length; i++) {
-                    rangeCursors[i].destroy();
-                }
+            if (rangeCursors != null) {
+                failure = DestroyUtils.destroy(failure, rangeCursors);
                 rangeCursors = null;
-            } finally {
+            }
+            try {
                 lsmHarness.endScanDiskComponents(opCtx);
+            } catch (Throwable th) { // NOSONAR. Don't lose the root cause
+                failure = ExceptionUtils.suppress(failure, th);
             }
         }
         foundNext = false;
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
+        }
     }
 
     @Override

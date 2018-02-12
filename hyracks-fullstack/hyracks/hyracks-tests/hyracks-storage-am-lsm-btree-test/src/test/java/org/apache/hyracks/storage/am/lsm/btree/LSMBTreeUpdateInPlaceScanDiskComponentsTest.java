@@ -27,7 +27,6 @@ import java.io.DataInputStream;
 import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.logging.Level;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -369,13 +368,17 @@ public class LSMBTreeUpdateInPlaceScanDiskComponentsTest extends OrderedIndexTes
         ITreeIndexCursor cursor = btreeAccessor.createDiskOrderScanCursor();
         try {
             btreeAccessor.diskOrderScan(cursor);
-            for (UpdatedCheckTuple t : checkTuples) {
-                if (!t.isUpdated() || !hasOnlyKeys) {
-                    checkReturnedTuple((LSMBTreeTupleReference) getNext(cursor), ctx.getFieldSerdes(), t,
-                            ctx.getKeyFieldCount());
+            try {
+                for (UpdatedCheckTuple t : checkTuples) {
+                    if (!t.isUpdated() || !hasOnlyKeys) {
+                        checkReturnedTuple((LSMBTreeTupleReference) getNext(cursor), ctx.getFieldSerdes(), t,
+                                ctx.getKeyFieldCount());
+                    }
                 }
+                Assert.assertFalse(cursor.hasNext());
+            } finally {
+                cursor.close();
             }
-            Assert.assertFalse(cursor.hasNext());
         } finally {
             cursor.destroy();
         }

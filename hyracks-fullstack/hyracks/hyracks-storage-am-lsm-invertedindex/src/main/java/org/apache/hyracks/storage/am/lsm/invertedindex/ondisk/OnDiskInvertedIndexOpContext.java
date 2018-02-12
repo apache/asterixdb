@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
@@ -36,6 +37,7 @@ public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
     private MultiComparator searchCmp;
     // For prefix search on partitioned indexes.
     private MultiComparator prefixSearchCmp;
+    private boolean destroyed = false;
 
     public OnDiskInvertedIndexOpContext(BTree btree) {
         // TODO: Ignore opcallbacks for now.
@@ -82,4 +84,16 @@ public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
         return prefixSearchCmp;
     }
 
+    @Override
+    public void destroy() throws HyracksDataException {
+        if (destroyed) {
+            return;
+        }
+        destroyed = true;
+        try {
+            btreeAccessor.destroy();
+        } finally {
+            btreeCursor.destroy();
+        }
+    }
 }

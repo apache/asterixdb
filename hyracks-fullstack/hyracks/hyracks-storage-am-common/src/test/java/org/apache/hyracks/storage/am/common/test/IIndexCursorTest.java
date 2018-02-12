@@ -17,15 +17,16 @@
  * under the License.
  */
 
-package org.apache.hyracks.tests.unit;
+package org.apache.hyracks.storage.am.common.test;
 
-import org.apache.hyracks.storage.common.ICursorInitialState;
+import java.util.List;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.List;
 
 /**
  * This is a test class that forms the basis for unit tests of different implementations of the IIndexCursor interface
@@ -33,75 +34,87 @@ import java.util.List;
 public abstract class IIndexCursorTest {
     @Test
     public void testNormalLifeCycle() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
         for (ISearchPredicate predicate : predicates) {
-            cursor.open(initialState, predicate);
+            open(accessor, cursor, predicate);
             while (cursor.hasNext()) {
                 cursor.next();
             }
             cursor.close();
         }
         cursor.destroy();
+        destroy(accessor);
+    }
+
+    protected void destroy(IIndexAccessor accessor) throws HyracksDataException {
+        accessor.destroy();
     }
 
     @Test
     public void testCreateDestroySucceed() throws Exception {
-        IIndexCursor cursor = createCursor();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         cursor.destroy();
+        destroy(accessor);
     }
 
     @Test
     public void testDoubleOpenFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+        open(accessor, cursor, predicates.get(0));
         boolean expectedExceptionThrown = false;
         try {
-            cursor.open(initialState, predicates.get(0));
+            open(accessor, cursor, predicates.get(0));
         } catch (Exception e) {
             expectedExceptionThrown = true;
         }
         cursor.close();
         cursor.destroy();
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
-    public void testCloseWithoutOpenFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        boolean expectedExceptionThrown = false;
-        try {
-            cursor.close();
-        } catch (Exception e) {
-            expectedExceptionThrown = true;
-        }
-        cursor.destroy();
-        Assert.assertTrue(expectedExceptionThrown);
-    }
-
-    @Test
-    public void testDoubleCloseFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
-        List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+    public void testCloseWithoutOpenSucceeds() throws Exception {
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         cursor.close();
-        boolean expectedExceptionThrown = false;
-        try {
-            cursor.close();
-        } catch (Exception e) {
-            expectedExceptionThrown = true;
-        }
         cursor.destroy();
-        Assert.assertTrue(expectedExceptionThrown);
+        destroy(accessor);
+    }
+
+    @Test
+    public void testDoubleCloseSucceeds() throws Exception {
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
+        List<ISearchPredicate> predicates = createSearchPredicates();
+        open(accessor, cursor, predicates.get(0));
+        cursor.close();
+        cursor.close();
+        cursor.destroy();
+        destroy(accessor);
+    }
+
+    @Test
+    public void testDoubleDestroySucceeds() throws Exception {
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
+        List<ISearchPredicate> predicates = createSearchPredicates();
+        open(accessor, cursor, predicates.get(0));
+        cursor.close();
+        cursor.destroy();
+        cursor.destroy();
+        destroy(accessor);
     }
 
     @Test
     public void testHasNextBeforeOpenFails() throws Exception {
-        IIndexCursor cursor = createCursor();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         boolean expectedExceptionThrown = false;
         try {
             cursor.hasNext();
@@ -109,15 +122,16 @@ public abstract class IIndexCursorTest {
             expectedExceptionThrown = true;
         }
         cursor.destroy();
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
     public void testHasNextAfterCloseFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+        open(accessor, cursor, predicates.get(0));
         cursor.close();
         boolean expectedExceptionThrown = false;
         try {
@@ -126,12 +140,14 @@ public abstract class IIndexCursorTest {
             expectedExceptionThrown = true;
         }
         cursor.destroy();
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
     public void testNextBeforeOpenFails() throws Exception {
-        IIndexCursor cursor = createCursor();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         boolean expectedExceptionThrown = false;
         try {
             cursor.next();
@@ -139,15 +155,16 @@ public abstract class IIndexCursorTest {
             expectedExceptionThrown = true;
         }
         cursor.destroy();
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
     public void testNextAfterCloseFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+        open(accessor, cursor, predicates.get(0));
         cursor.close();
         boolean expectedExceptionThrown = false;
         try {
@@ -156,15 +173,16 @@ public abstract class IIndexCursorTest {
             expectedExceptionThrown = true;
         }
         cursor.destroy();
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
     public void testDestroyWhileOpenFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+        open(accessor, cursor, predicates.get(0));
         boolean expectedExceptionThrown = false;
         try {
             cursor.destroy();
@@ -173,32 +191,34 @@ public abstract class IIndexCursorTest {
         }
         cursor.close();
         cursor.destroy();
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
     public void testOpenAfterDestroyFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+        open(accessor, cursor, predicates.get(0));
         cursor.close();
         cursor.destroy();
         boolean expectedExceptionThrown = false;
         try {
-            cursor.open(initialState, predicates.get(0));
+            open(accessor, cursor, predicates.get(0));
         } catch (Exception e) {
             expectedExceptionThrown = true;
         }
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
     public void testCloseAfterDestroyFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+        open(accessor, cursor, predicates.get(0));
         cursor.close();
         cursor.destroy();
         boolean expectedExceptionThrown = false;
@@ -207,15 +227,16 @@ public abstract class IIndexCursorTest {
         } catch (Exception e) {
             expectedExceptionThrown = true;
         }
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
     public void testNextAfterDestroyFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+        open(accessor, cursor, predicates.get(0));
         cursor.close();
         cursor.destroy();
         boolean expectedExceptionThrown = false;
@@ -224,15 +245,16 @@ public abstract class IIndexCursorTest {
         } catch (Exception e) {
             expectedExceptionThrown = true;
         }
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
     public void testHasNextAfterDestroyFails() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+        open(accessor, cursor, predicates.get(0));
         cursor.close();
         cursor.destroy();
         boolean expectedExceptionThrown = false;
@@ -241,23 +263,32 @@ public abstract class IIndexCursorTest {
         } catch (Exception e) {
             expectedExceptionThrown = true;
         }
+        destroy(accessor);
         Assert.assertTrue(expectedExceptionThrown);
     }
 
     @Test
     public void testGetTupleReturnsNullAfterDestroy() throws Exception {
-        IIndexCursor cursor = createCursor();
-        ICursorInitialState initialState = createCursorInitialState();
+        IIndexAccessor accessor = createAccessor();
+        IIndexCursor cursor = createCursor(accessor);
         List<ISearchPredicate> predicates = createSearchPredicates();
-        cursor.open(initialState, predicates.get(0));
+        open(accessor, cursor, predicates.get(0));
         cursor.close();
         cursor.destroy();
+        destroy(accessor);
         Assert.assertNull(cursor.getTuple());
     }
 
-    protected abstract List<ISearchPredicate> createSearchPredicates();
+    protected IIndexCursor createCursor(IIndexAccessor accessor) {
+        return accessor.createSearchCursor(false);
+    }
 
-    protected abstract ICursorInitialState createCursorInitialState();
+    protected void open(IIndexAccessor accessor, IIndexCursor cursor, ISearchPredicate predicate)
+            throws HyracksDataException {
+        accessor.search(cursor, predicate);
+    }
 
-    protected abstract IIndexCursor createCursor();
+    protected abstract List<ISearchPredicate> createSearchPredicates() throws Exception;
+
+    protected abstract IIndexAccessor createAccessor() throws Exception;
 }

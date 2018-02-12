@@ -43,7 +43,7 @@ public class LSMInvertedIndexDeletedKeysBTreeMergeCursor extends LSMIndexSearchC
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+    public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMInvertedIndexRangeSearchCursorInitialState lsmInitialState =
                 (LSMInvertedIndexRangeSearchCursorInitialState) initialState;
         cmp = lsmInitialState.getOriginalKeyComparator();

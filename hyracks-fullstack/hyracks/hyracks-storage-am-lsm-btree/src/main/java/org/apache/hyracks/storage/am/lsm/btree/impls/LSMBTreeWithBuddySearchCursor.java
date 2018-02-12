@@ -37,13 +37,13 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
     }
 
     @Override
-    public void destroy() throws HyracksDataException {
-        super.destroy();
+    public void doDestroy() throws HyracksDataException {
+        super.doDestroy();
         currentCursor = 0;
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void doClose() throws HyracksDataException {
         if (!open) {
             return;
         }
@@ -52,8 +52,8 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
         foundNext = false;
         try {
             for (int i = 0; i < numberOfTrees; i++) {
-                btreeCursors[i].destroy();
-                buddyBtreeCursors[i].destroy();
+                btreeCursors[i].close();
+                buddyBtreeCursors[i].close();
             }
             btreeCursors = null;
             buddyBtreeCursors = null;
@@ -70,7 +70,7 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean doHasNext() throws HyracksDataException {
         if (foundNext) {
             return true;
         }
@@ -94,7 +94,7 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
                             killerTupleFound = true;
                         }
                     } finally {
-                        buddyBtreeCursors[i].destroy();
+                        buddyBtreeCursors[i].close();
                     }
                 }
                 if (!killerTupleFound) {
@@ -103,7 +103,7 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
                     return true;
                 }
             }
-            btreeCursors[currentCursor].destroy();
+            btreeCursors[currentCursor].close();
             currentCursor++;
             searchNextCursor();
         }
@@ -111,7 +111,7 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
     }
 
     @Override
-    public void next() throws HyracksDataException {
+    public void doNext() throws HyracksDataException {
         foundNext = false;
     }
 
@@ -135,8 +135,8 @@ public class LSMBTreeWithBuddySearchCursor extends LSMBTreeWithBuddyAbstractCurs
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-        super.open(initialState, searchPred);
+    public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+        super.doOpen(initialState, searchPred);
         searchNextCursor();
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.common;
 
+import org.apache.hyracks.api.dataflow.IDestroyable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -28,7 +29,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * can concurrently operate on the same IIndex (i.e., the IIndex must allow
  * concurrent operations).
  */
-public interface IIndexAccessor {
+public interface IIndexAccessor extends IDestroyable {
     /**
      * Inserts the given tuple.
      *
@@ -36,11 +37,10 @@ public interface IIndexAccessor {
      *            Tuple to be inserted.
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
-     * @throws IndexException
      *             If an index-specific constraint is violated, e.g., the key
      *             already exists.
      */
-    public void insert(ITupleReference tuple) throws HyracksDataException;
+    void insert(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Updates the tuple in the index matching the given tuple with the new
@@ -51,10 +51,9 @@ public interface IIndexAccessor {
      *            tuples contents.
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
-     * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    public void update(ITupleReference tuple) throws HyracksDataException;
+    void update(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Deletes the tuple in the index matching the given tuple.
@@ -63,10 +62,9 @@ public interface IIndexAccessor {
      *            Tuple to be deleted.
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
-     * @throws IndexException
      *             If there is no matching tuple in the index.
      */
-    public void delete(ITupleReference tuple) throws HyracksDataException;
+    void delete(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * This operation is only supported by indexes with the notion of a unique key.
@@ -77,29 +75,29 @@ public interface IIndexAccessor {
      *            Tuple to be deleted.
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
-     * @throws IndexException
      *             If there is no matching tuple in the index.
      *
      */
-    public void upsert(ITupleReference tuple) throws HyracksDataException;
+    void upsert(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * Creates a cursor appropriate for passing into search().
      *
      */
-    public IIndexCursor createSearchCursor(boolean exclusive);
+    IIndexCursor createSearchCursor(boolean exclusive);
 
     /**
      * Open the given cursor for an index search using the given predicate as
      * search condition.
      *
-     * @param icursor
+     * Note: if this call returns successfully, then the cursor is open, otherwise it is not.
+     *
+     * @param cursor
      *            Cursor over the index entries satisfying searchPred.
      * @param searchPred
      *            Search condition.
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
-     * @throws IndexException
      */
-    public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException;
+    void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException;
 }

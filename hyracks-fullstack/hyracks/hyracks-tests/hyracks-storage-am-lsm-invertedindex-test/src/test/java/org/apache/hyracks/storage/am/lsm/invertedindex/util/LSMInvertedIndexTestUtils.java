@@ -260,42 +260,44 @@ public class LSMInvertedIndexTestUtils {
         IInvertedIndexAccessor invIndexAccessor =
                 (IInvertedIndexAccessor) invIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
         IIndexCursor invIndexCursor = invIndexAccessor.createRangeSearchCursor();
-        MultiComparator tokenCmp = MultiComparator.create(invIndex.getTokenCmpFactories());
-        IBinaryComparatorFactory[] tupleCmpFactories =
-                new IBinaryComparatorFactory[tokenFieldCount + invListFieldCount];
-        for (int i = 0; i < tokenFieldCount; i++) {
-            tupleCmpFactories[i] = invIndex.getTokenCmpFactories()[i];
-        }
-        for (int i = 0; i < invListFieldCount; i++) {
-            tupleCmpFactories[tokenFieldCount + i] = invIndex.getInvListCmpFactories()[i];
-        }
-        MultiComparator tupleCmp = MultiComparator.create(tupleCmpFactories);
-        RangePredicate nullPred = new RangePredicate(null, null, true, true, tokenCmp, tokenCmp);
-        invIndexAccessor.rangeSearch(invIndexCursor, nullPred);
-
-        // Helpers for generating a serialized inverted-list element from a CheckTuple from the expected index.
-        ISerializerDeserializer[] fieldSerdes = testCtx.getFieldSerdes();
-        ArrayTupleBuilder expectedBuilder = new ArrayTupleBuilder(fieldSerdes.length);
-        ArrayTupleReference expectedTuple = new ArrayTupleReference();
-
-        Iterator<CheckTuple> expectedIter = testCtx.getCheckTuples().iterator();
-
-        // Compare index elements.
         try {
-            while (invIndexCursor.hasNext() && expectedIter.hasNext()) {
-                invIndexCursor.next();
-                ITupleReference actualTuple = invIndexCursor.getTuple();
-                CheckTuple expected = expectedIter.next();
-                OrderedIndexTestUtils.createTupleFromCheckTuple(expected, expectedBuilder, expectedTuple, fieldSerdes);
-                if (tupleCmp.compare(actualTuple, expectedTuple) != 0) {
-                    fail("Index entries differ for token '" + expected.getField(0) + "'.");
+            MultiComparator tokenCmp = MultiComparator.create(invIndex.getTokenCmpFactories());
+            IBinaryComparatorFactory[] tupleCmpFactories =
+                    new IBinaryComparatorFactory[tokenFieldCount + invListFieldCount];
+            for (int i = 0; i < tokenFieldCount; i++) {
+                tupleCmpFactories[i] = invIndex.getTokenCmpFactories()[i];
+            }
+            for (int i = 0; i < invListFieldCount; i++) {
+                tupleCmpFactories[tokenFieldCount + i] = invIndex.getInvListCmpFactories()[i];
+            }
+            MultiComparator tupleCmp = MultiComparator.create(tupleCmpFactories);
+            RangePredicate nullPred = new RangePredicate(null, null, true, true, tokenCmp, tokenCmp);
+            // Helpers for generating a serialized inverted-list element from a CheckTuple from the expected index.
+            ISerializerDeserializer[] fieldSerdes = testCtx.getFieldSerdes();
+            ArrayTupleBuilder expectedBuilder = new ArrayTupleBuilder(fieldSerdes.length);
+            ArrayTupleReference expectedTuple = new ArrayTupleReference();
+            Iterator<CheckTuple> expectedIter = testCtx.getCheckTuples().iterator();
+            // Compare index elements.
+            invIndexAccessor.rangeSearch(invIndexCursor, nullPred);
+            try {
+                while (invIndexCursor.hasNext() && expectedIter.hasNext()) {
+                    invIndexCursor.next();
+                    ITupleReference actualTuple = invIndexCursor.getTuple();
+                    CheckTuple expected = expectedIter.next();
+                    OrderedIndexTestUtils.createTupleFromCheckTuple(expected, expectedBuilder, expectedTuple,
+                            fieldSerdes);
+                    if (tupleCmp.compare(actualTuple, expectedTuple) != 0) {
+                        fail("Index entries differ for token '" + expected.getField(0) + "'.");
+                    }
                 }
-            }
-            if (expectedIter.hasNext()) {
-                fail("Indexes do not match. Actual index is missing entries.");
-            }
-            if (invIndexCursor.hasNext()) {
-                fail("Indexes do not match. Actual index contains too many entries.");
+                if (expectedIter.hasNext()) {
+                    fail("Indexes do not match. Actual index is missing entries.");
+                }
+                if (invIndexCursor.hasNext()) {
+                    fail("Indexes do not match. Actual index contains too many entries.");
+                }
+            } finally {
+                invIndexCursor.close();
             }
         } finally {
             invIndexCursor.destroy();
@@ -517,61 +519,65 @@ public class LSMInvertedIndexTestUtils {
             searchPred.setQueryFieldIndex(0);
 
             IIndexCursor resultCursor = accessor.createSearchCursor(false);
-            boolean panic = false;
             try {
-                accessor.search(resultCursor, searchPred);
-            } catch (HyracksDataException e) {
-                // ignore panic queries.
-                if (e.getErrorCode() == ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION) {
-                    panic = true;
-                } else {
-                    throw e;
+                boolean panic = false;
+                try {
+                    accessor.search(resultCursor, searchPred);
+                } catch (HyracksDataException e) {
+                    // ignore panic queries.
+                    if (e.getErrorCode() == ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION) {
+                        panic = true;
+                    } else {
+                        throw e;
+                    }
                 }
-            }
-
-            try {
-                if (!panic) {
-                    // Consume cursor and deserialize results so we can sort them. Some search cursors may not deliver the result sorted (e.g., LSM search cursor).
-                    ArrayList<Integer> actualResults = new ArrayList<>();
-                    try {
-                        while (resultCursor.hasNext()) {
-                            resultCursor.next();
-                            ITupleReference resultTuple = resultCursor.getTuple();
-                            int actual = IntegerPointable.getInteger(resultTuple.getFieldData(0),
-                                    resultTuple.getFieldStart(0));
-                            actualResults.add(Integer.valueOf(actual));
+                try {
+                    if (!panic) {
+                        // Consume cursor and deserialize results so we can sort them. Some search cursors may not deliver the result sorted (e.g., LSM search cursor).
+                        ArrayList<Integer> actualResults = new ArrayList<>();
+                        try {
+                            while (resultCursor.hasNext()) {
+                                resultCursor.next();
+                                ITupleReference resultTuple = resultCursor.getTuple();
+                                int actual = IntegerPointable.getInteger(resultTuple.getFieldData(0),
+                                        resultTuple.getFieldStart(0));
+                                actualResults.add(Integer.valueOf(actual));
+                            }
+                        } catch (HyracksDataException e) {
+                            if (e.getErrorCode() == ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION) {
+                                // Ignore panic queries.
+                                continue;
+                            } else {
+                                throw e;
+                            }
                         }
-                    } catch (HyracksDataException e) {
-                        if (e.getErrorCode() == ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION) {
-                            // Ignore panic queries.
-                            continue;
-                        } else {
-                            throw e;
+                        Collections.sort(actualResults);
+
+                        // Get expected results.
+                        List<Integer> expectedResults = new ArrayList<>();
+                        LSMInvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(),
+                                searchDocument, tokenizer, testCtx.getFieldSerdes()[0], searchModifier, expectedResults,
+                                testCtx.getInvertedIndexType());
+
+                        Iterator<Integer> expectedIter = expectedResults.iterator();
+                        Iterator<Integer> actualIter = actualResults.iterator();
+                        while (expectedIter.hasNext() && actualIter.hasNext()) {
+                            int expected = expectedIter.next();
+                            int actual = actualIter.next();
+                            if (actual != expected) {
+                                fail("Query results do not match. Encountered: " + actual + ". Expected: " + expected
+                                        + "");
+                            }
+                        }
+                        if (expectedIter.hasNext()) {
+                            fail("Query results do not match. Actual results missing.");
+                        }
+                        if (actualIter.hasNext()) {
+                            fail("Query results do not match. Actual contains too many results.");
                         }
                     }
-                    Collections.sort(actualResults);
-
-                    // Get expected results.
-                    List<Integer> expectedResults = new ArrayList<>();
-                    LSMInvertedIndexTestUtils.getExpectedResults(scanCountArray, testCtx.getCheckTuples(),
-                            searchDocument, tokenizer, testCtx.getFieldSerdes()[0], searchModifier, expectedResults,
-                            testCtx.getInvertedIndexType());
-
-                    Iterator<Integer> expectedIter = expectedResults.iterator();
-                    Iterator<Integer> actualIter = actualResults.iterator();
-                    while (expectedIter.hasNext() && actualIter.hasNext()) {
-                        int expected = expectedIter.next();
-                        int actual = actualIter.next();
-                        if (actual != expected) {
-                            fail("Query results do not match. Encountered: " + actual + ". Expected: " + expected + "");
-                        }
-                    }
-                    if (expectedIter.hasNext()) {
-                        fail("Query results do not match. Actual results missing.");
-                    }
-                    if (actualIter.hasNext()) {
-                        fail("Query results do not match. Actual contains too many results.");
-                    }
+                } finally {
+                    resultCursor.close();
                 }
             } finally {
                 resultCursor.destroy();

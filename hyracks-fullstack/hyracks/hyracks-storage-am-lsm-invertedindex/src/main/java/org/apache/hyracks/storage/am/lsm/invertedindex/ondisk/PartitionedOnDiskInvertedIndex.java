@@ -87,8 +87,8 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
         }
         ctx.getBtreePred().setLowKey(lowSearchKey, true);
         ctx.getBtreePred().setHighKey(highSearchKey, true);
-        ctx.getBtreeAccessor().search(ctx.getBtreeCursor(), ctx.getBtreePred());
         boolean tokenExists = false;
+        ctx.getBtreeAccessor().search(ctx.getBtreeCursor(), ctx.getBtreePred());
         try {
             while (ctx.getBtreeCursor().hasNext()) {
                 ctx.getBtreeCursor().next();
@@ -102,7 +102,6 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
                 tokenExists = true;
             }
         } finally {
-            ctx.getBtreeCursor().destroy();
             ctx.getBtreeCursor().close();
         }
         return tokenExists;

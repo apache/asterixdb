@@ -39,6 +39,8 @@ public interface ITreeIndexAccessor extends IIndexAccessor {
     /**
      * Open the given cursor for a disk-order scan, positioning the cursor to
      * the first leaf tuple.
+     * If this method returns successfully, the cursor is open.
+     * Otherwise, it was not open
      *
      * @param icursor
      *            Cursor to be opened for disk-order scanning.

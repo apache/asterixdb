@@ -352,7 +352,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         try {
             if (fileLogDir.exists()) {
                 List<Long> logFileIds = getLogFileIds();
-                if (logFileIds == null) {
+                if (logFileIds.isEmpty()) {
                     fileId = nextLogFileId;
                     createFileIfNotExists(getLogFilePath(fileId));
                     if (LOGGER.isInfoEnabled()) {
@@ -395,9 +395,11 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     public void deleteOldLogFiles(long checkpointLSN) {
         Long checkpointLSNLogFileID = getLogFileId(checkpointLSN);
         List<Long> logFileIds = getLogFileIds();
-        if (logFileIds != null) {
+        if (!logFileIds.isEmpty()) {
             //sort log files from oldest to newest
             Collections.sort(logFileIds);
+            // remove the last one not to delete the current log file
+            logFileIds.remove(logFileIds.size() - 1);
             /**
              * At this point, any future LogReader should read from LSN >= checkpointLSN
              */
@@ -412,7 +414,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
                             || (txnLogFileId2ReaderCount.containsKey(id) && txnLogFileId2ReaderCount.get(id) > 0)) {
                         break;
                     }
-
                     //delete old log file
                     File file = new File(getLogFilePath(id));
                     file.delete();
@@ -447,12 +448,14 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private long deleteAllLogFiles() {
         txnLogFileId2ReaderCount.clear();
         List<Long> logFileIds = getLogFileIds();
-        if (logFileIds != null) {
+        if (!logFileIds.isEmpty()) {
             for (Long id : logFileIds) {
                 File file = new File(getLogFilePath(id));
+                LOGGER.info("Deleting log file: " + file.getAbsolutePath());
                 if (!file.delete()) {
                     throw new IllegalStateException("Failed to delete a file: " + file.getAbsolutePath());
                 }
+                LOGGER.info("log file: " + file.getAbsolutePath() + " was deleted successfully");
             }
             return logFileIds.get(logFileIds.size() - 1);
         } else {
@@ -464,29 +467,40 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         File fileLogDir = new File(logDir);
         String[] logFileNames = null;
         List<Long> logFileIds = null;
-        if (fileLogDir.exists()) {
-            logFileNames = fileLogDir.list(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    if (name.startsWith(logFilePrefix)) {
-                        return true;
-                    }
-                    return false;
-                }
-            });
-            if (logFileNames != null && logFileNames.length != 0) {
-                logFileIds = new ArrayList<>();
-                for (String fileName : logFileNames) {
-                    logFileIds.add(Long.parseLong(fileName.substring(logFilePrefix.length() + 1)));
-                }
-                Collections.sort(logFileIds, new Comparator<Long>() {
-                    @Override
-                    public int compare(Long arg0, Long arg1) {
-                        return arg0.compareTo(arg1);
-                    }
-                });
-            }
+        if (!fileLogDir.exists()) {
+            LOGGER.log(Level.INFO, "log dir " + logDir + " doesn't exist.  returning empty list");
+            return Collections.emptyList();
         }
+        if (!fileLogDir.isDirectory()) {
+            throw new IllegalStateException("log dir " + logDir + " exists but it is not a directory");
+        }
+        logFileNames = fileLogDir.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                if (name.startsWith(logFilePrefix)) {
+                    return true;
+                }
+                return false;
+            }
+        });
+        if (logFileNames == null) {
+            throw new IllegalStateException("listing of log dir (" + logDir + ") files returned null. "
+                    + "Either an IO error occurred or the dir was just deleted by another process/thread");
+        }
+        if (logFileNames.length == 0) {
+            LOGGER.log(Level.INFO, "the log dir (" + logDir + ") is empty. returning empty list");
+            return Collections.emptyList();
+        }
+        logFileIds = new ArrayList<>();
+        for (String fileName : logFileNames) {
+            logFileIds.add(Long.parseLong(fileName.substring(logFilePrefix.length() + 1)));
+        }
+        Collections.sort(logFileIds, new Comparator<Long>() {
+            @Override
+            public int compare(Long arg0, Long arg1) {
+                return arg0.compareTo(arg1);
+            }
+        });
         return logFileIds;
     }
 
@@ -551,7 +565,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     @Override
     public long getReadableSmallestLSN() {
         List<Long> logFileIds = getLogFileIds();
-        if (logFileIds != null) {
+        if (!logFileIds.isEmpty()) {
             return logFileIds.get(0) * logFileSize;
         } else {
             throw new IllegalStateException("Couldn't find any log files.");
@@ -672,7 +686,6 @@ class LogFlusher implements Callable<Boolean> {
     public void terminate() {
         // make sure the LogFlusher thread started before terminating it.
         InvokeUtil.doUninterruptibly(started::acquire);
-
         stopping = true;
 
         // we must tell any active flush, if any, to stop

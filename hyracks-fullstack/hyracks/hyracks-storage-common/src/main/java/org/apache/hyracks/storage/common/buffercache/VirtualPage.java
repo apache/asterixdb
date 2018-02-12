@@ -141,8 +141,9 @@ public class VirtualPage implements ICachedPage {
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append("{\"class\":\"" + getClass().getSimpleName() + "\", \"readers\":" + getReadLatchCount()
-                + ",\"writers\":" + (isWriteLatched()));
+        str.append("{\"class\":\"").append(getClass().getSimpleName()).append("\", \"readers\":")
+                .append(getReadLatchCount()).append(",\"writers\":").append(isWriteLatched());
+        str.append(",\"next\":").append(next);
         str.append("}");
         return str.toString();
     }

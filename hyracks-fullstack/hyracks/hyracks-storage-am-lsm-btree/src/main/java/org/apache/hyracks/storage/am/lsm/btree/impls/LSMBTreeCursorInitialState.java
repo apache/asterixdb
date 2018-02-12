@@ -36,11 +36,10 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
     private MultiComparator cmp;
     private final MultiComparator bloomFilterCmp;
     private final ILSMHarness lsmHarness;
-
     private ISearchPredicate predicate;
     private ISearchOperationCallback searchCallback;
-
     private List<ILSMComponent> operationalComponents;
+    private boolean isDiskComponentScan;
 
     public LSMBTreeCursorInitialState(ITreeIndexFrameFactory leafFrameFactory, MultiComparator cmp,
             MultiComparator bloomFilterCmp, ILSMHarness lsmHarness, ISearchPredicate predicate,
@@ -105,7 +104,16 @@ public class LSMBTreeCursorInitialState implements ICursorInitialState {
 
     // make the cursor initial state re-usable
     public void reset(ISearchPredicate predicate, List<ILSMComponent> operationalComponents) {
+        isDiskComponentScan = false;
         this.predicate = predicate;
         this.operationalComponents = operationalComponents;
+    }
+
+    public void setDiskComponentScan(boolean isDiskComponentScan) {
+        this.isDiskComponentScan = isDiskComponentScan;
+    }
+
+    public boolean isDiskComponentScan() {
+        return isDiskComponentScan;
     }
 }

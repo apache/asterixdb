@@ -72,18 +72,25 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         MultiComparator cmp = RTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), key);
 
         IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor(false);
-        SearchPredicate searchPred = new SearchPredicate(key, cmp);
-        ctx.getIndexAccessor().search(searchCursor, searchPred);
+        try {
+            SearchPredicate searchPred = new SearchPredicate(key, cmp);
+            ctx.getIndexAccessor().search(searchCursor, searchPred);
+            try {
+                // Get the subset of elements from the expected set within given key
+                // range.
+                RTreeCheckTuple keyCheck =
+                        (RTreeCheckTuple) createCheckTupleFromTuple(key, ctx.getFieldSerdes(), cmp.getKeyFieldCount());
 
-        // Get the subset of elements from the expected set within given key
-        // range.
-        RTreeCheckTuple keyCheck =
-                (RTreeCheckTuple) createCheckTupleFromTuple(key, ctx.getFieldSerdes(), cmp.getKeyFieldCount());
+                HashMultiSet<RTreeCheckTuple> expectedResult = null;
 
-        HashMultiSet<RTreeCheckTuple> expectedResult = null;
-
-        expectedResult = getRangeSearchExpectedResults(ctx.getCheckTuples(), keyCheck);
-        checkExpectedResults(searchCursor, expectedResult, ctx.getFieldSerdes(), ctx.getKeyFieldCount(), null);
+                expectedResult = getRangeSearchExpectedResults(ctx.getCheckTuples(), keyCheck);
+                checkExpectedResults(searchCursor, expectedResult, ctx.getFieldSerdes(), ctx.getKeyFieldCount(), null);
+            } finally {
+                searchCursor.close();
+            }
+        } finally {
+            searchCursor.destroy();
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -176,27 +183,22 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
     public void checkExpectedResults(IIndexCursor cursor, Collection checkTuples, ISerializerDeserializer[] fieldSerdes,
             int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception {
         int actualCount = 0;
-        try {
-            while (cursor.hasNext()) {
-                cursor.next();
-                ITupleReference tuple = cursor.getTuple();
-                RTreeCheckTuple checkTuple =
-                        (RTreeCheckTuple) createCheckTupleFromTuple(tuple, fieldSerdes, keyFieldCount);
-                if (!checkTuples.contains(checkTuple)) {
-                    fail("Scan or range search returned unexpected answer: " + checkTuple.toString());
-                }
-                actualCount++;
+        while (cursor.hasNext()) {
+            cursor.next();
+            ITupleReference tuple = cursor.getTuple();
+            RTreeCheckTuple checkTuple = (RTreeCheckTuple) createCheckTupleFromTuple(tuple, fieldSerdes, keyFieldCount);
+            if (!checkTuples.contains(checkTuple)) {
+                fail("Scan or range search returned unexpected answer: " + checkTuple.toString());
             }
-            if (actualCount < checkTuples.size()) {
-                fail("Scan or range search returned fewer answers than expected.\nExpected: " + checkTuples.size()
-                        + "\nActual  : " + actualCount);
-            }
-            if (actualCount > checkTuples.size()) {
-                fail("Scan or range search returned more answers than expected.\nExpected: " + checkTuples.size()
-                        + "\nActual  : " + actualCount);
-            }
-        } finally {
-            cursor.destroy();
+            actualCount++;
+        }
+        if (actualCount < checkTuples.size()) {
+            fail("Scan or range search returned fewer answers than expected.\nExpected: " + checkTuples.size()
+                    + "\nActual  : " + actualCount);
+        }
+        if (actualCount > checkTuples.size()) {
+            fail("Scan or range search returned more answers than expected.\nExpected: " + checkTuples.size()
+                    + "\nActual  : " + actualCount);
         }
     }
 

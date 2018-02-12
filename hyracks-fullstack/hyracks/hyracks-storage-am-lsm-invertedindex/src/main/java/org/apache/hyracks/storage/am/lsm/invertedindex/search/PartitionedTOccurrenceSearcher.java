@@ -92,16 +92,14 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
         IPartitionedInvertedIndex partInvIndex = (IPartitionedInvertedIndex) invIndex;
         searchResult.reset();
         if (partInvIndex.isEmpty()) {
+            resultCursor.open(null, searchPred);
             return;
         }
-
         tokenizeQuery(searchPred);
         short numQueryTokens = (short) queryTokenAppender.getTupleCount();
-
         IInvertedIndexSearchModifier searchModifier = searchPred.getSearchModifier();
         short numTokensLowerBound = searchModifier.getNumTokensLowerBound(numQueryTokens);
         short numTokensUpperBound = searchModifier.getNumTokensUpperBound(numQueryTokens);
-
         occurrenceThreshold = searchModifier.getOccurrenceThreshold(numQueryTokens);
         if (occurrenceThreshold <= 0) {
             throw HyracksDataException.create(ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION);
@@ -118,15 +116,14 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
                 maxCountPossible--;
                 // No results possible.
                 if (maxCountPossible < occurrenceThreshold) {
+                    resultCursor.open(null, searchPred);
                     return;
                 }
             }
         }
-
         ArrayList<IInvertedListCursor>[] partitionCursors = partitions.getPartitions();
         short start = partitions.getMinValidPartitionIndex();
         short end = partitions.getMaxValidPartitionIndex();
-
         // Typically, we only enter this case for disk-based inverted indexes.
         // TODO: This behavior could potentially lead to a deadlock if we cannot pin
         // all inverted lists in memory, and are forced to wait for a page to get evicted
@@ -165,7 +162,6 @@ public class PartitionedTOccurrenceSearcher extends AbstractTOccurrenceSearcher 
             invListMerger.reset();
             invListMerger.merge(partitionCursors[i], occurrenceThreshold, numPrefixLists, searchResult);
         }
-
         resultCursor.open(null, searchPred);
     }
 

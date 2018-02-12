@@ -37,7 +37,6 @@ public interface IIndexBulkLoader {
     /**
      * Finalize the bulk loading operation in the given context.
      *
-     * @throws IndexException
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.
      */
@@ -46,6 +45,9 @@ public interface IIndexBulkLoader {
     /**
      * Release all resources held by this bulkloader, with no guarantee of
      * persisted content.
+     *
+     * @throws HyracksDataException
+     *             If the operation was completed through end() invocation before abort is called
      */
     void abort() throws HyracksDataException;
 }

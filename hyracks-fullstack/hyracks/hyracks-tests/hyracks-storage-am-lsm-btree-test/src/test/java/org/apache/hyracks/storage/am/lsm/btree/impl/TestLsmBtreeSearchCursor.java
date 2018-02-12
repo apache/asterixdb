@@ -35,7 +35,7 @@ public class TestLsmBtreeSearchCursor extends LSMBTreeSearchCursor {
     }
 
     @Override
-    public void next() throws HyracksDataException {
+    public void doNext() throws HyracksDataException {
         try {
             List<ITestOpCallback<Semaphore>> callbacks = lsmBtree.getSearchCallbacks();
             synchronized (callbacks) {
@@ -47,6 +47,6 @@ public class TestLsmBtreeSearchCursor extends LSMBTreeSearchCursor {
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
-        super.next();
+        super.doNext();
     }
 }

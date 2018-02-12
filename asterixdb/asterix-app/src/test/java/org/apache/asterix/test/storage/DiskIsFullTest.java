@@ -33,6 +33,9 @@ import org.apache.asterix.app.data.gen.TupleGenerator.GenerationFunction;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
+import org.apache.asterix.common.transactions.ITransactionContext;
+import org.apache.asterix.common.transactions.ITransactionManager;
+import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -128,35 +131,46 @@ public class DiskIsFullTest {
                         KEY_INDICATOR_LIST, 0);
                 JobId jobId = nc.newJobId();
                 IHyracksTaskContext ctx = nc.createTestContext(jobId, 0, false);
+                ITransactionContext txnCtx = nc.getTransactionManager().beginTransaction(nc.getTxnJobId(ctx),
+                        new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL));
                 // Prepare insert operation
                 LSMInsertDeleteOperatorNodePushable insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES,
                         RECORD_TYPE, META_TYPE, null, KEY_INDEXES, KEY_INDICATOR_LIST, storageManager, null).getLeft();
-                insertOp.open();
-                TupleGenerator tupleGenerator = new TupleGenerator(RECORD_TYPE, META_TYPE, KEY_INDEXES, KEY_INDICATOR,
-                        RECORD_GEN_FUNCTION, UNIQUE_RECORD_FIELDS, META_GEN_FUNCTION, UNIQUE_META_FIELDS);
-                VSizeFrame frame = new VSizeFrame(ctx);
-                FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
-                // Insert records until disk becomes full
-                int tupleCount = 100000;
-                while (tupleCount > 0) {
-                    ITupleReference tuple = tupleGenerator.next();
-                    try {
-                        DataflowUtils.addTupleToFrame(tupleAppender, tuple, insertOp);
-                    } catch (Throwable t) {
-                        final Throwable rootCause = ExceptionUtils.getRootCause(t);
-                        rootCause.printStackTrace();
-                        if (rootCause instanceof HyracksDataException) {
-                            HyracksDataException cause = (HyracksDataException) rootCause;
-                            Assert.assertEquals(cause.getErrorCode(), expectedException.getErrorCode());
-                            Assert.assertEquals(cause.getMessage(), expectedException.getMessage());
-                            return;
-                        } else {
-                            break;
+                try {
+                    insertOp.open();
+                    TupleGenerator tupleGenerator =
+                            new TupleGenerator(RECORD_TYPE, META_TYPE, KEY_INDEXES, KEY_INDICATOR, RECORD_GEN_FUNCTION,
+                                    UNIQUE_RECORD_FIELDS, META_GEN_FUNCTION, UNIQUE_META_FIELDS);
+                    VSizeFrame frame = new VSizeFrame(ctx);
+                    FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
+                    // Insert records until disk becomes full
+                    int tupleCount = 100000;
+                    while (tupleCount > 0) {
+                        ITupleReference tuple = tupleGenerator.next();
+                        try {
+                            DataflowUtils.addTupleToFrame(tupleAppender, tuple, insertOp);
+                        } catch (Throwable t) {
+                            final Throwable rootCause = ExceptionUtils.getRootCause(t);
+                            rootCause.printStackTrace();
+                            if (rootCause instanceof HyracksDataException) {
+                                HyracksDataException cause = (HyracksDataException) rootCause;
+                                Assert.assertEquals(cause.getErrorCode(), expectedException.getErrorCode());
+                                Assert.assertEquals(cause.getMessage(), expectedException.getMessage());
+                                return;
+                            } else {
+                                break;
+                            }
                         }
+                        tupleCount--;
                     }
-                    tupleCount--;
+                    Assert.fail("Expected exception (" + expectedException + ") was not thrown");
+                } finally {
+                    try {
+                        insertOp.close();
+                    } finally {
+                        nc.getTransactionManager().abortTransaction(txnCtx.getTxnId());
+                    }
                 }
-                Assert.fail("Expected exception (" + expectedException + ") was not thrown");
             } finally {
                 nc.deInit();
             }

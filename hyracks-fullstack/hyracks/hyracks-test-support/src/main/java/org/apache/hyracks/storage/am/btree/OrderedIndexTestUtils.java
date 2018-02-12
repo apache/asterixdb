@@ -99,37 +99,42 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), lowKey);
         MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), highKey);
         IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor(false);
-        RangePredicate rangePred =
-                new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp, highKeyCmp);
-        ctx.getIndexAccessor().search(searchCursor, rangePred);
-        // Get the subset of elements from the expected set within given key
-        // range.
-        CheckTuple lowKeyCheck = createCheckTupleFromTuple(lowKey, ctx.getFieldSerdes(), lowKeyCmp.getKeyFieldCount());
-        CheckTuple highKeyCheck =
-                createCheckTupleFromTuple(highKey, ctx.getFieldSerdes(), highKeyCmp.getKeyFieldCount());
-        SortedSet<CheckTuple> expectedSubset = null;
-        if (lowKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()
-                || highKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()) {
-            // Searching on a key prefix (low key or high key or both).
-            expectedSubset =
-                    getPrefixExpectedSubset((TreeSet<CheckTuple>) ctx.getCheckTuples(), lowKeyCheck, highKeyCheck);
-        } else {
-            // Searching on all key fields.
-            expectedSubset = ((TreeSet<CheckTuple>) ctx.getCheckTuples()).subSet(lowKeyCheck, lowKeyInclusive,
-                    highKeyCheck, highKeyInclusive);
-        }
-        Iterator<CheckTuple> checkIter = expectedSubset.iterator();
-        int actualCount = 0;
         try {
-            while (searchCursor.hasNext()) {
-                if (!checkIter.hasNext()) {
-                    fail("Range search returned more answers than expected.\nExpected: " + expectedSubset.size());
+            RangePredicate rangePred =
+                    new RangePredicate(lowKey, highKey, lowKeyInclusive, highKeyInclusive, lowKeyCmp, highKeyCmp);
+            int actualCount = 0;
+            SortedSet<CheckTuple> expectedSubset = null;
+            ctx.getIndexAccessor().search(searchCursor, rangePred);
+            try {
+                // Get the subset of elements from the expected set within given key
+                // range.
+                CheckTuple lowKeyCheck =
+                        createCheckTupleFromTuple(lowKey, ctx.getFieldSerdes(), lowKeyCmp.getKeyFieldCount());
+                CheckTuple highKeyCheck =
+                        createCheckTupleFromTuple(highKey, ctx.getFieldSerdes(), highKeyCmp.getKeyFieldCount());
+                if (lowKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()
+                        || highKeyCmp.getKeyFieldCount() < ctx.getKeyFieldCount()) {
+                    // Searching on a key prefix (low key or high key or both).
+                    expectedSubset = getPrefixExpectedSubset((TreeSet<CheckTuple>) ctx.getCheckTuples(), lowKeyCheck,
+                            highKeyCheck);
+                } else {
+                    // Searching on all key fields.
+                    expectedSubset = ((TreeSet<CheckTuple>) ctx.getCheckTuples()).subSet(lowKeyCheck, lowKeyInclusive,
+                            highKeyCheck, highKeyInclusive);
                 }
-                searchCursor.next();
-                CheckTuple expectedTuple = checkIter.next();
-                ITupleReference tuple = searchCursor.getTuple();
-                compareActualAndExpected(tuple, expectedTuple, ctx.getFieldSerdes());
-                actualCount++;
+                Iterator<CheckTuple> checkIter = expectedSubset.iterator();
+                while (searchCursor.hasNext()) {
+                    if (!checkIter.hasNext()) {
+                        fail("Range search returned more answers than expected.\nExpected: " + expectedSubset.size());
+                    }
+                    searchCursor.next();
+                    CheckTuple expectedTuple = checkIter.next();
+                    ITupleReference tuple = searchCursor.getTuple();
+                    compareActualAndExpected(tuple, expectedTuple, ctx.getFieldSerdes());
+                    actualCount++;
+                }
+            } finally {
+                searchCursor.close();
             }
             if (actualCount < expectedSubset.size()) {
                 fail("Range search returned fewer answers than expected.\nExpected: " + expectedSubset.size()
@@ -146,41 +151,43 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
         }
         OrderedIndexTestContext ctx = (OrderedIndexTestContext) ictx;
         IIndexCursor searchCursor = ctx.getIndexAccessor().createSearchCursor(false);
+        try {
+            ArrayTupleBuilder lowKeyBuilder = new ArrayTupleBuilder(ctx.getKeyFieldCount());
+            ArrayTupleReference lowKey = new ArrayTupleReference();
+            ArrayTupleBuilder highKeyBuilder = new ArrayTupleBuilder(ctx.getKeyFieldCount());
+            ArrayTupleReference highKey = new ArrayTupleReference();
+            RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, null, null);
 
-        ArrayTupleBuilder lowKeyBuilder = new ArrayTupleBuilder(ctx.getKeyFieldCount());
-        ArrayTupleReference lowKey = new ArrayTupleReference();
-        ArrayTupleBuilder highKeyBuilder = new ArrayTupleBuilder(ctx.getKeyFieldCount());
-        ArrayTupleReference highKey = new ArrayTupleReference();
-        RangePredicate rangePred = new RangePredicate(lowKey, highKey, true, true, null, null);
+            // Iterate through expected tuples, and perform a point search in the
+            // BTree to verify the tuple can be reached.
+            for (CheckTuple checkTuple : ctx.getCheckTuples()) {
+                createTupleFromCheckTuple(checkTuple, lowKeyBuilder, lowKey, ctx.getFieldSerdes());
+                createTupleFromCheckTuple(checkTuple, highKeyBuilder, highKey, ctx.getFieldSerdes());
+                MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), lowKey);
+                MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), highKey);
 
-        // Iterate through expected tuples, and perform a point search in the
-        // BTree to verify the tuple can be reached.
-        for (CheckTuple checkTuple : ctx.getCheckTuples()) {
-            createTupleFromCheckTuple(checkTuple, lowKeyBuilder, lowKey, ctx.getFieldSerdes());
-            createTupleFromCheckTuple(checkTuple, highKeyBuilder, highKey, ctx.getFieldSerdes());
-            MultiComparator lowKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), lowKey);
-            MultiComparator highKeyCmp = BTreeUtils.getSearchMultiComparator(ctx.getComparatorFactories(), highKey);
+                rangePred.setLowKey(lowKey, true);
+                rangePred.setHighKey(highKey, true);
+                rangePred.setLowKeyComparator(lowKeyCmp);
+                rangePred.setHighKeyComparator(highKeyCmp);
 
-            rangePred.setLowKey(lowKey, true);
-            rangePred.setHighKey(highKey, true);
-            rangePred.setLowKeyComparator(lowKeyCmp);
-            rangePred.setHighKeyComparator(highKeyCmp);
-
-            ctx.getIndexAccessor().search(searchCursor, rangePred);
-
-            try {
-                // We expect exactly one answer.
-                if (searchCursor.hasNext()) {
-                    searchCursor.next();
-                    ITupleReference tuple = searchCursor.getTuple();
-                    compareActualAndExpected(tuple, checkTuple, ctx.getFieldSerdes());
+                ctx.getIndexAccessor().search(searchCursor, rangePred);
+                try {
+                    // We expect exactly one answer.
+                    if (searchCursor.hasNext()) {
+                        searchCursor.next();
+                        ITupleReference tuple = searchCursor.getTuple();
+                        compareActualAndExpected(tuple, checkTuple, ctx.getFieldSerdes());
+                    }
+                    if (searchCursor.hasNext()) {
+                        fail("Point search returned more than one answer.");
+                    }
+                } finally {
+                    searchCursor.close();
                 }
-                if (searchCursor.hasNext()) {
-                    fail("Point search returned more than one answer.");
-                }
-            } finally {
-                searchCursor.destroy();
             }
+        } finally {
+            searchCursor.destroy();
         }
     }
 
@@ -479,25 +486,20 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
     public void checkExpectedResults(IIndexCursor cursor, Collection checkTuples, ISerializerDeserializer[] fieldSerdes,
             int keyFieldCount, Iterator<CheckTuple> checkIter) throws Exception {
         int actualCount = 0;
-        try {
-            while (cursor.hasNext()) {
-                if (!checkIter.hasNext()) {
-                    fail("Ordered scan returned more answers than expected.\nExpected: " + checkTuples.size());
-                }
-                cursor.next();
-                CheckTuple expectedTuple = checkIter.next();
-                ITupleReference tuple = cursor.getTuple();
-                compareActualAndExpected(tuple, expectedTuple, fieldSerdes);
-                actualCount++;
+        while (cursor.hasNext()) {
+            if (!checkIter.hasNext()) {
+                fail("Ordered scan returned more answers than expected.\nExpected: " + checkTuples.size());
             }
-            if (actualCount < checkTuples.size()) {
-                fail("Ordered scan returned fewer answers than expected.\nExpected: " + checkTuples.size()
-                        + "\nActual  : " + actualCount);
-            }
-        } finally {
-            cursor.destroy();
+            cursor.next();
+            CheckTuple expectedTuple = checkIter.next();
+            ITupleReference tuple = cursor.getTuple();
+            compareActualAndExpected(tuple, expectedTuple, fieldSerdes);
+            actualCount++;
         }
-
+        if (actualCount < checkTuples.size()) {
+            fail("Ordered scan returned fewer answers than expected.\nExpected: " + checkTuples.size() + "\nActual  : "
+                    + actualCount);
+        }
     }
 
     @Override

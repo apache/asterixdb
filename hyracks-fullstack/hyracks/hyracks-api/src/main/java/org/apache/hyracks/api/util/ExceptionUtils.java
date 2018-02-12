@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.common.utils;
+package org.apache.hyracks.api.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,4 +83,26 @@ public class ExceptionUtils {
         return true;
     }
 
+    /**
+     * Suppress the second exception if not null into the first exception if not null.
+     * If the suppressed exception is an instance of InterruptedException, the current thread is interrupted.
+     *
+     * @param first
+     *            the root failure
+     * @param second
+     *            the subsequent failure
+     * @return the root exception, or null if both parameters are null
+     */
+    public static Throwable suppress(Throwable first, Throwable second) {
+        if (second != null && second instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
+        }
+        if (first == null) {
+            return second;
+        } else if (second == null) {
+            return first;
+        }
+        first.addSuppressed(second);
+        return first;
+    }
 }

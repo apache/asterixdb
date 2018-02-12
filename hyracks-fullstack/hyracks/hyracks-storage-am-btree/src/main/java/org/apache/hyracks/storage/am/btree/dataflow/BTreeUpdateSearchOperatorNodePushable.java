@@ -29,10 +29,10 @@ import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
 import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITupleUpdater;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.common.IIndexCursor;
 
 public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNodePushable {
     private final ITupleUpdater tupleUpdater;
@@ -49,7 +49,7 @@ public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNo
     }
 
     @Override
-    protected ITreeIndexCursor createCursor() {
+    protected IIndexCursor createCursor() {
         ITreeIndex treeIndex = (ITreeIndex) index;
         ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
         return new BTreeRangeSearchCursor((IBTreeLeafFrame) cursorFrame, true);

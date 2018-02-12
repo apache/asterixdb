@@ -30,12 +30,21 @@ public class HyracksDataException extends HyracksException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Wrap the failure cause in a HyracksDataException.
+     * If the cause is an InterruptedException, the thread is interrupted first.
+     * If the cause is already a HyracksDataException, then return it as it is.
+     *
+     * @param cause
+     *            the root failure
+     * @return the wrapped failure
+     */
     public static HyracksDataException create(Throwable cause) {
-        if (cause instanceof HyracksDataException || cause == null) {
+        if (cause == null) {
+            throw new NullPointerException("Attempt to wrap null in a HyracksDataException");
+        }
+        if (cause instanceof HyracksDataException) {
             return (HyracksDataException) cause;
-        } else if (cause instanceof Error) {
-            // don't wrap errors, allow them to propagate
-            throw (Error) cause;
         } else if (cause instanceof InterruptedException) {
             Thread.currentThread().interrupt();
         }
@@ -48,21 +57,6 @@ public class HyracksDataException extends HyracksException {
 
     public static HyracksDataException create(int code, Throwable cause, Serializable... params) {
         return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), cause, params);
-    }
-
-    public static HyracksDataException suppress(HyracksDataException root, Throwable th) {
-        if (root == null) {
-            return HyracksDataException.create(th);
-        }
-        if (th instanceof Error) {
-            // don't suppress errors into a HyracksDataException, allow them to propagate
-            th.addSuppressed(root);
-            throw (Error) th;
-        } else if (th instanceof InterruptedException) {
-            Thread.currentThread().interrupt();
-        }
-        root.addSuppressed(th);
-        return root;
     }
 
     public HyracksDataException(String component, int errorCode, String message, Throwable cause, String nodeId,

@@ -38,7 +38,7 @@ public interface IInvertedListCursor extends Comparable<IInvertedListCursor> {
     public ITupleReference getTuple();
 
     // getters
-    public int size();
+    public int size() throws HyracksDataException;
 
     public int getStartPageId();
 

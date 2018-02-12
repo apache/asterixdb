@@ -126,25 +126,30 @@ public class LSMBTreeSearchOperationCallbackTest extends AbstractSearchOperation
                 if (!insertTaskStarted) {
                     condition.await();
                 }
-
                 // begin a search on [50, +inf), blocking on 75
                 TupleUtils.createIntegerTuple(builder, tuple, 50);
                 predicate.setLowKey(tuple, true);
                 predicate.setHighKey(null, true);
                 accessor.search(cursor, predicate);
-                expectedTupleToBeLockedValue = 50;
-                TupleUtils.createIntegerTuple(builder, expectedTupleToBeLocked, expectedTupleToBeLockedValue);
-                consumeIntTupleRange(50, 75, true, 76);
+                try {
+                    expectedTupleToBeLockedValue = 50;
+                    TupleUtils.createIntegerTuple(builder, expectedTupleToBeLocked, expectedTupleToBeLockedValue);
+                    consumeIntTupleRange(50, 75, true, 76);
 
-                // consume tuples [77, 150], blocking on 151
-                consumeIntTupleRange(77, 150, true, 150);
+                    // consume tuples [77, 150], blocking on 151
+                    consumeIntTupleRange(77, 150, true, 150);
 
-                // consume tuples [152, 300]
-                consumeIntTupleRange(152, 300, false, -1);
-
-                cursor.destroy();
+                    // consume tuples [152, 300]
+                    consumeIntTupleRange(152, 300, false, -1);
+                } finally {
+                    cursor.close();
+                }
             } finally {
-                lock.unlock();
+                try {
+                    cursor.destroy();
+                } finally {
+                    lock.unlock();
+                }
             }
 
             return true;

@@ -46,7 +46,7 @@ public class LSMRTreeDeletedKeysBTreeMergeCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+    public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMRTreeCursorInitialState lsmInitialState = (LSMRTreeCursorInitialState) initialState;
         cmp = lsmInitialState.getBTreeCmp();
         operationalComponents = lsmInitialState.getOperationalComponents();

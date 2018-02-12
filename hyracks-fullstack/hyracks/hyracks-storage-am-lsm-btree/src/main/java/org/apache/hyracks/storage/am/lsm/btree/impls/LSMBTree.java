@@ -180,22 +180,24 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         predicate.setLowKey(tuple);
         if (needKeyDupCheck) {
             // first check the inmemory component
+            boolean found;
             ctx.getCurrentMutableBTreeAccessor().search(memCursor, predicate);
             try {
-                if (memCursor.hasNext()) {
+                found = memCursor.hasNext();
+                if (found) {
                     memCursor.next();
                     LSMBTreeTupleReference lsmbtreeTuple = (LSMBTreeTupleReference) memCursor.getTuple();
                     if (!lsmbtreeTuple.isAntimatter()) {
                         throw HyracksDataException.create(ErrorCode.DUPLICATE_KEY);
-                    } else {
-                        memCursor.destroy();
-                        ctx.getCurrentMutableBTreeAccessor().upsertIfConditionElseInsert(tuple,
-                                AntimatterAwareTupleAcceptor.INSTANCE);
-                        return true;
                     }
                 }
             } finally {
-                memCursor.destroy();
+                memCursor.close();
+            }
+            if (found) {
+                ctx.getCurrentMutableBTreeAccessor().upsertIfConditionElseInsert(tuple,
+                        AntimatterAwareTupleAcceptor.INSTANCE);
+                return true;
             }
 
             // TODO: Can we just remove the above code that search the mutable
@@ -213,7 +215,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                     throw HyracksDataException.create(ErrorCode.DUPLICATE_KEY);
                 }
             } finally {
-                searchCursor.destroy();
+                searchCursor.close();
                 // Add the current active mutable component back
                 ctx.getComponentHolder().add(0, firstComponent);
             }
@@ -241,7 +243,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         MultiComparator comp = MultiComparator.create(getComparatorFactories());
         ISearchPredicate pred = new RangePredicate(null, null, true, true, comp, comp);
         ctx.getSearchInitialState().reset(pred, operationalComponents);
-        ((LSMBTreeSearchCursor) cursor).scan(ctx.getSearchInitialState(), pred);
+        ctx.getSearchInitialState().setDiskComponentScan(true);
+        ((LSMBTreeSearchCursor) cursor).open(ctx.getSearchInitialState(), pred);
     }
 
     @Override
@@ -249,46 +252,55 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         LSMBTreeFlushOperation flushOp = (LSMBTreeFlushOperation) operation;
         LSMBTreeMemoryComponent flushingComponent = (LSMBTreeMemoryComponent) flushOp.getFlushingComponent();
         IIndexAccessor accessor = flushingComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
-
-        RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
-        long numElements = 0L;
-        if (hasBloomFilter) {
-            //count elements in btree for creating Bloomfilter
-            IIndexCursor countingCursor = ((BTreeAccessor) accessor).createCountingSearchCursor();
-            accessor.search(countingCursor, nullPred);
+        ILSMDiskComponent component;
+        ILSMDiskComponentBulkLoader componentBulkLoader;
+        try {
+            RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
+            long numElements = 0L;
+            if (hasBloomFilter) {
+                //count elements in btree for creating Bloomfilter
+                IIndexCursor countingCursor = ((BTreeAccessor) accessor).createCountingSearchCursor();
+                accessor.search(countingCursor, nullPred);
+                try {
+                    while (countingCursor.hasNext()) {
+                        countingCursor.next();
+                        ITupleReference countTuple = countingCursor.getTuple();
+                        numElements =
+                                IntegerPointable.getInteger(countTuple.getFieldData(0), countTuple.getFieldStart(0));
+                    }
+                } finally {
+                    try {
+                        countingCursor.close();
+                    } finally {
+                        countingCursor.destroy();
+                    }
+                }
+            }
+            component = createDiskComponent(componentFactory, flushOp.getTarget(), null, flushOp.getBloomFilterTarget(),
+                    true);
+            componentBulkLoader = component.createBulkLoader(1.0f, false, numElements, false, false, false);
+            IIndexCursor scanCursor = accessor.createSearchCursor(false);
+            accessor.search(scanCursor, nullPred);
             try {
-                while (countingCursor.hasNext()) {
-                    countingCursor.next();
-                    ITupleReference countTuple = countingCursor.getTuple();
-                    numElements = IntegerPointable.getInteger(countTuple.getFieldData(0), countTuple.getFieldStart(0));
+                while (scanCursor.hasNext()) {
+                    scanCursor.next();
+                    // we can safely throw away updated tuples in secondary BTree components, because they correspond to
+                    // deleted tuples
+                    if (updateAware && ((LSMBTreeTupleReference) scanCursor.getTuple()).isUpdated()) {
+                        continue;
+                    }
+                    componentBulkLoader.add(scanCursor.getTuple());
                 }
             } finally {
-                countingCursor.destroy();
-            }
-        }
-
-        ILSMDiskComponent component =
-                createDiskComponent(componentFactory, flushOp.getTarget(), null, flushOp.getBloomFilterTarget(), true);
-
-        ILSMDiskComponentBulkLoader componentBulkLoader =
-                component.createBulkLoader(1.0f, false, numElements, false, false, false);
-
-        IIndexCursor scanCursor = accessor.createSearchCursor(false);
-        accessor.search(scanCursor, nullPred);
-        try {
-            while (scanCursor.hasNext()) {
-                scanCursor.next();
-                // we can safely throw away updated tuples in secondary BTree components, because they correspond to
-                // deleted tuples
-                if (updateAware && ((LSMBTreeTupleReference) scanCursor.getTuple()).isUpdated()) {
-                    continue;
+                try {
+                    scanCursor.close();
+                } finally {
+                    scanCursor.destroy();
                 }
-                componentBulkLoader.add(scanCursor.getTuple());
             }
         } finally {
-            scanCursor.destroy();
+            accessor.destroy();
         }
-
         if (component.getLSMComponentFilter() != null) {
             List<ITupleReference> filterTuples = new ArrayList<>();
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
@@ -313,9 +325,55 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     public ILSMDiskComponent doMerge(ILSMIOOperation operation) throws HyracksDataException {
         LSMBTreeMergeOperation mergeOp = (LSMBTreeMergeOperation) operation;
         IIndexCursor cursor = mergeOp.getCursor();
-        RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
-        search(mergeOp.getAccessor().getOpContext(), cursor, rangePred);
-        List<ILSMComponent> mergedComponents = mergeOp.getMergingComponents();
+        ILSMDiskComponent mergedComponent;
+        ILSMDiskComponentBulkLoader componentBulkLoader = null;
+        try {
+            try {
+                RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
+                search(mergeOp.getAccessor().getOpContext(), cursor, rangePred);
+                try {
+                    List<ILSMComponent> mergedComponents = mergeOp.getMergingComponents();
+                    long numElements = getNumberOfElements(mergedComponents);
+                    mergedComponent = createDiskComponent(componentFactory, mergeOp.getTarget(), null,
+                            mergeOp.getBloomFilterTarget(), true);
+                    componentBulkLoader =
+                            mergedComponent.createBulkLoader(1.0f, false, numElements, false, false, false);
+                    while (cursor.hasNext()) {
+                        cursor.next();
+                        ITupleReference frameTuple = cursor.getTuple();
+                        componentBulkLoader.add(frameTuple);
+                    }
+                } finally {
+                    cursor.close();
+                }
+            } finally {
+                cursor.destroy();
+            }
+            if (mergedComponent.getLSMComponentFilter() != null) {
+                List<ITupleReference> filterTuples = new ArrayList<>();
+                for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
+                    filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMinTuple());
+                    filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMaxTuple());
+                }
+                getFilterManager().updateFilter(mergedComponent.getLSMComponentFilter(), filterTuples);
+                getFilterManager().writeFilter(mergedComponent.getLSMComponentFilter(),
+                        mergedComponent.getMetadataHolder());
+            }
+        } catch (Throwable e) { // NOSONAR.. As per the contract, we should either abort or end
+            try {
+                if (componentBulkLoader != null) {
+                    componentBulkLoader.abort();
+                }
+            } catch (Throwable th) { // NOSONAR Don't lose the root failure
+                e.addSuppressed(th);
+            }
+            throw e;
+        }
+        componentBulkLoader.end();
+        return mergedComponent;
+    }
+
+    private long getNumberOfElements(List<ILSMComponent> mergedComponents) throws HyracksDataException {
         long numElements = 0L;
         if (hasBloomFilter) {
             //count elements in btree for creating Bloomfilter
@@ -324,32 +382,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                         .getNumElements();
             }
         }
-        ILSMDiskComponent mergedComponent =
-                createDiskComponent(componentFactory, mergeOp.getTarget(), null, mergeOp.getBloomFilterTarget(), true);
-
-        ILSMDiskComponentBulkLoader componentBulkLoader =
-                mergedComponent.createBulkLoader(1.0f, false, numElements, false, false, false);
-        try {
-            while (cursor.hasNext()) {
-                cursor.next();
-                ITupleReference frameTuple = cursor.getTuple();
-                componentBulkLoader.add(frameTuple);
-            }
-        } finally {
-            cursor.destroy();
-        }
-        if (mergedComponent.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<>();
-            for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
-                filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMinTuple());
-                filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMaxTuple());
-            }
-            getFilterManager().updateFilter(mergedComponent.getLSMComponentFilter(), filterTuples);
-            getFilterManager().writeFilter(mergedComponent.getLSMComponentFilter(),
-                    mergedComponent.getMetadataHolder());
-        }
-        componentBulkLoader.end();
-        return mergedComponent;
+        return numElements;
     }
 
     @Override

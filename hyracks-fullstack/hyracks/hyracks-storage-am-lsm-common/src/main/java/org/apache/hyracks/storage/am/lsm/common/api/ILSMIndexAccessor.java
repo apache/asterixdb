@@ -245,6 +245,9 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      * The returned tuples are first ordered on primary key, and then ordered on the descending order of
      * disk_component_position (older components get returned first)
      *
+     * If this method returns successfully, then the cursor has been opened. If an exception is thrown then
+     * the cursor was not opened
+     *
      * @param icursor
      *            Cursor over the index entries satisfying searchPred.
      * @throws HyracksDataException

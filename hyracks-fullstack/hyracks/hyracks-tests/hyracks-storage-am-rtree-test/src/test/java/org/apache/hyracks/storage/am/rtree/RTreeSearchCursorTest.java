@@ -61,8 +61,31 @@ import org.junit.Test;
 
 public class RTreeSearchCursorTest extends AbstractRTreeTest {
 
+    public static final int FIELD_COUNT = 5;
+    public static final ITypeTraits[] TYPE_TRAITS = { IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS,
+            IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS };
+    // Declare field serdes.
+    @SuppressWarnings("rawtypes")
+    public static final ISerializerDeserializer[] FIELD_SERDES = { IntegerSerializerDeserializer.INSTANCE,
+            IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
+            IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
+    public static final int KEY_FIELD_COUNT = 4;
+    public static final IBinaryComparatorFactory[] CMP_FACTORIES =
+            { PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
+                    PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
+                    PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY),
+                    PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY) };
+    public static final IPrimitiveValueProviderFactory[] VALUE_PROVIDER_FACTORY =
+            RTreeUtils.createPrimitiveValueProviderFactories(CMP_FACTORIES.length, IntegerPointable.FACTORY);
+    public static final RTreeTypeAwareTupleWriterFactory TUPLE_WRITER_FACTORY =
+            new RTreeTypeAwareTupleWriterFactory(TYPE_TRAITS);
+    public static final ITreeIndexMetadataFrameFactory META_FRAME_FACTORY = new LIFOMetaDataFrameFactory();
+    public static final ITreeIndexFrameFactory INTERIOR_FRAME_FACTORY = new RTreeNSMInteriorFrameFactory(
+            TUPLE_WRITER_FACTORY, VALUE_PROVIDER_FACTORY, RTreePolicyType.RTREE, false);
+    public static final ITreeIndexFrameFactory LEAF_FRAME_FACTORY =
+            new RTreeNSMLeafFrameFactory(TUPLE_WRITER_FACTORY, VALUE_PROVIDER_FACTORY, RTreePolicyType.RTREE, false);
+    private static final Random RND = new Random(50);
     private final RTreeTestUtils rTreeTestUtils;
-    private Random rnd = new Random(50);
 
     public RTreeSearchCursorTest() {
         this.rTreeTestUtils = new RTreeTestUtils();
@@ -74,69 +97,73 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
         super.setUp();
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "rawtypes" })
     @Test
     public void rangeSearchTest() throws Exception {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("TESTING RANGE SEARCH CURSOR FOR RTREE");
         }
-
         IBufferCache bufferCache = harness.getBufferCache();
-
-        // Declare fields.
-        int fieldCount = 5;
-        ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
-        typeTraits[0] = IntegerPointable.TYPE_TRAITS;
-        typeTraits[1] = IntegerPointable.TYPE_TRAITS;
-        typeTraits[2] = IntegerPointable.TYPE_TRAITS;
-        typeTraits[3] = IntegerPointable.TYPE_TRAITS;
-        typeTraits[4] = IntegerPointable.TYPE_TRAITS;
-        // Declare field serdes.
-        ISerializerDeserializer[] fieldSerdes = { IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
-
-        // Declare keys.
-        int keyFieldCount = 4;
-        IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
-        cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        cmpFactories[1] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        cmpFactories[2] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-        cmpFactories[3] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-
         // create value providers
-        IPrimitiveValueProviderFactory[] valueProviderFactories =
-                RTreeUtils.createPrimitiveValueProviderFactories(cmpFactories.length, IntegerPointable.FACTORY);
-
-        RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
-        ITreeIndexMetadataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-
-        ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
-                valueProviderFactories, RTreePolicyType.RTREE, false);
-        ITreeIndexFrameFactory leafFrameFactory =
-                new RTreeNSMLeafFrameFactory(tupleWriterFactory, valueProviderFactories, RTreePolicyType.RTREE, false);
-
-        IRTreeInteriorFrame interiorFrame = (IRTreeInteriorFrame) interiorFrameFactory.createFrame();
-        IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) leafFrameFactory.createFrame();
-        IMetadataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
-
-        RTree rtree = new RTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
-                fieldCount, harness.getFileReference(), false);
+        IRTreeInteriorFrame interiorFrame = (IRTreeInteriorFrame) INTERIOR_FRAME_FACTORY.createFrame();
+        IRTreeLeafFrame leafFrame = (IRTreeLeafFrame) LEAF_FRAME_FACTORY.createFrame();
+        IMetadataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, META_FRAME_FACTORY);
+        RTree rtree = new RTree(bufferCache, freePageManager, INTERIOR_FRAME_FACTORY, LEAF_FRAME_FACTORY, CMP_FACTORIES,
+                FIELD_COUNT, harness.getFileReference(), false);
         rtree.create();
         rtree.activate();
+        ArrayList<RTreeCheckTuple> checkTuples = insert(rtree);
+        ITreeIndexAccessor indexAccessor = rtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+        try {
+            // Build key.
+            ArrayTupleReference key = new ArrayTupleReference();
+            SearchPredicate searchPredicate = createSearchPredicate(key, -1000, -1000, 1000, 1000);
+            ITreeIndexCursor searchCursor = new RTreeSearchCursor(interiorFrame, leafFrame);
+            try {
+                RTreeCheckTuple keyCheck =
+                        (RTreeCheckTuple) rTreeTestUtils.createCheckTupleFromTuple(key, FIELD_SERDES, KEY_FIELD_COUNT);
+                HashMultiSet<RTreeCheckTuple> expectedResult =
+                        rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
+                rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
+                indexAccessor.search(searchCursor, searchPredicate);
+                try {
+                    rTreeTestUtils.checkExpectedResults(searchCursor, expectedResult, FIELD_SERDES, KEY_FIELD_COUNT,
+                            null);
+                } finally {
+                    searchCursor.close();
+                }
+            } finally {
+                searchCursor.destroy();
+            }
+        } finally {
+            indexAccessor.destroy();
+        }
+        rtree.deactivate();
+        rtree.destroy();
+    }
 
-        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
+    public static SearchPredicate createSearchPredicate(ArrayTupleReference key, int first, int second, int third,
+            int fourth) throws HyracksDataException {
+        ArrayTupleBuilder keyTb = new ArrayTupleBuilder(KEY_FIELD_COUNT);
+        TupleUtils.createIntegerTuple(keyTb, key, first, second, third, fourth);
+        MultiComparator cmp = MultiComparator.create(CMP_FACTORIES);
+        return new SearchPredicate(key, cmp);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static ArrayList<RTreeCheckTuple> insert(RTree rtree) throws HyracksDataException {
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(FIELD_COUNT);
         ArrayTupleReference tuple = new ArrayTupleReference();
         ITreeIndexAccessor indexAccessor = rtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
         int numInserts = 10000;
         ArrayList<RTreeCheckTuple> checkTuples = new ArrayList<>();
         for (int i = 0; i < numInserts; i++) {
-            int p1x = rnd.nextInt();
-            int p1y = rnd.nextInt();
-            int p2x = rnd.nextInt();
-            int p2y = rnd.nextInt();
+            int p1x = RND.nextInt();
+            int p1y = RND.nextInt();
+            int p2x = RND.nextInt();
+            int p2y = RND.nextInt();
 
-            int pk = rnd.nextInt();;
+            int pk = RND.nextInt();;
 
             TupleUtils.createIntegerTuple(tb, tuple, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                     Math.max(p1y, p2y), pk);
@@ -147,7 +174,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
                     throw e;
                 }
             }
-            RTreeCheckTuple checkTuple = new RTreeCheckTuple(fieldCount, keyFieldCount);
+            RTreeCheckTuple checkTuple = new RTreeCheckTuple(FIELD_COUNT, KEY_FIELD_COUNT);
             checkTuple.appendField(Math.min(p1x, p2x));
             checkTuple.appendField(Math.min(p1y, p2y));
             checkTuple.appendField(Math.max(p1x, p2x));
@@ -156,28 +183,6 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
 
             checkTuples.add(checkTuple);
         }
-
-        // Build key.
-        ArrayTupleBuilder keyTb = new ArrayTupleBuilder(keyFieldCount);
-        ArrayTupleReference key = new ArrayTupleReference();
-        TupleUtils.createIntegerTuple(keyTb, key, -1000, -1000, 1000, 1000);
-
-        MultiComparator cmp = MultiComparator.create(cmpFactories);
-        ITreeIndexCursor searchCursor = new RTreeSearchCursor(interiorFrame, leafFrame);
-        SearchPredicate searchPredicate = new SearchPredicate(key, cmp);
-
-        RTreeCheckTuple keyCheck =
-                (RTreeCheckTuple) rTreeTestUtils.createCheckTupleFromTuple(key, fieldSerdes, keyFieldCount);
-        HashMultiSet<RTreeCheckTuple> expectedResult =
-                rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
-
-        rTreeTestUtils.getRangeSearchExpectedResults(checkTuples, keyCheck);
-        indexAccessor.search(searchCursor, searchPredicate);
-
-        rTreeTestUtils.checkExpectedResults(searchCursor, expectedResult, fieldSerdes, keyFieldCount, null);
-
-        rtree.deactivate();
-        rtree.destroy();
+        return checkTuples;
     }
-
 }

@@ -275,7 +275,10 @@ public class DiskBTree extends BTree {
 
         @Override
         protected void releasePage() throws HyracksDataException {
-            bufferCache.unpin(page);
+            if (page != null) {
+                bufferCache.unpin(page);
+                page = null;
+            }
         }
 
         @Override

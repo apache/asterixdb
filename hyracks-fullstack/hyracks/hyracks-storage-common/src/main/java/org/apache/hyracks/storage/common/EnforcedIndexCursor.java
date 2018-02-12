@@ -19,83 +19,117 @@
 
 package org.apache.hyracks.storage.common;
 
+import java.util.Arrays;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-public class EnforcedIndexCursor implements IIndexCursor {
+public abstract class EnforcedIndexCursor implements IIndexCursor {
     enum State {
         CLOSED,
         OPENED,
         DESTROYED
     }
 
+    private static final boolean STORE_TRACES = false;
+    private static final boolean ENFORCE_NEXT_HAS_NEXT = true;
+    private static final boolean ENFORCE_OPEN_CLOSE_DESTROY = true;
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private State state = State.CLOSED;
+    private StackTraceElement[] openCallStack;
+    private StackTraceElement[] destroyCallStack;
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-        if (state != State.CLOSED) {
+    public final void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+        if (ENFORCE_OPEN_CLOSE_DESTROY && state != State.CLOSED) {
+            if (STORE_TRACES && destroyCallStack != null) {
+                LOGGER.log(Level.WARN, "The cursor was destroyed in " + Arrays.toString(destroyCallStack));
+            }
             throw new IllegalStateException("Cannot open a cursor in the state " + state);
         }
         doOpen(initialState, searchPred);
         state = State.OPENED;
+        if (STORE_TRACES) {
+            openCallStack = new Throwable().getStackTrace();
+        }
     }
 
-    protected void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-        // Do nothing
-    }
+    protected abstract void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred)
+            throws HyracksDataException;
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
-        if (state != State.OPENED) {
+    public final boolean hasNext() throws HyracksDataException {
+        if (ENFORCE_NEXT_HAS_NEXT && state != State.OPENED) {
             throw new IllegalStateException("Cannot call hasNext() on a cursor in the state " + state);
         }
         return doHasNext();
     }
 
-    protected boolean doHasNext() throws HyracksDataException {
-        return false;
-    }
+    protected abstract boolean doHasNext() throws HyracksDataException;
 
     @Override
-    public void next() throws HyracksDataException {
-        if (state != State.OPENED) {
+    public final void next() throws HyracksDataException {
+        if (ENFORCE_NEXT_HAS_NEXT && state != State.OPENED) {
             throw new IllegalStateException("Cannot call next() on a cursor in the state " + state);
         }
         doNext();
     }
 
-    protected void doNext() throws HyracksDataException {
-        // Do nothing
-    }
+    protected abstract void doNext() throws HyracksDataException;
 
     @Override
-    public void destroy() throws HyracksDataException {
-        if (state != State.CLOSED) {
-            throw new IllegalStateException("Cannot destroy a cursor in the state " + state);
+    public final void destroy() throws HyracksDataException {
+        if (ENFORCE_OPEN_CLOSE_DESTROY) {
+            if (state == State.DESTROYED) {
+                LOGGER.log(Level.WARN,
+                        "multiple cursor.destroy() call in " + Arrays.toString(new Throwable().getStackTrace()));
+                return;
+            } else if (state != State.CLOSED) {
+                if (STORE_TRACES && openCallStack != null) {
+                    LOGGER.log(Level.WARN, "The cursor was opened in " + Arrays.toString(openCallStack));
+                }
+                throw new IllegalStateException("Cannot destroy a cursor in the state " + state);
+            }
         }
-        doDestroy();
         state = State.DESTROYED;
-    }
-
-    protected void doDestroy() throws HyracksDataException {
-        // Do nothing
-    }
-
-    @Override
-    public void close() throws HyracksDataException {
-        if (state != State.OPENED) {
-            throw new IllegalStateException("Cannot close a cursor in the state " + state);
+        try {
+            doDestroy();
+        } finally {
+            if (ENFORCE_OPEN_CLOSE_DESTROY && STORE_TRACES) {
+                destroyCallStack = new Throwable().getStackTrace();
+            }
         }
-        doClose();
-        state = State.CLOSED;
     }
 
-    private void doClose() throws HyracksDataException {
-        // Do nothing
-    }
+    protected abstract void doDestroy() throws HyracksDataException;
 
     @Override
-    public ITupleReference getTuple() {
-        return null;
+    public final void close() throws HyracksDataException {
+        if (ENFORCE_OPEN_CLOSE_DESTROY) {
+            if (state == State.CLOSED) {
+                return;
+            } else if (state == State.DESTROYED) {
+                throw new IllegalStateException("Cannot close a cursor in the state " + state);
+            }
+        }
+        state = State.CLOSED;
+        doClose();
     }
+
+    protected abstract void doClose() throws HyracksDataException;
+
+    @Override
+    public final ITupleReference getTuple() {
+        if (state == State.OPENED) {
+            return doGetTuple();
+        } else {
+            return null;
+        }
+    }
+
+    protected abstract ITupleReference doGetTuple();
 }

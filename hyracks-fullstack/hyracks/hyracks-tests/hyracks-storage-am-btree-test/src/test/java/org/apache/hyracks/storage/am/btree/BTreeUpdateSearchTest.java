@@ -101,75 +101,81 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         IndexAccessParameters actx =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         ITreeIndexAccessor indexAccessor = btree.createAccessor(actx);
-
-        int numInserts = 10000;
-        for (int i = 0; i < numInserts; i++) {
-            int f0 = rnd.nextInt() % 10000;
-            int f1 = 5;
-            TupleUtils.createIntegerTuple(tb, insertTuple, f0, f1);
-            if (LOGGER.isInfoEnabled()) {
-                if (i % 10000 == 0) {
-                    long end = System.currentTimeMillis();
-                    LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
-                }
-            }
-
-            try {
-                indexAccessor.insert(insertTuple);
-            } catch (HyracksDataException hde) {
-                if (hde.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
-                    hde.printStackTrace();
-                    throw hde;
-                }
-            }
-        }
-        long end = System.currentTimeMillis();
-        long duration = end - start;
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("DURATION: " + duration);
-        }
-
-        // Update scan.
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("UPDATE SCAN:");
-        }
-        // Set the cursor to X latch nodes.
-        ITreeIndexCursor updateScanCursor = new BTreeRangeSearchCursor(leafFrame, true);
-        RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
-        indexAccessor.search(updateScanCursor, nullPred);
         try {
-            while (updateScanCursor.hasNext()) {
-                updateScanCursor.next();
-                ITupleReference tuple = updateScanCursor.getTuple();
-                // Change the value field.
-                IntegerPointable.setInteger(tuple.getFieldData(1), tuple.getFieldStart(1), 10);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            updateScanCursor.destroy();
-        }
-
-        // Ordered scan to verify the values.
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("ORDERED SCAN:");
-        }
-        // Set the cursor to X latch nodes.
-        ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame, true);
-        indexAccessor.search(scanCursor, nullPred);
-        try {
-            while (scanCursor.hasNext()) {
-                scanCursor.next();
-                ITupleReference tuple = scanCursor.getTuple();
-                String rec = TupleUtils.printTuple(tuple, recDescSers);
+            int numInserts = 10000;
+            for (int i = 0; i < numInserts; i++) {
+                int f0 = rnd.nextInt() % 10000;
+                int f1 = 5;
+                TupleUtils.createIntegerTuple(tb, insertTuple, f0, f1);
                 if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info(rec);
+                    if (i % 10000 == 0) {
+                        long end = System.currentTimeMillis();
+                        LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
+                    }
+                }
+
+                try {
+                    indexAccessor.insert(insertTuple);
+                } catch (HyracksDataException hde) {
+                    if (hde.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                        hde.printStackTrace();
+                        throw hde;
+                    }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            long end = System.currentTimeMillis();
+            long duration = end - start;
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("DURATION: " + duration);
+            }
+
+            // Update scan.
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("UPDATE SCAN:");
+            }
+            // Set the cursor to X latch nodes.
+            RangePredicate nullPred = new RangePredicate(null, null, true, true, null, null);
+            ITreeIndexCursor updateScanCursor = new BTreeRangeSearchCursor(leafFrame, true);
+            try {
+                indexAccessor.search(updateScanCursor, nullPred);
+                try {
+                    while (updateScanCursor.hasNext()) {
+                        updateScanCursor.next();
+                        ITupleReference tuple = updateScanCursor.getTuple();
+                        // Change the value field.
+                        IntegerPointable.setInteger(tuple.getFieldData(1), tuple.getFieldStart(1), 10);
+                    }
+                } finally {
+                    updateScanCursor.close();
+                }
+            } finally {
+                updateScanCursor.destroy();
+            }
+            // Ordered scan to verify the values.
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("ORDERED SCAN:");
+            }
+            // Set the cursor to X latch nodes.
+            ITreeIndexCursor scanCursor = new BTreeRangeSearchCursor(leafFrame, true);
+            try {
+                indexAccessor.search(scanCursor, nullPred);
+                try {
+                    while (scanCursor.hasNext()) {
+                        scanCursor.next();
+                        ITupleReference tuple = scanCursor.getTuple();
+                        String rec = TupleUtils.printTuple(tuple, recDescSers);
+                        if (LOGGER.isInfoEnabled()) {
+                            LOGGER.info(rec);
+                        }
+                    }
+                } finally {
+                    scanCursor.close();
+                }
+            } finally {
+                scanCursor.destroy();
+            }
         } finally {
-            scanCursor.destroy();
+            indexAccessor.destroy();
         }
         btree.deactivate();
         btree.destroy();

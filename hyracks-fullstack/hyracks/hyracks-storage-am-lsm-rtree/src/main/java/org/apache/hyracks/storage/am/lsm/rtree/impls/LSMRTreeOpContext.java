@@ -22,6 +22,8 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.DestroyUtils;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTreeOpContext;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -51,6 +53,7 @@ public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
     private RTreeOpContext currentRTreeOpContext;
     private BTreeOpContext currentBTreeOpContext;
     private LSMRTreeCursorInitialState searchInitialState;
+    private boolean destroyed = false;
 
     public LSMRTreeOpContext(ILSMIndex index, List<ILSMMemoryComponent> mutableComponents,
             ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
@@ -127,5 +130,20 @@ public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
 
     public RTreeOpContext getCurrentRTreeOpContext() {
         return currentRTreeOpContext;
+    }
+
+    @Override
+    public void destroy() throws HyracksDataException {
+        if (destroyed) {
+            return;
+        }
+        destroyed = true;
+        Throwable failure = DestroyUtils.destroy(null, mutableRTreeAccessors);
+        failure = DestroyUtils.destroy(failure, rtreeOpContexts);
+        failure = DestroyUtils.destroy(failure, mutableBTreeAccessors);
+        failure = DestroyUtils.destroy(failure, btreeOpContexts);
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
+        }
     }
 }

@@ -50,6 +50,7 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     protected final ILSMHarness lsmHarness;
     protected final ILSMIndexOperationContext ctx;
     protected final ICursorFactory cursorFactory;
+    private boolean destroyed = false;
 
     public LSMTreeIndexAccessor(ILSMHarness lsmHarness, ILSMIndexOperationContext ctx, ICursorFactory cursorFactory) {
         this.lsmHarness = lsmHarness;
@@ -233,5 +234,14 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     @Override
     public ILSMIndexOperationContext getOpContext() {
         return ctx;
+    }
+
+    @Override
+    public void destroy() throws HyracksDataException {
+        if (destroyed) {
+            return;
+        }
+        destroyed = true;
+        ctx.destroy();
     }
 }

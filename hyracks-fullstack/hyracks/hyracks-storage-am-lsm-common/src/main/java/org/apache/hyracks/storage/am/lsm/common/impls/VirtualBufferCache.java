@@ -385,6 +385,11 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         public CacheBucket() {
             this.bucketLock = new ReentrantLock();
         }
+
+        @Override
+        public String toString() {
+            return CacheBucket.class.getSimpleName() + " -> " + (cachedPage == null ? "" : cachedPage.toString());
+        }
     }
 
     @Override

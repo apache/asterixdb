@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.lsm.invertedindex.inmemory;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
@@ -46,6 +47,7 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
     // To generate in-memory BTree tuples for insertions.
     private final IBinaryTokenizerFactory tokenizerFactory;
     private InvertedIndexTokenizingTupleIterator tupleIter;
+    private boolean destroyed = false;
 
     InMemoryInvertedIndexOpContext(BTree btree, IBinaryComparatorFactory[] tokenCmpFactories,
             IBinaryTokenizerFactory tokenizerFactory) {
@@ -122,5 +124,16 @@ public class InMemoryInvertedIndexOpContext implements IIndexOperationContext {
 
     public void setTupleIter(InvertedIndexTokenizingTupleIterator tupleIter) {
         this.tupleIter = tupleIter;
+    }
+
+    @Override
+    public void destroy() throws HyracksDataException {
+        if (destroyed) {
+            return;
+        }
+        destroyed = true;
+        if (btreeAccessor != null) {
+            btreeAccessor.destroy();
+        }
     }
 }

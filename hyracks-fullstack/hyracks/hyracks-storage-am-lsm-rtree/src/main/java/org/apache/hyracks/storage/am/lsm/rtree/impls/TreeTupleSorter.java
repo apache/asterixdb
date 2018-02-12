@@ -25,6 +25,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
+import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -32,7 +33,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
-public class TreeTupleSorter implements ITreeIndexCursor {
+public class TreeTupleSorter extends EnforcedIndexCursor implements ITreeIndexCursor {
     private final static int INITIAL_SIZE = 1000000;
     private int numTuples;
     private int currentTupleIndex;
@@ -62,13 +63,13 @@ public class TreeTupleSorter implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() {
+    public void doClose() {
         numTuples = 0;
         currentTupleIndex = 0;
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean doHasNext() throws HyracksDataException {
         if (numTuples <= currentTupleIndex) {
             return false;
         }
@@ -87,12 +88,12 @@ public class TreeTupleSorter implements ITreeIndexCursor {
     }
 
     @Override
-    public void next() {
+    public void doNext() {
         currentTupleIndex++;
     }
 
     @Override
-    public ITupleReference getTuple() {
+    public ITupleReference doGetTuple() {
         return frameTuple1;
     }
 
@@ -180,34 +181,32 @@ public class TreeTupleSorter implements ITreeIndexCursor {
     private int compare(int[] tPointers, int tp1, int tp2i, int tp2j) throws HyracksDataException {
         int i1 = tPointers[tp1 * 2];
         int j1 = tPointers[tp1 * 2 + 1];
-
         int i2 = tp2i;
         int j2 = tp2j;
-
         ICachedPage node1 = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i1), false);
-        leafFrame1.setPage(node1);
-        ICachedPage node2 = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i2), false);
-        leafFrame2.setPage(node2);
-
         try {
-            frameTuple1.resetByTupleOffset(leafFrame1.getBuffer().array(), j1);
-            frameTuple2.resetByTupleOffset(leafFrame2.getBuffer().array(), j2);
-
-            return cmp.selectiveFieldCompare(frameTuple1, frameTuple2, comparatorFields);
-
+            leafFrame1.setPage(node1);
+            ICachedPage node2 = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i2), false);
+            try {
+                leafFrame2.setPage(node2);
+                frameTuple1.resetByTupleOffset(leafFrame1.getBuffer().array(), j1);
+                frameTuple2.resetByTupleOffset(leafFrame2.getBuffer().array(), j2);
+                return cmp.selectiveFieldCompare(frameTuple1, frameTuple2, comparatorFields);
+            } finally {
+                bufferCache.unpin(node2);
+            }
         } finally {
             bufferCache.unpin(node1);
-            bufferCache.unpin(node2);
         }
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+    public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         // do nothing
     }
 
     @Override
-    public void destroy() throws HyracksDataException {
+    public void doDestroy() throws HyracksDataException {
         // do nothing
     }
 

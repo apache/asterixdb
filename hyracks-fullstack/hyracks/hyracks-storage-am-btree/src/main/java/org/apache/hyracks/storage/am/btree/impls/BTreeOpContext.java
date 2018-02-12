@@ -24,6 +24,7 @@ import java.util.Deque;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.DestroyUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -73,6 +74,7 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     private ISearchOperationCallback searchCallback;
     private ITupleAcceptor acceptor;
     private int smoCount;
+    private boolean destroyed = false;
 
     // Debug
     private final Deque<PageValidationInfo> validationInfos;
@@ -382,5 +384,17 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
 
     public void resetNonIndexFieldsTuple(ITupleReference newValue) {
         tupleWithNonIndexFields.reset(newValue);
+    }
+
+    @Override
+    public void destroy() throws HyracksDataException {
+        if (destroyed) {
+            return;
+        }
+        destroyed = true;
+        Throwable failure = DestroyUtils.destroy(null, accessor, cursor);
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
+        }
     }
 }

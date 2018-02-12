@@ -16,16 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.tests.unit;
-
-import org.apache.hyracks.storage.common.EnforcedIndexCursor;
-import org.apache.hyracks.storage.common.ICursorInitialState;
-import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.storage.common.ISearchPredicate;
-import org.mockito.Mockito;
+package org.apache.hyracks.storage.am.common.test;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.EnforcedIndexCursor;
+import org.apache.hyracks.storage.common.IIndexAccessor;
+import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class EnforcedIndexCursorTest extends IIndexCursorTest {
     @Override
@@ -38,12 +42,20 @@ public class EnforcedIndexCursorTest extends IIndexCursorTest {
     }
 
     @Override
-    protected ICursorInitialState createCursorInitialState() {
-        return Mockito.mock(ICursorInitialState.class);
-    }
-
-    @Override
-    protected IIndexCursor createCursor() {
-        return new EnforcedIndexCursor();
+    protected IIndexAccessor createAccessor() throws HyracksDataException {
+        EnforcedIndexCursor cursor = new DummyEnforcedIndexCursor();
+        IIndexAccessor accessor = Mockito.mock(IIndexAccessor.class);
+        Mockito.when(accessor.createSearchCursor(Mockito.anyBoolean())).thenReturn(cursor);
+        Mockito.doAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                IIndexCursor cursor = (IIndexCursor) args[0];
+                ISearchPredicate pred = (ISearchPredicate) args[1];
+                cursor.open(null, pred);
+                return null;
+            }
+        }).when(accessor).search(Matchers.any(IIndexCursor.class), Matchers.any(ISearchPredicate.class));
+        return accessor;
     }
 }

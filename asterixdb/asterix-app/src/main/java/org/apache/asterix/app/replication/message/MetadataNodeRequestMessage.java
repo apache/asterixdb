@@ -24,6 +24,7 @@ import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,7 +45,7 @@ public class MetadataNodeRequestMessage extends CcIdentifiedMessage
     @Override
     public void handle(INcApplicationContext appContext) throws HyracksDataException, InterruptedException {
         INCMessageBroker broker = (INCMessageBroker) appContext.getServiceContext().getMessageBroker();
-        HyracksDataException hde = null;
+        Throwable hde = null;
         try {
             if (export) {
                 appContext.initializeMetadata(false, partitionId);
@@ -63,11 +64,11 @@ public class MetadataNodeRequestMessage extends CcIdentifiedMessage
                 broker.sendMessageToCC(getCcId(), reponse);
             } catch (Exception e) {
                 LOGGER.log(Level.ERROR, "Failed taking over metadata", e);
-                hde = HyracksDataException.suppress(hde, e);
+                hde = ExceptionUtils.suppress(hde, e);
             }
         }
         if (hde != null) {
-            throw hde;
+            throw HyracksDataException.create(hde);
         }
     }
 

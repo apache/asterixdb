@@ -841,6 +841,7 @@ public class BTree extends AbstractTreeIndex {
     public class BTreeAccessor implements ITreeIndexAccessor {
         protected BTree btree;
         protected BTreeOpContext ctx;
+        private boolean destroyed = false;
 
         public BTreeAccessor(BTree btree, IModificationOperationCallback modificationCalback,
                 ISearchOperationCallback searchCallback) {
@@ -994,6 +995,15 @@ public class BTree extends AbstractTreeIndex {
             if (ctx.getOpRestarts() >= MAX_RESTARTS) {
                 throw HyracksDataException.create(ErrorCode.OPERATION_EXCEEDED_MAX_RESTARTS, MAX_RESTARTS);
             }
+        }
+
+        @Override
+        public void destroy() throws HyracksDataException {
+            if (destroyed) {
+                return;
+            }
+            destroyed = true;
+            ctx.destroy();
         }
     }
 

@@ -206,7 +206,6 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
                 listCursor.reset(0, 0, 0, 0);
             }
         } finally {
-            ctx.getBtreeCursor().destroy();
             ctx.getBtreeCursor().close();
         }
     }
@@ -420,6 +419,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         private final OnDiskInvertedIndex index;
         private final IInvertedIndexSearcher searcher;
         private final IIndexOperationContext opCtx = new OnDiskInvertedIndexOpContext(btree);
+        private boolean destroyed = false;
 
         public OnDiskInvertedIndexAccessor(OnDiskInvertedIndex index) throws HyracksDataException {
             this.index = index;
@@ -483,6 +483,15 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         public void upsert(ITupleReference tuple) throws HyracksDataException {
             throw new UnsupportedOperationException("Upsert not supported by inverted index.");
         }
+
+        @Override
+        public void destroy() throws HyracksDataException {
+            if (destroyed) {
+                return;
+            }
+            destroyed = true;
+            opCtx.destroy();
+        }
     }
 
     @Override
@@ -542,24 +551,38 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         btree.validate();
         // Scan the btree and validate the order of elements in each inverted-list.
         IIndexAccessor btreeAccessor = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        IIndexCursor btreeCursor = btreeAccessor.createSearchCursor(false);
-        MultiComparator btreeCmp = MultiComparator.create(btree.getComparatorFactories());
-        RangePredicate rangePred = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
+        try {
+            MultiComparator btreeCmp = MultiComparator.create(btree.getComparatorFactories());
+            RangePredicate rangePred = new RangePredicate(null, null, true, true, btreeCmp, btreeCmp);
+            IIndexCursor btreeCursor = btreeAccessor.createSearchCursor(false);
+            try {
+                btreeAccessor.search(btreeCursor, rangePred);
+                try {
+                    doValidate(btreeCursor);
+                } finally {
+                    btreeCursor.close();
+                }
+            } finally {
+                btreeCursor.destroy();
+            }
+        } finally {
+            btreeAccessor.destroy();
+        }
+    }
+
+    private void doValidate(IIndexCursor btreeCursor) throws HyracksDataException {
         int[] fieldPermutation = new int[tokenTypeTraits.length];
         for (int i = 0; i < tokenTypeTraits.length; i++) {
             fieldPermutation[i] = i;
         }
         PermutingTupleReference tokenTuple = new PermutingTupleReference(fieldPermutation);
-
+        // Search key for finding an inverted-list in the actual index.
+        ArrayTupleBuilder prevBuilder = new ArrayTupleBuilder(invListTypeTraits.length);
+        ArrayTupleReference prevTuple = new ArrayTupleReference();
         IInvertedIndexAccessor invIndexAccessor = createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        IInvertedListCursor invListCursor = invIndexAccessor.createInvertedListCursor();
-        MultiComparator invListCmp = MultiComparator.create(invListCmpFactories);
-
         try {
-            // Search key for finding an inverted-list in the actual index.
-            ArrayTupleBuilder prevBuilder = new ArrayTupleBuilder(invListTypeTraits.length);
-            ArrayTupleReference prevTuple = new ArrayTupleReference();
-            btreeAccessor.search(btreeCursor, rangePred);
+            IInvertedListCursor invListCursor = invIndexAccessor.createInvertedListCursor();
+            MultiComparator invListCmp = MultiComparator.create(invListCmpFactories);
             while (btreeCursor.hasNext()) {
                 btreeCursor.next();
                 tokenTuple.reset(btreeCursor.getTuple());
@@ -578,9 +601,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
                         invListCursor.next();
                         ITupleReference invListElement = invListCursor.getTuple();
                         // Compare with previous element.
-                        if (invListCmp.compare(invListElement, prevTuple) <= 0) {
-                            throw new HyracksDataException("Index validation failed.");
-                        }
+                        validateWithPrevious(invListCmp, invListElement, prevTuple);
                         // Set new prevTuple.
                         TupleUtils.copyTuple(prevBuilder, invListElement, invListElement.getFieldCount());
                         prevTuple.reset(prevBuilder.getFieldEndOffsets(), prevBuilder.getByteArray());
@@ -590,7 +611,14 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
                 }
             }
         } finally {
-            btreeCursor.destroy();
+            invIndexAccessor.destroy();
+        }
+    }
+
+    private void validateWithPrevious(MultiComparator invListCmp, ITupleReference invListElement,
+            ArrayTupleReference prevTuple) throws HyracksDataException {
+        if (invListCmp.compare(invListElement, prevTuple) <= 0) {
+            throw new HyracksDataException("Index validation failed.");
         }
     }
 

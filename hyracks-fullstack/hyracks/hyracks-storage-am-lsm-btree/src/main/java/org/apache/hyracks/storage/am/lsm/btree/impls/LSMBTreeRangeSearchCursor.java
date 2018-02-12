@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.PriorityQueue;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.DestroyUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
@@ -64,13 +65,13 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
-        super.close();
+    public void doClose() throws HyracksDataException {
+        super.doClose();
         canCallProceed = true;
     }
 
     @Override
-    public void next() throws HyracksDataException {
+    public void doNext() throws HyracksDataException {
         outputElement = outputPriorityQueue.poll();
         needPushElementIntoQueue = true;
         canCallProceed = false;
@@ -267,7 +268,6 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                     TupleUtils.copyTuple(switchComponentTupleBuilders[i], element.getTuple(), cmp.getKeyFieldCount());
                 }
                 rangeCursors[i].close();
-                rangeCursors[i].destroy();
                 switchRequest[i] = true;
                 switchedElements[i] = element;
             }
@@ -318,7 +318,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+    public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;
         cmp = lsmInitialState.getOriginalKeyComparator();
         operationalComponents = lsmInitialState.getOperationalComponents();
@@ -331,8 +331,17 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
         includeMutableComponent = false;
 
         int numBTrees = operationalComponents.size();
-        if (rangeCursors == null || rangeCursors.length != numBTrees) {
+        if (rangeCursors == null) {
             // object creation: should be relatively low
+            rangeCursors = new IIndexCursor[numBTrees];
+            btreeAccessors = new BTreeAccessor[numBTrees];
+        } else if (rangeCursors.length != numBTrees) {
+            // should destroy first
+            Throwable failure = DestroyUtils.destroy(null, btreeAccessors);
+            failure = DestroyUtils.destroy(failure, rangeCursors);
+            if (failure != null) {
+                throw HyracksDataException.create(failure);
+            }
             rangeCursors = new IIndexCursor[numBTrees];
             btreeAccessors = new BTreeAccessor[numBTrees];
         }

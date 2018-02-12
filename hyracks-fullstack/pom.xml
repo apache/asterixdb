@@ -16,8 +16,8 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.hyracks</groupId>
   <artifactId>apache-hyracks</artifactId>
@@ -25,14 +25,12 @@
   <packaging>pom</packaging>
   <name>hyracks-ecosystem-full-stack</name>
   <url>https://asterixdb.apache.org/</url>
-
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
     <version>18</version>
     <relativePath />
   </parent>
-
   <licenses>
     <license>
       <name>Apache License, Version 2.0</name>
@@ -41,14 +39,12 @@
       <comments>A business-friendly OSS license</comments>
     </license>
   </licenses>
-
   <scm>
     <connection>scm:git:https://github.com/apache/asterixdb</connection>
     <developerConnection>scm:git:ssh://asterix-gerrit.ics.uci.edu:29418/asterixdb</developerConnection>
     <url>https://github.com/apache/asterixdb</url>
     <tag>HEAD</tag>
   </scm>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <file.encoding>UTF-8</file.encoding>
@@ -196,9 +192,13 @@
         <artifactId>log4j-core</artifactId>
         <version>2.10.0</version>
       </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>2.0.2-beta</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
-
   <build>
     <plugins>
       <plugin>
@@ -241,10 +241,10 @@
           <addDefaultLicenseMatchers>false</addDefaultLicenseMatchers>
           <consoleOutput>true</consoleOutput>
           <licenses>
-            <license implementation="org.apache.rat.analysis.license.ApacheSoftwareLicense20"/>
+            <license implementation="org.apache.rat.analysis.license.ApacheSoftwareLicense20" />
           </licenses>
           <licenseFamilies>
-            <licenseFamily implementation="org.apache.rat.license.Apache20LicenseFamily"/>
+            <licenseFamily implementation="org.apache.rat.license.Apache20LicenseFamily" />
           </licenseFamilies>
           <excludeSubProjects>true</excludeSubProjects>
           <excludes combine.children="append">
@@ -259,11 +259,8 @@
           <failIfNoTests>false</failIfNoTests>
           <forkCount>1</forkCount>
           <reuseForks>false</reuseForks>
-          <argLine>-enableassertions -Xmx2048m
-            -Dfile.encoding=UTF-8
-            -Xdebug
-            -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n
-            ${coverageArgLine}
+          <argLine>-enableassertions -Xmx2048m -Dfile.encoding=UTF-8 -Xdebug
+            -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=n ${coverageArgLine} 
           </argLine>
           <systemPropertyVariables>
             <log4j.configurationFile>${testLog4jConfigFile}</log4j.configurationFile>
@@ -458,16 +455,16 @@
                 </pluginExecution>
                 <pluginExecution>
                   <pluginExecutionFilter>
-                   <groupId>net.revelc.code.formatter</groupId>
-                   <artifactId>formatter-maven-plugin</artifactId>
-                   <versionRange>[2.0.1,)</versionRange>
-                   <goals>
-                       <goal>format</goal>
-                   </goals>
-                   </pluginExecutionFilter>
-                   <action>
-                       <ignore></ignore>
-                   </action>
+                    <groupId>net.revelc.code.formatter</groupId>
+                    <artifactId>formatter-maven-plugin</artifactId>
+                    <versionRange>[2.0.1,)</versionRange>
+                    <goals>
+                      <goal>format</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore></ignore>
+                  </action>
                 </pluginExecution>
               </pluginExecutions>
             </lifecycleMappingMetadata>
@@ -541,7 +538,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
   <profiles>
     <profile>
       <id>skip-assembly</id>
@@ -668,11 +664,9 @@
       </properties>
     </profile>
   </profiles>
-
   <modules>
     <module>hyracks</module>
     <module>algebricks</module>
     <module>hyracks-fullstack-license</module>
   </modules>
-
 </project>

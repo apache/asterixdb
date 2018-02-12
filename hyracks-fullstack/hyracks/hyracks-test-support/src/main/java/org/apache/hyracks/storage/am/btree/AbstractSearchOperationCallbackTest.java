@@ -110,24 +110,27 @@ public abstract class AbstractSearchOperationCallbackTest extends AbstractOperat
         public Boolean call() throws Exception {
             lock.lock();
             try {
-                if (!insertTaskStarted) {
-                    condition.await();
+                try {
+                    while (!insertTaskStarted) {
+                        condition.await();
+                    }
+                    // begin a search on [101, +inf), blocking on 101
+                    TupleUtils.createIntegerTuple(builder, tuple, 101);
+                    predicate.setLowKey(tuple, true);
+                    predicate.setHighKey(null, true);
+                    accessor.search(cursor, predicate);
+                    try {
+                        consumeIntTupleRange(101, 101, true, 101);
+                        // consume tuples [102, 152], blocking on 151
+                        consumeIntTupleRange(102, 151, true, 152);
+                        // consume tuples [153, 300]
+                        consumeIntTupleRange(153, 300, false, -1);
+                    } finally {
+                        cursor.close();
+                    }
+                } finally {
+                    cursor.destroy();
                 }
-
-                // begin a search on [101, +inf), blocking on 101
-                TupleUtils.createIntegerTuple(builder, tuple, 101);
-                predicate.setLowKey(tuple, true);
-                predicate.setHighKey(null, true);
-                accessor.search(cursor, predicate);
-                consumeIntTupleRange(101, 101, true, 101);
-
-                // consume tuples [102, 152], blocking on 151
-                consumeIntTupleRange(102, 151, true, 152);
-
-                // consume tuples [153, 300]
-                consumeIntTupleRange(153, 300, false, -1);
-
-                cursor.destroy();
             } finally {
                 lock.unlock();
             }

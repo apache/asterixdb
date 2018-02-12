@@ -45,7 +45,7 @@ public class LSMBuddyBTreeMergeCursor extends LSMIndexSearchCursor {
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+    public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMBTreeWithBuddyCursorInitialState lsmInitialState = (LSMBTreeWithBuddyCursorInitialState) initialState;
         cmp = lsmInitialState.getBuddyBTreeCmp();
         operationalComponents = lsmInitialState.getOperationalComponents();

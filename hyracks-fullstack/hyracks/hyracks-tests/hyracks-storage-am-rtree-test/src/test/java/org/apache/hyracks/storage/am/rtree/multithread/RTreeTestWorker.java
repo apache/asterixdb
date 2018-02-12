@@ -52,37 +52,49 @@ public class RTreeTestWorker extends AbstractIndexTestWorker {
     @Override
     public void performOp(ITupleReference tuple, TestOperation op) throws HyracksDataException {
         RTree.RTreeAccessor accessor = (RTree.RTreeAccessor) indexAccessor;
-        IIndexCursor searchCursor = accessor.createSearchCursor(false);
-        ITreeIndexCursor diskOrderScanCursor = accessor.createDiskOrderScanCursor();
         MultiComparator cmp = accessor.getOpContext().getCmp();
         SearchPredicate rangePred = new SearchPredicate(tuple, cmp);
+        IIndexCursor searchCursor = accessor.createSearchCursor(false);
+        try {
+            ITreeIndexCursor diskOrderScanCursor = accessor.createDiskOrderScanCursor();
+            try {
+                switch (op) {
+                    case INSERT:
+                        rearrangeTuple(tuple, cmp);
+                        accessor.insert(rearrangedTuple);
+                        break;
 
-        switch (op) {
-            case INSERT:
-                rearrangeTuple(tuple, cmp);
-                accessor.insert(rearrangedTuple);
-                break;
+                    case DELETE:
+                        rearrangeTuple(tuple, cmp);
+                        accessor.delete(rearrangedTuple);
+                        break;
 
-            case DELETE:
-                rearrangeTuple(tuple, cmp);
-                accessor.delete(rearrangedTuple);
-                break;
+                    case SCAN:
+                        rangePred.setSearchKey(null);
+                        accessor.search(searchCursor, rangePred);
+                        try {
+                            consumeCursorTuples(searchCursor);
+                        } finally {
+                            searchCursor.close();
+                        }
+                        break;
 
-            case SCAN:
-                searchCursor.close();
-                rangePred.setSearchKey(null);
-                accessor.search(searchCursor, rangePred);
-                consumeCursorTuples(searchCursor);
-                break;
-
-            case DISKORDER_SCAN:
-                diskOrderScanCursor.close();
-                accessor.diskOrderScan(diskOrderScanCursor);
-                consumeCursorTuples(diskOrderScanCursor);
-                break;
-
-            default:
-                throw new HyracksDataException("Op " + op.toString() + " not supported.");
+                    case DISKORDER_SCAN:
+                        accessor.diskOrderScan(diskOrderScanCursor);
+                        try {
+                            consumeCursorTuples(diskOrderScanCursor);
+                        } finally {
+                            diskOrderScanCursor.close();
+                        }
+                        break;
+                    default:
+                        throw new HyracksDataException("Op " + op.toString() + " not supported.");
+                }
+            } finally {
+                diskOrderScanCursor.destroy();
+            }
+        } finally {
+            searchCursor.destroy();
         }
     }
 

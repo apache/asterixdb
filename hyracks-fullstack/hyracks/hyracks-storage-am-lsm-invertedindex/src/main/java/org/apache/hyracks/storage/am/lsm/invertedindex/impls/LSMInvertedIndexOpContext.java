@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.DestroyUtils;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -46,6 +47,7 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
     private IIndexAccessor[] deletedKeysBTreeAccessors;
     private IInvertedIndexAccessor currentMutableInvIndexAccessors;
     private IIndexAccessor currentDeletedKeysBTreeAccessors;
+    private boolean destroyed = false;
 
     public LSMInvertedIndexOpContext(ILSMIndex index, List<ILSMMemoryComponent> mutableComponents,
             IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback,
@@ -93,5 +95,18 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
 
     public IIndexAccessor getCurrentDeletedKeysBTreeAccessors() {
         return currentDeletedKeysBTreeAccessors;
+    }
+
+    @Override
+    public void destroy() throws HyracksDataException {
+        if (destroyed) {
+            return;
+        }
+        destroyed = true;
+        Throwable failure = DestroyUtils.destroy(null, mutableInvIndexAccessors);
+        failure = DestroyUtils.destroy(failure, deletedKeysBTreeAccessors);
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
+        }
     }
 }

@@ -25,6 +25,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexCursor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeInteriorFrame;
 import org.apache.hyracks.storage.am.rtree.api.IRTreeLeafFrame;
+import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -32,7 +33,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
-public class RTreeSearchCursor implements ITreeIndexCursor {
+public class RTreeSearchCursor extends EnforcedIndexCursor implements ITreeIndexCursor {
 
     private int fileId = -1;
     private ICachedPage page = null;
@@ -62,7 +63,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void destroy() throws HyracksDataException {
+    public void doDestroy() throws HyracksDataException {
         if (readLatched) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
@@ -75,7 +76,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public ITupleReference getTuple() {
+    public ITupleReference doGetTuple() {
         return frameTuple;
     }
 
@@ -163,7 +164,7 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean doHasNext() throws HyracksDataException {
         if (page == null) {
             return false;
         }
@@ -198,12 +199,12 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void next() throws HyracksDataException {
+    public void doNext() throws HyracksDataException {
         tupleIndex = tupleIndexInc;
     }
 
     @Override
-    public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
+    public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         // in case open is called multiple times without closing
         if (this.page != null) {
             this.page.releaseReadLatch();
@@ -239,8 +240,8 @@ public class RTreeSearchCursor implements ITreeIndexCursor {
     }
 
     @Override
-    public void close() throws HyracksDataException {
-        destroy();
+    public void doClose() throws HyracksDataException {
+        doDestroy();
     }
 
     @Override

@@ -19,10 +19,12 @@
 package org.apache.hyracks.storage.am.common.dataflow;
 
 import java.io.DataOutput;
+import java.io.IOException;
 
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -37,6 +39,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
+import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.LocalResource;
@@ -56,55 +59,69 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
 
     @Override
     public void initialize() throws HyracksDataException {
+        Throwable failure = null;
         treeIndexHelper.open();
-        ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
         try {
-            ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
-            ITreeIndexCursor cursor = new TreeIndexDiskOrderScanCursor(cursorFrame);
-            LocalResource resource = treeIndexHelper.getResource();
-            ISearchOperationCallback searchCallback =
-                    searchCallbackFactory.createSearchOperationCallback(resource.getId(), ctx, null);
-            IIndexAccessParameters iap = new IndexAccessParameters(NoOpOperationCallback.INSTANCE, searchCallback);
-            ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor(iap);
+            writer.open();
+            FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
+            scan(appender);
+            appender.write(writer, true);
+        } catch (Throwable th) { // NOSONAR: Must call writer.fail
+            failure = th;
             try {
-                writer.open();
-                indexAccessor.diskOrderScan(cursor);
-                int fieldCount = treeIndex.getFieldCount();
-                FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
-                ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
-                DataOutput dos = tb.getDataOutput();
+                writer.fail();
+            } catch (Throwable failFailure) {// NOSONAR: Must maintain all stacks
+                failure = ExceptionUtils.suppress(failure, failFailure);
+            }
+        } finally {
+            failure = ResourceReleaseUtils.close(writer, failure);
+        }
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
+        }
+    }
 
+    private void scan(FrameTupleAppender appender) throws IOException {
+        ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
+        LocalResource resource = treeIndexHelper.getResource();
+        ISearchOperationCallback searchCallback =
+                searchCallbackFactory.createSearchOperationCallback(resource.getId(), ctx, null);
+        IIndexAccessParameters iap = new IndexAccessParameters(NoOpOperationCallback.INSTANCE, searchCallback);
+        ITreeIndexAccessor indexAccessor = (ITreeIndexAccessor) treeIndex.createAccessor(iap);
+        try {
+            doScan(treeIndex, indexAccessor, appender);
+        } finally {
+            indexAccessor.destroy();
+        }
+    }
+
+    private void doScan(ITreeIndex treeIndex, ITreeIndexAccessor indexAccessor, FrameTupleAppender appender)
+            throws IOException {
+        int fieldCount = treeIndex.getFieldCount();
+        ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
+        DataOutput dos = tb.getDataOutput();
+        ITreeIndexFrame cursorFrame = treeIndex.getLeafFrameFactory().createFrame();
+        ITreeIndexCursor cursor = new TreeIndexDiskOrderScanCursor(cursorFrame);
+        try {
+            indexAccessor.diskOrderScan(cursor);
+            try {
                 while (cursor.hasNext()) {
                     tb.reset();
                     cursor.next();
-
                     ITupleReference frameTuple = cursor.getTuple();
                     for (int i = 0; i < frameTuple.getFieldCount(); i++) {
                         dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i),
                                 frameTuple.getFieldLength(i));
                         tb.addFieldEndOffset();
                     }
-
                     FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
                             tb.getSize());
-
                 }
-                appender.write(writer, true);
-            } catch (Throwable th) {
-                writer.fail();
-                throw new HyracksDataException(th);
             } finally {
-                try {
-                    cursor.destroy();
-                } catch (Exception cursorCloseException) {
-                    throw new IllegalStateException(cursorCloseException);
-                } finally {
-                    writer.close();
-                }
+                cursor.close();
             }
-        } catch (Throwable th) {
-            treeIndexHelper.close();
-            throw new HyracksDataException(th);
+        } finally {
+            cursor.destroy();
         }
     }
 

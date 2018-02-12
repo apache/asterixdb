@@ -1270,64 +1270,68 @@ public class MetadataNode implements IMetadataNode {
 
         StringBuilder sb = new StringBuilder();
         try {
+            RangePredicate rangePred = null;
             IMetadataIndex index = MetadataPrimaryIndexes.DATAVERSE_DATASET;
             String resourceName = index.getFile().toString();
             IIndex indexInstance = datasetLifecycleManager.get(resourceName);
             datasetLifecycleManager.open(resourceName);
             IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
-
-            RangePredicate rangePred = null;
-            rangePred = new RangePredicate(null, null, true, true, null, null);
-            indexAccessor.search(rangeCursor, rangePred);
             try {
-                while (rangeCursor.hasNext()) {
-                    rangeCursor.next();
-                    sb.append(TupleUtils.printTuple(rangeCursor.getTuple(), new ISerializerDeserializer[] {
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING) }));
+                rangePred = new RangePredicate(null, null, true, true, null, null);
+                indexAccessor.search(rangeCursor, rangePred);
+                try {
+                    while (rangeCursor.hasNext()) {
+                        rangeCursor.next();
+                        sb.append(TupleUtils.printTuple(rangeCursor.getTuple(),
+                                new ISerializerDeserializer[] { SerializerDeserializerProvider.INSTANCE
+                                        .getSerializerDeserializer(BuiltinType.ASTRING) }));
+                    }
+                } finally {
+                    rangeCursor.close();
                 }
-            } finally {
-                rangeCursor.destroy();
-            }
-            datasetLifecycleManager.close(resourceName);
-
-            index = MetadataPrimaryIndexes.DATASET_DATASET;
-            indexInstance = datasetLifecycleManager.get(resourceName);
-            datasetLifecycleManager.open(resourceName);
-            indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            rangeCursor = indexAccessor.createSearchCursor(false);
-
-            rangePred = null;
-            rangePred = new RangePredicate(null, null, true, true, null, null);
-            indexAccessor.search(rangeCursor, rangePred);
-            try {
-                while (rangeCursor.hasNext()) {
-                    rangeCursor.next();
-                    sb.append(TupleUtils.printTuple(rangeCursor.getTuple(), new ISerializerDeserializer[] {
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING) }));
+                datasetLifecycleManager.close(resourceName);
+                index = MetadataPrimaryIndexes.DATASET_DATASET;
+                indexInstance = datasetLifecycleManager.get(resourceName);
+                datasetLifecycleManager.open(resourceName);
+                indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                rangeCursor = indexAccessor.createSearchCursor(false);
+                rangePred = null;
+                rangePred = new RangePredicate(null, null, true, true, null, null);
+                indexAccessor.search(rangeCursor, rangePred);
+                try {
+                    while (rangeCursor.hasNext()) {
+                        rangeCursor.next();
+                        sb.append(TupleUtils.printTuple(rangeCursor.getTuple(),
+                                new ISerializerDeserializer[] {
+                                        SerializerDeserializerProvider.INSTANCE
+                                                .getSerializerDeserializer(BuiltinType.ASTRING),
+                                        SerializerDeserializerProvider.INSTANCE
+                                                .getSerializerDeserializer(BuiltinType.ASTRING) }));
+                    }
+                } finally {
+                    rangeCursor.close();
                 }
-            } finally {
-                rangeCursor.destroy();
-            }
-            datasetLifecycleManager.close(resourceName);
-
-            index = MetadataPrimaryIndexes.INDEX_DATASET;
-            indexInstance = datasetLifecycleManager.get(resourceName);
-            datasetLifecycleManager.open(resourceName);
-            indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            rangeCursor = indexAccessor.createSearchCursor(false);
-
-            rangePred = null;
-            rangePred = new RangePredicate(null, null, true, true, null, null);
-            indexAccessor.search(rangeCursor, rangePred);
-            try {
-                while (rangeCursor.hasNext()) {
-                    rangeCursor.next();
-                    sb.append(TupleUtils.printTuple(rangeCursor.getTuple(), new ISerializerDeserializer[] {
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING) }));
+                datasetLifecycleManager.close(resourceName);
+                index = MetadataPrimaryIndexes.INDEX_DATASET;
+                indexInstance = datasetLifecycleManager.get(resourceName);
+                datasetLifecycleManager.open(resourceName);
+                indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                rangeCursor = indexAccessor.createSearchCursor(false);
+                rangePred = null;
+                rangePred = new RangePredicate(null, null, true, true, null, null);
+                indexAccessor.search(rangeCursor, rangePred);
+                try {
+                    while (rangeCursor.hasNext()) {
+                        rangeCursor.next();
+                        sb.append(TupleUtils.printTuple(rangeCursor.getTuple(), new ISerializerDeserializer[] {
+                                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
+                                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING),
+                                SerializerDeserializerProvider.INSTANCE
+                                        .getSerializerDeserializer(BuiltinType.ASTRING) }));
+                    }
+                } finally {
+                    rangeCursor.close();
                 }
             } finally {
                 rangeCursor.destroy();
@@ -1351,75 +1355,95 @@ public class MetadataNode implements IMetadataNode {
         IIndex indexInstance = datasetLifecycleManager.get(resourceName);
         datasetLifecycleManager.open(resourceName);
         IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
-
-        IBinaryComparator[] searchCmps = null;
-        MultiComparator searchCmp = null;
-        RangePredicate rangePred = null;
-        if (searchKey != null) {
-            searchCmps = new IBinaryComparator[searchKey.getFieldCount()];
-            for (int i = 0; i < searchKey.getFieldCount(); i++) {
-                searchCmps[i] = comparatorFactories[i].createBinaryComparator();
-            }
-            searchCmp = new MultiComparator(searchCmps);
-        }
-        rangePred = new RangePredicate(searchKey, searchKey, true, true, searchCmp, searchCmp);
-        indexAccessor.search(rangeCursor, rangePred);
-
         try {
-            while (rangeCursor.hasNext()) {
-                rangeCursor.next();
-                ResultType result = valueExtractor.getValue(txnId, rangeCursor.getTuple());
-                if (result != null) {
-                    results.add(result);
+            IBinaryComparator[] searchCmps = null;
+            MultiComparator searchCmp = null;
+            if (searchKey != null) {
+                searchCmps = new IBinaryComparator[searchKey.getFieldCount()];
+                for (int i = 0; i < searchKey.getFieldCount(); i++) {
+                    searchCmps[i] = comparatorFactories[i].createBinaryComparator();
                 }
+                searchCmp = new MultiComparator(searchCmps);
             }
+            RangePredicate rangePred = new RangePredicate(searchKey, searchKey, true, true, searchCmp, searchCmp);
+            search(indexAccessor, rangePred, results, valueExtractor, txnId);
         } finally {
-            rangeCursor.destroy();
+            indexAccessor.destroy();
         }
         datasetLifecycleManager.close(resourceName);
     }
 
+    private <ResultType> void search(IIndexAccessor indexAccessor, RangePredicate rangePred, List<ResultType> results,
+            IValueExtractor<ResultType> valueExtractor, TxnId txnId)
+            throws HyracksDataException, RemoteException, AlgebricksException {
+        IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
+        try {
+            indexAccessor.search(rangeCursor, rangePred);
+            try {
+                while (rangeCursor.hasNext()) {
+                    rangeCursor.next();
+                    ResultType result = valueExtractor.getValue(txnId, rangeCursor.getTuple());
+                    if (result != null) {
+                        results.add(result);
+                    }
+                }
+            } finally {
+                rangeCursor.close();
+            }
+        } finally {
+            rangeCursor.destroy();
+        }
+    }
+
     @Override
     public void initializeDatasetIdFactory(TxnId txnId) throws AlgebricksException, RemoteException {
-        int mostRecentDatasetId = MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID;
+        int mostRecentDatasetId;
         try {
             String resourceName = MetadataPrimaryIndexes.DATASET_DATASET.getFile().getRelativePath();
             IIndex indexInstance = datasetLifecycleManager.get(resourceName);
             datasetLifecycleManager.open(resourceName);
             try {
-                IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-                IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
+                mostRecentDatasetId = getMostRecentDatasetIdFromStoredDatasetIndex(indexInstance, txnId);
+            } finally {
+                datasetLifecycleManager.close(resourceName);
+            }
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
+        DatasetIdFactory.initialize(mostRecentDatasetId);
+    }
 
-                DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
-                IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
-                RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
-
+    private int getMostRecentDatasetIdFromStoredDatasetIndex(IIndex indexInstance, TxnId txnId)
+            throws HyracksDataException, RemoteException, AlgebricksException {
+        DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
+        IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+        RangePredicate rangePred = new RangePredicate(null, null, true, true, null, null);
+        int mostRecentDatasetId = MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID;
+        IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+        try {
+            IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
+            try {
                 indexAccessor.search(rangeCursor, rangePred);
-                int datasetId;
-
                 try {
                     while (rangeCursor.hasNext()) {
                         rangeCursor.next();
                         final ITupleReference ref = rangeCursor.getTuple();
                         final Dataset ds = valueExtractor.getValue(txnId, ref);
-                        datasetId = ds.getDatasetId();
+                        int datasetId = ds.getDatasetId();
                         if (mostRecentDatasetId < datasetId) {
                             mostRecentDatasetId = datasetId;
                         }
                     }
                 } finally {
-                    rangeCursor.destroy();
+                    rangeCursor.close();
                 }
             } finally {
-                datasetLifecycleManager.close(resourceName);
+                rangeCursor.destroy();
             }
-
-        } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
+        } finally {
+            indexAccessor.destroy();
         }
-
-        DatasetIdFactory.initialize(mostRecentDatasetId);
+        return mostRecentDatasetId;
     }
 
     // TODO: Can use Hyrack's TupleUtils for this, once we switch to a newer

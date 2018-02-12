@@ -140,16 +140,19 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                     resetSearchPredicate(index);
                     if (isFiltered || isDelete || hasSecondaries) {
                         lsmAccessor.search(cursor, searchPred);
-                        if (cursor.hasNext()) {
-                            cursor.next();
-                            prevTuple = cursor.getTuple();
+                        try {
+                            if (cursor.hasNext()) {
+                                cursor.next();
+                                prevTuple = cursor.getTuple();
+                                appendFilterToPrevTuple();
+                                appendPrevRecord();
+                                appendPreviousMeta();
+                                appendFilterToOutput();
+                            } else {
+                                appendPreviousTupleAsMissing();
+                            }
+                        } finally {
                             cursor.close(); // end the search
-                            appendFilterToPrevTuple();
-                            appendPrevRecord();
-                            appendPreviousMeta();
-                            appendFilterToOutput();
-                        } else {
-                            appendPreviousTupleAsMissing();
                         }
                     } else {
                         searchCallback.before(key); // lock
@@ -319,7 +322,6 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         if (isFiltered) {
             writeMissingField();
         }
-        cursor.close();
     }
 
     /**
@@ -362,7 +364,9 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     public void close() throws HyracksDataException {
         try {
             try {
-                cursor.destroy();
+                if (cursor != null) {
+                    cursor.destroy();
+                }
             } finally {
                 writer.close();
             }
