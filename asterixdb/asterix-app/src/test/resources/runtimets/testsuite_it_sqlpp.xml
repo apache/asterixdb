@@ -55,4 +55,31 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="feeds">
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-parser">
+        <output-dir compare="Text">feed-with-external-parser</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-parser-with-open-index">
+        <output-dir compare="Text">feed-with-external-parser-with-open-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-parser-with-two-open-indexes">
+        <output-dir compare="Text">feed-with-external-parser-with-two-open-indexes</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-external-function">
+        <output-dir compare="Text">feed-with-external-function</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="feed-with-multiple-indexes">
+        <output-dir compare="Text">feed-with-multiple-indexes</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

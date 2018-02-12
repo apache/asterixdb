@@ -1,0 +1,56 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Create a change feed with meta-data and test ingestion of records
+ * Expected Res : Success
+ * Date         : 24th Feb 2016
+ */
+
+drop dataverse KeyVerse if exists;
+create dataverse KeyVerse;
+use KeyVerse;
+
+create type DocumentType as open{
+};
+
+create type KVMetaType as open{
+id:string,
+flags:int32,
+expiration:int32,
+cas:int64,
+rev:int64,
+vbid:int32,
+dtype:int32
+};
+
+create dataset KVStore(DocumentType) with meta(KVMetaType)primary key meta().id;
+
+create feed KVStream with {
+ "adapter-name" : "adapter",
+ "reader" : "localfs",
+ "parser" : "record-with-metadata",
+ "type-name" : "DocumentType",
+ "meta-type-name" : "KVMetaType",
+ "path" : "asterix_nc1://target/data/csv/openbeerdb/beer.csv",
+ "format" : "csv",
+ "delimiter" : ",",
+ "record-format" : "adm",
+ "record-index" : "4",
+ "header" : "true"
+};

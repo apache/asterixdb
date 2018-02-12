@@ -368,6 +368,7 @@
             <usedDependency>org.apache.hyracks:hyracks-control-cc</usedDependency>
             <usedDependency>org.apache.hyracks:hyracks-control-nc</usedDependency>
             <usedDependency>org.apache.hyracks:hyracks-nc-service</usedDependency>
+            <usedDependency>org.apache.asterix:asterix-external-data</usedDependency>
             <usedDependency>org.codehaus.mojo.appassembler:appassembler-booter</usedDependency>
           </usedDependencies>
         </configuration>
@@ -568,6 +569,13 @@
       <version>${project.version}</version>
       <type>zip</type>
       <classifier>assembly</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-external-data</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
