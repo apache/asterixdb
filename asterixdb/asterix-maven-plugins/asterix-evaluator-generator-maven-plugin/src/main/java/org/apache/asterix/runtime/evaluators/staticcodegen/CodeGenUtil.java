@@ -60,7 +60,7 @@ public class CodeGenUtil {
          * @throws IOException
          */
         public void runAction(String targetClassName, byte[] classDefinitionBytes) throws IOException;
-    };
+    }
 
     /**
      * Generates the byte code for a scalar function descriptor.
@@ -101,29 +101,32 @@ public class CodeGenUtil {
                 CodeGenHelper.toJdkStandardName(targetFuncDescriptorClassName)));
 
         // Gathers evaluator factory classes that are created in the function descriptor.
-        ClassReader reader = new ClassReader(getResourceStream(internalFuncDescriptorClassName, classLoader));
-        GatherEvaluatorFactoryCreationVisitor evalFactoryCreationVisitor =
-                new GatherEvaluatorFactoryCreationVisitor(CodeGenHelper.toInternalClassName(packagePrefix));
-        reader.accept(evalFactoryCreationVisitor, 0);
-        Set<String> evaluatorFactoryClassNames = evalFactoryCreationVisitor.getCreatedEvaluatorFactoryClassNames();
+        try (InputStream internalFuncDescriptorStream =
+                getResourceStream(internalFuncDescriptorClassName, classLoader)) {
+            ClassReader reader = new ClassReader(internalFuncDescriptorStream);
+            GatherEvaluatorFactoryCreationVisitor evalFactoryCreationVisitor =
+                    new GatherEvaluatorFactoryCreationVisitor(CodeGenHelper.toInternalClassName(packagePrefix));
+            reader.accept(evalFactoryCreationVisitor, 0);
+            Set<String> evaluatorFactoryClassNames = evalFactoryCreationVisitor.getCreatedEvaluatorFactoryClassNames();
 
-        // Generates inner classes other than evaluator factories.
-        generateNonEvalInnerClasses(reader, evaluatorFactoryClassNames, nameMappings, suffixForGeneratedClass,
-                classLoader, action);
+            // Generates inner classes other than evaluator factories.
+            generateNonEvalInnerClasses(reader, evaluatorFactoryClassNames, nameMappings, suffixForGeneratedClass,
+                    classLoader, action);
 
-        // Generates evaluator factories that are created in the function descriptor.
-        int evalFactoryCounter = 0;
-        for (String evaluateFactoryClassName : evaluatorFactoryClassNames) {
-            generateEvaluatorFactoryClassBinary(packagePrefix, evaluateFactoryClassName, suffixForGeneratedClass,
-                    evalFactoryCounter++, nameMappings, classLoader, action);
+            // Generates evaluator factories that are created in the function descriptor.
+            int evalFactoryCounter = 0;
+            for (String evaluateFactoryClassName : evaluatorFactoryClassNames) {
+                generateEvaluatorFactoryClassBinary(packagePrefix, evaluateFactoryClassName, suffixForGeneratedClass,
+                        evalFactoryCounter++, nameMappings, classLoader, action);
+            }
+
+            // Transforms the function descriptor class and outputs the generated class binary.
+            ClassWriter writer = new ClassWriter(reader, 0);
+            RenameClassVisitor renamingVisitor = new RenameClassVisitor(writer, nameMappings);
+            reader.accept(renamingVisitor, 0);
+            action.runAction(targetFuncDescriptorClassName, writer.toByteArray());
+            return nameMappings;
         }
-
-        // Transforms the function descriptor class and outputs the generated class binary.
-        ClassWriter writer = new ClassWriter(reader, 0);
-        RenameClassVisitor renamingVisitor = new RenameClassVisitor(writer, nameMappings);
-        reader.accept(renamingVisitor, 0);
-        action.runAction(targetFuncDescriptorClassName, writer.toByteArray());
-        return nameMappings;
     }
 
     /**
@@ -187,28 +190,31 @@ public class CodeGenUtil {
                 CodeGenHelper.toJdkStandardName(targetEvaluatorFactoryClassName)));
 
         // Gathers the class names of the evaluators that are created in the evaluator factory.
-        ClassReader reader = new ClassReader(getResourceStream(internalEvaluatorFactoryClassName, classLoader));
-        GatherEvaluatorCreationVisitor evalCreationVisitor =
-                new GatherEvaluatorCreationVisitor(CodeGenHelper.toInternalClassName(packagePrefix));
-        reader.accept(evalCreationVisitor, 0);
-        Set<String> evaluatorClassNames = evalCreationVisitor.getCreatedEvaluatorClassNames();
+        try (InputStream internalEvaluatorFactoryStream =
+                getResourceStream(internalEvaluatorFactoryClassName, classLoader)) {
+            ClassReader reader = new ClassReader(internalEvaluatorFactoryStream);
+            GatherEvaluatorCreationVisitor evalCreationVisitor =
+                    new GatherEvaluatorCreationVisitor(CodeGenHelper.toInternalClassName(packagePrefix));
+            reader.accept(evalCreationVisitor, 0);
+            Set<String> evaluatorClassNames = evalCreationVisitor.getCreatedEvaluatorClassNames();
 
-        // Generates inner classes other than evaluators.
-        generateNonEvalInnerClasses(reader, evaluatorClassNames, nameMappings, suffixForGeneratedClass, classLoader,
-                action);
+            // Generates inner classes other than evaluators.
+            generateNonEvalInnerClasses(reader, evaluatorClassNames, nameMappings, suffixForGeneratedClass, classLoader,
+                    action);
 
-        // Generates code for all evaluators.
-        int evalCounter = 0;
-        for (String evaluateClassName : evaluatorClassNames) {
-            generateEvaluatorClassBinary(evaluateClassName, suffixForGeneratedClass, evalCounter++, nameMappings,
-                    classLoader, action);
+            // Generates code for all evaluators.
+            int evalCounter = 0;
+            for (String evaluateClassName : evaluatorClassNames) {
+                generateEvaluatorClassBinary(evaluateClassName, suffixForGeneratedClass, evalCounter++, nameMappings,
+                        classLoader, action);
+            }
+
+            // Transforms the evaluator factory class and outputs the generated class binary.
+            ClassWriter writer = new ClassWriter(reader, 0);
+            RenameClassVisitor renamingVisitor = new RenameClassVisitor(writer, nameMappings);
+            reader.accept(renamingVisitor, 0);
+            action.runAction(targetEvaluatorFactoryClassName, writer.toByteArray());
         }
-
-        // Transforms the evaluator factory class and outputs the generated class binary.
-        ClassWriter writer = new ClassWriter(reader, 0);
-        RenameClassVisitor renamingVisitor = new RenameClassVisitor(writer, nameMappings);
-        reader.accept(renamingVisitor, 0);
-        action.runAction(targetEvaluatorFactoryClassName, writer.toByteArray());
     }
 
     /**
@@ -250,31 +256,33 @@ public class CodeGenUtil {
         nameMappings.add(Pair.of(CodeGenHelper.toJdkStandardName(internalEvaluatorClassName),
                 CodeGenHelper.toJdkStandardName(targetEvaluatorClassName)));
 
-        ClassReader firstPassReader = new ClassReader(getResourceStream(internalEvaluatorClassName, classLoader));
-        // Generates inner classes other than the evaluator.
-        Set<String> excludedNames = new HashSet<>();
-        for (Pair<String, String> entry : nameMappings) {
-            excludedNames.add(entry.getKey());
+        try (InputStream internalEvaluatorStream = getResourceStream(internalEvaluatorClassName, classLoader)) {
+            ClassReader firstPassReader = new ClassReader(internalEvaluatorStream);
+            // Generates inner classes other than the evaluator.
+            Set<String> excludedNames = new HashSet<>();
+            for (Pair<String, String> entry : nameMappings) {
+                excludedNames.add(entry.getKey());
+            }
+            generateNonEvalInnerClasses(firstPassReader, excludedNames, nameMappings, suffixForGeneratedClass,
+                    classLoader, action);
+
+            // Injects missing-handling byte code.
+            ClassWriter firstPassWriter = new ClassWriter(firstPassReader, 0);
+            EvaluatorMissingCheckVisitor missingHandlingVisitor = new EvaluatorMissingCheckVisitor(firstPassWriter);
+            firstPassReader.accept(missingHandlingVisitor, 0);
+
+            ClassReader secondPassReader = new ClassReader(firstPassWriter.toByteArray());
+            // Injects null-handling byte code and output the class binary.
+            // Since we're going to add jump instructions, we have to let the ClassWriter to
+            // automatically generate frames for JVM to verify the class.
+            ClassWriter secondPassWriter =
+                    new ClassWriter(secondPassReader, ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+            RenameClassVisitor renamingVisitor = new RenameClassVisitor(secondPassWriter, nameMappings);
+            EvaluatorNullCheckVisitor nullHandlingVisitor =
+                    new EvaluatorNullCheckVisitor(renamingVisitor, missingHandlingVisitor.getLastAddedLabel());
+            secondPassReader.accept(nullHandlingVisitor, 0);
+            action.runAction(targetEvaluatorClassName, secondPassWriter.toByteArray());
         }
-        generateNonEvalInnerClasses(firstPassReader, excludedNames, nameMappings, suffixForGeneratedClass, classLoader,
-                action);
-
-        // Injects missing-handling byte code.
-        ClassWriter firstPassWriter = new ClassWriter(firstPassReader, 0);
-        EvaluatorMissingCheckVisitor missingHandlingVisitor = new EvaluatorMissingCheckVisitor(firstPassWriter);
-        firstPassReader.accept(missingHandlingVisitor, 0);
-
-        ClassReader secondPassReader = new ClassReader(firstPassWriter.toByteArray());
-        // Injects null-handling byte code and output the class binary.
-        // Since we're going to add jump instructions, we have to let the ClassWriter to
-        // automatically generate frames for JVM to verify the class.
-        ClassWriter secondPassWriter =
-                new ClassWriter(secondPassReader, ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-        RenameClassVisitor renamingVisitor = new RenameClassVisitor(secondPassWriter, nameMappings);
-        EvaluatorNullCheckVisitor nullHandlingVisitor =
-                new EvaluatorNullCheckVisitor(renamingVisitor, missingHandlingVisitor.getLastAddedLabel());
-        secondPassReader.accept(nullHandlingVisitor, 0);
-        action.runAction(targetEvaluatorClassName, secondPassWriter.toByteArray());
     }
 
     /**
@@ -314,11 +322,13 @@ public class CodeGenUtil {
                     CodeGenHelper.toJdkStandardName(targetInnerClassName)));
 
             // Renaming appearances of original class names.
-            ClassReader innerClassReader = new ClassReader(getResourceStream(innerClassName, classLoader));
-            ClassWriter writer = new ClassWriter(innerClassReader, 0);
-            RenameClassVisitor renamingVisitor = new RenameClassVisitor(writer, nameMappings);
-            innerClassReader.accept(renamingVisitor, 0);
-            action.runAction(targetInnerClassName, writer.toByteArray());
+            try (InputStream innerStream = getResourceStream(innerClassName, classLoader)) {
+                ClassReader innerClassReader = new ClassReader(innerStream);
+                ClassWriter writer = new ClassWriter(innerClassReader, 0);
+                RenameClassVisitor renamingVisitor = new RenameClassVisitor(writer, nameMappings);
+                innerClassReader.accept(renamingVisitor, 0);
+                action.runAction(targetInnerClassName, writer.toByteArray());
+            }
         }
     }
 
