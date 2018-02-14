@@ -141,7 +141,7 @@ public class NodeControllerState {
 
     private int rrdPtr;
 
-    private long lastHeartbeatNanoTime;
+    private volatile long lastHeartbeatNanoTime;
 
     private NodeCapacity capacity;
 
@@ -252,10 +252,6 @@ public class NodeControllerState {
 
     public long nanosSinceLastHeartbeat() {
         return System.nanoTime() - lastHeartbeatNanoTime;
-    }
-
-    public long getLastHeartbeatNanoTime() {
-        return lastHeartbeatNanoTime;
     }
 
     public NodeControllerRemoteProxy getNodeController() {

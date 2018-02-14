@@ -48,9 +48,11 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.AbortCCJobsFunction;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.hyracks.util.annotations.NotThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@NotThreadSafe
 public class NodeManager implements INodeManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -99,7 +101,7 @@ public class NodeManager implements INodeManager {
         // Updates the node registry.
         if (nodeRegistry.containsKey(nodeId)) {
             LOGGER.warn("Node with name " + nodeId + " has already registered; failing the node then re-registering.");
-            removeDeadNode(nodeId);
+            failNonDeadNode(nodeId);
         } else {
             try {
                 // TODO(mblow): it seems we should close IPC handles when we're done with them (like here)
@@ -155,22 +157,23 @@ public class NodeManager implements INodeManager {
             Map.Entry<String, NodeControllerState> entry = nodeIterator.next();
             String nodeId = entry.getKey();
             NodeControllerState state = entry.getValue();
-            if (state.nanosSinceLastHeartbeat() >= deadNodeNanosThreshold) {
+            final long nanosSinceLastHeartbeat = state.nanosSinceLastHeartbeat();
+            if (nanosSinceLastHeartbeat >= deadNodeNanosThreshold) {
+                ensureNodeFailure(nodeId, state);
                 deadNodes.add(nodeId);
                 affectedJobIds.addAll(state.getActiveJobIds());
-                // Removes the node from node map.
                 nodeIterator.remove();
-                // Removes the node from IP map.
                 removeNodeFromIpAddressMap(nodeId, state);
-                // Updates the cluster capacity.
                 resourceManager.update(nodeId, new NodeCapacity(0L, 0));
-                LOGGER.info(entry.getKey() + " considered dead");
+                LOGGER.info("{} considered dead. Last heartbeat received {}ms ago. Max miss period: {}ms", nodeId,
+                        TimeUnit.NANOSECONDS.toMillis(nanosSinceLastHeartbeat),
+                        TimeUnit.NANOSECONDS.toMillis(deadNodeNanosThreshold));
             }
         }
         return Pair.of(deadNodes, affectedJobIds);
     }
 
-    public void removeDeadNode(String nodeId) throws HyracksException {
+    private void failNonDeadNode(String nodeId) throws HyracksException {
         NodeControllerState state = nodeRegistry.get(nodeId);
         Set<JobId> affectedJobIds = state.getActiveJobIds();
         // Removes the node from node map.
@@ -196,7 +199,6 @@ public class NodeManager implements INodeManager {
         nodeRegistry.forEach(nodeFunction::apply);
     }
 
-    // Removes the entry of the node in <code>ipAddressNodeNameMap</code>.
     private void removeNodeFromIpAddressMap(String nodeId, NodeControllerState ncState) throws HyracksException {
         InetAddress ipAddress = getIpAddress(ncState);
         Set<String> nodes = ipAddressNodeNameMap.get(ipAddress);
@@ -209,7 +211,6 @@ public class NodeManager implements INodeManager {
         }
     }
 
-    // Retrieves the IP address for a given node.
     private InetAddress getIpAddress(NodeControllerState ncState) throws HyracksException {
         String ipAddress = ncState.getNCConfig().getDataPublicAddress();
         try {
@@ -221,5 +222,16 @@ public class NodeManager implements INodeManager {
 
     private NodeCapacity getAdjustedNodeCapacity(NodeCapacity nodeCapacity) {
         return new NodeCapacity(nodeCapacity.getMemoryByteSize(), nodeCapacity.getCores() * nodeCoresMultiplier);
+    }
+
+    private void ensureNodeFailure(String nodeId, NodeControllerState state) {
+        try {
+            LOGGER.info("Requesting node {} to shutdown to ensure failure", nodeId);
+            state.getNodeController().shutdown(false);
+            LOGGER.info("Request to shutdown failed node {} succeeded. false positive heartbeat miss indication",
+                    nodeId);
+        } catch (Exception ignore) {
+            LOGGER.debug(() -> "Ignoring failure on ensuring node " + nodeId + " has failed", ignore);
+        }
     }
 }
