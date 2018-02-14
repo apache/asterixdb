@@ -26,14 +26,20 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 /**
  * Represents an index cursor. The expected use
  * cursor = new cursor();
- * while (more predicates){
- * -cursor.open(predicate);
- * -while (cursor.hasNext()){
- * --cursor.next()
+ * try{
+ * -while (more predicates){
+ * --cursor.open(predicate);
+ * --try{
+ * ---while (cursor.hasNext()){
+ * ----cursor.next()
+ * ---}
+ * --} finally{
+ * ---cursor.close();
+ * --}
  * -}
- * -cursor.close();
+ * } finally{
+ * -cursor.destroy();
  * }
- * cursor.destroy();
  * Each created cursor must have destroy called
  * Each successfully opened cursor must have close called
  *
@@ -47,7 +53,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  * When a cursor object is created, it is in the CLOSED state.
  * CLOSED: Legal calls are open() --> OPENED, or destroy() --> DESTROYED, close() --> no effect
  * OPENED: The only legal calls are hasNext(), next(), or close() --> CLOSED.
- * DESTROYED: All calls are illegal.
+ * DESTROYED: The only legal call is destroy() which has no effect.
+ *
  * Cursors must enforce the cursor state machine
  */
 public interface IIndexCursor extends IDestroyable {

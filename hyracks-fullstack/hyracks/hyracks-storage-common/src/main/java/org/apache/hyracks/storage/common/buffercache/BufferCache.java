@@ -28,11 +28,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -45,8 +48,10 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.storage.common.buffercache.CachedPage.State;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
+import org.apache.hyracks.util.InvokeUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,6 +60,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int MAP_FACTOR = 3;
+    private static final CachedPage POISON_PILL = new CachedPage();
 
     private static final int MIN_CLEANED_COUNT_DIFF = 3;
     private static final int PIN_MAX_WAIT_TIME = 50;
@@ -66,7 +72,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     private final int pageSize;
     private final int maxOpenFiles;
-    final IIOManager ioManager;
+    private final ExecutorService executor;
+    private final IIOManager ioManager;
     private final CacheBucket[] pageMap;
     private final IPageReplacementStrategy pageReplacementStrategy;
     private final IPageCleanerPolicy pageCleanerPolicy;
@@ -75,6 +82,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
     private final AsyncFIFOPageQueueManager fifoWriter;
     private final Queue<BufferCacheHeaderHelper> headerPageCache = new ConcurrentLinkedQueue<>();
+    private final BlockingQueue<CachedPage> readRequests;
 
     //DEBUG
     private Level fileOpsLevel = Level.DEBUG;
@@ -103,19 +111,43 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         this.pageReplacementStrategy = pageReplacementStrategy;
         this.pageCleanerPolicy = pageCleanerPolicy;
         this.fileMapManager = fileMapManager;
-
-        Executor executor = Executors.newCachedThreadPool(threadFactory);
-        fileInfoMap = new HashMap<>();
-        cleanerThread = new CleanerThread();
-        executor.execute(cleanerThread);
-        closed = false;
-
-        fifoWriter = new AsyncFIFOPageQueueManager(this);
-        if (DEBUG) {
-            confiscatedPages = new ArrayList<>();
-            confiscatedPagesOwner = new HashMap<>();
-            confiscateLock = new ReentrantLock();
-            pinnedPageOwner = new ConcurrentHashMap<>();
+        int numReaders = ioManager.getIODevices().size() * 2;
+        readRequests = new ArrayBlockingQueue<>(pageReplacementStrategy.getMaxAllowedNumPages());
+        executor = Executors.newFixedThreadPool(numReaders + 1, threadFactory);
+        try {
+            fileInfoMap = new HashMap<>();
+            cleanerThread = new CleanerThread();
+            executor.execute(cleanerThread);
+            for (int i = 0; i < numReaders; i++) {
+                executor.execute(new ReaderThread(i));
+            }
+            closed = false;
+            fifoWriter = new AsyncFIFOPageQueueManager(this);
+            if (DEBUG) {
+                confiscatedPages = new ArrayList<>();
+                confiscatedPagesOwner = new HashMap<>();
+                confiscateLock = new ReentrantLock();
+                pinnedPageOwner = new ConcurrentHashMap<>();
+            }
+        } catch (Throwable th) {
+            try {
+                throw th;
+            } finally {
+                readRequests.offer(POISON_PILL); // NOSONAR will always succeed since the queue is empty
+                executor.shutdown();
+                try {
+                    if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                        LOGGER.log(Level.WARN, "Failure shutting down buffer cache executor service");
+                    }
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.WARN, "Interrupted while shutting down buffer cache executor service");
+                    Thread.currentThread().interrupt();
+                    th.addSuppressed(e);
+                } catch (Throwable e) {
+                    LOGGER.log(Level.WARN, "Failure shutting down buffer cache executor service", e);
+                    th.addSuppressed(e);
+                }
+            }
         }
     }
 
@@ -185,22 +217,27 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             // Resolve race of multiple threads trying to read the page from
             // disk.
             synchronized (cPage) {
-                if (!cPage.valid) {
+                if (cPage.state != State.VALID) {
                     try {
-                        tryRead(cPage);
-                        cPage.valid = true;
-                    } catch (Exception e) {
-                        LOGGER.log(Level.WARN, "Failure while trying to read a page from disk", e);
-                        throw e;
-                    } finally {
-                        if (!cPage.valid) {
-                            unpin(cPage);
+                        // Will attempt to re-read even if previous read failed
+                        if (cPage.state == State.INVALID || cPage.state == State.READ_FAILED) {
+                            // submit request to read
+                            cPage.state = State.READ_REQUESTED;
+                            readRequests.put(cPage);
                         }
+                        cPage.awaitRead();
+                    } catch (InterruptedException e) {
+                        cPage.state = State.INVALID;
+                        unpin(cPage);
+                        throw HyracksDataException.create(e);
+                    } catch (Throwable th) {
+                        unpin(cPage);
+                        throw HyracksDataException.create(th);
                     }
                 }
             }
         } else {
-            cPage.valid = true;
+            cPage.state = State.VALID;
         }
         pageReplacementStrategy.notifyCachePageAccess(cPage);
         if (DEBUG) {
@@ -449,7 +486,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                     buffer.append("      ").append(cp.cpid).append(" -> [")
                             .append(BufferedFileHandle.getFileId(cp.dpid)).append(':')
                             .append(BufferedFileHandle.getPageId(cp.dpid)).append(", ").append(cp.pinCount.get())
-                            .append(", ").append(cp.valid ? "valid" : "invalid").append(", ")
+                            .append(", ").append(cp.state).append(", ")
                             .append(cp.confiscated.get() ? "confiscated" : "physical").append(", ")
                             .append(cp.dirty.get() ? "dirty" : "clean").append("]\n");
                     cp = cp.next;
@@ -480,7 +517,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 if (c.confiscated() || c.latch.getReadLockCount() != 0 || c.latch.getWriteHoldCount() != 0) {
                     return false;
                 }
-                if (c.valid) {
+                if (c.state == State.VALID) {
                     reachableDpids.add(c.dpid);
                 }
             }
@@ -519,6 +556,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 read(cPage);
                 return;
             } catch (HyracksDataException readException) {
+                if (Thread.interrupted()) {
+                    LOGGER.log(Level.WARN, "Ignoring interrupt. Reader threads should never be interrupted.");
+                }
                 if (readException.getErrorCode() == ErrorCode.CANNOT_READ_CLOSED_FILE && i <= MAX_PAGE_READ_ATTEMPTS) {
                     /**
                      * if the read failure was due to another thread closing the file channel because
@@ -530,8 +570,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                         LOGGER.log(Level.WARN, String.format("Failed to read page. Retrying attempt (%d/%d)", i + 1,
                                 MAX_PAGE_READ_ATTEMPTS), readException);
                     } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw HyracksDataException.create(e);
+                        LOGGER.log(Level.WARN, "Ignoring interrupt. Reader threads should never be interrupted.");
                     }
                 } else {
                     throw readException;
@@ -670,6 +709,54 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         }
     }
 
+    private class ReaderThread implements Runnable {
+        private final int num;
+
+        private ReaderThread(int num) {
+            this.num = num;
+        }
+
+        @Override
+        public void run() {
+            Thread.currentThread().setName("Buffer-Cache-Reader-" + num);
+            while (true) {
+                CachedPage next;
+                try {
+                    next = readRequests.take();
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.WARN, "Ignoring interrupt. Reader threads should never be interrupted.");
+                    break;
+                }
+                if (next == POISON_PILL) {
+                    LOGGER.log(Level.INFO, "Exiting");
+                    InvokeUtil.doUninterruptibly(() -> readRequests.put(POISON_PILL));
+                    if (Thread.interrupted()) {
+                        LOGGER.log(Level.ERROR, "Ignoring interrupt. Reader threads should never be interrupted.");
+                    }
+                    break;
+                }
+                if (next.state != State.READ_REQUESTED) {
+                    LOGGER.log(Level.ERROR,
+                            "Exiting BufferCache reader thread. Took a page with state = {} out of the queue",
+                            next.state);
+                    break;
+                }
+                try {
+                    tryRead(next);
+                    next.state = State.VALID;
+                } catch (HyracksDataException e) {
+                    next.readFailure = e;
+                    next.state = State.READ_FAILED;
+                    LOGGER.log(Level.WARN, "Failed to read a page", e);
+                }
+                synchronized (next) {
+                    next.notifyAll();
+                }
+            }
+        }
+
+    }
+
     private class CleanerThread implements Runnable {
         private volatile boolean shutdownStart = false;
         private volatile boolean shutdownComplete = false;
@@ -798,6 +885,16 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 }
             });
             fileInfoMap.clear();
+        }
+        InvokeUtil.doUninterruptibly(() -> readRequests.put(POISON_PILL));
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                LOGGER.log(Level.WARN, "Failure shutting down buffer cache executor service");
+            }
+        } catch (InterruptedException e) {
+            LOGGER.log(Level.WARN, "Interrupted while shutting down buffer cache executor service");
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -1343,7 +1440,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             }
             try {
                 cPage.reset(cPage.dpid);
-                cPage.valid = true;
+                cPage.state = State.VALID;
                 cPage.next = bucket.cachedPage;
                 bucket.cachedPage = cPage;
                 cPage.pinCount.decrementAndGet();
