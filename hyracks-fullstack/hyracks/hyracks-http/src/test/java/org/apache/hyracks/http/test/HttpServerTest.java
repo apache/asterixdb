@@ -48,13 +48,18 @@ import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.http.servlet.ChattyServlet;
 import org.apache.hyracks.http.servlet.SleepyServlet;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class HttpServerTest {
+    private static final Logger LOGGER = LogManager.getLogger();
     static final boolean PRINT_TO_CONSOLE = false;
     static final int PORT = 9898;
     static final String HOST = "localhost";
@@ -236,6 +241,63 @@ public class HttpServerTest {
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
+        } finally {
+            webMgr.stop();
+        }
+    }
+
+    @Test
+    public void testServerRevival() throws Exception {
+        int numExecutors = 16;
+        int serverQueueSize = 16;
+        int numRequests = 1;
+        WebManager webMgr = new WebManager();
+        HttpServer server =
+                new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, numExecutors, serverQueueSize);
+        ChattyServlet servlet = new ChattyServlet(server.ctx(), new String[] { PATH });
+        server.addServlet(servlet);
+        webMgr.add(server);
+        webMgr.start();
+        try {
+            // send a request
+            request(numRequests);
+            for (Future<Void> thread : FUTURES) {
+                thread.get();
+            }
+            Assert.assertEquals(numRequests, SUCCESS_COUNT.get());
+            // close the channel
+            Field channelField = server.getClass().getDeclaredField("channel");
+            channelField.setAccessible(true);
+            Field recoveryThreadField = server.getClass().getDeclaredField("recoveryThread");
+            recoveryThreadField.setAccessible(true);
+            Channel channel = (Channel) channelField.get(server);
+            channel.close();
+            Thread.sleep(1000);
+            final int sleeps = 10;
+            for (int i = 0; i < sleeps; i++) {
+                Thread thread = (Thread) recoveryThreadField.get(server);
+                if (thread == null) {
+                    break;
+                }
+                LOGGER.log(Level.WARN,
+                        "Attempt #" + (i + 1) + ". Recovery thread is not null and has id " + thread.getId());
+                if (i == sleeps - 1) {
+                    throw new Exception("Http server recovery didn't complete after " + sleeps + "s");
+                }
+                Thread.sleep(1000);
+            }
+            for (int i = 0; i < sleeps; i++) {
+                request(1);
+                for (Future<Void> thread : FUTURES) {
+                    thread.get();
+                }
+                if (numRequests + 1 == SUCCESS_COUNT.get()) {
+                    break;
+                } else if (i == sleeps - 1) {
+                    throw new Exception(
+                            "Http server couldn't process requests correctly after recovery for " + sleeps + "s");
+                }
+            }
         } finally {
             webMgr.stop();
         }
