@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.asterix.common.utils.StorageConstants;
+import org.apache.commons.lang3.StringUtils;
 
 public class ResourceReference {
 
@@ -77,7 +78,7 @@ public class ResourceReference {
 
     protected static void parse(ResourceReference ref, String path) {
         // format: root/partition/dataverse/dataset/rebalanceCount/index/fileName
-        final String[] tokens = path.split(File.separator);
+        final String[] tokens = StringUtils.split(path, File.separatorChar);
         if (tokens.length < 6) {
             throw new IllegalStateException("Unrecognized path structure: " + path);
         }
