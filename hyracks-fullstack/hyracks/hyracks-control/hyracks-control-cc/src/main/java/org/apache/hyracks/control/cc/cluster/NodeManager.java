@@ -101,7 +101,7 @@ public class NodeManager implements INodeManager {
         // Updates the node registry.
         if (nodeRegistry.containsKey(nodeId)) {
             LOGGER.warn("Node with name " + nodeId + " has already registered; failing the node then re-registering.");
-            failNonDeadNode(nodeId);
+            failNode(nodeId);
         } else {
             try {
                 // TODO(mblow): it seems we should close IPC handles when we're done with them (like here)
@@ -173,7 +173,7 @@ public class NodeManager implements INodeManager {
         return Pair.of(deadNodes, affectedJobIds);
     }
 
-    private void failNonDeadNode(String nodeId) throws HyracksException {
+    public void failNode(String nodeId) throws HyracksException {
         NodeControllerState state = nodeRegistry.get(nodeId);
         Set<JobId> affectedJobIds = state.getActiveJobIds();
         // Removes the node from node map.

@@ -38,7 +38,8 @@ public class ResourceIdManager implements IResourceIdManager {
 
     @Override
     public long createResourceId() {
-        return csm.isClusterActive() ? globalResourceId.incrementAndGet() : -1;
+        return csm.isClusterActive() || reportedNodes.containsAll(csm.getParticipantNodes(true))
+                ? globalResourceId.incrementAndGet() : -1;
     }
 
     @Override

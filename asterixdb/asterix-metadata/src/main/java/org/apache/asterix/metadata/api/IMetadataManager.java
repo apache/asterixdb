@@ -320,16 +320,27 @@ public interface IMetadataManager extends IMetadataBootstrap {
             throws AlgebricksException;
 
     /**
-     * Inserts a node group.
+     * Inserts a new node group.
      *
      * @param ctx
      *            MetadataTransactionContext of an active metadata transaction.
      * @param nodeGroup
      *            Node group instance to insert.
      * @throws AlgebricksException
-     *             For example, if the node group already exists.
+     *             For example, if the node group already exists
      */
     void addNodegroup(MetadataTransactionContext ctx, NodeGroup nodeGroup) throws AlgebricksException;
+
+    /**
+     * Inserts a new (or updates an existing) node group.
+     *
+     * @param ctx
+     *            MetadataTransactionContext of an active metadata transaction.
+     * @param nodeGroup
+     *            Node group instance to insert or update.
+     * @throws AlgebricksException
+     */
+    void upsertNodegroup(MetadataTransactionContext ctx, NodeGroup nodeGroup) throws AlgebricksException;
 
     /**
      * Retrieves a node group.

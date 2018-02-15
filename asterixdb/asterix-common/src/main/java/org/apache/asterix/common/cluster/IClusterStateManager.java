@@ -66,7 +66,7 @@ public interface IClusterStateManager {
     /**
      * Updates the active node and active state of the cluster partition with id {@code partitionNum}
      */
-    void updateClusterPartition(Integer partitionNum, String activeNode, boolean active);
+    void updateClusterPartition(int partitionNum, String activeNode, boolean active);
 
     /**
      * Updates the metadata node id and its state.

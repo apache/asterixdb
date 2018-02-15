@@ -163,7 +163,7 @@ public class ClusterApiServlet extends AbstractServlet {
     private void processPartitionMaster(IServletRequest request, IServletResponse response) {
         final String partition = request.getParameter("partition");
         final String node = request.getParameter("node");
-        appCtx.getClusterStateManager().updateClusterPartition(Integer.valueOf(partition), node, true);
+        appCtx.getClusterStateManager().updateClusterPartition(Integer.parseInt(partition), node, true);
         response.setStatus(HttpResponseStatus.OK);
     }
 

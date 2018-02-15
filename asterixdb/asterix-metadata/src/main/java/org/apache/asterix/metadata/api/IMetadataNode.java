@@ -41,6 +41,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
@@ -340,11 +341,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *            A globally unique id for an active metadata transaction.
      * @param nodeGroup
      *            Node group instance to insert.
+     * @param modificationOp
      * @throws AlgebricksException
      *             For example, if the node group already exists.
      * @throws RemoteException
      */
-    void addNodeGroup(TxnId txnId, NodeGroup nodeGroup) throws AlgebricksException, RemoteException;
+    void modifyNodeGroup(TxnId txnId, NodeGroup nodeGroup,
+            AbstractIndexModificationOperationCallback.Operation modificationOp)
+            throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves a node group, acquiring local locks on behalf of the given

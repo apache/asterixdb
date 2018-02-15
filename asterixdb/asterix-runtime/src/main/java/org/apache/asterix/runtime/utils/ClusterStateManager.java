@@ -150,7 +150,7 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public synchronized void updateClusterPartition(Integer partitionNum, String activeNode, boolean active) {
+    public synchronized void updateClusterPartition(int partitionNum, String activeNode, boolean active) {
         ClusterPartition clusterPartition = clusterPartitions.get(partitionNum);
         if (clusterPartition != null) {
             // set the active node for this node's partitions
@@ -159,6 +159,7 @@ public class ClusterStateManager implements IClusterStateManager {
                 clusterPartition.setActiveNodeId(activeNode);
                 clusterPartition.setPendingActivation(false);
             }
+            notifyAll();
         }
     }
 

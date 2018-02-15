@@ -21,7 +21,6 @@ package org.apache.asterix.metadata;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -191,12 +190,9 @@ public class MetadataCache {
         }
     }
 
-    public NodeGroup addNodeGroupIfNotExists(NodeGroup nodeGroup) {
+    public NodeGroup addOrUpdateNodeGroup(NodeGroup nodeGroup) {
         synchronized (nodeGroups) {
-            if (!nodeGroups.containsKey(nodeGroup.getNodeGroupName())) {
-                return nodeGroups.put(nodeGroup.getNodeGroupName(), nodeGroup);
-            }
-            return null;
+            return nodeGroups.put(nodeGroup.getNodeGroupName(), nodeGroup);
         }
     }
 

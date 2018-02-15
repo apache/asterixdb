@@ -152,7 +152,7 @@ public class MetadataTransactionContext extends MetadataCache {
 
     public void dropNodeGroup(String nodeGroupName) {
         NodeGroup nodeGroup = new NodeGroup(nodeGroupName, null);
-        droppedCache.addNodeGroupIfNotExists(nodeGroup);
+        droppedCache.addOrUpdateNodeGroup(nodeGroup);
         logAndApply(new MetadataLogicalOperation(nodeGroup, false));
     }
 

@@ -50,7 +50,7 @@ public class NodeGroup implements IMetadataEntity<NodeGroup> {
 
     @Override
     public NodeGroup addToCache(MetadataCache cache) {
-        return cache.addNodeGroupIfNotExists(this);
+        return cache.addOrUpdateNodeGroup(this);
     }
 
     @Override

@@ -57,6 +57,7 @@ import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -480,8 +481,18 @@ public abstract class MetadataManager implements IMetadataManager {
 
     @Override
     public void addNodegroup(MetadataTransactionContext ctx, NodeGroup nodeGroup) throws AlgebricksException {
+        modifyNodegroup(ctx, nodeGroup, Operation.INSERT);
+    }
+
+    @Override
+    public void upsertNodegroup(MetadataTransactionContext ctx, NodeGroup nodeGroup) throws AlgebricksException {
+        modifyNodegroup(ctx, nodeGroup, Operation.UPSERT);
+    }
+
+    public void modifyNodegroup(MetadataTransactionContext ctx, NodeGroup nodeGroup, Operation op)
+            throws AlgebricksException {
         try {
-            metadataNode.addNodeGroup(ctx.getTxnId(), nodeGroup);
+            metadataNode.modifyNodeGroup(ctx.getTxnId(), nodeGroup, op);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
