@@ -369,7 +369,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     @Override
     public Void visitSplitOperator(SplitOperator op, Integer indent) throws AlgebricksException {
         Mutable<ILogicalExpression> branchingExpression = op.getBranchingExpression();
-        addIndent(indent).append("split " + branchingExpression.getValue().accept(exprVisitor, indent));
+        addIndent(indent).append("split (" + branchingExpression.getValue().accept(exprVisitor, indent) + ")");
         return null;
     }
 

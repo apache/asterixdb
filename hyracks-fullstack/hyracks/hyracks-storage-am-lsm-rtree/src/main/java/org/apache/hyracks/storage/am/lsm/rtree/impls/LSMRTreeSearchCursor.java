@@ -31,6 +31,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
 
     private int currentCursor;
     private final PermutingTupleReference btreeTuple;
+    private boolean resultOfsearchCallbackProceed = false;
 
     public LSMRTreeSearchCursor(ILSMIndexOperationContext opCtx, int[] buddyBTreeFields) {
         super(opCtx);
@@ -96,6 +97,8 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
             while (rtreeCursors[currentCursor].hasNext()) {
                 rtreeCursors[currentCursor].next();
                 ITupleReference currentTuple = rtreeCursors[currentCursor].getTuple();
+                // Call proceed() to do necessary operations before returning this tuple.
+                resultOfsearchCallbackProceed = searchCallback.proceed(currentTuple);
                 btreeTuple.reset(rtreeCursors[currentCursor].getTuple());
                 boolean killerTupleFound = false;
                 for (int i = 0; i < currentCursor && !killerTupleFound; i++) {
@@ -136,6 +139,11 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
     public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         super.doOpen(initialState, searchPred);
         searchNextCursor();
+    }
+
+    @Override
+    public boolean getSearchOperationCallbackProceedResult() {
+        return resultOfsearchCallbackProceed;
     }
 
 }

@@ -29,14 +29,12 @@ import java.util.Set;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -177,16 +175,8 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
             ProjectOperator projectOp = (ProjectOperator) op;
             List<LogicalVariable> projectVarsTemp = projectOp.getVariables();
             if (liveVars.size() == projectVarsTemp.size() && liveVars.containsAll(projectVarsTemp)) {
-                boolean eliminateProject = true;
-                // For UnionAll the variables must also be in exactly the correct order.
-                if (parentOp.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
-                    eliminateProject =
-                            canEliminateProjectBelowUnion((UnionAllOperator) parentOp, projectOp, parentInputIndex);
-                }
-                if (eliminateProject) {
-                    // The existing project has become useless. Remove it.
-                    parentOp.getInputs().get(parentInputIndex).setValue(op.getInputs().get(0).getValue());
-                }
+                // The existing project has become useless. Remove it.
+                parentOp.getInputs().get(parentInputIndex).setValue(op.getInputs().get(0).getValue());
             }
         }
 
@@ -196,23 +186,4 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
         return modified;
     }
 
-    private boolean canEliminateProjectBelowUnion(UnionAllOperator unionOp, ProjectOperator projectOp,
-            int unionInputIndex) throws AlgebricksException {
-        List<LogicalVariable> orderedLiveVars = new ArrayList<>();
-        VariableUtilities.getLiveVariables(projectOp.getInputs().get(0).getValue(), orderedLiveVars);
-        int numVars = orderedLiveVars.size();
-        for (int i = 0; i < numVars; i++) {
-            Triple<LogicalVariable, LogicalVariable, LogicalVariable> varTriple = unionOp.getVariableMappings().get(i);
-            if (unionInputIndex == 0) {
-                if (varTriple.first != orderedLiveVars.get(i)) {
-                    return false;
-                }
-            } else {
-                if (varTriple.second != orderedLiveVars.get(i)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
 }

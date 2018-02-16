@@ -36,6 +36,8 @@ public abstract class AbstractUnnestMapOperator extends AbstractUnnestOperator {
     protected List<LogicalVariable> maxFilterVars;
 
     protected boolean propagateIndexFilter;
+    // Used when the result of a searchCallBack.proceed() is required afterwards.
+    protected boolean generateSearchCallBackProceedResultVar;
 
     public AbstractUnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
             List<Object> variableTypes, boolean propagateInput) {
@@ -44,15 +46,20 @@ public abstract class AbstractUnnestMapOperator extends AbstractUnnestOperator {
         this.variableTypes = variableTypes;
         this.propagateInput = propagateInput;
         this.propagateIndexFilter = false;
+        this.generateSearchCallBackProceedResultVar = false;
     }
 
     @Override
     public List<LogicalVariable> getScanVariables() {
+        // An additional variable - generateSearchCallBackProceedResultVar should not be returned.
+        int excludeVarCount = 0;
         if (propagateIndexFilter) {
-            return variables.subList(0, variables.size() - 2);
-        } else {
-            return variables;
+            excludeVarCount += 2;
         }
+        if (generateSearchCallBackProceedResultVar) {
+            excludeVarCount++;
+        }
+        return excludeVarCount > 0 ? variables.subList(0, variables.size() - excludeVarCount) : variables;
     }
 
     public List<Object> getVariableTypes() {
@@ -133,4 +140,18 @@ public abstract class AbstractUnnestMapOperator extends AbstractUnnestOperator {
             return null;
         }
     }
+
+    /**
+     * Sets the variable to tell whether the result of a searchCallBack.proceed() is required.
+     * If this variable is set to true, the last variable in the variables list should contain
+     * the result of a searchCallBack.proceed().
+     */
+    public void setGenerateCallBackProceedResultVar(boolean generateCallBackProceedResultVar) {
+        this.generateSearchCallBackProceedResultVar = generateCallBackProceedResultVar;
+    }
+
+    public boolean getGenerateCallBackProceedResultVar() {
+        return this.generateSearchCallBackProceedResultVar;
+    }
+
 }

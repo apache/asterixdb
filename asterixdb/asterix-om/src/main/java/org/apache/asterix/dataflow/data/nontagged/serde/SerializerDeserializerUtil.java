@@ -22,11 +22,16 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public final class SerializerDeserializerUtil {
 
@@ -77,4 +82,20 @@ public final class SerializerDeserializerUtil {
             throw HyracksDataException.create(e);
         }
     }
+
+    /**
+     * Computes and returns the byte array for an integer value.
+     */
+    public static byte[] computeByteArrayForIntValue(int value) throws AlgebricksException {
+        ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
+        try {
+            AInt32 val = new AInt32(value);
+            SerializerDeserializerUtil.serializeTag(val, castBuffer.getDataOutput());
+            AInt32SerializerDeserializer.INSTANCE.serialize(val, castBuffer.getDataOutput());
+        } catch (HyracksDataException e) {
+            throw CompilationException.create(ErrorCode.CANNOT_SERIALIZE_A_VALUE, e);
+        }
+        return castBuffer.getByteArray();
+    }
+
 }

@@ -59,6 +59,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
     private int numMemoryComponents;
     private boolean open;
     protected ISearchOperationCallback searchCallback;
+    private boolean resultOfsearchCallBackProceed = false;
 
     public LSMRTreeWithAntiMatterTuplesSearchCursor(ILSMIndexOperationContext opCtx) {
         this(opCtx, false);
@@ -150,7 +151,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
                     // reconcile() and complete() can be added later after considering the semantics.
 
                     // Call proceed() to do necessary operations before returning this tuple.
-                    searchCallback.proceed(currentTuple);
+                    resultOfsearchCallBackProceed = searchCallback.proceed(currentTuple);
                     if (searchMemBTrees(currentTuple, currentCursor)) {
                         // anti-matter tuple is NOT found
                         foundNext = true;
@@ -169,7 +170,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
                 // reconcile() and complete() can be added later after considering the semantics.
 
                 // Call proceed() to do necessary operations before returning this tuple.
-                searchCallback.proceed(diskRTreeTuple);
+                resultOfsearchCallBackProceed = searchCallback.proceed(diskRTreeTuple);
                 if (searchMemBTrees(diskRTreeTuple, numMemoryComponents)) {
                     // anti-matter tuple is NOT found
                     foundNext = true;
@@ -185,7 +186,7 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
                 // reconcile() and complete() can be added later after considering the semantics.
                 // Call proceed() to do necessary operations before returning this tuple.
                 // Since in-memory components don't exist, we can skip searching in-memory B-Trees.
-                searchCallback.proceed(diskRTreeTuple);
+                resultOfsearchCallBackProceed = searchCallback.proceed(diskRTreeTuple);
                 foundNext = true;
                 frameTuple = diskRTreeTuple;
                 return true;
@@ -310,5 +311,10 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
                 return -1;
             }
         }
+    }
+
+    @Override
+    public boolean getSearchOperationCallbackProceedResult() {
+        return resultOfsearchCallBackProceed;
     }
 }

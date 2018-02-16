@@ -46,10 +46,13 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Quadruple;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -65,7 +68,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
@@ -86,14 +88,22 @@ public class BTreeAccessMethod implements IAccessMethod {
         EQUAL
     }
 
-    private static final List<FunctionIdentifier> FUNC_IDENTIFIERS =
-            Collections.unmodifiableList(Arrays.asList(AlgebricksBuiltinFunctions.EQ, AlgebricksBuiltinFunctions.LE,
-                    AlgebricksBuiltinFunctions.GE, AlgebricksBuiltinFunctions.LT, AlgebricksBuiltinFunctions.GT));
+    // The second boolean value tells whether the given function generates false positive results.
+    // That is, this function can produce false positive results if it is set to true.
+    // In this case, an index-search alone cannot replace the given SELECT condition and
+    // that SELECT condition needs to be applied after the index-search to get the correct results.
+    // For B+Tree indexes, there are no false positive results unless the given index is a composite index.
+    private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS = Collections
+            .unmodifiableList(Arrays.asList(new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.EQ, false),
+                    new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.LE, false),
+                    new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.GE, false),
+                    new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.LT, false),
+                    new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.GT, false)));
 
     public static final BTreeAccessMethod INSTANCE = new BTreeAccessMethod();
 
     @Override
-    public List<FunctionIdentifier> getOptimizableFunctions() {
+    public List<Pair<FunctionIdentifier, Boolean>> getOptimizableFunctions() {
         return FUNC_IDENTIFIERS;
     }
 
@@ -123,59 +133,124 @@ public class BTreeAccessMethod implements IAccessMethod {
     public boolean applySelectPlanTransformation(List<Mutable<ILogicalOperator>> afterSelectRefs,
             Mutable<ILogicalOperator> selectRef, OptimizableOperatorSubTree subTree, Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
-        SelectOperator select = (SelectOperator) selectRef.getValue();
-        Mutable<ILogicalExpression> conditionRef = select.getCondition();
+        SelectOperator selectOp = (SelectOperator) selectRef.getValue();
+        Mutable<ILogicalExpression> conditionRef = selectOp.getCondition();
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) conditionRef.getValue();
 
-        ILogicalOperator primaryIndexUnnestOp =
-                createSecondaryToPrimaryPlan(conditionRef, subTree, null, chosenIndex, analysisCtx,
-                        AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(),
-                                subTree.getDataSourceRef().getValue(), afterSelectRefs),
-                        false, subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
-                                .getExecutionMode() == ExecutionMode.UNPARTITIONED,
-                        context);
+        // Check whether assign (unnest) operator exists before the select operator
+        Mutable<ILogicalOperator> assignBeforeSelectOpRef =
+                subTree.getAssignsAndUnnestsRefs().isEmpty() ? null : subTree.getAssignsAndUnnestsRefs().get(0);
+        ILogicalOperator assignBeforeSelectOp = null;
+        if (assignBeforeSelectOpRef != null) {
+            assignBeforeSelectOp = assignBeforeSelectOpRef.getValue();
+        }
+
+        Dataset dataset = subTree.getDataset();
+
+        // To check whether the given plan is an index-only plan.
+        // index-only plan possible?
+        boolean isIndexOnlyPlan = false;
+
+        // Whether a verification is required after this secondary index search.
+        // In other words, can the chosen method generate any false positive results?
+        // Currently, for the B+ Tree index, there cannot be any false positive results unless it's a composite index.
+        boolean requireVerificationAfterSIdxSearch = false;
+
+        Pair<Boolean, Boolean> functionFalsePositiveCheck =
+                AccessMethodUtils.canFunctionGenerateFalsePositiveResultsUsingIndex(funcExpr, FUNC_IDENTIFIERS);
+        if (functionFalsePositiveCheck.first) {
+            // An index-utilizable function found? then, get the info about false positive results generation.
+            requireVerificationAfterSIdxSearch = functionFalsePositiveCheck.second;
+        } else {
+            return false;
+        }
+
+        Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo =
+                new Quadruple<>(isIndexOnlyPlan, false, requireVerificationAfterSIdxSearch, false);
+
+        if (dataset.getDatasetType() == DatasetType.INTERNAL && !chosenIndex.isPrimaryIndex()) {
+            AccessMethodUtils.indexOnlyPlanCheck(afterSelectRefs, selectRef, subTree, null, chosenIndex, analysisCtx,
+                    context, indexOnlyPlanInfo);
+            isIndexOnlyPlan = indexOnlyPlanInfo.getFirst();
+        }
+
+        // Sets the result of index-only plan check into AccessMethodAnalysisContext.
+        analysisCtx.setIndexOnlyPlanInfo(indexOnlyPlanInfo);
+
+        // Transform the current path to the path that is utilizing the corresponding indexes
+        ILogicalOperator primaryIndexUnnestOp = createIndexSearchPlan(afterSelectRefs, selectRef, conditionRef,
+                subTree.getAssignsAndUnnestsRefs(), subTree, null, chosenIndex, analysisCtx,
+                AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(), subTree.getDataSourceRef().getValue(),
+                        afterSelectRefs),
+                false, subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
+                        .getExecutionMode() == ExecutionMode.UNPARTITIONED,
+                context, null);
 
         if (primaryIndexUnnestOp == null) {
             return false;
         }
-        Mutable<ILogicalOperator> opRef =
-                subTree.getAssignsAndUnnestsRefs().isEmpty() ? null : subTree.getAssignsAndUnnestsRefs().get(0);
-        ILogicalOperator op = null;
-        if (opRef != null) {
-            op = opRef.getValue();
-        }
-        // Generate new select using the new condition.
+
+        // Generate new path using the new condition.
         if (conditionRef.getValue() != null) {
-            select.getInputs().clear();
-            if (op != null) {
-                subTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
-                select.getInputs().add(new MutableObject<>(op));
+            if (assignBeforeSelectOp != null) {
+                if (isIndexOnlyPlan && dataset.getDatasetType() == DatasetType.INTERNAL) {
+                    // Case 1: index-only plan
+                    // The whole plan is now changed. Replace the current path with the given new plan.
+                    // Gets the revised dataSourceRef operator
+                    //  - a secondary index-search that generates trustworthy results.
+                    ILogicalOperator dataSourceRefOp =
+                            AccessMethodUtils.findDataSourceFromIndexUtilizationPlan(primaryIndexUnnestOp);
+
+                    if (dataSourceRefOp.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
+                        subTree.getDataSourceRef().setValue(dataSourceRefOp);
+                    }
+
+                    // Replace the current operator with the newly created operator.
+                    selectRef.setValue(primaryIndexUnnestOp);
+                } else {
+                    // Case 2: Non-index only plan case
+                    // Right now, the order of operators is: select <- assign <- unnest-map (primary index look-up).
+                    selectOp.getInputs().clear();
+                    subTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
+                    selectOp.getInputs().add(new MutableObject<ILogicalOperator>(assignBeforeSelectOp));
+                }
             } else {
-                select.getInputs().add(new MutableObject<>(primaryIndexUnnestOp));
+                // A secondary-index-only plan without any assign cannot exist. This is a non-index only plan.
+                selectOp.getInputs().clear();
+                selectOp.getInputs().add(new MutableObject<ILogicalOperator>(primaryIndexUnnestOp));
             }
         } else {
+            // All condition is now gone. UNNEST-MAP can replace the SELECT operator.
             ((AbstractLogicalOperator) primaryIndexUnnestOp).setExecutionMode(ExecutionMode.PARTITIONED);
-            if (op != null) {
+            if (assignBeforeSelectOp != null) {
                 subTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
-                selectRef.setValue(op);
+                selectRef.setValue(assignBeforeSelectOp);
             } else {
                 selectRef.setValue(primaryIndexUnnestOp);
             }
         }
+
         return true;
     }
 
     @Override
-    public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
-            OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin,
-            boolean hasGroupBy) throws AlgebricksException {
+    public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
+            Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
+            OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean hasGroupBy) throws AlgebricksException {
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         Mutable<ILogicalExpression> conditionRef = joinOp.getCondition();
-        // Determine if the index is applicable on the left or right side
-        // (if both, we arbitrarily prefer the left side).
-        Dataset dataset = analysisCtx.getDatasetFromIndexDatasetMap(chosenIndex);
-        OptimizableOperatorSubTree indexSubTree;
-        OptimizableOperatorSubTree probeSubTree;
+
+        AbstractFunctionCallExpression funcExpr = null;
+        if (conditionRef.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            funcExpr = (AbstractFunctionCallExpression) conditionRef.getValue();
+        }
+
+        Dataset dataset = analysisCtx.getIndexDatasetMap().get(chosenIndex);
+
+        // Determine if the index is applicable on the right (inner) side.
+        OptimizableOperatorSubTree indexSubTree = null;
+        OptimizableOperatorSubTree probeSubTree = null;
         // We assume that the left subtree is the outer branch and the right subtree is the inner branch.
         // This assumption holds true since we only use an index from the right subtree.
         // The following is just a sanity check.
@@ -189,42 +264,41 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         LogicalVariable newNullPlaceHolderVar = null;
         if (isLeftOuterJoin) {
-            //get a new null place holder variable that is the first field variable of the primary key
-            //from the indexSubTree's datasourceScanOp
+            // Gets a new null place holder variable that is the first field variable of the primary key
+            // from the indexSubTree's datasourceScanOp.
             newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
         }
 
-        ILogicalOperator primaryIndexUnnestOp = createSecondaryToPrimaryPlan(conditionRef, indexSubTree, probeSubTree,
-                chosenIndex, analysisCtx, true, isLeftOuterJoin, true, context);
-        if (primaryIndexUnnestOp == null) {
+        boolean canContinue = AccessMethodUtils.setIndexOnlyPlanInfo(afterJoinRefs, joinRef, probeSubTree, indexSubTree,
+                chosenIndex, analysisCtx, context, funcExpr, FUNC_IDENTIFIERS);
+        if (!canContinue) {
             return false;
         }
 
-        if (isLeftOuterJoin && hasGroupBy) {
-            //reset the null place holder variable
-            AccessMethodUtils.resetLOJNullPlaceholderVariableInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
+        ILogicalOperator indexSearchOp = createIndexSearchPlan(afterJoinRefs, joinRef, conditionRef,
+                indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree, probeSubTree, chosenIndex, analysisCtx, true,
+                isLeftOuterJoin, true, context, newNullPlaceHolderVar);
+
+        if (indexSearchOp == null) {
+            return false;
         }
 
-        // If there are conditions left, add a new select operator on top.
-        indexSubTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
-        if (conditionRef.getValue() != null) {
-            SelectOperator topSelect = new SelectOperator(conditionRef, isLeftOuterJoin, newNullPlaceHolderVar);
-            topSelect.getInputs().add(indexSubTree.getRootRef());
-            topSelect.setExecutionMode(ExecutionMode.LOCAL);
-            context.computeAndSetTypeEnvironmentForOperator(topSelect);
-            // Replace the original join with the new subtree rooted at the select op.
-            joinRef.setValue(topSelect);
-        } else {
-            joinRef.setValue(indexSubTree.getRootRef().getValue());
-        }
-        return true;
+        return AccessMethodUtils.finalizeJoinPlanTransformation(afterJoinRefs, joinRef, indexSubTree, analysisCtx,
+                context, isLeftOuterJoin, hasGroupBy, indexSearchOp, newNullPlaceHolderVar, conditionRef, dataset);
     }
 
+    /**
+     * Creates an index utilization plan optimization - in case of an index-only select plan:
+     * union < project < select < assign? < unnest-map(pidx) < split < unnest-map(sidx) < assign? < datasource-scan
+     * ..... < project < ................................... <
+     */
     @Override
-    public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef,
-            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
-            IOptimizationContext context) throws AlgebricksException {
+    public ILogicalOperator createIndexSearchPlan(List<Mutable<ILogicalOperator>> afterTopOpRefs,
+            Mutable<ILogicalOperator> topOpRef, Mutable<ILogicalExpression> conditionRef,
+            List<Mutable<ILogicalOperator>> assignBeforeTheOpRefs, OptimizableOperatorSubTree indexSubTree,
+            OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            boolean retainInput, boolean retainMissing, boolean requiresBroadcast, IOptimizationContext context,
+            LogicalVariable newMissingPlaceHolderForLOJ) throws AlgebricksException {
         Dataset dataset = indexSubTree.getDataset();
         ARecordType recordType = indexSubTree.getRecordType();
         ARecordType metaRecordType = indexSubTree.getMetaRecordType();
@@ -233,10 +307,20 @@ public class BTreeAccessMethod implements IAccessMethod {
                 (AbstractDataSourceOperator) indexSubTree.getDataSourceRef().getValue();
         List<Pair<Integer, Integer>> exprAndVarList = analysisCtx.getIndexExprsFromIndexExprsAndVars(chosenIndex);
         int numSecondaryKeys = analysisCtx.getNumberOfMatchedKeys(chosenIndex);
+
+        // Whether the given plan is an index-only plan or not.
+        Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo = analysisCtx.getIndexOnlyPlanInfo();
+        boolean isIndexOnlyPlan = indexOnlyPlanInfo.getFirst();
+
+        // We only apply index-only plan for an internal dataset.
+        boolean generateInstantTrylockResultFromIndexSearch = false;
+        if (dataset.getDatasetType() == DatasetType.INTERNAL && isIndexOnlyPlan) {
+            generateInstantTrylockResultFromIndexSearch = true;
+        }
+
         // List of function expressions that will be replaced by the secondary-index search.
         // These func exprs will be removed from the select condition at the very end of this method.
         Set<ILogicalExpression> replacedFuncExprs = new HashSet<>();
-
         // Info on high and low keys for the BTree search predicate.
         ILogicalExpression[] lowKeyExprs = new ILogicalExpression[numSecondaryKeys];
         ILogicalExpression[] highKeyExprs = new ILogicalExpression[numSecondaryKeys];
@@ -257,6 +341,9 @@ public class BTreeAccessMethod implements IAccessMethod {
         BitSet setHighKeys = new BitSet(numSecondaryKeys);
         // Go through the func exprs listed as optimizable by the chosen index,
         // and formulate a range predicate on the secondary-index keys.
+
+        // Checks whether a type casting happened from a real (FLOAT, DOUBLE) value to an INT value
+        // since we have a round issue when dealing with LT(<) OR GT(>) operator.
         for (Pair<Integer, Integer> exprIndex : exprAndVarList) {
             // Position of the field of matchedFuncExprs.get(exprIndex) in the chosen index's indexed exprs.
             IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprIndex.first);
@@ -268,10 +355,16 @@ public class BTreeAccessMethod implements IAccessMethod {
             if (keyPos < 0) {
                 throw CompilationException.create(ErrorCode.NO_INDEX_FIELD_NAME_FOR_GIVEN_FUNC_EXPR);
             }
+            // returnedSearchKeyExpr contains a pair of search expression.
+            // The second expression will not be null only if we are creating an EQ search predicate
+            // with a FLOAT or a DOUBLE constant that will be fed into an INTEGER index.
+            // This is required because of type-casting. Refer to AccessMethodUtils.createSearchKeyExpr for details.
             IAType indexedFieldType = chosenIndex.getKeyFieldTypes().get(keyPos);
-            Pair<ILogicalExpression, Boolean> returnedSearchKeyExpr = AccessMethodUtils.createSearchKeyExpr(chosenIndex,
-                    optFuncExpr, indexedFieldType, indexSubTree, probeSubTree);
+            Triple<ILogicalExpression, ILogicalExpression, Boolean> returnedSearchKeyExpr =
+                    AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, indexedFieldType, probeSubTree);
             ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
+            ILogicalExpression searchKeyEQExpr = null;
+            boolean realTypeConvertedToIntegerType = returnedSearchKeyExpr.third;
             if (searchKeyExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 constantAtRuntimeExpressions[keyPos] = searchKeyExpr;
                 constAtRuntimeExprVars[keyPos] = context.newVar();
@@ -283,10 +376,13 @@ public class BTreeAccessMethod implements IAccessMethod {
                 return null;
             }
 
-            // checks whether a type casting happened from a real (FLOAT, DOUBLE) value to an INT value
-            // since we have a round issues when dealing with LT(<) OR GT(>) operator.
-            boolean realTypeConvertedToIntegerType = returnedSearchKeyExpr.second;
+            if (limit == LimitType.EQUAL && returnedSearchKeyExpr.second != null) {
+                // The given search predicate is EQ and
+                // we have two type-casted values from FLOAT or DOUBLE to an INT constant.
+                searchKeyEQExpr = returnedSearchKeyExpr.second;
+            }
 
+            // Deals with the non-enforced index case here.
             if (relaxLimitTypeToInclusive(chosenIndex, keyPos, realTypeConvertedToIntegerType)) {
                 if (limit == LimitType.HIGH_EXCLUSIVE) {
                     limit = LimitType.HIGH_INCLUSIVE;
@@ -300,7 +396,16 @@ public class BTreeAccessMethod implements IAccessMethod {
                     if (lowKeyLimits[keyPos] == null && highKeyLimits[keyPos] == null) {
                         lowKeyLimits[keyPos] = highKeyLimits[keyPos] = limit;
                         lowKeyInclusive[keyPos] = highKeyInclusive[keyPos] = true;
-                        lowKeyExprs[keyPos] = highKeyExprs[keyPos] = searchKeyExpr;
+                        if (searchKeyEQExpr == null) {
+                            // No type-casting was happened.
+                            lowKeyExprs[keyPos] = highKeyExprs[keyPos] = searchKeyExpr;
+                        } else {
+                            // We have two type-casted FLOAT or DOUBLE values to be fed into an INT index.
+                            // They contain the same value if their fraction value is 0.
+                            // Refer to AccessMethodUtils.createSearchKeyExpr() for more details.
+                            lowKeyExprs[keyPos] = searchKeyExpr;
+                            highKeyExprs[keyPos] = searchKeyEQExpr;
+                        }
                         setLowKeys.set(keyPos);
                         setHighKeys.set(keyPos);
                         isEqCondition = true;
@@ -444,8 +549,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             highKeyInclusive[0] = true;
         }
 
-        // Here we generate vars and funcs for assigning the secondary-index keys to be fed into the secondary-index
-        // search.
+        // Here we generate vars and funcs for assigning the secondary-index keys to be fed into
+        // the secondary-index search.
         // List of variables for the assign.
         ArrayList<LogicalVariable> keyVarList = new ArrayList<>();
         // List of variables and expressions for the assign.
@@ -477,7 +582,9 @@ public class BTreeAccessMethod implements IAccessMethod {
             } else {
                 // We are optimizing a join, place the assign op top of the probe subtree.
                 assignSearchKeys.getInputs().add(probeSubTree.getRootRef());
+                assignSearchKeys.setExecutionMode(probeSubTree.getRootRef().getValue().getExecutionMode());
             }
+            context.computeAndSetTypeEnvironmentForOperator(assignSearchKeys);
             inputOp = assignSearchKeys;
         } else if (probeSubTree == null) {
             //nonpure case
@@ -496,36 +603,60 @@ public class BTreeAccessMethod implements IAccessMethod {
             inputOp = probeSubTree.getRoot();
         }
 
+        // Creates an unnest-map for the secondary index search.
+        // The result: SK, PK, [Optional - the result of an instantTrylock on PK]
         ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                metaRecordType, chosenIndex, inputOp, jobGenParams, context, false, retainInput, retainNull);
+                metaRecordType, chosenIndex, inputOp, jobGenParams, context, retainInput, retainMissing,
+                generateInstantTrylockResultFromIndexSearch);
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
-        AbstractUnnestMapOperator primaryIndexUnnestOp = null;
+        ILogicalOperator indexSearchOp = null;
 
         boolean isPrimaryIndex = chosenIndex.isPrimaryIndex();
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             // External dataset
-            UnnestMapOperator externalDataAccessOp = AccessMethodUtils.createExternalDataLookupUnnestMap(dataSourceOp,
-                    dataset, recordType, secondaryIndexUnnestOp, context, retainInput, retainNull);
+            UnnestMapOperator externalDataAccessOp =
+                    AccessMethodUtils.createExternalDataLookupUnnestMap(dataSourceOp, dataset, recordType,
+                            metaRecordType, secondaryIndexUnnestOp, context, chosenIndex, retainInput, retainMissing);
             indexSubTree.getDataSourceRef().setValue(externalDataAccessOp);
             return externalDataAccessOp;
         } else if (!isPrimaryIndex) {
-            primaryIndexUnnestOp = AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceOp, dataset, recordType,
-                    metaRecordType, secondaryIndexUnnestOp, context, true, retainInput, retainNull, false);
+            indexSearchOp = AccessMethodUtils.createRestOfIndexSearchPlan(afterTopOpRefs, topOpRef, conditionRef,
+                    assignBeforeTheOpRefs, dataSourceOp, dataset, recordType, metaRecordType, secondaryIndexUnnestOp,
+                    context, true, retainInput, retainMissing, false, chosenIndex, analysisCtx, indexSubTree,
+                    newMissingPlaceHolderForLOJ);
 
-            // Adds equivalence classes --- one equivalent class between a primary key
-            // variable and a record field-access expression.
-            EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(primaryIndexUnnestOp,
-                    dataSourceOp.getVariables(), recordType, metaRecordType, dataset, context);
+            // Replaces the datasource scan with the new plan rooted at
+            // Get dataSourceRef operator -
+            // 1) unnest-map (PK, record) for a non-index only plan
+            // 2) unnest-map (SK, PK) for an index-only plan
+            if (isIndexOnlyPlan) {
+                // Index-only plan
+                ILogicalOperator dataSourceRefOp =
+                        AccessMethodUtils.findDataSourceFromIndexUtilizationPlan(indexSearchOp);
+
+                if (dataSourceRefOp.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP
+                        || dataSourceRefOp.getOperatorTag() == LogicalOperatorTag.LEFT_OUTER_UNNEST_MAP) {
+                    // Adds equivalence classes --- one equivalent class between a primary key
+                    // variable and a record field-access expression.
+                    EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(indexSearchOp,
+                            dataSourceOp.getVariables(), recordType, metaRecordType, dataset, context);
+                }
+            } else {
+                // Non-indexonly plan cases
+                // Adds equivalence classes --- one equivalent class between a primary key
+                // variable and a record field-access expression.
+                EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(indexSearchOp,
+                        dataSourceOp.getVariables(), recordType, metaRecordType, dataset, context);
+            }
         } else {
+            // Primary index search case
             List<Object> primaryIndexOutputTypes = new ArrayList<>();
             AccessMethodUtils.appendPrimaryIndexTypes(dataset, recordType, metaRecordType, primaryIndexOutputTypes);
             List<LogicalVariable> scanVariables = dataSourceOp.getVariables();
 
-            // Checks whether the primary index search can replace the given
-            // SELECT condition.
-            // If so, condition will be set to null and eventually the SELECT
-            // operator will be removed.
+            // Checks whether the primary index search can replace the given SELECT condition.
+            // If so, the condition will be set to null and eventually the SELECT operator will be removed.
             // If not, we create a new condition based on remaining ones.
             if (!primaryIndexPostProccessingIsNeeded) {
                 List<Mutable<ILogicalExpression>> remainingFuncExprs = new ArrayList<>();
@@ -534,7 +665,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 } catch (CompilationException e) {
                     return null;
                 }
-                // Generate new condition.
+                // Generates the new condition.
                 if (!remainingFuncExprs.isEmpty()) {
                     ILogicalExpression pulledCond = createSelectCondition(remainingFuncExprs);
                     conditionRef.setValue(pulledCond);
@@ -545,7 +676,7 @@ public class BTreeAccessMethod implements IAccessMethod {
 
             // Checks whether LEFT_OUTER_UNNESTMAP operator is required.
             boolean leftOuterUnnestMapRequired = false;
-            if (retainNull && retainInput) {
+            if (retainMissing && retainInput) {
                 leftOuterUnnestMapRequired = true;
             } else {
                 leftOuterUnnestMapRequired = false;
@@ -556,42 +687,41 @@ public class BTreeAccessMethod implements IAccessMethod {
                 // via the UnnestMapOperator's function arguments.
                 List<Mutable<ILogicalExpression>> primaryIndexFuncArgs = new ArrayList<>();
                 jobGenParams.writeToFuncArgs(primaryIndexFuncArgs);
-                // An index search is expressed as an unnest-map over an
-                // index-search function.
+                // An index search is expressed as an unnest-map over an index-search function.
                 IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(BuiltinFunctions.INDEX_SEARCH);
                 UnnestingFunctionCallExpression primaryIndexSearchFunc =
                         new UnnestingFunctionCallExpression(primaryIndexSearch, primaryIndexFuncArgs);
                 primaryIndexSearchFunc.setReturnsUniqueValues(true);
                 if (!leftOuterUnnestMapRequired) {
-                    primaryIndexUnnestOp = new UnnestMapOperator(scanVariables,
+                    indexSearchOp = new UnnestMapOperator(scanVariables,
                             new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
                             retainInput);
                 } else {
-                    primaryIndexUnnestOp = new LeftOuterUnnestMapOperator(scanVariables,
+                    indexSearchOp = new LeftOuterUnnestMapOperator(scanVariables,
                             new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
                             true);
                 }
             } else {
                 if (!leftOuterUnnestMapRequired) {
-                    primaryIndexUnnestOp = new UnnestMapOperator(scanVariables,
+                    indexSearchOp = new UnnestMapOperator(scanVariables,
                             ((UnnestMapOperator) secondaryIndexUnnestOp).getExpressionRef(), primaryIndexOutputTypes,
                             retainInput);
                 } else {
-                    primaryIndexUnnestOp = new LeftOuterUnnestMapOperator(scanVariables,
+                    indexSearchOp = new LeftOuterUnnestMapOperator(scanVariables,
                             ((LeftOuterUnnestMapOperator) secondaryIndexUnnestOp).getExpressionRef(),
                             primaryIndexOutputTypes, true);
                 }
             }
 
-            primaryIndexUnnestOp.getInputs().add(new MutableObject<>(inputOp));
+            indexSearchOp.getInputs().add(new MutableObject<>(inputOp));
 
             // Adds equivalence classes --- one equivalent class between a primary key
             // variable and a record field-access expression.
-            EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(primaryIndexUnnestOp, scanVariables,
-                    recordType, metaRecordType, dataset, context);
+            EquivalenceClassUtils.addEquivalenceClassesForPrimaryIndexAccess(indexSearchOp, scanVariables, recordType,
+                    metaRecordType, dataset, context);
         }
 
-        return primaryIndexUnnestOp;
+        return indexSearchOp;
     }
 
     private int createKeyVarsAndExprs(int numKeys, LimitType[] keyLimits, ILogicalExpression[] searchKeyExprs,
@@ -706,6 +836,13 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     private boolean relaxLimitTypeToInclusive(Index chosenIndex, int keyPos, boolean realTypeConvertedToIntegerType) {
+        // For a non-enforced index or an enforced index that stores a casted value on the given index,
+        // we need to apply the following transformation.
+        // For an index on a closed field, this transformation is not necessary since the value between
+        // the index and the actual record match.
+        //
+        // Check AccessMethodUtils.createSearchKeyExpr for more details.
+        //
         // If a DOUBLE or FLOAT constant is converted to an INT type value,
         // we need to check a corner case where two real values are located between an INT value.
         // For example, for the following query,
@@ -721,10 +858,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         // Therefore, we convert LT(<) to LE(<=) and GT(>) to GE(>=) to find candidates.
         // This does not change the result of an actual comparison since this conversion is only applied
         // for finding candidates from an index.
-        //
-        // We also need to do this for a non-enforced index that overrides key field type (for a numeric type)
-
-        if (realTypeConvertedToIntegerType) {
+        if (chosenIndex.isEnforced() && realTypeConvertedToIntegerType) {
             return true;
         }
 

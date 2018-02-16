@@ -146,12 +146,15 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
         Set<LogicalVariable> assignVarsSetForThisOp = removeAssignVarFromConsideration(opRef);
 
         while (removeFromAssigns(op, assignVarsSetForThisOp, context) == 0) {
-            if (op.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+            // UnionAllOperator cannot be removed since it has two branches.
+            if (op.getOperatorTag() == LogicalOperatorTag.AGGREGATE
+                    || op.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
                 break;
             }
             op = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
             opRef.setValue(op);
             assignVarsSetForThisOp = removeAssignVarFromConsideration(opRef);
+            isTransformed = true;
         }
 
         Iterator<Mutable<ILogicalOperator>> childIter = op.getInputs().iterator();

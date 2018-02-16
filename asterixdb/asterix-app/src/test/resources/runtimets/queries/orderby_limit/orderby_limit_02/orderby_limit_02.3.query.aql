@@ -28,6 +28,6 @@ use dataverse test;
 
 for $l in dataset Employee
 where $l.name >= "A" and $l.name <= "Z"
-limit 5
 order by $l.name desc
+limit 5
 return {"name": $l.name}

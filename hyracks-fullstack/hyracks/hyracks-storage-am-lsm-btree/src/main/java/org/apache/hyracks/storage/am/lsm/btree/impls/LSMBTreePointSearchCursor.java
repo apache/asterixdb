@@ -58,6 +58,7 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
     private int foundIn = -1;
     private ITupleReference frameTuple;
     private List<ILSMComponent> operationalComponents;
+    private boolean resultOfSearchCallbackProceed = false;
 
     private final long[] hashes = BloomFilter.createHashArray();
 
@@ -82,7 +83,10 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
                 btreeCursors[i].next();
                 // We use the predicate's to lock the key instead of the tuple that we get from cursor
                 // to avoid copying the tuple when we do the "unlatch dance".
-                if (reconciled || searchCallback.proceed(predicate.getLowKey())) {
+                if (!reconciled) {
+                    resultOfSearchCallbackProceed = searchCallback.proceed(predicate.getLowKey());
+                }
+                if (reconciled || resultOfSearchCallbackProceed) {
                     // if proceed is successful, then there's no need for doing the "unlatch dance"
                     if (((ILSMTreeTupleReference) btreeCursors[i].getTuple()).isAntimatter()) {
                         if (reconciled) {
@@ -237,5 +241,10 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
                 }
             }
         }
+    }
+
+    @Override
+    public boolean getSearchOperationCallbackProceedResult() {
+        return resultOfSearchCallbackProceed;
     }
 }

@@ -173,4 +173,9 @@ public class LSMRTreeWithAntiMatterTuplesFlushCursor extends EnforcedIndexCursor
         return null;
     }
 
+    @Override
+    public boolean getSearchOperationCallbackProceedResult() {
+        return false;
+    }
+
 }

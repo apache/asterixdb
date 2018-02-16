@@ -23,10 +23,10 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy.TypeCastingMathFunctionType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.FloatPointable;
 
@@ -54,8 +54,9 @@ public class FloatToInt64TypeConvertComputer implements ITypeConvertComputer {
     }
 
     @Override
-    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
-        float sourceValue = ((AFloat) sourceObject).getFloatValue();
+    public IAObject convertType(IAObject sourceObject, TypeCastingMathFunctionType mathFunction)
+            throws HyracksDataException {
+        float sourceValue = ATypeHierarchy.applyMathFunctionToFloatValue(sourceObject, mathFunction);
         long targetValue = convert(sourceValue);
         return new AInt64(targetValue);
     }

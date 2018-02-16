@@ -55,7 +55,7 @@ create index msgCountAIx on TweetMessages(countA) type btree;
 create index msgCountBIx on TweetMessages(countB) type btree;
 create index msgTextIx on TweetMessages(message-text) type keyword;
 
-write output to asterix_nc1:"rttest/btree-index-join_self-secondary-equi-join.adm";
+set noindexonly 'true';
 
 for $t1 in dataset('TweetMessages')
 for $t2 in dataset('TweetMessages')

@@ -28,6 +28,8 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.om.base.ADouble;
+import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.types.ATypeTag;
@@ -193,12 +195,14 @@ public class ATypeHierarchy {
     // Get an AsterixConstantValue from a source Object
     public static AsterixConstantValue getAsterixConstantValueFromNumericTypeObject(IAObject sourceObject,
             ATypeTag targetTypeTag) throws HyracksDataException {
-        return getAsterixConstantValueFromNumericTypeObject(sourceObject, targetTypeTag, false);
+        return getAsterixConstantValueFromNumericTypeObject(sourceObject, targetTypeTag, false,
+                TypeCastingMathFunctionType.NONE);
     }
 
     // Get an AsterixConstantValue from a source Object
     public static AsterixConstantValue getAsterixConstantValueFromNumericTypeObject(IAObject sourceObject,
-            ATypeTag targetTypeTag, boolean strictDemote) throws HyracksDataException {
+            ATypeTag targetTypeTag, boolean strictDemote, TypeCastingMathFunctionType mathFunction)
+            throws HyracksDataException {
         ATypeTag sourceTypeTag = sourceObject.getType().getTypeTag();
         if (sourceTypeTag == targetTypeTag) {
             return new AsterixConstantValue(sourceObject);
@@ -215,19 +219,19 @@ public class ATypeHierarchy {
             return null;
         }
 
-        IAObject targetObject = convertComputer.convertType(sourceObject);
+        IAObject targetObject = convertComputer.convertType(sourceObject, mathFunction);
         return new AsterixConstantValue(targetObject);
     }
 
     // Type Casting from source Object to an Object with Target type
     public static IAObject convertNumericTypeObject(IAObject sourceObject, ATypeTag targetTypeTag)
             throws HyracksDataException {
-        return convertNumericTypeObject(sourceObject, targetTypeTag, false);
+        return convertNumericTypeObject(sourceObject, targetTypeTag, false, TypeCastingMathFunctionType.NONE);
     }
 
     // Type Casting from source Object to an Object with Target type
-    public static IAObject convertNumericTypeObject(IAObject sourceObject, ATypeTag targetTypeTag, boolean strictDemote)
-            throws HyracksDataException {
+    public static IAObject convertNumericTypeObject(IAObject sourceObject, ATypeTag targetTypeTag, boolean strictDemote,
+            TypeCastingMathFunctionType mathFunction) throws HyracksDataException {
         ATypeTag sourceTypeTag = sourceObject.getType().getTypeTag();
         if (sourceTypeTag == targetTypeTag) {
             return sourceObject;
@@ -243,7 +247,7 @@ public class ATypeHierarchy {
             throw new RuntimeDataException(ErrorCode.TYPE_CONVERT, sourceTypeTag, targetTypeTag);
         }
 
-        return convertComputer.convertType(sourceObject);
+        return convertComputer.convertType(sourceObject, mathFunction);
     }
 
     // convert a numeric value in a byte array to the target type value
@@ -388,10 +392,46 @@ public class ATypeHierarchy {
         }
     }
 
+    /**
+     * Applies certain math function (e.g., ceil or floor) to a double value and returns that value.
+     */
+    public static double applyMathFunctionToDoubleValue(IAObject sourceObject, TypeCastingMathFunctionType mathFunction)
+            throws RuntimeDataException {
+        switch (mathFunction) {
+            case CEIL:
+                return Math.ceil(((ADouble) sourceObject).getDoubleValue());
+            case FLOOR:
+                return Math.floor(((ADouble) sourceObject).getDoubleValue());
+            default:
+                return ((ADouble) sourceObject).getDoubleValue();
+        }
+    }
+
+    /**
+     * Applies certain math function (e.g., ceil or floor) to a float value and returns that value.
+     */
+    public static float applyMathFunctionToFloatValue(IAObject sourceObject, TypeCastingMathFunctionType mathFunction) {
+        switch (mathFunction) {
+            case CEIL:
+                return (float) Math.ceil(((AFloat) sourceObject).getFloatValue());
+            case FLOOR:
+                return (float) Math.floor(((AFloat) sourceObject).getFloatValue());
+            default:
+                return ((AFloat) sourceObject).getFloatValue();
+        }
+    }
+
     public enum Domain {
         SPATIAL,
         NUMERIC,
         LIST,
         ANY
+    }
+
+    // Type-casting mathFunction that will be used to type-cast a FLOAT or a DOUBLE value into an INTEGER value.
+    public enum TypeCastingMathFunctionType {
+        CEIL,
+        FLOOR,
+        NONE
     }
 }

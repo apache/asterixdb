@@ -1,0 +1,111 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ *  Description     : Secondary RTree Index index-only selection plan verification test
+ *                  : The test is intended to verify that the secondary RTree index is used in the optimized query plan.
+ *                  : In this plan, we fetch PK and SK based on a select condition that utilizes a secondary index.
+ *                  : The plan should have two paths after the secondary index-lookup.
+ *                  : The left path:
+ *                      ... -> unnest-map (sidx) -> split -> unnest-map (pidx) -> select -> union -> ...
+ *                  : The right path:
+ *                      ... -> unnest-map (sidx) -> split ->                                union -> ...
+ *  Expected Result : Success
+ *
+*/
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+/* For raw Fragile data */
+create type FragileTypeRaw as closed {
+  row_id: int32,
+  sid: int32,
+  date: string,
+  day: int32,
+  time: string,
+  bpm: int32,
+  RR: float,
+  /* new string field and location field*/
+  text: string,
+  location: point,
+  text2: string
+
+};
+
+/* For cleaned Fragile data */
+create type FragileType as closed {
+  row_id: int32,
+  sid: int32,
+  date: date,
+  day: int32,
+  time: time,
+  bpm: int32,
+  RR: float,
+
+  /* new string field and location field*/
+  text: string,
+  location: point,
+  text2: string
+};
+
+/* Create dataset for loading raw Fragile data */
+create dataset Fragile_raw (FragileTypeRaw)
+primary key row_id;
+
+/* Create dataset for cleaned Fragile data */
+create dataset Fragile (FragileType)
+primary key row_id;
+
+
+/* Create rtree secondary index on dataset clean Fragile */
+create index cfLocation on Fragile(location) type rtree;
+create index cfLocation on Fragile_raw(location) type rtree;
+
+create type MyRecord as closed {
+  id: int64,
+  docid: int64,
+  val1: int64,
+  title: string,
+  point: point,
+  kwds: string,
+  line1: line,
+  line2: line,
+  poly1: polygon,
+  poly2: polygon,
+  rec: rectangle,
+  circle: circle
+}
+
+create dataset MyData(MyRecord)
+  primary key id;
+
+create index btree_index_docid on MyData(docid) type btree;
+create index btree_index_val1 on MyData(val1) type btree;
+create index rtree_index_point on MyData(point) type rtree;
+create index rtree_index_rec on MyData(rec) type rtree;
+create index ngram_index_title on MyData(title) type ngram(3);
+create index keyword_index_title on MyData(title) type keyword;
+
+let $area:=create-rectangle(point("0.0,0.0"), point("4.0,4.0"))
+for $o in dataset('MyData')
+where spatial-intersect($o.point, $area)
+order by $o.id
+return {"id":$o.id}

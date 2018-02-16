@@ -19,8 +19,10 @@
 package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +55,7 @@ import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescripto
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -70,7 +73,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -107,33 +109,34 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         DISJUNCTIVE
     }
 
-    private static List<FunctionIdentifier> funcIdents = new ArrayList<>();
-
-    static {
-        funcIdents.add(BuiltinFunctions.STRING_CONTAINS);
-        // For matching similarity-check functions. For example, similarity-jaccard-check returns a list of two items,
-        // and the select condition will get the first list-item and check whether it evaluates to true.
-        funcIdents.add(BuiltinFunctions.GET_ITEM);
-        // Full-text search function
-        funcIdents.add(BuiltinFunctions.FULLTEXT_CONTAINS);
-        funcIdents.add(BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION);
-    }
+    // The second boolean value tells whether the given function generates false positive results.
+    // That is, this function can produce false positive results if it is set to true.
+    // In this case, an index-search alone cannot replace the given SELECT condition and
+    // that SELECT condition needs to be applied after the index-search to get the correct results.
+    // Currently, only full-text index search does not generate false positive results.
+    private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS = Collections.unmodifiableList(
+            Arrays.asList(new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.STRING_CONTAINS, true),
+                    // For matching similarity-check functions. For example, similarity-jaccard-check returns
+                    // a list of two items, and the select condition will get the first list-item and
+                    // check whether it evaluates to true.
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.GET_ITEM, true),
+                    // Full-text search function
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.FULLTEXT_CONTAINS, false),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION, false)));
 
     // These function identifiers are matched in this AM's analyzeFuncExprArgs(),
     // and are not visible to the outside driver.
-    private static HashSet<FunctionIdentifier> secondLevelFuncIdents = new HashSet<>();
-
-    static {
-        secondLevelFuncIdents.add(BuiltinFunctions.SIMILARITY_JACCARD_CHECK);
-        secondLevelFuncIdents.add(BuiltinFunctions.EDIT_DISTANCE_CHECK);
-        secondLevelFuncIdents.add(BuiltinFunctions.EDIT_DISTANCE_CONTAINS);
-    }
+    private static final List<Pair<FunctionIdentifier, Boolean>> SECOND_LEVEL_FUNC_IDENTIFIERS =
+            Collections.unmodifiableList(Arrays.asList(
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.SIMILARITY_JACCARD_CHECK, true),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.EDIT_DISTANCE_CHECK, true),
+                    new Pair<FunctionIdentifier, Boolean>(BuiltinFunctions.EDIT_DISTANCE_CONTAINS, true)));
 
     public static InvertedIndexAccessMethod INSTANCE = new InvertedIndexAccessMethod();
 
     @Override
-    public List<FunctionIdentifier> getOptimizableFunctions() {
-        return funcIdents;
+    public List<Pair<FunctionIdentifier, Boolean>> getOptimizableFunctions() {
+        return FUNC_IDENTIFIERS;
     }
 
     @Override
@@ -224,10 +227,21 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 }
             }
         }
-        // Check that the matched function is optimizable by this access method.
-        if (!secondLevelFuncIdents.contains(matchedFuncExpr.getFunctionIdentifier())) {
+        // Checks that the matched function is optimizable by this access method.
+        boolean found = false;
+        for (Iterator<Pair<FunctionIdentifier, Boolean>> iterator = SECOND_LEVEL_FUNC_IDENTIFIERS.iterator(); iterator
+                .hasNext();) {
+            FunctionIdentifier fID = iterator.next().first;
+
+            if (fID != null && matchedFuncExpr != null && fID.equals(matchedFuncExpr.getFunctionIdentifier())) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
             return false;
         }
+
         boolean selectMatchFound = analyzeSelectSimilarityCheckFuncExprArgs(matchedFuncExpr, assignsAndUnnests,
                 matchedAssignOrUnnestIndex, analysisCtx);
         boolean joinMatchFound = analyzeJoinSimilarityCheckFuncExprArgs(matchedFuncExpr, assignsAndUnnests,
@@ -376,10 +390,18 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef,
-            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
-            IOptimizationContext context) throws AlgebricksException {
+    public ILogicalOperator createIndexSearchPlan(List<Mutable<ILogicalOperator>> afterTopOpRefs,
+            Mutable<ILogicalOperator> topOpRef, Mutable<ILogicalExpression> conditionRef,
+            List<Mutable<ILogicalOperator>> assignBeforeTopOpRefs, OptimizableOperatorSubTree indexSubTree,
+            OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context,
+            LogicalVariable newNullPlaceHolderForLOJ) throws AlgebricksException {
+        // TODO: we currently do not support the index-only plan for the inverted index searches since
+        // there can be many <SK, PK> pairs for the same PK and we may see two different records with the same PK
+        // (e.g., the record is deleted and inserted with the same PK). The reason is that there are
+        // no locking processes during a secondary index DML operation. When a secondary index search can see
+        // the only one version of the record during the lifetime of a query, index-only plan can be applied.
+        boolean generateInstantTrylockResultFromIndexSearch = false;
 
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         Dataset dataset = indexSubTree.getDataset();
@@ -412,6 +434,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
             inputOp.getInputs().add(new MutableObject<>(
                     OperatorManipulationUtil.deepCopy(dataSourceScan.getInputs().get(0).getValue())));
+            context.computeAndSetTypeEnvironmentForOperator(inputOp);
             inputOp.setExecutionMode(dataSourceScan.getExecutionMode());
         } else {
             // We are optimizing a join. Add the input variable to the secondaryIndexFuncArgs.
@@ -420,13 +443,17 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             inputOp = (AbstractLogicalOperator) probeSubTree.getRoot();
         }
         jobGenParams.setKeyVarList(keyVarList);
+        // By default, we don't generate SK output for an inverted index
+        // since it doesn't contain a field value, only part of it.
         ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                metaRecordType, chosenIndex, inputOp, jobGenParams, context, true, retainInput, retainNull);
+                metaRecordType, chosenIndex, inputOp, jobGenParams, context, retainInput, retainNull,
+                generateInstantTrylockResultFromIndexSearch);
 
-        // Generate the rest of the upstream plan which feeds the search results into the primary index.
-        AbstractUnnestMapOperator primaryIndexUnnestOp =
-                AccessMethodUtils.createPrimaryIndexUnnestMap(dataSourceScan, dataset, recordType, metaRecordType,
-                        secondaryIndexUnnestOp, context, true, retainInput, retainNull, false);
+        // Generates the rest of the upstream plan which feeds the search results into the primary index.
+        ILogicalOperator primaryIndexUnnestOp = AccessMethodUtils.createRestOfIndexSearchPlan(afterTopOpRefs, topOpRef,
+                conditionRef, assignBeforeTopOpRefs, dataSourceScan, dataset, recordType, metaRecordType,
+                secondaryIndexUnnestOp, context, true, retainInput, retainNull, false, chosenIndex, analysisCtx,
+                indexSubTree, newNullPlaceHolderForLOJ);
 
         return primaryIndexUnnestOp;
     }
@@ -451,23 +478,24 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public boolean applySelectPlanTransformation(List<Mutable<ILogicalOperator>> afterSelectRefs,
             Mutable<ILogicalOperator> selectRef, OptimizableOperatorSubTree subTree, Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException {
-        ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(null, subTree, null, chosenIndex, analysisCtx,
-                AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(), subTree.getDataSourceRef().getValue(),
-                        afterSelectRefs),
-                false, subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
-                        .getExecutionMode() == ExecutionMode.UNPARTITIONED,
-                context);
+        SelectOperator selectOp = (SelectOperator) selectRef.getValue();
+        ILogicalOperator indexPlanRootOp =
+                createIndexSearchPlan(afterSelectRefs, selectRef, selectOp.getCondition(),
+                        subTree.getAssignsAndUnnestsRefs(),
+                        subTree, null, chosenIndex, analysisCtx, false, false, subTree.getDataSourceRef().getValue()
+                                .getInputs().get(0).getValue().getExecutionMode() == ExecutionMode.UNPARTITIONED,
+                        context, null);
+
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
         subTree.getDataSourceRef().setValue(indexPlanRootOp);
         return true;
     }
 
     @Override
-    public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
-            OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin,
-            boolean hasGroupBy) throws AlgebricksException {
-        // Figure out if the index is applicable on the left or right side (if both, we arbitrarily prefer the left side).
+    public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
+            Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
+            OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean hasGroupBy) throws AlgebricksException {
         Dataset dataset = analysisCtx.getDatasetFromIndexDatasetMap(chosenIndex);
         OptimizableOperatorSubTree indexSubTree;
         OptimizableOperatorSubTree probeSubTree;
@@ -485,7 +513,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         // The arguments of edit-distance-contains() function are asymmetrical, we can only use index
-        // if the dataset of index subtree and the dataset of first argument's subtree is the same
+        // if the dataset of index subtree and the dataset of first argument's subtree is the same.
         if (optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CONTAINS
                 && optFuncExpr.getOperatorSubTree(0).getDataset() != null && !optFuncExpr.getOperatorSubTree(0)
                         .getDataset().getDatasetName().equals(indexSubTree.getDataset().getDatasetName())) {
@@ -500,7 +528,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
 
             //reset the null place holder variable
-            AccessMethodUtils.resetLOJNullPlaceholderVariableInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
+            AccessMethodUtils.resetLOJMissingPlaceholderVarInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
         }
 
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) joinRef.getValue();
@@ -535,8 +563,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             probeSubTree.setRoot(newProbeRootRef.getValue());
         }
         // Create regular indexed-nested loop join path.
-        ILogicalOperator indexPlanRootOp = createSecondaryToPrimaryPlan(null, indexSubTree, probeSubTree, chosenIndex,
-                analysisCtx, true, isLeftOuterJoin, true, context);
+        ILogicalOperator indexPlanRootOp = createIndexSearchPlan(afterJoinRefs, joinRef,
+                new MutableObject<ILogicalExpression>(joinCond), indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree,
+                probeSubTree, chosenIndex, analysisCtx, true, isLeftOuterJoin, true, context, newNullPlaceHolderVar);
         indexSubTree.getDataSourceRef().setValue(indexPlanRootOp);
 
         // Change join into a select with the same condition.

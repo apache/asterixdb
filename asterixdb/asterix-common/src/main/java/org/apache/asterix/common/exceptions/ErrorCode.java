@@ -71,6 +71,7 @@ public class ErrorCode {
     public static final int INVALID_DURATION = 28;
     public static final int UNKNOWN_DURATION_UNIT = 29;
     public static final int QUERY_TIMEOUT = 30;
+    public static final int INVALID_TYPE_CASTING_MATH_FUNCTION = 31;
 
     public static final int INSTANTIATION_ERROR = 100;
 
@@ -140,6 +141,11 @@ public class ErrorCode {
     public static final int WITH_FIELD_MUST_CONTAIN_SUB_FIELD = 1061;
     public static final int MERGE_POLICY_PARAMETER_INVALID_TYPE = 1062;
     public static final int NO_DATAVERSE_WITH_NAME = 1063;
+    public static final int ERROR_OCCURRED_BETWEEN_TWO_TYPES_CONVERSION = 1064;
+    public static final int CHOSEN_INDEX_COUNT_SHOULD_BE_GREATER_THAN_ONE = 1065;
+    public static final int CANNOT_SERIALIZE_A_VALUE = 1066;
+    public static final int CANNOT_FIND_NON_MISSING_SELECT_OPERATOR = 1067;
+    public static final int CANNOT_GET_CONDITIONAL_SPLIT_KEY_VARIABLE = 1068;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

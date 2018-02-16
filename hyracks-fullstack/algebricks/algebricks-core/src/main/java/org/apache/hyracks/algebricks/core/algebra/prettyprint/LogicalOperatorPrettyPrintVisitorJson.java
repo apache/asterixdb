@@ -524,7 +524,8 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     public Void visitSplitOperator(SplitOperator op, Integer indent) throws AlgebricksException {
         Mutable<ILogicalExpression> branchingExpression = op.getBranchingExpression();
         addIndent(indent).append("\"operator\": \"split\",\n");
-        addIndent(indent).append("\"" + branchingExpression.getValue().accept(exprVisitor, indent) + "\"");
+        addIndent(indent).append("\"expressions\": \""
+                + branchingExpression.getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
         return null;
     }
 

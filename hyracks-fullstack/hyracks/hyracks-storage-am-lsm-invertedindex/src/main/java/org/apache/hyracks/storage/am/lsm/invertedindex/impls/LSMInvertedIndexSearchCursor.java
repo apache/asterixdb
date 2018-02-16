@@ -216,4 +216,10 @@ public class LSMInvertedIndexSearchCursor extends EnforcedIndexCursor implements
         }
         return operationalComponents.get(accessorIndex).getLSMComponentFilter();
     }
+
+    @Override
+    public boolean getSearchOperationCallbackProceedResult() {
+        return false;
+    }
+
 }

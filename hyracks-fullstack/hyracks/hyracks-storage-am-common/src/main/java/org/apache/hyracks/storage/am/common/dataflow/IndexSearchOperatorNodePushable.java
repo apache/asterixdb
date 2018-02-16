@@ -90,11 +90,27 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected boolean failed = false;
     private final IOperatorStats stats;
 
+    // Used when the result of the search operation callback needs to be passed.
+    protected boolean appendSearchCallbackProceedResult;
+    protected byte[] searchCallbackProceedResultFalseValue;
+    protected byte[] searchCallbackProceedResultTrueValue;
+
     public IndexSearchOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc, int partition,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IIndexDataflowHelperFactory indexHelperFactory,
             boolean retainInput, boolean retainMissing, IMissingWriterFactory missingWriterFactory,
             ISearchOperationCallbackFactory searchCallbackFactory, boolean appendIndexFilter)
             throws HyracksDataException {
+        this(ctx, inputRecDesc, partition, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
+                retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter, false, null,
+                null);
+    }
+
+    public IndexSearchOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc, int partition,
+            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IIndexDataflowHelperFactory indexHelperFactory,
+            boolean retainInput, boolean retainMissing, IMissingWriterFactory missingWriterFactory,
+            ISearchOperationCallbackFactory searchCallbackFactory, boolean appendIndexFilter,
+            boolean appendSearchCallbackProceedResult, byte[] searchCallbackProceedResultFalseValue,
+            byte[] searchCallbackProceedResultTrueValue) throws HyracksDataException {
         this.ctx = ctx;
         this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
         this.retainInput = retainInput;
@@ -115,6 +131,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             maxFilterKey = new PermutingFrameTupleReference();
             maxFilterKey.setFieldPermutation(maxFilterFieldIndexes);
         }
+        this.appendSearchCallbackProceedResult = appendSearchCallbackProceedResult;
+        this.searchCallbackProceedResultFalseValue = searchCallbackProceedResultFalseValue;
+        this.searchCallbackProceedResultTrueValue = searchCallbackProceedResultTrueValue;
         stats = new OperatorStats(getDisplayName());
         if (ctx.getStatsCollector() != null) {
             ctx.getStatsCollector().add(stats);
@@ -139,8 +158,15 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         accessor = new FrameTupleAccessor(inputRecDesc);
         if (retainMissing) {
             int fieldCount = getFieldCount();
-            nonMatchTupleBuild = new ArrayTupleBuilder(fieldCount);
+            // Field count in case searchCallback.proceed() result is needed.
+            int finalFieldCount = appendSearchCallbackProceedResult ? fieldCount + 1 : fieldCount;
+            nonMatchTupleBuild = new ArrayTupleBuilder(finalFieldCount);
             buildMissingTuple(fieldCount, nonMatchTupleBuild, nonMatchWriter);
+            if (appendSearchCallbackProceedResult) {
+                // Writes the success result in the last field in case we need to write down
+                // the result of searchOperationCallback.proceed(). This value can't be missing even for this case.
+                writeSearchCallbackProceedResult(nonMatchTupleBuild, true);
+            }
         } else {
             nonMatchTupleBuild = null;
         }
@@ -183,6 +209,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             }
             ITupleReference tuple = cursor.getTuple();
             writeTupleToOutput(tuple);
+            if (appendSearchCallbackProceedResult) {
+                writeSearchCallbackProceedResult(tb,
+                        ((ILSMIndexCursor) cursor).getSearchOperationCallbackProceedResult());
+            }
             if (appendIndexFilter) {
                 writeFilterTupleToOutput(((ILSMIndexCursor) cursor).getFilterMinTuple());
                 writeFilterTupleToOutput(((ILSMIndexCursor) cursor).getFilterMaxTuple());
@@ -271,6 +301,18 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             }
         } catch (Exception e) {
             throw e;
+        }
+    }
+
+    /**
+     * Write the result of a SearchCallback.proceed() if it is needed.
+     */
+    private void writeSearchCallbackProceedResult(ArrayTupleBuilder atb, boolean searchCallbackProceedResult)
+            throws HyracksDataException {
+        if (!searchCallbackProceedResult) {
+            atb.addField(searchCallbackProceedResultFalseValue, 0, searchCallbackProceedResultFalseValue.length);
+        } else {
+            atb.addField(searchCallbackProceedResultTrueValue, 0, searchCallbackProceedResultTrueValue.length);
         }
     }
 

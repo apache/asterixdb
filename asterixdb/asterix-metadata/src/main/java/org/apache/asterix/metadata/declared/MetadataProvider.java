@@ -41,6 +41,7 @@ import org.apache.asterix.common.metadata.LockList;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
+import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import org.apache.asterix.external.adapter.factory.LookupAdapterFactory;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
@@ -432,7 +433,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context, boolean retainInput,
             boolean retainMissing, Dataset dataset, String indexName, int[] lowKeyFields, int[] highKeyFields,
             boolean lowKeyInclusive, boolean highKeyInclusive, boolean propagateFilter, int[] minFilterFieldIndexes,
-            int[] maxFilterFieldIndexes) throws AlgebricksException {
+            int[] maxFilterFieldIndexes, boolean isIndexOnlyPlan) throws AlgebricksException {
         boolean isSecondary = true;
         Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                 dataset.getDatasetName(), dataset.getDatasetName());
@@ -450,16 +451,34 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             primaryKeyFields[i] = i;
         }
 
-        ISearchOperationCallbackFactory searchCallbackFactory = dataset
-                .getSearchCallbackFactory(storageComponentProvider, theIndex, IndexOperation.SEARCH, primaryKeyFields);
+        int[] primaryKeyFieldsInSecondaryIndex = null;
+        byte[] successValueForIndexOnlyPlan = null;
+        byte[] failValueForIndexOnlyPlan = null;
+        boolean proceedIndexOnlyPlan = isIndexOnlyPlan && isSecondary;
+        if (proceedIndexOnlyPlan) {
+            int numSecondaryKeys = theIndex.getKeyFieldNames().size();
+            primaryKeyFieldsInSecondaryIndex = new int[numPrimaryKeys];
+            for (int i = 0; i < numPrimaryKeys; i++) {
+                primaryKeyFieldsInSecondaryIndex[i] = i + numSecondaryKeys;
+            }
+            // Defines the return value from a secondary index search if this is an index-only plan.
+            failValueForIndexOnlyPlan = SerializerDeserializerUtil.computeByteArrayForIntValue(0);
+            successValueForIndexOnlyPlan = SerializerDeserializerUtil.computeByteArrayForIntValue(1);
+        }
+
+        ISearchOperationCallbackFactory searchCallbackFactory =
+                dataset.getSearchCallbackFactory(storageComponentProvider, theIndex, IndexOperation.SEARCH,
+                        primaryKeyFields, primaryKeyFieldsInSecondaryIndex, proceedIndexOnlyPlan);
         IStorageManager storageManager = getStorageComponentProvider().getStorageManager();
         IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(storageManager, spPc.first);
         BTreeSearchOperatorDescriptor btreeSearchOp;
+
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             btreeSearchOp = new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields, highKeyFields,
                     lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
                     context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
-                    maxFilterFieldIndexes, propagateFilter);
+                    maxFilterFieldIndexes, propagateFilter, proceedIndexOnlyPlan, failValueForIndexOnlyPlan,
+                    successValueForIndexOnlyPlan);
         } else {
             btreeSearchOp = new ExternalBTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
                     highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
@@ -472,8 +491,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildRtreeRuntime(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
             JobGenContext context, boolean retainInput, boolean retainMissing, Dataset dataset, String indexName,
-            int[] keyFields, boolean propagateFilter, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes)
-            throws AlgebricksException {
+            int[] keyFields, boolean propagateFilter, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
+            boolean isIndexOnlyPlan) throws AlgebricksException {
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
         Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                 dataset.getDatasetName(), indexName);
@@ -489,15 +508,38 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             primaryKeyFields[i] = i;
         }
 
-        ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
-                storageComponentProvider, secondaryIndex, IndexOperation.SEARCH, primaryKeyFields);
+        int[] primaryKeyFieldsInSecondaryIndex = null;
+        byte[] successValueForIndexOnlyPlan = null;
+        byte[] failValueForIndexOnlyPlan = null;
+        if (isIndexOnlyPlan) {
+            ARecordType recType = (ARecordType) findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+            List<List<String>> secondaryKeyFields = secondaryIndex.getKeyFieldNames();
+            List<IAType> secondaryKeyTypes = secondaryIndex.getKeyFieldTypes();
+            Pair<IAType, Boolean> keyTypePair =
+                    Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
+            IAType keyType = keyTypePair.first;
+            int numDimensions = NonTaggedFormatUtil.getNumDimensions(keyType.getTypeTag());
+            int numNestedSecondaryKeyFields = numDimensions * 2;
+            primaryKeyFieldsInSecondaryIndex = new int[numPrimaryKeys];
+            for (int i = 0; i < numPrimaryKeys; i++) {
+                primaryKeyFieldsInSecondaryIndex[i] = i + numNestedSecondaryKeyFields;
+            }
+            // Defines the return value from a secondary index search if this is an index-only plan.
+            failValueForIndexOnlyPlan = SerializerDeserializerUtil.computeByteArrayForIntValue(0);
+            successValueForIndexOnlyPlan = SerializerDeserializerUtil.computeByteArrayForIntValue(1);
+        }
+
+        ISearchOperationCallbackFactory searchCallbackFactory =
+                dataset.getSearchCallbackFactory(storageComponentProvider, secondaryIndex, IndexOperation.SEARCH,
+                        primaryKeyFields, primaryKeyFieldsInSecondaryIndex, isIndexOnlyPlan);
         RTreeSearchOperatorDescriptor rtreeSearchOp;
         IIndexDataflowHelperFactory indexDataflowHelperFactory =
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), spPc.first);
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
                     indexDataflowHelperFactory, retainInput, retainMissing, context.getMissingWriterFactory(),
-                    searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes, propagateFilter);
+                    searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes, propagateFilter,
+                    isIndexOnlyPlan, failValueForIndexOnlyPlan, successValueForIndexOnlyPlan);
         } else {
             // Create the operator
             rtreeSearchOp = new ExternalRTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,

@@ -98,10 +98,10 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
             // By nature, LEFT_OUTER_UNNEST_MAP should generate null values for non-matching tuples.
             retainNull = true;
         }
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> rtreeSearch =
-                mp.buildRtreeRuntime(builder.getJobSpec(), outputVars, opSchema, typeEnv, context,
-                        jobGenParams.getRetainInput(), retainNull, dataset, jobGenParams.getIndexName(), keyIndexes,
-                        propagateIndexFilter, minFilterFieldIndexes, maxFilterFieldIndexes);
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> rtreeSearch = mp.buildRtreeRuntime(
+                builder.getJobSpec(), outputVars, opSchema, typeEnv, context, jobGenParams.getRetainInput(), retainNull,
+                dataset, jobGenParams.getIndexName(), keyIndexes, propagateIndexFilter, minFilterFieldIndexes,
+                maxFilterFieldIndexes, unnestMap.getGenerateCallBackProceedResultVar());
 
         builder.contributeHyracksOperator(unnestMap, rtreeSearch.first);
         builder.contributeAlgebricksPartitionConstraint(rtreeSearch.first, rtreeSearch.second);

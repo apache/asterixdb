@@ -233,7 +233,7 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             AbstractUnnestMapOperator primaryIndexUnnestOperator =
                     (AbstractUnnestMapOperator) AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
                             metaRecordType, primaryIndex, scanOperator.getInputs().get(0).getValue(),
-                            newBTreeParameters, context, true, retainInput, false);
+                            newBTreeParameters, context, retainInput, false, false);
 
             // re-use the PK variables of the original scan operator
             primaryIndexUnnestOperator.getVariables().clear();

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules.am;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -48,33 +49,37 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 /**
  * This rule optimizes a join with secondary indexes into an indexed nested-loop join.
- * Matches the following operator pattern:
- * (join) <-- (select)? <-- (assign | unnest)+ <-- (datasource scan)
- * <-- (select)? <-- (assign | unnest)+ <-- (datasource scan | unnest-map)
- * The order of the join inputs matters (left becomes the outer relation and right becomes the inner relation).
+ * This rule matches the following operator pattern:
+ * join <-- select? <-- (assign|unnest)+ <-- (datasource scan|unnest-map)
+ * The order of the join inputs matters (left branch - outer relation, right branch - inner relation).
  * This rule tries to utilize an index on the inner relation.
  * If that's not possible, it stops transforming the given join into an index-nested-loop join.
- * Replaces the above pattern with the following simplified plan:
- * (select) <-- (assign) <-- (btree search) <-- (sort) <-- (unnest(index search)) <-- (assign) <-- (A)
- * (A) <-- (datasource scan | unnest-map)
- * The sort is optional, and some access methods may choose not to sort.
+ *
+ * This rule replaces the above pattern with the following simplified plan:
+ * select <-- assign+ <-- unnest-map(pidx) <-- sort <-- unnest-map(sidx) <-- assign+ <-- (datasource scan|unnest-map)
+ * The sorting PK process is optional, and some access methods may choose not to sort.
  * Note that for some index-based optimizations we do not remove the triggering
  * condition from the join, since the secondary index may only act as a filter, and the
  * final verification must still be done with the original join condition.
+ *
  * The basic outline of this rule is:
  * 1. Match operator pattern.
  * 2. Analyze join condition to see if there are optimizable functions (delegated to IAccessMethods).
  * 3. Check metadata to see if there are applicable indexes.
  * 4. Choose an index to apply (for now only a single index will be chosen).
  * 5. Rewrite plan using index (delegated to IAccessMethods).
+ *
  * For left-outer-join, additional patterns are checked and additional treatment is needed as follows:
- * 1. First it checks if there is a groupByOp above the join: (groupby) <-- (leftouterjoin)
+ * 1. First it checks if there is a groupByOp above the join: groupby <-- leftouterjoin
  * 2. Inherently, only the right-subtree of the lojOp can be used as indexSubtree.
- * So, the right-subtree must have at least one applicable index on join field(s)
+ * So, the right-subtree must have at least one applicable index on join field(s).
  * 3. If there is a groupByOp, the null placeholder variable introduced in groupByOp should be taken care of correctly.
  * Here, the primary key variable from datasourceScanOp replaces the introduced null placeholder variable.
- * If the primary key is composite key, then the first variable of the primary key variables becomes the
+ * If the primary key is a composite key, then the first variable of the primary key variables becomes the
  * null place holder variable. This null placeholder variable works for all three types of indexes.
+ *
+ * If the inner-branch can be transformed as an index-only plan, this rule creates an index-only-plan path
+ * that is similar to one described in IntroduceSelectAccessMethod Rule.
  */
 public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethodRule {
 
@@ -84,10 +89,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     protected final OptimizableOperatorSubTree leftSubTree = new OptimizableOperatorSubTree();
     protected final OptimizableOperatorSubTree rightSubTree = new OptimizableOperatorSubTree();
     protected IVariableTypeEnvironment typeEnvironment = null;
-    protected boolean isLeftOuterJoin = false;
     protected boolean hasGroupBy = true;
+    protected List<Mutable<ILogicalOperator>> afterJoinRefs = null;
 
-    // Register access methods.
+    // Registers access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<>();
 
     static {
@@ -97,8 +102,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     /**
-     * Recursively check the given plan from the root operator to transform a plan
-     * with JOIN or LEFT-OUTER-JOIN operator into an index-utilized plan.
+     * Recursively checks the given plan from the root operator to transform a plan
+     * with INNERJOIN or LEFT-OUTER-JOIN operator into an index-utilized plan.
      */
 
     @Override
@@ -114,7 +119,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             return false;
         }
 
-        // Check whether this operator is the root, which is DISTRIBUTE_RESULT or SINK since
+        // Checks whether this operator is the root, which is DISTRIBUTE_RESULT or SINK since
         // we start the process from the root operator.
         if (op.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT
                 && op.getOperatorTag() != LogicalOperatorTag.SINK
@@ -127,7 +132,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             return false;
         }
 
-        // Recursively check the given plan whether the desired pattern exists in it.
+        afterJoinRefs = new ArrayList<>();
+        // Recursively checks the given plan whether the desired pattern exists in it.
         // If so, try to optimize the plan.
         boolean planTransformed = checkAndApplyJoinTransformation(opRef, context);
 
@@ -227,11 +233,11 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         joinRef = null;
         joinOp = null;
         joinCond = null;
-        isLeftOuterJoin = false;
+        afterJoinRefs = null;
     }
 
     /**
-     * Recursively traverse the given plan and check whether a INNERJOIN or LEFTOUTERJOIN operator exists.
+     * Recursively traverses the given plan and check whether a INNERJOIN or LEFTOUTERJOIN operator exists.
      * If one is found, maintain the path from the root to the given join operator and
      * optimize the path from the given join operator to the EMPTY_TUPLE_SOURCE operator
      * if it is not already optimized.
@@ -240,6 +246,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean joinFoundAndOptimizationApplied;
+
+        // Adds the current operator to the operator list that contains operators after a join operator
+        // in case there is a descendant join operator and it could be transformed first.
+        afterJoinRefs.add(opRef);
 
         // Recursively check the plan and try to optimize it. We first check the children of the given operator
         // to make sure an earlier join in the path is optimized first.
@@ -250,32 +260,39 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             }
         }
 
-        // Check the current operator pattern to see whether it is a JOIN or not.
+        // Now, we are sure that transformation attempts for earlier joins have been failed.
+        // Checks the current operator pattern to see whether it is a JOIN or not.
         boolean isThisOpInnerJoin = isInnerJoin(op);
         boolean isThisOpLeftOuterJoin = isLeftOuterJoin(op);
         boolean isParentOpGroupBy = hasGroupBy;
 
         Mutable<ILogicalOperator> joinRefFromThisOp = null;
         AbstractBinaryJoinOperator joinOpFromThisOp = null;
-
+        // operators that need to be removed from the afterJoinRefs list.
+        Mutable<ILogicalOperator> opRefRemove = opRef;
         if (isThisOpInnerJoin) {
-            // Set join operator.
+            // Sets the join operator.
             joinRef = opRef;
             joinOp = (InnerJoinOperator) op;
             joinRefFromThisOp = opRef;
             joinOpFromThisOp = (InnerJoinOperator) op;
         } else if (isThisOpLeftOuterJoin) {
-            // Set left-outer-join op.
-            // The current operator is GROUP and the child of this op is LEFTOUERJOIN.
+            // Sets the left-outer-join operator.
+            // The current operator is GROUP and the child of this operator is LEFTOUERJOIN.
             joinRef = op.getInputs().get(0);
             joinOp = (LeftOuterJoinOperator) joinRef.getValue();
             joinRefFromThisOp = op.getInputs().get(0);
             joinOpFromThisOp = (LeftOuterJoinOperator) joinRefFromThisOp.getValue();
-        }
 
-        // For a JOIN case, try to transform the given plan.
+            // Group-by should not be removed at this point since the given left-outer-join can be transformed.
+            opRefRemove = op.getInputs().get(0);
+        }
+        afterJoinRefs.remove(opRefRemove);
+
+        // For a JOIN case, tries to transform the given plan.
         if (isThisOpInnerJoin || isThisOpLeftOuterJoin) {
-            // Restore the information from this operator since it might have been be set to null
+
+            // Restores the information from this operator since it might have been be set to null
             // if there are other join operators in the earlier path.
             joinRef = joinRefFromThisOp;
             joinOp = joinOpFromThisOp;
@@ -294,14 +311,14 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 analyzedAMs = new HashMap<>();
             }
 
-            // Check the condition of JOIN operator is a function call since only function call can be transformed
-            // using available indexes. If so, initialize the subtree information that will be used later to decide
+            // Checks the condition of JOIN operator is a function call since only function call can be transformed
+            // using available indexes. If so, initializes the subtree information that will be used later to decide
             // whether the given plan is truly optimizable or not.
             if (continueCheck && !checkJoinOpConditionAndInitSubTree(context)) {
                 continueCheck = false;
             }
 
-            // Analyze the condition of SELECT operator and initialize analyzedAMs.
+            // Analyzes the condition of SELECT operator and initializes analyzedAMs.
             // Check whether the function in the SELECT operator can be truly transformed.
             boolean matchInLeftSubTree = false;
             boolean matchInRightSubTree = false;
@@ -316,7 +333,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 }
             }
 
-            // Find the dataset from the data-source and the record type of the dataset from the metadata.
+            // Finds the dataset from the data-source and the record type of the dataset from the metadata.
             // This will be used to find an applicable index on the dataset.
             boolean checkLeftSubTreeMetadata = false;
             boolean checkRightSubTreeMetadata = false;
@@ -338,11 +355,11 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 }
                 fillSubTreeIndexExprs(rightSubTree, analyzedAMs, context);
 
-                // Prune the access methods based on the function expression and access methods.
+                // Prunes the access methods based on the function expression and access methods.
                 pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
 
                 // If the right subtree (inner branch) has indexes, one of those indexes will be used.
-                // Remove the indexes from the outer branch in the optimizer's consideration list for this rule.
+                // Removes the indexes from the outer branch in the optimizer's consideration list for this rule.
                 pruneIndexCandidatesFromOuterBranch(analyzedAMs);
 
                 // We are going to use indexes from the inner branch.
@@ -354,7 +371,16 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 }
 
                 if (continueCheck) {
-                    // Apply plan transformation using chosen index.
+                    // Finds the field name of each variable in the sub-tree such as variables for order by.
+                    // This step is required when checking index-only plan.
+                    if (checkLeftSubTreeMetadata) {
+                        fillFieldNamesInTheSubTree(leftSubTree);
+                    }
+                    if (checkRightSubTreeMetadata) {
+                        fillFieldNamesInTheSubTree(rightSubTree);
+                    }
+
+                    // Applies the plan transformation using chosen index.
                     AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
 
                     // For LOJ with GroupBy, prepare objects to reset LOJ nullPlaceHolderVariable
@@ -363,7 +389,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                         analysisCtx.setLOJGroupbyOpRef(opRef);
                         ScalarFunctionCallExpression isNullFuncExpr =
                                 AccessMethodUtils.findLOJIsMissingFuncInGroupBy((GroupByOperator) opRef.getValue());
-                        analysisCtx.setLOJIsNullFuncInGroupBy(isNullFuncExpr);
+                        analysisCtx.setLOJIsMissingFuncInGroupBy(isNullFuncExpr);
                     }
 
                     Dataset indexDataset = analysisCtx.getDatasetFromIndexDatasetMap(chosenIndex.second);
@@ -376,9 +402,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                         return false;
                     }
 
-                    // Finally, try to apply plan transformation using chosen index.
-                    boolean res = chosenIndex.first.applyJoinPlanTransformation(joinRef, leftSubTree, rightSubTree,
-                            chosenIndex.second, analysisCtx, context, isThisOpLeftOuterJoin, isParentOpGroupBy);
+                    // Finally, tries to apply plan transformation using the chosen index.
+                    boolean res = chosenIndex.first.applyJoinPlanTransformation(afterJoinRefs, joinRef, leftSubTree,
+                            rightSubTree, chosenIndex.second, analysisCtx, context, isThisOpLeftOuterJoin,
+                            isParentOpGroupBy);
 
                     // If the plan transformation is successful, we don't need to traverse the plan
                     // any more, since if there are more JOIN operators, the next trigger on this plan
@@ -393,11 +420,19 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
             joinOp = null;
         }
 
+        // Checked the given left-outer-join operator and it is not transformed. So, this group-by operator
+        // after the left-outer-join operator should be removed from the afterJoinRefs list
+        // since the current operator is a group-by operator.
+        if (isThisOpLeftOuterJoin) {
+            afterJoinRefs.remove(opRef);
+        }
+
         return false;
     }
 
     /**
-     * After the pattern is matched, check the condition and initialize the data sources from the both sub trees.
+     * After the pattern is matched, checks the condition and initializes the data source
+     * from the right (inner) sub tree.
      *
      * @throws AlgebricksException
      */

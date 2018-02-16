@@ -1,0 +1,6 @@
+{  "cid": 775,  "name": "Jodi Rotruck", "cashBack": 775, "age": null, "address": {  "number": 8389,  "street": "Hill St.",  "city": "Mountain View" },  "lastorder": {  "oid": 66,  "total": 38.618626f } }
+{  "cid": 5,  "name": "Jodi Alex",  "cashBack": 5, "age": 19, "address": null, "lastorder": {  "oid": 48,  "total": 318.618626f } }
+{  "cid": 1,  "name": "Mike Carey",  "cashBack": 1, "address": {  "number": 389,  "street": "Hill St.",  "city": "Mountain View" },  "lastorder": {  "oid": 18,  "total": 338.618626f } }
+{  "cid": 0,  "name": "Mike ley",  "cashBack": 0, "address": null, "lastorder": {  "oid": 0258,  "total": 368.618626f } }
+{  "cid": 4,  "name": "Mary Carey",  "cashBack": 4, "age": 12,  "address": {  "number": 8,  "street": "Hill St.",  "city": "Mountain View" },  "lastorder": {  "oid": 4545,  "total": 87.618626f } }
+

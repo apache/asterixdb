@@ -33,4 +33,14 @@ public interface ILSMIndexCursor extends IIndexCursor {
      * @return the max tuple of the corresponding component's filter
      */
     ITupleReference getFilterMaxTuple();
+
+    /**
+     * Returns the result of the current SearchOperationCallback.proceed().
+     * This method is used for the secondary-index searches.
+     *
+     * @return true if SearchOperationCallback.proceed() succeeded
+     *         false otherwise
+     */
+    boolean getSearchOperationCallbackProceedResult();
+
 }

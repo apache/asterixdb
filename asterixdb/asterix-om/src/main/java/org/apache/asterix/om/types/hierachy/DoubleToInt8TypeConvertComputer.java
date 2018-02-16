@@ -23,10 +23,10 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy.TypeCastingMathFunctionType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 
@@ -55,8 +55,9 @@ public class DoubleToInt8TypeConvertComputer implements ITypeConvertComputer {
     }
 
     @Override
-    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
-        double sourceValue = ((ADouble) sourceObject).getDoubleValue();
+    public IAObject convertType(IAObject sourceObject, TypeCastingMathFunctionType mathFunction)
+            throws HyracksDataException {
+        double sourceValue = ATypeHierarchy.applyMathFunctionToDoubleValue(sourceObject, mathFunction);
         byte targetValue = convert(sourceValue);
         return new AInt8(targetValue);
     }

@@ -56,7 +56,7 @@ create index msgCountAIx on TweetMessages(countA) type btree;
 create index msgCountBIx on TweetMessages(countB) type btree;
 create index msgTextIx on TweetMessages(message-text) type keyword;
 
-write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm";
+set noindexonly 'true';
 
 for $t1 in dataset('TweetMessages')
 let $time := current-datetime()

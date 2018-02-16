@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy.TypeCastingMathFunctionType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class IntegerToInt8TypeConvertComputer extends AbstractIntegerTypeConvertComputer {
@@ -45,7 +46,8 @@ public class IntegerToInt8TypeConvertComputer extends AbstractIntegerTypeConvert
     }
 
     @Override
-    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+    public IAObject convertType(IAObject sourceObject, TypeCastingMathFunctionType mathFunction)
+            throws HyracksDataException {
         return convertIntegerType(sourceObject, ATypeTag.TINYINT);
     }
 }

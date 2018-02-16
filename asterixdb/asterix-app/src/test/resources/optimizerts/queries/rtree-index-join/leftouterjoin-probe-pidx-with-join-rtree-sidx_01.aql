@@ -17,7 +17,8 @@
  * under the License.
  */
 /*
- * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary rtree index in index subtree.
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree
+ *              : and another for secondary rtree index in index subtree.
  * Issue        : 730, 741
  * Expected Res : Success
  * Date         : 8th May 2014
@@ -55,7 +56,7 @@ create index msgCountAIx on TweetMessages(countA) type btree;
 create index msgCountBIx on TweetMessages(countB) type btree;
 create index msgTextIx on TweetMessages(message-text) type keyword;
 
-write output to asterix_nc1:"rttest/rtree-index-join_leftouterjoin-probe-pidx-with-join-rtree-sidx_01.adm";
+set noindexonly 'true';
 
 for $t1 in dataset('TweetMessages')
 let $n :=  create-circle($t1.sender-location, 0.5)

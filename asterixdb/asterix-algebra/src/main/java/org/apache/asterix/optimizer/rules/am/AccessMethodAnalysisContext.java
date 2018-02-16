@@ -28,6 +28,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 
@@ -52,7 +53,40 @@ public class AccessMethodAnalysisContext {
 
     // variables for resetting null placeholder for left-outer-join
     private Mutable<ILogicalOperator> lojGroupbyOpRef = null;
-    private ScalarFunctionCallExpression lojIsNullFuncInGroupBy = null;
+    private ScalarFunctionCallExpression lojIsMissingFuncInGroupBy = null;
+
+    // For a secondary index, if we use only PK and secondary key field in a plan, it is an index-only plan.
+    // Contains information about index-only plan
+    //
+    // 1. isIndexOnlyPlan - index-only plan possible?
+    //    This option is the primary option. If this is false, then regardless of the following variables,
+    //    An index-only plan will not be constructed. If this is true, then we use the following variables to
+    //    construct an index-only plan.
+    //
+    // 2. secondaryKeyFieldUsedAfterSelectOrJoinOp - secondary key field usage after the select or join operator?
+    //    If the secondary key field is used after SELECT or JOIN operator (e.g., returning the field),
+    //    then we need to keep secondary keys from the secondary index search.
+    //
+    // 3. requireVerificationAfterSIdxSearch -
+    //    whether a verification (especially for R-Tree case) is required after the secondary index search?
+    //    For an R-Tree index, if the given query shape is not RECTANGLE or POINT,
+    //    we need to add the original SELECT operator to filter out the false positive results.
+    //    (e.g., spatial-intersect($o.pointfield, create-circle(create-point(30.0,70.0), 5.0)) )
+    //
+    //    Also, for a B-Tree composite index, we need to apply SELECT operators in the right path
+    //    to remove any false positive results from the secondary composite index search.
+    //
+    //    Lastly, if there is an index-nested-loop-join and the join contains more conditions
+    //    other than joining fields, then those conditions need to be applied to filter out
+    //    false positive results in the right path (isntantTryLock success path).
+    //    (e.g., where $a.authors /*+ indexnl */ = $b.authors and $a.id = $b.id)
+    //    For more details, refer to AccessMethodUtils.createPrimaryIndexUnnestMap() method.
+    //
+    // 4. doesSIdxSearchCoverAllPredicates - can the given index cover all search predicates?
+    //    In other words, all search predicates are about the given secondary index?
+    //
+    private Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo =
+            new Quadruple<>(false, false, false, false);
 
     public void addIndexExpr(Dataset dataset, Index index, Integer exprIndex, Integer varIndex) {
         List<Pair<Integer, Integer>> exprs = getIndexExprsFromIndexExprsAndVars(index);
@@ -108,20 +142,36 @@ public class AccessMethodAnalysisContext {
         return lojGroupbyOpRef;
     }
 
-    public void setLOJIsNullFuncInGroupBy(ScalarFunctionCallExpression isNullFunc) {
-        lojIsNullFuncInGroupBy = isNullFunc;
+    public void setLOJIsMissingFuncInGroupBy(ScalarFunctionCallExpression isMissingFunc) {
+        lojIsMissingFuncInGroupBy = isMissingFunc;
     }
 
-    public ScalarFunctionCallExpression getLOJIsNullFuncInGroupBy() {
-        return lojIsNullFuncInGroupBy;
+    public ScalarFunctionCallExpression getLOJIsMissingFuncInGroupBy() {
+        return lojIsMissingFuncInGroupBy;
     }
 
     public Dataset getDatasetFromIndexDatasetMap(Index idx) {
-        return indexDatasetMap.get(idx);
+        return getIndexDatasetMap().get(idx);
     }
 
     public void putDatasetIntoIndexDatasetMap(Index idx, Dataset ds) {
-        indexDatasetMap.put(idx, ds);
+        getIndexDatasetMap().put(idx, ds);
+    }
+
+    public void setIndexOnlyPlanInfo(Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo) {
+        this.indexOnlyPlanInfo = indexOnlyPlanInfo;
+    }
+
+    public Quadruple<Boolean, Boolean, Boolean, Boolean> getIndexOnlyPlanInfo() {
+        return this.indexOnlyPlanInfo;
+    }
+
+    public Map<Index, Dataset> getIndexDatasetMap() {
+        return indexDatasetMap;
+    }
+
+    public void setIndexDatasetMap(Map<Index, Dataset> indexDatasetMap) {
+        this.indexDatasetMap = indexDatasetMap;
     }
 
 }

@@ -23,9 +23,11 @@ import java.util.List;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -41,9 +43,10 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
 
     /**
      * @return A list of function identifiers that are optimizable by this
-     *         access method.
+     *         access method. Also, the second boolean tells whether that
+     *         function can generate a false-positive result.
      */
-    public List<FunctionIdentifier> getOptimizableFunctions();
+    public List<Pair<FunctionIdentifier, Boolean>> getOptimizableFunctions();
 
     /**
      * Analyzes the arguments of a given optimizable funcExpr to see if this
@@ -86,20 +89,22 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
             Mutable<ILogicalOperator> selectRef, OptimizableOperatorSubTree subTree, Index chosenIndex,
             AccessMethodAnalysisContext analysisCtx, IOptimizationContext context) throws AlgebricksException;
 
-    public ILogicalOperator createSecondaryToPrimaryPlan(Mutable<ILogicalExpression> conditionRef,
-            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, boolean retainInput, boolean retainNull, boolean requiresBroadcast,
-            IOptimizationContext context) throws AlgebricksException;
+    public ILogicalOperator createIndexSearchPlan(List<Mutable<ILogicalOperator>> afterTopOpRefs,
+            Mutable<ILogicalOperator> topOpRef, Mutable<ILogicalExpression> conditionRef,
+            List<Mutable<ILogicalOperator>> assignBeforeTheOpRefs, OptimizableOperatorSubTree indexSubTree,
+            OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context,
+            LogicalVariable newNullPlaceHolderForLOJ) throws AlgebricksException;
 
     /**
      * Applies the plan transformation to use chosenIndex to optimize a join query.
      * In the case of a LeftOuterJoin, there may or may not be a needed groupby operation
      * If there is, we will need to include it in the transformation
      */
-    public boolean applyJoinPlanTransformation(Mutable<ILogicalOperator> joinRef,
-            OptimizableOperatorSubTree leftSubTree, OptimizableOperatorSubTree rightSubTree, Index chosenIndex,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean isLeftOuterJoin,
-            boolean hasGroupBy) throws AlgebricksException;
+    public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
+            Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
+            OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean hasGroupBy) throws AlgebricksException;
 
     /**
      * Analyzes expr to see whether it is optimizable by the given concrete index.

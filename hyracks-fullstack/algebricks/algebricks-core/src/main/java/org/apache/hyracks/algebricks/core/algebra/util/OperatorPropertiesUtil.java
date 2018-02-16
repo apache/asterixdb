@@ -59,9 +59,15 @@ public class OperatorPropertiesUtil {
         return true;
     }
 
-    // Obs: doesn't return expected result for op. with nested plans.
-    private static void getFreeVariablesInOp(ILogicalOperator op, Set<LogicalVariable> freeVars)
+    /**
+     * Adds the free variables of the operator to the given set.
+     *
+     * @param op
+     * @param freeVars
+     */
+    public static void getFreeVariablesInOp(ILogicalOperator op, Set<LogicalVariable> freeVars)
             throws AlgebricksException {
+        // Obs: doesn't return expected result for op. with nested plans.
         VariableUtilities.getUsedVariables(op, freeVars);
         HashSet<LogicalVariable> produced = new HashSet<>();
         VariableUtilities.getProducedVariables(op, produced);
@@ -248,6 +254,16 @@ public class OperatorPropertiesUtil {
         }
     }
 
+    /**
+     * Recursively visits all descendants of the given operator and
+     * (re)computes and sets a type environment for each operator.
+     *
+     * @param r
+     *            a mutable logical operator
+     * @param context
+     *            optimization context
+     * @throws AlgebricksException
+     */
     public static void typeOpRec(Mutable<ILogicalOperator> r, IOptimizationContext context) throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) r.getValue();
         for (Mutable<ILogicalOperator> i : op.getInputs()) {

@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy.TypeCastingMathFunctionType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ITypeConvertComputer {
@@ -30,5 +31,6 @@ public interface ITypeConvertComputer {
     void convertType(byte[] data, int start, int length, DataOutput out) throws IOException;
 
     // promote or demote a type to a different type
-    IAObject convertType(IAObject sourceObject) throws HyracksDataException;
+    // mathFunction (e.g., ceil or floor) is used to convert a real value into an integer value.
+    IAObject convertType(IAObject sourceObject, TypeCastingMathFunctionType mathFunction) throws HyracksDataException;
 }

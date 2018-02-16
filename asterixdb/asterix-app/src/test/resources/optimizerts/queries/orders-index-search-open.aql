@@ -23,14 +23,14 @@ create dataverse index_search;
 use dataverse index_search;
 
 create type OrderType as open {
-  o_orderkey: int32, 
-  o_custkey: int32, 
-  o_orderstatus: string, 
-  o_totalprice: double, 
-  o_orderdate: string, 
+  o_orderkey: int32,
+  o_custkey: int32,
+  o_orderstatus: string,
+  o_totalprice: double,
+  o_orderdate: string,
   o_orderpriority: string,
-  o_clerk: string, 
-  o_shippriority: int32, 
+  o_clerk: string,
+  o_shippriority: int32,
   o_comment: string
 }
 
@@ -42,12 +42,12 @@ create dataset Orders(OrderType)
 
 create index idx_Orders_Custkey on Orders(o_custkey);
 
-write output to asterix_nc1:"/tmp/index_search.adm";
+set noindexonly 'true';
 
 for $o in dataset('Orders')
 where
   $o.o_custkey = 40
-return {  
+return {
   "o_orderkey": $o.o_orderkey,
-  "o_custkey": $o.o_custkey 
+  "o_custkey": $o.o_custkey
 }

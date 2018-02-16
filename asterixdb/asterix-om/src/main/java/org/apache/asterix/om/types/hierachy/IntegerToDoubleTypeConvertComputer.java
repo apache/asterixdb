@@ -31,6 +31,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy.TypeCastingMathFunctionType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.BytePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -73,7 +74,8 @@ public class IntegerToDoubleTypeConvertComputer implements ITypeConvertComputer 
     }
 
     @Override
-    public IAObject convertType(IAObject sourceObject) throws HyracksDataException {
+    public IAObject convertType(IAObject sourceObject, TypeCastingMathFunctionType mathFunction)
+            throws HyracksDataException {
         long val;
         switch (sourceObject.getType().getTypeTag()) {
             case TINYINT:

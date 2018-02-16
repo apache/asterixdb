@@ -166,4 +166,10 @@ public abstract class LSMBTreeWithBuddyAbstractCursor extends EnforcedIndexCurso
     public ITupleReference doGetTuple() {
         return frameTuple;
     }
+
+    @Override
+    public boolean getSearchOperationCallbackProceedResult() {
+        return false;
+    }
+
 }

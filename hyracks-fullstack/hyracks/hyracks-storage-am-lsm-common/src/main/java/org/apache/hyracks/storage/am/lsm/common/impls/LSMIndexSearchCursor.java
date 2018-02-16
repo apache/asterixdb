@@ -311,4 +311,9 @@ public abstract class LSMIndexSearchCursor extends EnforcedIndexCursor implement
             throws HyracksDataException {
         return cmp.compare(tupleA, tupleB);
     }
+
+    @Override
+    public boolean getSearchOperationCallbackProceedResult() {
+        return false;
+    }
 }

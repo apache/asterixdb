@@ -1,0 +1,64 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Self-joins on a dataset on the intersection of a point attribute.
+ *                  The dataset 'TweetMessages' has an RTree index, and we expect the
+ *                  join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TwitterUserType as closed {
+    screen-name: string,
+    lang: string,
+    friends-count: int64,
+    statuses-count: int64,
+    name: string,
+    followers-count: int64
+}
+
+create type TweetMessageType as closed {
+    tweetid: int64,
+        user: TwitterUserType,
+        sender-location: point,
+    send-time: datetime,
+        referred-topics: {{ string }},
+    message-text: string,
+    countA: int64,
+    countB: int64
+}
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid;
+
+create index twmSndLocIx on TweetMessages(sender-location) type rtree;
+create index msgCountAIx on TweetMessages(countA) type btree;
+create index msgCountBIx on TweetMessages(countB) type btree;
+create index msgTextIx on TweetMessages(message-text) type keyword;
+
+for $t1 in dataset('TweetMessages')
+for $t2 in dataset('TweetMessages')
+let $n :=  create-circle($t1.sender-location, 0.5)
+where spatial-intersect($t2.sender-location, $n)
+order by $t2.tweetid
+return {"tweetid2":$t2.tweetid, "loc2":$t2.sender-location};
+

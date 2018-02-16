@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -60,7 +61,7 @@ public class LeftOuterUnnestMapOperator extends AbstractUnnestMapOperator {
         // Propagates all input variables that come from the outer branch.
         PropagatingTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
 
-        env.getCorrelatedMissableVariableLists().add(variables);
+        env.getCorrelatedMissableVariableLists().add(new ArrayList<>(variables));
 
         // For the variables from the inner branch, the output type is the union
         // of (original type + null).

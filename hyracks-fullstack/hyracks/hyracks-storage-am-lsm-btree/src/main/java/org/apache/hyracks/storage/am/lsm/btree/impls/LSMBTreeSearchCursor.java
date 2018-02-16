@@ -104,4 +104,9 @@ public class LSMBTreeSearchCursor extends EnforcedIndexCursor implements ILSMInd
     public ITupleReference getFilterMaxTuple() {
         return currentCursor.getFilterMaxTuple();
     }
+
+    @Override
+    public boolean getSearchOperationCallbackProceedResult() {
+        return false;
+    }
 }

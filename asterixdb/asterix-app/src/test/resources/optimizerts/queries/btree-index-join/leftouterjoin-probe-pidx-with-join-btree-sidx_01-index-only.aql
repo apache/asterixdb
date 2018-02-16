@@ -1,0 +1,72 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree
+ *              : and another for secondary btree index in index subtree.
+ *              : In fact, this is an index-only plan from the inner branch's perspective since only PK and SK
+ *              : variables are used and returned.
+ * Issue        : 730, 741
+ * Expected Res : Success
+ * Date         : 8th May 2014
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TwitterUserType as closed {
+    screen-name: string,
+    lang: string,
+    friends-count: int32,
+    statuses-count: int32,
+    name: string,
+    followers-count: int32
+}
+
+create type TweetMessageType as closed {
+    tweetid: int64,
+        user: TwitterUserType,
+        sender-location: point,
+    send-time: datetime,
+        referred-topics: {{ string }},
+    message-text: string,
+    countA: int32,
+    countB: int32
+}
+
+create dataset TweetMessages(TweetMessageType)
+primary key tweetid;
+
+create index twmSndLocIx on TweetMessages(sender-location) type rtree;
+create index msgCountAIx on TweetMessages(countA) type btree;
+create index msgCountBIx on TweetMessages(countB) type btree;
+create index msgTextIx on TweetMessages(message-text) type keyword;
+
+for $t1 in dataset('TweetMessages')
+where $t1.tweetid < int64("10")
+order by $t1.tweetid
+return {
+"tweetid1": $t1.tweetid,
+"count1":$t1.countA,
+"t2info": for $t2 in dataset('TweetMessages')
+          where $t1.countA /* +indexnl */= $t2.countB
+          order by $t2.tweetid
+          return {"tweetid2": $t2.tweetid,
+                  "count2":$t2.countB}
+};

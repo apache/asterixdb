@@ -43,8 +43,7 @@ using localfs
 
 create index rtree_index_point on MyData(point) type rtree;
 
-
-write output to asterix_nc1:"rttest/index_rtree-secondary-index-open.adm";
+set noindexonly 'true';
 
 for $o in dataset('MyData')
 where spatial-intersect($o.point, create-polygon([4.0,1.0,4.0,4.0,12.0,4.0,12.0,1.0]))

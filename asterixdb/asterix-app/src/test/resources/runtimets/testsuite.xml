@@ -2671,6 +2671,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
+      <compilation-unit name="btree-primary-to-secondary-indexonly-plan-equi-join_01">
+        <output-dir compare="Text">btree-primary-to-secondary-indexonly-plan-equi-join_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
       <compilation-unit name="btree-secondary-equi-join_01">
         <output-dir compare="Text">btree-secondary-equi-join_01</output-dir>
       </compilation-unit>
@@ -2686,13 +2691,58 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
+      <compilation-unit name="btree-secondary-equi-join_04">
+        <output-dir compare="Text">btree-secondary-equi-join_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="btree-secondary-indexonly-plan-to-primary-equi-join_01">
+        <output-dir compare="Text">btree-secondary-indexonly-plan-to-primary-equi-join_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="btree-secondary-indexonly-plan-to-secondary-indexonly-plan-equi-join_01">
+        <output-dir compare="Text">btree-secondary-indexonly-plan-to-secondary-indexonly-plan-equi-join_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="btree-secondary-non-indexonly-plan-to-primary-equi-join_01">
+        <output-dir compare="Text">btree-secondary-non-indexonly-plan-to-primary-equi-join_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="btree-secondary-non-indexonly-plan-to-secondary-indexonly-plan-equi-join_01">
+        <output-dir compare="Text">btree-secondary-non-indexonly-plan-to-secondary-indexonly-plan-equi-join_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
       <compilation-unit name="btree-secondary-self-equi-join_01">
         <output-dir compare="Text">btree-secondary-self-equi-join_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
-      <compilation-unit name="rtree-spatial-intersect-point">
-        <output-dir compare="Text">rtree-spatial-intersect-point</output-dir>
+      <compilation-unit name="rtree-spatial-intersect-point_01">
+        <output-dir compare="Text">rtree-spatial-intersect-point_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="rtree-spatial-intersect-point_02">
+        <output-dir compare="Text">rtree-spatial-intersect-point_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="rtree-spatial-intersect-point_03">
+        <output-dir compare="Text">rtree-spatial-intersect-point_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="rtree-spatial-intersect-point_04">
+        <output-dir compare="Text">rtree-spatial-intersect-point_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="rtree-spatial-intersect-point_05">
+        <output-dir compare="Text">rtree-spatial-intersect-point_05</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
@@ -2720,6 +2770,26 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-rewrite-multiple">
         <output-dir compare="Text">btree-index-rewrite-multiple</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-secondary-composite-index-indexonly-plan-01">
+        <output-dir compare="Text">btree-secondary-composite-index-indexonly-plan-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-secondary-composite-index-indexonly-plan-02">
+        <output-dir compare="Text">btree-secondary-composite-index-indexonly-plan-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-secondary-composite-index-indexonly-plan-03">
+        <output-dir compare="Text">btree-secondary-composite-index-indexonly-plan-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="btree-secondary-index-indexonly-plan-01">
+        <output-dir compare="Text">btree-secondary-index-indexonly-plan-01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -2840,6 +2910,21 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="rtree-secondary-index-circular-query">
         <output-dir compare="Text">rtree-secondary-index-circular-query</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="rtree-secondary-index-indexonly-plan-01">
+        <output-dir compare="Text">rtree-secondary-index-indexonly-plan-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="rtree-secondary-index-non-indexonly-plan-01">
+        <output-dir compare="Text">rtree-secondary-index-non-indexonly-plan-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="rtree-secondary-index-non-indexonly-plan-02">
+        <output-dir compare="Text">rtree-secondary-index-non-indexonly-plan-02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -6710,6 +6795,11 @@
   </test-group>
   <test-group name="index-leftouterjoin">
     <test-case FilePath="index-leftouterjoin">
+      <compilation-unit name="probe-pidx-with-join-btree-pidx1">
+        <output-dir compare="Text">probe-pidx-with-join-btree-pidx1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-leftouterjoin">
       <compilation-unit name="probe-pidx-with-join-btree-sidx1">
         <output-dir compare="Text">probe-pidx-with-join-btree-sidx1</output-dir>
       </compilation-unit>
@@ -6720,6 +6810,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-leftouterjoin">
+      <compilation-unit name="probe-pidx-with-join-btree-sidx3-indexonly-plan">
+        <output-dir compare="Text">probe-pidx-with-join-btree-sidx3-indexonly-plan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-leftouterjoin">
       <compilation-unit name="probe-pidx-with-join-rtree-sidx1">
         <output-dir compare="Text">probe-pidx-with-join-rtree-sidx1</output-dir>
       </compilation-unit>
@@ -6727,6 +6822,26 @@
     <test-case FilePath="index-leftouterjoin">
       <compilation-unit name="probe-pidx-with-join-rtree-sidx2">
         <output-dir compare="Text">probe-pidx-with-join-rtree-sidx2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-leftouterjoin">
+      <compilation-unit name="probe-sidx-btree-indexonly-plan-with-join-btree-pidx1">
+        <output-dir compare="Text">probe-sidx-btree-indexonly-plan-with-join-btree-pidx1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-leftouterjoin">
+      <compilation-unit name="probe-sidx-btree-indexonly-plan-with-join-btree-sidx1-indexonly-plan">
+        <output-dir compare="Text">probe-sidx-btree-indexonly-plan-with-join-btree-sidx1-indexonly-plan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-leftouterjoin">
+      <compilation-unit name="probe-sidx-btree-non-indexonly-plan-with-join-btree-pidx1">
+        <output-dir compare="Text">probe-sidx-btree-non-indexonly-plan-with-join-btree-pidx1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-leftouterjoin">
+      <compilation-unit name="probe-sidx-btree-non-indexonly-plan-with-join-btree-sidx1-indexonly-plan">
+        <output-dir compare="Text">probe-sidx-btree-non-indexonly-plan-with-join-btree-sidx1-indexonly-plan</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-leftouterjoin">
@@ -7015,6 +7130,11 @@
     <test-case FilePath="filters">
       <compilation-unit name="load-with-secondary-btree">
         <output-dir compare="Text">load-with-secondary-btree</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="filters">
+      <compilation-unit name="load-with-secondary-btree-index-only">
+        <output-dir compare="Text">load-with-secondary-btree-index-only</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="filters">

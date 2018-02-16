@@ -19,7 +19,9 @@
 package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -61,6 +63,7 @@ public class OptimizableOperatorSubTree {
         EXTERNAL_SCAN,
         PRIMARY_INDEX_LOOKUP,
         COLLECTION_SCAN,
+        INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP,
         NO_DATASOURCE
     }
 
@@ -75,6 +78,9 @@ public class OptimizableOperatorSubTree {
     private Dataset dataset = null;
     private ARecordType recordType = null;
     private ARecordType metaRecordType = null;
+    // Contains the field names for all assign operations in this sub-tree.
+    // This will be used for the index-only plan check.
+    private Map<LogicalVariable, List<String>> varsToFieldNameMap = new HashMap<>();
 
     // Additional datasources can exist if IntroduceJoinAccessMethodRule has been applied.
     // (E.g. There are index-nested-loop-joins in the plan.)
@@ -83,6 +89,9 @@ public class OptimizableOperatorSubTree {
     private List<Dataset> ixJoinOuterAdditionalDatasets = null;
     private List<ARecordType> ixJoinOuterAdditionalRecordTypes = null;
 
+    /**
+     * Identifies the root of the subtree and initializes the data-source, assign, and unnest information.
+     */
     public boolean initFromSubTree(Mutable<ILogicalOperator> subTreeOpRef) throws AlgebricksException {
         reset();
         rootRef = subTreeOpRef;
@@ -160,15 +169,11 @@ public class OptimizableOperatorSubTree {
                             AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                             jobGenParams.readFromFuncArgs(f.getArguments());
                             if (jobGenParams.isPrimaryIndex()) {
-                                if (getDataSourceRef() == null) {
-                                    setDataSourceRef(subTreeOpRef);
-                                    setDataSourceType(DataSourceType.PRIMARY_INDEX_LOOKUP);
-                                } else {
-                                    // One datasource already exists. This is an additional datasource.
-                                    initializeIxJoinOuterAddtionalDataSourcesIfEmpty();
-                                    getIxJoinOuterAdditionalDataSourceTypes().add(DataSourceType.PRIMARY_INDEX_LOOKUP);
-                                    getIxJoinOuterAdditionalDataSourceRefs().add(subTreeOpRef);
-                                }
+                                intializeDataSourceRefAndType(DataSourceType.PRIMARY_INDEX_LOOKUP, subTreeOpRef);
+                                dataSourceFound = true;
+                            } else if (unnestMapOp.getGenerateCallBackProceedResultVar()) {
+                                intializeDataSourceRefAndType(DataSourceType.INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP,
+                                        subTreeOpRef);
                                 dataSourceFound = true;
                             }
                         } else if (f.getFunctionIdentifier().equals(BuiltinFunctions.EXTERNAL_LOOKUP)) {
@@ -213,6 +218,18 @@ public class OptimizableOperatorSubTree {
         return false;
     }
 
+    private void intializeDataSourceRefAndType(DataSourceType dsType, Mutable<ILogicalOperator> opRef) {
+        if (getDataSourceRef() == null) {
+            setDataSourceRef(opRef);
+            setDataSourceType(dsType);
+        } else {
+            // One datasource already exists. This is an additional datasource.
+            initializeIxJoinOuterAddtionalDataSourcesIfEmpty();
+            getIxJoinOuterAdditionalDataSourceTypes().add(dsType);
+            getIxJoinOuterAdditionalDataSourceRefs().add(opRef);
+        }
+    }
+
     /**
      * Find the dataset corresponding to the datasource scan in the metadata.
      * Also sets recordType to be the type of that dataset.
@@ -254,6 +271,7 @@ public class OptimizableOperatorSubTree {
                     datasetName = datasetInfo.second;
                     break;
                 case PRIMARY_INDEX_LOOKUP:
+                case INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP:
                     AbstractUnnestOperator unnestMapOp = (AbstractUnnestOperator) sourceOpRefs.get(i).getValue();
                     ILogicalExpression unnestExpr = unnestMapOp.getExpressionRef().getValue();
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
@@ -369,7 +387,7 @@ public class OptimizableOperatorSubTree {
     }
 
     /**
-     * Get primary key variables from the given data-source.
+     * Gets the primary key variables from the given data-source.
      */
     public void getPrimaryKeyVars(Mutable<ILogicalOperator> dataSourceRefToFetch, List<LogicalVariable> target)
             throws AlgebricksException {
@@ -389,12 +407,26 @@ public class OptimizableOperatorSubTree {
                 primaryKeys = AccessMethodUtils.getPrimaryKeyVarsFromPrimaryUnnestMap(dataset, unnestMapOp);
                 target.addAll(primaryKeys);
                 break;
+            case INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP:
+                AbstractUnnestMapOperator idxOnlyPlanUnnestMapOp =
+                        (AbstractUnnestMapOperator) dataSourceRefToFetchKey.getValue();
+                List<LogicalVariable> idxOnlyPlanKeyVars = idxOnlyPlanUnnestMapOp.getVariables();
+                int indexOnlyPlanNumPrimaryKeys = dataset.getPrimaryKeys().size();
+                // The order of variables: SK, PK, the result of instantTryLock on PK.
+                // The last variable keeps the result of instantTryLock on PK.
+                // Thus, we deduct 1 to only count key variables.
+                int start = idxOnlyPlanKeyVars.size() - 1 - indexOnlyPlanNumPrimaryKeys;
+                int end = start + indexOnlyPlanNumPrimaryKeys;
+
+                for (int i = start; i < end; i++) {
+                    target.add(idxOnlyPlanKeyVars.get(i));
+                }
+                break;
             case EXTERNAL_SCAN:
                 break;
             case NO_DATASOURCE:
             default:
                 throw CompilationException.create(ErrorCode.SUBTREE_HAS_NO_DATA_SOURCE);
-
         }
     }
 
@@ -405,6 +437,11 @@ public class OptimizableOperatorSubTree {
             case PRIMARY_INDEX_LOOKUP:
                 AbstractScanOperator scanOp = (AbstractScanOperator) getDataSourceRef().getValue();
                 return scanOp.getVariables();
+            case INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP:
+                // This data-source doesn't have record variables.
+                List<LogicalVariable> pkVars = new ArrayList<>();
+                getPrimaryKeyVars(dataSourceRef, pkVars);
+                return pkVars;
             case COLLECTION_SCAN:
                 return new ArrayList<>();
             case NO_DATASOURCE:
@@ -422,6 +459,10 @@ public class OptimizableOperatorSubTree {
                     AbstractScanOperator scanOp =
                             (AbstractScanOperator) getIxJoinOuterAdditionalDataSourceRefs().get(idx).getValue();
                     return scanOp.getVariables();
+                case INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP:
+                    List<LogicalVariable> PKVars = new ArrayList<>();
+                    getPrimaryKeyVars(ixJoinOuterAdditionalDataSourceRefs.get(idx), PKVars);
+                    return PKVars;
                 case COLLECTION_SCAN:
                     return new ArrayList<>();
                 case NO_DATASOURCE:
@@ -537,6 +578,10 @@ public class OptimizableOperatorSubTree {
 
     public void setIxJoinOuterAdditionalRecordTypes(List<ARecordType> ixJoinOuterAdditionalRecordTypes) {
         this.ixJoinOuterAdditionalRecordTypes = ixJoinOuterAdditionalRecordTypes;
+    }
+
+    public Map<LogicalVariable, List<String>> getVarsToFieldNameMap() {
+        return varsToFieldNameMap;
     }
 
 }
