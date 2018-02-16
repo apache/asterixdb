@@ -26,7 +26,7 @@ import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.metadata.IMetadataLock;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.util.InvokeUtil;
+import org.apache.hyracks.api.util.InvokeUtil;
 
 public class DatasetLock implements IMetadataLock {
 
