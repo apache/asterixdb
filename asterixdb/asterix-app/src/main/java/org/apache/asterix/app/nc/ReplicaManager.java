@@ -40,9 +40,11 @@ import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@ThreadSafe
 public class ReplicaManager implements IReplicaManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -86,13 +88,13 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     @Override
-    public List<IPartitionReplica> getReplicas(int partition) {
+    public synchronized List<IPartitionReplica> getReplicas(int partition) {
         return replicas.entrySet().stream().filter(e -> e.getKey().getPartition() == partition).map(Map.Entry::getValue)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Set<Integer> getPartitions() {
+    public synchronized Set<Integer> getPartitions() {
         return Collections.unmodifiableSet(partitions);
     }
 
@@ -110,7 +112,7 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     @Override
-    public void release(int partition) throws HyracksDataException {
+    public synchronized void release(int partition) throws HyracksDataException {
         if (!partitions.contains(partition)) {
             return;
         }
