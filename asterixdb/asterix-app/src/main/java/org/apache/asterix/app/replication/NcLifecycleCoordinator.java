@@ -34,6 +34,7 @@ import org.apache.asterix.app.nc.task.MetadataBootstrapTask;
 import org.apache.asterix.app.nc.task.ReportLocalCountersTask;
 import org.apache.asterix.app.nc.task.StartLifecycleComponentsTask;
 import org.apache.asterix.app.nc.task.StartReplicationServiceTask;
+import org.apache.asterix.app.nc.task.UpdateNodeStatusTask;
 import org.apache.asterix.app.replication.message.MetadataNodeRequestMessage;
 import org.apache.asterix.app.replication.message.MetadataNodeResponseMessage;
 import org.apache.asterix.app.replication.message.NCLifecycleTaskReportMessage;
@@ -145,6 +146,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             return buildActiveNCRegTasks(isMetadataNode);
         }
         final List<INCLifecycleTask> tasks = new ArrayList<>();
+        tasks.add(new UpdateNodeStatusTask(NodeStatus.ACTIVE));
         if (state == SystemState.CORRUPTED) {
             //need to perform local recovery for node partitions
             LocalRecoveryTask rt = new LocalRecoveryTask(Arrays.asList(clusterManager.getNodePartitions(nodeId))

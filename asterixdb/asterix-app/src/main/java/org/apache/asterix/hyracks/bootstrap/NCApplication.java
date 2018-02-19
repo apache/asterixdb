@@ -73,7 +73,6 @@ public class NCApplication extends BaseNCApplication {
     private INcApplicationContext runtimeContext;
     private String nodeId;
     private boolean stopInitiated;
-    private boolean startupCompleted;
     protected WebManager webManager;
 
     @Override
@@ -190,33 +189,16 @@ public class NCApplication extends BaseNCApplication {
         // configure servlets after joining the cluster, so we can create HyracksClientConnection
         configureServers();
         webManager.start();
-
-        // Since we don't pass initial run flag in AsterixHyracksIntegrationUtil, we use the virtualNC flag
-        final NodeProperties nodeProperties = runtimeContext.getNodeProperties();
-        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
-        SystemState state = recoveryMgr.getSystemState();
-        if (state == SystemState.PERMANENT_DATA_LOSS
-                && (nodeProperties.isInitialRun() || nodeProperties.isVirtualNc())) {
-            state = SystemState.BOOTSTRAPPING;
-        }
-        // Request registration tasks from CC (we only do this from our primary CC, in the case of multiple CCs)
-        final NodeControllerService ncControllerService = (NodeControllerService) ncServiceCtx.getControllerService();
-        RegistrationTasksRequestMessage.send(ncControllerService.getPrimaryCcId(), ncControllerService,
-                NodeStatus.BOOTING, state);
-        startupCompleted = true;
     }
 
     @Override
-    public void onRegisterNode(CcId ccId) throws Exception {
-        if (startupCompleted) {
-            /*
-             * If the node completed its startup before, then this is a re-registration with
-             * the primary (or supplemental) CC and therefore the system state should be HEALTHY and the node status
-             * is ACTIVE
-             */
-            RegistrationTasksRequestMessage.send(ccId, (NodeControllerService) ncServiceCtx.getControllerService(),
-                    NodeStatus.ACTIVE, SystemState.HEALTHY);
-        }
+    public synchronized void onRegisterNode(CcId ccId) throws Exception {
+        final NodeControllerService ncs = (NodeControllerService) ncServiceCtx.getControllerService();
+        final NodeStatus currentStatus = ncs.getNodeStatus();
+        final SystemState systemState = isPendingStartupTasks(currentStatus, ncs.getPrimaryCcId(), ccId)
+                ? getCurrentSystemState() : SystemState.HEALTHY;
+        RegistrationTasksRequestMessage.send(ccId, (NodeControllerService) ncServiceCtx.getControllerService(),
+                currentStatus, systemState);
     }
 
     @Override
@@ -258,5 +240,21 @@ public class NCApplication extends BaseNCApplication {
             int ioDeviceIndex = Math.abs(StoragePathUtil.getPartitionNumFromRelativePath(relPath) % devices.size());
             return devices.get(ioDeviceIndex);
         };
+    }
+
+    private boolean isPendingStartupTasks(NodeStatus nodeStatus, CcId primaryCc, CcId registeredCc) {
+        return nodeStatus == NodeStatus.BOOTING && (primaryCc == null || primaryCc.equals(registeredCc));
+    }
+
+    private SystemState getCurrentSystemState() {
+        final NodeProperties nodeProperties = runtimeContext.getNodeProperties();
+        IRecoveryManager recoveryMgr = runtimeContext.getTransactionSubsystem().getRecoveryManager();
+        SystemState state = recoveryMgr.getSystemState();
+        // Since we don't pass initial run flag in AsterixHyracksIntegrationUtil, we use the virtualNC flag
+        if (state == SystemState.PERMANENT_DATA_LOSS
+                && (nodeProperties.isInitialRun() || nodeProperties.isVirtualNc())) {
+            state = SystemState.BOOTSTRAPPING;
+        }
+        return state;
     }
 }

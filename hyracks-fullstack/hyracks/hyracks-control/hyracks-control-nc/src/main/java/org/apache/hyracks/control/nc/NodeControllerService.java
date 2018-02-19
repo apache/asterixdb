@@ -48,6 +48,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
@@ -62,6 +63,7 @@ import org.apache.hyracks.api.job.JobParameterByteStore;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.control.common.base.IClusterController;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.context.ServerContext;
@@ -95,7 +97,6 @@ import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.net.protocols.muxdemux.MuxDemuxPerformanceCounters;
 import org.apache.hyracks.util.ExitUtil;
-import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.util.PidHelper;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.Tracer;
@@ -183,6 +184,7 @@ public class NodeControllerService implements IControllerService {
     private final ConfigManager configManager;
 
     private final Map<CcId, AtomicLong> maxJobIds = new ConcurrentHashMap<>();
+    private NodeStatus status = NodeStatus.BOOTING;
 
     static {
         ExitUtil.init();
@@ -625,6 +627,14 @@ public class NodeControllerService implements IControllerService {
 
     public WorkQueue getWorkQueue() {
         return workQueue;
+    }
+
+    public synchronized NodeStatus getNodeStatus() {
+        return status;
+    }
+
+    public synchronized void setNodeStatus(NodeStatus status) {
+        this.status = status;
     }
 
     private class HeartbeatTask implements Runnable {
