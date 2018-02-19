@@ -25,19 +25,37 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutorService;
 
+import org.apache.hyracks.api.context.IHyracksJobletContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.dataflow.state.IStateObject;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
+import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.profiling.IStatsCollector;
+import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
+import org.apache.hyracks.api.resources.IDeallocatable;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -46,6 +64,11 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.utils.TaskUtil;
+import org.apache.hyracks.dataflow.std.buffermanager.DeallocatableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.FramePoolBackedFrameBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.IDeallocatableFramePool;
+import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.storage.am.btree.OrderedIndexTestUtils;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.CheckTuple;
@@ -54,12 +77,15 @@ import org.apache.hyracks.storage.am.common.datagen.IFieldValueGenerator;
 import org.apache.hyracks.storage.am.common.datagen.PersonNameFieldValueGenerator;
 import org.apache.hyracks.storage.am.common.datagen.SortedIntegerFieldValueGenerator;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
+import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
@@ -73,6 +99,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.NGramUTF8Strin
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8NGramTokenFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext.InvertedIndexType;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -323,7 +350,7 @@ public class LSMInvertedIndexTestUtils {
         ArrayTupleBuilder searchKeyBuilder = new ArrayTupleBuilder(tokenFieldCount);
         ArrayTupleReference searchKey = new ArrayTupleReference();
         // Cursor over inverted list from actual index.
-        IInvertedListCursor actualInvListCursor = invIndexAccessor.createInvertedListCursor();
+        InvertedListCursor actualInvListCursor = invIndexAccessor.createInvertedListCursor();
 
         // Helpers for generating a serialized inverted-list element from a CheckTuple from the expected index.
         ArrayTupleBuilder expectedBuilder = new ArrayTupleBuilder(fieldSerdes.length);
@@ -361,7 +388,8 @@ public class LSMInvertedIndexTestUtils {
             }
             // Compare inverted-list elements.
             int count = 0;
-            actualInvListCursor.pinPages();
+            actualInvListCursor.prepareLoadPages();
+            actualInvListCursor.loadPages();
             try {
                 while (actualInvListCursor.hasNext() && expectedInvListIter.hasNext()) {
                     actualInvListCursor.next();
@@ -376,7 +404,8 @@ public class LSMInvertedIndexTestUtils {
                     count++;
                 }
             } finally {
-                actualInvListCursor.unpinPages();
+                actualInvListCursor.unloadPages();
+                actualInvListCursor.close();
             }
         }
     }
@@ -492,8 +521,19 @@ public class LSMInvertedIndexTestUtils {
             int numDocQueries, int numRandomQueries, IInvertedIndexSearchModifier searchModifier, int[] scanCountArray)
             throws IOException, HyracksDataException {
         IInvertedIndex invIndex = testCtx.invIndex;
-        IInvertedIndexAccessor accessor =
-                (IInvertedIndexAccessor) invIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+
+        // Dummy hyracks task context for the test purpose only
+        IHyracksTaskContext ctx = new HyracksTaskTestContext();
+        // Intermediate and final search result will use this buffer manager to get frames.
+        IDeallocatableFramePool framePool = new DeallocatableFramePool(ctx,
+                AccessMethodTestsConfig.LSM_INVINDEX_SEARCH_FRAME_LIMIT * ctx.getInitialFrameSize());;
+        ISimpleFrameBufferManager bufferManagerForSearch = new FramePoolBackedFrameBufferManager(framePool);;
+        // Keep the buffer manager in the hyracks context so that the search process can get it via the context.
+        TaskUtil.put(HyracksConstants.INVERTED_INDEX_SEARCH_FRAME_MANAGER, bufferManagerForSearch, ctx);
+        IIndexAccessParameters iap =
+                new IndexAccessParameters(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx);
+        IInvertedIndexAccessor accessor = (IInvertedIndexAccessor) invIndex.createAccessor(iap);
         IBinaryTokenizer tokenizer = testCtx.getTokenizerFactory().createTokenizer();
         InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizer, searchModifier);
         List<ITupleReference> documentCorpus = testCtx.getDocumentCorpus();
@@ -584,4 +624,128 @@ public class LSMInvertedIndexTestUtils {
             }
         }
     }
+
+    // This is just a dummy hyracks context for allocating frames for temporary
+    // results during inverted index searches for the test purposes only.
+    public static class HyracksTaskTestContext implements IHyracksTaskContext {
+        private final int FRAME_SIZE = AccessMethodTestsConfig.LSM_INVINDEX_HYRACKS_FRAME_SIZE;
+        private Object sharedObject;
+
+        @Override
+        public int getInitialFrameSize() {
+            return FRAME_SIZE;
+        }
+
+        @Override
+        public IIOManager getIoManager() {
+            return null;
+        }
+
+        @Override
+        public ByteBuffer allocateFrame() {
+            return ByteBuffer.allocate(FRAME_SIZE);
+        }
+
+        @Override
+        public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
+            return ByteBuffer.allocate(bytes);
+        }
+
+        @Override
+        public ByteBuffer reallocateFrame(ByteBuffer bytes, int newSizeInBytes, boolean copyOldData)
+                throws HyracksDataException {
+            throw new HyracksDataException("TODO");
+        }
+
+        @Override
+        public void deallocateFrames(int bytes) {
+            // no-op
+        }
+
+        @Override
+        public FileReference createUnmanagedWorkspaceFile(String prefix) throws HyracksDataException {
+            return null;
+        }
+
+        @Override
+        public FileReference createManagedWorkspaceFile(String prefix) throws HyracksDataException {
+            return null;
+        }
+
+        @Override
+        public void registerDeallocatable(IDeallocatable deallocatable) {
+            // no-op
+        }
+
+        @Override
+        public void setStateObject(IStateObject taskState) {
+            // no-op
+        }
+
+        @Override
+        public IStateObject getStateObject(Object id) {
+            return null;
+        }
+
+        @Override
+        public IHyracksJobletContext getJobletContext() {
+            return null;
+        }
+
+        @Override
+        public TaskAttemptId getTaskAttemptId() {
+            return null;
+        }
+
+        @Override
+        public ICounterContext getCounterContext() {
+            return null;
+        }
+
+        @Override
+        public ExecutorService getExecutorService() {
+            return null;
+        }
+
+        @Override
+        public IDatasetPartitionManager getDatasetPartitionManager() {
+            return null;
+        }
+
+        @Override
+        public void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) throws Exception {
+            // no-op
+        }
+
+        @Override
+        public void sendApplicationMessageToCC(byte[] message, DeploymentId deploymentId) throws Exception {
+            // no-op
+        }
+
+        @Override
+        public void setSharedObject(Object object) {
+            this.sharedObject = object;
+        }
+
+        @Override
+        public Object getSharedObject() {
+            return sharedObject;
+        }
+
+        @Override
+        public byte[] getJobParameter(byte[] name, int start, int length) throws HyracksException {
+            return null;
+        }
+
+        @Override
+        public Set<JobFlag> getJobFlags() {
+            return null;
+        }
+
+        @Override
+        public IStatsCollector getStatsCollector() {
+            return null;
+        }
+    }
+
 }

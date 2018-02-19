@@ -39,7 +39,7 @@ public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
     private MultiComparator prefixSearchCmp;
     private boolean destroyed = false;
 
-    public OnDiskInvertedIndexOpContext(BTree btree) {
+    public OnDiskInvertedIndexOpContext(BTree btree) throws HyracksDataException {
         // TODO: Ignore opcallbacks for now.
         btreeAccessor = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
         btreeCursor = btreeAccessor.createSearchCursor(false);

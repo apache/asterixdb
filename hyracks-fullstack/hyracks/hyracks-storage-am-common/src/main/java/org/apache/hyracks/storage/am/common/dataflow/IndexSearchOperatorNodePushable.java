@@ -144,7 +144,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     protected abstract void resetSearchPredicate(int tupleIndex);
 
-    protected IIndexCursor createCursor() {
+    // Assigns any index-type specific related accessor parameters
+    protected abstract void addAdditionalIndexAccessorParams(IIndexAccessParameters iap) throws HyracksDataException;
+
+    protected IIndexCursor createCursor() throws HyracksDataException {
         return indexAccessor.createSearchCursor(false);
     }
 
@@ -184,6 +187,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             ISearchOperationCallback searchCallback =
                     searchCallbackFactory.createSearchOperationCallback(indexHelper.getResource().getId(), ctx, null);
             IIndexAccessParameters iap = new IndexAccessParameters(NoOpOperationCallback.INSTANCE, searchCallback);
+            addAdditionalIndexAccessorParams(iap);
             indexAccessor = index.createAccessor(iap);
             cursor = createCursor();
             if (retainInput) {

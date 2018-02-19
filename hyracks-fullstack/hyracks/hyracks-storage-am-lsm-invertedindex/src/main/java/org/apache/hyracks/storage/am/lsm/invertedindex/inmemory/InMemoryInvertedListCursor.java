@@ -33,11 +33,11 @@ import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
 
-public class InMemoryInvertedListCursor implements IInvertedListCursor {
+public class InMemoryInvertedListCursor extends InvertedListCursor {
     private RangePredicate btreePred;
     private BTreeAccessor btreeAccessor;
     private IIndexCursor btreeCursor;
@@ -80,7 +80,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public int compareTo(IInvertedListCursor cursor) {
+    public int compareTo(InvertedListCursor cursor) {
         try {
             return size() - cursor.size();
         } catch (HyracksDataException hde) {
@@ -100,12 +100,13 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public void reset(int startPageId, int endPageId, int startOff, int numElements) {
-        // Do nothing
+    protected void setInvListInfo(int startPageId, int endPageId, int startOff, int numElements)
+            throws HyracksDataException {
+        // no-op for this in-memory cursor - everything is in memory
     }
 
     @Override
-    public void pinPages() throws HyracksDataException {
+    public void loadPages() throws HyracksDataException {
         btreePred.setLowKeyComparator(tokenFieldsCmp);
         btreePred.setHighKeyComparator(tokenFieldsCmp);
         btreePred.setLowKey(tokenTuple, true);
@@ -115,7 +116,7 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public void unpinPages() throws HyracksDataException {
+    public void unloadPages() throws HyracksDataException {
         if (cursorNeedsClose) {
             btreeCursor.close();
             cursorNeedsClose = false;
@@ -123,17 +124,17 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public boolean hasNext() throws HyracksDataException {
+    public boolean doHasNext() throws HyracksDataException {
         return btreeCursor.hasNext();
     }
 
     @Override
-    public void next() throws HyracksDataException {
+    public void doNext() throws HyracksDataException {
         btreeCursor.next();
     }
 
     @Override
-    public ITupleReference getTuple() {
+    public ITupleReference doGetTuple() {
         resultTuple.reset(btreeCursor.getTuple());
         return resultTuple;
     }
@@ -161,24 +162,9 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     }
 
     @Override
-    public int getStartPageId() {
-        return 0;
-    }
-
-    @Override
-    public int getEndPageId() {
-        return 0;
-    }
-
-    @Override
-    public int getStartOff() {
-        return 0;
-    }
-
-    @Override
     public boolean containsKey(ITupleReference searchTuple, MultiComparator invListCmp) throws HyracksDataException {
         // Close cursor if necessary.
-        unpinPages();
+        unloadPages();
         btreeSearchTuple.addTuple(searchTuple);
         btreePred.setLowKeyComparator(btreeCmp);
         btreePred.setHighKeyComparator(btreeCmp);
@@ -226,4 +212,20 @@ public class InMemoryInvertedListCursor implements IInvertedListCursor {
     public String printCurrentElement(ISerializerDeserializer[] serdes) throws HyracksDataException {
         return null;
     }
+
+    @Override
+    public void prepareLoadPages() throws HyracksDataException {
+        // no-op for this in-memory cursor - no need to initialize a buffer
+    }
+
+    @Override
+    public void doClose() throws HyracksDataException {
+        btreeCursor.close();
+    }
+
+    @Override
+    public void doDestroy() throws HyracksDataException {
+        btreeCursor.destroy();
+    }
+
 }

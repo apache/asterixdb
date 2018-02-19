@@ -2744,8 +2744,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-03">
+        <output-dir compare="Text">fulltext-index-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-index-08">
         <output-dir compare="Text">fulltext-index-08</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-large-data">
+        <output-dir compare="Text">fulltext-index-large-data</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -3166,6 +3176,11 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="inverted-index-ngram-edit-distance">
         <output-dir compare="Text">inverted-index-ngram-edit-distance</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="inverted-index-ngram-edit-distance-large-data">
+        <output-dir compare="Text">inverted-index-ngram-edit-distance-large-data</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">

@@ -301,7 +301,7 @@ public class PlanStagesGeneratorTest {
 
     private void assertRequiredMemory(List<PlanStage> stages, long expectedMemory) {
         final IClusterCapacity clusterCapacity = ResourceUtils.getStageBasedRequiredCapacity(stages, PARALLELISM,
-                FRAME_LIMIT, FRAME_LIMIT, FRAME_LIMIT, FRAME_SIZE);
+                FRAME_LIMIT, FRAME_LIMIT, FRAME_LIMIT, FRAME_LIMIT, FRAME_SIZE);
         Assert.assertEquals(clusterCapacity.getAggregatedMemoryByteSize(), expectedMemory);
     }
 }

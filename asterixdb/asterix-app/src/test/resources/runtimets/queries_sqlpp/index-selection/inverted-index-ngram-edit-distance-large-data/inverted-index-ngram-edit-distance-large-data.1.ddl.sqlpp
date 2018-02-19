@@ -1,0 +1,47 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description     : Testing using a secondary inverted n-gram index
+ *                 : Based on the text.searchmemory budget (default=160KB), this test should
+ *                 : create intermediate result files.
+ */
+
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+create type FragileTypeRaw as closed {
+  row_id: int32,
+  sid: int32,
+  date: string,
+  day: int32,
+  time: string,
+  bpm: int32,
+  RR: float
+};
+
+// For bulk-loading test (tuples will be fetched from the disk)
+create dataset Fragile_raw (FragileTypeRaw) primary key row_id;
+
+// For insert test (tuples will be fetched from memory)
+create dataset Fragile_raw_insert (FragileTypeRaw) primary key row_id;
+create  index ngram_insert_index  on Fragile_raw_insert(date) type ngram(2);
+

@@ -83,8 +83,10 @@ public interface IIndexAccessor extends IDestroyable {
     /**
      * Creates a cursor appropriate for passing into search().
      *
+     * @throws HyracksDataException
+     *
      */
-    IIndexCursor createSearchCursor(boolean exclusive);
+    IIndexCursor createSearchCursor(boolean exclusive) throws HyracksDataException;
 
     /**
      * Open the given cursor for an index search using the given predicate as

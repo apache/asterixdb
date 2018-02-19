@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.common.impls;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
@@ -26,6 +27,8 @@ import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 public class NoOpIndexAccessParameters implements IIndexAccessParameters {
     public static final NoOpIndexAccessParameters INSTANCE = new NoOpIndexAccessParameters();
+    // Immutable empty map not to cause getParameters().get() generate an exception
+    private static final Map<String, Object> paramMap = Collections.emptyMap();
 
     private NoOpIndexAccessParameters() {
     }
@@ -42,7 +45,7 @@ public class NoOpIndexAccessParameters implements IIndexAccessParameters {
 
     @Override
     public Map<String, Object> getParameters() {
-        return null;
+        return paramMap;
     }
 
 }

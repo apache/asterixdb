@@ -25,6 +25,11 @@ import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 
+/**
+ * This is a fixed-size tuple accessor class.
+ * The frame structure: [4 bytes for minimum Hyracks frame count] [fixed-size tuple 1] ... [fixed-size tuple n] ...
+ * [4 bytes for the tuple count in a frame]
+ */
 public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
 
     private final int frameSize;
@@ -82,12 +87,12 @@ public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
 
     @Override
     public int getFieldStartOffset(int tupleIndex, int fIdx) {
-        return tupleIndex * tupleSize + fieldStartOffsets[fIdx];
+        return getTupleStartOffset(tupleIndex) + fieldStartOffsets[fIdx];
     }
 
     @Override
     public int getTupleCount() {
-        return buffer.getInt(FrameHelper.getTupleCountOffset(frameSize));
+        return buffer != null ? buffer.getInt(FrameHelper.getTupleCountOffset(frameSize)) : 0;
     }
 
     @Override
@@ -97,7 +102,7 @@ public class FixedSizeFrameTupleAccessor implements IFrameTupleAccessor {
 
     @Override
     public int getTupleStartOffset(int tupleIndex) {
-        return tupleIndex * tupleSize;
+        return FixedSizeFrameTupleAppender.MINFRAME_COUNT_SIZE + tupleIndex * tupleSize;
     }
 
     @Override

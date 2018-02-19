@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.storage.am.lsm.invertedindex.inmemory;
 
-import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -31,7 +30,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IPartitionedInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedListPartitions;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.PartitionedTOccurrenceSearcher;
@@ -89,20 +87,21 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
     public PartitionedInMemoryInvertedIndexAccessor createAccessor(IIndexAccessParameters iap)
             throws HyracksDataException {
         return new PartitionedInMemoryInvertedIndexAccessor(this,
-                new PartitionedInMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory));
+                new PartitionedInMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory), iap);
     }
 
     @Override
-    public PartitionedInMemoryInvertedIndexAccessor createAccessor(int[] nonIndexFields) throws HyracksDataException {
+    public PartitionedInMemoryInvertedIndexAccessor createAccessor(IIndexAccessParameters iap, int[] nonIndexFields)
+            throws HyracksDataException {
         return new PartitionedInMemoryInvertedIndexAccessor(this,
                 new PartitionedInMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory),
-                nonIndexFields);
+                nonIndexFields, iap);
     }
 
     @Override
     public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
-            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions,
-            List<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException {
+            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
+            throws HyracksDataException {
         short minPartitionIndex;
         short maxPartitionIndex;
         partitionIndexLock.readLock().lock();
@@ -140,6 +139,8 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
             inMemListCursor.prepare(ctx.getBtreeAccessor(), ctx.getBtreePred(), ctx.getTokenFieldsCmp(),
                     ctx.getBtreeCmp());
             inMemListCursor.reset(searchKey);
+            // Makes the cursor state to OPENED
+            inMemListCursor.open(null, null);
             invListPartitions.addInvertedListCursor(inMemListCursor, i);
         }
         return true;

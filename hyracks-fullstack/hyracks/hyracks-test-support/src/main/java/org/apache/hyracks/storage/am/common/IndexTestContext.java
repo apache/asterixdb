@@ -35,7 +35,7 @@ public abstract class IndexTestContext<T extends CheckTuple> implements IIndexTe
     protected final IIndex index;
     protected final ArrayTupleBuilder tupleBuilder;
     protected final ArrayTupleReference tuple = new ArrayTupleReference();
-    protected final IIndexAccessor indexAccessor;
+    protected IIndexAccessor indexAccessor;
 
     public IndexTestContext(ISerializerDeserializer[] fieldSerdes, IIndex index, boolean filtered)
             throws HyracksDataException {

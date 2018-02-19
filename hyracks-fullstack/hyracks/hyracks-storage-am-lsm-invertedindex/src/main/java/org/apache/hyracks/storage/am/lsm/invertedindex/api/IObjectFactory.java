@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.api;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public interface IObjectFactory<T> {
-    public T create();
+    public T create() throws HyracksDataException;
 }

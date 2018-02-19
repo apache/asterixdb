@@ -42,6 +42,10 @@ public class CompilerProperties extends AbstractProperties {
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for a group by operator instance in a partition"),
+        COMPILER_TEXTSEARCHMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
+                "The memory budget (in bytes) for an inverted-index-search operator instance in a partition"),
         COMPILER_FRAMESIZE(
                 INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(32, KILOBYTE),
@@ -98,6 +102,8 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_JOINMEMORY_KEY = Option.COMPILER_JOINMEMORY.ini();
 
+    public static final String COMPILER_TEXTSEARCHMEMORY_KEY = Option.COMPILER_TEXTSEARCHMEMORY.ini();
+
     public static final String COMPILER_PARALLELISM_KEY = Option.COMPILER_PARALLELISM.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
@@ -116,6 +122,10 @@ public class CompilerProperties extends AbstractProperties {
 
     public long getGroupMemorySize() {
         return accessor.getLong(Option.COMPILER_GROUPMEMORY);
+    }
+
+    public long getTextSearchMemorySize() {
+        return accessor.getLong(Option.COMPILER_TEXTSEARCHMEMORY);
     }
 
     public int getFrameSize() {

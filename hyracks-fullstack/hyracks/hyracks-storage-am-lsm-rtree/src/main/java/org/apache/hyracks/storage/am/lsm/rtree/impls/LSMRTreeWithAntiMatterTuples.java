@@ -260,7 +260,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
 
     @Override
     public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) {
-        LSMRTreeOpContext opCtx = createOpContext(iap.getModificationCallback(), iap.getSearchOperationCallback());
+        LSMRTreeOpContext opCtx = createOpContext(iap);
         return new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
     }
 

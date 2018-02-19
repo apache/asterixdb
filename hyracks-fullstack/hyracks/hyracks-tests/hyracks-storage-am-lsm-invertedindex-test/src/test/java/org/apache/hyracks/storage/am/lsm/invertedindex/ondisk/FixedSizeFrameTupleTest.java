@@ -23,15 +23,11 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Random;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
-
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
-import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeFrameTupleAccessor;
-import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeFrameTupleAppender;
+import org.junit.Test;
+
+import junit.framework.Assert;
 
 public class FixedSizeFrameTupleTest {
 
@@ -60,7 +56,7 @@ public class FixedSizeFrameTupleTest {
 
         ArrayList<Integer> check = new ArrayList<Integer>();
 
-        ftapp.reset(buffer, true);
+        ftapp.reset(buffer);
         while (frameHasSpace) {
             int val = rnd.nextInt();
             frameHasSpace = ftapp.append(val);

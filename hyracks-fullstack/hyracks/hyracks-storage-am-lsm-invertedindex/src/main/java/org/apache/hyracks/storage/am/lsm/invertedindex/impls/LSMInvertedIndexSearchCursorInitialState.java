@@ -35,6 +35,8 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialState {
 
+    public static final int INVALID_VALUE = -1;
+
     private final boolean includeMemComponent;
     private final ILSMHarness lsmHarness;
     private final List<IIndexAccessor> indexAccessors;
@@ -47,6 +49,17 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
     private final ITreeIndexFrameFactory deletedKeysBtreeLeafFrameFactory;
 
     private final List<ILSMComponent> operationalComponents;
+
+    // For disk-based inverted list cursors
+    private int invListStartPageId = INVALID_VALUE;
+    private int invListEndPageId = INVALID_VALUE;
+    private int invListStartOffset = INVALID_VALUE;
+    private int invListNumElements = INVALID_VALUE;
+
+    public LSMInvertedIndexSearchCursorInitialState() {
+        this(null, null, null, null, null, null, false, null, null);
+        resetInvertedListInfo();
+    }
 
     public LSMInvertedIndexSearchCursorInitialState(final MultiComparator keyCmp, PermutingTupleReference keysOnlyTuple,
             List<IIndexAccessor> indexAccessors, List<IIndexAccessor> deletedKeysBTreeAccessors,
@@ -61,7 +74,8 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
         this.operationalComponents = operationalComponents;
         this.lsmHarness = lsmHarness;
         this.ctx = (LSMInvertedIndexOpContext) ctx;
-        this.searchCallback = this.ctx.getSearchOperationCallback();
+        this.searchCallback = ctx != null ? this.ctx.getSearchOperationCallback() : null;
+        resetInvertedListInfo();
     }
 
     @Override
@@ -127,5 +141,36 @@ public class LSMInvertedIndexSearchCursorInitialState implements ICursorInitialS
 
     public PermutingTupleReference getKeysOnlyTuple() {
         return keysOnlyTuple;
+    }
+
+    public void setInvertedListInfo(int invListStartPageId, int invListEndPageId, int invListStartOffset,
+            int invListNumElements) {
+        this.invListStartPageId = invListStartPageId;
+        this.invListEndPageId = invListEndPageId;
+        this.invListStartOffset = invListStartOffset;
+        this.invListNumElements = invListNumElements;
+    }
+
+    public int getInvListStartPageId() {
+        return invListStartPageId;
+    }
+
+    public int getInvListEndPageId() {
+        return invListEndPageId;
+    }
+
+    public int getInvListStartOffset() {
+        return invListStartOffset;
+    }
+
+    public int getInvListNumElements() {
+        return invListNumElements;
+    }
+
+    private void resetInvertedListInfo() {
+        invListStartPageId = INVALID_VALUE;
+        invListEndPageId = INVALID_VALUE;
+        invListStartOffset = INVALID_VALUE;
+        invListNumElements = INVALID_VALUE;
     }
 }

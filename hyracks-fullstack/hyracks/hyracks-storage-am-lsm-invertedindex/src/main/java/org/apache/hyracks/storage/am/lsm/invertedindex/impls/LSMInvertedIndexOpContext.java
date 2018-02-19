@@ -30,9 +30,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexAccessor;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
-import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.util.trace.ITracer;
 
 public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext {
@@ -47,21 +46,22 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
     private IIndexAccessor[] deletedKeysBTreeAccessors;
     private IInvertedIndexAccessor currentMutableInvIndexAccessors;
     private IIndexAccessor currentDeletedKeysBTreeAccessors;
+    // To keep the buffer frame manager in case of a search
+    private IIndexAccessParameters iap;
     private boolean destroyed = false;
 
     public LSMInvertedIndexOpContext(ILSMIndex index, List<ILSMMemoryComponent> mutableComponents,
-            IModificationOperationCallback modificationCallback, ISearchOperationCallback searchCallback,
-            int[] invertedIndexFields, int[] filterFields, IBinaryComparatorFactory[] filterComparatorFactories,
-            ITracer tracer) throws HyracksDataException {
-        super(index, invertedIndexFields, filterFields, filterComparatorFactories, searchCallback, modificationCallback,
-                tracer);
+            IIndexAccessParameters iap, int[] invertedIndexFields, int[] filterFields,
+            IBinaryComparatorFactory[] filterComparatorFactories, ITracer tracer) throws HyracksDataException {
+        super(index, invertedIndexFields, filterFields, filterComparatorFactories, iap.getSearchOperationCallback(),
+                iap.getModificationCallback(), tracer);
         mutableInvIndexAccessors = new IInvertedIndexAccessor[mutableComponents.size()];
         deletedKeysBTreeAccessors = new IIndexAccessor[mutableComponents.size()];
         for (int i = 0; i < mutableComponents.size(); i++) {
             LSMInvertedIndexMemoryComponent mutableComponent =
                     (LSMInvertedIndexMemoryComponent) mutableComponents.get(i);
             if (allFields != null) {
-                mutableInvIndexAccessors[i] = mutableComponent.getIndex().createAccessor(allFields);
+                mutableInvIndexAccessors[i] = mutableComponent.getIndex().createAccessor(iap, allFields);
             } else {
                 mutableInvIndexAccessors[i] =
                         mutableComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
@@ -77,6 +77,7 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
             keyFieldPermutation[i] = NUM_DOCUMENT_FIELDS + i;
         }
         keysOnlyTuple = new PermutingTupleReference(keyFieldPermutation);
+        this.iap = iap;
     }
 
     @Override
@@ -95,6 +96,10 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
 
     public IIndexAccessor getCurrentDeletedKeysBTreeAccessors() {
         return currentDeletedKeysBTreeAccessors;
+    }
+
+    public IIndexAccessParameters getIndexAccessParameters() {
+        return iap;
     }
 
     @Override

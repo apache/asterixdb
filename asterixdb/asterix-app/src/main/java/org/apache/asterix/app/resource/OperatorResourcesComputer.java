@@ -22,6 +22,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 
 public class OperatorResourcesComputer {
@@ -33,14 +34,16 @@ public class OperatorResourcesComputer {
     private final long groupByMemorySize;
     private final long joinMemorySize;
     private final long sortMemorySize;
+    private final long textSearchMemorySize;
     private final long frameSize;
 
     public OperatorResourcesComputer(int numComputationPartitions, int sortFrameLimit, int groupFrameLimit,
-            int joinFrameLimit, long frameSize) {
+            int joinFrameLimit, int textSearchFrameLimit, long frameSize) {
         this.numComputationPartitions = numComputationPartitions;
         this.groupByMemorySize = groupFrameLimit * frameSize;
         this.joinMemorySize = joinFrameLimit * frameSize;
         this.sortMemorySize = sortFrameLimit * frameSize;
+        this.textSearchMemorySize = textSearchFrameLimit * frameSize;
         this.frameSize = frameSize;
     }
 
@@ -62,7 +65,6 @@ public class OperatorResourcesComputer {
             case EMPTYTUPLESOURCE:
             case DELEGATE_OPERATOR:
             case EXTERNAL_LOOKUP:
-            case LEFT_OUTER_UNNEST_MAP:
             case LIMIT:
             case MATERIALIZE:
             case NESTEDTUPLESOURCE:
@@ -78,7 +80,6 @@ public class OperatorResourcesComputer {
             case UNIONALL:
             case UNNEST:
             case LEFT_OUTER_UNNEST:
-            case UNNEST_MAP:
             case UPDATE:
             case WRITE:
             case WRITE_RESULT:
@@ -86,6 +87,15 @@ public class OperatorResourcesComputer {
             case INSERT_DELETE_UPSERT:
             case INTERSECT:
                 return getOperatorRequiredMemory(operator, frameSize);
+            case LEFT_OUTER_UNNEST_MAP:
+            case UNNEST_MAP:
+                // Since an inverted-index search requires certain amount of memory, needs to calculate
+                // the memory size differently if the given index-search is an inverted-index search.
+                long unnestMapMemorySize = frameSize;
+                if (isInvertedIndexSearch((AbstractUnnestMapOperator) operator)) {
+                    unnestMapMemorySize += textSearchMemorySize;
+                }
+                return getOperatorRequiredMemory(operator, unnestMapMemorySize);
             case EXCHANGE:
                 return getExchangeRequiredMemory((ExchangeOperator) operator);
             case GROUP:
@@ -106,6 +116,16 @@ public class OperatorResourcesComputer {
             return memorySize * numComputationPartitions;
         }
         return memorySize;
+    }
+
+    private boolean isInvertedIndexSearch(AbstractUnnestMapOperator op) {
+        IPhysicalOperator physicalOperator = op.getPhysicalOperator();
+        final PhysicalOperatorTag physicalOperatorTag = physicalOperator.getOperatorTag();
+        if (physicalOperatorTag == PhysicalOperatorTag.LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH
+                || physicalOperatorTag == PhysicalOperatorTag.SINGLE_PARTITION_INVERTED_INDEX_SEARCH) {
+            return true;
+        }
+        return false;
     }
 
     private long getExchangeRequiredMemory(ExchangeOperator op) {

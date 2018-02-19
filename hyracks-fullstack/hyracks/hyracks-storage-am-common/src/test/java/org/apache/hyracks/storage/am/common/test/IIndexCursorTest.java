@@ -279,7 +279,7 @@ public abstract class IIndexCursorTest {
         Assert.assertNull(cursor.getTuple());
     }
 
-    protected IIndexCursor createCursor(IIndexAccessor accessor) {
+    protected IIndexCursor createCursor(IIndexAccessor accessor) throws Exception {
         return accessor.createSearchCursor(false);
     }
 

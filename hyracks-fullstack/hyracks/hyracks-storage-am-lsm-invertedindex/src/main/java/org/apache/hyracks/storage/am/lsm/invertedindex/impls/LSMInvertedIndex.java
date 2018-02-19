@@ -69,8 +69,6 @@ import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
-import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -193,6 +191,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     @Override
     public void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred)
             throws HyracksDataException {
+        LSMInvertedIndexOpContext ctx = (LSMInvertedIndexOpContext) ictx;
         List<ILSMComponent> operationalComponents = ictx.getComponentHolder();
         int numComponents = operationalComponents.size();
         boolean includeMutableComponent = false;
@@ -203,15 +202,13 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             ILSMComponent component = operationalComponents.get(i);
             if (component.getType() == LSMComponentType.MEMORY) {
                 includeMutableComponent = true;
-                IIndexAccessor invIndexAccessor =
-                        component.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                IIndexAccessor invIndexAccessor = component.getIndex().createAccessor(ctx.getIndexAccessParameters());
                 indexAccessors.add(invIndexAccessor);
                 IIndexAccessor deletedKeysAccessor = ((LSMInvertedIndexMemoryComponent) component).getBuddyIndex()
                         .createAccessor(NoOpIndexAccessParameters.INSTANCE);
                 deletedKeysBTreeAccessors.add(deletedKeysAccessor);
             } else {
-                IIndexAccessor invIndexAccessor =
-                        component.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                IIndexAccessor invIndexAccessor = component.getIndex().createAccessor(ctx.getIndexAccessParameters());
                 indexAccessors.add(invIndexAccessor);
                 IIndexAccessor deletedKeysAccessor = ((LSMInvertedIndexDiskComponent) component).getBuddyIndex()
                         .createAccessor(NoOpIndexAccessParameters.INSTANCE);
@@ -436,15 +433,13 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
 
     @Override
     public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) throws HyracksDataException {
-        return new LSMInvertedIndexAccessor(getHarness(),
-                createOpContext(iap.getModificationCallback(), iap.getSearchOperationCallback()));
+        return new LSMInvertedIndexAccessor(getHarness(), createOpContext(iap));
     }
 
     @Override
-    protected LSMInvertedIndexOpContext createOpContext(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) throws HyracksDataException {
-        return new LSMInvertedIndexOpContext(this, memoryComponents, modificationCallback, searchCallback,
-                invertedIndexFieldsForNonBulkLoadOps, filterFieldsForNonBulkLoadOps, getFilterCmpFactories(), tracer);
+    protected LSMInvertedIndexOpContext createOpContext(IIndexAccessParameters iap) throws HyracksDataException {
+        return new LSMInvertedIndexOpContext(this, memoryComponents, iap, invertedIndexFieldsForNonBulkLoadOps,
+                filterFieldsForNonBulkLoadOps, getFilterCmpFactories(), tracer);
     }
 
     @Override

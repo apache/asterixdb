@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
 public class LSMBTreeDiskComponentScanOperatorNodePushable extends IndexSearchOperatorNodePushable {
@@ -64,6 +65,11 @@ public class LSMBTreeDiskComponentScanOperatorNodePushable extends IndexSearchOp
     @Override
     protected int getFieldCount() {
         return ((ITreeIndex) index).getFieldCount() + 2;
+    }
+
+    @Override
+    protected void addAdditionalIndexAccessorParams(IIndexAccessParameters iap) throws HyracksDataException {
+        // no additional parameters are required for the B+Tree search case
     }
 
 }

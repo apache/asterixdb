@@ -20,13 +20,25 @@
 package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 
+/**
+ * An appender class for an inverted list. Each frame has two integer values at the beginning and at the end.
+ * The first represents the number of minimum Hyracks frames in a frame. Currently, we use 1 for this value.
+ * The latter represents the number of tuples in a frame. This design is required since we may need to use
+ * RunFileWriter and RunFileReader class during the inverted-index-search operation.
+ */
 public class FixedSizeFrameTupleAppender {
 
-    private static final int TUPLE_COUNT_SIZE = 4;
+    // At the end of a frame, an integer value is written to keep the tuple count in this frame.
+    public static final int TUPLE_COUNT_SIZE = 4;
+    // At the beginning of a frame, an integer value is written to keep the number of minimum frames in this frame.
+    // For this class, the frame size is equal to the minimum frame size in Hyracks.
+    public static final int MINFRAME_COUNT_SIZE = 4;
+
     private final int frameSize;
     private final int tupleSize;
     private ByteBuffer buffer;
@@ -42,13 +54,22 @@ public class FixedSizeFrameTupleAppender {
         tupleSize = tmp;
     }
 
-    public void reset(ByteBuffer buffer, boolean clear) {
+    public void reset(ByteBuffer buffer) {
+        reset(buffer, true, 0, MINFRAME_COUNT_SIZE);
+    }
+
+    public void reset(ByteBuffer buffer, boolean clear, int tupleCount, int tupleDataEndOffset) {
         this.buffer = buffer;
         if (clear) {
-            buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), 0);
-            tupleCount = 0;
-            tupleDataEndOffset = 0;
+            Arrays.fill(this.buffer.array(), (byte) 0);
+            this.buffer.clear();
+            // the number of minimum frames in a frame - it's one.
+            FrameHelper.serializeFrameSize(this.buffer, 1);
         }
+        // tuple count
+        this.buffer.putInt(FrameHelper.getTupleCountOffset(frameSize), tupleCount);
+        this.tupleCount = tupleCount;
+        this.tupleDataEndOffset = tupleDataEndOffset;
     }
 
     public boolean append(byte[] bytes, int offset) {
@@ -128,4 +149,5 @@ public class FixedSizeFrameTupleAppender {
     public ByteBuffer getBuffer() {
         return buffer;
     }
+
 }

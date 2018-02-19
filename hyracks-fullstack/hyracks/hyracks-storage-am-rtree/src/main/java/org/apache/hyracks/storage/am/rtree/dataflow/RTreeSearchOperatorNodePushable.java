@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePush
 import org.apache.hyracks.storage.am.common.tuples.PermutingFrameTupleReference;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 
@@ -88,4 +89,10 @@ public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     protected int getFieldCount() {
         return ((ITreeIndex) index).getFieldCount();
     }
+
+    @Override
+    protected void addAdditionalIndexAccessorParams(IIndexAccessParameters iap) throws HyracksDataException {
+        // no additional parameteres are required for the B+Tree search case yet
+    }
+
 }

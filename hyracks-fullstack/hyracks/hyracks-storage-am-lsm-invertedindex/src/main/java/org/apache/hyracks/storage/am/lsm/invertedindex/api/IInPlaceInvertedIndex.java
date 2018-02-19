@@ -18,18 +18,29 @@
  */
 package org.apache.hyracks.storage.am.lsm.invertedindex.api;
 
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 
 public interface IInPlaceInvertedIndex extends IInvertedIndex {
     /**
-     * Create an inverted list cursor
+     * Creates an inverted list cursor.
+     *
+     * @throws HyracksDataException
      */
-    IInvertedListCursor createInvertedListCursor();
+    InvertedListCursor createInvertedListCursor(IHyracksTaskContext ctx) throws HyracksDataException;
 
     /**
-     * Open an inverted list cursor
+     * Creates an inverted-list-range-search cursor. This cursor is mainly used to conduct
+     * a full scan of an inverted list during a storage-component-merge operation.
+     *
+     * @throws HyracksDataException
+     */
+    InvertedListCursor createInvertedListRangeSearchCursor() throws HyracksDataException;
+
+    /**
+     * Opens an inverted list cursor
      *
      * @param listCursor
      *            the cursor to open
@@ -39,6 +50,6 @@ public interface IInPlaceInvertedIndex extends IInvertedIndex {
      *            the operation context under which the cursor is to be open
      * @throws HyracksDataException
      */
-    void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
+    void openInvertedListCursor(InvertedListCursor listCursor, ITupleReference searchKey, IIndexOperationContext ictx)
             throws HyracksDataException;
 }

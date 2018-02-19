@@ -65,8 +65,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor.ICurs
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
-import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -394,18 +392,17 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     @Override
-    public LSMBTreeOpContext createOpContext(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback) {
+    public LSMBTreeOpContext createOpContext(IIndexAccessParameters iap) {
         int numBloomFilterKeyFields = hasBloomFilter
                 ? ((LSMBTreeWithBloomFilterDiskComponentFactory) componentFactory).getBloomFilterKeyFields().length : 0;
         return new LSMBTreeOpContext(this, memoryComponents, insertLeafFrameFactory, deleteLeafFrameFactory,
-                modificationCallback, searchCallback, numBloomFilterKeyFields, getTreeFields(), getFilterFields(),
-                getHarness(), getFilterCmpFactories(), tracer);
+                iap.getModificationCallback(), iap.getSearchOperationCallback(), numBloomFilterKeyFields,
+                getTreeFields(), getFilterFields(), getHarness(), getFilterCmpFactories(), tracer);
     }
 
     @Override
     public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) {
-        return createAccessor(createOpContext(iap.getModificationCallback(), iap.getSearchOperationCallback()));
+        return createAccessor(createOpContext(iap));
     }
 
     public ILSMIndexAccessor createAccessor(AbstractLSMIndexOperationContext opCtx) {

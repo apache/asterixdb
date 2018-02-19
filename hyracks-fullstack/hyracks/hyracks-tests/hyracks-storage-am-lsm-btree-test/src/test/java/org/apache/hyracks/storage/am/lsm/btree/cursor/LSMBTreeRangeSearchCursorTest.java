@@ -94,7 +94,7 @@ public class LSMBTreeRangeSearchCursorTest extends IIndexCursorTest {
 
     @Override
     protected IIndexCursor createCursor(IIndexAccessor accessor) {
-        opCtx = lsmBtree.createOpContext(NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
+        opCtx = lsmBtree.createOpContext(NoOpIndexAccessParameters.INSTANCE);
         return new LSMBTreeRangeSearchCursor(opCtx);
     }
 

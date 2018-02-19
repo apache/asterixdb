@@ -25,22 +25,25 @@ import java.util.List;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.context.IHyracksCommonContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppenderAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.utils.TaskUtil;
+import org.apache.hyracks.dataflow.std.buffermanager.BufferManagerBackedVSizeFrame;
+import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeFrameTupleAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.FixedSizeTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
@@ -57,10 +60,12 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
     protected final int OBJECT_CACHE_INIT_SIZE = 10;
     protected final int OBJECT_CACHE_EXPAND_SIZE = 10;
 
-    protected final IHyracksCommonContext ctx;
+    protected final IHyracksTaskContext ctx;
 
     protected final InvertedListMerger invListMerger;
-    protected final SearchResult searchResult;
+    // Final search result is needed because multiple merge() calls can happen.
+    // We can't just use one of intermediate results as the final search result.
+    protected final InvertedIndexFinalSearchResult finalSearchResult;
     protected final IInPlaceInvertedIndex invIndex;
     protected final MultiComparator invListCmp;
 
@@ -71,28 +76,51 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
 
     protected int occurrenceThreshold;
 
-    protected final IObjectFactory<IInvertedListCursor> invListCursorFactory;
-    protected final ObjectCache<IInvertedListCursor> invListCursorCache;
+    protected final IObjectFactory<InvertedListCursor> invListCursorFactory;
+    protected final ObjectCache<InvertedListCursor> invListCursorCache;
 
-    public AbstractTOccurrenceSearcher(IHyracksCommonContext ctx, IInPlaceInvertedIndex invIndex)
+    protected final ISimpleFrameBufferManager bufferManager;
+    protected boolean isFinishedSearch;
+
+    // For a single inverted list case
+    protected InvertedListCursor singleInvListCursor;
+    protected boolean isSingleInvertedList;
+
+    // To read the final search result
+    protected ByteBuffer searchResultBuffer;
+    protected int searchResultTupleIndex = 0;
+    protected final IFrameTupleAccessor searchResultFta;
+    protected FixedSizeTupleReference searchResultTuple;
+
+    public AbstractTOccurrenceSearcher(IInPlaceInvertedIndex invIndex, IHyracksTaskContext ctx)
             throws HyracksDataException {
-        this.ctx = ctx;
-        this.invListMerger = new InvertedListMerger(ctx, invIndex);
-        this.searchResult = new SearchResult(invIndex.getInvListTypeTraits(), ctx);
         this.invIndex = invIndex;
+        this.ctx = ctx;
+        if (ctx == null) {
+            throw HyracksDataException.create(ErrorCode.CANNOT_CONTINUE_TEXT_SEARCH_HYRACKS_TASK_IS_NULL);
+        }
+        this.bufferManager = TaskUtil.get(HyracksConstants.INVERTED_INDEX_SEARCH_FRAME_MANAGER, ctx);
+        if (bufferManager == null) {
+            throw HyracksDataException.create(ErrorCode.CANNOT_CONTINUE_TEXT_SEARCH_BUFFER_MANAGER_IS_NULL);
+        }
+        this.finalSearchResult =
+                new InvertedIndexFinalSearchResult(invIndex.getInvListTypeTraits(), ctx, bufferManager);
+        this.invListMerger = new InvertedListMerger(ctx, invIndex, bufferManager);
         this.invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
-        this.invListCursorFactory = new InvertedListCursorFactory(invIndex);
+        this.invListCursorFactory = new InvertedListCursorFactory(invIndex, ctx);
         this.invListCursorCache =
                 new ObjectCache<>(invListCursorFactory, OBJECT_CACHE_INIT_SIZE, OBJECT_CACHE_EXPAND_SIZE);
-        this.queryTokenFrame = new VSizeFrame(ctx);
+        this.queryTokenFrame = new BufferManagerBackedVSizeFrame(ctx, bufferManager);
+        if (queryTokenFrame.getBuffer() == null) {
+            throw HyracksDataException.create(ErrorCode.NOT_ENOUGH_BUDGET_FOR_TEXTSEARCH,
+                    this.getClass().getSimpleName());
+        }
         this.queryTokenAppender = new FrameTupleAppenderAccessor(QUERY_TOKEN_REC_DESC);
         this.queryTokenAppender.reset(queryTokenFrame, true);
-    }
-
-    @Override
-    public void reset() {
-        searchResult.clear();
-        invListMerger.reset();
+        this.isSingleInvertedList = false;
+        this.searchResultTuple = new FixedSizeTupleReference(invIndex.getInvListTypeTraits());
+        this.searchResultFta =
+                new FixedSizeFrameTupleAccessor(ctx.getInitialFrameSize(), invIndex.getInvListTypeTraits());
     }
 
     protected void tokenizeQuery(InvertedIndexSearchPredicate searchPred) throws HyracksDataException {
@@ -100,7 +128,7 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         int queryFieldIndex = searchPred.getQueryFieldIndex();
         IBinaryTokenizer queryTokenizer = searchPred.getQueryTokenizer();
         // Is this a full-text query?
-        // Then, the last argument is conjuctive or disjunctive search option, not a query text.
+        // Then, the last argument is conjunctive or disjunctive search option, not a query text.
         // Thus, we need to remove the last argument.
         boolean isFullTextSearchQuery = searchPred.getIsFullTextSearchQuery();
         // Get the type of query tokenizer.
@@ -144,33 +172,13 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         }
     }
 
-    @Override
-    public IFrameTupleAccessor createResultFrameTupleAccessor() {
-        return new FixedSizeFrameTupleAccessor(ctx.getInitialFrameSize(), searchResult.getTypeTraits());
-    }
-
-    @Override
-    public ITupleReference createResultFrameTupleReference() {
-        return new FixedSizeTupleReference(searchResult.getTypeTraits());
-    }
-
-    @Override
-    public List<ByteBuffer> getResultBuffers() {
-        return searchResult.getBuffers();
-    }
-
-    @Override
-    public int getNumValidResultBuffers() {
-        return searchResult.getCurrentBufferIndex() + 1;
-    }
-
     public int getOccurrenceThreshold() {
         return occurrenceThreshold;
     }
 
     public void printNewResults(int maxResultBufIdx, List<ByteBuffer> buffer) {
         StringBuffer strBuffer = new StringBuffer();
-        FixedSizeFrameTupleAccessor resultFrameTupleAcc = searchResult.getAccessor();
+        FixedSizeFrameTupleAccessor resultFrameTupleAcc = finalSearchResult.getAccessor();
         for (int i = 0; i <= maxResultBufIdx; i++) {
             ByteBuffer testBuf = buffer.get(i);
             resultFrameTupleAcc.reset(testBuf);
@@ -183,4 +191,99 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         }
         System.out.println(strBuffer.toString());
     }
+
+    /**
+     * Checks whether underlying the inverted list cursor or final search result has a tuple to return.
+     */
+    @Override
+    public boolean hasNext() throws HyracksDataException {
+        do {
+            boolean moreToRead = hasMoreElement();
+            if (moreToRead) {
+                return true;
+            }
+            // Current cursor or buffer is exhausted. Unbinds the inverted list cursor or
+            // cleans the output buffer of the final search result.
+            resetResultSource();
+            // Search is done? Then, there's nothing left.
+            if (isFinishedSearch) {
+                return false;
+            }
+            // Otherwise, resume the search process.
+            continueSearch();
+        } while (true);
+    }
+
+    @Override
+    public void next() throws HyracksDataException {
+        // Case 1: fetching a tuple from an inverted list cursor
+        if (isSingleInvertedList) {
+            singleInvListCursor.next();
+        } else {
+            // Case 2: fetching a tuple from the output frame of a final search result
+            searchResultTuple.reset(searchResultFta.getBuffer().array(),
+                    searchResultFta.getTupleStartOffset(searchResultTupleIndex));
+            searchResultTupleIndex++;
+        }
+    }
+
+    private boolean hasMoreElement() throws HyracksDataException {
+        // Case #1: single inverted list cursor
+        if (isSingleInvertedList) {
+            return singleInvListCursor.hasNext();
+        }
+        // Case #2: ouput buffer from a final search result
+        return searchResultTupleIndex < searchResultFta.getTupleCount();
+    }
+
+    private void resetResultSource() throws HyracksDataException {
+        if (isSingleInvertedList) {
+            isSingleInvertedList = false;
+            singleInvListCursor.unloadPages();
+            singleInvListCursor.close();
+            singleInvListCursor = null;
+        } else {
+            finalSearchResult.resetBuffer();
+            searchResultTupleIndex = 0;
+        }
+    }
+
+    public void destroy() throws HyracksDataException {
+        // To ensure to release the buffer of the query token frame.
+        ((BufferManagerBackedVSizeFrame) queryTokenFrame).destroy();
+
+        // Releases the frames of the cursor.
+        if (isSingleInvertedList && singleInvListCursor != null) {
+            singleInvListCursor.unloadPages();
+            singleInvListCursor.close();
+        }
+        // Releases the frame of the final search result.
+        finalSearchResult.close();
+
+        // Releases the frames of the two intermediate search result.
+        invListMerger.close();
+    }
+
+    @Override
+    public ITupleReference getTuple() {
+        if (isSingleInvertedList) {
+            return singleInvListCursor.getTuple();
+        }
+        return searchResultTuple;
+    }
+
+    /**
+     * Prepares the search process. This mainly allocates/clears the buffer frames of the each component.
+     */
+    protected void prepareSearch() throws HyracksDataException {
+        finalSearchResult.prepareIOBuffer();
+        invListMerger.prepareMerge();
+        ((BufferManagerBackedVSizeFrame) queryTokenFrame).acquireFrame();
+        isFinishedSearch = false;
+        isSingleInvertedList = false;
+        searchResultFta.reset(finalSearchResult.getNextFrame());
+        searchResultTupleIndex = 0;
+        singleInvListCursor = null;
+    }
+
 }

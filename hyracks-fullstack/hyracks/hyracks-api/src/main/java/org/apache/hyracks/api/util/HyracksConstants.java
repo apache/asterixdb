@@ -21,6 +21,10 @@ package org.apache.hyracks.api.util;
 public class HyracksConstants {
     public static final String KEY_MESSAGE = "HYX:MSG";
     public static final String HYRACKS_LOGGER_NAME = "org.apache.hyracks";
+    // A frame manager that manages all inverted index searches
+    public static final String INVERTED_INDEX_SEARCH_FRAME_MANAGER = "INVERTED_INDEX_SEARCH_FRAME_MANAGER";
+    // Hyracks task context
+    public static final String HYRACKS_TASK_CONTEXT = "HYRACKS_TASK_CONTEXT";
 
     private HyracksConstants() {
     }

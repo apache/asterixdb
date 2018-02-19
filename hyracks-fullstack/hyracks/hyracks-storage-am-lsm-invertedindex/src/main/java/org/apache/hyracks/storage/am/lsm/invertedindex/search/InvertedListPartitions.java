@@ -22,24 +22,29 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.ObjectCache;
 
+/**
+ * This class contains multiple inverted list partitions. Each partition can contain inverted list cursors in it.
+ *
+ */
 public class InvertedListPartitions {
     private final int DEFAULT_NUM_PARTITIONS = 10;
     private final int PARTITIONS_SLACK_SIZE = 10;
     private final int OBJECT_CACHE_INIT_SIZE = 10;
     private final int OBJECT_CACHE_EXPAND_SIZE = 10;
-    private final IObjectFactory<ArrayList<IInvertedListCursor>> arrayListFactory;
-    private final ObjectCache<ArrayList<IInvertedListCursor>> arrayListCache;
-    private ArrayList<IInvertedListCursor>[] partitions;
+    private final IObjectFactory<ArrayList<InvertedListCursor>> arrayListFactory;
+    private final ObjectCache<ArrayList<InvertedListCursor>> arrayListCache;
+    private ArrayList<InvertedListCursor>[] partitions;
     private short minValidPartitionIndex;
     private short maxValidPartitionIndex;
 
-    public InvertedListPartitions() {
-        this.arrayListFactory = new ArrayListFactory<IInvertedListCursor>();
-        this.arrayListCache = new ObjectCache<ArrayList<IInvertedListCursor>>(arrayListFactory, OBJECT_CACHE_INIT_SIZE,
+    public InvertedListPartitions() throws HyracksDataException {
+        this.arrayListFactory = new ArrayListFactory<InvertedListCursor>();
+        this.arrayListCache = new ObjectCache<ArrayList<InvertedListCursor>>(arrayListFactory, OBJECT_CACHE_INIT_SIZE,
                 OBJECT_CACHE_EXPAND_SIZE);
     }
 
@@ -52,7 +57,7 @@ public class InvertedListPartitions {
             } else {
                 initialSize = numTokensUpperBound + 1;
             }
-            partitions = (ArrayList<IInvertedListCursor>[]) new ArrayList[initialSize];
+            partitions = (ArrayList<InvertedListCursor>[]) new ArrayList[initialSize];
         } else {
             if (numTokensUpperBound + 1 >= partitions.length) {
                 partitions = Arrays.copyOf(partitions, numTokensUpperBound + 1);
@@ -64,11 +69,11 @@ public class InvertedListPartitions {
         maxValidPartitionIndex = Short.MIN_VALUE;
     }
 
-    public void addInvertedListCursor(IInvertedListCursor listCursor, short numTokens) {
+    public void addInvertedListCursor(InvertedListCursor listCursor, short numTokens) throws HyracksDataException {
         if (numTokens + 1 >= partitions.length) {
             partitions = Arrays.copyOf(partitions, numTokens + PARTITIONS_SLACK_SIZE);
         }
-        ArrayList<IInvertedListCursor> partitionCursors = partitions[numTokens];
+        ArrayList<InvertedListCursor> partitionCursors = partitions[numTokens];
         if (partitionCursors == null) {
             partitionCursors = arrayListCache.getNext();
             partitionCursors.clear();
@@ -84,7 +89,7 @@ public class InvertedListPartitions {
         partitionCursors.add(listCursor);
     }
 
-    public ArrayList<IInvertedListCursor>[] getPartitions() {
+    public ArrayList<InvertedListCursor>[] getPartitions() {
         return partitions;
     }
 

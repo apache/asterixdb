@@ -19,27 +19,36 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.api;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-
-import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
-import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.OnDiskInvertedIndexSearchCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
+import org.apache.hyracks.storage.common.IIndexCursor;
 
+/**
+ * Inverted index search cursor class that conducts the actual inverted index traversal
+ *
+ */
 public interface IInvertedIndexSearcher {
-    public void search(OnDiskInvertedIndexSearchCursor resultCursor, InvertedIndexSearchPredicate searchPred,
-            IIndexOperationContext ictx) throws HyracksDataException;
+    /**
+     * Searches the given inverted index using the search predicate and initializes the result cursor.
+     */
+    public void search(IIndexCursor resultCursor, InvertedIndexSearchPredicate searchPred, IIndexOperationContext ictx)
+            throws HyracksDataException;
 
-    public IFrameTupleAccessor createResultFrameTupleAccessor();
+    /**
+     * Continues the search process if it is paused. (e.g., output buffer full)
+     *
+     * @return true only if all search process is done.
+     *         false otherwise.
+     */
+    public boolean continueSearch() throws HyracksDataException;
 
-    public ITupleReference createResultFrameTupleReference();
+    public boolean hasNext() throws HyracksDataException;
 
-    public List<ByteBuffer> getResultBuffers();
+    public void next() throws HyracksDataException;
 
-    public int getNumValidResultBuffers();
+    public void destroy() throws HyracksDataException;
 
-    public void reset();
+    public ITupleReference getTuple();
 }

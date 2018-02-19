@@ -85,6 +85,9 @@ public class AccessMethodTestsConfig {
     public static final int LSM_INVINDEX_HYRACKS_FRAME_SIZE = 32768;
     public static final double LSM_INVINDEX_BLOOMFILTER_FALSE_POSITIVE_RATE = 0.01;
     public static final int LSM_INVINDEX_NUM_MUTABLE_COMPONENTS = 2;
+    // inverted-index-search frame limit for the test purposes (minimum 5)
+    // (1 for query token frame, 2 for intermediate results, 1 for the final result, 1 for inverted lists)
+    public static final int LSM_INVINDEX_SEARCH_FRAME_LIMIT = 5;
 
     // Test parameters.
     public static final int LSM_INVINDEX_NUM_DOCS_TO_INSERT = 100;

@@ -11,6 +11,7 @@
     "compiler\.joinmemory" : 262144,
     "compiler\.parallelism" : -1,
     "compiler\.sortmemory" : 327680,
+    "compiler\.textsearchmemory" : 163840,
     "default\.dir" : "target/io/dir/asterixdb",
     "instance\.name" : "DEFAULT_INSTANCE",
     "log\.level" : "WARN",

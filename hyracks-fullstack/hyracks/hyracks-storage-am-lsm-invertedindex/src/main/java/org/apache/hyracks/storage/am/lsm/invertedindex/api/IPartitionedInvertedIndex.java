@@ -19,16 +19,14 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.api;
 
-import java.util.List;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedListPartitions;
 
 public interface IPartitionedInvertedIndex {
     public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
-            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions,
-            List<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException;
+            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
+            throws HyracksDataException;
 
     public boolean isEmpty();
 }

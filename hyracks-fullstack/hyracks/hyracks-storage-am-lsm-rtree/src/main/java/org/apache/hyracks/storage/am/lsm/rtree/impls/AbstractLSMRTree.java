@@ -51,9 +51,8 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.rtree.frames.RTreeFrameFactory;
 import org.apache.hyracks.storage.am.rtree.impls.RTree;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
-import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.util.trace.ITracer;
@@ -229,11 +228,10 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
     }
 
     @Override
-    protected LSMRTreeOpContext createOpContext(IModificationOperationCallback modCallback,
-            ISearchOperationCallback searchCallback) {
+    protected LSMRTreeOpContext createOpContext(IIndexAccessParameters iap) {
         return new LSMRTreeOpContext(this, memoryComponents, rtreeLeafFrameFactory, rtreeInteriorFrameFactory,
-                btreeLeafFrameFactory, modCallback, searchCallback, getTreeFields(), getFilterFields(), getHarness(),
-                comparatorFields, linearizerArray, getFilterCmpFactories(), tracer);
+                btreeLeafFrameFactory, iap.getModificationCallback(), iap.getSearchOperationCallback(), getTreeFields(),
+                getFilterFields(), getHarness(), comparatorFields, linearizerArray, getFilterCmpFactories(), tracer);
     }
 
     @Override

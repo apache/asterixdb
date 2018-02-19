@@ -19,23 +19,26 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
-import java.util.List;
-
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IPartitionedInvertedIndex;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedListPartitions;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.PartitionedTOccurrenceSearcher;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
+import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implements IPartitionedInvertedIndex {
@@ -51,21 +54,39 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
     }
 
     public class PartitionedOnDiskInvertedIndexAccessor extends OnDiskInvertedIndexAccessor {
-        public PartitionedOnDiskInvertedIndexAccessor(OnDiskInvertedIndex index) throws HyracksDataException {
-            super(index, new PartitionedTOccurrenceSearcher(ctx, index));
+        public PartitionedOnDiskInvertedIndexAccessor(OnDiskInvertedIndex index, IHyracksTaskContext ctx)
+                throws HyracksDataException {
+            super(index, ctx);
+        }
+
+        @Override
+        public IIndexCursor createSearchCursor(boolean exclusive) throws HyracksDataException {
+            if (searcher == null) {
+                searcher = new PartitionedTOccurrenceSearcher(index, ctx);
+            }
+            return new OnDiskInvertedIndexSearchCursor(searcher);
+        }
+
+        @Override
+        public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException {
+            if (searcher == null) {
+                searcher = new PartitionedTOccurrenceSearcher(index, ctx);
+            }
+            searcher.search(cursor, (InvertedIndexSearchPredicate) searchPred, opCtx);
         }
     }
 
     @Override
     public PartitionedOnDiskInvertedIndexAccessor createAccessor(IIndexAccessParameters iap)
             throws HyracksDataException {
-        return new PartitionedOnDiskInvertedIndexAccessor(this);
+        return new PartitionedOnDiskInvertedIndexAccessor(this,
+                (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
     }
 
     @Override
     public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
-            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions,
-            List<IInvertedListCursor> cursorsOrderedByTokens) throws HyracksDataException {
+            short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
+            throws HyracksDataException {
         PartitionedTOccurrenceSearcher partSearcher = (PartitionedTOccurrenceSearcher) searcher;
         OnDiskInvertedIndexOpContext ctx = (OnDiskInvertedIndexOpContext) ictx;
         ITupleReference lowSearchKey = null;
@@ -95,9 +116,8 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
                 ITupleReference btreeTuple = ctx.getBtreeCursor().getTuple();
                 short numTokens = ShortPointable.getShort(btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD),
                         btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
-                IInvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
-                resetInvertedListCursor(btreeTuple, invListCursor);
-                cursorsOrderedByTokens.add(invListCursor);
+                InvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
+                openInvertedListCursor(btreeTuple, invListCursor);
                 invListPartitions.addInvertedListCursor(invListCursor, numTokens);
                 tokenExists = true;
             }

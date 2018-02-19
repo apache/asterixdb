@@ -374,8 +374,7 @@ public class LSMRTree extends AbstractLSMRTree {
 
     @Override
     public ILSMIndexAccessor createAccessor(IIndexAccessParameters iap) {
-        return new LSMRTreeAccessor(getHarness(),
-                createOpContext(iap.getModificationCallback(), iap.getSearchOperationCallback()), buddyBTreeFields);
+        return new LSMRTreeAccessor(getHarness(), createOpContext(iap), buddyBTreeFields);
     }
 
     // This function is modified for R-Trees without antimatter tuples to allow buddy B-Tree to have only primary keys

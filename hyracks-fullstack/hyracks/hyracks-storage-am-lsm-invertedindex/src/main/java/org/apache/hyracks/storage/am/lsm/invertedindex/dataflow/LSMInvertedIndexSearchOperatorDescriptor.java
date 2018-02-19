@@ -49,13 +49,16 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
     private final IMissingWriterFactory missingWriterFactory;
     private final ISearchOperationCallbackFactory searchCallbackFactory;
     private final int numOfFields;
+    // the maximum number of frames that this inverted-index-search can use
+    private final int frameLimit;
 
     public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int queryField, IIndexDataflowHelperFactory indexHelperFactory,
             IBinaryTokenizerFactory queryTokenizerFactory, IInvertedIndexSearchModifierFactory searchModifierFactory,
             boolean retainInput, boolean retainMissing, IMissingWriterFactory missingWriterFactory,
             ISearchOperationCallbackFactory searchCallbackFactory, int[] minFilterFieldIndexes,
-            int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery, int numOfFields, boolean appendIndexFilter) {
+            int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery, int numOfFields, boolean appendIndexFilter,
+            int frameLimit) {
         super(spec, 1, 1);
         this.indexHelperFactory = indexHelperFactory;
         this.queryTokenizerFactory = queryTokenizerFactory;
@@ -71,6 +74,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
         this.appendIndexFilter = appendIndexFilter;
         this.numOfFields = numOfFields;
         this.outRecDescs[0] = outRecDesc;
+        this.frameLimit = frameLimit;
     }
 
     @Override
@@ -81,6 +85,6 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), partition, minFilterFieldIndexes,
                 maxFilterFieldIndexes, indexHelperFactory, retainInput, retainMissing, missingWriterFactory,
                 searchCallbackFactory, searchModifier, queryTokenizerFactory, queryField, isFullTextSearchQuery,
-                numOfFields, appendIndexFilter);
+                numOfFields, appendIndexFilter, frameLimit);
     }
 }

@@ -28,6 +28,7 @@ public class PhysicalOptimizationConfig {
     private static final String MAX_FRAMES_EXTERNAL_GROUP_BY = "MAX_FRAMES_EXTERNAL_GROUP_BY";
     private static final String MAX_FRAMES_FOR_JOIN_LEFT_INPUT = "MAX_FRAMES_FOR_JOIN_LEFT_INPUT";
     private static final String MAX_FRAMES_FOR_JOIN = "MAX_FRAMES_FOR_JOIN";
+    private static final String MAX_FRAMES_FOR_TEXTSEARCH = "MAX_FRAMES_FOR_TEXTSEARCH";
     private static final String FUDGE_FACTOR = "FUDGE_FACTOR";
     private static final String MAX_RECORDS_PER_FRAME = "MAX_RECORDS_PER_FRAME";
 
@@ -107,6 +108,15 @@ public class PhysicalOptimizationConfig {
 
     public void setMaxFramesExternalSort(int frameLimit) {
         setInt(MAX_FRAMES_EXTERNAL_SORT, frameLimit);
+    }
+
+    public int getMaxFramesForTextSearch() {
+        int frameSize = getFrameSize();
+        return getInt(MAX_FRAMES_FOR_TEXTSEARCH, (int) (((long) 32 * MB) / frameSize));
+    }
+
+    public void setMaxFramesForTextSearch(int frameLimit) {
+        setInt(MAX_FRAMES_FOR_TEXTSEARCH, frameLimit);
     }
 
     public int getHashGroupByTableSize() {

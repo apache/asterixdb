@@ -19,20 +19,24 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.search;
 
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
 
-public class InvertedListCursorFactory implements IObjectFactory<IInvertedListCursor> {
+public class InvertedListCursorFactory implements IObjectFactory<InvertedListCursor> {
 
     private final IInPlaceInvertedIndex invIndex;
+    private final IHyracksTaskContext ctx;
 
-    public InvertedListCursorFactory(IInPlaceInvertedIndex invIndex) {
+    public InvertedListCursorFactory(IInPlaceInvertedIndex invIndex, IHyracksTaskContext ctx) {
         this.invIndex = invIndex;
+        this.ctx = ctx;
     }
 
     @Override
-    public IInvertedListCursor create() {
-        return invIndex.createInvertedListCursor();
+    public InvertedListCursor create() throws HyracksDataException {
+        return invIndex.createInvertedListCursor(ctx);
     }
 }

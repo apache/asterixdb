@@ -18,11 +18,13 @@
  */
 package org.apache.hyracks.storage.am.lsm.invertedindex.inmemory;
 
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
@@ -32,7 +34,7 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
@@ -150,29 +152,41 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     }
 
     @Override
-    public IInvertedListCursor createInvertedListCursor() {
+    public InvertedListCursor createInvertedListCursor(IHyracksTaskContext ctx) {
         return new InMemoryInvertedListCursor(invListTypeTraits.length, tokenTypeTraits.length);
     }
 
     @Override
-    public void openInvertedListCursor(IInvertedListCursor listCursor, ITupleReference searchKey,
+    public InvertedListCursor createInvertedListRangeSearchCursor() {
+        // An in-memory index does not have a separate inverted list.
+        // Therefore, a different range-search cursor for an inverted list is not required.
+        return createInvertedListCursor(null);
+    }
+
+    @Override
+    public void openInvertedListCursor(InvertedListCursor listCursor, ITupleReference searchKey,
             IIndexOperationContext ictx) throws HyracksDataException {
         InMemoryInvertedIndexOpContext ctx = (InMemoryInvertedIndexOpContext) ictx;
         ctx.setOperation(IndexOperation.SEARCH);
         InMemoryInvertedListCursor inMemListCursor = (InMemoryInvertedListCursor) listCursor;
         inMemListCursor.prepare(ctx.getBtreeAccessor(), ctx.getBtreePred(), ctx.getTokenFieldsCmp(), ctx.getBtreeCmp());
         inMemListCursor.reset(searchKey);
+        // Makes the cursor state to OPENED
+        inMemListCursor.open(null, null);
     }
 
     @Override
     public InMemoryInvertedIndexAccessor createAccessor(IIndexAccessParameters iap) throws HyracksDataException {
         return new InMemoryInvertedIndexAccessor(this,
-                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory));
+                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory),
+                (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
     }
 
-    public InMemoryInvertedIndexAccessor createAccessor(int[] nonIndexFields) throws HyracksDataException {
+    public InMemoryInvertedIndexAccessor createAccessor(IIndexAccessParameters iap, int[] nonIndexFields)
+            throws HyracksDataException {
         return new InMemoryInvertedIndexAccessor(this,
-                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory), nonIndexFields);
+                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory), nonIndexFields,
+                (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
     }
 
     @Override
@@ -219,4 +233,5 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     public void purge() throws HyracksDataException {
         btree.purge();
     }
+
 }

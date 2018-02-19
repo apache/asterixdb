@@ -19,24 +19,28 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.inmemory;
 
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.PartitionedTOccurrenceSearcher;
+import org.apache.hyracks.storage.common.IIndexAccessParameters;
 
 public class PartitionedInMemoryInvertedIndexAccessor extends InMemoryInvertedIndexAccessor {
 
-    public PartitionedInMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx)
-            throws HyracksDataException {
-        super(index, opCtx);
+    public PartitionedInMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx,
+            IIndexAccessParameters iap) throws HyracksDataException {
+        super(index, opCtx, (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
     }
 
     public PartitionedInMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx,
-            int[] nonIndexFields) throws HyracksDataException {
-        super(index, opCtx, nonIndexFields);
+            int[] nonIndexFields, IIndexAccessParameters iap) throws HyracksDataException {
+        super(index, opCtx, nonIndexFields,
+                (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
     }
 
     protected IInvertedIndexSearcher createSearcher() throws HyracksDataException {
-        return new PartitionedTOccurrenceSearcher(hyracksCtx, index);
+        return new PartitionedTOccurrenceSearcher(index, ctx);
     }
 }
