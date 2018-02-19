@@ -73,7 +73,9 @@ public class ActiveManager {
         if (shutdown) {
             throw new RuntimeDataException(ErrorCode.ACTIVE_MANAGER_SHUTDOWN);
         }
-        runtimes.putIfAbsent(runtime.getRuntimeId(), runtime);
+        if (runtimes.putIfAbsent(runtime.getRuntimeId(), runtime) != null) {
+            throw new IllegalStateException("Active Runtime " + runtime.getRuntimeId() + " is already registered");
+        }
     }
 
     public void deregisterRuntime(ActiveRuntimeId id) {
