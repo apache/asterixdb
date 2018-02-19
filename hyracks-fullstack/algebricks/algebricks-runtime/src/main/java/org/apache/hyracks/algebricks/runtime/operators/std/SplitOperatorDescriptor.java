@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 
 import java.nio.ByteBuffer;
 
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspector;
 import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -34,6 +35,7 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -102,6 +104,7 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
             final FrameTupleReference tRef = new FrameTupleReference();;
             final IBinaryIntegerInspector intInsepctor = intInsepctorFactory.createBinaryIntegerInspector(ctx);
             final IScalarEvaluator eval = brachingExprEvalFactory.createScalarEvaluator(ctx);
+            final MutableBoolean hasFailed = new MutableBoolean(false);
             for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
                 appenders[i] = new FrameTupleAppender(new VSizeFrame(ctx), true);
             }
@@ -160,28 +163,44 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
 
                 @Override
                 public void close() throws HyracksDataException {
-                    HyracksDataException hde = null;
-                    for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
-                        if (isOpen[i]) {
-                            try {
-                                appenders[i].write(writers[i], true);
-                                writers[i].close();
-                            } catch (Throwable th) {
-                                if (hde == null) {
-                                    hde = HyracksDataException.create(th);
-                                } else {
-                                    hde.addSuppressed(th);
+                    Throwable hde = null;
+                    // write if hasn't failed
+                    if (!hasFailed.booleanValue()) {
+                        for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
+                            if (isOpen[i]) {
+                                try {
+                                    appenders[i].write(writers[i], true);
+                                } catch (Throwable th) {
+                                    hde = th;
+                                    break;
                                 }
                             }
                         }
                     }
+
+                    // fail the writers
                     if (hde != null) {
-                        throw hde;
+                        for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
+                            if (isOpen[i]) {
+                                CleanupUtils.fail(writers[i], hde);
+                            }
+                        }
+                    }
+
+                    // close
+                    for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
+                        if (isOpen[i]) {
+                            hde = CleanupUtils.close(writers[i], hde);
+                        }
+                    }
+                    if (hde != null) {
+                        throw HyracksDataException.create(hde);
                     }
                 }
 
                 @Override
                 public void fail() throws HyracksDataException {
+                    hasFailed.setTrue();
                     HyracksDataException hde = null;
                     for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
                         if (isOpen[i]) {

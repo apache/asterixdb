@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.DestroyUtils;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -103,8 +103,8 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
             return;
         }
         destroyed = true;
-        Throwable failure = DestroyUtils.destroy(null, mutableInvIndexAccessors);
-        failure = DestroyUtils.destroy(failure, deletedKeysBTreeAccessors);
+        Throwable failure = CleanupUtils.destroy(null, mutableInvIndexAccessors);
+        failure = CleanupUtils.destroy(failure, deletedKeysBTreeAccessors);
         if (failure != null) {
             throw HyracksDataException.create(failure);
         }

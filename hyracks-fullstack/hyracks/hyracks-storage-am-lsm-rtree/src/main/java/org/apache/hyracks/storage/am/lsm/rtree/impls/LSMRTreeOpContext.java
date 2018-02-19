@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.DestroyUtils;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTreeOpContext;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -138,10 +138,10 @@ public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
             return;
         }
         destroyed = true;
-        Throwable failure = DestroyUtils.destroy(null, mutableRTreeAccessors);
-        failure = DestroyUtils.destroy(failure, rtreeOpContexts);
-        failure = DestroyUtils.destroy(failure, mutableBTreeAccessors);
-        failure = DestroyUtils.destroy(failure, btreeOpContexts);
+        Throwable failure = CleanupUtils.destroy(null, mutableRTreeAccessors);
+        failure = CleanupUtils.destroy(failure, rtreeOpContexts);
+        failure = CleanupUtils.destroy(failure, mutableBTreeAccessors);
+        failure = CleanupUtils.destroy(failure, btreeOpContexts);
         if (failure != null) {
             throw HyracksDataException.create(failure);
         }

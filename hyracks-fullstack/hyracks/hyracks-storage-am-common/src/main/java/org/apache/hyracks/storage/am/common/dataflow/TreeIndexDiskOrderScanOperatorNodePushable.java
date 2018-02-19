@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -39,7 +40,6 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
-import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.LocalResource;
@@ -74,7 +74,7 @@ public class TreeIndexDiskOrderScanOperatorNodePushable extends AbstractUnaryOut
                 failure = ExceptionUtils.suppress(failure, failFailure);
             }
         } finally {
-            failure = ResourceReleaseUtils.close(writer, failure);
+            failure = CleanupUtils.close(writer, failure);
         }
         if (failure != null) {
             throw HyracksDataException.create(failure);

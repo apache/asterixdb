@@ -24,7 +24,7 @@ import java.util.Deque;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.DestroyUtils;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -392,7 +392,7 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
             return;
         }
         destroyed = true;
-        Throwable failure = DestroyUtils.destroy(null, accessor, cursor);
+        Throwable failure = CleanupUtils.destroy(null, accessor, cursor);
         if (failure != null) {
             throw HyracksDataException.create(failure);
         }

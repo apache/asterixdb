@@ -20,7 +20,7 @@
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.DestroyUtils;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
@@ -178,7 +178,7 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
         Throwable failure = null;
         if (lsmHarness != null) {
             if (rangeCursors != null) {
-                failure = DestroyUtils.destroy(failure, rangeCursors);
+                failure = CleanupUtils.destroy(failure, rangeCursors);
                 rangeCursors = null;
             }
             try {

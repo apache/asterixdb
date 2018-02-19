@@ -23,7 +23,7 @@ import java.util.Iterator;
 import java.util.PriorityQueue;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.DestroyUtils;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
@@ -341,8 +341,8 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             btreeAccessors = new BTreeAccessor[numBTrees];
         } else if (rangeCursors.length != numBTrees) {
             // should destroy first
-            Throwable failure = DestroyUtils.destroy(null, btreeAccessors);
-            failure = DestroyUtils.destroy(failure, rangeCursors);
+            Throwable failure = CleanupUtils.destroy(null, btreeAccessors);
+            failure = CleanupUtils.destroy(failure, rangeCursors);
             if (failure != null) {
                 throw HyracksDataException.create(failure);
             }

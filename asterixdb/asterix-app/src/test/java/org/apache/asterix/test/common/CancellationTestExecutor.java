@@ -63,11 +63,16 @@ public class CancellationTestExecutor extends TestExecutor {
             }
         };
         Future<InputStream> future = executor.submit(query);
-        if (cancellable) {
-            Thread.sleep(20);
-            // Cancels the query request while the query is executing.
-            int rc = cancelQuery(getEndpoint(Servlets.RUNNING_REQUESTS), newParams);
-            Assert.assertTrue(rc == 200 || rc == 404);
+        while (!future.isDone()) {
+            if (cancellable) {
+                Thread.sleep(10);
+                // Cancels the query request while the query is executing.
+                int rc = cancelQuery(getEndpoint(Servlets.RUNNING_REQUESTS), newParams);
+                Assert.assertTrue(rc == 200 || rc == 404);
+                if (rc == 200) {
+                    break;
+                }
+            }
         }
         InputStream inputStream = future.get();
         // Since the current cancellation (i.e., abort) implementation is based on thread.interrupt and we did not

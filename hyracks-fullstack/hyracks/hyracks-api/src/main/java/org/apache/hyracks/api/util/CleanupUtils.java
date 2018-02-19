@@ -18,16 +18,17 @@
  */
 package org.apache.hyracks.api.util;
 
+import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.dataflow.IDestroyable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class DestroyUtils {
+public class CleanupUtils {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private DestroyUtils() {
+    private CleanupUtils() {
     }
 
     public static Throwable destroy(Throwable root, IDestroyable... destroyables) {
@@ -49,5 +50,53 @@ public class DestroyUtils {
             }
         }
         return root;
+    }
+
+    /**
+     * Close the IFrameWriter and suppress any Throwable thrown by the close call.
+     * This method must NEVER throw any Throwable
+     *
+     * @param writer
+     *            the writer to close
+     * @param root
+     *            the first exception encountered during release of resources
+     * @return the root Throwable if not null or a new Throwable if any was thrown, otherwise, it returns null
+     */
+    public static Throwable close(IFrameWriter writer, Throwable root) {
+        if (writer != null) {
+            try {
+                writer.close();
+            } catch (Throwable th) { // NOSONAR Will be re-thrown
+                try {
+                    LOGGER.log(Level.WARN, "Failure closing a closeable resource", th);
+                } catch (Throwable loggingFailure) {
+                    // Do nothing
+                }
+                root = ExceptionUtils.suppress(root, th);
+            }
+        }
+        return root;
+    }
+
+    /**
+     * Fail the IFrameWriter and suppress any Throwable thrown by the fail call.
+     * This method must NEVER throw any Throwable
+     *
+     * @param writer
+     *            the writer to fail
+     * @param root
+     *            the root failure
+     */
+    public static void fail(IFrameWriter writer, Throwable root) {
+        try {
+            writer.fail();
+        } catch (Throwable th) { // NOSONAR Will be re-thrown
+            try {
+                LOGGER.log(Level.WARN, "Failure failing " + writer.getClass().getSimpleName(), th);
+            } catch (Throwable loggingFailure) {
+                // Do nothing
+            }
+            root.addSuppressed(th);
+        }
     }
 }
