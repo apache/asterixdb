@@ -85,8 +85,6 @@ public abstract class EnforcedIndexCursor implements IIndexCursor {
     public final void destroy() throws HyracksDataException {
         if (ENFORCE_OPEN_CLOSE_DESTROY) {
             if (state == State.DESTROYED) {
-                LOGGER.log(Level.WARN,
-                        "multiple cursor.destroy() call in " + Arrays.toString(new Throwable().getStackTrace()));
                 return;
             } else if (state != State.CLOSED) {
                 if (STORE_TRACES && openCallStack != null) {
