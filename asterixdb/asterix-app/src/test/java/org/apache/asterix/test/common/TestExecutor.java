@@ -1649,14 +1649,18 @@ public class TestExecutor {
             InputStream resultStream = executeQueryService(
                     "select dv.DataverseName from Metadata.`Dataverse` as dv order by dv.DataverseName;",
                     getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.CLEAN_JSON);
-            String out = IOUtils.toString(resultStream);
+            String out = IOUtils.toString(resultStream, StandardCharsets.UTF_8);
             ObjectMapper om = new ObjectMapper();
             om.setConfig(om.getDeserializationConfig().with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT));
             JsonNode result;
             try {
                 result = om.readValue(out, ObjectNode.class).get("results");
             } catch (JsonMappingException e) {
-                result = om.createArrayNode();
+                LOGGER.warn("error mapping response '{}' to json", out, e);
+                result = null;
+            }
+            if (result == null) {
+                return;
             }
             for (int i = 0; i < result.size(); i++) {
                 JsonNode json = result.get(i);
