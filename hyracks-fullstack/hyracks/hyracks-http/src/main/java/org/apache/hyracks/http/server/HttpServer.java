@@ -28,6 +28,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.logging.log4j.Level;
@@ -62,6 +63,7 @@ public class HttpServer {
     private static final int STARTED = 2;
     private static final int STOPPING = 3;
     // Final members
+    private final IChannelClosedHandler closedHandler;
     private final Object lock = new Object();
     private final AtomicInteger threadId = new AtomicInteger();
     private final ConcurrentMap<String, Object> ctx;
@@ -78,14 +80,25 @@ public class HttpServer {
     private Throwable cause;
 
     public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port) {
-        this(bossGroup, workerGroup, port, DEFAULT_NUM_EXECUTOR_THREADS, DEFAULT_REQUEST_QUEUE_SIZE);
+        this(bossGroup, workerGroup, port, DEFAULT_NUM_EXECUTOR_THREADS, DEFAULT_REQUEST_QUEUE_SIZE, null);
+    }
+
+    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port,
+            IChannelClosedHandler closeHandler) {
+        this(bossGroup, workerGroup, port, DEFAULT_NUM_EXECUTOR_THREADS, DEFAULT_REQUEST_QUEUE_SIZE, closeHandler);
     }
 
     public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port, int numExecutorThreads,
             int requestQueueSize) {
+        this(bossGroup, workerGroup, port, numExecutorThreads, requestQueueSize, null);
+    }
+
+    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port, int numExecutorThreads,
+            int requestQueueSize, IChannelClosedHandler closeHandler) {
         this.bossGroup = bossGroup;
         this.workerGroup = workerGroup;
         this.port = port;
+        this.closedHandler = closeHandler;
         ctx = new ConcurrentHashMap<>();
         servlets = new ArrayList<>();
         workQueue = new LinkedBlockingQueue<>(requestQueueSize);
@@ -376,6 +389,10 @@ public class HttpServer {
 
     public int getWorkQueueSize() {
         return workQueue.size();
+    }
+
+    public IChannelClosedHandler getChannelClosedHandler() {
+        return closedHandler;
     }
 
     @Override

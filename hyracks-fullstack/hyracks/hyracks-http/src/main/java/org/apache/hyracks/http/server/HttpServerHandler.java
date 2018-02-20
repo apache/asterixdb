@@ -19,8 +19,10 @@
 package org.apache.hyracks.http.server;
 
 import java.io.IOException;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 
+import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -92,12 +94,16 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
             return;
         }
         handler = new HttpRequestHandler(ctx, servlet, servletRequest, chunkSize);
-        submit();
+        submit(ctx, servlet);
     }
 
-    private void submit() throws IOException {
+    private void submit(ChannelHandlerContext ctx, IServlet servlet) throws IOException {
         try {
-            server.getExecutor(handler).submit(handler);
+            Future<Void> task = server.getExecutor(handler).submit(handler);
+            final IChannelClosedHandler closeHandler = servlet.getChannelClosedHandler(server);
+            if (closeHandler != null) {
+                ctx.channel().closeFuture().addListener(future -> closeHandler.channelClosed(server, servlet, task));
+            }
         } catch (RejectedExecutionException e) { // NOSONAR
             LOGGER.log(Level.WARN, "Request rejected by server executor service. " + e.getMessage());
             handler.reject();

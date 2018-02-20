@@ -31,6 +31,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 public class SleepyServlet extends AbstractServlet {
 
     private volatile boolean sleep = true;
+    private int numSlept = 0;
 
     public SleepyServlet(ConcurrentMap<String, Object> ctx, String[] paths) {
         super(ctx, paths);
@@ -46,13 +47,25 @@ public class SleepyServlet extends AbstractServlet {
         response.setStatus(HttpResponseStatus.OK);
         if (sleep) {
             synchronized (this) {
-                while (sleep) {
-                    this.wait();
+                if (sleep) {
+                    incrementSleptCount();
+                    while (sleep) {
+                        this.wait();
+                    }
                 }
             }
         }
         HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML, HttpUtil.Encoding.UTF8);
         response.outputStream().write("I am playing hard to get".getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void incrementSleptCount() {
+        numSlept++;
+        notifyAll();
+    }
+
+    public int getNumSlept() {
+        return numSlept;
     }
 
     public synchronized void wakeUp() {

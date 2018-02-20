@@ -19,15 +19,12 @@
 package org.apache.hyracks.http.test;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -35,14 +32,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -69,6 +58,7 @@ public class HttpServerTest {
     static final AtomicInteger UNAVAILABLE_COUNT = new AtomicInteger();
     static final AtomicInteger OTHER_COUNT = new AtomicInteger();
     static final AtomicInteger EXCEPTION_COUNT = new AtomicInteger();
+    static final List<HttpRequestTask> TASKS = new ArrayList<>();
     static final List<Future<Void>> FUTURES = new ArrayList<>();
     static final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -78,6 +68,8 @@ public class HttpServerTest {
         UNAVAILABLE_COUNT.set(0);
         OTHER_COUNT.set(0);
         EXCEPTION_COUNT.set(0);
+        FUTURES.clear();
+        TASKS.clear();
     }
 
     @Test
@@ -303,76 +295,57 @@ public class HttpServerTest {
         }
     }
 
+    @Test
+    public void testInterruptOnClientClose() throws Exception {
+        WebManager webMgr = new WebManager();
+        int numExecutors = 1;
+        int queueSize = 1;
+        HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, numExecutors, queueSize,
+                (reqServer, reqServlet, reqTask) -> reqTask.cancel(true));
+        SleepyServlet servlet = new SleepyServlet(server.ctx(), new String[] { PATH });
+        server.addServlet(servlet);
+        webMgr.add(server);
+        webMgr.start();
+        try {
+            request(1);
+            synchronized (servlet) {
+                while (servlet.getNumSlept() == 0) {
+                    servlet.wait();
+                }
+            }
+            request(1);
+            waitTillQueued(server, 1);
+            FUTURES.remove(0);
+            HttpRequestTask request = TASKS.remove(0);
+            request.request.abort();
+            waitTillQueued(server, 0);
+            synchronized (servlet) {
+                while (servlet.getNumSlept() == 1) {
+                    servlet.wait();
+                }
+            }
+            servlet.wakeUp();
+            for (Future<Void> f : FUTURES) {
+                f.get();
+            }
+            FUTURES.clear();
+        } finally {
+            webMgr.stop();
+        }
+    }
+
     public static void setPrivateField(Object obj, String filedName, Object value) throws Exception {
         Field f = obj.getClass().getDeclaredField(filedName);
         f.setAccessible(true);
         f.set(obj, value);
     }
 
-    private void request(int count) {
+    private void request(int count) throws URISyntaxException {
         for (int i = 0; i < count; i++) {
-            Future<Void> next = executor.submit(() -> {
-                try {
-                    HttpUriRequest request = post(null);
-                    HttpResponse response = executeHttpRequest(request);
-                    if (response.getStatusLine().getStatusCode() == HttpResponseStatus.OK.code()) {
-                        SUCCESS_COUNT.incrementAndGet();
-                    } else if (response.getStatusLine().getStatusCode() == HttpResponseStatus.SERVICE_UNAVAILABLE
-                            .code()) {
-                        UNAVAILABLE_COUNT.incrementAndGet();
-                    } else {
-                        OTHER_COUNT.incrementAndGet();
-                    }
-                    InputStream in = response.getEntity().getContent();
-                    if (PRINT_TO_CONSOLE) {
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                        String line = null;
-                        while ((line = reader.readLine()) != null) {
-                            System.out.println(line);
-                        }
-                    }
-                    IOUtils.closeQuietly(in);
-                } catch (Throwable th) {
-                    // Server closed connection before we complete writing..
-                    EXCEPTION_COUNT.incrementAndGet();
-                }
-                return null;
-            });
+            HttpRequestTask requestTask = new HttpRequestTask();
+            Future<Void> next = executor.submit(requestTask);
             FUTURES.add(next);
+            TASKS.add(requestTask);
         }
-    }
-
-    public static HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
-        HttpClient client = HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE).build();
-        try {
-            return client.execute(method);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }
-
-    public static HttpUriRequest get(String protocol, String host, int port, String path, String query)
-            throws URISyntaxException {
-        URI uri = new URI(protocol, null, host, port, path, query, null);
-        RequestBuilder builder = RequestBuilder.get(uri);
-        builder.setCharset(StandardCharsets.UTF_8);
-        return builder.build();
-    }
-
-    protected HttpUriRequest post(String query) throws URISyntaxException {
-        URI uri = new URI(PROTOCOL, null, HOST, PORT, PATH, query, null);
-        RequestBuilder builder = RequestBuilder.post(uri);
-        StringBuilder str = new StringBuilder();
-        for (int i = 0; i < 2046; i++) {
-            str.append("This is a string statement that will be ignored");
-            str.append('\n');
-        }
-        String statement = str.toString();
-        builder.setHeader("Content-type", "application/x-www-form-urlencoded");
-        builder.addParameter("statement", statement);
-        builder.setEntity(new StringEntity(statement, StandardCharsets.UTF_8));
-        builder.setCharset(StandardCharsets.UTF_8);
-        return builder.build();
     }
 }

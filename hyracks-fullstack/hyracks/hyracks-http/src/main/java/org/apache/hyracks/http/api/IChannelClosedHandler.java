@@ -18,41 +18,22 @@
  */
 package org.apache.hyracks.http.api;
 
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Future;
 
 import org.apache.hyracks.http.server.HttpServer;
 
-/**
- * Represents a component that handles IServlet requests
- */
-public interface IServlet {
+@FunctionalInterface
+public interface IChannelClosedHandler {
 
     /**
-     * @return an array of paths associated with this IServlet
-     */
-    String[] getPaths();
-
-    /**
-     * @return the context associated with this IServlet
-     */
-    ConcurrentMap<String, Object> ctx();
-
-    /**
-     * handle the IServletRequest writing the response in the passed IServletResponse
-     *
-     * @param request
-     * @param response
-     */
-    void handle(IServletRequest request, IServletResponse response);
-
-    /**
-     * Get the handler for channel close events
+     * Handle a request channel closed event
      *
      * @param server
-     *            the http server
-     * @return the handler for channel close events
+     *            the server handling the request
+     * @param servlet
+     *            the servlet handling the request
+     * @param task
+     *            the task handling the request
      */
-    default IChannelClosedHandler getChannelClosedHandler(HttpServer server) {
-        return server.getChannelClosedHandler();
-    }
+    void channelClosed(HttpServer server, IServlet servlet, Future<Void> task);
 }
