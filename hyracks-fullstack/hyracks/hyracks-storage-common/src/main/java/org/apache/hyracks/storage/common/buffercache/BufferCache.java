@@ -201,43 +201,48 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             pinSanityCheck(dpid);
         }
         CachedPage cPage = findPage(dpid);
-        if (!newPage) {
-            if (DEBUG) {
-                confiscateLock.lock();
-                try {
-                    for (CachedPage c : confiscatedPages) {
-                        if (c.dpid == dpid && c.confiscated.get()) {
-                            throw new IllegalStateException();
-                        }
-                    }
-                } finally {
-                    confiscateLock.unlock();
-                }
-            }
-            // Resolve race of multiple threads trying to read the page from
-            // disk.
+        if (cPage.state != State.VALID) {
             synchronized (cPage) {
-                if (cPage.state != State.VALID) {
-                    try {
-                        // Will attempt to re-read even if previous read failed
-                        if (cPage.state == State.INVALID || cPage.state == State.READ_FAILED) {
-                            // submit request to read
-                            cPage.state = State.READ_REQUESTED;
-                            readRequests.put(cPage);
+                if (!newPage) {
+                    if (DEBUG) {
+                        confiscateLock.lock();
+                        try {
+                            for (CachedPage c : confiscatedPages) {
+                                if (c.dpid == dpid && c.confiscated.get()) {
+                                    throw new IllegalStateException();
+                                }
+                            }
+                        } finally {
+                            confiscateLock.unlock();
                         }
-                        cPage.awaitRead();
-                    } catch (InterruptedException e) {
-                        cPage.state = State.INVALID;
-                        unpin(cPage);
-                        throw HyracksDataException.create(e);
-                    } catch (Throwable th) {
-                        unpin(cPage);
-                        throw HyracksDataException.create(th);
                     }
+                    // Resolve race of multiple threads trying to read the page from
+                    // disk.
+
+                    if (cPage.state != State.VALID) {
+                        try {
+                            // Will attempt to re-read even if previous read failed
+                            if (cPage.state == State.INVALID || cPage.state == State.READ_FAILED) {
+                                // submit request to read
+                                cPage.state = State.READ_REQUESTED;
+                                readRequests.put(cPage);
+                            }
+                            cPage.awaitRead();
+                        } catch (InterruptedException e) {
+                            cPage.state = State.INVALID;
+                            unpin(cPage);
+                            throw HyracksDataException.create(e);
+                        } catch (Throwable th) {
+                            unpin(cPage);
+                            throw HyracksDataException.create(th);
+                        }
+                    }
+
+                } else {
+                    cPage.state = State.VALID;
+                    cPage.notifyAll();
                 }
             }
-        } else {
-            cPage.state = State.VALID;
         }
         pageReplacementStrategy.notifyCachePageAccess(cPage);
         if (DEBUG) {
@@ -735,22 +740,24 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                     }
                     break;
                 }
-                if (next.state != State.READ_REQUESTED) {
-                    LOGGER.log(Level.ERROR,
-                            "Exiting BufferCache reader thread. Took a page with state = {} out of the queue",
-                            next.state);
-                    break;
-                }
-                try {
-                    tryRead(next);
-                    next.state = State.VALID;
-                } catch (HyracksDataException e) {
-                    next.readFailure = e;
-                    next.state = State.READ_FAILED;
-                    LOGGER.log(Level.WARN, "Failed to read a page", e);
-                }
                 synchronized (next) {
-                    next.notifyAll();
+                    if (next.state != State.VALID) {
+                        if (next.state != State.READ_REQUESTED) {
+                            LOGGER.log(Level.ERROR,
+                                    "Exiting BufferCache reader thread. Took a page with state = {} out of the queue",
+                                    next.state);
+                            break;
+                        }
+                        try {
+                            tryRead(next);
+                            next.state = State.VALID;
+                        } catch (HyracksDataException e) {
+                            next.readFailure = e;
+                            next.state = State.READ_FAILED;
+                            LOGGER.log(Level.WARN, "Failed to read a page", e);
+                        }
+                        next.notifyAll();
+                    }
                 }
             }
         }
