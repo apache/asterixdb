@@ -18,7 +18,7 @@
  !-->
 <!DOCTYPE test-suite [
 
-             <!ENTITY RecordsQueries SYSTEM "queries/objects/ObjectsQueries.xml">
+             <!ENTITY ObjectsQueries SYSTEM "queries/objects/ObjectsQueries.xml">
 
              ]>
 <test-suite
@@ -4381,7 +4381,7 @@
     </test-case>
   </test-group>
   <test-group name="records">
-    &RecordsQueries;
+    &ObjectsQueries;
   </test-group>
   <test-group name="scan">
     <test-case FilePath="scan">

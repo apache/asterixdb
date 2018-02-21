@@ -126,9 +126,13 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
             return null;
         }
         projection.getExpression().accept(this, step);
-        String name = projection.getName();
-        if (name != null) {
-            out.print(" as " + name);
+        if (projection.varStar()) {
+            out.print(".* ");
+        } else {
+            String name = projection.getName();
+            if (name != null) {
+                out.print(" as " + name);
+            }
         }
         return null;
     }

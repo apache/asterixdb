@@ -127,7 +127,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             out.println(skip(step) + "*");
         } else {
             projection.getExpression().accept(this, step);
-            out.println(skip(step) + projection.getName());
+            out.println(skip(step) + (projection.varStar() ? ".*" : projection.getName()));
         }
         return null;
     }

@@ -35,7 +35,7 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 public class UTF8StringUtil {
     public static char charAt(byte[] b, int s) {
         if (s >= b.length) {
-            throw new ArrayIndexOutOfBoundsException("Are you crazy?");
+            throw new ArrayIndexOutOfBoundsException(s);
         }
         int c = b[s] & 0xff;
         switch (c >> 4) {

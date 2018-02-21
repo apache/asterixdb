@@ -25,7 +25,7 @@ use dataverse TinySocial;
 
 for $r in dataset TweetMessages
 for $f in get-object-fields($r)
-where $f.field-type = "STRING"
+where $f.field-type = "string"
 let $result := get-object-field-value($r, $f.field-name)
 order by $result
 return $result

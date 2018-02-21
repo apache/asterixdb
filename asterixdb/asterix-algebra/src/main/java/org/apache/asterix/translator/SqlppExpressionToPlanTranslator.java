@@ -26,12 +26,14 @@ import java.util.List;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
@@ -76,7 +78,6 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
@@ -89,7 +90,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnne
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -130,10 +130,10 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         } else {
             LogicalVariable var = context.newVar();
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(queryBody, tupSource);
-            AssignOperator assignOp = new AssignOperator(var, new MutableObject<ILogicalExpression>(eo.first));
+            AssignOperator assignOp = new AssignOperator(var, new MutableObject<>(eo.first));
             assignOp.getInputs().add(eo.second);
             ProjectOperator projectOp = new ProjectOperator(var);
-            projectOp.getInputs().add(new MutableObject<ILogicalOperator>(assignOp));
+            projectOp.getInputs().add(new MutableObject<>(assignOp));
             return new Pair<>(projectOp, var);
         }
     }
@@ -243,12 +243,10 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         if (fromTerm.hasPositionalVariable()) {
             LogicalVariable pVar = context.newVarFromExpression(fromTerm.getPositionalVariable());
             // We set the positional variable type as BIGINT type.
-            unnestOp =
-                    new UnnestOperator(fromVar, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)),
-                            pVar, BuiltinType.AINT64, new PositionWriter());
+            unnestOp = new UnnestOperator(fromVar, new MutableObject<>(makeUnnestExpression(eo.first)), pVar,
+                    BuiltinType.AINT64, new PositionWriter());
         } else {
-            unnestOp =
-                    new UnnestOperator(fromVar, new MutableObject<ILogicalExpression>(makeUnnestExpression(eo.first)));
+            unnestOp = new UnnestOperator(fromVar, new MutableObject<>(makeUnnestExpression(eo.first)));
         }
         unnestOp.getInputs().add(eo.second);
 
@@ -277,23 +275,21 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             Pair<ILogicalOperator, LogicalVariable> rightBranch =
                     generateUnnestForBinaryCorrelateRightBranch(joinClause, inputRef, true);
             // A join operator with condition TRUE.
-            AbstractBinaryJoinOperator joinOperator =
-                    new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE), leftInputRef,
-                            new MutableObject<ILogicalOperator>(rightBranch.first));
+            AbstractBinaryJoinOperator joinOperator = new InnerJoinOperator(
+                    new MutableObject<>(ConstantExpression.TRUE), leftInputRef, new MutableObject<>(rightBranch.first));
             Mutable<ILogicalOperator> joinOpRef = new MutableObject<>(joinOperator);
 
             // Add an additional filter operator.
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair =
                     langExprToAlgExpression(joinClause.getConditionExpression(), joinOpRef);
-            SelectOperator filter =
-                    new SelectOperator(new MutableObject<ILogicalExpression>(conditionExprOpPair.first), false, null);
+            SelectOperator filter = new SelectOperator(new MutableObject<>(conditionExprOpPair.first), false, null);
             filter.getInputs().add(conditionExprOpPair.second);
             return new Pair<>(filter, rightBranch.second);
         } else {
             // Creates a subplan operator.
             SubplanOperator subplanOp = new SubplanOperator();
             Mutable<ILogicalOperator> ntsRef =
-                    new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(subplanOp)));
+                    new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(subplanOp)));
             subplanOp.getInputs().add(leftInputRef);
 
             // Enters the translation for a subplan.
@@ -305,10 +301,9 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             AbstractUnnestNonMapOperator rightUnnestOp = (AbstractUnnestNonMapOperator) rightBranch.first;
 
             // Adds an additional filter operator for the join condition.
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair = langExprToAlgExpression(
-                    joinClause.getConditionExpression(), new MutableObject<ILogicalOperator>(rightUnnestOp));
-            SelectOperator filter =
-                    new SelectOperator(new MutableObject<ILogicalExpression>(conditionExprOpPair.first), false, null);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair =
+                    langExprToAlgExpression(joinClause.getConditionExpression(), new MutableObject<>(rightUnnestOp));
+            SelectOperator filter = new SelectOperator(new MutableObject<>(conditionExprOpPair.first), false, null);
             filter.getInputs().add(conditionExprOpPair.second);
 
             ILogicalOperator currentTopOp = filter;
@@ -319,23 +314,18 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
                 ScalarFunctionCallExpression recordCreationFunc = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR),
                         // Field name for the listified right unnest var.
-                        new MutableObject<ILogicalExpression>(
-                                new ConstantExpression(new AsterixConstantValue(new AString("unnestvar")))),
+                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString("unnestvar")))),
                         // The listified right unnest var
-                        new MutableObject<ILogicalExpression>(
-                                new VariableReferenceExpression(rightUnnestOp.getVariable())),
+                        new MutableObject<>(new VariableReferenceExpression(rightUnnestOp.getVariable())),
                         // Field name for the listified right unnest positional var.
-                        new MutableObject<ILogicalExpression>(
-                                new ConstantExpression(new AsterixConstantValue(new AString("posvar")))),
+                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString("posvar")))),
                         // The listified right unnest positional var.
-                        new MutableObject<ILogicalExpression>(
-                                new VariableReferenceExpression(rightUnnestOp.getPositionalVariable())));
+                        new MutableObject<>(new VariableReferenceExpression(rightUnnestOp.getPositionalVariable())));
 
                 // Assigns the record constructor function to a record variable.
                 LogicalVariable recordVar = context.newVar();
-                AssignOperator assignOp =
-                        new AssignOperator(recordVar, new MutableObject<ILogicalExpression>(recordCreationFunc));
-                assignOp.getInputs().add(new MutableObject<ILogicalOperator>(currentTopOp));
+                AssignOperator assignOp = new AssignOperator(recordVar, new MutableObject<>(recordCreationFunc));
+                assignOp.getInputs().add(new MutableObject<>(currentTopOp));
 
                 // Sets currentTopOp and varToListify for later usages.
                 currentTopOp = assignOp;
@@ -346,40 +336,37 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
             // Adds an aggregate operator to listfy unnest variables.
             AggregateFunctionCallExpression fListify =
-                    BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.LISTIFY, mkSingletonArrayList(
-                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(varToListify))));
+                    BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.LISTIFY,
+                            mkSingletonArrayList(new MutableObject<>(new VariableReferenceExpression(varToListify))));
 
             LogicalVariable aggVar = context.newSubplanOutputVar();
             AggregateOperator aggOp = new AggregateOperator(mkSingletonArrayList(aggVar),
-                    mkSingletonArrayList(new MutableObject<ILogicalExpression>(fListify)));
-            aggOp.getInputs().add(new MutableObject<ILogicalOperator>(currentTopOp));
+                    mkSingletonArrayList(new MutableObject<>(fListify)));
+            aggOp.getInputs().add(new MutableObject<>(currentTopOp));
 
             // Exits the translation of a subplan.
             context.exitSubplan();
 
             // Sets the nested subplan of the subplan operator.
-            ILogicalPlan subplan = new ALogicalPlanImpl(new MutableObject<ILogicalOperator>(aggOp));
+            ILogicalPlan subplan = new ALogicalPlanImpl(new MutableObject<>(aggOp));
             subplanOp.getNestedPlans().add(subplan);
 
             // Outer unnest the aggregated var from the subplan.
             LogicalVariable outerUnnestVar = context.newVar();
-            LeftOuterUnnestOperator outerUnnestOp =
-                    new LeftOuterUnnestOperator(outerUnnestVar, new MutableObject<ILogicalExpression>(
-                            makeUnnestExpression(new VariableReferenceExpression(aggVar))));
-            outerUnnestOp.getInputs().add(new MutableObject<ILogicalOperator>(subplanOp));
+            LeftOuterUnnestOperator outerUnnestOp = new LeftOuterUnnestOperator(outerUnnestVar,
+                    new MutableObject<>(makeUnnestExpression(new VariableReferenceExpression(aggVar))));
+            outerUnnestOp.getInputs().add(new MutableObject<>(subplanOp));
             currentTopOp = outerUnnestOp;
 
             if (hasRightPosVar) {
                 ScalarFunctionCallExpression fieldAccessForRightUnnestVar = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
-                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(outerUnnestVar)),
-                        new MutableObject<ILogicalExpression>(
-                                new ConstantExpression(new AsterixConstantValue(new AInt32(0)))));
+                        new MutableObject<>(new VariableReferenceExpression(outerUnnestVar)),
+                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(0)))));
                 ScalarFunctionCallExpression fieldAccessForRightPosVar = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
-                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(outerUnnestVar)),
-                        new MutableObject<ILogicalExpression>(
-                                new ConstantExpression(new AsterixConstantValue(new AInt32(1)))));
+                        new MutableObject<>(new VariableReferenceExpression(outerUnnestVar)),
+                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(1)))));
 
                 // Creates variables for assign.
                 LogicalVariable rightUnnestVar = context.newVar();
@@ -396,12 +383,12 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
 
                 // Expressions for assign.
                 List<Mutable<ILogicalExpression>> assignExprs = new ArrayList<>();
-                assignExprs.add(new MutableObject<ILogicalExpression>(fieldAccessForRightUnnestVar));
-                assignExprs.add(new MutableObject<ILogicalExpression>(fieldAccessForRightPosVar));
+                assignExprs.add(new MutableObject<>(fieldAccessForRightUnnestVar));
+                assignExprs.add(new MutableObject<>(fieldAccessForRightPosVar));
 
                 // Creates the assign operator.
                 AssignOperator assignOp = new AssignOperator(assignVars, assignExprs);
-                assignOp.getInputs().add(new MutableObject<ILogicalOperator>(currentTopOp));
+                assignOp.getInputs().add(new MutableObject<>(currentTopOp));
                 currentTopOp = assignOp;
             } else {
                 context.setVar(joinClause.getRightVariable(), outerUnnestVar);
@@ -428,7 +415,7 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p =
                 langExprToAlgExpression(havingClause.getFilterExpression(), tupSource);
-        SelectOperator s = new SelectOperator(new MutableObject<ILogicalExpression>(p.first), false, null);
+        SelectOperator s = new SelectOperator(new MutableObject<>(p.first), false, null);
         s.getInputs().add(p.second);
         return new Pair<>(s, null);
     }
@@ -571,28 +558,12 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         }
     }
 
-    // Recursively replaces nested tuple source with empty tuple source
-    // in the operator tree under opRef.
-    private void replaceNtsWithEtsTopDown(Mutable<ILogicalOperator> opRef) {
-        ILogicalOperator op = opRef.getValue();
-        if (op.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
-            opRef.setValue(new EmptyTupleSourceOperator());
-        }
-        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
-            replaceNtsWithEtsTopDown(childRef);
-        }
-    }
-
     // Generates the return expression for a select clause.
     private Pair<ILogicalOperator, LogicalVariable> processSelectClause(SelectBlock selectBlock,
             Mutable<ILogicalOperator> tupSrc) throws CompilationException {
         SelectClause selectClause = selectBlock.getSelectClause();
-        Expression returnExpr;
-        if (selectClause.selectElement()) {
-            returnExpr = selectClause.getSelectElement().getExpression();
-        } else {
-            returnExpr = generateReturnExpr(selectClause, selectBlock);
-        }
+        Expression returnExpr = selectClause.selectElement() ? selectClause.getSelectElement().getExpression()
+                : generateReturnExpr(selectClause.getSelectRegular(), selectBlock);
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(returnExpr, tupSrc);
         LogicalVariable returnVar;
         ILogicalOperator returnOperator;
@@ -606,69 +577,90 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
             returnOperator.getInputs().add(eo.second);
         }
         if (selectClause.distinct()) {
-            DistinctOperator distinctOperator = new DistinctOperator(mkSingletonArrayList(
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(returnVar))));
-            distinctOperator.getInputs().add(new MutableObject<ILogicalOperator>(returnOperator));
+            DistinctOperator distinctOperator = new DistinctOperator(
+                    mkSingletonArrayList(new MutableObject<>(new VariableReferenceExpression(returnVar))));
+            distinctOperator.getInputs().add(new MutableObject<>(returnOperator));
             return new Pair<>(distinctOperator, returnVar);
         } else {
             return new Pair<>(returnOperator, returnVar);
         }
     }
 
-    // Generates the return expression for a select clause.
-    private Expression generateReturnExpr(SelectClause selectClause, SelectBlock selectBlock) {
-        SelectRegular selectRegular = selectClause.getSelectRegular();
+    // Generates the return expression for a regular select clause.
+    private Expression generateReturnExpr(SelectRegular selectRegular, SelectBlock selectBlock) {
+        List<Expression> recordExprs = new ArrayList<>();
         List<FieldBinding> fieldBindings = new ArrayList<>();
-        List<Projection> projections = selectRegular.getProjections();
-        for (Projection projection : projections) {
-            if (projection.star()) {
+        for (Projection projection : selectRegular.getProjections()) {
+            if (projection.varStar()) {
+                if (!fieldBindings.isEmpty()) {
+                    recordExprs.add(new RecordConstructor(new ArrayList<>(fieldBindings)));
+                    fieldBindings.clear();
+                }
+                recordExprs.add(projection.getExpression());
+            } else if (projection.star()) {
                 if (selectBlock.hasGroupbyClause()) {
-                    fieldBindings.addAll(getGroupBindings(selectBlock.getGroupbyClause()));
+                    getGroupBindings(selectBlock.getGroupbyClause(), fieldBindings);
+                    if (selectBlock.hasLetClausesAfterGroupby()) {
+                        getLetBindings(selectBlock.getLetListAfterGroupby(), fieldBindings);
+                    }
                 } else if (selectBlock.hasFromClause()) {
-                    fieldBindings.addAll(getFromBindings(selectBlock.getFromClause()));
+                    getFromBindings(selectBlock.getFromClause(), fieldBindings);
+                    if (selectBlock.hasLetClauses()) {
+                        getLetBindings(selectBlock.getLetList(), fieldBindings);
+                    }
+                } else if (selectBlock.hasLetClauses()) {
+                    getLetBindings(selectBlock.getLetList(), fieldBindings);
                 }
             } else {
                 fieldBindings.add(new FieldBinding(new LiteralExpr(new StringLiteral(projection.getName())),
                         projection.getExpression()));
             }
         }
-        return new RecordConstructor(fieldBindings);
+        if (!fieldBindings.isEmpty()) {
+            recordExprs.add(new RecordConstructor(fieldBindings));
+        }
+
+        return recordExprs.size() == 1 ? recordExprs.get(0)
+                : new CallExpr(new FunctionSignature(BuiltinFunctions.RECORD_CONCAT_STRICT), recordExprs);
     }
 
     // Generates all field bindings according to the from clause.
-    private List<FieldBinding> getFromBindings(FromClause fromClause) {
-        List<FieldBinding> fieldBindings = new ArrayList<>();
+    private void getFromBindings(FromClause fromClause, List<FieldBinding> outFieldBindings) {
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
-            fieldBindings.add(getFieldBinding(fromTerm.getLeftVariable()));
+            outFieldBindings.add(getFieldBinding(fromTerm.getLeftVariable()));
             if (fromTerm.hasPositionalVariable()) {
-                fieldBindings.add(getFieldBinding(fromTerm.getPositionalVariable()));
+                outFieldBindings.add(getFieldBinding(fromTerm.getPositionalVariable()));
             }
             if (!fromTerm.hasCorrelateClauses()) {
                 continue;
             }
             for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
-                fieldBindings.add(getFieldBinding(correlateClause.getRightVariable()));
+                outFieldBindings.add(getFieldBinding(correlateClause.getRightVariable()));
                 if (correlateClause.hasPositionalVariable()) {
-                    fieldBindings.add(getFieldBinding(correlateClause.getPositionalVariable()));
+                    outFieldBindings.add(getFieldBinding(correlateClause.getPositionalVariable()));
                 }
             }
         }
-        return fieldBindings;
     }
 
     // Generates all field bindings according to the from clause.
-    private List<FieldBinding> getGroupBindings(GroupbyClause groupbyClause) {
-        List<FieldBinding> fieldBindings = new ArrayList<>();
+    private void getGroupBindings(GroupbyClause groupbyClause, List<FieldBinding> outFieldBindings) {
         for (GbyVariableExpressionPair pair : groupbyClause.getGbyPairList()) {
-            fieldBindings.add(getFieldBinding(pair.getVar()));
+            outFieldBindings.add(getFieldBinding(pair.getVar()));
         }
         if (groupbyClause.hasGroupVar()) {
-            fieldBindings.add(getFieldBinding(groupbyClause.getGroupVar()));
+            outFieldBindings.add(getFieldBinding(groupbyClause.getGroupVar()));
         }
         if (groupbyClause.hasWithMap()) {
             throw new IllegalStateException(groupbyClause.getWithVarMap().values().toString()); // no WITH in SQLPP
         }
-        return fieldBindings;
+    }
+
+    // Generates all field bindings according to the let clause.
+    private void getLetBindings(List<LetClause> letClauses, List<FieldBinding> outFieldBindings) {
+        for (LetClause letClause : letClauses) {
+            outFieldBindings.add(getFieldBinding(letClause.getVarExpr()));
+        }
     }
 
     // Generates a field binding for a variable.

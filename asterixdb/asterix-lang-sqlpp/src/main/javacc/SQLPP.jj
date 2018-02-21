@@ -2477,15 +2477,12 @@ RecordConstructor RecordConstructor() throws ParseException:
 
 FieldBinding FieldBinding() throws ParseException:
 {
-    FieldBinding fb = new FieldBinding();
     Expression left, right;
 }
 {
     left = Expression() <COLON> right = Expression()
     {
-      fb.setLeftExpr(left);
-      fb.setRightExpr(right);
-      return fb;
+      return new FieldBinding(left, right);
     }
 }
 
@@ -2768,23 +2765,24 @@ Projection Projection() throws ParseException :
   Identifier identifier = null;
   String name = null;
   boolean star = false;
-  boolean exprStar = false;
+  boolean varStar = false;
 }
 {
   (
-    LOOKAHEAD(2)
-    expr = Expression() ((<AS>)? name = Identifier())?
-    | expr = Expression() <DOT> <MUL> {exprStar = true; }
-    | <MUL> {star = true; }
+    <MUL> {star = true; }
+    | LOOKAHEAD(3) expr = VariableRef() <DOT> <MUL> {varStar = true; }
+    | expr = Expression() ((<AS>)? name = Identifier())?
+      {
+        if (name == null) {
+          String generatedColumnIdentifier = ExpressionToVariableUtil.getGeneratedIdentifier(expr, false);
+          if (generatedColumnIdentifier != null) {
+            name = SqlppVariableUtil.toUserDefinedName(generatedColumnIdentifier);
+          }
+        }
+      }
   )
   {
-    if(!star && name == null){
-       String generatedColumnIdentifier = ExpressionToVariableUtil.getGeneratedIdentifier(expr, false);
-       if(generatedColumnIdentifier != null){
-            name = SqlppVariableUtil.toUserDefinedName(generatedColumnIdentifier);
-       }
-    }
-    return new Projection(expr, name, star, exprStar);
+    return new Projection(expr, name, star, varStar);
   }
 }
 

@@ -6,7 +6,7 @@ FunctionCall TinySocial.get-object-fields@1[
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [TweetMessagesAlternate]
+    LiteralExpr [STRING] [TinySocial.TweetMessagesAlternate]
   ]
   AS Variable [ Name=$r ]
 ]

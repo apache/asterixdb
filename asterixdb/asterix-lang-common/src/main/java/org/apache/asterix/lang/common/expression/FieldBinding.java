@@ -26,10 +26,6 @@ public class FieldBinding {
     private Expression leftExpr;
     private Expression rightExpr;
 
-    public FieldBinding() {
-        // default constructor.
-    }
-
     public FieldBinding(Expression leftExpr, Expression rightExpr) {
         super();
         this.leftExpr = leftExpr;

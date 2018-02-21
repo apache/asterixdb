@@ -16,25 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description     : Test creating an index with the same keys as primary keys but in different order
- * Expected Result : Success
- * Date            : Aug 3 2017
- */
 
-drop  dataverse test if exists;
-create  dataverse test;
-
-use test;
+USE tpch;
 
 
-create type test.testType as
-{
-  id : integer,
-  `value` : string
-}
-
-create  dataset testDS(testType) primary key id, `value`;
-
-create  index testIdx  on testDS (`value`, id);
-
+SELECT  c.c_custkey, *, o.o_orderkey, l.*
+FROM  Customer c,
+      Orders o,
+      LineItem l
+WHERE c.c_mktsegment = 'BUILDING' AND c.c_custkey = o.o_custkey
+      AND l.l_orderkey = o.o_orderkey AND o.o_orderdate < '1995-03-15'
+      AND l.l_shipdate > '1995-03-15'
+ORDER BY l.l_linenumber, l.l_orderkey
+LIMIT 3;

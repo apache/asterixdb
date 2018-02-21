@@ -310,4 +310,11 @@ public class RecordBuilder implements IARecordBuilder {
         return -1;
     }
 
+    public IBinaryHashFunction getFieldNameHashFunction() {
+        return utf8HashFunction;
+    }
+
+    public IBinaryComparator getFieldNameComparator() {
+        return utf8Comparator;
+    }
 }

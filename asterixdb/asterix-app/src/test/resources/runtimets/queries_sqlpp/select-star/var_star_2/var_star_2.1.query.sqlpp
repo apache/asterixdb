@@ -16,25 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 /*
- * Description     : Test creating an index with the same key repeated
- * Expected Result : Failure
- * Date            : Aug 3 2017
+ * Description  : Invalid data type in select var.*
+ * Expected Res : Failure
  */
 
-drop  dataverse test if exists;
-create  dataverse test;
-
-use test;
-
-
-create type test.testType as
-{
-  id : integer,
-  `value` : string
-}
-
-create  dataset testDS(testType) primary key id;
-
-create  index testIdx  on testDS (`value`,`value`);
-
+ SELECT t, t.*
+ FROM [1, 2, 3] t

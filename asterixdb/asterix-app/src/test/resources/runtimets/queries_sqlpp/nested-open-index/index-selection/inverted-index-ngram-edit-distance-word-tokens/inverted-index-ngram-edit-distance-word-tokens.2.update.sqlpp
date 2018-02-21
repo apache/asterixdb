@@ -24,11 +24,11 @@ load  dataset DBLPtmp using localfs ((`path`=`asterix_nc1://data/dblp-small/dblp
 
 insert into test.DBLP
 select element {'nested':x}
-from  `test.DBLPtmp` as x
+from  test.DBLPtmp as x
 where (x.id <= 50)
 ;
 insert into test.DBLP
 select element {'nested':{'id':c.id,'dblpid':c.dblpid,'authors':c.authors,'misc':c.misc}}
-from  `test.DBLPtmp` as c
+from  test.DBLPtmp as c
 where (c.id > 50)
 ;

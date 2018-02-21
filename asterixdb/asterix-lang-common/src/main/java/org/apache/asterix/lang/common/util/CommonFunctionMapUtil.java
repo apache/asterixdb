@@ -71,7 +71,10 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("tobigint", "to-bigint"); // tobigint, internal: to-bigint
 
         // Object functions
-        FUNCTION_NAME_MAP.put("record-merge", "object-merge"); // record-merge, internal: object-merge
+        // record-merge, internal: object-merge
+        FUNCTION_NAME_MAP.put("record-merge", "object-merge");
+        // record-concat, internal: object-concat
+        FUNCTION_NAME_MAP.put("record-concat", "object-concat");
         // record-get-fields, internal: object-get-fields
         FUNCTION_NAME_MAP.put("record-get-fields", "object-get-fields");
         // record-get-field-value, internal: object-get-field-value

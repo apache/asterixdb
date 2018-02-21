@@ -270,6 +270,8 @@ import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessNested
 import org.apache.asterix.runtime.evaluators.functions.records.GetRecordFieldValueDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.GetRecordFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordAddFieldsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordConcatDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordConcatStrictDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordMergeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordPairsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveFieldsDescriptor;
@@ -424,9 +426,11 @@ public final class FunctionCollection {
         fc.add(AndDescriptor.FACTORY);
         fc.add(OrDescriptor.FACTORY);
 
-        // Record constructors
+        // Record constructors / functions
         fc.add(ClosedRecordConstructorDescriptor.FACTORY);
         fc.add(OpenRecordConstructorDescriptor.FACTORY);
+        fc.add(RecordConcatDescriptor.FACTORY);
+        fc.add(RecordConcatStrictDescriptor.FACTORY);
 
         // List constructors
         fc.add(OrderedListConstructorDescriptor.FACTORY);

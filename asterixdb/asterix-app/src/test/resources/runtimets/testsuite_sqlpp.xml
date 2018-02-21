@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 <!DOCTYPE test-suite [
-  <!ENTITY RecordsQueries SYSTEM "queries_sqlpp/objects/ObjectsQueries.xml">
+  <!ENTITY ObjectsQueries SYSTEM "queries_sqlpp/objects/ObjectsQueries.xml">
   <!ENTITY AsyncDeferredQueries SYSTEM "queries_sqlpp/async-deferred/AsyncDeferredQueries.xml">
 ]>
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
@@ -3824,11 +3824,6 @@
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/index-leftouterjoin">
-        <compilation-unit name="probe-pidx-with-join-invidx-sidx1">
-          <output-dir compare="Text">probe-pidx-with-join-invidx-sidx1</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="open-index-enforced/index-leftouterjoin">
         <compilation-unit name="probe-pidx-with-join-invidx-sidx2">
           <output-dir compare="Text">probe-pidx-with-join-invidx-sidx2</output-dir>
         </compilation-unit>
@@ -4040,11 +4035,6 @@
         </compilation-unit>
       </test-case>
       <test-case FilePath="nested-open-index/index-leftouterjoin">
-        <compilation-unit name="probe-pidx-with-join-invidx-sidx1">
-          <output-dir compare="Text">probe-pidx-with-join-invidx-sidx1</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-open-index/index-leftouterjoin">
         <compilation-unit name="probe-pidx-with-join-invidx-sidx2">
           <output-dir compare="Text">probe-pidx-with-join-invidx-sidx2</output-dir>
         </compilation-unit>
@@ -4097,7 +4087,7 @@
         </compilation-unit>
       </test-case>
       <test-case FilePath="nested-open-index/index-selection">
-        <compilation-unit name="inverted-index-ngram-edit-distance-work-tokens">
+        <compilation-unit name="inverted-index-ngram-edit-distance-word-tokens">
           <output-dir compare="Text">inverted-index-ngram-edit-distance-word-tokens</output-dir>
         </compilation-unit>
       </test-case>
@@ -5462,7 +5452,7 @@
             </compilation-unit>
         </test-case> -->
   </test-group>
-  &RecordsQueries;
+  &ObjectsQueries;
   <test-group name="resolution">
     <test-case FilePath="resolution">
       <compilation-unit name="conflict-field-dataset">
@@ -5628,6 +5618,17 @@
     <test-case FilePath="select-star">
       <compilation-unit name="no_star">
         <output-dir compare="Text">no_star</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="var_star">
+        <output-dir compare="Text">var_star</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="var_star_2">
+        <output-dir compare="Text">var_star</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -5969,43 +5970,28 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="end-with1">
-        <output-dir compare="Text">end-with1</output-dir>
+      <compilation-unit name="ends-with1">
+        <output-dir compare="Text">ends-with1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="end-with2">
-        <output-dir compare="Text">end-with2</output-dir>
+      <compilation-unit name="ends-with2">
+        <output-dir compare="Text">ends-with2</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="end-with3">
-        <output-dir compare="Text">end-with3</output-dir>
+      <compilation-unit name="ends-with3">
+        <output-dir compare="Text">ends-with3</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="end-with4">
-        <output-dir compare="Text">end-with4</output-dir>
+      <compilation-unit name="ends-with4">
+        <output-dir compare="Text">ends-with4</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="end-with5">
-        <output-dir compare="Text">end-with5</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="ends-with_01">
-        <output-dir compare="Text">ends-with_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="endwith02">
-        <output-dir compare="Text">endwith02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="endwith03">
-        <output-dir compare="Text">endwith03</output-dir>
+      <compilation-unit name="ends-with5">
+        <output-dir compare="Text">ends-with5</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
@@ -6205,47 +6191,30 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="start-with1">
-        <output-dir compare="Text">start-with1</output-dir>
+      <compilation-unit name="starts-with1">
+        <output-dir compare="Text">starts-with1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="start-with2">
-        <output-dir compare="Text">start-with2</output-dir>
+      <compilation-unit name="starts-with2">
+        <output-dir compare="Text">starts-with2</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="start-with3">
-        <output-dir compare="Text">start-with3</output-dir>
+      <compilation-unit name="starts-with3">
+        <output-dir compare="Text">starts-with3</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="start-with4">
-        <output-dir compare="Text">start-with4</output-dir>
+      <compilation-unit name="starts-with4">
+        <output-dir compare="Text">starts-with4</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
-      <compilation-unit name="start-with5">
-        <output-dir compare="Text">start-with5</output-dir>
+      <compilation-unit name="starts-with5">
+        <output-dir compare="Text">starts-with5</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="starts-with_01">
-        <output-dir compare="Text">starts-with_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="startwith02">
-        <output-dir compare="Text">startwith02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <!--
-        <test-case FilePath="string">
-          <compilation-unit name="startwith03">
-            <output-dir compare="Text">startwith03</output-dir>
-          </compilation-unit>
-        </test-case>
-        -->
     <test-case FilePath="string">
       <compilation-unit name="strconcat01">
         <output-dir compare="Text">strconcat01</output-dir>
@@ -8489,8 +8458,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
-      <compilation-unit name="upsert-feed">
-        <output-dir compare="Text">upsert-feed</output-dir>
+      <compilation-unit name="insert-feed">
+        <output-dir compare="Text">insert-feed</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
@@ -8599,8 +8568,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
-      <compilation-unit name="upsert-feed">
-        <output-dir compare="Text">upsert-feed</output-dir>
+      <compilation-unit name="insert-feed">
+        <output-dir compare="Text">insert-feed</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="feeds">
@@ -8754,8 +8723,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="temporal">
-      <compilation-unit name="agg_01">
-        <output-dir compare="Text">agg_01</output-dir>
+      <compilation-unit name="agg_min">
+        <output-dir compare="Text">agg_min</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="agg_max">
+        <output-dir compare="Text">agg_max</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="temporal">
@@ -9351,7 +9325,7 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="filters">
-      <compilation-unit name="nested-filterequality-predicate">
+      <compilation-unit name="nested-filter-equality-predicate">
         <output-dir compare="Text">nested-filter-equality-predicate</output-dir>
       </compilation-unit>
     </test-case>

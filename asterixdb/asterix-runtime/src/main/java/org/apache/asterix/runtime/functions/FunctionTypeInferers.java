@@ -27,6 +27,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -275,6 +276,25 @@ public final class FunctionTypeInferers {
                 type1 = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
             }
             fd.setImmutableStates(outType, type0, type1);
+        }
+    }
+
+    public static final class RecordConcatTypeInferer implements IFunctionTypeInferer {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
+            AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
+            List<Mutable<ILogicalExpression>> args = f.getArguments();
+            int n = args.size();
+            ARecordType[] argRecordTypes = new ARecordType[n];
+            for (int i = 0; i < n; i++) {
+                IAType argType = (IAType) context.getType(args.get(i).getValue());
+                IAType t = TypeComputeUtils.getActualType(argType);
+                if (t.getTypeTag() == ATypeTag.OBJECT) {
+                    argRecordTypes[i] = (ARecordType) t;
+                }
+            }
+            fd.setImmutableStates((Object[]) argRecordTypes);
         }
     }
 }

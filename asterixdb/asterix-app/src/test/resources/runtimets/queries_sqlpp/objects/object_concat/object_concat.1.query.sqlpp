@@ -16,25 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description     : Test creating an index with the same keys as primary keys in same order
- * Expected Result : Success
- * Date            : Aug 3 2017
- */
 
-drop  dataverse test if exists;
-create  dataverse test;
-
-use test;
-
-
-create type test.testType as
-{
-  id : integer,
-  `value` : string
-}
-
-create  dataset testDS(testType) primary key id, `value`;
-
-create  index testIdx  on testDS (id, `value`);
-
+SELECT VALUE
+[
+  is_null(object_concat()),
+  is_null(object_concat(null)),
+  is_missing(object_concat(missing)),
+  is_null(object_concat({"a":1}, null)),
+  is_missing(object_concat({"a":1}, null, missing)),
+  is_null(object_concat({"a":1}, 1)),
+  is_null(object_concat({"a":1}, [])),
+  object_concat({"a":1, "b":"x"}),
+  object_concat({"a":1, "b":"x" }, {"c":true, "d":false}, {"e":null} ),
+  object_concat({"a":1, "b":"x", "c":true }, {"a":2, "b":"y" }, {"b":null}),
+  object_concat({"a":1, "b": { "x":2, "y":3 } }, {"a":10, "b": { "x":4, "y":5 } }, {"a":100})
+]

@@ -29,6 +29,6 @@ select element result
 from  TweetMessages as r,
       TinySocial.`get-object-fields`(r) as f
 with  result as TinySocial.`get-object-field-value`(r,f.`field-name`)
-where (f.`field-type` = 'STRING')
+where (f.`field-type` = 'string')
 order by result
 ;

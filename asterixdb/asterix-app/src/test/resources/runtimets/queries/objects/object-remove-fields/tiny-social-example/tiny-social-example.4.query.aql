@@ -25,5 +25,5 @@ use dataverse TinySocial;
 
 for $r in dataset TweetMessages
 let $result := object-remove-fields($r, ["sender-location", ["user", "screen-name"]])
-order by $result
+order by $r.tweetid
 return $result

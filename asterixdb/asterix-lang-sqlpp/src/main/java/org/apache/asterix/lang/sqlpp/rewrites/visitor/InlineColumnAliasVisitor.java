@@ -130,9 +130,12 @@ public class InlineColumnAliasVisitor extends AbstractSqlppExpressionScopingVisi
     private Map<Expression, Expression> mapProjections(List<Projection> projections) {
         Map<Expression, Expression> exprMap = new HashMap<>();
         for (Projection projection : projections) {
-            exprMap.put(
-                    new VariableExpr(new VarIdentifier(SqlppVariableUtil.toInternalVariableName(projection.getName()))),
-                    projection.getExpression());
+            if (!projection.star() && !projection.varStar()) {
+                exprMap.put(
+                        new VariableExpr(
+                                new VarIdentifier(SqlppVariableUtil.toInternalVariableName(projection.getName()))),
+                        projection.getExpression());
+            }
         }
         return exprMap;
     }

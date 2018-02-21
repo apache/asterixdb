@@ -2182,15 +2182,12 @@ RecordConstructor RecordConstructor() throws ParseException:
 
 FieldBinding FieldBinding() throws ParseException:
 {
-    FieldBinding fb = new FieldBinding();
     Expression left, right;
 }
 {
     left = Expression() <COLON> right = Expression()
     {
-      fb.setLeftExpr(left);
-      fb.setRightExpr(right);
-      return fb;
+      return new FieldBinding(left, right);
     }
 }
 

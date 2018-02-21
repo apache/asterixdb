@@ -20,7 +20,7 @@ RecordConstructor [
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [TweetMessagesAlternate]
+    LiteralExpr [STRING] [TinySocial.TweetMessagesAlternate]
   ]
   AS Variable [ Name=$r ]
 ,

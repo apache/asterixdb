@@ -118,7 +118,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
 
     @Override
     public Boolean visit(Projection projection, List<FunctionDecl> funcs) throws CompilationException {
-        if (projection.star() == true) {
+        if (projection.star()) {
             return false;
         }
         Pair<Boolean, Expression> p = inlineUdfsInExpr(projection.getExpression(), funcs);

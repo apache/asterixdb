@@ -4,7 +4,7 @@ SELECT ELEMENT [
 Variable [ Name=$result ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [TweetMessages]
+    LiteralExpr [STRING] [TinySocial.TweetMessages]
   ]
   AS Variable [ Name=$r ]
 ,
@@ -29,7 +29,7 @@ Where
       Field=field-type
     ]
     =
-    LiteralExpr [STRING] [STRING]
+    LiteralExpr [STRING] [string]
   ]
 Orderby
   Variable [ Name=$result ]

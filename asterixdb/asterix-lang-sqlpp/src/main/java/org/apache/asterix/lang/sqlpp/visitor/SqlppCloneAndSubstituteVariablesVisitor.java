@@ -197,7 +197,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             return new Pair<>(projection, env);
         }
         Projection newProjection = new Projection((Expression) projection.getExpression().accept(this, env).first,
-                projection.getName(), projection.star(), projection.exprStar());
+                projection.getName(), projection.star(), projection.varStar());
         return new Pair<>(newProjection, env);
     }
 

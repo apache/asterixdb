@@ -6,7 +6,7 @@ FunctionCall TinySocial.get-object-fields@1[
 ]
 ]
 FROM [  FunctionCall asterix.dataset@1[
-    LiteralExpr [STRING] [FacebookUsersAlternate]
+    LiteralExpr [STRING] [TinySocial.FacebookUsersAlternate]
   ]
   AS Variable [ Name=$user ]
 ]

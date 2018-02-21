@@ -18,9 +18,14 @@
             </compilation-unit>
         </test-case>
         <test-case FilePath="temporal">
-            <compilation-unit name="agg_01">
-                <output-dir compare="Text">agg_01</output-dir>
+            <compilation-unit name="agg_min">
+                <output-dir compare="Text">agg_min</output-dir>
             </compilation-unit>
+        </test-case>
+        <test-case FilePath="temporal">
+          <compilation-unit name="agg_max">
+            <output-dir compare="Text">agg_max</output-dir>
+          </compilation-unit>
         </test-case>
         <test-case FilePath="temporal">
             <compilation-unit name="overlap_bins_gby_1">

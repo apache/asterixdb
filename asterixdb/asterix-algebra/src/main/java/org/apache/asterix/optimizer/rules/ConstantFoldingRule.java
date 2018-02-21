@@ -40,7 +40,6 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionExtensionManager;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -87,12 +86,12 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
     // Function Identifier sets that the ConstantFolding rule should skip to apply.
     // Most of them are record-related functions.
-    private static final ImmutableSet<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED =
-            ImmutableSet.of(BuiltinFunctions.RECORD_MERGE, BuiltinFunctions.ADD_FIELDS, BuiltinFunctions.REMOVE_FIELDS,
-                    BuiltinFunctions.GET_RECORD_FIELDS, BuiltinFunctions.GET_RECORD_FIELD_VALUE,
-                    BuiltinFunctions.FIELD_ACCESS_NESTED, BuiltinFunctions.GET_ITEM,
-                    BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR, BuiltinFunctions.FIELD_ACCESS_BY_INDEX,
-                    BuiltinFunctions.CAST_TYPE, BuiltinFunctions.META, BuiltinFunctions.META_KEY);
+    private static final ImmutableSet<FunctionIdentifier> FUNC_ID_SET_THAT_SHOULD_NOT_BE_APPLIED = ImmutableSet.of(
+            BuiltinFunctions.RECORD_MERGE, BuiltinFunctions.ADD_FIELDS, BuiltinFunctions.REMOVE_FIELDS,
+            BuiltinFunctions.GET_RECORD_FIELDS, BuiltinFunctions.GET_RECORD_FIELD_VALUE,
+            BuiltinFunctions.FIELD_ACCESS_NESTED, BuiltinFunctions.GET_ITEM, BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
+            BuiltinFunctions.FIELD_ACCESS_BY_INDEX, BuiltinFunctions.CAST_TYPE, BuiltinFunctions.META,
+            BuiltinFunctions.META_KEY, BuiltinFunctions.RECORD_CONCAT, BuiltinFunctions.RECORD_CONCAT_STRICT);
 
     /** Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method. */
     private static final IVariableTypeEnvironment _emptyTypeEnv = new IVariableTypeEnvironment() {

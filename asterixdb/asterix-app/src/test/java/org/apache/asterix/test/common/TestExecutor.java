@@ -1514,6 +1514,10 @@ public class TestExecutor {
                     "Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
             Map<String, Object> variableCtx = new HashMap<>();
             List<TestFileContext> testFileCtxs = testCaseCtx.getTestFiles(cUnit);
+            if (testFileCtxs.isEmpty()) {
+                Assert.fail("No test files found for test: " + testCaseCtx.getTestCase().getFilePath() + "/"
+                        + cUnit.getName());
+            }
             List<TestFileContext> expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
             int[] savedQueryCounts = new int[numOfFiles + testFileCtxs.size()];
             for (ListIterator<TestFileContext> iter = testFileCtxs.listIterator(); iter.hasNext();) {
