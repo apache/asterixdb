@@ -39,7 +39,7 @@ public class InvokeUtil {
      * Executes the passed interruptible, retrying if the operation is interrupted. Once the interruptible
      * completes, the current thread will be re-interrupted, if the original operation was interrupted.
      */
-    public static void doUninterruptibly(Interruptible interruptible) {
+    public static void doUninterruptibly(InterruptibleAction interruptible) {
         boolean interrupted = false;
         try {
             while (true) {
@@ -58,10 +58,10 @@ public class InvokeUtil {
     }
 
     /**
-     * Executes the passed interruptible, retrying if the operation is interrupted. Once the interruptible
+     * Executes the passed action, retrying if the operation is interrupted. Once the interruptible
      * completes, the current thread will be re-interrupted, if the original operation was interrupted.
      */
-    public static void doExUninterruptibly(ThrowingInterruptible interruptible) throws Exception {
+    public static void doExUninterruptibly(ThrowingAction interruptible) throws Exception {
         boolean interrupted = false;
         try {
             while (true) {
@@ -84,7 +84,7 @@ public class InvokeUtil {
      *
      * @return true if the original operation was interrupted, otherwise false
      */
-    public static boolean doUninterruptiblyGet(Interruptible interruptible) {
+    public static boolean doUninterruptiblyGet(InterruptibleAction interruptible) {
         boolean interrupted = false;
         while (true) {
             try {
@@ -103,12 +103,12 @@ public class InvokeUtil {
      *
      * @return true if the original operation was interrupted, otherwise false
      */
-    public static boolean doExUninterruptiblyGet(ThrowingInterruptible interruptible) throws Exception {
+    public static boolean doExUninterruptiblyGet(Callable<Void> interruptible) throws Exception {
         boolean interrupted = false;
         boolean success = false;
         while (true) {
             try {
-                interruptible.run();
+                interruptible.call();
                 success = true;
                 break;
             } catch (InterruptedException e) { // NOSONAR- contract states caller must handle
@@ -154,7 +154,7 @@ public class InvokeUtil {
      * {@link InterruptedException}. Once the interruptible completes, the current thread will be re-interrupted, if
      * the original operation was interrupted.
      */
-    public static void doIoUninterruptibly(ThrowingIOInterruptible interruptible) throws IOException {
+    public static void doIoUninterruptibly(IOInterruptibleAction interruptible) throws IOException {
         boolean interrupted = false;
         try {
             while (true) {
@@ -175,8 +175,7 @@ public class InvokeUtil {
     }
 
     @SuppressWarnings({ "squid:S1181", "squid:S1193" }) // catching Throwable, instanceof of exception
-    public static void tryWithCleanups(ThrowingInterruptible action, ThrowingInterruptible... cleanups)
-            throws Exception {
+    public static void tryWithCleanups(ThrowingAction action, ThrowingAction... cleanups) throws Exception {
         Throwable savedT = null;
         boolean suppressedInterrupted = false;
         try {
@@ -184,7 +183,7 @@ public class InvokeUtil {
         } catch (Throwable t) {
             savedT = t;
         } finally {
-            for (ThrowingInterruptible cleanup : cleanups) {
+            for (ThrowingAction cleanup : cleanups) {
                 try {
                     cleanup.run();
                 } catch (Throwable t) {
@@ -212,18 +211,39 @@ public class InvokeUtil {
         }
     }
 
+    /**
+     * Runs the supplied action, after suspending any pending interruption.  An error will be logged if
+     * the action is itself interrupted.
+     */
+    public static void runUninterruptible(ThrowingAction action) throws Exception {
+        boolean interrupted = Thread.interrupted();
+        try {
+            action.run();
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+        } catch (InterruptedException e) {
+            LOGGER.error("uninterruptible action {} was interrupted!", action, e);
+            interrupted = true;
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
     @FunctionalInterface
-    public interface Interruptible {
+    public interface InterruptibleAction {
         void run() throws InterruptedException;
     }
 
     @FunctionalInterface
-    public interface ThrowingInterruptible {
+    public interface ThrowingAction {
         void run() throws Exception; // NOSONAR
     }
 
     @FunctionalInterface
-    public interface ThrowingIOInterruptible {
+    public interface IOInterruptibleAction {
         void run() throws IOException, InterruptedException;
     }
 }
