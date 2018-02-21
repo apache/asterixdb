@@ -48,6 +48,7 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.AbortCCJobsFunction;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
+import org.apache.hyracks.util.annotations.Idempotent;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -129,11 +130,15 @@ public class NodeManager implements INodeManager {
     }
 
     @Override
+    @Idempotent
     public void removeNode(String nodeId) throws HyracksException {
         NodeControllerState ncState = nodeRegistry.remove(nodeId);
-        removeNodeFromIpAddressMap(nodeId, ncState);
-
-        // Updates the cluster capacity.
+        if (ncState == null) {
+            LOGGER.warn("request to remove unknown node {}; ignoring", nodeId);
+        } else {
+            removeNodeFromIpAddressMap(nodeId, ncState);
+        }
+        // Updates the cluster capacity (idempotent)
         resourceManager.update(nodeId, new NodeCapacity(0L, 0));
     }
 

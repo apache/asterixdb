@@ -29,6 +29,7 @@ import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.util.annotations.Idempotent;
 
 /**
  * This interface provides abstractions for a node manager, which manages the node membership in a cluster.
@@ -102,13 +103,14 @@ public interface INodeManager {
     void addNode(String nodeId, NodeControllerState ncState) throws HyracksException;
 
     /**
-     * Removes one node from the cluster.
+     * Removes one node from the cluster.  This method is idempotent.
      *
      * @param nodeId,
      *            the node id.
      * @throws HyracksException
      *             when the IP address given in the node state is not valid
      */
+    @Idempotent
     void removeNode(String nodeId) throws HyracksException;
 
 }
