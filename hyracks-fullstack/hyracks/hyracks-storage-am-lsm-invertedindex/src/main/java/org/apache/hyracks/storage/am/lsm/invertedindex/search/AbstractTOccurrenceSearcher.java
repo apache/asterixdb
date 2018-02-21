@@ -239,8 +239,11 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
     private void resetResultSource() throws HyracksDataException {
         if (isSingleInvertedList) {
             isSingleInvertedList = false;
-            singleInvListCursor.unloadPages();
-            singleInvListCursor.close();
+            try {
+                singleInvListCursor.unloadPages();
+            } finally {
+                singleInvListCursor.close();
+            }
             singleInvListCursor = null;
         } else {
             finalSearchResult.resetBuffer();
@@ -253,9 +256,12 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         ((BufferManagerBackedVSizeFrame) queryTokenFrame).destroy();
 
         // Releases the frames of the cursor.
-        if (isSingleInvertedList && singleInvListCursor != null) {
-            singleInvListCursor.unloadPages();
-            singleInvListCursor.close();
+        if (singleInvListCursor != null) {
+            try {
+                singleInvListCursor.unloadPages();
+            } finally {
+                singleInvListCursor.close();
+            }
         }
         // Releases the frame of the final search result.
         finalSearchResult.close();

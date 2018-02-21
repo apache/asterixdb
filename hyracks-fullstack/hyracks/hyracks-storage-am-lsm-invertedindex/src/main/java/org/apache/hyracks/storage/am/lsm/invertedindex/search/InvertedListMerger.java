@@ -126,41 +126,48 @@ public class InvertedListMerger {
                 isFinalList = true;
             }
             InvertedListCursor invListCursor = invListCursors.get(i);
-            // Loads the inverted list (at least some part of it).
-            invListCursor.prepareLoadPages();
-            invListCursor.loadPages();
-            if (i < numPrefixLists) {
-                // Merges a prefix list.
-                doneMerge = mergePrefixList(invListCursor, prevSearchResult, result, isFinalList);
-            } else {
-                // Merge suffix list.
-                int numInvListElements = invListCursor.size();
-                int currentNumResults = prevSearchResult.getNumResults();
-                // Should we binary search the next list or should we sort-merge it?
-                if (currentNumResults * Math.log(numInvListElements) < currentNumResults + numInvListElements) {
-                    doneMerge = mergeSuffixListProbe(invListCursor, prevSearchResult, result, i, numInvLists,
-                            occurrenceThreshold, isFinalList);
+            // Track whether an exception is occurred.
+            boolean finishedTryBlock = false;
+            try {
+                // Loads the inverted list (at least some part of it).
+                invListCursor.prepareLoadPages();
+                invListCursor.loadPages();
+                if (i < numPrefixLists) {
+                    // Merges a prefix list.
+                    doneMerge = mergePrefixList(invListCursor, prevSearchResult, result, isFinalList);
                 } else {
-                    doneMerge = mergeSuffixListScan(invListCursor, prevSearchResult, result, i, numInvLists,
-                            occurrenceThreshold, isFinalList);
+                    // Merge suffix list.
+                    int numInvListElements = invListCursor.size();
+                    int currentNumResults = prevSearchResult.getNumResults();
+                    // Should we binary search the next list or should we sort-merge it?
+                    if (currentNumResults * Math.log(numInvListElements) < currentNumResults + numInvListElements) {
+                        doneMerge = mergeSuffixListProbe(invListCursor, prevSearchResult, result, i, numInvLists,
+                                occurrenceThreshold, isFinalList);
+                    } else {
+                        doneMerge = mergeSuffixListScan(invListCursor, prevSearchResult, result, i, numInvLists,
+                                occurrenceThreshold, isFinalList);
+                    }
+                }
+                finishedTryBlock = true;
+            } finally {
+                // An intermediate inverted list should always be closed.
+                // The final inverted list should be closed only when traversing the list is done.
+                // If an exception was occurred, just close the cursor.
+                if (!isFinalList || (isFinalList && doneMerge) || !finishedTryBlock) {
+                    try {
+                        invListCursor.unloadPages();
+                    } finally {
+                        invListCursor.close();
+                    }
                 }
             }
 
-            if (isFinalList) {
-                // For the final list, the method unloadPages() should be called only when traversing
-                // the inverted list is finished.
-                if (doneMerge) {
-                    invListCursor.unloadPages();
-                    invListCursor.close();
-                }
-                // Needs to return the calculation result for the final list only.
-                // Otherwise, the process needs to be continued until this method traverses the final inverted list
-                // and either generates some output in the output buffer or finishes traversing it.
+            // Needs to return the calculation result for the final list only.
+            // Otherwise, the process needs to be continued until this method traverses the final inverted list
+            // and either generates some output in the output buffer or finishes traversing it.
+            if (isFinalList && doneMerge) {
                 return doneMerge;
             }
-
-            invListCursor.unloadPages();
-            invListCursor.close();
         }
 
         // Control does not reach here.
@@ -195,8 +202,11 @@ public class InvertedListMerger {
 
         if (doneMerge) {
             // Final calculation is done.
-            finalInvListCursor.unloadPages();
-            finalInvListCursor.close();
+            try {
+                finalInvListCursor.unloadPages();
+            } finally {
+                finalInvListCursor.close();
+            }
         }
 
         return doneMerge;
@@ -553,8 +563,14 @@ public class InvertedListMerger {
      * Cleans every stuff.
      */
     public void close() throws HyracksDataException {
-        prevSearchResult.close();
-        newSearchResult.close();
+        try {
+            prevSearchResult.close();
+            newSearchResult.close();
+        } finally {
+            if (finalInvListCursor != null) {
+                finalInvListCursor.close();
+            }
+        }
     }
 
     // Resets the variables.

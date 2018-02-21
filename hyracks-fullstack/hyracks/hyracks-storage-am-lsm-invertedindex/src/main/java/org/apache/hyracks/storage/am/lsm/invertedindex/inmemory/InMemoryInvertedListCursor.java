@@ -172,6 +172,7 @@ public class InMemoryInvertedListCursor extends InvertedListCursor {
         btreePred.setHighKey(btreeSearchTuple, true);
         try {
             btreeAccessor.search(btreeCursor, btreePred);
+            cursorNeedsClose = true;
         } catch (Exception e) {
             btreeSearchTuple.removeLastTuple();
             throw HyracksDataException.create(e);

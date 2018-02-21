@@ -87,8 +87,11 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
             return true;
         }
         // The current inverted-list-range-search cursor is exhausted.
-        invListRangeSearchCursor.unloadPages();
-        invListRangeSearchCursor.close();
+        try {
+            invListRangeSearchCursor.unloadPages();
+        } finally {
+            invListRangeSearchCursor.close();
+        }
         isInvListCursorOpen = false;
         openInvListRangeSearchCursor();
         return isInvListCursorOpen;
@@ -105,22 +108,34 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
 
     @Override
     public void doDestroy() throws HyracksDataException {
-        if (isInvListCursorOpen) {
-            invListRangeSearchCursor.unloadPages();
-            invListRangeSearchCursor.destroy();
-            isInvListCursorOpen = false;
+        try {
+            if (isInvListCursorOpen) {
+                try {
+                    invListRangeSearchCursor.unloadPages();
+                } finally {
+                    isInvListCursorOpen = false;
+                    invListRangeSearchCursor.destroy();
+                }
+            }
+        } finally {
+            btreeCursor.destroy();
         }
-        btreeCursor.destroy();
     }
 
     @Override
     public void doClose() throws HyracksDataException {
-        if (isInvListCursorOpen) {
-            invListRangeSearchCursor.unloadPages();
-            invListRangeSearchCursor.close();
-            isInvListCursorOpen = false;
+        try {
+            if (isInvListCursorOpen) {
+                try {
+                    invListRangeSearchCursor.unloadPages();
+                } finally {
+                    invListRangeSearchCursor.close();
+                }
+                isInvListCursorOpen = false;
+            }
+        } finally {
+            btreeCursor.close();
         }
-        btreeCursor.close();
     }
 
     @Override
