@@ -86,14 +86,16 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             throws HyracksDataException {
         if (opType == LSMOperationType.MODIFICATION || opType == LSMOperationType.FORCE_MODIFICATION) {
             decrementNumActiveOperations(modificationCallback);
-            if (numActiveOperations.get() == 0) {
-                flushIfRequested();
-            } else if (numActiveOperations.get() < 0) {
-                throw new HyracksDataException("The number of active operations cannot be negative!");
-            }
+            flushIfNeeded();
         } else if (opType == LSMOperationType.FLUSH || opType == LSMOperationType.MERGE
                 || opType == LSMOperationType.REPLICATE) {
             dsInfo.undeclareActiveIOOperation();
+        }
+    }
+
+    public synchronized void flushIfNeeded() throws HyracksDataException {
+        if (numActiveOperations.get() == 0) {
+            flushIfRequested();
         }
     }
 
@@ -177,6 +179,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed.
         if (modificationCallback != NoOpOperationCallback.INSTANCE) {
             numActiveOperations.decrementAndGet();
+            if (numActiveOperations.get() < 0) {
+                throw new IllegalStateException("The number of active operations cannot be negative!");
+            }
             ((AbstractOperationCallback) modificationCallback).afterOperation();
         }
     }
