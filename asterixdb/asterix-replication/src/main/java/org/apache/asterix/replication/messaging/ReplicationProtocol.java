@@ -72,7 +72,7 @@ public class ReplicationProtocol {
         final ByteBuffer buf = ensureSize(dataBuffer, requestSize);
         // read request
         NetworkingUtil.readBytes(socketChannel, buf, requestSize);
-        return dataBuffer;
+        return buf;
     }
 
     public static ReplicationRequestType getRequestType(SocketChannel socketChannel, ByteBuffer byteBuffer)
@@ -135,6 +135,7 @@ public class ReplicationProtocol {
             requestBuffer.put(outputStream.getByteArray(), 0, outputStream.getLength());
             requestBuffer.flip();
             NetworkingUtil.transferBufferToChannel(channel, requestBuffer);
+            channel.socket().getOutputStream().flush();
         } catch (IOException e) {
             throw new ReplicationException(e);
         }
@@ -148,9 +149,9 @@ public class ReplicationProtocol {
     public static IReplicationMessage readMessage(ReplicationRequestType type, SocketChannel socketChannel,
             ByteBuffer buffer) {
         try {
-            ReplicationProtocol.readRequest(socketChannel, buffer);
+            final ByteBuffer requestBuf = ReplicationProtocol.readRequest(socketChannel, buffer);
             final ByteArrayInputStream input =
-                    new ByteArrayInputStream(buffer.array(), buffer.position(), buffer.limit());
+                    new ByteArrayInputStream(requestBuf.array(), requestBuf.position(), requestBuf.limit());
             try (DataInputStream dis = new DataInputStream(input)) {
                 switch (type) {
                     case PARTITION_RESOURCES_REQUEST:

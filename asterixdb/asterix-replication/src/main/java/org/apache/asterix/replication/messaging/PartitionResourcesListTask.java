@@ -26,9 +26,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.replication.api.IReplicationWorker;
+import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.replication.api.IReplicaTask;
+import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -48,8 +49,10 @@ public class PartitionResourcesListTask implements IReplicaTask {
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         localResourceRepository.cleanup(partition);
-        final List<String> partitionResources = localResourceRepository.getPartitionIndexesFiles(partition).stream()
-                .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toList());
+        final IReplicationStrategy replicationStrategy = appCtx.getReplicationManager().getReplicationStrategy();
+        final List<String> partitionResources =
+                localResourceRepository.getPartitionReplicatedFiles(partition, replicationStrategy).stream()
+                        .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toList());
         final PartitionResourcesListResponse response =
                 new PartitionResourcesListResponse(partition, partitionResources);
         ReplicationProtocol.sendTo(worker.getChannel(), response, worker.getReusableBuffer());

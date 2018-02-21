@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.replication.messaging.PartitionResourcesListResponse;
@@ -52,8 +53,10 @@ public class ReplicaFilesSynchronizer {
         final Set<String> replicaFiles = getReplicaFiles(partition);
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
-        final Set<String> masterFiles = localResourceRepository.getPartitionIndexesFiles(partition).stream()
-                .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toSet());
+        final IReplicationStrategy replicationStrategy = appCtx.getReplicationManager().getReplicationStrategy();
+        final Set<String> masterFiles =
+                localResourceRepository.getPartitionReplicatedFiles(partition, replicationStrategy).stream()
+                        .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toSet());
         // find files on master and not on replica
         final List<String> replicaMissingFiles =
                 masterFiles.stream().filter(file -> !replicaFiles.contains(file)).collect(Collectors.toList());
