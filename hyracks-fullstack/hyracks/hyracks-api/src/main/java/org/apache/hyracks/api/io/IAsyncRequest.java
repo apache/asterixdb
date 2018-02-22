@@ -18,10 +18,9 @@
  */
 package org.apache.hyracks.api.io;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+@FunctionalInterface
+public interface IAsyncRequest {
 
-public interface IIOFuture {
-    public int synchronize() throws HyracksDataException, InterruptedException;
+    void await() throws InterruptedException;
 
-    public boolean isComplete();
 }

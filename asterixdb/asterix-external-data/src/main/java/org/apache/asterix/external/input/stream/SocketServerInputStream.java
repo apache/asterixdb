@@ -25,7 +25,7 @@ import java.net.Socket;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -103,11 +103,11 @@ public class SocketServerInputStream extends AsterixInputStream {
 
     @Override
     public synchronized void close() throws IOException {
-        Throwable failure = ResourceReleaseUtils.close(connectionStream, null);
+        Throwable failure = CleanupUtils.close(connectionStream, null);
         connectionStream = null;
-        failure = ResourceReleaseUtils.close(socket, failure);
+        failure = CleanupUtils.close(socket, failure);
         socket = null;
-        failure = ResourceReleaseUtils.close(server, failure);
+        failure = CleanupUtils.close(server, failure);
         server = null;
         if (failure != null) {
             throw HyracksDataException.create(failure);

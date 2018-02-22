@@ -21,7 +21,6 @@ package org.apache.hyracks.test.support;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -110,7 +109,7 @@ public class TestStorageManagerComponentHolder {
             List<IODeviceHandle> devices = new ArrayList<>();
             devices.add(new IODeviceHandle(new File(System.getProperty("user.dir") + File.separator + "target"),
                     "iodev_test_wa"));
-            ioManager = new IOManager(devices, Executors.newCachedThreadPool(), new DefaultDeviceResolver());
+            ioManager = new IOManager(devices, new DefaultDeviceResolver());
         }
         return ioManager;
     }

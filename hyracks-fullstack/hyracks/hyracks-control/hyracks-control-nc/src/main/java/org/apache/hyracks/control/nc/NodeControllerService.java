@@ -63,6 +63,7 @@ import org.apache.hyracks.api.job.JobParameterByteStore;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.control.common.base.IClusterController;
 import org.apache.hyracks.control.common.config.ConfigManager;
@@ -218,21 +219,26 @@ public class NodeControllerService implements IControllerService {
         Thread.currentThread().setUncaughtExceptionHandler(getLifeCycleComponentManager());
         ioManager =
                 new IOManager(IODeviceHandle.getDevices(ncConfig.getIODevices()), application.getFileDeviceResolver());
-
-        workQueue = new WorkQueue(id, Thread.NORM_PRIORITY); // Reserves MAX_PRIORITY of the heartbeat thread.
-        jobletMap = new ConcurrentHashMap<>();
-        deployedJobSpecActivityClusterGraphMap = new Hashtable<>();
-        timer = new Timer(true);
-        serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER,
-                new File(new File(NodeControllerService.class.getName()), id));
-        memoryMXBean = ManagementFactory.getMemoryMXBean();
-        gcMXBeans = ManagementFactory.getGarbageCollectorMXBeans();
-        threadMXBean = ManagementFactory.getThreadMXBean();
-        runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-        osMXBean = ManagementFactory.getOperatingSystemMXBean();
-        getNodeControllerInfosAcceptor = new MutableObject<>();
-        memoryManager = new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
-        ioCounter = IOCounterFactory.INSTANCE.getIOCounter();
+        try {
+            workQueue = new WorkQueue(id, Thread.NORM_PRIORITY); // Reserves MAX_PRIORITY of the heartbeat thread.
+            jobletMap = new ConcurrentHashMap<>();
+            deployedJobSpecActivityClusterGraphMap = new Hashtable<>();
+            timer = new Timer(true);
+            serverCtx = new ServerContext(ServerContext.ServerType.NODE_CONTROLLER,
+                    new File(new File(NodeControllerService.class.getName()), id));
+            memoryMXBean = ManagementFactory.getMemoryMXBean();
+            gcMXBeans = ManagementFactory.getGarbageCollectorMXBeans();
+            threadMXBean = ManagementFactory.getThreadMXBean();
+            runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+            osMXBean = ManagementFactory.getOperatingSystemMXBean();
+            getNodeControllerInfosAcceptor = new MutableObject<>();
+            memoryManager =
+                    new MemoryManager((long) (memoryMXBean.getHeapMemoryUsage().getMax() * MEMORY_FUDGE_FACTOR));
+            ioCounter = IOCounterFactory.INSTANCE.getIOCounter();
+        } catch (Throwable th) { // NOSONAR will be re-thrown
+            CleanupUtils.close(ioManager, th);
+            throw th;
+        }
     }
 
     public IOManager getIoManager() {
@@ -271,7 +277,6 @@ public class NodeControllerService implements IControllerService {
     }
 
     private void init() throws Exception {
-        ioManager.setExecutor(executor);
         datasetPartitionManager = new DatasetPartitionManager(this, executor, ncConfig.getResultManagerMemory(),
                 ncConfig.getResultTTL(), ncConfig.getResultSweepThreshold());
         datasetNetworkManager = new DatasetNetworkManager(ncConfig.getResultListenAddress(),
@@ -526,7 +531,7 @@ public class NodeControllerService implements IControllerService {
                 });
             }
             ipc.stop();
-
+            ioManager.close();
             LOGGER.log(Level.INFO, "Stopped NodeControllerService");
         } else {
             LOGGER.log(Level.ERROR, "Duplicate shutdown call; original: " + Arrays.toString(shutdownCallStack),

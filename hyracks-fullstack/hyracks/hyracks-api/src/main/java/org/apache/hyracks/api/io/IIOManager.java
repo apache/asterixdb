@@ -18,13 +18,13 @@
  */
 package org.apache.hyracks.api.io;
 
+import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IIOManager {
+public interface IIOManager extends Closeable {
     public enum FileReadWriteMode {
         READ_ONLY,
         READ_WRITE
@@ -47,15 +47,15 @@ public interface IIOManager {
 
     public int syncRead(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
 
-    public IIOFuture asyncWrite(IFileHandle fHandle, long offset, ByteBuffer data);
+    IAsyncRequest asyncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
 
-    public IIOFuture asyncRead(IFileHandle fHandle, long offset, ByteBuffer data);
+    IAsyncRequest asyncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray) throws HyracksDataException;
+
+    IAsyncRequest asyncRead(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
 
     public void close(IFileHandle fHandle) throws HyracksDataException;
 
     public void sync(IFileHandle fileHandle, boolean metadata) throws HyracksDataException;
-
-    public void setExecutor(Executor executor);
 
     public long getSize(IFileHandle fileHandle);
 

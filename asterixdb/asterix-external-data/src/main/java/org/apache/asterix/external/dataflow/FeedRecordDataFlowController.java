@@ -32,9 +32,9 @@ import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -178,7 +178,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     }
 
     private Throwable finish(Throwable failure) {
-        Throwable th = ResourceReleaseUtils.close(recordReader, null);
+        Throwable th = CleanupUtils.close(recordReader, null);
         th = DataflowUtils.close(tupleForwarder, th);
         closeSignal();
         setState(State.STOPPED);

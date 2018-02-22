@@ -73,85 +73,66 @@ public class BTreeStatsTest extends AbstractBTreeTest {
 
     @Test
     public void test01() throws Exception {
-
         TestStorageManagerComponentHolder.init(PAGE_SIZE, NUM_PAGES, MAX_OPEN_FILES);
         IBufferCache bufferCache = harness.getBufferCache();
-
         // declare fields
         int fieldCount = 2;
         ITypeTraits[] typeTraits = new ITypeTraits[fieldCount];
         typeTraits[0] = IntegerPointable.TYPE_TRAITS;
         typeTraits[1] = IntegerPointable.TYPE_TRAITS;
-
         // declare keys
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = PointableBinaryComparatorFactory.of(IntegerPointable.FACTORY);
-
         BTreeTypeAwareTupleWriterFactory tupleWriterFactory = new BTreeTypeAwareTupleWriterFactory(typeTraits, false);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetadataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();
-
         IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) leafFrameFactory.createFrame();
         IBTreeInteriorFrame interiorFrame = (IBTreeInteriorFrame) interiorFrameFactory.createFrame();
         ITreeIndexMetadataFrame metaFrame = metaFrameFactory.createFrame();
-
         IMetadataPageManager freePageManager = new LinkedMetaDataPageManager(bufferCache, metaFrameFactory);
-
         BTree btree = new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
                 fieldCount, harness.getFileReference());
         btree.create();
         btree.activate();
-
         Random rnd = new Random();
         rnd.setSeed(50);
-
         long start = System.currentTimeMillis();
-
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("INSERTING INTO TREE");
         }
-
         IFrame frame = new VSizeFrame(ctx);
         FrameTupleAppender appender = new FrameTupleAppender();
         ArrayTupleBuilder tb = new ArrayTupleBuilder(fieldCount);
         DataOutput dos = tb.getDataOutput();
-
         ISerializerDeserializer[] recDescSers =
                 { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
         RecordDescriptor recDesc = new RecordDescriptor(recDescSers);
         IFrameTupleAccessor accessor = new FrameTupleAccessor(recDesc);
         accessor.reset(frame.getBuffer());
         FrameTupleReference tuple = new FrameTupleReference();
-
         IndexAccessParameters actx =
                 new IndexAccessParameters(TestOperationCallback.INSTANCE, TestOperationCallback.INSTANCE);
         ITreeIndexAccessor indexAccessor = btree.createAccessor(actx);
         // 10000
         for (int i = 0; i < 100000; i++) {
-
             int f0 = rnd.nextInt() % 100000;
             int f1 = 5;
-
             tb.reset();
             IntegerSerializerDeserializer.INSTANCE.serialize(f0, dos);
             tb.addFieldEndOffset();
             IntegerSerializerDeserializer.INSTANCE.serialize(f1, dos);
             tb.addFieldEndOffset();
-
             appender.reset(frame, true);
             appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
-
             tuple.reset(accessor, 0);
-
             if (LOGGER.isInfoEnabled()) {
                 if (i % 10000 == 0) {
                     long end = System.currentTimeMillis();
                     LOGGER.info("INSERTING " + i + " : " + f0 + " " + f1 + " " + (end - start));
                 }
             }
-
             try {
                 indexAccessor.insert(tuple);
             } catch (HyracksDataException e) {
@@ -161,18 +142,15 @@ public class BTreeStatsTest extends AbstractBTreeTest {
                 }
             }
         }
-
         TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, freePageManager,
                 harness.getFileReference(), btree.getRootPageId());
         TreeIndexStats stats = statsGatherer.gatherStats(leafFrame, interiorFrame, metaFrame);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("\n" + stats.toString());
         }
-
         TreeIndexBufferCacheWarmup bufferCacheWarmup =
                 new TreeIndexBufferCacheWarmup(bufferCache, freePageManager, harness.getFileReference());
         bufferCacheWarmup.warmup(leafFrame, metaFrame, new int[] { 1, 2 }, new int[] { 2, 5 });
-
         btree.deactivate();
         btree.destroy();
         bufferCache.close();

@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Executors;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.client.NodeControllerInfo;
@@ -40,6 +39,7 @@ import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.core.Appender;
@@ -49,8 +49,20 @@ import org.apache.logging.log4j.core.config.Configuration;
 
 public class TestUtils {
     public static IHyracksTaskContext create(int frameSize) {
+        IOManager ioManager = null;
         try {
-            IOManager ioManager = createIoManager();
+            ioManager = createIoManager();
+            return create(frameSize, ioManager);
+        } catch (Exception e) {
+            if (ioManager != null) {
+                CleanupUtils.close(ioManager, e);
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static IHyracksTaskContext create(int frameSize, IOManager ioManager) {
+        try {
             INCServiceContext serviceCtx = new TestNCServiceContext(ioManager, null);
             TestJobletContext jobletCtx = new TestJobletContext(frameSize, serviceCtx, new JobId(0));
             TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityId(new OperatorDescriptorId(0), 0), 0), 0);
@@ -64,7 +76,7 @@ public class TestUtils {
     private static IOManager createIoManager() throws HyracksException {
         List<IODeviceHandle> devices = new ArrayList<>();
         devices.add(new IODeviceHandle(new File(System.getProperty("java.io.tmpdir")), "."));
-        return new IOManager(devices, Executors.newCachedThreadPool(), new DefaultDeviceResolver());
+        return new IOManager(devices, new DefaultDeviceResolver());
     }
 
     public static void compareWithResult(File expectedFile, File actualFile) throws Exception {

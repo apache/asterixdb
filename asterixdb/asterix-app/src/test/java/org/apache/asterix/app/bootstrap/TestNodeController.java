@@ -429,7 +429,7 @@ public class TestNodeController {
 
     public IHyracksTaskContext createTestContext(JobId jobId, int partition, boolean withMessaging)
             throws HyracksDataException {
-        IHyracksTaskContext ctx = TestUtils.create(KB32);
+        IHyracksTaskContext ctx = TestUtils.create(KB32, ExecutionTestUtil.integrationUtil.ncs[0].getIoManager());
         if (withMessaging) {
             TaskUtil.put(HyracksConstants.KEY_MESSAGE, new VSizeFrame(ctx), ctx);
         }

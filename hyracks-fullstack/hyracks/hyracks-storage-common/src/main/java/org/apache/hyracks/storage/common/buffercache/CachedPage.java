@@ -23,19 +23,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
 /**
  * @author yingyib
  */
 public class CachedPage implements ICachedPageInternal {
-    public enum State {
-        INVALID,
-        READ_REQUESTED,
-        READ_FAILED,
-        VALID
-    }
-
     final int cpid;
     ByteBuffer buffer;
     public final AtomicInteger pinCount;
@@ -45,7 +36,7 @@ public class CachedPage implements ICachedPageInternal {
     private final IPageReplacementStrategy pageReplacementStrategy;
     volatile long dpid; // disk page id (composed of file id and page id)
     CachedPage next;
-    volatile State state;
+    volatile boolean valid;
     final AtomicBoolean confiscated;
     private IQueueInfo queueInfo;
     private int multiplier;
@@ -53,7 +44,6 @@ public class CachedPage implements ICachedPageInternal {
     // DEBUG
     private static final boolean DEBUG = false;
     private final StackTraceElement[] ctorStack;
-    Throwable readFailure;
 
     //Constructor for making dummy entry for FIFO queue
     public CachedPage() {
@@ -82,7 +72,7 @@ public class CachedPage implements ICachedPageInternal {
         latch = new ReentrantReadWriteLock(true);
         replacementStrategyObject = pageReplacementStrategy.createPerPageStrategyObject(cpid);
         dpid = -1;
-        state = State.INVALID;
+        valid = false;
         confiscated = new AtomicBoolean(false);
         queueInfo = null;
         ctorStack = DEBUG ? new Throwable().getStackTrace() : null;
@@ -91,7 +81,7 @@ public class CachedPage implements ICachedPageInternal {
     public void reset(long dpid) {
         this.dpid = dpid;
         dirty.set(false);
-        state = State.INVALID;
+        valid = false;
         confiscated.set(false);
         pageReplacementStrategy.notifyCachePageReset(this);
         queueInfo = null;
@@ -214,31 +204,5 @@ public class CachedPage implements ICachedPageInternal {
     @Override
     public boolean isLargePage() {
         return multiplier > 1;
-    }
-
-    /**
-     * Wait for the page requested to be read to complete the read operation
-     * This method is uninterrubtible
-     *
-     * @throws HyracksDataException
-     */
-    public synchronized void awaitRead() throws HyracksDataException {
-        boolean interrupted = false;
-        try {
-            while (state != State.VALID && state != State.READ_FAILED) {
-                try {
-                    wait();
-                } catch (InterruptedException e) {
-                    interrupted = true;
-                }
-            }
-            if (state == State.READ_FAILED) {
-                throw HyracksDataException.create(readFailure);
-            }
-        } finally {
-            if (interrupted) {
-                Thread.currentThread().interrupt();
-            }
-        }
     }
 }

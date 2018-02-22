@@ -30,42 +30,48 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.io.IFileHandle;
-import org.apache.hyracks.api.io.IIOFuture;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.control.nc.io.IoRequest.State;
 import org.apache.hyracks.util.file.FileUtil;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IOManager implements IIOManager {
     /*
      * Constants
      */
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final int IO_REQUEST_QUEUE_SIZE = 100; // TODO: Make configurable
     private static final String WORKSPACE_FILE_SUFFIX = ".waf";
     private static final FilenameFilter WORKSPACE_FILES_FILTER = (dir, name) -> name.endsWith(WORKSPACE_FILE_SUFFIX);
     /*
      * Finals
      */
+    private final ExecutorService executor;
+    private final BlockingQueue<IoRequest> submittedRequests;
+    private final BlockingQueue<IoRequest> freeRequests;
     private final List<IODeviceHandle> ioDevices;
     private final List<IODeviceHandle> workspaces;
     /*
      * Mutables
      */
-    private Executor executor;
     private int workspaceIndex;
     private IFileDeviceResolver deviceComputer;
-
-    public IOManager(List<IODeviceHandle> devices, Executor executor, IFileDeviceResolver deviceComputer)
-            throws HyracksDataException {
-        this(devices, deviceComputer);
-        this.executor = executor;
-    }
 
     public IOManager(List<IODeviceHandle> devices, IFileDeviceResolver deviceComputer) throws HyracksDataException {
         this.ioDevices = Collections.unmodifiableList(devices);
@@ -86,6 +92,21 @@ public class IOManager implements IIOManager {
         }
         workspaceIndex = 0;
         this.deviceComputer = deviceComputer;
+        submittedRequests = new ArrayBlockingQueue<>(IO_REQUEST_QUEUE_SIZE);
+        freeRequests = new ArrayBlockingQueue<>(IO_REQUEST_QUEUE_SIZE);
+        int numIoThreads = ioDevices.size() * 2;
+        executor = Executors.newFixedThreadPool(numIoThreads);
+        for (int i = 0; i < numIoThreads; i++) {
+            executor.execute(new IoRequestHandler(i, submittedRequests));
+        }
+    }
+
+    public IoRequest getOrAllocRequest() {
+        IoRequest request = freeRequests.poll();
+        if (request == null) {
+            request = new IoRequest(this, submittedRequests, freeRequests);
+        }
+        return request;
     }
 
     private void checkDeviceValidity(List<IODeviceHandle> devices) throws HyracksDataException {
@@ -103,11 +124,6 @@ public class IOManager implements IIOManager {
             }
 
         }
-    }
-
-    @Override
-    public void setExecutor(Executor executor) {
-        this.executor = executor;
     }
 
     @Override
@@ -129,6 +145,39 @@ public class IOManager implements IIOManager {
 
     @Override
     public int syncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+        IoRequest req = asyncWrite(fHandle, offset, data);
+        InvokeUtil.doUninterruptibly(req);
+        try {
+            if (req.getState() == State.OPERATION_SUCCEEDED) {
+                return req.getWrite();
+            } else if (req.getState() == State.OPERATION_FAILED) {
+                throw req.getFailure();
+            } else {
+                throw new IllegalStateException("Write request completed with state " + req.getState());
+            }
+        } finally {
+            req.recycle();
+        }
+    }
+
+    @Override
+    public long syncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray) throws HyracksDataException {
+        IoRequest req = asyncWrite(fHandle, offset, dataArray);
+        InvokeUtil.doUninterruptibly(req);
+        try {
+            if (req.getState() == State.OPERATION_SUCCEEDED) {
+                return req.getWrites();
+            } else if (req.getState() == State.OPERATION_FAILED) {
+                throw req.getFailure();
+            } else {
+                throw new IllegalStateException("Write request completed with state " + req.getState());
+            }
+        } finally {
+            req.recycle();
+        }
+    }
+
+    public int doSyncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
         try {
             if (fHandle == null) {
                 throw new IllegalStateException("Trying to write to a deleted file.");
@@ -152,8 +201,7 @@ public class IOManager implements IIOManager {
         }
     }
 
-    @Override
-    public long syncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray) throws HyracksDataException {
+    public long doSyncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray) throws HyracksDataException {
         try {
             if (fHandle == null) {
                 throw new IllegalStateException("Trying to write to a deleted file.");
@@ -197,6 +245,22 @@ public class IOManager implements IIOManager {
      */
     @Override
     public int syncRead(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+        IoRequest req = asyncRead(fHandle, offset, data);
+        InvokeUtil.doUninterruptibly(req);
+        try {
+            if (req.getState() == State.OPERATION_SUCCEEDED) {
+                return req.getRead();
+            } else if (req.getState() == State.OPERATION_FAILED) {
+                throw req.getFailure();
+            } else {
+                throw new IllegalStateException("Reqd request completed with state " + req.getState());
+            }
+        } finally {
+            req.recycle();
+        }
+    }
+
+    public int doSyncRead(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
         try {
             int n = 0;
             int remaining = data.remaining();
@@ -223,16 +287,38 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public IIOFuture asyncWrite(IFileHandle fHandle, long offset, ByteBuffer data) {
-        AsyncWriteRequest req = new AsyncWriteRequest((FileHandle) fHandle, offset, data);
-        executor.execute(req);
+    public IoRequest asyncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray) throws HyracksDataException {
+        IoRequest req = getOrAllocRequest();
+        try {
+            req.write(fHandle, offset, dataArray);
+        } catch (HyracksDataException e) {
+            req.recycle();
+            throw e;
+        }
         return req;
     }
 
     @Override
-    public IIOFuture asyncRead(IFileHandle fHandle, long offset, ByteBuffer data) {
-        AsyncReadRequest req = new AsyncReadRequest((FileHandle) fHandle, offset, data);
-        executor.execute(req);
+    public IoRequest asyncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+        IoRequest req = getOrAllocRequest();
+        try {
+            req.write(fHandle, offset, data);
+        } catch (HyracksDataException e) {
+            req.recycle();
+            throw e;
+        }
+        return req;
+    }
+
+    @Override
+    public IoRequest asyncRead(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+        IoRequest req = getOrAllocRequest();
+        try {
+            req.read(fHandle, offset, data);
+        } catch (HyracksDataException e) {
+            req.recycle();
+            throw e;
+        }
         return req;
     }
 
@@ -257,80 +343,6 @@ public class IOManager implements IIOManager {
             throw HyracksDataException.create(e);
         }
         return dev.createFileRef(waPath + File.separator + waf.getName());
-    }
-
-    private abstract class AsyncRequest implements IIOFuture, Runnable {
-        protected final FileHandle fHandle;
-        protected final long offset;
-        protected final ByteBuffer data;
-        private boolean complete;
-        private HyracksDataException exception;
-        private int result;
-
-        private AsyncRequest(FileHandle fHandle, long offset, ByteBuffer data) {
-            this.fHandle = fHandle;
-            this.offset = offset;
-            this.data = data;
-            complete = false;
-            exception = null;
-        }
-
-        @Override
-        public void run() {
-            HyracksDataException hde = null;
-            int res = -1;
-            try {
-                res = performOperation();
-            } catch (HyracksDataException e) {
-                hde = e;
-            }
-            synchronized (this) {
-                exception = hde;
-                result = res;
-                complete = true;
-                notifyAll();
-            }
-        }
-
-        protected abstract int performOperation() throws HyracksDataException;
-
-        @Override
-        public synchronized int synchronize() throws HyracksDataException, InterruptedException {
-            while (!complete) {
-                wait();
-            }
-            if (exception != null) {
-                throw exception;
-            }
-            return result;
-        }
-
-        @Override
-        public synchronized boolean isComplete() {
-            return complete;
-        }
-    }
-
-    private class AsyncReadRequest extends AsyncRequest {
-        private AsyncReadRequest(FileHandle fHandle, long offset, ByteBuffer data) {
-            super(fHandle, offset, data);
-        }
-
-        @Override
-        protected int performOperation() throws HyracksDataException {
-            return syncRead(fHandle, offset, data);
-        }
-    }
-
-    private class AsyncWriteRequest extends AsyncRequest {
-        private AsyncWriteRequest(FileHandle fHandle, long offset, ByteBuffer data) {
-            super(fHandle, offset, data);
-        }
-
-        @Override
-        protected int performOperation() throws HyracksDataException {
-            return syncWrite(fHandle, offset, data);
-        }
     }
 
     @Override
@@ -389,5 +401,19 @@ public class IOManager implements IIOManager {
             }
         }
         return null;
+    }
+
+    @Override
+    public void close() throws IOException {
+        InvokeUtil.doUninterruptibly(() -> submittedRequests.put(IoRequestHandler.POISON_PILL));
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                LOGGER.log(Level.WARN, "Failure shutting down {} executor service", getClass().getSimpleName());
+            }
+        } catch (InterruptedException e) {
+            LOGGER.log(Level.WARN, "Interrupted while shutting down {} executor service", getClass().getSimpleName());
+            Thread.currentThread().interrupt();
+        }
     }
 }
