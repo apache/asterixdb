@@ -8987,6 +8987,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">
+      <compilation-unit name="isatomic">
+        <output-dir compare="Text">isatomic</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
       <compilation-unit name="isboolean">
         <output-dir compare="Text">isboolean</output-dir>
       </compilation-unit>

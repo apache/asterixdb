@@ -53,6 +53,8 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("isnull", "is-null"); // isnull, internal: is-null
         FUNCTION_NAME_MAP.put("ismissing", "is-missing"); // ismissing, internal: is-missing
         FUNCTION_NAME_MAP.put("isunknown", "is-unknown"); // isunknown, internal: is-unknown
+        FUNCTION_NAME_MAP.put("isatomic", "is-atomic"); // isatomic, internal: is-atomic
+        FUNCTION_NAME_MAP.put("isatom", "is-atomic"); // isatom, internal: is-atomic
         FUNCTION_NAME_MAP.put("isboolean", "is-boolean"); // isboolean, internal: is-boolean
         FUNCTION_NAME_MAP.put("isbool", "is-boolean"); // isbool, internal: is-boolean
         FUNCTION_NAME_MAP.put("isnumber", "is-number"); // isnumber, internal: is-number

@@ -167,6 +167,7 @@ import org.apache.asterix.runtime.evaluators.functions.IfMissingOrNullDescriptor
 import org.apache.asterix.runtime.evaluators.functions.IfNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.InjectFailureDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsArrayDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IsAtomicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsBooleanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsMissingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsNullDescriptor;
@@ -711,6 +712,7 @@ public final class FunctionCollection {
         fc.addGenerated(DurationFromIntervalDescriptor.FACTORY);
 
         // Type functions.
+        fc.addGenerated(IsAtomicDescriptor.FACTORY);
         fc.addGenerated(IsBooleanDescriptor.FACTORY);
         fc.addGenerated(IsNumberDescriptor.FACTORY);
         fc.addGenerated(IsStringDescriptor.FACTORY);

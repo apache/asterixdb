@@ -53,6 +53,38 @@
 
  The function has an alias `isarray`.
 
+### is_atomic (isatomic, isatom) ###
+ * Syntax:
+
+        is_atomic(expr)
+
+ * Checks whether the given expression is evaluated to be a value of a [primitive](../datamodel.html#PrimitiveTypes) type.
+ * Arguments:
+    * `expr` : an expression (any type is allowed).
+ * Return Value:
+    * a `boolean` on whether the argument is a primitive type or not,
+    * a `missing` if the argument is a `missing` value,
+    * a `null` if the argument is a `null` value.
+
+ * Example:
+
+        {
+          "a": is_atomic(true),
+          "b": is_atomic(false),
+          "c": isatomic(null),
+          "d": isatomic(missing),
+          "e": isatomic("d"),
+          "f": isatom(4.0),
+          "g": isatom(5),
+          "h": isatom(["1", 2]),
+          "i": isatom({"a":1})
+        };
+
+* The expected result is:
+
+        { "a": true, "b": true, "c": null, "e": true, "f": true, "g": true, "h": false, "i": false }
+
+ The function has two aliases, `isatomic` or `isatom`.
 
 ### is_boolean (isboolean, isbool) ###
  * Syntax:

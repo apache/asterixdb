@@ -829,6 +829,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier IS_NULL = AlgebricksBuiltinFunctions.IS_NULL;
     public static final FunctionIdentifier IS_UNKNOWN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-unknown", 1);
+    public static final FunctionIdentifier IS_ATOMIC =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-atomic", 1);
     public static final FunctionIdentifier IS_BOOLEAN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "is-boolean", 1);
     public static final FunctionIdentifier IS_NUMBER =
@@ -889,6 +891,7 @@ public class BuiltinFunctions {
         addFunction(IS_UNKNOWN, BooleanOnlyTypeComputer.INSTANCE, true);
         addFunction(IS_NULL, BooleanOrMissingTypeComputer.INSTANCE, true);
         addFunction(IS_SYSTEM_NULL, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(IS_ATOMIC, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_BOOLEAN, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_NUMBER, ABooleanTypeComputer.INSTANCE, true);
         addFunction(IS_STRING, ABooleanTypeComputer.INSTANCE, true);
