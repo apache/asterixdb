@@ -21,7 +21,6 @@ package org.apache.hyracks.ipc.impl;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
 import java.nio.channels.ClosedChannelException;
@@ -41,6 +40,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -218,14 +218,12 @@ public class IPCConnectionManager {
                     if (!workingPendingConnections.isEmpty()) {
                         for (IPCHandle handle : workingPendingConnections) {
                             SocketChannel channel = SocketChannel.open();
-                            openChannels.add(channel);
-                            channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                            channel.configureBlocking(false);
+                            register(channel);
                             SelectionKey cKey;
                             if (channel.connect(handle.getRemoteAddress())) {
                                 cKey = channel.register(selector, SelectionKey.OP_READ);
                                 handle.setState(HandleState.CONNECT_SENT);
-                                write(createInitialReqMessage(handle));
+                                IPCConnectionManager.this.write(createInitialReqMessage(handle));
                             } else {
                                 cKey = channel.register(selector, SelectionKey.OP_CONNECT);
                             }
@@ -273,48 +271,15 @@ public class IPCConnectionManager {
                         for (Iterator<SelectionKey> i = selector.selectedKeys().iterator(); i.hasNext();) {
                             SelectionKey key = i.next();
                             i.remove();
-                            SelectableChannel sc = key.channel();
+                            final SelectableChannel sc = key.channel();
                             if (key.isReadable()) {
-                                SocketChannel channel = (SocketChannel) sc;
-                                IPCHandle handle = (IPCHandle) key.attachment();
-                                ByteBuffer readBuffer = handle.getInBuffer();
-                                int len = channel.read(readBuffer);
-                                system.getPerformanceCounters().addMessageBytesReceived(len);
-                                if (len < 0) {
-                                    key.cancel();
-                                    IOUtils.closeQuietly(channel);
-                                    openChannels.remove(channel);
-                                    handle.close();
-                                } else {
-                                    handle.processIncomingMessages();
-                                    if (!readBuffer.hasRemaining()) {
-                                        handle.resizeInBuffer();
-                                    }
-                                }
+                                read(key);
                             } else if (key.isWritable()) {
-                                SocketChannel channel = (SocketChannel) sc;
-                                IPCHandle handle = (IPCHandle) key.attachment();
-                                ByteBuffer writeBuffer = handle.getOutBuffer();
-                                int len = channel.write(writeBuffer);
-                                system.getPerformanceCounters().addMessageBytesSent(len);
-                                if (len < 0) {
-                                    key.cancel();
-                                    IOUtils.closeQuietly(channel);
-                                    openChannels.remove(channel);
-                                    handle.close();
-                                } else if (!writeBuffer.hasRemaining()) {
-                                    key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
-                                }
-                                if (handle.full()) {
-                                    handle.clearFull();
-                                    selector.wakeup();
-                                }
+                                write(key);
                             } else if (key.isAcceptable()) {
                                 assert sc == serverSocketChannel;
                                 SocketChannel channel = serverSocketChannel.accept();
-                                openChannels.add(channel);
-                                channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
-                                channel.configureBlocking(false);
+                                register(channel);
                                 IPCHandle handle = new IPCHandle(system, null);
                                 SelectionKey cKey = channel.register(selector, SelectionKey.OP_READ);
                                 handle.setKey(cKey);
@@ -331,7 +296,7 @@ public class IPCConnectionManager {
                                 handle.setState(HandleState.CONNECT_SENT);
                                 registerHandle(handle);
                                 key.interestOps(SelectionKey.OP_READ);
-                                write(createInitialReqMessage(handle));
+                                IPCConnectionManager.this.write(createInitialReqMessage(handle));
                             }
                         }
                     }
@@ -377,6 +342,65 @@ public class IPCConnectionManager {
             }
             workingSendList.clear();
             moveAll(tempUnsentMessages, workingSendList);
+        }
+
+        private void register(SocketChannel channel) throws IOException {
+            openChannels.add(channel);
+            NetworkUtil.configure(channel);
+            channel.configureBlocking(false);
+        }
+
+        private void read(SelectionKey readableKey) {
+            SocketChannel channel = (SocketChannel) readableKey.channel();
+            IPCHandle handle = (IPCHandle) readableKey.attachment();
+            ByteBuffer readBuffer = handle.getInBuffer();
+            try {
+                int len = channel.read(readBuffer);
+                if (len < 0) {
+                    close(readableKey, channel);
+                    return;
+                }
+                system.getPerformanceCounters().addMessageBytesReceived(len);
+                handle.processIncomingMessages();
+                if (!readBuffer.hasRemaining()) {
+                    handle.resizeInBuffer();
+                }
+            } catch (IOException e) {
+                LOGGER.error("TCP read error from {}", handle.getRemoteAddress(), e);
+                close(readableKey, channel);
+            }
+        }
+
+        private void write(SelectionKey writableKey) {
+            SocketChannel channel = (SocketChannel) writableKey.channel();
+            IPCHandle handle = (IPCHandle) writableKey.attachment();
+            ByteBuffer writeBuffer = handle.getOutBuffer();
+            try {
+                int len = channel.write(writeBuffer);
+                if (len < 0) {
+                    close(writableKey, channel);
+                    return;
+                }
+                system.getPerformanceCounters().addMessageBytesSent(len);
+                if (!writeBuffer.hasRemaining()) {
+                    writableKey.interestOps(writableKey.interestOps() & ~SelectionKey.OP_WRITE);
+                }
+                if (handle.full()) {
+                    handle.clearFull();
+                    selector.wakeup();
+                }
+            } catch (IOException e) {
+                LOGGER.error("TCP write error to {}", handle.getRemoteAddress(), e);
+                close(writableKey, channel);
+            }
+        }
+
+        private void close(SelectionKey key, SocketChannel sc) {
+            key.cancel();
+            NetworkUtil.closeQuietly(sc);
+            openChannels.remove(sc);
+            final IPCHandle handle = (IPCHandle) key.attachment();
+            handle.close();
         }
     }
 

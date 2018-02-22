@@ -32,7 +32,7 @@ import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.asterix.replication.sync.ReplicaSynchronizer;
-import org.apache.hyracks.util.JSONUtil;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
@@ -97,6 +97,7 @@ public class PartitionReplica implements IPartitionReplica {
         try {
             if (sc == null || !sc.isOpen() || !sc.isConnected()) {
                 sc = SocketChannel.open();
+                NetworkUtil.configure(sc);
                 sc.configureBlocking(true);
                 sc.connect(id.getLocation());
             }

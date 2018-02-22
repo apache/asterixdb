@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.ReplicationException;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.replication.IReplicationDestination;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,6 +79,7 @@ public class ReplicationDestination implements IReplicationDestination {
         try {
             if (logRepChannel == null || !logRepChannel.isOpen() || !logRepChannel.isConnected()) {
                 logRepChannel = SocketChannel.open();
+                NetworkUtil.configure(logRepChannel);
                 logRepChannel.configureBlocking(true);
                 logRepChannel.connect(location);
             }
