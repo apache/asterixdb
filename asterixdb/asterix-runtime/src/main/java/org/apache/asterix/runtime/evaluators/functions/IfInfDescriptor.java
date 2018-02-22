@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -29,9 +28,10 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class IfMissingDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class IfInfDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = IfMissingDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = IfInfDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -40,10 +40,20 @@ public class IfMissingDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new IfMissingOrNullDescriptor.AbstractIfMissingOrNullEval(ctx, args) {
+                return new IfNanOrInfDescriptor.AbstractIfInfOrNanEval(ctx, args) {
                     @Override
-                    protected boolean skip(byte argTypeTag) {
-                        return argTypeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
+                    protected boolean skipDouble(double d) {
+                        return Double.isInfinite(d);
+                    }
+
+                    @Override
+                    protected boolean skipFloat(float f) {
+                        return Float.isInfinite(f);
+                    }
+
+                    @Override
+                    protected FunctionIdentifier getIdentifier() {
+                        return IfInfDescriptor.this.getIdentifier();
                     }
                 };
             }
@@ -52,6 +62,6 @@ public class IfMissingDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.IF_MISSING;
+        return BuiltinFunctions.IF_INF;
     }
 }

@@ -4648,6 +4648,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="null-missing">
+      <compilation-unit name="ifmissing">
+        <output-dir compare="Text">ifmissing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="ifnull">
+        <output-dir compare="Text">ifnull</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
+      <compilation-unit name="ifmissingornull">
+        <output-dir compare="Text">ifmissingornull</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
       <compilation-unit name="query-ASTERIXDB-1689">
         <output-dir compare="Text">query-ASTERIXDB-1689</output-dir>
       </compilation-unit>
@@ -4802,6 +4817,21 @@
     <test-case FilePath="numeric">
       <compilation-unit name="floor4">
         <output-dir compare="Text">floor4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ifinf">
+        <output-dir compare="Text">ifinf</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ifnan">
+        <output-dir compare="Text">ifnan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="ifnanorinf">
+        <output-dir compare="Text">ifnanorinf</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
@@ -9179,21 +9209,6 @@
     <test-case FilePath="types">
       <compilation-unit name="promotion_opentype_field_vs_opentype_field_02">
         <output-dir compare="Text">promotion_opentype_field_vs_opentype_field_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="ifmissing">
-        <output-dir compare="Text">ifmissing</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="ifnull">
-        <output-dir compare="Text">ifnull</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="types">
-      <compilation-unit name="ifmissingornull">
-        <output-dir compare="Text">ifmissingornull</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">

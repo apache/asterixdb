@@ -45,7 +45,7 @@ public final class IfMissingOrNullDescriptor extends AbstractScalarFunctionDynam
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractIfEvaluator(ctx, args) {
+                return new AbstractIfMissingOrNullEval(ctx, args) {
                     @Override
                     protected boolean skip(byte argTypeTag) {
                         return argTypeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
@@ -61,15 +61,14 @@ public final class IfMissingOrNullDescriptor extends AbstractScalarFunctionDynam
         return BuiltinFunctions.IF_MISSING_OR_NULL;
     }
 
-    public static abstract class AbstractIfEvaluator implements IScalarEvaluator {
-
-        private static final byte[] nullBytes = new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG };
+    public static abstract class AbstractIfMissingOrNullEval implements IScalarEvaluator {
 
         private final IScalarEvaluator[] argEvals;
 
         private final IPointable argPtr;
 
-        AbstractIfEvaluator(IHyracksTaskContext ctx, IScalarEvaluatorFactory[] args) throws HyracksDataException {
+        AbstractIfMissingOrNullEval(IHyracksTaskContext ctx, IScalarEvaluatorFactory[] args)
+                throws HyracksDataException {
             argEvals = new IScalarEvaluator[args.length];
             for (int i = 0; i < argEvals.length; i++) {
                 argEvals[i] = args[i].createScalarEvaluator(ctx);
@@ -88,7 +87,7 @@ public final class IfMissingOrNullDescriptor extends AbstractScalarFunctionDynam
                     return;
                 }
             }
-            result.set(nullBytes, 0, nullBytes.length);
+            PointableHelper.setNull(result);
         }
 
         protected abstract boolean skip(byte argTypeTag);

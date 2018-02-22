@@ -41,7 +41,7 @@ public final class IfNullDescriptor extends AbstractScalarFunctionDynamicDescrip
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new IfMissingOrNullDescriptor.AbstractIfEvaluator(ctx, args) {
+                return new IfMissingOrNullDescriptor.AbstractIfMissingOrNullEval(ctx, args) {
                     @Override
                     protected boolean skip(byte argTypeTag) {
                         return argTypeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG;

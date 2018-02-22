@@ -101,3 +101,101 @@
         { "a": null, "b": null, "c": "asterixdb" }
 
  The function has an alias `ifmissingornull`.
+
+### if_inf (ifinf) ###
+
+ * Syntax:
+
+        if_inf(expression1, expression2, ... expressionN)
+
+ * Finds first argument which is a non-infinite (`INF` or`-INF`) number
+ * Arguments:
+    * `expressionI` : an expression (any type is allowed).
+ * Return Value:
+    * a `missing` if `missing` argument was encountered before the first non-infinite number argument
+    * a `null` if `null` argument or any other non-number argument was encountered before the first non-infinite number argument
+    * the first non-infinite number argument otherwise
+
+ * Example:
+
+        {
+            "a": is_null(if_inf(null)),
+            "b": is_missing(if_inf(missing)),
+            "c": is_null(if_inf(double("INF"))),
+            "d": if_inf(1, null, missing) ],
+            "e": is_null(if_inf(null, missing, 1)) ],
+            "f": is_missing(if_inf(missing, null, 1)) ],
+            "g": if_inf(float("INF"), 1) ],
+            "h": to_string(if_inf(float("INF"), double("NaN"), 1)) ]
+        };
+
+ * The expected result is:
+
+        { "a": true, "b": true, "c": true, "d": 1, "e": true, "f": true, "g": 1, "h": "NaN" }
+
+ The function has an alias `ifinf`.
+
+### if_nan (ifnan) ###
+
+ * Syntax:
+
+        if_nan(expression1, expression2, ... expressionN)
+
+ * Finds first argument which is a non-`NaN` number
+ * Arguments:
+    * `expressionI` : an expression (any type is allowed).
+ * Return Value:
+    * a `missing` if `missing` argument was encountered before the first non-`NaN` number argument
+    * a `null` if `null` argument or any other non-number argument was encountered before the first non-`NaN` number argument
+    * the first non-`NaN` number argument otherwise
+
+ * Example:
+
+        {
+            "a": is_null(if_nan(null)),
+            "b": is_missing(if_nan(missing)),
+            "c": is_null(if_nan(double("NaN"))),
+            "d": if_nan(1, null, missing) ],
+            "e": is_null(if_nan(null, missing, 1)) ],
+            "f": is_missing(if_nan(missing, null, 1)) ],
+            "g": if_nan(float("NaN"), 1) ],
+            "h": to_string(if_nan(float("NaN"), double("INF"), 1)) ]
+        };
+
+ * The expected result is:
+
+        { "a": true, "b": true, "c": true, "d": 1, "e": true, "f": true, "g": 1, "h": "INF" }
+
+ The function has an alias `ifnan`.
+
+### if_nan_or_inf (ifnanorinf) ###
+
+ * Syntax:
+
+        if_nan_or_inf(expression1, expression2, ... expressionN)
+
+ * Finds first argument which is a non-infinite (`INF` or`-INF`) and non-`NaN` number
+ * Arguments:
+    * `expressionI` : an expression (any type is allowed).
+ * Return Value:
+    * a `missing` if `missing` argument was encountered before the first non-infinite and non-`NaN` number argument
+    * a `null` if `null` argument or any other non-number argument was encountered before the first non-infinite and non-`NaN` number argument
+    * the first non-infinite and non-`NaN` number argument otherwise
+
+ * Example:
+
+        {
+            "a": is_null(if_nan_or_inf(null)),
+            "b": is_missing(if_nan_or_inf(missing)),
+            "c": is_null(if_nan_or_inf(double("NaN"), double("INF"))),
+            "d": if_nan_or_inf(1, null, missing) ],
+            "e": is_null(if_nan_or_inf(null, missing, 1)) ],
+            "f": is_missing(if_nan_or_inf(missing, null, 1)) ],
+            "g": if_nan_or_inf(float("NaN"), float("INF"), 1) ],
+        };
+
+ * The expected result is:
+
+        { "a": true, "b": true, "c": true, "d": 1, "e": true, "f": true, "g": 1 }
+
+ The function has an alias `ifnanorinf`.

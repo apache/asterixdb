@@ -66,7 +66,10 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("isobj", "is-object"); // isobj, internal: is-object
         FUNCTION_NAME_MAP.put("ifmissing", "if-missing"); // ifmissing, internal: if-missing
         FUNCTION_NAME_MAP.put("ifnull", "if-null"); // ifnull, internal: if-null
-        FUNCTION_NAME_MAP.put("ifmissingornull", "if-missing-or-null"); // ifmissingornull, internal: is-missing-or-null
+        FUNCTION_NAME_MAP.put("ifmissingornull", "if-missing-or-null"); // ifmissingornull, internal: if-missing-or-null
+        FUNCTION_NAME_MAP.put("ifinf", "if-inf"); // ifinf, internal: if-inf
+        FUNCTION_NAME_MAP.put("ifnan", "if-nan"); // ifnan, internal: if-nan
+        FUNCTION_NAME_MAP.put("ifnanorinf", "if-nan-or-inf"); // ifnanorinf, internal: if-nan-or-inf
         FUNCTION_NAME_MAP.put("toboolean", "to-boolean"); // toboolean, internal: to-boolean
         FUNCTION_NAME_MAP.put("tostring", "to-string"); // tostring, internal: to-string
         FUNCTION_NAME_MAP.put("todouble", "to-double"); // todouble, internal: to-double

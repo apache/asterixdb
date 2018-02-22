@@ -30,5 +30,11 @@
   "t11": is_null(to_string({{}})),
   "t12": is_null(to_string({})),
   "t13": is_null(to_string(null)),
-  "t14": is_missing(to_string(missing))
+  "t14": is_missing(to_string(missing)),
+  "t15": to_string(double("NaN")),
+  "t16": to_string(float("NaN")),
+  "t17": to_string(double("INF")),
+  "t18": to_string(float("INF")),
+  "t19": to_string(double("-INF")),
+  "t20": to_string(float("-INF"))
  }

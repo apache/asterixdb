@@ -1,0 +1,44 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+select value t
+from [
+    [ 0, isnull(ifinf()) ],
+    [ 1, isnull(ifinf(null)) ],
+    [ 2, ismissing(ifinf(missing)) ],
+    [ 3, isnull(ifinf(double("INF"))) ],
+    [ 4, isnull(ifinf(double("-INF"))) ],
+    [ 5, isnull(ifinf(float("INF"))) ],
+    [ 6, isnull(ifinf(float("-INF"))) ],
+    [ 7, ifinf(tinyint("1")) ],
+    [ 8, ifinf(smallint("2")) ],
+    [ 9, ifinf(integer("3")) ],
+    [ 10, ifinf(bigint("4")) ],
+    [ 11, ifinf(float("1.5")) ],
+    [ 12, ifinf(double("2.5")) ],
+    [ 13, ifinf(2, null, missing) ],
+    [ 14, isnull(ifinf(null, missing, 2)) ],
+    [ 15, ismissing(ifinf(missing, null, 2)) ],
+    [ 16, ifinf(double("INF"), float("-INF"), 2) ],
+    [ 17, ifinf(float("INF"), double("-INF"), 2) ],
+    [ 18, isnull(ifinf(double("INF"), double("-INF"), [], 2)) ],
+    [ 19, ismissing(if_inf(double("INF"), double("-INF"), missing, 2)) ],
+    [ 20, tostring(ifinf(float("INF"), float("NaN"), 2)) ]
+] t
+order by t[0]

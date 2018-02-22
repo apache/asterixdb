@@ -28,6 +28,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.util.string.UTF8StringWriter;
@@ -40,6 +41,9 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
  */
 
 public class PointableHelper {
+
+    private static final byte[] NULL_BYTES = new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG };
+
     private static final IBinaryComparator STRING_BINARY_COMPARATOR =
             PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
     private final UTF8StringWriter utf8Writer;
@@ -122,5 +126,9 @@ public class PointableHelper {
         } catch (IOException e) {
             throw new HyracksDataException("Could not serialize " + str);
         }
+    }
+
+    public static void setNull(IPointable pointable) {
+        pointable.set(NULL_BYTES, 0, NULL_BYTES.length);
     }
 }

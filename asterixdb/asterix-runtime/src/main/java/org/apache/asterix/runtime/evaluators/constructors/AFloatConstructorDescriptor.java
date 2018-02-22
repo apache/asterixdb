@@ -68,11 +68,6 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                     private DataOutput out = resultStorage.getDataOutput();
                     private IPointable inputArg = new VoidPointable();
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private final byte[] POSITIVE_INF = UTF8StringUtil.writeStringToBytes("INF");
-                    private final byte[] NEGATIVE_INF = UTF8StringUtil.writeStringToBytes("-INF");
-                    private final byte[] NAN = UTF8StringUtil.writeStringToBytes("NaN");
-                    private IBinaryComparator utf8BinaryComparator =
-                            BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
                     private AMutableFloat aFloat = new AMutableFloat(0);
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AFloat> floatSerde =
@@ -92,17 +87,19 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                 result.set(inputArg);
                             } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
                                 resultStorage.reset();
-                                if (utf8BinaryComparator.compare(serString, offset + 1, len - 1, POSITIVE_INF, 0,
-                                        5) == 0) {
+                                int utf8offset = offset + 1;
+                                int utf8len = len - 1;
+                                if (AbstractDoubleConstructorEvaluator.POSITIVE_INF.compareTo(serString, utf8offset,
+                                        utf8len) == 0) {
                                     aFloat.setValue(Float.POSITIVE_INFINITY);
-                                } else if (utf8BinaryComparator.compare(serString, offset + 1, len - 1, NEGATIVE_INF, 0,
-                                        6) == 0) {
+                                } else if (AbstractDoubleConstructorEvaluator.NEGATIVE_INF.compareTo(serString,
+                                        utf8offset, utf8len) == 0) {
                                     aFloat.setValue(Float.NEGATIVE_INFINITY);
-                                } else if (utf8BinaryComparator.compare(serString, offset + 1, len - 1, NAN, 0,
-                                        5) == 0) {
+                                } else if (AbstractDoubleConstructorEvaluator.NAN.compareTo(serString, utf8offset,
+                                        utf8len) == 0) {
                                     aFloat.setValue(Float.NaN);
                                 } else {
-                                    utf8Ptr.set(serString, offset + 1, len - 1);
+                                    utf8Ptr.set(serString, utf8offset, utf8len);
                                     aFloat.setValue(Float.parseFloat(utf8Ptr.toString()));
                                 }
                                 floatSerde.serialize(aFloat, out);

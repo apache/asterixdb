@@ -162,8 +162,11 @@ import org.apache.asterix.runtime.evaluators.functions.GetJobParameterByNameDesc
 import org.apache.asterix.runtime.evaluators.functions.GramTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.HashedGramTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.HashedWordTokensDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IfInfDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IfNanOrInfDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfMissingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfMissingOrNullDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IfNanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.InjectFailureDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsArrayDescriptor;
@@ -483,6 +486,9 @@ public final class FunctionCollection {
         fc.addGenerated(GetItemDescriptor.FACTORY);
 
         // Numeric functions
+        fc.add(IfInfDescriptor.FACTORY);
+        fc.add(IfNanDescriptor.FACTORY);
+        fc.add(IfNanOrInfDescriptor.FACTORY);
         fc.addGenerated(NumericUnaryMinusDescriptor.FACTORY);
         fc.addGenerated(NumericAddDescriptor.FACTORY);
         fc.addGenerated(NumericDivideDescriptor.FACTORY);

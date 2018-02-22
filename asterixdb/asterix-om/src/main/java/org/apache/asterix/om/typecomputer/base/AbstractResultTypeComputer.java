@@ -40,7 +40,7 @@ public abstract class AbstractResultTypeComputer implements IResultTypeComputer 
         AbstractFunctionCallExpression functionCallExpression = (AbstractFunctionCallExpression) expression;
         String funcName = functionCallExpression.getFunctionIdentifier().getName();
         return TypeComputeUtils.resolveResultType(expression, env, (index, type) -> checkArgType(funcName, index, type),
-                this::getResultType, true);
+                this::getResultType, propagateNullAndMissing());
     }
 
     /**
@@ -70,4 +70,12 @@ public abstract class AbstractResultTypeComputer implements IResultTypeComputer 
      */
     protected abstract IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes)
             throws AlgebricksException;
+
+    /**
+     * Whether the expression follows MISSING-in-MISSING-out and NULL-in-NULL-out semantics
+     * @return said value
+     */
+    protected boolean propagateNullAndMissing() {
+        return true;
+    }
 }

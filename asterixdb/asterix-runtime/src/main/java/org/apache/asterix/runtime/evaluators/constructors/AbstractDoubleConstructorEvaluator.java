@@ -22,7 +22,6 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
@@ -32,7 +31,6 @@ import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -40,19 +38,15 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public abstract class AbstractDoubleConstructorEvaluator implements IScalarEvaluator {
     @SuppressWarnings("unchecked")
     protected static final ISerializerDeserializer<ADouble> DOUBLE_SERDE =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
-    protected static final IBinaryComparator UTF8_BINARY_CMP =
-            BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
-
-    protected static final byte[] POSITIVE_INF = UTF8StringUtil.writeStringToBytes("INF");
-    protected static final byte[] NEGATIVE_INF = UTF8StringUtil.writeStringToBytes("-INF");
-    protected static final byte[] NAN = UTF8StringUtil.writeStringToBytes("NaN");
+    protected static final UTF8StringPointable POSITIVE_INF = UTF8StringPointable.generateUTF8Pointable("INF");
+    protected static final UTF8StringPointable NEGATIVE_INF = UTF8StringPointable.generateUTF8Pointable("-INF");
+    protected static final UTF8StringPointable NAN = UTF8StringPointable.generateUTF8Pointable("NaN");
 
     protected final IScalarEvaluator inputEval;
     protected final ArrayBackedValueStorage resultStorage;
@@ -89,14 +83,16 @@ public abstract class AbstractDoubleConstructorEvaluator implements IScalarEvalu
             result.set(inputArg);
         } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
             int len = inputArg.getLength();
-            if (UTF8_BINARY_CMP.compare(bytes, offset + 1, len - 1, POSITIVE_INF, 0, 5) == 0) {
+            int utf8offset = offset + 1;
+            int utf8len = len - 1;
+            if (POSITIVE_INF.compareTo(bytes, utf8offset, utf8len) == 0) {
                 setDouble(result, Double.POSITIVE_INFINITY);
-            } else if (UTF8_BINARY_CMP.compare(bytes, offset + 1, len - 1, NEGATIVE_INF, 0, 6) == 0) {
+            } else if (NEGATIVE_INF.compareTo(bytes, utf8offset, utf8len) == 0) {
                 setDouble(result, Double.NEGATIVE_INFINITY);
-            } else if (UTF8_BINARY_CMP.compare(bytes, offset + 1, len - 1, NAN, 0, 5) == 0) {
+            } else if (NAN.compareTo(bytes, utf8offset, utf8len) == 0) {
                 setDouble(result, Double.NaN);
             } else {
-                utf8Ptr.set(bytes, offset + 1, len - 1);
+                utf8Ptr.set(bytes, utf8offset, utf8len);
                 try {
                     setDouble(result, Double.parseDouble(utf8Ptr.toString()));
                 } catch (NumberFormatException e) {

@@ -66,6 +66,7 @@ import org.apache.asterix.om.typecomputer.impl.FieldAccessByNameResultType;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessNestedResultType;
 import org.apache.asterix.om.typecomputer.impl.FullTextContainsResultTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.GetOverlappingInvervalTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.IfNanOrInfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfMissingOrNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfMissingTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfNullTypeComputer;
@@ -855,6 +856,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-null", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier IF_MISSING_OR_NULL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-missing-or-null", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier IF_INF =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-inf", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier IF_NAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-nan", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier IF_NAN_OR_INF =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-nan-or-inf", FunctionIdentifier.VARARGS);
 
     public static final FunctionIdentifier TO_BOOLEAN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-boolean", 1);
@@ -992,6 +999,9 @@ public class BuiltinFunctions {
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN, NumericUnaryFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NumericRound2TypeComputer.INSTANCE, true);
         addFunction(NUMERIC_TRUNC, NumericRound2TypeComputer.INSTANCE, true);
+        addFunction(IF_INF, IfNanOrInfTypeComputer.INSTANCE, true);
+        addFunction(IF_NAN, IfNanOrInfTypeComputer.INSTANCE, true);
+        addFunction(IF_NAN_OR_INF, IfNanOrInfTypeComputer.INSTANCE, true);
 
         addFunction(BINARY_LENGTH, UnaryBinaryInt64TypeComputer.INSTANCE, true);
         addFunction(PARSE_BINARY, ABinaryTypeComputer.INSTANCE, true);
