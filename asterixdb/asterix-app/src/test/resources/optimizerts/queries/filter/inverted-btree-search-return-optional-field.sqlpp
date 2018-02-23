@@ -1,0 +1,91 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse twitter if exists;
+create dataverse twitter if not exists;
+use twitter;
+
+create type typeUser if not exists as open {
+    id: int64,
+    name: string,
+    screen_name : string,
+    profile_image_url : string?,
+    lang : string,
+    location: string,
+    create_at: date,
+    description: string,
+    followers_count: int32,
+    friends_count: int32,
+    statues_count: int64
+};
+
+create type typePlace if not exists as open{
+    country : string,
+    country_code : string,
+    full_name : string,
+    id : string,
+    name : string,
+    place_type : string,
+    bounding_box : rectangle
+};
+
+create type typeGeoTag if not exists as open {
+    stateID: int32,
+    stateName: string,
+    countyID: int32,
+    countyName: string,
+    cityID: int32?,
+    cityName: string?
+};
+
+create type typeTweet if not exists as open {
+    create_at : datetime,
+    id: int64,
+    text: string,
+    in_reply_to_status : int64,
+    in_reply_to_user : int64,
+    favorite_count : int64,
+    coordinate: point?,
+    retweet_count : int64,
+    lang : string,
+    is_retweet: boolean,
+    hashtags : {{ string }} ?,
+    user_mentions : {{ int64 }} ? ,
+    user : typeUser,
+    place : typePlace?,
+    geo_tag: typeGeoTag
+};
+
+create dataset ds_tweet(typeTweet) if not exists primary key id with filter on create_at with
+{"merge-policy":
+  {"name":"prefix","parameters":
+    {"max-mergable-component-size":134217728, "max-tolerance-component-count":10}
+  }
+};
+
+create index text_idx if not exists on ds_tweet(text) type fulltext;
+
+select t.`place`.`bounding_box` as `place.bounding_box`,t.`user`.`id` as `user.id`,t.`id` as `id`,
+       t.`coordinate` as `coordinate`,t.`create_at` as `create_at`
+from twitter.ds_tweet t
+where t.`create_at` >= datetime('2018-02-22T10:53:07.888Z') and t.`create_at` < datetime('2018-02-22T18:50:39.301Z')
+      and ftcontains(t.`text`, ['francisco'], {'mode':'all'}) and t.`geo_tag`.`stateID` in [ 37,51,24,11 ]
+order by t.`create_at` desc
+limit 2147483647
+offset 0;

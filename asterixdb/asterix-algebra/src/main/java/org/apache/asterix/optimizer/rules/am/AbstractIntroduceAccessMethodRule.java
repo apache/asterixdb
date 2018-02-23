@@ -30,6 +30,8 @@ import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
@@ -38,6 +40,7 @@ import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
@@ -872,9 +875,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 }
 
                 if (!isByName) {
-                    fieldName = sourceVar.equals(metaVar)
-                            ? ((ARecordType) metaType.getSubFieldType(parentFieldNames)).getFieldNames()[fieldIndex]
-                            : ((ARecordType) recordType.getSubFieldType(parentFieldNames)).getFieldNames()[fieldIndex];
+                    IAType subFieldType = sourceVar.equals(metaVar) ? metaType.getSubFieldType(parentFieldNames)
+                            : recordType.getSubFieldType(parentFieldNames);
+                    // Sub-field type can be AUnionType in case if it's optional. Thus, needs to get the actual type.
+                    subFieldType = TypeComputeUtils.getActualType(subFieldType);
+                    if (subFieldType.getTypeTag() != ATypeTag.OBJECT) {
+                        throw CompilationException.create(ErrorCode.TYPE_CONVERT, subFieldType,
+                                ARecordType.class.getName());
+                    }
+                    fieldName = ((ARecordType) subFieldType).getFieldNames()[fieldIndex];
                 }
                 if (optFuncExpr != null) {
                     optFuncExpr.setSourceVar(funcVarIndex, ((AssignOperator) op).getVariables().get(assignVarIndex));
