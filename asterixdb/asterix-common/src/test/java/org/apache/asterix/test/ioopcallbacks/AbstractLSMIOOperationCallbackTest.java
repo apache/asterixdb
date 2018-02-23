@@ -263,9 +263,11 @@ public abstract class AbstractLSMIOOperationCallbackTest extends TestCase {
 
     private void checkMemoryComponent(ILSMComponentId expected, ILSMMemoryComponent memoryComponent)
             throws HyracksDataException {
-        ArgumentCaptor<ILSMComponentId> argument = ArgumentCaptor.forClass(ILSMComponentId.class);
-        Mockito.verify(memoryComponent).resetId(argument.capture());
-        assertEquals(expected, argument.getValue());
+        ArgumentCaptor<ILSMComponentId> idArgument = ArgumentCaptor.forClass(ILSMComponentId.class);
+        ArgumentCaptor<Boolean> forceArgument = ArgumentCaptor.forClass(Boolean.class);
+        Mockito.verify(memoryComponent).resetId(idArgument.capture(), forceArgument.capture());
+        assertEquals(expected, idArgument.getValue());
+        assertEquals(false, forceArgument.getValue().booleanValue());
 
         Mockito.reset(memoryComponent);
     }

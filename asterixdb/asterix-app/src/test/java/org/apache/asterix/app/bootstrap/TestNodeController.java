@@ -121,8 +121,8 @@ public class TestNodeController {
 
     protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
     protected static TransactionProperties txnProperties;
-    private static final boolean cleanupOnStart = true;
-    private static final boolean cleanupOnStop = true;
+    private static final boolean CLEANUP_ON_START = true;
+    private static final boolean CLEANUP_ON_STOP = true;
 
     // Constants
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
@@ -142,6 +142,10 @@ public class TestNodeController {
     }
 
     public void init() throws Exception {
+        init(CLEANUP_ON_START);
+    }
+
+    public void init(boolean cleanupOnStart) throws Exception {
         try {
             File outdir = new File(PATH_ACTUAL);
             outdir.mkdirs();
@@ -157,12 +161,20 @@ public class TestNodeController {
     }
 
     public void deInit() throws Exception {
+        deInit(CLEANUP_ON_STOP);
+    }
+
+    public void deInit(boolean cleanupOnStop) throws Exception {
         ExternalUDFLibrarian.removeLibraryDir();
         ExecutionTestUtil.tearDown(cleanupOnStop);
     }
 
     public void setOpts(List<Pair<IOption, Object>> opts) {
         options.addAll(opts);
+    }
+
+    public void clearOpts() {
+        options.clear();
     }
 
     public TxnId getTxnJobId(IHyracksTaskContext ctx) {
@@ -241,10 +253,15 @@ public class TestNodeController {
                 SecondaryIndexInfo secondaryIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, secondaryIndex);
                 IIndexDataflowHelperFactory secondaryIndexHelperFactory = new IndexDataflowHelperFactory(
                         storageComponentProvider.getStorageManager(), secondaryIndexInfo.fileSplitProvider);
+
+                IModificationOperationCallbackFactory secondaryModCallbackFactory =
+                        dataset.getModificationCallbackFactory(storageComponentProvider, secondaryIndex,
+                                IndexOperation.INSERT, primaryKeyIndexes);
+
                 LSMInsertDeleteOperatorNodePushable secondaryInsertOp =
                         new LSMInsertDeleteOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
                                 secondaryIndexInfo.insertFieldsPermutations, secondaryIndexInfo.rDesc, op, false,
-                                secondaryIndexHelperFactory, NoOpOperationCallbackFactory.INSTANCE, null);
+                                secondaryIndexHelperFactory, secondaryModCallbackFactory, null);
                 assignOp.setOutputFrameWriter(0, secondaryInsertOp, secondaryIndexInfo.rDesc);
                 CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(ctx), dataset.getDatasetId(),
                         secondaryIndexInfo.primaryKeyIndexes, true, ctx.getTaskAttemptId().getTaskId().getPartition(),
@@ -465,12 +482,12 @@ public class TestNodeController {
     }
 
     public static class SecondaryIndexInfo {
-        private int[] primaryKeyIndexes;
-        private PrimaryIndexInfo primaryIndexInfo;
-        private Index secondaryIndex;
-        private ConstantFileSplitProvider fileSplitProvider;
-        private RecordDescriptor rDesc;
-        private int[] insertFieldsPermutations;
+        private final int[] primaryKeyIndexes;
+        private final PrimaryIndexInfo primaryIndexInfo;
+        private final Index secondaryIndex;
+        private final ConstantFileSplitProvider fileSplitProvider;
+        private final RecordDescriptor rDesc;
+        private final int[] insertFieldsPermutations;
 
         public SecondaryIndexInfo(PrimaryIndexInfo primaryIndexInfo, Index secondaryIndex) {
             this.primaryIndexInfo = primaryIndexInfo;
@@ -504,20 +521,20 @@ public class TestNodeController {
     }
 
     public static class PrimaryIndexInfo {
-        private Dataset dataset;
-        private IAType[] primaryKeyTypes;
-        private ARecordType recordType;
-        private ARecordType metaType;
-        private ILSMMergePolicyFactory mergePolicyFactory;
-        private Map<String, String> mergePolicyProperties;
-        private int primaryIndexNumOfTupleFields;
-        private ITypeTraits[] primaryIndexTypeTraits;
-        private ISerializerDeserializer<?>[] primaryIndexSerdes;
-        private ConstantFileSplitProvider fileSplitProvider;
-        private RecordDescriptor rDesc;
-        private int[] primaryIndexInsertFieldsPermutations;
-        private int[] primaryKeyIndexes;
-        private Index index;
+        private final Dataset dataset;
+        private final IAType[] primaryKeyTypes;
+        private final ARecordType recordType;
+        private final ARecordType metaType;
+        private final ILSMMergePolicyFactory mergePolicyFactory;
+        private final Map<String, String> mergePolicyProperties;
+        private final int primaryIndexNumOfTupleFields;
+        private final ITypeTraits[] primaryIndexTypeTraits;
+        private final ISerializerDeserializer<?>[] primaryIndexSerdes;
+        private final ConstantFileSplitProvider fileSplitProvider;
+        private final RecordDescriptor rDesc;
+        private final int[] primaryIndexInsertFieldsPermutations;
+        private final int[] primaryKeyIndexes;
+        private final Index index;
 
         public PrimaryIndexInfo(Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType,
                 ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
@@ -561,6 +578,10 @@ public class TestNodeController {
 
         public Index getIndex() {
             return index;
+        }
+
+        public Dataset getDataset() {
+            return dataset;
         }
 
         public IRecordDescriptorProvider getInsertRecordDescriptorProvider() {

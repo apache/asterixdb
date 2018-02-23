@@ -53,6 +53,7 @@ import org.apache.hyracks.util.trace.ITracer;
 public class TestLsmBtree extends LSMBTree {
 
     // Semaphores are used to control operations
+    // Operations are allowed by default.
     private final Semaphore modifySemaphore = new Semaphore(0);
     private final Semaphore searchSemaphore = new Semaphore(0);
     private final Semaphore flushSemaphore = new Semaphore(0);
@@ -91,6 +92,11 @@ public class TestLsmBtree extends LSMBTree {
                 filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy,
                 opTracker, ioScheduler, ioOperationCallbackFactory, needKeyDupCheck, btreeFields, filterFields, durable,
                 updateAware, tracer);
+
+        addModifyCallback(AllowTestOpCallback.INSTANCE);
+        addSearchCallback(AllowTestOpCallback.INSTANCE);
+        addFlushCallback(AllowTestOpCallback.INSTANCE);
+        addMergeCallback(AllowTestOpCallback.INSTANCE);
     }
 
     @Override
@@ -226,13 +232,13 @@ public class TestLsmBtree extends LSMBTree {
     }
 
     public void addModifyCallback(ITestOpCallback<Semaphore> modifyCallback) {
-        synchronized (mergeCallbacks) {
+        synchronized (modifyCallbacks) {
             modifyCallbacks.add(modifyCallback);
         }
     }
 
     public void clearModifyCallbacks() {
-        synchronized (mergeCallbacks) {
+        synchronized (modifyCallbacks) {
             modifyCallbacks.clear();
         }
     }
@@ -326,6 +332,18 @@ public class TestLsmBtree extends LSMBTree {
     public void clearVirtuablBufferCacheCallbacks() {
         for (IVirtualBufferCache vbc : virtualBufferCaches) {
             ((TestVirtualBufferCache) vbc).clearCallbacks();
+        }
+    }
+
+    public void addIoAfterFinalizeCallback(ITestOpCallback<Void> callback) {
+        synchronized (ioAfterFinalizeCallbacks) {
+            ioAfterFinalizeCallbacks.add(callback);
+        }
+    }
+
+    public void clearIoAfterFinalizeCallbacks() {
+        synchronized (ioAfterFinalizeCallbacks) {
+            ioAfterFinalizeCallbacks.clear();
         }
     }
 

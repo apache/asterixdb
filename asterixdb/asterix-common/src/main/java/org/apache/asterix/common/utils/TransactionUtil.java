@@ -45,10 +45,14 @@ public class TransactionUtil {
         logRecord.computeAndSetLogSize();
     }
 
-    public static void formFlushLogRecord(LogRecord logRecord, int datasetId, PrimaryIndexOperationTracker opTracker) {
+    public static void formFlushLogRecord(LogRecord logRecord, int datasetId, int resourcePartition,
+            long flushingComponentMinId, long flushingComponentMaxId, PrimaryIndexOperationTracker opTracker) {
         logRecord.setLogType(LogType.FLUSH);
         logRecord.setTxnId(-1);
         logRecord.setDatasetId(datasetId);
+        logRecord.setResourcePartition(resourcePartition);
+        logRecord.setFlushingComponentMinId(flushingComponentMinId);
+        logRecord.setFlushingComponentMaxId(flushingComponentMaxId);
         logRecord.setOpTracker(opTracker);
         logRecord.computeAndSetLogSize();
     }

@@ -67,7 +67,9 @@ public class RemoteLogsProcessor implements ILogRequester {
                     break;
                 case LogType.FLUSH:
                     RemoteLogRecord flushLog = new RemoteLogRecord();
-                    TransactionUtil.formFlushLogRecord(flushLog, reusableLog.getDatasetId(), null);
+                    TransactionUtil.formFlushLogRecord(flushLog, reusableLog.getDatasetId(),
+                            reusableLog.getResourcePartition(), reusableLog.getFlushingComponentMinId(),
+                            reusableLog.getFlushingComponentMaxId(), null);
                     flushLog.setRequester(this);
                     flushLog.setLogSource(LogSource.REMOTE);
                     flushLog.setMasterLsn(reusableLog.getLSN());

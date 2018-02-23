@@ -46,6 +46,8 @@ public interface ILogRecord {
     int SEQ_NUM_LEN = Long.BYTES;
     int TYPE_LEN = Byte.BYTES;
     int UUID_LEN = Long.BYTES;
+    int FLUSHING_COMPONENT_MINID_LEN = Long.BYTES;
+    int FLUSHING_COMPONENT_MAXID_LEN = Long.BYTES;
 
     int ALL_RECORD_HEADER_LEN = LOG_SOURCE_LEN + TYPE_LEN + TxnId.BYTES;
     int ENTITYCOMMIT_UPDATE_HEADER_LEN = RS_PARTITION_LEN + DatasetId.BYTES + PKHASH_LEN + PKSZ_LEN;
@@ -55,7 +57,8 @@ public interface ILogRecord {
     int JOB_TERMINATE_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
     int ENTITY_COMMIT_LOG_BASE_SIZE = ALL_RECORD_HEADER_LEN + ENTITYCOMMIT_UPDATE_HEADER_LEN + CHKSUM_LEN;
     int UPDATE_LOG_BASE_SIZE = ENTITY_COMMIT_LOG_BASE_SIZE + UPDATE_LSN_HEADER + UPDATE_BODY_HEADER;
-    int FLUSH_LOG_SIZE = ALL_RECORD_HEADER_LEN + DatasetId.BYTES + CHKSUM_LEN;
+    int FLUSH_LOG_SIZE = ALL_RECORD_HEADER_LEN + DS_LEN + RS_PARTITION_LEN + FLUSHING_COMPONENT_MINID_LEN
+            + FLUSHING_COMPONENT_MAXID_LEN + CHKSUM_LEN;
     int WAIT_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
     int MARKER_BASE_LOG_SIZE =
             ALL_RECORD_HEADER_LEN + CHKSUM_LEN + DS_LEN + RS_PARTITION_LEN + PRVLSN_LEN + LOGRCD_SZ_LEN;
@@ -176,4 +179,12 @@ public interface ILogRecord {
      * @return the flag
      */
     boolean isReplicate();
+
+    long getFlushingComponentMinId();
+
+    void setFlushingComponentMinId(long flushingComponentMinId);
+
+    long getFlushingComponentMaxId();
+
+    void setFlushingComponentMaxId(long flushingComponentMaxId);
 }

@@ -81,6 +81,8 @@ public class LogRecord implements ILogRecord {
     private long checksum;
     private long prevMarkerLSN;
     private ByteBuffer marker;
+    private long flushingComponentMinId;
+    private long flushingComponentMaxId;
     // ------------- fields in a log record (end) --------------//
     private final ILogMarkerCallback callback; // A callback for log mark operations
     private int PKFieldCnt;
@@ -141,6 +143,9 @@ public class LogRecord implements ILogRecord {
                 break;
             case LogType.FLUSH:
                 buffer.putInt(datasetId);
+                buffer.putInt(resourcePartition);
+                buffer.putLong(flushingComponentMinId);
+                buffer.putLong(flushingComponentMaxId);
                 break;
             case LogType.MARKER:
                 buffer.putInt(datasetId);
@@ -238,13 +243,23 @@ public class LogRecord implements ILogRecord {
         txnId = buffer.getLong();
         switch (logType) {
             case LogType.FLUSH:
+                if (buffer.remaining() < DS_LEN + RS_PARTITION_LEN + FLUSHING_COMPONENT_MINID_LEN
+                        + FLUSHING_COMPONENT_MAXID_LEN) {
+                    return RecordReadStatus.TRUNCATED;
+                }
+                datasetId = buffer.getInt();
+                resourcePartition = buffer.getInt();
+                flushingComponentMinId = buffer.getLong();
+                flushingComponentMaxId = buffer.getLong();
+                resourceId = 0l;
+                computeAndSetLogSize();
+                break;
+            case LogType.WAIT:
                 if (buffer.remaining() < ILogRecord.DS_LEN) {
                     return RecordReadStatus.TRUNCATED;
                 }
                 datasetId = buffer.getInt();
                 resourceId = 0l;
-                // fall throuh
-            case LogType.WAIT:
                 computeAndSetLogSize();
                 break;
             case LogType.JOB_COMMIT:
@@ -709,5 +724,25 @@ public class LogRecord implements ILogRecord {
 
     public void setRequester(ILogRequester requester) {
         this.requester = requester;
+    }
+
+    @Override
+    public long getFlushingComponentMinId() {
+        return flushingComponentMinId;
+    }
+
+    @Override
+    public void setFlushingComponentMinId(long flushingComponentMinId) {
+        this.flushingComponentMinId = flushingComponentMinId;
+    }
+
+    @Override
+    public long getFlushingComponentMaxId() {
+        return flushingComponentMaxId;
+    }
+
+    @Override
+    public void setFlushingComponentMaxId(long flushingComponentMaxId) {
+        this.flushingComponentMaxId = flushingComponentMaxId;
     }
 }

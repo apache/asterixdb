@@ -49,6 +49,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentIdGenerator;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
@@ -330,6 +331,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     @Override
     public synchronized ILSMComponentIdGenerator getComponentIdGenerator(int datasetId, int partition) {
         DatasetResource dataset = datasets.get(datasetId);
+        if (dataset == null) {
+            return null;
+        }
         ILSMComponentIdGenerator generator = dataset.getComponentIdGenerator(partition);
         if (generator == null) {
             populateOpTrackerAndIdGenerator(dataset, partition);
@@ -425,12 +429,26 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             }
             int partition = primaryOpTracker.getPartition();
             Collection<ILSMIndex> indexes = dsInfo.getDatasetPartitionOpenIndexes(partition);
+            ILSMIndex flushIndex = null;
+            for (ILSMIndex lsmIndex : indexes) {
+                if (!lsmIndex.isCurrentMutableComponentEmpty()) {
+                    flushIndex = lsmIndex;
+                    break;
+                }
+            }
+            if (flushIndex == null) {
+                // all open indexes are empty, nothing to flush
+                continue;
+            }
+            LSMComponentId componentId = (LSMComponentId) flushIndex.getCurrentMemoryComponent().getId();
             ILSMComponentIdGenerator idGenerator = getComponentIdGenerator(dsInfo.getDatasetID(), partition);
             idGenerator.refresh();
 
             if (dsInfo.isDurable()) {
+
                 synchronized (logRecord) {
-                    TransactionUtil.formFlushLogRecord(logRecord, dsInfo.getDatasetID(), null);
+                    TransactionUtil.formFlushLogRecord(logRecord, dsInfo.getDatasetID(), partition,
+                            componentId.getMinId(), componentId.getMaxId(), null);
                     try {
                         logManager.log(logRecord);
                     } catch (ACIDException e) {

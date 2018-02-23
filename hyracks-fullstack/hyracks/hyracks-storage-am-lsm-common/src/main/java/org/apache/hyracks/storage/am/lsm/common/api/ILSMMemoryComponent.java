@@ -107,7 +107,9 @@ public interface ILSMMemoryComponent extends ILSMComponent {
      * Reset the component Id of the memory component after it's recycled
      *
      * @param newId
+     * @param force
+     *      Whether to force reset the Id to skip sanity checks
      * @throws HyracksDataException
      */
-    void resetId(ILSMComponentId newId) throws HyracksDataException;
+    void resetId(ILSMComponentId newId, boolean force) throws HyracksDataException;
 }

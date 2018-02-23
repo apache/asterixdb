@@ -213,6 +213,13 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         }
     }
 
+    /**
+     * Used during the recovery process to force refresh the next component id
+     */
+    public void forceRefreshNextId() {
+        nextComponentIds[writeIndex] = idGenerator.getId();
+    }
+
     public synchronized void setFirstLSN(long firstLSN) {
         // We make sure that this method is only called on an empty component so the first LSN is not set incorrectly
         firstLSNs[writeIndex] = firstLSN;
@@ -258,7 +265,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     @Override
     public void recycled(ILSMMemoryComponent component, boolean componentSwitched) throws HyracksDataException {
         ILSMComponentId componentId = getLSMComponentId();
-        component.resetId(componentId);
+        component.resetId(componentId, false);
         if (componentSwitched) {
             recycleIndex = (recycleIndex + 1) % nextComponentIds.length;
         }
@@ -269,7 +276,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         if (component == lsmIndex.getCurrentMemoryComponent()) {
             // only set the component id for the first (current) memory component
             ILSMComponentId componentId = getLSMComponentId();
-            component.resetId(componentId);
+            component.resetId(componentId, false);
         }
     }
 }

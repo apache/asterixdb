@@ -57,6 +57,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.test.CountAnswer;
 import org.apache.hyracks.api.test.FrameWriterTestUtils;
 import org.apache.hyracks.api.test.FrameWriterTestUtils.FrameWriterOperation;
+import org.apache.hyracks.storage.am.lsm.btree.impl.AllowTestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.ITestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -92,25 +93,20 @@ public class StorageTestUtils {
                     NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
                             PARTITIONING_KEYS, null, null, null, false, null),
                     null, DatasetType.INTERNAL, DATASET_ID, 0);
-    public static final ITestOpCallback<Semaphore> ALLOW_CALLBACK = new ITestOpCallback<Semaphore>() {
-        @Override
-        public void before(Semaphore smeaphore) {
-            smeaphore.release();
-        }
-
-        @Override
-        public void after() {
-        }
-    };
 
     private StorageTestUtils() {
     }
 
     static void allowAllOps(TestLsmBtree lsmBtree) {
-        lsmBtree.addModifyCallback(ALLOW_CALLBACK);
-        lsmBtree.addFlushCallback(ALLOW_CALLBACK);
-        lsmBtree.addSearchCallback(ALLOW_CALLBACK);
-        lsmBtree.addMergeCallback(ALLOW_CALLBACK);
+        lsmBtree.clearModifyCallbacks();
+        lsmBtree.clearFlushCallbacks();
+        lsmBtree.clearSearchCallbacks();
+        lsmBtree.clearMergeCallbacks();
+
+        lsmBtree.addModifyCallback(AllowTestOpCallback.INSTANCE);
+        lsmBtree.addFlushCallback(AllowTestOpCallback.INSTANCE);
+        lsmBtree.addSearchCallback(AllowTestOpCallback.INSTANCE);
+        lsmBtree.addMergeCallback(AllowTestOpCallback.INSTANCE);
     }
 
     public static PrimaryIndexInfo createPrimaryIndex(TestNodeController nc, int partition)
@@ -121,8 +117,13 @@ public class StorageTestUtils {
 
     public static LSMInsertDeleteOperatorNodePushable getInsertPipeline(TestNodeController nc, IHyracksTaskContext ctx)
             throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
+        return getInsertPipeline(nc, ctx, null);
+    }
+
+    public static LSMInsertDeleteOperatorNodePushable getInsertPipeline(TestNodeController nc, IHyracksTaskContext ctx,
+            Index secondaryIndex) throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
         return nc.getInsertPipeline(ctx, DATASET, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
-                KEY_INDICATORS_LIST, STORAGE_MANAGER, null).getLeft();
+                KEY_INDICATORS_LIST, STORAGE_MANAGER, secondaryIndex).getLeft();
     }
 
     public static TupleGenerator getTupleGenerator() {

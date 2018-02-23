@@ -47,6 +47,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.lsm.btree.impl.AllowTestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
@@ -282,7 +283,7 @@ public class ComponentRollbackTest {
             lsmAccessor.deleteComponents(
                     c -> (c instanceof ILSMMemoryComponent && ((ILSMMemoryComponent) c).isModified()));
             // now that the rollback has completed, we will unblock the search
-            lsmBtree.addSearchCallback(StorageTestUtils.ALLOW_CALLBACK);
+            lsmBtree.addSearchCallback(AllowTestOpCallback.INSTANCE);
             lsmBtree.allowSearch(1);
             Assert.assertTrue(firstSearcher.result());
             // search now and ensure
@@ -303,7 +304,7 @@ public class ComponentRollbackTest {
             DiskComponentLsnPredicate pred = new DiskComponentLsnPredicate(lsn);
             lsmAccessor.deleteComponents(pred);
             // now that the rollback has completed, we will unblock the search
-            lsmBtree.addSearchCallback(StorageTestUtils.ALLOW_CALLBACK);
+            lsmBtree.addSearchCallback(AllowTestOpCallback.INSTANCE);
             lsmBtree.allowSearch(1);
             Assert.assertTrue(secondSearcher.result());
             StorageTestUtils.searchAndAssertCount(nc, PARTITION,
@@ -477,7 +478,7 @@ public class ComponentRollbackTest {
             Rollerback rollerback = new Rollerback(lsmBtree, memoryComponentsPredicate);
             //unblock the flush
             lsmBtree.allowFlush(1);
-            lsmBtree.addSearchCallback(StorageTestUtils.ALLOW_CALLBACK);
+            lsmBtree.addSearchCallback(AllowTestOpCallback.INSTANCE);
             lsmBtree.allowSearch(1);
             Assert.assertTrue(firstSearcher.result());
             // ensure current mem component is not modified
@@ -535,7 +536,7 @@ public class ComponentRollbackTest {
             // now that we enetered, we will rollback
             Rollerback rollerback = new Rollerback(lsmBtree, memoryComponentsPredicate);
             // The rollback will be waiting for the flush to complete
-            lsmBtree.addSearchCallback(StorageTestUtils.ALLOW_CALLBACK);
+            lsmBtree.addSearchCallback(AllowTestOpCallback.INSTANCE);
             lsmBtree.allowSearch(1);
             Assert.assertTrue(firstSearcher.result());
             //unblock the flush
@@ -606,7 +607,7 @@ public class ComponentRollbackTest {
             // unblock the merge
             lsmBtree.allowMerge(1);
             // unblock the search
-            lsmBtree.addSearchCallback(StorageTestUtils.ALLOW_CALLBACK);
+            lsmBtree.addSearchCallback(AllowTestOpCallback.INSTANCE);
             lsmBtree.allowSearch(1);
             Assert.assertTrue(firstSearcher.result());
             rollerback.complete();
@@ -673,7 +674,7 @@ public class ComponentRollbackTest {
             // now that we enetered, we will rollback
             Rollerback rollerBack = new Rollerback(lsmBtree, new DiskComponentLsnPredicate(lsn));
             // unblock the search
-            lsmBtree.addSearchCallback(StorageTestUtils.ALLOW_CALLBACK);
+            lsmBtree.addSearchCallback(AllowTestOpCallback.INSTANCE);
             lsmBtree.allowSearch(1);
             Assert.assertTrue(firstSearcher.result());
             // even though rollback has been called, it is still waiting for the merge to complete

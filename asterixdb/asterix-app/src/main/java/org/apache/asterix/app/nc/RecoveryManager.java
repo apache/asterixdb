@@ -44,6 +44,8 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.ReplicationProperties;
+import org.apache.asterix.common.context.DatasetInfo;
+import org.apache.asterix.common.context.IndexInfo;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
@@ -69,9 +71,14 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId.IdCompareResult;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.logging.log4j.Level;
@@ -284,6 +291,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         TxnEntityId tempKeyTxnEntityId = new TxnEntityId(-1, -1, -1, null, -1, false);
 
         ILogRecord logRecord = null;
+        ILSMComponentIdGenerator idGenerator = null;
         try {
             logReader.setPosition(lowWaterMarkLSN);
             logRecord = logReader.next();
@@ -363,10 +371,51 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             }
                         }
                         break;
+                    case LogType.FLUSH:
+                        int partition = logRecord.getResourcePartition();
+                        if (partitions.contains(partition)) {
+                            int datasetId = logRecord.getDatasetId();
+                            idGenerator = datasetLifecycleManager.getComponentIdGenerator(datasetId, partition);
+                            if (idGenerator == null) {
+                                // it's possible this dataset has been dropped
+                                logRecord = logReader.next();
+                                continue;
+                            }
+                            idGenerator.refresh();
+                            DatasetInfo dsInfo = datasetLifecycleManager.getDatasetInfo(datasetId);
+                            // we only need to flush open indexes here (opened by previous update records)
+                            // if an index has no ongoing updates, then it's memory component must be empty
+                            // and there is nothing to flush
+                            for (IndexInfo iInfo : dsInfo.getIndexes().values()) {
+                                if (iInfo.isOpen()) {
+                                    maxDiskLastLsn = resourceId2MaxLSNMap.get(iInfo.getResourceId());
+                                    index = iInfo.getIndex();
+                                    AbstractLSMIOOperationCallback ioCallback =
+                                            (AbstractLSMIOOperationCallback) index.getIOOperationCallback();
+                                    if (logRecord.getLSN() > maxDiskLastLsn
+                                            && !index.isCurrentMutableComponentEmpty()) {
+                                        // schedule flush
+                                        ioCallback.updateLastLSN(logRecord.getLSN());
+                                        redoFlush(index, logRecord);
+                                        redoCount++;
+                                    } else {
+                                        if (index.isMemoryComponentsAllocated()) {
+                                            // if the memory component has been allocated, we
+                                            // force it to receive the same Id
+                                            index.getCurrentMemoryComponent().resetId(idGenerator.getId(), true);
+                                        } else {
+                                            // otherwise, we refresh the id stored in ioCallback
+                                            // to ensure the memory component receives correct Id upon activation
+                                            ioCallback.forceRefreshNextId();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        break;
                     case LogType.JOB_COMMIT:
                     case LogType.ENTITY_COMMIT:
                     case LogType.ABORT:
-                    case LogType.FLUSH:
                     case LogType.WAIT:
                     case LogType.MARKER:
                         //do nothing
@@ -734,6 +783,23 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         } catch (Exception e) {
             throw new IllegalStateException("Failed to redo", e);
         }
+    }
+
+    private static void redoFlush(ILSMIndex index, ILogRecord logRecord) throws HyracksDataException {
+        ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+        long minId = logRecord.getFlushingComponentMinId();
+        long maxId = logRecord.getFlushingComponentMaxId();
+        ILSMComponentId id = new LSMComponentId(minId, maxId);
+        if (!index.getDiskComponents().isEmpty()) {
+            ILSMDiskComponent diskComponent = index.getDiskComponents().get(0);
+            ILSMComponentId maxDiskComponentId = diskComponent.getId();
+            if (maxDiskComponentId.compareTo(id) != IdCompareResult.LESS_THAN) {
+                throw new IllegalStateException("Illegal state of component Id. Max disk component Id "
+                        + maxDiskComponentId + " should be less than redo flush component Id " + id);
+            }
+        }
+        index.getCurrentMemoryComponent().resetId(id, true);
+        accessor.scheduleFlush(index.getIOOperationCallback());
     }
 
     private class JobEntityCommits {

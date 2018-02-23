@@ -38,6 +38,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
@@ -117,6 +118,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
         if (needsFlush || flushOnExit) {
             //Make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering them until the current flush is scheduled.
+            LSMComponentId primaryId = null;
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMOperationTracker opTracker = lsmIndex.getOperationTracker();
                 synchronized (opTracker) {
@@ -124,7 +126,13 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                     if (memComponent.getState() == ComponentState.READABLE_WRITABLE && memComponent.isModified()) {
                         memComponent.setState(ComponentState.READABLE_UNWRITABLE);
                     }
+                    if (lsmIndex.isPrimaryIndex()) {
+                        primaryId = (LSMComponentId) memComponent.getId();
+                    }
                 }
+            }
+            if (primaryId == null) {
+                throw new IllegalStateException("Primary index not found in dataset " + dsInfo.getDatasetID());
             }
             LogRecord logRecord = new LogRecord();
             flushOnExit = false;
@@ -133,7 +141,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                  * Generate a FLUSH log.
                  * Flush will be triggered when the log is written to disk by LogFlusher.
                  */
-                TransactionUtil.formFlushLogRecord(logRecord, datasetID, this);
+                TransactionUtil.formFlushLogRecord(logRecord, datasetID, partition, primaryId.getMinId(),
+                        primaryId.getMaxId(), this);
                 try {
                     logManager.log(logRecord);
                 } catch (ACIDException e) {
