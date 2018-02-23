@@ -40,17 +40,19 @@ public class FeedConnection implements IMetadataEntity<FeedConnection> {
     private String feedName;
     private String datasetName;
     private String policyName;
+    private String whereClauseBody;
     private String outputType;
     private List<FunctionSignature> appliedFunctions;
 
     public FeedConnection(String dataverseName, String feedName, String datasetName,
-            List<FunctionSignature> appliedFunctions, String policyName, String outputType) {
+            List<FunctionSignature> appliedFunctions, String policyName, String whereClauseBody, String outputType) {
         this.dataverseName = dataverseName;
         this.feedName = feedName;
         this.datasetName = datasetName;
         this.appliedFunctions = appliedFunctions;
         this.connectionId = feedName + ":" + datasetName;
         this.policyName = policyName;
+        this.whereClauseBody = whereClauseBody == null ? "" : whereClauseBody;
         this.outputType = outputType;
         this.feedId = new EntityId(FeedUtils.FEED_EXTENSION_NAME, dataverseName, feedName);
     }
@@ -103,6 +105,10 @@ public class FeedConnection implements IMetadataEntity<FeedConnection> {
 
     public String getPolicyName() {
         return policyName;
+    }
+
+    public String getWhereClauseBody() {
+        return whereClauseBody;
     }
 
     public String getOutputType() {

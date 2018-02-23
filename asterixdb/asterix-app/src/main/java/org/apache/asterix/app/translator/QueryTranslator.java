@@ -2181,6 +2181,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String feedName = cfs.getFeedName();
         String datasetName = cfs.getDatasetName().getValue();
         String policyName = cfs.getPolicy();
+        String whereClauseBody = cfs.getWhereClauseBody();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         // TODO: Check whether we are connecting a change feed to a non-meta dataset
@@ -2213,7 +2214,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (fc != null) {
                 throw new AlgebricksException("Feed" + feedName + " is already connected dataset " + datasetName);
             }
-            fc = new FeedConnection(dataverseName, feedName, datasetName, appliedFunctions, policyName,
+            fc = new FeedConnection(dataverseName, feedName, datasetName, appliedFunctions, policyName, whereClauseBody,
                     outputType.getTypeName());
             MetadataManager.INSTANCE.addFeedConnection(metadataProvider.getMetadataTxnContext(), fc);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

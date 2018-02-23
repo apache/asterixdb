@@ -157,6 +157,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
+import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
@@ -1264,14 +1265,37 @@ Statement ConnectStatement() throws ParseException:
   List<FunctionSignature> appliedFunctions = new ArrayList<FunctionSignature>();
   Statement stmt = null;
   String policy = null;
+  String whereClauseBody = null;
+  WhereClause whereClause = null;
+  Token beginPos = null;
+  Token endPos = null;
 }
 {
   (
     <FEED> feedNameComponents = QualifiedName() <TO> Dataset() datasetNameComponents = QualifiedName()
-    (ApplyFunction(appliedFunctions))?  (policy = GetPolicy())?
+    (ApplyFunction(appliedFunctions))?
+    (policy = GetPolicy())?
+    (
+      <WHERE>
+      {
+        beginPos = token;
+        whereClause = new WhereClause();
+        Expression whereExpr;
+      }
+      whereExpr = Expression()
+      {
+        whereClause.setWhereExpr(whereExpr);
+      }
+    )?
+    {
+      if (whereClause != null) {
+        endPos = token;
+        whereClauseBody = extractFragment(beginPos.endLine, beginPos.endColumn, endPos.endLine, endPos.endColumn + 1);
+      }
+    }
       {
         stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, appliedFunctions,
-         policy, getVarCounter());
+         policy, whereClauseBody, getVarCounter());
       }
   )
   {

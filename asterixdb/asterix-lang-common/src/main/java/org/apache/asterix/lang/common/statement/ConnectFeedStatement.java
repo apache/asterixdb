@@ -34,11 +34,12 @@ public class ConnectFeedStatement implements Statement {
     private final Identifier datasetName;
     private final String feedName;
     private final String policy;
+    private final String whereClauseBody;
     private int varCounter;
     private final List<FunctionSignature> appliedFunctions;
 
     public ConnectFeedStatement(Pair<Identifier, Identifier> feedNameCmp, Pair<Identifier, Identifier> datasetNameCmp,
-            List<FunctionSignature> appliedFunctions, String policy, int varCounter) {
+            List<FunctionSignature> appliedFunctions, String policy, String whereClauseBody, int varCounter) {
         if (feedNameCmp.first != null && datasetNameCmp.first != null
                 && !feedNameCmp.first.getValue().equals(datasetNameCmp.first.getValue())) {
             throw new IllegalArgumentException("Dataverse for source feed and target dataset do not match");
@@ -48,6 +49,7 @@ public class ConnectFeedStatement implements Statement {
         this.datasetName = datasetNameCmp.second;
         this.feedName = feedNameCmp.second.getValue();
         this.policy = policy != null ? policy : BuiltinFeedPolicies.DEFAULT_POLICY.getPolicyName();
+        this.whereClauseBody = whereClauseBody;
         this.varCounter = varCounter;
         this.appliedFunctions = appliedFunctions;
     }
@@ -62,6 +64,10 @@ public class ConnectFeedStatement implements Statement {
 
     public int getVarCounter() {
         return varCounter;
+    }
+
+    public String getWhereClauseBody() {
+        return whereClauseBody;
     }
 
     @Override

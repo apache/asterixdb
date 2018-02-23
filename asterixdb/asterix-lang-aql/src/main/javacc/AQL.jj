@@ -1166,7 +1166,7 @@ Statement FeedStatement() throws ParseException:
     <CONNECT> <FEED> feedNameComponents = QualifiedName() <TO> <DATASET> datasetNameComponents = QualifiedName()
     (ApplyFunction(appliedFunctions))? (policy = GetPolicy())?
       {
-        stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, appliedFunctions, policy, getVarCounter());
+        stmt = new ConnectFeedStatement(feedNameComponents, datasetNameComponents, appliedFunctions, policy, null, getVarCounter());
       }
     | <DISCONNECT> <FEED> feedNameComponents = QualifiedName() <FROM> <DATASET> datasetNameComponents = QualifiedName()
       {
