@@ -32,20 +32,17 @@ public class CleanupUtils {
     }
 
     public static Throwable destroy(Throwable root, IDestroyable... destroyables) {
-        for (int i = 0; i < destroyables.length; i++) {
-            if (destroyables[i] != null) {
-                IDestroyable destroyable = destroyables[i];
-                if (destroyable != null) {
+        for (IDestroyable destroyable : destroyables) {
+            if (destroyable != null) {
+                try {
+                    destroyable.destroy();
+                } catch (Throwable th) { // NOSONAR. Had to be done to satisfy contracts
                     try {
-                        destroyable.destroy();
-                    } catch (Throwable th) { // NOSONAR. Had to be done to satisfy contracts
-                        try {
-                            LOGGER.log(Level.WARN, "Failure destroying a destroyable resource", th);
-                        } catch (Throwable ignore) { // NOSONAR: Ignore catching Throwable
-                            // NOSONAR Ignore logging failure
-                        }
-                        root = ExceptionUtils.suppress(root, th);
+                        LOGGER.log(Level.WARN, "Failure destroying a destroyable resource", th);
+                    } catch (Throwable ignore) { // NOSONAR: Ignore catching Throwable
+                        // NOSONAR Ignore logging failure
                     }
+                    root = ExceptionUtils.suppress(root, th); // NOSONAR
                 }
             }
         }
@@ -72,7 +69,7 @@ public class CleanupUtils {
                 } catch (Throwable loggingFailure) { // NOSONAR: Ignore catching Throwable
                     // NOSONAR: Ignore logging failure
                 }
-                root = ExceptionUtils.suppress(root, th);
+                root = ExceptionUtils.suppress(root, th); // NOSONAR
             }
         }
         return root;
