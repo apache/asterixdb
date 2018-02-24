@@ -56,4 +56,45 @@ public class DataUtils {
     public static void copyInto(IValueReference value, byte[] copy, int offset) {
         System.arraycopy(value.getByteArray(), value.getStartOffset(), copy, offset, value.getLength());
     }
+
+    /**
+     * Check whether two value references are equals
+     *
+     * @param first
+     *            first value
+     * @param second
+     *            second value
+     * @return true if the two values are equal, false otherwise
+     */
+    public static boolean equals(IValueReference first, IValueReference second) { // NOSONAR
+        if (first.getLength() != second.getLength()) {
+            return false;
+        }
+        return equalsInRange(first.getByteArray(), first.getStartOffset(), second.getByteArray(),
+                second.getStartOffset(), first.getLength());
+    }
+
+    /**
+     * Check whether subranges of two byte arrays are equal
+     *
+     * @param arr1
+     *            first array
+     * @param offset1
+     *            first offset
+     * @param arr2
+     *            second array
+     * @param offset2
+     *            second offset
+     * @param length
+     *            the length of the window
+     * @return true if the two arrays have equal subranges, false otherwise
+     */
+    public static boolean equalsInRange(byte[] arr1, int offset1, byte[] arr2, int offset2, int length) {
+        for (int i = 0; i < length; i++) {
+            if (arr1[offset1 + i] != arr2[offset2 + i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

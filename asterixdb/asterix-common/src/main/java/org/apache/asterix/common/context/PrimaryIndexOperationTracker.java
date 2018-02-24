@@ -187,8 +187,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     private void decrementNumActiveOperations(IModificationOperationCallback modificationCallback) {
         //modificationCallback can be NoOpOperationCallback when redo/undo operations are executed.
         if (modificationCallback != NoOpOperationCallback.INSTANCE) {
-            numActiveOperations.decrementAndGet();
-            if (numActiveOperations.get() < 0) {
+            if (numActiveOperations.decrementAndGet() < 0) {
                 throw new IllegalStateException("The number of active operations cannot be negative!");
             }
             ((AbstractOperationCallback) modificationCallback).afterOperation();
