@@ -46,7 +46,6 @@ public class QueryCancellationServlet extends AbstractServlet {
 
     @Override
     protected void delete(IServletRequest request, IServletResponse response) throws IOException {
-        // gets the parameter client_context_id from the request.
         String clientContextId = request.getParameter(CLIENT_CONTEXT_ID);
         if (clientContextId == null) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);

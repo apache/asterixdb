@@ -21,6 +21,7 @@ package org.apache.asterix.app.message;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.messaging.api.MessageFuture;
+import org.apache.asterix.common.utils.RequestStatus;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -28,9 +29,11 @@ public class CancelQueryResponse implements INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private final long reqId;
+    private final RequestStatus status;
 
-    public CancelQueryResponse(long reqId) {
+    public CancelQueryResponse(long reqId, RequestStatus status) {
         this.reqId = reqId;
+        this.status = status;
     }
 
     @Override
@@ -41,4 +44,9 @@ public class CancelQueryResponse implements INcAddressedMessage {
             future.complete(this);
         }
     }
+
+    public RequestStatus getStatus() {
+        return status;
+    }
+
 }
