@@ -107,5 +107,7 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
         logRecord.setLogType(LogType.WAIT);
         logRecord.computeAndSetLogSize();
         txnSubsystem.getLogManager().log(logRecord);
+        // set the log type back to UPDATE for normal updates
+        logRecord.setLogType(LogType.UPDATE);
     }
 }
