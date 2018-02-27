@@ -499,8 +499,7 @@ public class AccessMethodUtils {
                 // In this case, we need to change the search parameter. Refer to the caller section for the detail.
                 realTypeConvertedToIntegerType =
                         isRealTypeConvertedToIntegerType(constantValueTag, indexedFieldTypeTag);
-                if (realTypeConvertedToIntegerType && !index.isEnforced() && !index.isOverridingKeyFieldTypes()) {
-                    // For the index on a closed-type field,
+                if (realTypeConvertedToIntegerType) {
                     // if a DOUBLE or FLOAT constant is converted to an INT type value,
                     // we need to check a corner case where two real values are located
                     // between an INT value. For example, the following query,
@@ -564,7 +563,7 @@ public class AccessMethodUtils {
                             // NEQ should not be a case.
                             throw new IllegalStateException();
                     }
-                } else if (!realTypeConvertedToIntegerType) {
+                } else {
                     // Type conversion only case: (e.g., INT -> BIGINT)
                     replacedConstantValue = getReplacedConstantValue(constantValue.getObject(), constantValueTag,
                             indexedFieldTypeTag, index.isEnforced(), TypeCastingMathFunctionType.NONE);
