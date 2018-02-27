@@ -27,6 +27,7 @@ import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 import twitter4j.Query;
 import twitter4j.QueryResult;
 import twitter4j.Status;
@@ -43,6 +44,7 @@ public class TwitterPullRecordReader implements IRecordReader<String> {
     private int nextTweetIndex = 0;
     private long lastTweetIdReceived = 0;
     private GenericRecord<String> record;
+    private boolean stopped = false;
 
     public TwitterPullRecordReader(Twitter twitter, String keywords, int requestInterval) {
         this.twitter = twitter;
@@ -59,7 +61,7 @@ public class TwitterPullRecordReader implements IRecordReader<String> {
 
     @Override
     public boolean hasNext() throws Exception {
-        return true;
+        return !stopped;
     }
 
     @Override
@@ -90,7 +92,8 @@ public class TwitterPullRecordReader implements IRecordReader<String> {
 
     @Override
     public boolean stop() {
-        return false;
+        stopped = true;
+        return true;
     }
 
     @Override

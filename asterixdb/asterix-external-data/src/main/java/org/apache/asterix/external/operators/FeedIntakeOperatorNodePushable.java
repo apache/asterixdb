@@ -44,7 +44,7 @@ import org.apache.logging.log4j.Logger;
 public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePushable {
     private static final Logger LOGGER = LogManager.getLogger();
     // TODO: Make configurable https://issues.apache.org/jira/browse/ASTERIXDB-2065
-    public static final int DEFAULT_ABORT_TIMEOUT = 10000;
+    public static final int DEFAULT_ABORT_TIMEOUT = 60000;
     private final FeedIntakeOperatorDescriptor opDesc;
     private final FeedAdapter adapter;
     private boolean poisoned = false;

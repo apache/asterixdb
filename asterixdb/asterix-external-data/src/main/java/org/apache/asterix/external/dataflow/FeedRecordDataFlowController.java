@@ -95,11 +95,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
             }
         } catch (HyracksDataException e) {
             LOGGER.log(Level.WARN, "Exception during ingestion", e);
-            //if interrupted while waiting for a new record, then it is safe to not fail forward
             if (e.getComponent() == ErrorCode.ASTERIX
-                    && (e.getErrorCode() == ErrorCode.FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD)) {
-                // Do nothing. interrupted by the active manager
-            } else if (e.getComponent() == ErrorCode.ASTERIX
                     && (e.getErrorCode() == ErrorCode.FEED_FAILED_WHILE_GETTING_A_NEW_RECORD)) {
                 // Failure but we know we can for sure push the previously parsed records safely
                 failure = e;
@@ -141,11 +137,8 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     private IRawRecord<? extends T> next() throws Exception {
         try {
             return recordReader.next();
-        } catch (InterruptedException e) { // NOSONAR Gracefully handling interrupt to push records in the pipeline
-            if (flushing) {
-                throw e;
-            }
-            throw new RuntimeDataException(ErrorCode.FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD, e);
+        } catch (InterruptedException e) {
+            throw e;
         } catch (Exception e) {
             if (flushing) {
                 throw e;
@@ -161,11 +154,8 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         while (true) {
             try {
                 return recordReader.hasNext();
-            } catch (InterruptedException e) { // NOSONAR Gracefully handling interrupt to push records in the pipeline
-                if (flushing) {
-                    throw e;
-                }
-                throw new RuntimeDataException(ErrorCode.FEED_STOPPED_WHILE_WAITING_FOR_A_NEW_RECORD, e);
+            } catch (InterruptedException e) {
+                throw e;
             } catch (Exception e) {
                 if (flushing) {
                     throw e;
