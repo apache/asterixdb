@@ -52,6 +52,6 @@ public class MetadataIndexImmutableProperties {
     }
 
     public static boolean isMetadataDataset(int datasetId) {
-        return datasetId < FIRST_AVAILABLE_USER_DATASET_ID;
+        return datasetId >= 0 && datasetId < FIRST_AVAILABLE_USER_DATASET_ID;
     }
 }

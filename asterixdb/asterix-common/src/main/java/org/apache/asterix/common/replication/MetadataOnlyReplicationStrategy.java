@@ -24,6 +24,6 @@ public class MetadataOnlyReplicationStrategy implements IReplicationStrategy {
 
     @Override
     public boolean isMatch(int datasetId) {
-        return datasetId < MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID && datasetId >= 0;
+        return MetadataIndexImmutableProperties.isMetadataDataset(datasetId);
     }
 }
