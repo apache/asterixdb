@@ -46,7 +46,6 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -128,7 +127,7 @@ public class ClusterStateManager implements IClusterStateManager {
         metadataNodeActive = active;
         if (active) {
             metadataPartition.setActiveNodeId(currentMetadataNode);
-            LOGGER.info(String.format("Metadata node %s is now active", currentMetadataNode));
+            LOGGER.info("Metadata node {} is now active", currentMetadataNode);
         }
         notifyAll();
     }
@@ -166,7 +165,7 @@ public class ClusterStateManager implements IClusterStateManager {
     @Override
     public synchronized void refreshState() throws HyracksDataException {
         if (state == ClusterState.SHUTTING_DOWN) {
-            LOGGER.log(Level.INFO, "Not refreshing final state %s", state);
+            LOGGER.info("Not refreshing final state {}", state);
             return;
         }
         resetClusterPartitionConstraint();
@@ -187,8 +186,7 @@ public class ClusterStateManager implements IClusterStateManager {
         IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
         for (String node : participantNodes) {
             if (!resourceIdManager.reported(node)) {
-                LOGGER.log(Level.INFO, "Partitions are ready but %s has not yet registered its max resource id...",
-                        node);
+                LOGGER.info("Partitions are ready but {} has not yet registered its max resource id...", node);
                 setState(ClusterState.UNUSABLE);
                 return;
             }
