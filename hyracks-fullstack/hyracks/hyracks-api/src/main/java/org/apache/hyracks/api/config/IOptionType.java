@@ -42,7 +42,7 @@ public interface IOptionType<T> {
     }
 
     /**
-     * @return the value in a format suitable for serialized JSON
+     * Serializes the value as a field in the provided object node
      */
     void serializeJSONField(String fieldName, Object value, ObjectNode node);
 

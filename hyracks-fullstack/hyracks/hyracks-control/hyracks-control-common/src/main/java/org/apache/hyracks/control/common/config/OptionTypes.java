@@ -21,8 +21,8 @@ package org.apache.hyracks.control.common.config;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
@@ -305,7 +305,12 @@ public class OptionTypes {
 
         @Override
         public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
-            node.put(fieldName, value == null ? null : StringUtils.join((String[]) value, ','));
+            if (value == null) {
+                node.putNull(fieldName);
+            } else {
+                ArrayNode array = node.putArray(fieldName);
+                Stream.of((String[]) value).forEachOrdered(array::add);
+            }
         }
     };
 
