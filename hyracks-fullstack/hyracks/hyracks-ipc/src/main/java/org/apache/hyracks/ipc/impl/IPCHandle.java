@@ -118,10 +118,22 @@ final class IPCHandle implements IIPCHandle {
     }
 
     synchronized boolean waitTillConnected() throws InterruptedException {
-        while (state != HandleState.CONNECTED && state != HandleState.CONNECT_FAILED) {
-            wait();
+        while (true) {
+            switch (state) {
+                case INITIAL:
+                case CONNECT_SENT:
+                case CONNECT_RECEIVED:
+                    // TODO: need a reasonable timeout here
+                    wait();
+                    break;
+                case CONNECTED:
+                case CONNECT_FAILED:
+                case CLOSED:
+                    return state == HandleState.CONNECTED;
+                default:
+                    throw new IllegalStateException("unknown state: " + state);
+            }
         }
-        return state == HandleState.CONNECTED;
     }
 
     ByteBuffer getInBuffer() {
