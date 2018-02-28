@@ -730,15 +730,19 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                     (ILSMIndex) datasetLifecycleManager.getIndex(logRecord.getDatasetId(), logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             try {
-                if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.INSERT_BYTE) {
-                    indexAccessor.forceDelete(logRecord.getNewValue());
-                } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.DELETE_BYTE) {
-                    indexAccessor.forceInsert(logRecord.getOldValue());
-                } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.UPSERT_BYTE) {
-                    // undo, upsert the old value if found, otherwise, physical delete
-                    undoUpsert(indexAccessor, logRecord);
-                } else {
-                    throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
+                switch (logRecord.getNewOp()) {
+                    case AbstractIndexModificationOperationCallback.INSERT_BYTE:
+                        indexAccessor.forceDelete(logRecord.getNewValue());
+                        break;
+                    case AbstractIndexModificationOperationCallback.DELETE_BYTE:
+                        // use the same logic to undo delete as undo upsert, since
+                        // the old value could be null as well if the deleted record is from disk component
+                    case AbstractIndexModificationOperationCallback.UPSERT_BYTE:
+                        // undo, upsert the old value if found, otherwise, physical delete
+                        undoUpsertOrDelete(indexAccessor, logRecord);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
                 }
             } finally {
                 indexAccessor.destroy();
@@ -748,7 +752,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         }
     }
 
-    private static void undoUpsert(ILSMIndexAccessor indexAccessor, ILogRecord logRecord) throws HyracksDataException {
+    private static void undoUpsertOrDelete(ILSMIndexAccessor indexAccessor, ILogRecord logRecord)
+            throws HyracksDataException {
         if (logRecord.getOldValue() == null) {
             try {
                 indexAccessor.forcePhysicalDelete(logRecord.getNewValue());

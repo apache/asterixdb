@@ -189,6 +189,15 @@ public class TestNodeController {
             Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType, int[] filterFields,
             int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
             StorageComponentProvider storageComponentProvider, Index secondaryIndex)
+            throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
+        return getInsertPipeline(ctx, dataset, primaryKeyTypes, recordType, metaType, filterFields, primaryKeyIndexes,
+                primaryKeyIndicators, storageComponentProvider, secondaryIndex, IndexOperation.INSERT);
+    }
+
+    public Pair<LSMInsertDeleteOperatorNodePushable, CommitRuntime> getInsertPipeline(IHyracksTaskContext ctx,
+            Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType, int[] filterFields,
+            int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
+            StorageComponentProvider storageComponentProvider, Index secondaryIndex, IndexOperation op)
             throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
         CcApplicationContext appCtx =
                 (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
@@ -200,7 +209,6 @@ public class TestNodeController {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                     mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
-            IndexOperation op = IndexOperation.INSERT;
             IModificationOperationCallbackFactory modOpCallbackFactory =
                     new PrimaryIndexModificationOperationCallbackFactory(dataset.getDatasetId(),
                             primaryIndexInfo.primaryKeyIndexes, TXN_SUBSYSTEM_PROVIDER, Operation.get(op),
