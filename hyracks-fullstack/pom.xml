@@ -24,7 +24,7 @@
   <version>0.3.4-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hyracks-ecosystem-full-stack</name>
-  <url>https://asterixdb.apache.org/</url>
+  <url>${implementation.url}</url>
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
@@ -67,6 +67,11 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <hadoop.version>2.2.0</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
+
+    <implementation.title>Apache Hyracks - ${project.name}</implementation.title>
+    <implementation.url>https://asterixdb.apache.org/</implementation.url>
+    <implementation.version>${project.version}</implementation.version>
+    <implementation.vendor>${project.organization.name}</implementation.vendor>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -208,6 +213,18 @@
           <excludes combine.children="append">
             <exclude>**/DEPENDENCIES</exclude>
           </excludes>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+              <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+            </manifest>
+            <manifestEntries>
+              <Implementation-Title>${implementation.title}</Implementation-Title>
+              <Implementation-URL>${implementation.url}</Implementation-URL>
+              <Implementation-Version>${implementation.version}</Implementation-Version>
+              <Implementation-Vendor>${implementation.vendor}</Implementation-Vendor>
+            </manifestEntries>
+          </archive>
         </configuration>
       </plugin>
       <plugin>
@@ -554,6 +571,18 @@
       <id>release</id>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+              <archive>
+                <manifest>
+                  <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                  <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+                </manifest>
+              </archive>
+            </configuration>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
