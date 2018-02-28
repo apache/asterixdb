@@ -18,16 +18,17 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.properties;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections4.MultiSet;
+import org.apache.commons.collections4.multiset.HashMultiSet;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint.PartitionConstraintType;
 
 public class DefaultNodeGroupDomain implements INodeDomain {
 
-    private List<String> nodes = new ArrayList<>();
+    private MultiSet<String> nodes = new HashMultiSet<>();
 
     public DefaultNodeGroupDomain(List<String> nodes) {
         this.nodes.addAll(nodes);
@@ -66,5 +67,9 @@ public class DefaultNodeGroupDomain implements INodeDomain {
     @Override
     public Integer cardinality() {
         return nodes.size();
+    }
+
+    public String[] getNodes() {
+        return nodes.toArray(new String[0]);
     }
 }

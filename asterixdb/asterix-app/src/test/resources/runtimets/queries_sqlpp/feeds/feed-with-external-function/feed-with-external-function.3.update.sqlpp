@@ -23,6 +23,8 @@
  */
 use externallibtest;
 
+SET `compiler.parallelism` "5";
+
 connect feed TweetFeed to dataset TweetsFeedIngest apply function `testlib#parseTweet`;
 
 start feed TweetFeed;

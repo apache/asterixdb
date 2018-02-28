@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -44,7 +44,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 public class AssignPOperator extends AbstractPhysicalOperator {
 
     private boolean flushFramesRapidly;
-    private int cardinalityConstraint = 0;
+    private String[] locations;
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
@@ -93,10 +93,10 @@ public class AssignPOperator extends AbstractPhysicalOperator {
 
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
-        if (cardinalityConstraint > 0) {
-            AlgebricksCountPartitionConstraint countConstraint =
-                    new AlgebricksCountPartitionConstraint(cardinalityConstraint);
-            builder.contributeMicroOperator(assign, runtime, recDesc, countConstraint);
+        if (locations != null && locations.length > 0) {
+            AlgebricksAbsolutePartitionConstraint locationConstraint =
+                    new AlgebricksAbsolutePartitionConstraint(locations);
+            builder.contributeMicroOperator(assign, runtime, recDesc, locationConstraint);
         } else {
             builder.contributeMicroOperator(assign, runtime, recDesc);
         }
@@ -115,8 +115,8 @@ public class AssignPOperator extends AbstractPhysicalOperator {
         this.flushFramesRapidly = flushFramesRapidly;
     }
 
-    public void setCardinalityConstraint(int cardinality) {
-        this.cardinalityConstraint = cardinality;
+    public void setLocationConstraint(String[] locations) {
+        this.locations = locations;
     }
 
     @Override
