@@ -54,9 +54,9 @@ public class CcConnection {
         notifyAll();
     }
 
-    public synchronized CcId registerNode(NodeRegistration nodeRegistration) throws Exception {
+    public synchronized CcId registerNode(NodeRegistration nodeRegistration, int registrationId) throws Exception {
         registrationPending = true;
-        ccs.registerNode(nodeRegistration);
+        ccs.registerNode(nodeRegistration, registrationId);
         while (registrationPending) {
             wait();
         }

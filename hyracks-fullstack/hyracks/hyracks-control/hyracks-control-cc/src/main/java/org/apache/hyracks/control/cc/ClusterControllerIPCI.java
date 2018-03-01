@@ -65,7 +65,8 @@ class ClusterControllerIPCI implements IIPCI {
         switch (fn.getFunctionId()) {
             case REGISTER_NODE:
                 CCNCFunctions.RegisterNodeFunction rnf = (CCNCFunctions.RegisterNodeFunction) fn;
-                ccs.getWorkQueue().schedule(new RegisterNodeWork(ccs, rnf.getNodeRegistration()));
+                ccs.getWorkQueue()
+                        .schedule(new RegisterNodeWork(ccs, rnf.getNodeRegistration(), rnf.getRegistrationId()));
                 break;
             case UNREGISTER_NODE:
                 CCNCFunctions.UnregisterNodeFunction unf = (CCNCFunctions.UnregisterNodeFunction) fn;

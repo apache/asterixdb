@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.control.common.utils;
 
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,12 +39,8 @@ public class HyracksThreadFactory implements ThreadFactory {
     public Thread newThread(Runnable runnable) {
         Thread t = new Thread(runnable, "Executor-" + threadId.incrementAndGet() + ":" + identifier);
         t.setDaemon(true);
-        t.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                LOGGER.log(Level.ERROR, "Uncaught exception by " + t.getName(), e);
-            }
-        });
+        t.setUncaughtExceptionHandler(
+                (thread, e) -> LOGGER.log(Level.ERROR, "Uncaught exception by " + thread.getName(), e));
         return t;
     }
 }

@@ -35,7 +35,7 @@ import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 
 public interface IClusterController {
-    void registerNode(NodeRegistration reg) throws Exception;
+    void registerNode(NodeRegistration reg, int registrationId) throws Exception;
 
     void unregisterNode(String nodeId) throws Exception;
 

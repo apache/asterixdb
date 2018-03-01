@@ -63,8 +63,8 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
-    public void registerNode(NodeRegistration reg) throws Exception {
-        RegisterNodeFunction fn = new RegisterNodeFunction(reg);
+    public void registerNode(NodeRegistration reg, int registrationId) throws Exception {
+        RegisterNodeFunction fn = new RegisterNodeFunction(reg, registrationId);
         ipcHandle.send(-1, fn, null);
     }
 

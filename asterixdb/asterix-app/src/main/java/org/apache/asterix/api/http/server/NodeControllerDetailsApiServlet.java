@@ -41,7 +41,6 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
@@ -142,7 +141,10 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
 
     protected ObjectNode processNodeStats(IHyracksClientConnection hcc, String node) throws Exception {
         final String details = checkNullDetail(node, hcc.getNodeDetailsJSON(node, true, false));
-        ObjectNode json = (ObjectNode) OBJECT_MAPPER.readTree(details);
+        return processNodeDetailsJSON((ObjectNode) OBJECT_MAPPER.readTree(details));
+    }
+
+    protected ObjectNode processNodeDetailsJSON(ObjectNode json) {
         int index = json.get("rrd-ptr").asInt() - 1;
         json.remove("rrd-ptr");
 
@@ -150,7 +152,6 @@ public class NodeControllerDetailsApiServlet extends ClusterApiServlet {
         for (Iterator<String> iter = json.fieldNames(); iter.hasNext();) {
             keys.add(iter.next());
         }
-
         final ArrayNode gcNames = (ArrayNode) json.get("gc-names");
         final ArrayNode gcCollectionTimes = (ArrayNode) json.get("gc-collection-times");
         final ArrayNode gcCollectionCounts = (ArrayNode) json.get("gc-collection-counts");

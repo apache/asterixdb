@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.control.common.heartbeat;
 
+import static org.apache.hyracks.control.common.utils.MXHelper.gcMXBeans;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -53,6 +55,11 @@ public class HeartbeatData {
     public long diskReads;
     public long diskWrites;
     public int numCores;
+
+    public HeartbeatData() {
+        gcCollectionCounts = new long[gcMXBeans.size()];
+        gcCollectionTimes = new long[gcMXBeans.size()];
+    }
 
     public void readFields(DataInput dis) throws IOException {
         heapInitSize = dis.readLong();

@@ -41,10 +41,12 @@ public class RegisterNodeWork extends SynchronizableWork {
 
     private final ClusterControllerService ccs;
     private final NodeRegistration reg;
+    private final int registrationId;
 
-    public RegisterNodeWork(ClusterControllerService ccs, NodeRegistration reg) {
+    public RegisterNodeWork(ClusterControllerService ccs, NodeRegistration reg, int registrationId) {
         this.ccs = ccs;
         this.reg = reg;
+        this.registrationId = registrationId;
     }
 
     @Override
@@ -71,7 +73,7 @@ public class RegisterNodeWork extends SynchronizableWork {
             params.setDistributedState(ccs.getContext().getDistributedState());
             params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriodMillis());
             params.setProfileDumpPeriod(ccs.getCCConfig().getProfileDumpPeriod());
-            params.setRegistrationId(reg.getRegistrationId());
+            params.setRegistrationId(registrationId);
             result = new CCNCFunctions.NodeRegistrationResult(params, null);
         } catch (Exception e) {
             LOGGER.log(Level.WARN, "Node registration failed", e);

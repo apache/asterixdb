@@ -91,7 +91,9 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
             ncDataMap.put(nc, getNcDiagnosticFutures(nc));
         }
         ObjectNode result = OBJECT_MAPPER.createObjectNode();
-        result.putPOJO("cc", resolveFutures(ccFutureData));
+        if (!ccFutureData.isEmpty()) {
+            result.putPOJO("cc", resolveFutures(ccFutureData));
+        }
         List<Map<String, ?>> ncList = new ArrayList<>();
         for (Map.Entry<String, Map<String, Future<JsonNode>>> entry : ncDataMap.entrySet()) {
             final Map<String, JsonNode> ncMap = resolveFutures(entry.getValue());

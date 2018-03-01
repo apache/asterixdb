@@ -174,9 +174,11 @@ public class CCNCFunctions {
         private static final long serialVersionUID = 1L;
 
         private final NodeRegistration reg;
+        private final int registrationId;
 
-        public RegisterNodeFunction(NodeRegistration reg) {
+        public RegisterNodeFunction(NodeRegistration reg, int registrationId) {
             this.reg = reg;
+            this.registrationId = registrationId;
         }
 
         @Override
@@ -186,6 +188,10 @@ public class CCNCFunctions {
 
         public NodeRegistration getNodeRegistration() {
             return reg;
+        }
+
+        public int getRegistrationId() {
+            return registrationId;
         }
     }
 

@@ -22,7 +22,6 @@ public class ConfigurationUtil {
     public static final String JAVA_IO_TMPDIR = "java.io.tmpdir";
 
     private ConfigurationUtil() {
-
     }
 
 }
