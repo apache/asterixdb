@@ -102,7 +102,9 @@ public class ExceptionUtils {
         } else if (second == null) {
             return first;
         }
-        first.addSuppressed(second);
+        if (first != second) {
+            first.addSuppressed(second);
+        }
         return first;
     }
 }
