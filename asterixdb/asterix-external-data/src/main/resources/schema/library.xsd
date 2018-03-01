@@ -25,11 +25,12 @@
     <!-- definition of simple types -->
     <xs:element name="language" type="xs:string" />
     <xs:element name="name" type="xs:string" />
-    <xs:element name="arguments" type="xs:string" />
+    <xs:element name="argument_type" type="xs:string" />
     <xs:element name="return_type" type="xs:string" />
     <xs:element name="function_type" type="xs:string" />
     <xs:element name="definition" type="xs:string" />
     <xs:element name="factory_class" type="xs:string" />
+    <xs:element name="parameters" type="xs:string" />
 
 
     <!-- definition of complex elements -->
@@ -38,9 +39,10 @@
             <xs:sequence>
                 <xs:element ref="lib:name" />
                 <xs:element ref="lib:function_type" />
-                <xs:element ref="lib:arguments" />
+                <xs:element ref="lib:argument_type" />
                 <xs:element ref="lib:return_type" />
                 <xs:element ref="lib:definition" />
+                <xs:element ref="lib:parameters" minOccurs="0" maxOccurs="unbounded"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

@@ -33,7 +33,7 @@ public interface IExternalFunctionInfo extends IFunctionInfo {
 
     public String getFunctionBody();
 
-    public List<IAType> getParamList();
+    public List<IAType> getArgumentList();
 
     public String getLanguage();
 

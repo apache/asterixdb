@@ -16,26 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
 
-import org.apache.asterix.external.library.java.JTypeTag;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+use test;
 
-import java.util.List;
+SELECT value r1.id
+FROM Res1 r1, Res2 r2
+WHERE r1.id = r2.id AND (r1.sensitive OR r2.sensitive)
+ORDER BY r1.id;
 
-public interface IFunctionHelper {
-
-    IJObject getArgument(int index);
-
-    IJObject getResultObject();
-
-    void setResult(IJObject result) throws HyracksDataException;
-
-    boolean isValidResult();
-
-    IJObject getObject(JTypeTag jtypeTag) throws HyracksDataException;
-
-    void reset();
-
-    List<String> getParameters();
-}

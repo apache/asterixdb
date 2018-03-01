@@ -16,26 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
 
-import org.apache.asterix.external.library.java.JTypeTag;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+use test;
 
-import java.util.List;
+insert into Res1(
+select value testlib#fnameDetector(t) from EmpDataset t);
 
-public interface IFunctionHelper {
+insert into Res2(
+select value testlib#lnameDetector(t2) from EmpDataset t2);
 
-    IJObject getArgument(int index);
 
-    IJObject getResultObject();
-
-    void setResult(IJObject result) throws HyracksDataException;
-
-    boolean isValidResult();
-
-    IJObject getObject(JTypeTag jtypeTag) throws HyracksDataException;
-
-    void reset();
-
-    List<String> getParameters();
-}

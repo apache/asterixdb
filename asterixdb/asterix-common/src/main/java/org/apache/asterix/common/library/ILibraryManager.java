@@ -34,13 +34,13 @@ public interface ILibraryManager {
      * @param libraryName
      * @param classLoader
      */
-    public void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader)
+    void registerLibraryClassLoader(String dataverseName, String libraryName, ClassLoader classLoader)
             throws HyracksDataException;
 
     /**
      * @return all registered libraries.
      */
-    public List<Pair<String, String>> getAllLibraries();
+    List<Pair<String, String>> getAllLibraries();
 
     /**
      * De-registers a library class loader.
@@ -48,7 +48,7 @@ public interface ILibraryManager {
      * @param dataverseName
      * @param libraryName
      */
-    public void deregisterLibraryClassLoader(String dataverseName, String libraryName);
+    void deregisterLibraryClassLoader(String dataverseName, String libraryName);
 
     /**
      * Finds a class loader for a given pair of dataverse name and library name.
@@ -57,5 +57,22 @@ public interface ILibraryManager {
      * @param libraryName
      * @return the library class loader associated with the dataverse and library.
      */
-    public ClassLoader getLibraryClassLoader(String dataverseName, String libraryName);
+    ClassLoader getLibraryClassLoader(String dataverseName, String libraryName);
+
+    /**
+     * Add function parameters  to library manager if it exists.
+     * @param dataverseName
+     * @param fullFunctionName
+     * @param parameters
+     */
+
+    void addFunctionParameters(String dataverseName, String fullFunctionName, List<String> parameters);
+
+    /**
+     * Get a list of parameters.
+     * @param dataverseName
+     * @param fullFunctionName
+     * @return A list contains all pre-specified function parameters.
+     */
+    List<String> getFunctionParameters(String dataverseName, String fullFunctionName);
 }

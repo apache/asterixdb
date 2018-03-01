@@ -46,7 +46,7 @@ public class FunctionParser {
                     function.getLanguage());
         }
         String functionBody = function.getFunctionBody();
-        List<String> params = function.getParams();
+        List<String> arguments = function.getArguments();
         List<VarIdentifier> varIdentifiers = new ArrayList<VarIdentifier>();
 
         StringBuilder builder = new StringBuilder();
@@ -54,15 +54,15 @@ public class FunctionParser {
         builder.append(" declare function " + function.getName().split("@")[0]);
         builder.append("(");
         boolean first = true;
-        for (String param : params) {
-            VarIdentifier varId = new VarIdentifier(param);
+        for (String argument : arguments) {
+            VarIdentifier varId = new VarIdentifier(argument);
             varIdentifiers.add(varId);
             if (first) {
                 first = false;
             } else {
                 builder.append(",");
             }
-            builder.append(param);
+            builder.append(argument);
         }
         builder.append("){\n").append(functionBody).append("\n}");
 

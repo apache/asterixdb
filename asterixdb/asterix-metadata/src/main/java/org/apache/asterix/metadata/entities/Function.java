@@ -35,17 +35,17 @@ public class Function implements IMetadataEntity<Function> {
     public static final String NOT_APPLICABLE = "N/A";
 
     private final FunctionSignature signature;
-    private final List<String> params;
     private final List<List<List<String>>> dependencies;
+    private final List<String> arguments;
     private final String body;
     private final String returnType;
     private final String language;
     private final String kind;
 
-    public Function(FunctionSignature signature, List<String> params, String returnType, String functionBody,
+    public Function(FunctionSignature signature, List<String> arguments, String returnType, String functionBody,
             String language, String functionKind, List<List<List<String>>> dependencies) {
         this.signature = signature;
-        this.params = params;
+        this.arguments = arguments;
         this.body = functionBody;
         this.returnType = returnType == null ? RETURNTYPE_VOID : returnType;
         this.language = language;
@@ -75,8 +75,8 @@ public class Function implements IMetadataEntity<Function> {
         return signature.getArity();
     }
 
-    public List<String> getParams() {
-        return params;
+    public List<String> getArguments() {
+        return arguments;
     }
 
     public List<List<List<String>>> getDependencies() {

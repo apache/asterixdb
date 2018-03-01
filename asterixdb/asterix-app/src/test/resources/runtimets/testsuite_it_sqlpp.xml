@@ -54,6 +54,11 @@
         <expected-error>External UDF cannot produce expected result.</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="keyword_detector">
+        <output-dir compare="Text">keyword_detector</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="feeds">
     <test-case FilePath="feeds">

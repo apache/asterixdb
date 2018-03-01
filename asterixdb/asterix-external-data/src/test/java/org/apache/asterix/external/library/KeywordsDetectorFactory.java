@@ -16,26 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
 
-import org.apache.asterix.external.library.java.JTypeTag;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+package org.apache.asterix.external.library;
 
-import java.util.List;
+import org.apache.asterix.external.api.IExternalScalarFunction;
+import org.apache.asterix.external.api.IFunctionFactory;
 
-public interface IFunctionHelper {
+public class KeywordsDetectorFactory implements IFunctionFactory {
 
-    IJObject getArgument(int index);
-
-    IJObject getResultObject();
-
-    void setResult(IJObject result) throws HyracksDataException;
-
-    boolean isValidResult();
-
-    IJObject getObject(JTypeTag jtypeTag) throws HyracksDataException;
-
-    void reset();
-
-    List<String> getParameters();
+    @Override
+    public IExternalScalarFunction getExternalFunction() {
+        return new KeywordsDetectorFunction();
+    }
 }

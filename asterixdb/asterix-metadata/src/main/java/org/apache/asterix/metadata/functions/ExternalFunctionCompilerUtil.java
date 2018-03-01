@@ -73,11 +73,11 @@ public class ExternalFunctionCompilerUtil {
         FunctionIdentifier fid =
                 new FunctionIdentifier(function.getDataverseName(), function.getName(), function.getArity());
         IResultTypeComputer typeComputer = getResultTypeComputer(txnCtx, function);
-        List<IAType> arguments = new ArrayList<IAType>();
-        IAType returnType = null;
-        List<String> paramTypes = function.getParams();
-        for (String paramType : paramTypes) {
-            arguments.add(getTypeInfo(paramType, txnCtx, function));
+        List<IAType> arguments = new ArrayList<>();
+        IAType returnType;
+        List<String> argumentTypes = function.getArguments();
+        for (String argumentType : argumentTypes) {
+            arguments.add(getTypeInfo(argumentType, txnCtx, function));
         }
 
         returnType = getTypeInfo(function.getReturnType(), txnCtx, function);

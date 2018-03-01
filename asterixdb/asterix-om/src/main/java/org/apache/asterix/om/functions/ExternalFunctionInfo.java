@@ -60,7 +60,7 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
     }
 
     @Override
-    public List<IAType> getParamList() {
+    public List<IAType> getArgumentList() {
         return argumentTypes;
     }
 

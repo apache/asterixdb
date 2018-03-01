@@ -46,7 +46,7 @@ public class FunctionParser {
                     Function.LANGUAGE_SQLPP, function.getLanguage());
         }
         String functionBody = function.getFunctionBody();
-        List<String> params = function.getParams();
+        List<String> params = function.getArguments();
 
         StringBuilder builder = new StringBuilder();
         builder.append(" use " + function.getDataverseName() + ";");

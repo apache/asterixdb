@@ -20,65 +20,83 @@
   <language>JAVA</language>
   <libraryFunctions>
     <libraryFunction>
+      <name>fnameDetector</name>
       <function_type>SCALAR</function_type>
+      <argument_type>InputRecordType</argument_type>
+      <return_type>DetectResultType</return_type>
+      <definition>org.apache.asterix.external.library.KeywordsDetectorFactory</definition>
+      <parameters>data/external_function/KeywordsDetector_List1.txt</parameters>
+      <parameters>fname</parameters>
+    </libraryFunction>
+    <libraryFunction>
+      <name>lnameDetector</name>
+      <function_type>SCALAR</function_type>
+      <argument_type>InputRecordType</argument_type>
+      <return_type>DetectResultType</return_type>
+      <definition>org.apache.asterix.external.library.KeywordsDetectorFactory</definition>
+      <parameters>data/external_function/KeywordsDetector_List2.txt</parameters>
+      <parameters>lname</parameters>
+    </libraryFunction>
+    <libraryFunction>
       <name>parseTweet</name>
-      <arguments>TweetInputType</arguments>
+      <function_type>SCALAR</function_type>
+      <argument_type>TweetInputType</argument_type>
       <return_type>TweetOutputType</return_type>
       <definition>org.apache.asterix.external.library.ParseTweetFactory
       </definition>
     </libraryFunction>
     <libraryFunction>
-      <function_type>SCALAR</function_type>
       <name>addHashTags</name>
-      <arguments>Tweet</arguments>
+      <function_type>SCALAR</function_type>
+      <argument_type>Tweet</argument_type>
       <return_type>ProcessedTweet</return_type>
       <definition>org.apache.asterix.external.library.AddHashTagsFactory
       </definition>
     </libraryFunction>
     <libraryFunction>
-      <function_type>SCALAR</function_type>
       <name>addHashTagsInPlace</name>
-      <arguments>Tweet</arguments>
+      <function_type>SCALAR</function_type>
+      <argument_type>Tweet</argument_type>
       <return_type>ProcessedTweet</return_type>
       <definition>org.apache.asterix.external.library.AddHashTagsInPlaceFactory
       </definition>
     </libraryFunction>
     <libraryFunction>
-      <function_type>SCALAR</function_type>
       <name>mysum</name>
-      <arguments>AINT32,AINT32</arguments>
+      <function_type>SCALAR</function_type>
+      <argument_type>AINT32,AINT32</argument_type>
       <return_type>AINT32</return_type>
       <definition>org.apache.asterix.external.library.SumFactory
       </definition>
     </libraryFunction>
     <libraryFunction>
-      <function_type>SCALAR</function_type>
       <name>getCapital</name>
-      <arguments>ASTRING</arguments>
+      <function_type>SCALAR</function_type>
+      <argument_type>ASTRING</argument_type>
       <return_type>CountryCapitalType</return_type>
       <definition>org.apache.asterix.external.library.CapitalFinderFactory
       </definition>
     </libraryFunction>
     <libraryFunction>
-      <function_type>SCALAR</function_type>
       <name>toUpper</name>
-      <arguments>TextType</arguments>
+      <function_type>SCALAR</function_type>
+      <argument_type>TextType</argument_type>
       <return_type>TextType</return_type>
       <definition>org.apache.asterix.external.library.UpperCaseFactory
       </definition>
     </libraryFunction>
     <libraryFunction>
-      <function_type>SCALAR</function_type>
       <name>allTypes</name>
-      <arguments>AllType</arguments>
+      <function_type>SCALAR</function_type>
+      <argument_type>AllType</argument_type>
       <return_type>AllType</return_type>
       <definition>org.apache.asterix.external.library.AllTypesFactory
       </definition>
     </libraryFunction>
     <libraryFunction>
-      <function_type>SCALAR</function_type>
       <name>echoDelay</name>
-      <arguments>TweetMessageType</arguments>
+      <function_type>SCALAR</function_type>
+      <argument_type>TweetMessageType</argument_type>
       <return_type>TweetMessageType</return_type>
       <definition>org.apache.asterix.external.library.EchoDelayFactory
       </definition>

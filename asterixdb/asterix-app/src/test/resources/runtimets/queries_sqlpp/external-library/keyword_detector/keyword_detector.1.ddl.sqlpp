@@ -16,26 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
+/*
+ * Description     : Detect ids with different settings. First name in list1. Last name in list2.
+ * Expected Result : Success
+ * Date            : 21th July 2016
+ */
 
-import org.apache.asterix.external.library.java.JTypeTag;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-import java.util.List;
+create type InputRecordType as closed {
+id:int64,
+fname:string,
+lname:string,
+age:int64,
+dept:string
+};
 
-public interface IFunctionHelper {
+create type DetectResultType as open{
+id:int64,
+sensitive: boolean
+};
 
-    IJObject getArgument(int index);
-
-    IJObject getResultObject();
-
-    void setResult(IJObject result) throws HyracksDataException;
-
-    boolean isValidResult();
-
-    IJObject getObject(JTypeTag jtypeTag) throws HyracksDataException;
-
-    void reset();
-
-    List<String> getParameters();
-}
+create dataset EmpDataset(InputRecordType) primary key id;
+create dataset Res1(DetectResultType) primary key id;
+create dataset Res2(DetectResultType) primary key id;

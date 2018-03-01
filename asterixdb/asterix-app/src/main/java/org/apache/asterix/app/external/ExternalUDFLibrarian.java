@@ -101,12 +101,10 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
         }
 
         for (ILibraryManager libraryManager : libraryManagers) {
-            ExternalLibraryUtils.registerLibrary(libraryManager, dvName, libName);
+            ExternalLibraryUtils.registerClassLoader(libraryManager, dvName, libName);
+            ExternalLibraryUtils.configureLibrary(libraryManager, dvName, destinationDir, new HashMap<>(),
+                    libraryManagers.indexOf(libraryManager) != 0);
         }
-        // get library file
-        // install if needed (add functions, adapters, datasources, parsers to the metadata)
-        // <Not required for use>
-        ExternalLibraryUtils.installLibraryIfNeeded(dvName, destinationDir, new HashMap<>());
     }
 
     @Override

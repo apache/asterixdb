@@ -183,7 +183,7 @@ public class FunctionTupleTranslator extends AbstractTupleTranslator<Function> {
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
         listBuilder.reset((AOrderedListType) MetadataRecordTypes.FUNCTION_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAM_LIST_FIELD_INDEX]);
-        for (String param : function.getParams()) {
+        for (String param : function.getArguments()) {
             itemValue.reset();
             aString.setValue(param);
             stringSerde.serialize(aString, itemValue.getDataOutput());
