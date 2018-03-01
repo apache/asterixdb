@@ -219,6 +219,7 @@ public class LogReader implements ILogReader {
                     flushLSN.wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
+                    throw new ACIDException(e);
                 }
             }
         }
