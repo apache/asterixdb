@@ -357,6 +357,13 @@ public class PrintTools {
                                     break;
                             }
                             break;
+                        case 3:
+                            // special treatment for surrogates
+                            if (Character.isHighSurrogate(c)) {
+                                position += writeSupplementaryChar(os, b, maxPosition, position, c, sz);
+                                sz = 0;
+                            }
+                            break;
                     }
                     while (sz > 0) {
                         os.write(b[position]);
@@ -376,6 +383,24 @@ public class PrintTools {
         os.write('0');
         os.write(HexPrinter.hex((c >>> 4) & 0x0f, HexPrinter.CASE.LOWER_CASE));
         os.write(HexPrinter.hex(c & 0x0f, HexPrinter.CASE.LOWER_CASE));
+    }
+
+    /**
+     * Writes a supplementary char consisting of high and low surrogates
+     *
+     * @return The length of the surrogates
+     * @throws IOException
+     */
+    private static int writeSupplementaryChar(OutputStream os, byte[] src, int limit, int highSurrogatePos,
+            char highSurrogate, int highSurrogateSize) throws IOException {
+        final int lowSurrogatePos = highSurrogatePos + highSurrogateSize;
+        if (lowSurrogatePos >= limit) {
+            throw new IllegalStateException("malformed utf8 input");
+        }
+        final char lowSurrogate = UTF8StringUtil.charAt(src, lowSurrogatePos);
+        final int lowSurrogateSize = UTF8StringUtil.charSize(src, lowSurrogatePos);
+        os.write(new String(new char[] { highSurrogate, lowSurrogate }).getBytes());
+        return highSurrogateSize + lowSurrogateSize;
     }
 
 }

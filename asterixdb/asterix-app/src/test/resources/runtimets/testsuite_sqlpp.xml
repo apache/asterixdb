@@ -6445,6 +6445,11 @@
         <output-dir compare="Text">varlen-encoding</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="utf8">
+        <output-dir compare="Text">utf8</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="subquery">
     <test-case FilePath="subquery">
