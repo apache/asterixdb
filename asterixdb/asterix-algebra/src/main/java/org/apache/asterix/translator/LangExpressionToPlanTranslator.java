@@ -84,6 +84,7 @@ import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -1087,10 +1088,17 @@ class LangExpressionToPlanTranslator
             fAgg = BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.NON_EMPTY_STREAM,
                     new ArrayList<>());
         } else { // EVERY
-            List<Mutable<ILogicalExpression>> satExprList = new ArrayList<>(1);
-            satExprList.add(new MutableObject<>(eo2.first));
+            List<Mutable<ILogicalExpression>> ifMissingOrNullArgs = new ArrayList<>(2);
+            ifMissingOrNullArgs.add(new MutableObject<>(eo2.first));
+            ifMissingOrNullArgs
+                    .add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(ABoolean.FALSE))));
+
+            List<Mutable<ILogicalExpression>> notArgs = new ArrayList<>(1);
+            notArgs.add(new MutableObject<>(new ScalarFunctionCallExpression(
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.IF_MISSING_OR_NULL), ifMissingOrNullArgs)));
+
             s = new SelectOperator(new MutableObject<>(new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.NOT), satExprList)), false, null);
+                    FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.NOT), notArgs)), false, null);
             s.getInputs().add(eo2.second);
             fAgg = BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.EMPTY_STREAM, new ArrayList<>());
         }
