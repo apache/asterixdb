@@ -30,7 +30,7 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 /**
- * A simple scan cursor that only reads a frame by frame from the inverted list. This cursor does not
+ * A simple scan cursor that only reads a frame by frame from the inverted list on disk. This cursor does not
  * conduct a binary search. It only supports the scan operation. The main purpose of this cursor is
  * doing a full-scan of an inverted list during a storage-component-merge process.
  */
@@ -111,14 +111,12 @@ public class FixedSizeElementInvertedListScanCursor extends InvertedListCursor {
         }
         currentPageId++;
         page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
-        page.acquireReadLatch();
         pinned = true;
     }
 
     @Override
     public void unloadPages() throws HyracksDataException {
         if (pinned) {
-            page.releaseReadLatch();
             bufferCache.unpin(page);
             pinned = false;
         }
