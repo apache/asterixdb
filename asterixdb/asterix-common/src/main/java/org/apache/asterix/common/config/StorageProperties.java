@@ -26,6 +26,7 @@ import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 
 import java.util.function.Function;
 
+import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
@@ -45,7 +46,6 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(INTEGER, 2),
         STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES(INTEGER, 32),
         STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d),
-        STORAGE_METADATA_DATASETS(INTEGER, 14),
         STORAGE_MAX_ACTIVE_WRITABLE_DATASETS(INTEGER, 8);
 
         private final IOptionType interpreter;
@@ -85,8 +85,6 @@ public class StorageProperties extends AbstractProperties {
                     return "The number of pages to allocate for a metadata memory component";
                 case STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE:
                     return "The maximum acceptable false positive rate for bloom filters associated with LSM indexes";
-                case STORAGE_METADATA_DATASETS:
-                    return "The number of metadata datasets";
                 case STORAGE_MAX_ACTIVE_WRITABLE_DATASETS:
                     return "The maximum number of datasets that can be concurrently modified";
                 default:
@@ -113,6 +111,8 @@ public class StorageProperties extends AbstractProperties {
         }
     }
 
+    private static final int SYSTEM_RESERVED_DATASETS = 0;
+
     public StorageProperties(PropertiesAccessor accessor) {
         super(accessor);
     }
@@ -136,7 +136,8 @@ public class StorageProperties extends AbstractProperties {
     public int getMemoryComponentNumPages() {
         final long metadataReservedMem = getMetadataReservedMemory();
         final long globalUserDatasetMem = getMemoryComponentGlobalBudget() - metadataReservedMem;
-        final long userDatasetMem = globalUserDatasetMem / getMaxActiveWritableDatasets();
+        final long userDatasetMem =
+                globalUserDatasetMem / (getMaxActiveWritableDatasets() + geSystemReservedDatasets());
         return (int) (userDatasetMem / getMemoryComponentPageSize());
     }
 
@@ -177,8 +178,12 @@ public class StorageProperties extends AbstractProperties {
         return accessor.getInt(Option.STORAGE_MAX_ACTIVE_WRITABLE_DATASETS);
     }
 
-    private int getMetadataDatasets() {
-        return accessor.getInt(Option.STORAGE_METADATA_DATASETS);
+    protected int getMetadataDatasets() {
+        return MetadataIndexImmutableProperties.METADATA_DATASETS_COUNT;
+    }
+
+    protected int geSystemReservedDatasets() {
+        return SYSTEM_RESERVED_DATASETS;
     }
 
     private long getMetadataReservedMemory() {

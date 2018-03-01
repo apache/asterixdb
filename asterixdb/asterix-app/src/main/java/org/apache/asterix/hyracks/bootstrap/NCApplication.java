@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -29,13 +30,17 @@ import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.MessagingProperties;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.config.NodeProperties;
+import org.apache.asterix.common.config.PropertiesAccessor;
+import org.apache.asterix.common.config.PropertiesFactory;
 import org.apache.asterix.common.config.StorageProperties;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
@@ -106,7 +111,7 @@ public class NCApplication extends BaseNCApplication {
                     (controllerService).getConfiguration().getClusterPublicAddress());
         }
         MetadataBuiltinFunctions.init();
-        runtimeContext = new NCAppRuntimeContext(ncServiceCtx, getExtensions());
+        runtimeContext = new NCAppRuntimeContext(ncServiceCtx, getExtensions(), getPropertiesFactory());
         MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(this.ncServiceCtx.getNodeId())) {
             if (LOGGER.isInfoEnabled()) {
@@ -153,6 +158,11 @@ public class NCApplication extends BaseNCApplication {
 
     protected List<AsterixExtension> getExtensions() {
         return Collections.emptyList();
+    }
+
+    protected IPropertiesFactory getPropertiesFactory() throws IOException, AsterixException {
+        PropertiesAccessor propertiesAccessor = PropertiesAccessor.getInstance(ncServiceCtx.getAppConfig());
+        return new PropertiesFactory(propertiesAccessor);
     }
 
     @Override

@@ -36,6 +36,7 @@ import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.IDatasetMemoryManager;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.AsterixExtension;
@@ -87,7 +88,6 @@ import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
@@ -142,26 +142,26 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private IReplicaManager replicaManager;
 
-    public NCAppRuntimeContext(INCServiceContext ncServiceContext, List<AsterixExtension> extensions)
-            throws AsterixException, InstantiationException, IllegalAccessException, ClassNotFoundException,
-            IOException {
+    public NCAppRuntimeContext(INCServiceContext ncServiceContext, List<AsterixExtension> extensions,
+            IPropertiesFactory propertiesFactory) throws AsterixException, InstantiationException,
+            IllegalAccessException, ClassNotFoundException, IOException {
         List<AsterixExtension> allExtensions = new ArrayList<>();
         this.ncServiceContext = ncServiceContext;
-        PropertiesAccessor propertiesAccessor = PropertiesAccessor.getInstance(ncServiceContext.getAppConfig());
-        compilerProperties = new CompilerProperties(propertiesAccessor);
-        externalProperties = new ExternalProperties(propertiesAccessor);
-        metadataProperties = new MetadataProperties(propertiesAccessor);
-        storageProperties = new StorageProperties(propertiesAccessor);
-        txnProperties = new TransactionProperties(propertiesAccessor);
-        activeProperties = new ActiveProperties(propertiesAccessor);
-        buildProperties = new BuildProperties(propertiesAccessor);
-        replicationProperties = new ReplicationProperties(propertiesAccessor);
-        messagingProperties = new MessagingProperties(propertiesAccessor);
-        nodeProperties = new NodeProperties(propertiesAccessor);
+        compilerProperties = propertiesFactory.newCompilerProperties();
+        externalProperties = propertiesFactory.newExternalProperties();
+        metadataProperties = propertiesFactory.newMetadataProperties();
+        storageProperties = propertiesFactory.newStorageProperties();
+        txnProperties = propertiesFactory.newTransactionProperties();
+        activeProperties = propertiesFactory.newActiveProperties();
+        buildProperties = propertiesFactory.newBuildProperties();
+        replicationProperties = propertiesFactory.newReplicationProperties();
+        messagingProperties = propertiesFactory.newMessagingProperties();
+        nodeProperties = propertiesFactory.newNodeProperties();
         libraryManager = new ExternalLibraryManager();
         if (extensions != null) {
             allExtensions.addAll(extensions);
         }
+        PropertiesAccessor propertiesAccessor = PropertiesAccessor.getInstance(ncServiceContext.getAppConfig());
         allExtensions.addAll(propertiesAccessor.getExtensions());
         ncExtensionManager = new NCExtensionManager(allExtensions);
         componentProvider = new StorageComponentProvider();
