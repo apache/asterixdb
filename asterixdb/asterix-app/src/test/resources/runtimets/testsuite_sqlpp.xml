@@ -3538,6 +3538,11 @@
   </test-group>
   <test-group name="misc">
     <test-case FilePath="misc">
+      <compilation-unit name="poll-dynamic">
+        <output-dir compare="Text">poll-dynamic</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="validate-expected">
         <output-dir compare="Text">validate-expected</output-dir>
       </compilation-unit>
