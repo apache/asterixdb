@@ -88,6 +88,9 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("record-add-fields", "object-add-fields");
         // record-remove-fields, internal: object-remove-fields
         FUNCTION_NAME_MAP.put("record-remove-fields", "object-remove-fields");
+
+        // Array/Mutliset functions
+        FUNCTION_NAME_MAP.put("array_length", "len");
     }
 
     private CommonFunctionMapUtil() {

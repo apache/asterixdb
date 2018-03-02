@@ -3430,6 +3430,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="list">
+      <compilation-unit name="array_length">
+        <output-dir compare="Text">array_length</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
       <compilation-unit name="exists">
         <output-dir compare="Text">exists</output-dir>
       </compilation-unit>

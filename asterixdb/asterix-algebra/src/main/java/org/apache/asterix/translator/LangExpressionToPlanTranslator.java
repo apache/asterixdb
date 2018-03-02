@@ -1088,6 +1088,10 @@ class LangExpressionToPlanTranslator
             fAgg = BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.NON_EMPTY_STREAM,
                     new ArrayList<>());
         } else { // EVERY
+            // look for input items that do not satisfy the condition, if none found then return true
+            // when inverting the condition account for NULL/MISSING by replacing them with FALSE
+            // condition() -> not(if-missing-or-null(condition(), false))
+
             List<Mutable<ILogicalExpression>> ifMissingOrNullArgs = new ArrayList<>(2);
             ifMissingOrNullArgs.add(new MutableObject<>(eo2.first));
             ifMissingOrNullArgs
