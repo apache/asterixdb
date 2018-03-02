@@ -17,13 +17,19 @@
  * under the License.
  */
 
-{
-  'result1':REGEXP_REPLACE('abracadabra','',null,null),
-  'result2':REGEXP_REPLACE('abracadabra','bra','XXX',''),
-  'result3':REGEXP_REPLACE(null,'hello world','XxXx','x'),
-  'result4':REGEXP_REPLACE('abracadabra','bra','XXX',null),
-  'result5':REGEXP_REPLACE('abracadabra',null,'XXX',null),
-  'result6':REGEXP_REPLACE('abracadabra','Bra',null,'i'),
-  'result7':REGEXP_REPLACE('abracadabra','Bra','','i'),
-  'result8':REGEXP_REPLACE('abracadabra','','XXX','')
-};
+select value t from
+[
+  [ 0, is_missing(replace("", null, missing, 1)) ],
+  [ 1, is_null(replace("", null, null, 1)) ],
+  [ 2, is_null(replace("", "", null, 1)) ],
+  [ 3, replace("", "", "", 1) ],
+  [ 4, replace("", "", "a", 1) ],
+  [ 5, replace("a", "a", "", tinyint("1")) ],
+  [ 6, replace("aaa", "a", "b", smallint("2")) ],
+  [ 7, replace("ab_ba_ab", "ab", "ba", integer("100")) ],
+  [ 8, replace("_ab_ba_ab_ab_ab_", "ab", "xyz", bigint("4")) ],
+  [ 9, replace("abracadabra_abracadabra_xyz","bra","*BRA*", 3) ],
+  [ 10, replace("ab_ba_ab", "ab", "ba", 0) ],
+  [ 11, replace("ab_ba_ab", "ab", "ba", -100) ]
+] t
+order by t[0]

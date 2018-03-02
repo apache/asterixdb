@@ -287,6 +287,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-position", 2);
     public static final FunctionIdentifier STRING_REGEXP_POSITION_WITH_FLAG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-position", 3);
+    public static final FunctionIdentifier STRING_REGEXP_REPLACE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-replace", 3);
+    public static final FunctionIdentifier STRING_REGEXP_REPLACE_WITH_FLAG =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "regexp-replace", 4);
     public static final FunctionIdentifier STRING_LOWERCASE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "lowercase", 1);
     public static final FunctionIdentifier STRING_UPPERCASE =
@@ -309,7 +313,7 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "position", 2);
     public static final FunctionIdentifier STRING_REPLACE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "replace", 3);
-    public static final FunctionIdentifier STRING_REPLACE_WITH_FLAG =
+    public static final FunctionIdentifier STRING_REPLACE_WITH_LIMIT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "replace", 4);
     public static final FunctionIdentifier STRING_LENGTH =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-length", 1);
@@ -1043,8 +1047,10 @@ public class BuiltinFunctions {
         addFunction(STRING_REGEXP_LIKE_WITH_FLAG, StringBooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_REGEXP_POSITION, StringInt32TypeComputer.INSTANCE, true);
         addFunction(STRING_REGEXP_POSITION_WITH_FLAG, StringInt32TypeComputer.INSTANCE, true);
+        addFunction(STRING_REGEXP_REPLACE, StringStringTypeComputer.INSTANCE, true);
+        addFunction(STRING_REGEXP_REPLACE_WITH_FLAG, StringStringTypeComputer.INSTANCE, true);
         addFunction(STRING_REPLACE, StringStringTypeComputer.INSTANCE, true);
-        addFunction(STRING_REPLACE_WITH_FLAG, StringStringTypeComputer.INSTANCE, true);
+        addFunction(STRING_REPLACE_WITH_LIMIT, StringIntToStringTypeComputer.INSTANCE_TRIPLE_STRING, true);
         addFunction(SUBSTRING_BEFORE, StringStringTypeComputer.INSTANCE, true);
         addFunction(SUBSTRING_AFTER, StringStringTypeComputer.INSTANCE, true);
         addPrivateFunction(STRING_EQUAL, StringBooleanTypeComputer.INSTANCE, true);

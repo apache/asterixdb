@@ -17,13 +17,17 @@
  * under the License.
  */
 
-{
-  'result1':REGEXP_REPLACE('abracadabra','',null,null),
-  'result2':REGEXP_REPLACE('abracadabra','bra','XXX',''),
-  'result3':REGEXP_REPLACE(null,'hello world','XxXx','x'),
-  'result4':REGEXP_REPLACE('abracadabra','bra','XXX',null),
-  'result5':REGEXP_REPLACE('abracadabra',null,'XXX',null),
-  'result6':REGEXP_REPLACE('abracadabra','Bra',null,'i'),
-  'result7':REGEXP_REPLACE('abracadabra','Bra','','i'),
-  'result8':REGEXP_REPLACE('abracadabra','','XXX','')
-};
+select value t from
+[
+  [ 0, is_missing(replace("", null, missing)) ],
+  [ 1, is_null(replace("", null, null)) ],
+  [ 2, is_null(replace("", "", null)) ],
+  [ 3, replace("", "", "") ],
+  [ 4, replace("", "", "a") ],
+  [ 5, replace("a", "a", "") ],
+  [ 6, replace("aaa", "a", "b") ],
+  [ 7, replace("ab_ba_ab", "ab", "ba") ],
+  [ 8, replace("_ab_ba_ab_", "ab", "xyz") ],
+  [ 9, replace("abracadabra_abracadabra_xyz","bra","*BRA*") ]
+] t
+order by t[0]

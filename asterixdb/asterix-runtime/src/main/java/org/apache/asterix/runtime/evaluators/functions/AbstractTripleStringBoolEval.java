@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.BuiltinType;
@@ -46,7 +44,7 @@ public abstract class AbstractTripleStringBoolEval extends AbstractTripleStringE
     @SuppressWarnings("unchecked")
     @Override
     protected void process(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable thrid,
-            IPointable result) throws IOException {
+            IPointable result) throws HyracksDataException {
         ABoolean res = compute(first, second, thrid) ? ABoolean.TRUE : ABoolean.FALSE;
         boolSerde.serialize(res, dout);
         result.set(resultStorage);
@@ -62,9 +60,8 @@ public abstract class AbstractTripleStringBoolEval extends AbstractTripleStringE
      * @param third
      *            , the second input argument.
      * @return a boolean value.
-     * @throws IOException
+     * @throws HyracksDataException
      */
     protected abstract boolean compute(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable third)
-            throws IOException;
-
+            throws HyracksDataException;
 }

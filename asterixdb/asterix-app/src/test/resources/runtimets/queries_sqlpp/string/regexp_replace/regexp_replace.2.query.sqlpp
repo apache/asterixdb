@@ -18,12 +18,7 @@
  */
 
 {
-  'result1':REGEXP_REPLACE('abracadabra','',null,null),
-  'result2':REGEXP_REPLACE('abracadabra','bra','XXX',''),
-  'result3':REGEXP_REPLACE(null,'hello world','XxXx','x'),
-  'result4':REGEXP_REPLACE('abracadabra','bra','XXX',null),
-  'result5':REGEXP_REPLACE('abracadabra',null,'XXX',null),
-  'result6':REGEXP_REPLACE('abracadabra','Bra',null,'i'),
-  'result7':REGEXP_REPLACE('abracadabra','Bra','','i'),
-  'result8':REGEXP_REPLACE('abracadabra','','XXX','')
+  'result1':regexp_replace('abracadabra','a',''),
+  'result2':regexp_replace('abracadabra','a(.)','a$1$1'),
+  'result3':regexp_replace('darted','^(.*?)d(.*)$','$1c$2')
 };

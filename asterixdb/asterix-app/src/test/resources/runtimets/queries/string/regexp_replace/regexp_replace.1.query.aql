@@ -17,13 +17,12 @@
  * under the License.
  */
 
-{
-  'result1':REGEXP_REPLACE('abracadabra','',null,null),
-  'result2':REGEXP_REPLACE('abracadabra','bra','XXX',''),
-  'result3':REGEXP_REPLACE(null,'hello world','XxXx','x'),
-  'result4':REGEXP_REPLACE('abracadabra','bra','XXX',null),
-  'result5':REGEXP_REPLACE('abracadabra',null,'XXX',null),
-  'result6':REGEXP_REPLACE('abracadabra','Bra',null,'i'),
-  'result7':REGEXP_REPLACE('abracadabra','Bra','','i'),
-  'result8':REGEXP_REPLACE('abracadabra','','XXX','')
-};
+let $c1 := regexp-replace("abracadabra", "", null, null)
+let $c2 := regexp-replace("abracadabra", "bra", "XXX", "")
+let $c3 := regexp-replace(null,"hello world", "XxXx", "x")
+let $c4 := regexp-replace("abracadabra", "bra", "XXX", null)
+let $c5 := regexp-replace("abracadabra", null, "XXX", null)
+let $c6 := regexp-replace("abracadabra", "Bra", null, "i")
+let $c7 := regexp-replace("abracadabra", "Bra", "", "i")
+let $c8 := regexp-replace("abracadabra", "", "XXX", "")
+return {"result1": $c1,"result2": $c2,"result3": $c3,"result4": $c4,"result5": $c5,"result6": $c6,"result7": $c7,"result8": $c8}

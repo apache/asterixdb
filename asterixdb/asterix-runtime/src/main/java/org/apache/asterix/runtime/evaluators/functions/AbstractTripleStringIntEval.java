@@ -19,8 +19,6 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.types.BuiltinType;
@@ -48,7 +46,7 @@ public abstract class AbstractTripleStringIntEval extends AbstractTripleStringEv
     @SuppressWarnings("unchecked")
     @Override
     protected void process(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable thrid,
-            IPointable result) throws IOException {
+            IPointable result) throws HyracksDataException {
         resultValue.setValue(compute(first, second, thrid));
         intSerde.serialize(resultValue, dout);
         result.set(resultStorage);
@@ -64,8 +62,8 @@ public abstract class AbstractTripleStringIntEval extends AbstractTripleStringEv
      * @param third
      *            , the second input argument.
      * @return an integer value.
-     * @throws IOException
+     * @throws HyracksDataException
      */
     protected abstract int compute(UTF8StringPointable first, UTF8StringPointable second, UTF8StringPointable third)
-            throws IOException;
+            throws HyracksDataException;
 }

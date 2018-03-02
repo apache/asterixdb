@@ -6201,33 +6201,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="replace">
+        <output-dir compare="Text">replace</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
+      <compilation-unit name="replace_with_limit">
+        <output-dir compare="Text">replace_with_limit</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="regexp_replace">
-        <output-dir compare="Text">replace22</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="replace1">
-        <output-dir compare="Text">replace1</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="replace2">
-        <output-dir compare="Text">replace2</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="replace21">
-        <output-dir compare="Text">replace21</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="replace22">
-        <output-dir compare="Text">replace22</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="string">
-      <compilation-unit name="replace3">
-        <output-dir compare="Text">replace3</output-dir>
+        <output-dir compare="Text">regexp_replace</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">

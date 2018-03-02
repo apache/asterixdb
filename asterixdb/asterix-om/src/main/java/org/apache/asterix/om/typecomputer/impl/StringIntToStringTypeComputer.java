@@ -27,15 +27,24 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
-    public static final StringIntToStringTypeComputer INSTANCE = new StringIntToStringTypeComputer();
+    public static final StringIntToStringTypeComputer INSTANCE = new StringIntToStringTypeComputer(1);
+
+    public static final StringIntToStringTypeComputer INSTANCE_TRIPLE_STRING = new StringIntToStringTypeComputer(3);
+
+    private final int stringArgCount;
+
+    public StringIntToStringTypeComputer(int stringArgCount) {
+        this.stringArgCount = stringArgCount;
+    }
 
     @Override
     public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
-        if (argIndex == 0 && tag != ATypeTag.STRING) {
-            throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.STRING);
-        }
-        if (argIndex == 1) {
+        if (argIndex < stringArgCount) {
+            if (tag != ATypeTag.STRING) {
+                throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.STRING);
+            }
+        } else {
             switch (tag) {
                 case TINYINT:
                 case SMALLINT:

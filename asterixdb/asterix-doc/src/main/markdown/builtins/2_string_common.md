@@ -332,7 +332,7 @@
 
  * Checks whether the string `string` matches the given
    regular expression pattern `string_pattern` (a Java regular expression pattern),
-   and replace the matched pattern `string_pattern` with the new pattern `string_replacement`.
+   and replaces the matched pattern `string_pattern` with the new pattern `string_replacement`.
  * Arguments:
     * `string` : a `string` that might contain the pattern,
     * `string_pattern` : a pattern `string` to be matched,
@@ -381,6 +381,38 @@
 
         "testtesttest"
 
+### replace ###
+ * Syntax:
+
+        replace(string, search_string, replacement_string[, limit])
+
+ * Finds occurrences of the given substring `search_string` in the input string `string`
+   and replaces them with the new substring `replacement_string`.
+ * Arguments:
+    * `string` : an input `string`,
+    * `search_string` : a `string`  substring to be searched for,
+    * `replacement_string` : a `string` to be used as the replacement,
+    * `limit` : (Optional) an `integer` - maximum number of occurrences to be replaced.
+                If not specified then all occurrences will be replaced
+ * Return Value:
+    * Returns a `string` that is obtained after the replacements,
+    * `missing` if any argument is a `missing` value,
+    * any other non-string input value or non-integer `limit` will cause a type error,
+    * `null` if any argument is a `null` value but no argument is a `missing` value.
+
+ * Example:
+
+        {
+          "v1": replace(" like x-phone the voicemail_service is awesome", " like x-phone", "like product-a"),
+          "v2": replace("x-phone and x-phone", "x-phone", "product-a", 1)
+        };
+
+ * The expected result is:
+
+        {
+          "v1": "like product-a the voicemail_service is awesome",
+          "v2": "product-a and x-phone"
+        }
 
 ### rtrim ###
  * Syntax:

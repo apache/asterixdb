@@ -39,7 +39,6 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("upper", "uppercase"); // upper, internal: uppercase
         FUNCTION_NAME_MAP.put("title", "initcap"); // title, internal: initcap
         FUNCTION_NAME_MAP.put("regexp_contains", "matches"); // regexp_contains, internal: matches
-        FUNCTION_NAME_MAP.put("regexp_replace", "replace"); //regexp_replace, internal: replace
         FUNCTION_NAME_MAP.put("power", "caret"); //pow, internal: caret
         FUNCTION_NAME_MAP.put("int", "integer"); // int, internal: integer
 

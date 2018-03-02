@@ -22,28 +22,22 @@ package org.apache.asterix.runtime.evaluators.functions;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.runtime.evaluators.functions.utils.RegExpMatcher;
-import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.utils.StringReplacer;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
-public class StringRegExpPositionWithFlagDescriptor extends AbstractStringOffsetConfigurableDescriptor {
+public class StringReplaceDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new StringRegExpPositionWithFlagDescriptor();
-        }
-
-        @Override
-        public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_STRING_OFFSET;
+            return new StringReplaceDescriptor();
         }
     };
 
@@ -52,20 +46,20 @@ public class StringRegExpPositionWithFlagDescriptor extends AbstractStringOffset
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
-            private final int baseOffset = stringOffset;
-
             @Override
-            public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractTripleStringIntEval(ctx, args[0], args[1], args[2],
-                        StringRegExpPositionWithFlagDescriptor.this.getIdentifier()) {
-                    private final RegExpMatcher matcher = new RegExpMatcher();
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+                return new AbstractTripleStringEval(ctx, args[0], args[1], args[2], getIdentifier()) {
+
+                    final StringReplacer replacer = new StringReplacer();
 
                     @Override
-                    protected int compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr,
-                            UTF8StringPointable flagPtr) {
-                        matcher.build(srcPtr, patternPtr, flagPtr);
-                        int pos = matcher.postion();
-                        return pos < 0 ? pos : pos + baseOffset;
+                    protected void process(UTF8StringPointable first, UTF8StringPointable second,
+                            UTF8StringPointable third, IPointable resultPointable) throws HyracksDataException {
+                        if (replacer.findAndReplace(first, second, third, Integer.MAX_VALUE)) {
+                            replacer.assignResult(resultPointable);
+                        } else {
+                            resultPointable.set(argPtrFirst);
+                        }
                     }
                 };
             }
@@ -74,6 +68,6 @@ public class StringRegExpPositionWithFlagDescriptor extends AbstractStringOffset
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.STRING_REGEXP_POSITION_WITH_FLAG;
+        return BuiltinFunctions.STRING_REPLACE;
     }
 }

@@ -66,6 +66,6 @@ public class StringRegExpReplaceWithFlagsDescriptor extends AbstractScalarFuncti
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.STRING_REPLACE_WITH_FLAG;
+        return BuiltinFunctions.STRING_REGEXP_REPLACE_WITH_FLAG;
     }
 }

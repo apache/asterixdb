@@ -19,7 +19,8 @@
 package org.apache.hyracks.data.std.primitive;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -161,7 +162,11 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
 
     @Override
     public String toString() {
-        return new String(this.bytes, this.getCharStartOffset(), this.getUTF8Length(), Charset.forName("UTF-8"));
+        try {
+            return new String(bytes, getCharStartOffset(), getUTF8Length(), StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /****
@@ -218,7 +223,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 char ch2 = pattern.charAt(pttnStart + c2);
 
                 if (ch1 != ch2) {
-                    if (!ignoreCase || ignoreCase && Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
+                    if (!ignoreCase || Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
                         break;
                     }
                 }
@@ -261,7 +266,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             char ch1 = src.charAt(s1Start + c1);
             char ch2 = pattern.charAt(s2Start + c2);
             if (ch1 != ch2) {
-                if (!ignoreCase || ignoreCase && Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
+                if (!ignoreCase || Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
                     break;
                 }
             }
@@ -292,7 +297,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             char ch2 = pattern.charAt(s2Start + c2);
 
             if (ch1 != ch2) {
-                if (!ignoreCase || ignoreCase && Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
+                if (!ignoreCase || Character.toLowerCase(ch1) != Character.toLowerCase(ch2)) {
                     break;
                 }
             }
@@ -582,4 +587,44 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         builder.finish();
     }
 
+    public boolean findAndReplace(UTF8StringPointable searchPtr, UTF8StringPointable replacePtr, int replaceLimit,
+            UTF8StringBuilder builder, GrowableArray out) throws IOException {
+        return findAndReplace(this, searchPtr, replacePtr, replaceLimit, builder, out);
+    }
+
+    public static boolean findAndReplace(UTF8StringPointable srcPtr, UTF8StringPointable searchPtr,
+            UTF8StringPointable replacePtr, int replaceLimit, UTF8StringBuilder builder, GrowableArray out)
+            throws IOException {
+        if (replaceLimit < 1) {
+            return false;
+        }
+        int curIdx = find(srcPtr, searchPtr, false);
+        if (curIdx < 0) {
+            return false;
+        }
+        int searchUtfLen = searchPtr.getUTF8Length();
+        int replaceUtfLen = replacePtr.getUTF8Length();
+        int estimatedLen = searchUtfLen > 0 && replaceUtfLen > searchUtfLen
+                ? (int) (((long) srcPtr.getUTF8Length()) * replaceUtfLen / searchUtfLen) : srcPtr.getUTF8Length();
+        builder.reset(out, estimatedLen);
+        builder.appendUtf8StringPointable(srcPtr, srcPtr.getCharStartOffset(), curIdx);
+        builder.appendUtf8StringPointable(replacePtr);
+
+        curIdx += searchUtfLen;
+        int limit = replaceLimit - 1;
+
+        int nextIdx;
+        while (limit > 0 && (nextIdx = find(srcPtr, searchPtr, false, curIdx)) > 0) {
+            builder.appendUtf8StringPointable(srcPtr, srcPtr.getCharStartOffset() + curIdx, nextIdx - curIdx);
+            builder.appendUtf8StringPointable(replacePtr);
+            curIdx = nextIdx + searchUtfLen;
+            limit--;
+        }
+        builder.appendUtf8StringPointable(srcPtr, srcPtr.getCharStartOffset() + curIdx,
+                srcPtr.getUTF8Length() - curIdx);
+
+        builder.finish();
+
+        return true;
+    }
 }

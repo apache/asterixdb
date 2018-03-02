@@ -55,7 +55,7 @@ public class StringRegExpReplaceDescriptor extends AbstractScalarFunctionDynamic
 
                     @Override
                     protected String compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr,
-                            UTF8StringPointable replacePtr) throws IOException {
+                            UTF8StringPointable replacePtr) {
                         matcher.build(srcPtr, patternPtr);
                         return matcher.replace(replacePtr);
                     }
@@ -66,6 +66,6 @@ public class StringRegExpReplaceDescriptor extends AbstractScalarFunctionDynamic
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.STRING_REPLACE;
+        return BuiltinFunctions.STRING_REGEXP_REPLACE;
     }
 }

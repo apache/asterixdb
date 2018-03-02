@@ -243,6 +243,8 @@ import org.apache.asterix.runtime.evaluators.functions.StringRegExpPositionWithF
 import org.apache.asterix.runtime.evaluators.functions.StringRegExpReplaceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringRegExpReplaceWithFlagsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringRepeatDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringReplaceDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringReplaceWithLimitDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringSplitDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringStartsWithDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringToCodePointDescriptor;
@@ -571,6 +573,8 @@ public final class FunctionCollection {
         fc.addGenerated(StringRTrim2Descriptor.FACTORY);
         fc.addGenerated(StringPositionDescriptor.FACTORY);
         fc.addGenerated(StringRepeatDescriptor.FACTORY);
+        fc.addGenerated(StringReplaceDescriptor.FACTORY);
+        fc.addGenerated(StringReplaceWithLimitDescriptor.FACTORY);
         fc.addGenerated(StringSplitDescriptor.FACTORY);
 
         // Constructors
