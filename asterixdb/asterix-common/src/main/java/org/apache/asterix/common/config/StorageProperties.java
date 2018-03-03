@@ -44,7 +44,7 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(LONG_BYTE_UNIT, Runtime.getRuntime().maxMemory() / 4),
         STORAGE_MEMORYCOMPONENT_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(INTEGER, 2),
-        STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES(INTEGER, 32),
+        STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES(INTEGER, 8),
         STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d),
         STORAGE_MAX_ACTIVE_WRITABLE_DATASETS(INTEGER, 8);
 
@@ -105,7 +105,7 @@ public class StorageProperties extends AbstractProperties {
         @Override
         public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
             if (this == STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES) {
-                return "32 pages";
+                return "8 pages";
             }
             return null;
         }
