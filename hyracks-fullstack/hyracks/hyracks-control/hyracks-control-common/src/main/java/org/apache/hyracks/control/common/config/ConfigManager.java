@@ -20,6 +20,7 @@ package org.apache.hyracks.control.common.config;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +41,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.map.CompositeMap;
@@ -491,7 +493,17 @@ public class ConfigManager implements IConfigManager, Serializable {
     }
 
     public void set(String nodeId, IOption option, Object value) {
-        invokeSetters(option, value, nodeId);
+        invokeSetters(option, copyIfArray(value), nodeId);
+    }
+
+    private Object copyIfArray(Object orig) {
+        if (orig == null || !orig.getClass().isArray()) {
+            return orig;
+        }
+        int arrayLength = Array.getLength(orig);
+        Object copy = Array.newInstance(orig.getClass().getComponentType(), arrayLength);
+        IntStream.range(0, arrayLength).forEach(i -> Array.set(copy, i, Array.get(orig, i)));
+        return copy;
     }
 
     public Object get(IOption option) {
