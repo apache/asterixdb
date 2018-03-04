@@ -18,7 +18,7 @@
 -->
 <#-- TODO(mblow): share notice file template with asterixdb via maven artifact -->
 Apache Hyracks and Algebricks
-Copyright 2015-2017 The Apache Software Foundation
+Copyright 2015-2018 The Apache Software Foundation
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
