@@ -30,6 +30,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -107,11 +108,11 @@ public abstract class AbstractStringConstructorEvaluator implements IScalarEvalu
                 case DOUBLE: {
                     double d = ADoubleSerializerDeserializer.getDouble(serString, startOffset);
                     if (Double.isNaN(d)) {
-                        builder.appendUtf8StringPointable(AbstractDoubleConstructorEvaluator.NAN);
+                        builder.appendUtf8StringPointable(NumberUtils.NAN);
                     } else if (d == Double.POSITIVE_INFINITY) { // NOSONAR
-                        builder.appendUtf8StringPointable(AbstractDoubleConstructorEvaluator.POSITIVE_INF);
+                        builder.appendUtf8StringPointable(NumberUtils.POSITIVE_INF);
                     } else if (d == Double.NEGATIVE_INFINITY) { // NOSONAR
-                        builder.appendUtf8StringPointable(AbstractDoubleConstructorEvaluator.NEGATIVE_INF);
+                        builder.appendUtf8StringPointable(NumberUtils.NEGATIVE_INF);
                     } else {
                         builder.appendString(String.valueOf(d));
                     }
@@ -120,11 +121,11 @@ public abstract class AbstractStringConstructorEvaluator implements IScalarEvalu
                 case FLOAT: {
                     float f = AFloatSerializerDeserializer.getFloat(serString, startOffset);
                     if (Float.isNaN(f)) {
-                        builder.appendUtf8StringPointable(AbstractDoubleConstructorEvaluator.NAN);
+                        builder.appendUtf8StringPointable(NumberUtils.NAN);
                     } else if (f == Float.POSITIVE_INFINITY) { // NOSONAR
-                        builder.appendUtf8StringPointable(AbstractDoubleConstructorEvaluator.POSITIVE_INF);
+                        builder.appendUtf8StringPointable(NumberUtils.POSITIVE_INF);
                     } else if (f == Float.NEGATIVE_INFINITY) { // NOSONAR
-                        builder.appendUtf8StringPointable(AbstractDoubleConstructorEvaluator.NEGATIVE_INF);
+                        builder.appendUtf8StringPointable(NumberUtils.NEGATIVE_INF);
                     } else {
                         builder.appendString(String.valueOf(f));
                     }

@@ -74,6 +74,8 @@ public class CommonFunctionMapUtil {
         FUNCTION_NAME_MAP.put("tostring", "to-string"); // tostring, internal: to-string
         FUNCTION_NAME_MAP.put("todouble", "to-double"); // todouble, internal: to-double
         FUNCTION_NAME_MAP.put("tobigint", "to-bigint"); // tobigint, internal: to-bigint
+        FUNCTION_NAME_MAP.put("tonumber", "to-number"); // tonumber, internal: to-number
+        FUNCTION_NAME_MAP.put("tonum", "to-number"); // tonum, internal: to-number
 
         // Object functions
         // record-merge, internal: object-merge

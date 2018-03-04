@@ -106,6 +106,9 @@ import org.apache.asterix.om.typecomputer.impl.StringToStringListTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SubsetCollectionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SubstringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SwitchCaseComputer;
+import org.apache.asterix.om.typecomputer.impl.ToBigIntTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ToDoubleTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ToNumberTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryBinaryInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryMinusTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryStringInt64TypeComputer;
@@ -871,6 +874,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-double", 1);
     public static final FunctionIdentifier TO_BIGINT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-bigint", 1);
+    public static final FunctionIdentifier TO_NUMBER =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-number", 1);
 
     public static final FunctionIdentifier EXTERNAL_LOOKUP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "external-lookup", FunctionIdentifier.VARARGS);
@@ -1057,8 +1062,9 @@ public class BuiltinFunctions {
 
         addFunction(TO_BOOLEAN, ABooleanTypeComputer.INSTANCE, true);
         addFunction(TO_STRING, AStringTypeComputer.INSTANCE, true);
-        addFunction(TO_DOUBLE, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(TO_BIGINT, AInt64TypeComputer.INSTANCE, true);
+        addFunction(TO_DOUBLE, ToDoubleTypeComputer.INSTANCE, true);
+        addFunction(TO_BIGINT, ToBigIntTypeComputer.INSTANCE, true);
+        addFunction(TO_NUMBER, ToNumberTypeComputer.INSTANCE, true);
 
         // Aggregate Functions
         addFunction(MAX, MinMaxAggTypeComputer.INSTANCE, true);

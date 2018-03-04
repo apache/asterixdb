@@ -22,13 +22,10 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -37,7 +34,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
@@ -58,10 +54,6 @@ public class ToBigIntDescriptor extends AbstractScalarFunctionDynamicDescriptor 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractInt64ConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
-                    @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-
                     @Override
                     protected void evaluateImpl(IPointable result) throws IOException {
                         byte[] bytes = inputArg.getByteArray();
@@ -94,7 +86,7 @@ public class ToBigIntDescriptor extends AbstractScalarFunctionDynamicDescriptor 
                             case ARRAY:
                             case MULTISET:
                             case OBJECT:
-                                setNull(result);
+                                PointableHelper.setNull(result);
                                 break;
 
                             default:
@@ -104,13 +96,8 @@ public class ToBigIntDescriptor extends AbstractScalarFunctionDynamicDescriptor 
                     }
 
                     @Override
-                    protected void handleUnparseableString(IPointable result) throws HyracksDataException {
-                        setNull(result);
-                    }
-
-                    private void setNull(IPointable result) throws HyracksDataException {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
+                    protected void handleUnparseableString(IPointable result) {
+                        PointableHelper.setNull(result);
                     }
 
                     @Override

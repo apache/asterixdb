@@ -33,6 +33,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.asterix.runtime.evaluators.constructors.AbstractBooleanConstructorEvaluator;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -44,12 +45,6 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class ToBooleanDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-
-    private static final long BITS_NAN = Double.doubleToLongBits(Double.NaN);
-
-    private static final long BITS_ZERO_POS = Double.doubleToLongBits(+0.0d);
-
-    private static final long BITS_ZERO_NEG = Double.doubleToLongBits(-0.0d);
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
@@ -117,7 +112,8 @@ public class ToBooleanDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
                     private void setDouble(double v, IPointable result) throws HyracksDataException {
                         long bits = Double.doubleToLongBits(v);
-                        boolean zeroOrNaN = bits == BITS_ZERO_POS || bits == BITS_ZERO_NEG || bits == BITS_NAN;
+                        boolean zeroOrNaN = bits == NumberUtils.POSITIVE_ZERO_BITS
+                                || bits == NumberUtils.NEGATIVE_ZERO_BITS || bits == NumberUtils.NAN_BITS;
                         setBoolean(result, !zeroOrNaN);
                     }
 

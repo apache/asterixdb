@@ -99,6 +99,14 @@ public class AUnionType extends AbstractComplexType {
         return createMissableType(t, s == null ? null : s + "?");
     }
 
+    public static IAType createNullableType(IAType t) {
+        if (t != null && t.getTypeTag() == ATypeTag.NULL) {
+            return t;
+        }
+        String s = t != null ? t.getTypeName() : null;
+        return createNullableType(t, s == null ? null : s + "?");
+    }
+
     public static IAType createNullableType(IAType type, String typeName) {
         if (type != null && type.getTypeTag() == ATypeTag.NULL) {
             return type;

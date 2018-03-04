@@ -257,6 +257,7 @@ import org.apache.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToBigIntDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToBooleanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToDoubleDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ToNumberDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToStringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.UUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.WordTokensDescriptor;
@@ -728,6 +729,7 @@ public final class FunctionCollection {
         fc.addGenerated(ToStringDescriptor.FACTORY);
         fc.addGenerated(ToDoubleDescriptor.FACTORY);
         fc.addGenerated(ToBigIntDescriptor.FACTORY);
+        fc.addGenerated(ToNumberDescriptor.FACTORY);
 
         // Cast function
         fc.addGenerated(CastTypeDescriptor.FACTORY);

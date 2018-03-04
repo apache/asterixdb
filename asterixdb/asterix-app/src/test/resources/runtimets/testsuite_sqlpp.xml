@@ -9285,6 +9285,17 @@
         <expected-error>ASX0002: Type mismatch</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_number_01">
+        <output-dir compare="Text">to_number_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="types">
+      <compilation-unit name="to_number_02">
+        <output-dir compare="Text">to_number_02</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="materialization">
     <test-case FilePath="materialization">

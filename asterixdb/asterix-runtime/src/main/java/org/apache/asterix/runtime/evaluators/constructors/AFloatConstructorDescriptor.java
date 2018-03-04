@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AMutableFloat;
@@ -31,13 +30,13 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -45,7 +44,6 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -89,14 +87,11 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                 resultStorage.reset();
                                 int utf8offset = offset + 1;
                                 int utf8len = len - 1;
-                                if (AbstractDoubleConstructorEvaluator.POSITIVE_INF.compareTo(serString, utf8offset,
-                                        utf8len) == 0) {
+                                if (NumberUtils.POSITIVE_INF.compareTo(serString, utf8offset, utf8len) == 0) {
                                     aFloat.setValue(Float.POSITIVE_INFINITY);
-                                } else if (AbstractDoubleConstructorEvaluator.NEGATIVE_INF.compareTo(serString,
-                                        utf8offset, utf8len) == 0) {
+                                } else if (NumberUtils.NEGATIVE_INF.compareTo(serString, utf8offset, utf8len) == 0) {
                                     aFloat.setValue(Float.NEGATIVE_INFINITY);
-                                } else if (AbstractDoubleConstructorEvaluator.NAN.compareTo(serString, utf8offset,
-                                        utf8len) == 0) {
+                                } else if (NumberUtils.NAN.compareTo(serString, utf8offset, utf8len) == 0) {
                                     aFloat.setValue(Float.NaN);
                                 } else {
                                     utf8Ptr.set(serString, utf8offset, utf8len);

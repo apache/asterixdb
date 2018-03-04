@@ -27,6 +27,7 @@ import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -43,10 +44,6 @@ public abstract class AbstractDoubleConstructorEvaluator implements IScalarEvalu
     @SuppressWarnings("unchecked")
     protected static final ISerializerDeserializer<ADouble> DOUBLE_SERDE =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
-
-    protected static final UTF8StringPointable POSITIVE_INF = UTF8StringPointable.generateUTF8Pointable("INF");
-    protected static final UTF8StringPointable NEGATIVE_INF = UTF8StringPointable.generateUTF8Pointable("-INF");
-    protected static final UTF8StringPointable NAN = UTF8StringPointable.generateUTF8Pointable("NaN");
 
     protected final IScalarEvaluator inputEval;
     protected final ArrayBackedValueStorage resultStorage;
@@ -77,41 +74,25 @@ public abstract class AbstractDoubleConstructorEvaluator implements IScalarEvalu
 
     protected void evaluateImpl(IPointable result) throws IOException {
         byte[] bytes = inputArg.getByteArray();
-        int offset = inputArg.getStartOffset();
-        byte tt = bytes[offset];
+        int startOffset = inputArg.getStartOffset();
+        byte tt = bytes[startOffset];
         if (tt == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
             result.set(inputArg);
         } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            int len = inputArg.getLength();
-            int utf8offset = offset + 1;
-            int utf8len = len - 1;
-            if (POSITIVE_INF.compareTo(bytes, utf8offset, utf8len) == 0) {
-                setDouble(result, Double.POSITIVE_INFINITY);
-            } else if (NEGATIVE_INF.compareTo(bytes, utf8offset, utf8len) == 0) {
-                setDouble(result, Double.NEGATIVE_INFINITY);
-            } else if (NAN.compareTo(bytes, utf8offset, utf8len) == 0) {
-                setDouble(result, Double.NaN);
+            utf8Ptr.set(bytes, startOffset + 1, inputArg.getLength() - 1);
+            if (NumberUtils.parseDouble(utf8Ptr, aDouble)) {
+                DOUBLE_SERDE.serialize(aDouble, out);
+                result.set(resultStorage);
             } else {
-                utf8Ptr.set(bytes, utf8offset, utf8len);
-                try {
-                    setDouble(result, Double.parseDouble(utf8Ptr.toString()));
-                } catch (NumberFormatException e) {
-                    handleUparseableString(result, e);
-                }
+                handleUparseableString(result);
             }
         } else {
             throw new TypeMismatchException(getIdentifier(), 0, tt, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
     }
 
-    protected void handleUparseableString(IPointable result, NumberFormatException e) throws HyracksDataException {
-        throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
-    }
-
-    protected void setDouble(IPointable result, double value) throws HyracksDataException {
-        aDouble.setValue(value);
-        DOUBLE_SERDE.serialize(aDouble, out);
-        result.set(resultStorage);
+    protected void handleUparseableString(IPointable result) throws HyracksDataException {
+        throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
     }
 
     protected abstract FunctionIdentifier getIdentifier();
