@@ -88,7 +88,6 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
             public void run() {
                 Thread thread = Thread.currentThread();
                 setDataConsumerThread(thread); // Sets the data consumer thread to the current thread.
-                String oldName = thread.getName();
                 try {
                     thread.setName(MaterializingPipelinedPartition.class.getName() + pid);
                     FileReference fRefCopy;
@@ -167,7 +166,6 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                 } catch (Exception e) {
                     LOGGER.log(Level.ERROR, e.getMessage(), e);
                 } finally {
-                    thread.setName(oldName);
                     setDataConsumerThread(null); // Sets back the data consumer thread to null.
                 }
             }

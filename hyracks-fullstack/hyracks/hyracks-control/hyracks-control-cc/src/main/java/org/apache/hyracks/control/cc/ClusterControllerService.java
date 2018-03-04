@@ -34,7 +34,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
@@ -82,6 +81,7 @@ import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 import org.apache.hyracks.util.ExitUtil;
+import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -232,7 +232,7 @@ public class ClusterControllerService implements IControllerService {
         serviceCtx = new CCServiceContext(this, serverCtx, ccContext, ccConfig.getAppConfig());
         serviceCtx.addJobLifecycleListener(datasetDirectoryService);
         application.init(serviceCtx);
-        executor = Executors.newCachedThreadPool(serviceCtx.getThreadFactory());
+        executor = MaintainedThreadNameExecutorService.newCachedThreadPool(serviceCtx.getThreadFactory());
         application.start(ccConfig.getAppArgsArray());
         IJobCapacityController jobCapacityController = application.getJobCapacityController();
 

@@ -37,7 +37,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -94,6 +93,7 @@ import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.util.ExitUtil;
+import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
 import org.apache.hyracks.util.PidHelper;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.Tracer;
@@ -480,7 +480,7 @@ public class NodeControllerService implements IControllerService {
         serviceCtx = new NCServiceContext(this, serverCtx, ioManager, id, memoryManager, lccm,
                 ncConfig.getNodeScopedAppConfig());
         application.init(serviceCtx);
-        executor = Executors.newCachedThreadPool(serviceCtx.getThreadFactory());
+        executor = MaintainedThreadNameExecutorService.newCachedThreadPool(serviceCtx.getThreadFactory());
         application.start(ncConfig.getAppArgsArray());
     }
 

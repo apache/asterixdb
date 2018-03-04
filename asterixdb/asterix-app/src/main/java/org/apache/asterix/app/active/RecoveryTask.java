@@ -59,19 +59,12 @@ public class RecoveryTask {
 
     public Callable<Void> recover() {
         if (retryPolicyFactory == NoRetryPolicyFactory.INSTANCE) {
-            return () -> {
-                return null;
-            };
+            return () -> null;
         }
         IRetryPolicy policy = retryPolicyFactory.create(listener);
         return () -> {
-            String nameBefore = Thread.currentThread().getName();
-            try {
-                Thread.currentThread().setName("RecoveryTask (" + listener.getEntityId() + ")");
-                doRecover(policy);
-            } finally {
-                Thread.currentThread().setName(nameBefore);
-            }
+            Thread.currentThread().setName("RecoveryTask (" + listener.getEntityId() + ")");
+            doRecover(policy);
             return null;
         };
     }

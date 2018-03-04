@@ -275,7 +275,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public void run() {
         Thread ct = Thread.currentThread();
-        String threadName = ct.getName();
         // Calls synchronized addPendingThread(..) to make sure that in the abort() method,
         // the thread is not escaped from interruption.
         if (!addPendingThread(ct)) {
@@ -304,7 +303,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                             if (!addPendingThread(thread)) {
                                 return;
                             }
-                            String oldName = thread.getName();
                             thread.setName(displayName + ":" + taskAttemptId + ":" + cIdx);
                             thread.setPriority(Thread.MIN_PRIORITY);
                             try {
@@ -314,7 +312,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                                     exceptions.add(e);
                                 }
                             } finally {
-                                thread.setName(oldName);
                                 sem.release();
                                 removePendingThread(thread);
                             }
@@ -351,7 +348,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         } catch (Exception e) {
             exceptions.add(e);
         } finally {
-            ct.setName(threadName);
             close();
             removePendingThread(ct);
         }

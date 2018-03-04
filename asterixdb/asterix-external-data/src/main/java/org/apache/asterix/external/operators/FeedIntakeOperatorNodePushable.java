@@ -60,7 +60,6 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
 
     @Override
     protected void start() throws HyracksDataException, InterruptedException {
-        String before = Thread.currentThread().getName();
         Thread.currentThread().setName("Intake Thread");
         try {
             writer.open();
@@ -85,7 +84,6 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
             throw e;
         } finally {
             writer.close();
-            Thread.currentThread().setName(before);
         }
     }
 
