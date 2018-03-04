@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.app.bootstrap.TestNodeController;
 import org.apache.asterix.app.bootstrap.TestNodeController.PrimaryIndexInfo;
@@ -37,6 +38,7 @@ import org.apache.asterix.app.data.gen.TupleGenerator;
 import org.apache.asterix.app.data.gen.TupleGenerator.GenerationFunction;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -173,6 +175,35 @@ public class StorageTestUtils {
                 exceptionThrowingOperations, errorThrowingOperations);
         return new TestTupleCounterFrameWriter(recordDescriptor, openAnswer, nextAnswer, flushAnswer, failAnswer,
                 closeAnswer, deepCopyInputFrames);
+    }
+
+    public static void flushPartition(IDatasetLifecycleManager dslLifecycleMgr, TestLsmBtree lsmBtree, boolean async)
+            throws Exception {
+        flushPartition(dslLifecycleMgr, lsmBtree, DATASET, async);
+    }
+
+    public static void flushPartition(IDatasetLifecycleManager dslLifecycleMgr, TestLsmBtree lsmBtree, Dataset dataset,
+            boolean async) throws Exception {
+        waitForOperations(lsmBtree);
+        PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) lsmBtree.getOperationTracker();
+        opTracker.setFlushOnExit(true);
+        opTracker.flushIfNeeded();
+
+        long maxWaitTime = TimeUnit.MINUTES.toNanos(1); // 1min
+        // wait for log record is flushed, i.e., the flush is scheduled
+        long before = System.nanoTime();
+        while (opTracker.isFlushLogCreated()) {
+            Thread.sleep(5); // NOSONAR: Test code with a timeout
+            if (System.nanoTime() - before > maxWaitTime) {
+                throw new IllegalStateException(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - before)
+                        + "ms passed without scheduling the flush operation");
+            }
+        }
+
+        if (!async) {
+            DatasetInfo dsInfo = dslLifecycleMgr.getDatasetInfo(dataset.getDatasetId());
+            dsInfo.waitForIO();
+        }
     }
 
     public static void flush(IDatasetLifecycleManager dsLifecycleMgr, TestLsmBtree lsmBtree, boolean async)

@@ -175,6 +175,7 @@ public class TestNodeController {
 
     public void clearOpts() {
         options.clear();
+        ExecutionTestUtil.integrationUtil.clearOptions();
     }
 
     public TxnId getTxnJobId(IHyracksTaskContext ctx) {

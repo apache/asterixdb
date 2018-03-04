@@ -137,11 +137,12 @@ public class AsterixHyracksIntegrationUtil {
                 ncConfigManager = new ConfigManager(new String[] { "-config-file", confFile });
             }
             ncApplication.registerConfig(ncConfigManager);
+            opts.forEach(opt -> ncConfigManager.set(nodeId, opt.getLeft(), opt.getRight()));
             nodeControllers.add(
                     new NodeControllerService(fixupIODevices(createNCConfig(nodeId, ncConfigManager)), ncApplication));
         }
 
-        opts.stream().forEach(opt -> configManager.set(opt.getLeft(), opt.getRight()));
+        opts.forEach(opt -> configManager.set(opt.getLeft(), opt.getRight()));
         cc.start();
 
         // Starts ncs.
@@ -357,6 +358,10 @@ public class AsterixHyracksIntegrationUtil {
 
     public void addOption(IOption name, Object value) {
         opts.add(Pair.of(name, value));
+    }
+
+    public void clearOptions() {
+        opts.clear();
     }
 
     /**

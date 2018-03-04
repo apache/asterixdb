@@ -387,7 +387,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             // if an index has no ongoing updates, then it's memory component must be empty
                             // and there is nothing to flush
                             for (IndexInfo iInfo : dsInfo.getIndexes().values()) {
-                                if (iInfo.isOpen()) {
+                                if (iInfo.isOpen() && iInfo.getPartition() == partition) {
                                     maxDiskLastLsn = resourceId2MaxLSNMap.get(iInfo.getResourceId());
                                     index = iInfo.getIndex();
                                     AbstractLSMIOOperationCallback ioCallback =
