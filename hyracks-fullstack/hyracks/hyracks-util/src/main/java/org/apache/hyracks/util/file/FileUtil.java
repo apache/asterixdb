@@ -30,6 +30,7 @@ public class FileUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Object LOCK = new Object();
+    private static final int MAX_COPY_ATTEMPTS = 3;
 
     private FileUtil() {
     }
@@ -61,6 +62,28 @@ public class FileUtil {
                     .replaceAll(escapedSeparator + "$", "");
         } else {
             return joined.replaceAll("(" + escapedSeparator + ")+", "$1").replaceAll(escapedSeparator + "$", "");
+        }
+    }
+
+    public static void safeCopyFile(File child, File destChild) throws IOException {
+        forceMkdirs(destChild.getParentFile());
+        IOException ioException = null;
+        while (true) {
+            try {
+                FileUtils.copyFile(child, destChild);
+                return;
+            } catch (IOException e) {
+                if (ioException == null) {
+                    ioException = e;
+                } else {
+                    ioException.addSuppressed(e);
+                }
+                if (ioException.getSuppressed().length >= MAX_COPY_ATTEMPTS) {
+                    LOGGER.warn("Unable to copy {} to {} after " + MAX_COPY_ATTEMPTS + " attempts; skipping file",
+                            child, destChild, e);
+                    return;
+                }
+            }
         }
     }
 }

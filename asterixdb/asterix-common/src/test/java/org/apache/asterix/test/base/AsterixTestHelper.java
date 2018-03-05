@@ -25,9 +25,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.util.file.FileUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AsterixTestHelper {
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    private AsterixTestHelper() {
+    }
 
     public static String extToResExt(String fname, String resultExt) {
         int dot = fname.lastIndexOf('.');
@@ -77,11 +83,12 @@ public class AsterixTestHelper {
             throw new IllegalArgumentException("Exists and not a directory: " + destDir);
         }
         for (File child : srcDir.listFiles()) {
+            File destChild = new File(destDir, child.getName());
             if (child.isDirectory()) {
-                deepSelectiveCopy(child, new File(destDir, child.getName()), filter);
+                deepSelectiveCopy(child, destChild, filter);
             } else if (filter.accept(child)) {
-                destDir.mkdirs();
-                FileUtils.copyFile(child, new File(destDir, child.getName()));
+                FileUtil.safeCopyFile(child, destChild);
+                return;
             }
         }
     }

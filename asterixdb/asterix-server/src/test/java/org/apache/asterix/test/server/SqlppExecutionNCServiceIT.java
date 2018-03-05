@@ -27,9 +27,9 @@ import org.junit.runners.Parameterized.Parameters;
  * Runs the runtime test cases under 'asterix-app/src/test/resources/runtimets'.
  */
 @RunWith(Parameterized.class)
-public class SqlppExecutionIT extends AbstractExecutionIT {
+public class SqlppExecutionNCServiceIT extends AbstractExecutionIT {
 
-    @Parameters(name = "SqlppExecutionIT {index}: {0}")
+    @Parameters(name = "SqlppExecutionNCServiceIT {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         Collection<Object[]> testArgs = buildTestsInXml("only_sqlpp.xml");
         if (testArgs.size() == 0) {
@@ -48,7 +48,7 @@ public class SqlppExecutionIT extends AbstractExecutionIT {
 
     }
 
-    public SqlppExecutionIT(TestCaseContext tcCtx) {
+    public SqlppExecutionNCServiceIT(TestCaseContext tcCtx) {
         super(tcCtx);
     }
 }
