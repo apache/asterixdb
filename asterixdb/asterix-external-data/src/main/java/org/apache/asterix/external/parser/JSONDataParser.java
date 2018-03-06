@@ -119,6 +119,18 @@ public class JSONDataParser extends AbstractNestedDataParser<ADMToken>
         }
     }
 
+    public boolean parseAnyValue(DataOutput out) throws HyracksDataException {
+        try {
+            if (nextToken() == ADMToken.EOF) {
+                return false;
+            }
+            parseValue(BuiltinType.ANY, out);
+            return true;
+        } catch (IOException e) {
+            throw new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM, e);
+        }
+    }
+
     @Override
     public boolean reset(InputStream in) throws IOException {
         setInputStream(in);
