@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
@@ -82,4 +83,28 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
      * @return true if performance tracing is enabled, false otherwise
      */
     boolean isTracingEnabled();
+
+    /**
+     * @return the IO Operation type associated with this context
+     */
+    LSMIOOperationType getIoOperationType();
+
+    /**
+     * Set the IO Operation type associated with this context
+     *
+     * @param ioOpType
+     */
+    void setIoOperationType(LSMIOOperationType ioOpType);
+
+    /**
+     * @return the new component produced by this operation if any, null otherwise
+     */
+    ILSMDiskComponent getNewComponent();
+
+    /**
+     * Set the new component produced by this operation
+     *
+     * @param component
+     */
+    void setNewComponent(ILSMDiskComponent component);
 }

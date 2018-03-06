@@ -37,6 +37,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
@@ -90,8 +91,8 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public void beforeOperation(LSMIOOperationType opType) throws HyracksDataException {
-        if (opType == LSMIOOperationType.FLUSH) {
+    public void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+        if (opCtx.getIoOperationType() == LSMIOOperationType.FLUSH) {
             /*
              * This method was called on the scheduleFlush operation.
              * We set the lastLSN to the last LSN for the index (the LSN for the flush log)
@@ -111,25 +112,25 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public void afterOperation(LSMIOOperationType opType, List<ILSMComponent> oldComponents,
-            ILSMDiskComponent newComponent) throws HyracksDataException {
+    public void afterOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
         //TODO: Copying Filters and all content of the metadata pages for flush operation should be done here
-        if (newComponent == null) {
+        if (opCtx.getNewComponent() == null) {
             // failed operation. Nothing to do.
             return;
         }
-        putLSNIntoMetadata(newComponent, oldComponents);
-        putComponentIdIntoMetadata(opType, newComponent, oldComponents);
-        componentLsnMap.put(newComponent.getId(), getComponentLSN(oldComponents));
-        if (opType == LSMIOOperationType.MERGE) {
-            if (oldComponents == null) {
+        putLSNIntoMetadata(opCtx.getNewComponent(), opCtx.getComponentsToBeMerged());
+        putComponentIdIntoMetadata(opCtx.getIoOperationType(), opCtx.getNewComponent(),
+                opCtx.getComponentsToBeMerged());
+        componentLsnMap.put(opCtx.getNewComponent().getId(), getComponentLSN(opCtx.getComponentsToBeMerged()));
+        if (opCtx.getIoOperationType() == LSMIOOperationType.MERGE) {
+            if (opCtx.getComponentsToBeMerged().isEmpty()) {
                 throw new IllegalStateException("Merge must have old components");
             }
-            LongPointable markerLsn =
-                    LongPointable.FACTORY.createPointable(ComponentUtils.getLong(oldComponents.get(0).getMetadata(),
+            LongPointable markerLsn = LongPointable.FACTORY
+                    .createPointable(ComponentUtils.getLong(opCtx.getComponentsToBeMerged().get(0).getMetadata(),
                             ComponentUtils.MARKER_LSN_KEY, ComponentUtils.NOT_FOUND));
-            newComponent.getMetadata().put(ComponentUtils.MARKER_LSN_KEY, markerLsn);
-        } else if (opType == LSMIOOperationType.FLUSH) {
+            opCtx.getNewComponent().getMetadata().put(ComponentUtils.MARKER_LSN_KEY, markerLsn);
+        } else if (opCtx.getIoOperationType() == LSMIOOperationType.FLUSH) {
             // advance memory component indexes
             synchronized (this) {
                 // we've already consumed the specified LSN/component id.
@@ -146,17 +147,18 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     @Override
-    public void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent) throws HyracksDataException {
+    public void afterFinalize(ILSMIndexOperationContext opCtx) throws HyracksDataException {
         // The operation was complete and the next I/O operation for the LSM index didn't start yet
-        if (opType == LSMIOOperationType.FLUSH) {
+        if (opCtx.getIoOperationType() == LSMIOOperationType.FLUSH) {
             hasFlushed = true;
-            if (newComponent != null) {
-                final Long lsn = componentLsnMap.remove(newComponent.getId());
+            if (opCtx.getNewComponent() != null) {
+                final Long lsn = componentLsnMap.remove(opCtx.getNewComponent().getId());
                 if (lsn == null) {
-                    throw new IllegalStateException("Unidentified flushed component: " + newComponent);
+                    throw new IllegalStateException("Unidentified flushed component: " + opCtx.getNewComponent());
                 }
                 // empty component doesn't have any files
-                final Optional<String> componentFile = newComponent.getLSMComponentPhysicalFiles().stream().findAny();
+                final Optional<String> componentFile =
+                        opCtx.getNewComponent().getLSMComponentPhysicalFiles().stream().findAny();
                 if (componentFile.isPresent()) {
                     final ResourceReference ref = ResourceReference.of(componentFile.get());
                     final String componentEndTime = AbstractLSMIndexFileManager.getComponentEndTime(ref.getName());
@@ -166,7 +168,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         }
     }
 
-    private void putLSNIntoMetadata(ILSMDiskComponent newComponent, List<ILSMComponent> oldComponents)
+    private void putLSNIntoMetadata(ILSMDiskComponent newComponent, List<? extends ILSMComponent> oldComponents)
             throws HyracksDataException {
         newComponent.getMetadata().put(LSN_KEY, LongPointable.FACTORY.createPointable(getComponentLSN(oldComponents)));
     }
@@ -178,8 +180,9 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
         return pointable.getLength() == 0 ? INVALID : pointable.longValue();
     }
 
-    private ILSMComponentId getMergedComponentId(List<ILSMComponent> mergedComponents) throws HyracksDataException {
-        if (mergedComponents == null || mergedComponents.isEmpty()) {
+    private ILSMComponentId getMergedComponentId(List<? extends ILSMComponent> mergedComponents)
+            throws HyracksDataException {
+        if (mergedComponents.isEmpty()) {
             return null;
         }
         return LSMComponentIdUtils.union(mergedComponents.get(0).getId(),
@@ -188,7 +191,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     private void putComponentIdIntoMetadata(LSMIOOperationType opType, ILSMDiskComponent newComponent,
-            List<ILSMComponent> oldComponents) throws HyracksDataException {
+            List<? extends ILSMComponent> oldComponents) throws HyracksDataException {
         // the id of flushed component is set when we copy the metadata of the memory component
         if (opType == LSMIOOperationType.MERGE) {
             ILSMComponentId componentId = getMergedComponentId(oldComponents);
@@ -242,7 +245,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     }
 
     public long getComponentLSN(List<? extends ILSMComponent> diskComponents) throws HyracksDataException {
-        if (diskComponents == null) {
+        if (diskComponents.isEmpty()) {
             // Implies a flush IO operation. --> moves the flush pointer
             // Flush operation of an LSM index are executed sequentially.
             synchronized (this) {

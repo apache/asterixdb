@@ -18,20 +18,17 @@
  */
 package org.apache.asterix.test.dataflow;
 
-import java.util.List;
-
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallback;
 import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.EmptyComponent;
 
@@ -108,42 +105,40 @@ public class TestLsmBtreeIoOpCallbackFactory extends LSMBTreeIOOperationCallback
         }
 
         @Override
-        public void beforeOperation(LSMIOOperationType opType) throws HyracksDataException {
+        public void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
             lsmBtree.beforeIoOperationCalled();
-            super.beforeOperation(opType);
+            super.beforeOperation(opCtx);
             lsmBtree.beforeIoOperationReturned();
         }
 
         @Override
-        public void afterOperation(LSMIOOperationType opType, List<ILSMComponent> oldComponents,
-                ILSMDiskComponent newComponent) throws HyracksDataException {
+        public void afterOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
             lsmBtree.afterIoOperationCalled();
-            super.afterOperation(opType, oldComponents, newComponent);
+            super.afterOperation(opCtx);
             lsmBtree.afterIoOperationReturned();
         }
 
         @Override
-        public void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent)
-                throws HyracksDataException {
+        public void afterFinalize(ILSMIndexOperationContext opCtx) throws HyracksDataException {
             lsmBtree.afterIoFinalizeCalled();
-            super.afterFinalize(opType, newComponent);
+            super.afterFinalize(opCtx);
             synchronized (TestLsmBtreeIoOpCallbackFactory.this) {
-                if (newComponent != null) {
-                    if (newComponent == EmptyComponent.INSTANCE) {
-                        if (opType == LSMIOOperationType.FLUSH) {
+                if (opCtx.getNewComponent() != null) {
+                    if (opCtx.getNewComponent() == EmptyComponent.INSTANCE) {
+                        if (opCtx.getIoOperationType() == LSMIOOperationType.FLUSH) {
                             rollbackFlushes++;
                         } else {
                             rollbackMerges++;
                         }
                     } else {
-                        if (opType == LSMIOOperationType.FLUSH) {
+                        if (opCtx.getIoOperationType() == LSMIOOperationType.FLUSH) {
                             completedFlushes++;
                         } else {
                             completedMerges++;
                         }
                     }
                 } else {
-                    recordFailure(opType);
+                    recordFailure(opCtx.getIoOperationType());
                 }
                 TestLsmBtreeIoOpCallbackFactory.this.notifyAll();
             }

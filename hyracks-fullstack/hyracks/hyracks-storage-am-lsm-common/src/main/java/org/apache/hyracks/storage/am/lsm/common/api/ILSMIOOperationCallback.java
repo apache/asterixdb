@@ -18,19 +18,16 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
-import java.util.List;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 
 public interface ILSMIOOperationCallback {
 
     /**
      * This method is called on an IO operation before the operation starts.
-     * (i.e. IO operations could be flush or merge operations.)
+     * (i.e. IO operations could be flush, or merge operations.)
      * For flush, this is called immediately before switching the current memory component pointer
      */
-    void beforeOperation(LSMIOOperationType opType) throws HyracksDataException;
+    void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException;
 
     /**
      * This method is called on an IO operation sometime after the operation was completed.
@@ -39,22 +36,18 @@ public interface ILSMIOOperationCallback {
      * Copying content of metadata page from memory component to disk component should be done in this call
      * Merging content of metadata pages from disk components to new disk component should be done in this call
      *
-     * @param oldComponents
-     * @param newComponent
      * @throws HyracksDataException
      */
-    void afterOperation(LSMIOOperationType opType, List<ILSMComponent> oldComponents, ILSMDiskComponent newComponent)
-            throws HyracksDataException;
+    void afterOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException;
 
     /**
      * This method is called on an IO operation when the operation needs any cleanup works
      * regardless that the IO operation was executed or not. Once the IO operation is executed,
      * this method should be called after ILSMIOOperationCallback.afterOperation() was called.
      *
-     * @param newComponent
      * @throws HyracksDataException
      */
-    void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent) throws HyracksDataException;
+    void afterFinalize(ILSMIndexOperationContext opCtx) throws HyracksDataException;
 
     /**
      * This method is called when a memory component is recycled

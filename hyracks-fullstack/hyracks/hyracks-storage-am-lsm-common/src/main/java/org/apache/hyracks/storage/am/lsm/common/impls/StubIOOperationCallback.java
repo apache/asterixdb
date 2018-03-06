@@ -21,10 +21,9 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 
 /**
@@ -34,33 +33,29 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 
 public class StubIOOperationCallback implements ILSMIOOperationCallback {
 
-    private List<ILSMComponent> oldComponents = null;
-    private ILSMDiskComponent newComponent = null;
+    private ILSMIndexOperationContext opCtx = null;
 
     @Override
-    public void beforeOperation(LSMIOOperationType opType) throws HyracksDataException {
+    public void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
         // Not interested in this
     }
 
     @Override
-    public void afterOperation(LSMIOOperationType opType, List<ILSMComponent> oldComponents,
-            ILSMDiskComponent newComponent) throws HyracksDataException {
-        this.oldComponents = oldComponents;
-        this.newComponent = newComponent;
+    public void afterOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+        this.opCtx = opCtx;
     }
 
     @Override
-    public synchronized void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent)
-            throws HyracksDataException {
+    public void afterFinalize(ILSMIndexOperationContext opCtx) throws HyracksDataException {
         // Redundant info from after
     }
 
-    public List<ILSMComponent> getLastOldComponents() {
-        return oldComponents;
+    public List<ILSMDiskComponent> getLastOldComponents() {
+        return opCtx.getComponentsToBeMerged();
     }
 
     public ILSMDiskComponent getLastNewComponent() {
-        return newComponent;
+        return opCtx.getNewComponent();
     }
 
     @Override

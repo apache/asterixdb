@@ -50,7 +50,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
-import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import org.apache.hyracks.storage.am.lsm.common.impls.ExternalIndexHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
@@ -288,8 +287,9 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
         if (flushOnExit) {
-            BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(ioOpCallback);
-            cb.afterFinalize(LSMIOOperationType.FLUSH, null);
+            ExternalBTreeOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE, version);
+            opCtx.setIoOperationType(LSMIOOperationType.FLUSH);
+            ioOpCallback.afterFinalize(opCtx);
         }
         for (ILSMDiskComponent c : diskComponents) {
             c.deactivateAndPurge();

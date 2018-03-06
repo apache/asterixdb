@@ -369,6 +369,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         AbstractLSMIndexOperationContext opCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
         opCtx.setOperation(ctx.getOperation());
         opCtx.getComponentHolder().addAll(mergingComponents);
+        opCtx.getComponentsToBeMerged().addAll(ctx.getComponentsToBeMerged());
         ILSMDiskComponent firstComponent = (ILSMDiskComponent) mergingComponents.get(0);
         ILSMDiskComponent lastComponent = (ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1);
         LSMComponentFileReferences mergeFileRefs = getMergeFileReferences(firstComponent, lastComponent);
@@ -406,8 +407,10 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
 
     public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
             throws HyracksDataException {
-        ioOpCallback.beforeOperation(LSMIOOperationType.LOAD);
-        return new LSMIndexDiskComponentBulkLoader(this, fillLevel, verifyInput, numElementsHint);
+        AbstractLSMIndexOperationContext opCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
+        opCtx.setIoOperationType(LSMIOOperationType.LOAD);
+        ioOpCallback.beforeOperation(opCtx);
+        return new LSMIndexDiskComponentBulkLoader(this, opCtx, fillLevel, verifyInput, numElementsHint);
     }
 
     @Override

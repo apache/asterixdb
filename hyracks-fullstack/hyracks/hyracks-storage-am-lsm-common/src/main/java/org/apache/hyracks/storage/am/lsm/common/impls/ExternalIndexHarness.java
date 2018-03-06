@@ -107,7 +107,8 @@ public class ExternalIndexHarness extends LSMHarness {
         // Check if there is any action that is needed to be taken based on the operation type
         switch (opType) {
             case MERGE:
-                lsmIndex.getIOOperationCallback().beforeOperation(LSMIOOperationType.MERGE);
+                ctx.setIoOperationType(LSMIOOperationType.MERGE);
+                lsmIndex.getIOOperationCallback().beforeOperation(ctx);
             default:
                 break;
         }
@@ -208,7 +209,8 @@ public class ExternalIndexHarness extends LSMHarness {
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
-            callback.afterFinalize(LSMIOOperationType.MERGE, null);
+            ctx.setIoOperationType(LSMIOOperationType.MERGE);
+            callback.afterFinalize(ctx);
             return;
         }
         lsmIndex.scheduleMerge(ctx, callback);
@@ -221,7 +223,8 @@ public class ExternalIndexHarness extends LSMHarness {
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
             // If the merge cannot be scheduled because there is already an ongoing merge on subset/all of the components, then
             // whenever the current merge has finished, it will schedule the full merge again.
-            callback.afterFinalize(LSMIOOperationType.MERGE, null);
+            ctx.setIoOperationType(LSMIOOperationType.MERGE);
+            callback.afterFinalize(ctx);
             return;
         }
         fullMergeIsRequested.set(false);
@@ -237,11 +240,13 @@ public class ExternalIndexHarness extends LSMHarness {
         ILSMDiskComponent newComponent = null;
         try {
             newComponent = lsmIndex.merge(operation);
-            operation.getCallback().afterOperation(LSMIOOperationType.MERGE, ctx.getComponentHolder(), newComponent);
+            ctx.setNewComponent(newComponent);
+            ctx.setIoOperationType(LSMIOOperationType.MERGE);
+            operation.getCallback().afterOperation(ctx);
             newComponent.markAsValid(lsmIndex.isDurable());
         } finally {
             exitComponents(ctx, LSMOperationType.MERGE, newComponent, false);
-            operation.getCallback().afterFinalize(LSMIOOperationType.MERGE, newComponent);
+            operation.getCallback().afterFinalize(ctx);
         }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Finished the merge operation for index: " + lsmIndex);
@@ -301,7 +306,8 @@ public class ExternalIndexHarness extends LSMHarness {
     @Override
     public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
-        callback.afterFinalize(LSMIOOperationType.FLUSH, null);
+        ctx.setIoOperationType(LSMIOOperationType.FLUSH);
+        callback.afterFinalize(ctx);
     }
 
     @Override

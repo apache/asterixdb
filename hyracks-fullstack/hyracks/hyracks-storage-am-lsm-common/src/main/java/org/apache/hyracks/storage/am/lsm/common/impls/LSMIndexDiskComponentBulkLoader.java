@@ -22,26 +22,27 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
 public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
     private final AbstractLSMIndex lsmIndex;
-    private final ILSMDiskComponent component;
     private final ILSMDiskComponentBulkLoader componentBulkLoader;
+    private ILSMIndexOperationContext opCtx;
 
-    public LSMIndexDiskComponentBulkLoader(AbstractLSMIndex lsmIndex, float fillFactor, boolean verifyInput,
-            long numElementsHint) throws HyracksDataException {
+    public LSMIndexDiskComponentBulkLoader(AbstractLSMIndex lsmIndex, ILSMIndexOperationContext opCtx, float fillFactor,
+            boolean verifyInput, long numElementsHint) throws HyracksDataException {
         this.lsmIndex = lsmIndex;
+        this.opCtx = opCtx;
         // Note that by using a flush target file name, we state that the
         // new bulk loaded component is "newer" than any other merged component.
-        this.component = lsmIndex.createBulkLoadTarget();
+        opCtx.setNewComponent(lsmIndex.createBulkLoadTarget());
         this.componentBulkLoader =
-                component.createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true, true);
+                opCtx.getNewComponent().createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true, true);
     }
 
     public ILSMDiskComponent getComponent() {
-        return component;
+        return opCtx.getNewComponent();
     }
 
     @Override
@@ -57,15 +58,15 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
     public void end() throws HyracksDataException {
         try {
             componentBulkLoader.end();
-            if (component.getComponentSize() > 0) {
+            if (opCtx.getNewComponent().getComponentSize() > 0) {
                 //TODO(amoudi): Ensure Bulk load follow the same lifecycle Other Operations (Flush, Merge, etc).
                 //then after operation should be called from harness as well
                 //https://issues.apache.org/jira/browse/ASTERIXDB-1764
-                lsmIndex.getIOOperationCallback().afterOperation(LSMIOOperationType.LOAD, null, component);
-                lsmIndex.getHarness().addBulkLoadedComponent(component);
+                lsmIndex.getIOOperationCallback().afterOperation(opCtx);
+                lsmIndex.getHarness().addBulkLoadedComponent(opCtx.getNewComponent());
             }
         } finally {
-            lsmIndex.getIOOperationCallback().afterFinalize(LSMIOOperationType.LOAD, component);
+            lsmIndex.getIOOperationCallback().afterFinalize(opCtx);
         }
     }
 
@@ -73,9 +74,10 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
     public void abort() throws HyracksDataException {
         try {
             componentBulkLoader.abort();
-            lsmIndex.getIOOperationCallback().afterOperation(LSMIOOperationType.LOAD, null, null);
+            opCtx.setNewComponent(null);
+            lsmIndex.getIOOperationCallback().afterOperation(opCtx);
         } finally {
-            lsmIndex.getIOOperationCallback().afterFinalize(LSMIOOperationType.LOAD, null);
+            lsmIndex.getIOOperationCallback().afterFinalize(opCtx);
         }
     }
 

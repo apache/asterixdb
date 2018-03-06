@@ -33,7 +33,8 @@ public interface ILSMIOOperation extends Callable<Boolean> {
     enum LSMIOOperationType {
         FLUSH,
         MERGE,
-        LOAD
+        LOAD,
+        NOOP
     }
 
     /**

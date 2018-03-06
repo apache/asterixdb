@@ -35,6 +35,7 @@ import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBloomFilterDiskComponent;
@@ -430,7 +431,9 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
         if (flushOnExit) {
-            ioOpCallback.afterFinalize(LSMIOOperationType.FLUSH, null);
+            AbstractLSMIndexOperationContext opCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
+            opCtx.setIoOperationType(LSMIOOperationType.FLUSH);
+            ioOpCallback.afterFinalize(opCtx);
         }
         // Even though, we deactivate the index, we don't exit components or
         // modify any of the lists to make sure they

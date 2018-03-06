@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
@@ -217,5 +218,25 @@ public class ComponentReplacementContext implements ILSMIndexOperationContext {
     @Override
     public void destroy() throws HyracksDataException {
         // No Op.. Nothing to destroy
+    }
+
+    @Override
+    public LSMIOOperationType getIoOperationType() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setIoOperationType(LSMIOOperationType ioOpType) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ILSMDiskComponent getNewComponent() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setNewComponent(ILSMDiskComponent component) {
+        throw new UnsupportedOperationException();
     }
 }

@@ -18,13 +18,9 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import java.util.List;
-
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 
 public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallback {
@@ -45,20 +41,18 @@ public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallba
     }
 
     @Override
-    public void beforeOperation(LSMIOOperationType opType) throws HyracksDataException {
-        wrappedCallback.beforeOperation(opType);
+    public void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+        wrappedCallback.beforeOperation(opCtx);
     }
 
     @Override
-    public void afterOperation(LSMIOOperationType opType, List<ILSMComponent> oldComponents,
-            ILSMDiskComponent newComponent) throws HyracksDataException {
-        wrappedCallback.afterOperation(opType, oldComponents, newComponent);
+    public void afterOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+        wrappedCallback.afterOperation(opCtx);
     }
 
     @Override
-    public synchronized void afterFinalize(LSMIOOperationType opType, ILSMDiskComponent newComponent)
-            throws HyracksDataException {
-        wrappedCallback.afterFinalize(opType, newComponent);
+    public synchronized void afterFinalize(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+        wrappedCallback.afterFinalize(opCtx);
         notifyAll();
         notified = true;
     }
