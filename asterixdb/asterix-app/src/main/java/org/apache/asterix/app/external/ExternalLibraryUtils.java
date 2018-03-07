@@ -400,29 +400,19 @@ public class ExternalLibraryUtils {
     }
 
     /**
-     * @return the directory "$(ControllerConfig.defaultDir)/library": This needs to be improved
+     * @return the directory "System.getProperty("app.home", System.getProperty("user.home")/lib/udfs"
      */
     protected static File getLibraryInstallDir() {
-        // Check managix directory first. If not exists, check app home.
-        File installDir = new File(System.getProperty("user.dir"), "library");
-        if (!installDir.exists()) {
-            installDir = new File(System.getProperty("app.home", System.getProperty("user.home")) + File.separator
-                    + "lib" + File.separator + "udfs");
-        }
-        return installDir;
+        return new File(System.getProperty("app.home", System.getProperty("user.home")) + File.separator + "lib"
+                + File.separator + "udfs");
     }
 
     /**
-     * @return the directory "$(ControllerConfig.defaultDir)/uninstall": This needs to be improved
+     * @return the directory "System.getProperty("app.home", System.getProperty("user.home")/lib/udfs/uninstall"
      */
     protected static File getLibraryUninstallDir() {
-        // Check managix directory first. If not exists, check app home.
-        File uninstallDir = new File(System.getProperty("user.dir"), "uninstall");
-        if (!uninstallDir.exists()) {
-            uninstallDir = new File(System.getProperty("app.home", System.getProperty("user.home")) + File.separator
-                    + "lib" + File.separator + "udfs" + File.separator + "uninstall");
-        }
-        return uninstallDir;
+        return new File(System.getProperty("app.home", System.getProperty("user.home")) + File.separator + "lib"
+                + File.separator + "udfs" + File.separator + "uninstall");
     }
 
     public static String getExternalFunctionFullName(String libraryName, String functionName) {
