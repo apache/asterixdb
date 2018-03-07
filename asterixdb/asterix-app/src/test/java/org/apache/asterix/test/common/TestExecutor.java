@@ -85,6 +85,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.protocol.HttpContext;
@@ -477,13 +478,25 @@ public class TestExecutor {
     }
 
     protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
-        HttpClient client = HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE).build();
+        // https://issues.apache.org/jira/browse/ASTERIXDB-2315
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        CloseableHttpClient client =
+                HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE).build();
+        Future<HttpResponse> future = executor.submit(() -> {
+            try {
+                return client.execute(method, getHttpContext());
+            } catch (Exception e) {
+                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, "Failure executing {}", method, e);
+                throw e;
+            }
+        });
         try {
-            return client.execute(method, getHttpContext());
+            return future.get();
         } catch (Exception e) {
-            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
-            e.printStackTrace();
+            client.close();
             throw e;
+        } finally {
+            executor.shutdownNow();
         }
     }
 
