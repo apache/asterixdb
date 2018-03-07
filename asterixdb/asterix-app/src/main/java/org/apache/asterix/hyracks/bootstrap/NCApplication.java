@@ -89,6 +89,8 @@ public class NCApplication extends BaseNCApplication {
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
         ncServiceCtx = (INCServiceContext) serviceCtx;
+        // set the node status initially to idle to indicate that it is pending booting
+        ((NodeControllerService) serviceCtx.getControllerService()).setNodeStatus(NodeStatus.IDLE);
         ncServiceCtx.setThreadFactory(
                 new AsterixThreadFactory(ncServiceCtx.getThreadFactory(), ncServiceCtx.getLifeCycleComponentManager()));
     }
@@ -253,7 +255,7 @@ public class NCApplication extends BaseNCApplication {
     }
 
     private boolean isPendingStartupTasks(NodeStatus nodeStatus, CcId primaryCc, CcId registeredCc) {
-        return nodeStatus == NodeStatus.BOOTING && (primaryCc == null || primaryCc.equals(registeredCc));
+        return nodeStatus == NodeStatus.IDLE && (primaryCc == null || primaryCc.equals(registeredCc));
     }
 
     private SystemState getCurrentSystemState() {

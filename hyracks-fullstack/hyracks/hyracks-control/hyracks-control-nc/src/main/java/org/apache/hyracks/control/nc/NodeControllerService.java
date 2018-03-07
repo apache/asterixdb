@@ -170,7 +170,7 @@ public class NodeControllerService implements IControllerService {
 
     private final Map<CcId, AtomicLong> maxJobIds = new ConcurrentHashMap<>();
 
-    private NodeStatus status = NodeStatus.BOOTING;
+    private volatile NodeStatus status = NodeStatus.ACTIVE;
 
     private NodeRegistration nodeRegistration;
 
@@ -633,11 +633,11 @@ public class NodeControllerService implements IControllerService {
         return workQueue;
     }
 
-    public synchronized NodeStatus getNodeStatus() {
+    public NodeStatus getNodeStatus() {
         return status;
     }
 
-    public synchronized void setNodeStatus(NodeStatus status) {
+    public void setNodeStatus(NodeStatus status) {
         this.status = status;
     }
 

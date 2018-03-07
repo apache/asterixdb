@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionCollector;
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
@@ -45,6 +46,7 @@ import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.ActivityCluster;
@@ -116,6 +118,9 @@ public class StartTasksWork extends AbstractWork {
             ncs.updateMaxJobId(jobId);
             NCServiceContext serviceCtx = ncs.getContext();
             Joblet joblet = getOrCreateLocalJoblet(deploymentId, serviceCtx, acgBytes);
+            if (ncs.getNodeStatus() != NodeStatus.ACTIVE) {
+                throw HyracksException.create(ErrorCode.NODE_IS_NOT_ACTIVE, ncs.getId());
+            }
             final ActivityClusterGraph acg = joblet.getActivityClusterGraph();
             IRecordDescriptorProvider rdp = new IRecordDescriptorProvider() {
                 @Override

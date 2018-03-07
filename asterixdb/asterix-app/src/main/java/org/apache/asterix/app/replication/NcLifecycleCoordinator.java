@@ -146,7 +146,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             return buildActiveNCRegTasks(isMetadataNode);
         }
         final List<INCLifecycleTask> tasks = new ArrayList<>();
-        tasks.add(new UpdateNodeStatusTask(NodeStatus.ACTIVE));
+        tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING));
         if (state == SystemState.CORRUPTED) {
             //need to perform local recovery for node partitions
             LocalRecoveryTask rt = new LocalRecoveryTask(Arrays.asList(clusterManager.getNodePartitions(nodeId))
@@ -167,6 +167,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             tasks.add(new BindMetadataNodeTask());
         }
         tasks.add(new ReportLocalCountersTask());
+        tasks.add(new UpdateNodeStatusTask(NodeStatus.ACTIVE));
         return tasks;
     }
 
