@@ -43,8 +43,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import org.apache.hyracks.storage.am.lsm.common.impls.StubIOOperationCallback;
-
-import junit.framework.Assert;
+import org.junit.Assert;
 
 /**
  * This test is the LSMBTreeMergeTest but using a filter, and at each step of the filter's lifecycle its value is

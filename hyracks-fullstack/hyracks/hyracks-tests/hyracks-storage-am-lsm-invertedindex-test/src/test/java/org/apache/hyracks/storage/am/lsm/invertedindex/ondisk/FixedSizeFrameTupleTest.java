@@ -25,9 +25,8 @@ import java.util.Random;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.junit.Assert;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 public class FixedSizeFrameTupleTest {
 

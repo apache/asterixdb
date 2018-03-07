@@ -18,12 +18,10 @@
  */
 package org.apache.hyracks.dataflow.std.test.util;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
-
 import org.apache.hyracks.dataflow.std.util.SelectionTree;
 import org.apache.hyracks.dataflow.std.util.SelectionTree.Entry;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class SelectionTreeTest {
     @Test

@@ -21,7 +21,6 @@ package org.apache.hyracks.hdfs2.dataflow;
 
 import java.util.List;
 
-import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
@@ -54,6 +53,7 @@ import org.apache.hyracks.hdfs.lib.TextKeyValueParserFactory;
 import org.apache.hyracks.hdfs.lib.TextTupleWriterFactory;
 import org.apache.hyracks.hdfs.utils.HyracksUtils;
 import org.apache.hyracks.hdfs2.scheduler.Scheduler;
+import org.junit.Assert;
 
 /**
  * Test the org.apache.hyracks.hdfs2.dataflow package,

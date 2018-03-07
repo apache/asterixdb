@@ -19,8 +19,7 @@
 
 package org.apache.hyracks.dataflow.std.buffermanager;
 
-import static junit.framework.Assert.assertEquals;
-
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,26 +39,26 @@ public class FrameFreeSlotBiggestFirstTest {
 
         for (int i = 0; i < size; i++) {
             policy.pushNewFrame(i, i);
-            assertEquals(i, policy.popBestFit(i));
+            Assert.assertEquals(i, policy.popBestFit(i));
         }
-        assertEquals(-1, policy.popBestFit(0));
+        Assert.assertEquals(-1, policy.popBestFit(0));
 
         for (int i = 0; i < size; i++) {
             policy.pushNewFrame(i, i);
         }
         for (int i = 0; i < size; i++) {
-            assertEquals(size - i - 1, policy.popBestFit(0));
+            Assert.assertEquals(size - i - 1, policy.popBestFit(0));
         }
 
         for (int i = 0; i < size; i++) {
             policy.pushNewFrame(i, i);
         }
         for (int i = 0; i < size / 2; i++) {
-            assertEquals(size - i - 1, policy.popBestFit(size / 2));
+            Assert.assertEquals(size - i - 1, policy.popBestFit(size / 2));
         }
-        assertEquals(-1, policy.popBestFit(size / 2));
+        Assert.assertEquals(-1, policy.popBestFit(size / 2));
         for (int i = 0; i < size / 2; i++) {
-            assertEquals(size / 2 - i - 1, policy.popBestFit(0));
+            Assert.assertEquals(size / 2 - i - 1, policy.popBestFit(0));
         }
 
     }

@@ -32,10 +32,10 @@ import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.api.topology.TopologyDefinitionParser;
 import org.apache.hyracks.test.support.TestUtils;
+import org.junit.Assert;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 @SuppressWarnings("deprecation")

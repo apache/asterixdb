@@ -21,9 +21,8 @@ package org.apache.hyracks.dataflow.common.data.normalizers;
 
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.utils.NormalizedKeyUtils;
+import org.junit.Assert;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 public abstract class AbstractNormalizedKeyComputerFactoryTest {
 

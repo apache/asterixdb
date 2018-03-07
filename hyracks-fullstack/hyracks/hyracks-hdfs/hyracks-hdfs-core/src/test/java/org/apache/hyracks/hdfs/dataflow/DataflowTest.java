@@ -56,8 +56,8 @@ import org.apache.hyracks.hdfs.scheduler.Scheduler;
 import org.apache.hyracks.hdfs.utils.HyracksUtils;
 import org.apache.hyracks.test.support.TestUtils;
 import org.apache.hyracks.util.file.FileUtil;
+import org.junit.Assert;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 /**

@@ -19,12 +19,11 @@
 
 package org.apache.hyracks.dataflow.common.data.normalizers;
 
-import static junit.framework.Assert.*;
-
 import java.util.Random;
 
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class ByteArrayNormalizedKeyComputerFactoryTest {
@@ -57,9 +56,9 @@ public class ByteArrayNormalizedKeyComputerFactoryTest {
         computer.normalize(pointable1.getByteArray(), pointable1.getStartOffset(), pointable1.getLength(), key1, 0);
         computer.normalize(pointable2.getByteArray(), pointable2.getStartOffset(), pointable2.getLength(), key2, 0);
         if (key1[0] < key2[0]) {
-            assertTrue(pointable1.compareTo(pointable2) < 0);
+            Assert.assertTrue(pointable1.compareTo(pointable2) < 0);
         } else if (key1[0] > key2[0]) {
-            assertTrue(pointable1.compareTo(pointable2) > 0);
+            Assert.assertTrue(pointable1.compareTo(pointable2) > 0);
         }
     }
 
@@ -80,7 +79,7 @@ public class ByteArrayNormalizedKeyComputerFactoryTest {
         computer.normalize(ptr1.getByteArray(), ptr1.getStartOffset(), ptr1.getLength(), key1, 0);
         computer.normalize(ptr2.getByteArray(), ptr2.getStartOffset(), ptr2.getLength(), key2, 0);
 
-        assertTrue(key1[0] < key2[0]);
+        Assert.assertTrue(key1[0] < key2[0]);
 
     }
 }

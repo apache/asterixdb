@@ -93,10 +93,9 @@ import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOpera
 import org.apache.hyracks.dataflow.std.misc.ReplicateOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 public class PushRuntimeTest {
 

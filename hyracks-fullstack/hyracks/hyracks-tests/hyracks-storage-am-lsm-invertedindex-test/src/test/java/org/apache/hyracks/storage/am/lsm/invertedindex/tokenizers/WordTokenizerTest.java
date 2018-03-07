@@ -29,10 +29,9 @@ import java.util.HashMap;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.util.string.UTF8StringReader;
 import org.apache.hyracks.util.string.UTF8StringUtil;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 public class WordTokenizerTest {
 
