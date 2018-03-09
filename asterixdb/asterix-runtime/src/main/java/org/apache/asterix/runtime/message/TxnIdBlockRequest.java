@@ -33,7 +33,7 @@ import org.apache.logging.log4j.Logger;
 
 public class TxnIdBlockRequest implements ICcAddressedMessage {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int BLOCK_SIZE = 100;
+    private static final int BLOCK_SIZE = 512;
     private static final long serialVersionUID = 1L;
 
     private static BlockingQueue<TxnIdBlockResponse> blockQueue = new LinkedBlockingQueue<>();

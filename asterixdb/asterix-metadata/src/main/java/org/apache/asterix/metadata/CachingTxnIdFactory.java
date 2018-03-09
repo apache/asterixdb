@@ -89,7 +89,7 @@ class CachingTxnIdFactory implements ITxnIdFactory {
         }
 
         private long nextId() throws BlockExhaustedException {
-            long nextId = id.incrementAndGet();
+            long nextId = id.getAndIncrement();
             if (nextId >= endExclusive && (endExclusive >= start || nextId < start)) {
                 throw BLOCK_EXHAUSTED_EXCEPTION;
             }
