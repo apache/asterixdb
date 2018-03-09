@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.external.dataflow;
 
-import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.external.api.ITupleForwarder;
-import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -28,40 +26,28 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
-import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 
-public class FrameFullTupleForwarder implements ITupleForwarder {
+public class TupleForwarder {
 
-    private FrameTupleAppender appender;
-    private IFrame frame;
-    private IFrameWriter writer;
+    private final FrameTupleAppender appender;
+    private final IFrame frame;
+    private final IFrameWriter writer;
 
-    @Override
-    public void initialize(IHyracksTaskContext ctx, IFrameWriter writer) throws HyracksDataException {
-        this.appender = new FrameTupleAppender();
+    public TupleForwarder(IHyracksTaskContext ctx, IFrameWriter writer) throws HyracksDataException {
         this.frame = new VSizeFrame(ctx);
         this.writer = writer;
-        appender.reset(frame, true);
+        this.appender = new FrameTupleAppender(frame);
     }
 
-    @Override
     public void addTuple(ArrayTupleBuilder tb) throws HyracksDataException {
-        boolean success = appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
-        if (!success) {
-            FrameUtils.flushFrame(frame.getBuffer(), writer);
-            appender.reset(frame, true);
-            success = appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
-            if (!success) {
-                throw new RuntimeDataException(ErrorCode.DATAFLOW_ILLEGAL_STATE);
-            }
-        }
+        DataflowUtils.addTupleToFrame(appender, tb, writer);
     }
 
-    @Override
-    public void close() throws HyracksDataException {
-        if (appender.getTupleCount() > 0) {
-            FrameUtils.flushFrame(frame.getBuffer(), writer);
-        }
+    public void flush() throws HyracksDataException {
+        appender.flush(writer);
+    }
 
+    public void complete() throws HyracksDataException {
+        appender.write(writer, false);
     }
 }

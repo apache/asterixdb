@@ -26,14 +26,12 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
-import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -58,10 +56,9 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     protected long incomingRecordsCount = 0;
     protected long failedRecordsCount = 0;
 
-    public FeedRecordDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
-            FeedLogManager feedLogManager, int numOfOutputFields, IRecordDataParser<T> dataParser,
-            IRecordReader<T> recordReader) throws HyracksDataException {
-        super(ctx, tupleForwarder, feedLogManager, numOfOutputFields);
+    public FeedRecordDataFlowController(IHyracksTaskContext ctx, FeedLogManager feedLogManager, int numOfOutputFields,
+            IRecordDataParser<T> dataParser, IRecordReader<T> recordReader) throws HyracksDataException {
+        super(ctx, feedLogManager, numOfOutputFields);
         this.dataParser = dataParser;
         this.recordReader = recordReader;
         recordReader.setFeedLogManager(feedLogManager);
@@ -79,7 +76,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         }
         Throwable failure = null;
         try {
-            tupleForwarder.initialize(ctx, writer);
+            this.tupleForwarder = new TupleForwarder(ctx, writer);
             while (hasNext()) {
                 IRawRecord<? extends T> record = next();
                 if (record == null) {
@@ -102,17 +99,14 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 try {
                     flush();
                 } catch (Exception flushException) {
-                    tupleForwarder.fail();
                     flushException.addSuppressed(e);
                     failure = flushException;
                 }
             } else {
                 failure = e;
-                tupleForwarder.fail();
             }
         } catch (Throwable e) {
             failure = e;
-            tupleForwarder.fail();
             LOGGER.log(Level.WARN, "Failure while operating a feed source", e);
         } finally {
             failure = finish(failure);
@@ -168,11 +162,17 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     }
 
     private Throwable finish(Throwable failure) {
-        Throwable th = CleanupUtils.close(recordReader, null);
-        th = DataflowUtils.close(tupleForwarder, th);
+        Throwable th = CleanupUtils.close(recordReader, failure);
+        if (th == null) {
+            try {
+                tupleForwarder.complete();
+            } catch (Throwable completeFailure) {
+                th = completeFailure;
+            }
+        }
         closeSignal();
         setState(State.STOPPED);
-        return ExceptionUtils.suppress(failure, th);
+        return th;
     }
 
     private boolean parseAndForward(IRawRecord<? extends T> record) throws IOException {

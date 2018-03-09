@@ -19,16 +19,13 @@
 package org.apache.asterix.external.dataflow;
 
 import org.apache.asterix.external.api.IDataFlowController;
-import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public abstract class AbstractDataFlowController implements IDataFlowController {
 
-    protected final ITupleForwarder tupleForwarder;
     protected final IHyracksTaskContext ctx;
 
-    public AbstractDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder) {
+    public AbstractDataFlowController(IHyracksTaskContext ctx) {
         this.ctx = ctx;
-        this.tupleForwarder = tupleForwarder;
     }
 }

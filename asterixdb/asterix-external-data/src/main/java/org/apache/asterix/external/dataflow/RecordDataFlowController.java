@@ -21,7 +21,6 @@ package org.apache.asterix.external.dataflow;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -33,9 +32,9 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
     protected final IRecordReader<? extends T> recordReader;
     protected final int numOfTupleFields;
 
-    public RecordDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder,
-            IRecordDataParser<T> dataParser, IRecordReader<? extends T> recordReader, int numOfTupleFields) {
-        super(ctx, tupleForwarder);
+    public RecordDataFlowController(IHyracksTaskContext ctx, IRecordDataParser<T> dataParser,
+            IRecordReader<? extends T> recordReader, int numOfTupleFields) {
+        super(ctx);
         this.dataParser = dataParser;
         this.recordReader = recordReader;
         this.numOfTupleFields = numOfTupleFields;
@@ -45,7 +44,7 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
     public void start(IFrameWriter writer) throws HyracksDataException {
         try {
             ArrayTupleBuilder tb = new ArrayTupleBuilder(numOfTupleFields);
-            tupleForwarder.initialize(ctx, writer);
+            TupleForwarder tupleForwarder = new TupleForwarder(ctx, writer);
             while (recordReader.hasNext()) {
                 IRawRecord<? extends T> record = recordReader.next();
                 tb.reset();
@@ -54,7 +53,7 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
                 appendOtherTupleFields(tb);
                 tupleForwarder.addTuple(tb);
             }
-            tupleForwarder.close();
+            tupleForwarder.complete();
             recordReader.close();
         } catch (Exception e) {
             throw new HyracksDataException(e);

@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -31,10 +30,9 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 public class IndexingDataFlowController<T> extends RecordDataFlowController<T> {
     private final IExternalIndexer indexer;
 
-    public IndexingDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder,
-            IRecordDataParser<T> dataParser, IRecordReader<? extends T> recordReader, IExternalIndexer indexer)
-            throws IOException {
-        super(ctx, tupleForwarder, dataParser, recordReader, 1 + indexer.getNumberOfFields());
+    public IndexingDataFlowController(IHyracksTaskContext ctx, IRecordDataParser<T> dataParser,
+            IRecordReader<? extends T> recordReader, IExternalIndexer indexer) throws IOException {
+        super(ctx, dataParser, recordReader, 1 + indexer.getNumberOfFields());
         this.indexer = indexer;
     }
 

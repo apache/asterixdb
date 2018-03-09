@@ -19,7 +19,6 @@
 package org.apache.asterix.external.dataflow;
 
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.api.ITupleForwarder;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -28,9 +27,8 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 public class StreamDataFlowController extends AbstractDataFlowController {
     private final IStreamDataParser dataParser;
 
-    public StreamDataFlowController(IHyracksTaskContext ctx, ITupleForwarder tupleForwarder,
-            IStreamDataParser dataParser) {
-        super(ctx, tupleForwarder);
+    public StreamDataFlowController(IHyracksTaskContext ctx, IStreamDataParser dataParser) {
+        super(ctx);
         this.dataParser = dataParser;
     }
 
@@ -38,7 +36,7 @@ public class StreamDataFlowController extends AbstractDataFlowController {
     public void start(IFrameWriter writer) throws HyracksDataException {
         try {
             ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
-            tupleForwarder.initialize(ctx, writer);
+            TupleForwarder tupleForwarder = new TupleForwarder(ctx, writer);
             while (true) {
                 tb.reset();
                 if (!dataParser.parse(tb.getDataOutput())) {
@@ -47,7 +45,7 @@ public class StreamDataFlowController extends AbstractDataFlowController {
                 tb.addFieldEndOffset();
                 tupleForwarder.addTuple(tb);
             }
-            tupleForwarder.close();
+            tupleForwarder.complete();
         } catch (Exception e) {
             throw new HyracksDataException(e);
         }

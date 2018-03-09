@@ -107,11 +107,11 @@ public class EnforceFrameWriter implements IFrameWriter {
 
     @Override
     public void close() throws HyracksDataException {
-        writer.close();
-        downstreamOpen = false;
         if (downstreamFailed && !failCalledByUpstream) {
             throw HyracksDataException.create(ErrorCode.MISSED_FAIL_CALL);
         }
+        writer.close();
+        downstreamOpen = false;
     }
 
     public static IFrameWriter enforce(IFrameWriter writer) {

@@ -30,11 +30,10 @@ public class ChangeFeedDataFlowController<T> extends FeedRecordDataFlowControlle
 
     private final IRecordWithPKDataParser<T> dataParser;
 
-    public ChangeFeedDataFlowController(final IHyracksTaskContext ctx, final FeedTupleForwarder tupleForwarder,
-            final FeedLogManager feedLogManager, final int numOfOutputFields,
-            final IRecordWithPKDataParser<T> dataParser, final IRecordReader<T> recordReader)
-            throws HyracksDataException {
-        super(ctx, tupleForwarder, feedLogManager, numOfOutputFields, dataParser, recordReader);
+    public ChangeFeedDataFlowController(final IHyracksTaskContext ctx, final FeedLogManager feedLogManager,
+            final int numOfOutputFields, final IRecordWithPKDataParser<T> dataParser,
+            final IRecordReader<T> recordReader) throws HyracksDataException {
+        super(ctx, feedLogManager, numOfOutputFields, dataParser, recordReader);
         this.dataParser = dataParser;
     }
 

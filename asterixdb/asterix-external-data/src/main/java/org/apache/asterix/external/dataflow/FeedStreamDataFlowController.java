@@ -31,9 +31,9 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
     private final AsterixInputStream stream;
     protected long incomingRecordsCount = 0;
 
-    public FeedStreamDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
-            FeedLogManager feedLogManager, IStreamDataParser streamParser, AsterixInputStream inputStream) {
-        super(ctx, tupleForwarder, feedLogManager, 1);
+    public FeedStreamDataFlowController(IHyracksTaskContext ctx, FeedLogManager feedLogManager,
+            IStreamDataParser streamParser, AsterixInputStream inputStream) {
+        super(ctx, feedLogManager, 1);
         this.dataParser = streamParser;
         this.stream = inputStream;
     }
@@ -41,7 +41,7 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
     @Override
     public void start(IFrameWriter writer) throws HyracksDataException {
         try {
-            tupleForwarder.initialize(ctx, writer);
+            tupleForwarder = new TupleForwarder(ctx, writer);
             while (true) {
                 if (!parseNext()) {
                     break;
@@ -50,10 +50,9 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
                 tupleForwarder.addTuple(tb);
                 incomingRecordsCount++;
             }
-        } catch (Exception e) {
+            tupleForwarder.complete();
+        } catch (Throwable e) {
             throw HyracksDataException.create(e);
-        } finally {
-            tupleForwarder.close();
         }
     }
 

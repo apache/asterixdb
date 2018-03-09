@@ -20,6 +20,7 @@ package org.apache.asterix.external.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +36,7 @@ import java.util.TreeSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class FeedLogManager {
+public class FeedLogManager implements Closeable {
 
     public enum LogEntryType {
         START, // partition start
@@ -64,7 +65,7 @@ public class FeedLogManager {
     public FeedLogManager(File file) throws HyracksDataException {
         try {
             this.dir = file.toPath();
-            this.completed = new TreeSet<String>();
+            this.completed = new TreeSet<>();
             if (!exists()) {
                 create();
             }
@@ -100,16 +101,16 @@ public class FeedLogManager {
 
     public synchronized void open() throws IOException {
         // read content of logs.
-        BufferedReader reader = Files.newBufferedReader(
-                Paths.get(dir.toAbsolutePath().toString() + File.separator + PROGRESS_LOG_FILE_NAME));
-        String log = reader.readLine();
-        while (log != null) {
-            if (log.startsWith(END_PREFIX)) {
-                completed.add(getSplitId(log));
+        try (BufferedReader reader = Files.newBufferedReader(
+                Paths.get(dir.toAbsolutePath().toString() + File.separator + PROGRESS_LOG_FILE_NAME))) {
+            String log = reader.readLine();
+            while (log != null) {
+                if (log.startsWith(END_PREFIX)) {
+                    completed.add(getSplitId(log));
+                }
+                log = reader.readLine();
             }
-            log = reader.readLine();
         }
-        reader.close();
 
         progressLogger = Files.newBufferedWriter(
                 Paths.get(dir.toAbsolutePath().toString() + File.separator + PROGRESS_LOG_FILE_NAME),
@@ -122,6 +123,7 @@ public class FeedLogManager {
                 StandardCharsets.UTF_8, StandardOpenOption.APPEND);
     }
 
+    @Override
     public synchronized void close() throws IOException {
         count--;
         if (count > 0) {

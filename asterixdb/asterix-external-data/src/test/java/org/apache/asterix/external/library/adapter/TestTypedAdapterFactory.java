@@ -28,11 +28,8 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.api.IAdapterFactory;
 import org.apache.asterix.external.api.IDataSourceAdapter;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
-import org.apache.asterix.external.api.ITupleForwarder;
+import org.apache.asterix.external.dataflow.TupleForwarder;
 import org.apache.asterix.external.parser.ADMDataParser;
-import org.apache.asterix.external.util.DataflowUtils;
-import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -79,26 +76,19 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
             @Override
             public ITupleParser createTupleParser(IHyracksTaskContext ctx) throws HyracksDataException {
                 ADMDataParser parser;
-                ITupleForwarder forwarder;
+
                 ArrayTupleBuilder tb;
                 IApplicationContext appCtx =
                         (IApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
                 ClusterPartition nodePartition = appCtx.getMetadataProperties().getNodePartitions().get(nodeId)[0];
                 parser = new ADMDataParser(outputType, true);
-                forwarder =
-                        DataflowUtils
-                                .getTupleForwarder(configuration,
-                                        FeedUtils.getFeedLogManager(ctx, FeedUtils.splitsForAdapter(
-                                                ExternalDataUtils.getDataverse(configuration),
-                                                ExternalDataUtils.getFeedName(configuration), nodeId, nodePartition)));
                 tb = new ArrayTupleBuilder(1);
                 return new ITupleParser() {
-
                     @Override
                     public void parse(InputStream in, IFrameWriter writer) throws HyracksDataException {
                         try {
                             parser.setInputStream(in);
-                            forwarder.initialize(ctx, writer);
+                            TupleForwarder forwarder = new TupleForwarder(ctx, writer);
                             while (true) {
                                 tb.reset();
                                 if (!parser.parse(tb.getDataOutput())) {
@@ -107,7 +97,7 @@ public class TestTypedAdapterFactory implements IAdapterFactory {
                                 tb.addFieldEndOffset();
                                 forwarder.addTuple(tb);
                             }
-                            forwarder.close();
+                            forwarder.complete();
                         } catch (Exception e) {
                             throw HyracksDataException.create(e);
                         }

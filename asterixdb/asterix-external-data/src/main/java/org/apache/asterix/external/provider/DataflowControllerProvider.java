@@ -42,12 +42,10 @@ import org.apache.asterix.external.dataflow.ChangeFeedDataFlowController;
 import org.apache.asterix.external.dataflow.ChangeFeedWithMetaDataFlowController;
 import org.apache.asterix.external.dataflow.FeedRecordDataFlowController;
 import org.apache.asterix.external.dataflow.FeedStreamDataFlowController;
-import org.apache.asterix.external.dataflow.FeedTupleForwarder;
 import org.apache.asterix.external.dataflow.FeedWithMetaDataFlowController;
 import org.apache.asterix.external.dataflow.IndexingDataFlowController;
 import org.apache.asterix.external.dataflow.RecordDataFlowController;
 import org.apache.asterix.external.dataflow.StreamDataFlowController;
-import org.apache.asterix.external.util.DataflowUtils;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.om.types.ARecordType;
@@ -70,35 +68,29 @@ public class DataflowControllerProvider {
                     IRecordDataParserFactory<?> recordParserFactory = (IRecordDataParserFactory<?>) dataParserFactory;
                     IRecordDataParser<?> dataParser = recordParserFactory.createRecordParser(ctx);
                     if (indexingOp) {
-                        return new IndexingDataFlowController(ctx,
-                                DataflowUtils.getTupleForwarder(configuration, feedLogManager), dataParser,
-                                recordReader, ((IIndexingDatasource) recordReader).getIndexer());
+                        return new IndexingDataFlowController(ctx, dataParser, recordReader,
+                                ((IIndexingDatasource) recordReader).getIndexer());
                     } else if (isFeed) {
-                        FeedTupleForwarder tupleForwarder =
-                                (FeedTupleForwarder) DataflowUtils.getTupleForwarder(configuration, feedLogManager);
                         boolean isChangeFeed = ExternalDataUtils.isChangeFeed(configuration);
                         boolean isRecordWithMeta = ExternalDataUtils.isRecordWithMeta(configuration);
                         if (isRecordWithMeta) {
                             if (isChangeFeed) {
                                 int numOfKeys = ExternalDataUtils.getNumberOfKeys(configuration);
-                                return new ChangeFeedWithMetaDataFlowController(ctx, tupleForwarder, feedLogManager,
-                                        numOfKeys + 2, (IRecordWithMetadataParser) dataParser, recordReader);
+                                return new ChangeFeedWithMetaDataFlowController(ctx, feedLogManager, numOfKeys + 2,
+                                        (IRecordWithMetadataParser) dataParser, recordReader);
                             } else {
-                                return new FeedWithMetaDataFlowController(ctx, tupleForwarder, feedLogManager, 2,
+                                return new FeedWithMetaDataFlowController(ctx, feedLogManager, 2,
                                         (IRecordWithMetadataParser) dataParser, recordReader);
                             }
                         } else if (isChangeFeed) {
                             int numOfKeys = ExternalDataUtils.getNumberOfKeys(configuration);
-                            return new ChangeFeedDataFlowController(ctx, tupleForwarder, feedLogManager, numOfKeys + 1,
+                            return new ChangeFeedDataFlowController(ctx, feedLogManager, numOfKeys + 1,
                                     (IRecordWithPKDataParser) dataParser, recordReader);
                         } else {
-                            return new FeedRecordDataFlowController(ctx, tupleForwarder, feedLogManager, 1, dataParser,
-                                    recordReader);
+                            return new FeedRecordDataFlowController(ctx, feedLogManager, 1, dataParser, recordReader);
                         }
                     } else {
-                        return new RecordDataFlowController(ctx,
-                                DataflowUtils.getTupleForwarder(configuration, feedLogManager), dataParser,
-                                recordReader, 1);
+                        return new RecordDataFlowController(ctx, dataParser, recordReader, 1);
                     }
                 case STREAM:
                     IInputStreamFactory streamFactory = (IInputStreamFactory) dataSourceFactory;
@@ -107,12 +99,9 @@ public class DataflowControllerProvider {
                     IStreamDataParser streamParser = streamParserFactory.createInputStreamParser(ctx, partition);
                     streamParser.setInputStream(stream);
                     if (isFeed) {
-                        return new FeedStreamDataFlowController(ctx,
-                                (FeedTupleForwarder) DataflowUtils.getTupleForwarder(configuration, feedLogManager),
-                                feedLogManager, streamParser, stream);
+                        return new FeedStreamDataFlowController(ctx, feedLogManager, streamParser, stream);
                     } else {
-                        return new StreamDataFlowController(ctx, DataflowUtils.getTupleForwarder(configuration, null),
-                                streamParser);
+                        return new StreamDataFlowController(ctx, streamParser);
                     }
                 default:
                     throw new RuntimeDataException(ErrorCode.PROVIDER_DATAFLOW_CONTROLLER_UNKNOWN_DATA_SOURCE,

@@ -18,39 +18,28 @@
  */
 package org.apache.asterix.external.dataflow;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
-public abstract class AbstractFeedDataFlowController implements IDataFlowController {
-    protected final FeedTupleForwarder tupleForwarder;
+public abstract class AbstractFeedDataFlowController implements IDataFlowController, Closeable {
+    protected TupleForwarder tupleForwarder;
     protected final IHyracksTaskContext ctx;
     protected final int numOfFields;
     protected final ArrayTupleBuilder tb;
     protected final FeedLogManager feedLogManager;
     protected boolean flushing;
 
-    public AbstractFeedDataFlowController(IHyracksTaskContext ctx, FeedTupleForwarder tupleForwarder,
-            FeedLogManager feedLogManager, int numOfFields) {
+    public AbstractFeedDataFlowController(IHyracksTaskContext ctx, FeedLogManager feedLogManager, int numOfFields) {
         this.feedLogManager = feedLogManager;
         this.numOfFields = numOfFields;
         this.ctx = ctx;
-        this.tupleForwarder = tupleForwarder;
         this.tb = new ArrayTupleBuilder(numOfFields);
-    }
-
-    @Override
-    public boolean pause() {
-        tupleForwarder.pause();
-        return true;
-    }
-
-    @Override
-    public boolean resume() {
-        tupleForwarder.resume();
-        return true;
     }
 
     @Override
@@ -61,4 +50,9 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
     }
 
     public abstract String getStats();
+
+    @Override
+    public void close() throws IOException {
+        feedLogManager.close();
+    }
 }
