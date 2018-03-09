@@ -255,11 +255,6 @@ public class LogRecord implements ILogRecord {
                 computeAndSetLogSize();
                 break;
             case LogType.WAIT:
-                if (buffer.remaining() < ILogRecord.DS_LEN) {
-                    return RecordReadStatus.TRUNCATED;
-                }
-                datasetId = buffer.getInt();
-                resourceId = 0l;
                 computeAndSetLogSize();
                 break;
             case LogType.JOB_COMMIT:
