@@ -16,19 +16,38 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
+package org.apache.asterix.external.library.java.base;
 
-import org.apache.asterix.external.library.java.JObjectPointableVisitor;
-import org.apache.asterix.external.library.java.base.JRecord;
-import org.apache.asterix.om.pointables.ARecordVisitablePointable;
-import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.base.AMissing;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IJRecordAccessor {
+import java.io.DataOutput;
 
-    JRecord access(ARecordVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
-            ARecordType recordType, JObjectPointableVisitor pointableVisitor) throws HyracksDataException;
+public final class JMissing extends JObject {
 
+    public final static JMissing INSTANCE = new JMissing();
+
+    @Override
+    public IAType getIAType() {
+        return BuiltinType.AMISSING;
+    }
+
+    @Override
+    public IAObject getIAObject() {
+        return AMissing.MISSING;
+    }
+
+    @Override
+    public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+        serializeTypeTag(writeTypeTag, dataOutput, ATypeTag.MISSING);
+    }
+
+    @Override
+    public void reset() throws HyracksDataException {
+        // no op
+    }
 }

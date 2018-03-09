@@ -16,19 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
+package org.apache.asterix.external.library.java.base;
 
-import org.apache.asterix.external.library.java.JObjectPointableVisitor;
-import org.apache.asterix.external.library.java.base.JRecord;
-import org.apache.asterix.om.pointables.ARecordVisitablePointable;
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.container.IObjectPool;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import java.io.DataInputStream;
 
-public interface IJRecordAccessor {
+public class ByteArrayAccessibleDataInputStream extends DataInputStream {
 
-    JRecord access(ARecordVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
-            ARecordType recordType, JObjectPointableVisitor pointableVisitor) throws HyracksDataException;
+    public ByteArrayAccessibleDataInputStream(ByteArrayAccessibleInputStream in) {
+        super(in);
+    }
+
+    public ByteArrayAccessibleInputStream getInputStream() {
+        return (ByteArrayAccessibleInputStream) in;
+    }
 
 }

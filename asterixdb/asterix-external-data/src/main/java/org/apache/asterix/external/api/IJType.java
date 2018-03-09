@@ -18,12 +18,9 @@
  */
 package org.apache.asterix.external.api;
 
-import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.IAType;
 
 public interface IJType {
 
-    public ATypeTag getTypeTag();
-
-    public IAObject getIAObject();
+    IAType getIAType();
 }

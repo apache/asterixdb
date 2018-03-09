@@ -16,21 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
+package org.apache.asterix.external.library.java.base;
 
-import java.io.DataOutput;
-
+import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IJObject {
+import java.io.DataOutput;
+import java.io.IOException;
 
-    IAType getIAType();
+public abstract class JObject implements IJObject {
 
-    IAObject getIAObject();
+    protected IAObject value;
+    protected byte[] bytes;
 
-    void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException;
+    protected JObject() {
+    }
 
-    void reset() throws HyracksDataException;
+    protected JObject(IAObject value) {
+        this.value = value;
+    }
+
+    @Override
+    public IAObject getIAObject() {
+        return value;
+    }
+
+    public void serializeTypeTag(boolean writeTypeTag, DataOutput dataOutput, ATypeTag typeTag)
+            throws HyracksDataException {
+        if (writeTypeTag) {
+            try {
+                dataOutput.writeByte(typeTag.serialize());
+            } catch (IOException e) {
+                throw new HyracksDataException(e);
+            }
+        }
+    }
 }

@@ -22,7 +22,7 @@ import java.util.Random;
 
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
-import org.apache.asterix.external.library.java.JObjects.JRecord;
+import org.apache.asterix.external.library.java.base.JRecord;
 
 public class EchoDelayFunction implements IExternalScalarFunction {
 

@@ -49,28 +49,28 @@ import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.external.api.IJObjectAccessor;
 import org.apache.asterix.external.api.IJRecordAccessor;
 import org.apache.asterix.external.library.TypeInfo;
-import org.apache.asterix.external.library.java.JObjects.JBoolean;
-import org.apache.asterix.external.library.java.JObjects.JByte;
-import org.apache.asterix.external.library.java.JObjects.JCircle;
-import org.apache.asterix.external.library.java.JObjects.JDate;
-import org.apache.asterix.external.library.java.JObjects.JDateTime;
-import org.apache.asterix.external.library.java.JObjects.JDouble;
-import org.apache.asterix.external.library.java.JObjects.JDuration;
-import org.apache.asterix.external.library.java.JObjects.JFloat;
-import org.apache.asterix.external.library.java.JObjects.JInt;
-import org.apache.asterix.external.library.java.JObjects.JInterval;
-import org.apache.asterix.external.library.java.JObjects.JLine;
-import org.apache.asterix.external.library.java.JObjects.JList;
-import org.apache.asterix.external.library.java.JObjects.JLong;
-import org.apache.asterix.external.library.java.JObjects.JOrderedList;
-import org.apache.asterix.external.library.java.JObjects.JPoint;
-import org.apache.asterix.external.library.java.JObjects.JPoint3D;
-import org.apache.asterix.external.library.java.JObjects.JPolygon;
-import org.apache.asterix.external.library.java.JObjects.JRecord;
-import org.apache.asterix.external.library.java.JObjects.JRectangle;
-import org.apache.asterix.external.library.java.JObjects.JString;
-import org.apache.asterix.external.library.java.JObjects.JTime;
-import org.apache.asterix.external.library.java.JObjects.JUnorderedList;
+import org.apache.asterix.external.library.java.base.JBoolean;
+import org.apache.asterix.external.library.java.base.JByte;
+import org.apache.asterix.external.library.java.base.JCircle;
+import org.apache.asterix.external.library.java.base.JDate;
+import org.apache.asterix.external.library.java.base.JDateTime;
+import org.apache.asterix.external.library.java.base.JDouble;
+import org.apache.asterix.external.library.java.base.JDuration;
+import org.apache.asterix.external.library.java.base.JFloat;
+import org.apache.asterix.external.library.java.base.JInt;
+import org.apache.asterix.external.library.java.base.JInterval;
+import org.apache.asterix.external.library.java.base.JLine;
+import org.apache.asterix.external.library.java.base.JList;
+import org.apache.asterix.external.library.java.base.JLong;
+import org.apache.asterix.external.library.java.base.JOrderedList;
+import org.apache.asterix.external.library.java.base.JPoint;
+import org.apache.asterix.external.library.java.base.JPoint3D;
+import org.apache.asterix.external.library.java.base.JPolygon;
+import org.apache.asterix.external.library.java.base.JRecord;
+import org.apache.asterix.external.library.java.base.JRectangle;
+import org.apache.asterix.external.library.java.base.JString;
+import org.apache.asterix.external.library.java.base.JTime;
+import org.apache.asterix.external.library.java.base.JUnorderedList;
 import org.apache.asterix.om.base.ACircle;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.ALine;
@@ -146,6 +146,21 @@ public class JObjectAccessors {
                 break;
             case DURATION:
                 accessor = new JDurationAccessor();
+                break;
+            case INTERVAL:
+                accessor = new JIntervalAccessor();
+                break;
+            case CIRCLE:
+                accessor = new JCircleAccessor();
+                break;
+            case POLYGON:
+                accessor = new JPolygonAccessor();
+                break;
+            case RECTANGLE:
+                accessor = new JRectangleAccessor();
+                break;
+            case TIME:
+                accessor = new JTimeAccessor();
                 break;
             case NULL:
                 accessor = new JNullAccessor();
@@ -272,16 +287,14 @@ public class JObjectAccessors {
             int s = pointable.getStartOffset();
             int l = pointable.getLength();
 
-            String v = null;
+            String v;
             try {
                 v = reader.readUTF(new DataInputStream(new ByteArrayInputStream(b, s + 1, l - 1)));
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }
-            JObjectUtil.getNormalizedString(v);
-
             IJObject jObject = objectPool.allocate(BuiltinType.ASTRING);
-            ((JString) jObject).setValue(JObjectUtil.getNormalizedString(v));
+            ((JString) jObject).setValue(v);
             return jObject;
         }
     }
@@ -597,15 +610,5 @@ public class JObjectAccessors {
             }
             return list;
         }
-    }
-
-    public static class JUnorderedListAccessor implements IJObjectAccessor {
-
-        @Override
-        public IJObject access(IVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool)
-                throws HyracksDataException {
-            return null;
-        }
-
     }
 }

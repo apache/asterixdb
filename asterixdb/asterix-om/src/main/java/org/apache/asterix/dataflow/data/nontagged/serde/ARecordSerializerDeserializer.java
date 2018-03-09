@@ -235,7 +235,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         confRecordBuilder.write(dataOutput, writeTypeTag);
     }
 
-    private IAObject[] mergeFields(IAObject[] closedFields, IAObject[] openFields) {
+    public static IAObject[] mergeFields(IAObject[] closedFields, IAObject[] openFields) {
         IAObject[] fields = new IAObject[closedFields.length + openFields.length];
         int i = 0;
         for (; i < closedFields.length; i++) {
@@ -247,7 +247,7 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
         return fields;
     }
 
-    private ARecordType mergeRecordTypes(ARecordType recType1, ARecordType recType2) {
+    public static ARecordType mergeRecordTypes(ARecordType recType1, ARecordType recType2) {
         String[] fieldNames = new String[recType1.getFieldNames().length + recType2.getFieldNames().length];
         IAType[] fieldTypes = new IAType[recType1.getFieldTypes().length + recType2.getFieldTypes().length];
 

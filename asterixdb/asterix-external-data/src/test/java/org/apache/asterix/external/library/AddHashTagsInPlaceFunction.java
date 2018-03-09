@@ -18,9 +18,10 @@
  */
 package org.apache.asterix.external.library;
 
-import org.apache.asterix.external.library.java.JObjects.JRecord;
-import org.apache.asterix.external.library.java.JObjects.JString;
-import org.apache.asterix.external.library.java.JObjects.JUnorderedList;
+import org.apache.asterix.external.library.java.JBuiltinType;
+import org.apache.asterix.external.library.java.base.JRecord;
+import org.apache.asterix.external.library.java.base.JString;
+import org.apache.asterix.external.library.java.base.JUnorderedList;
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.library.java.JTypeTag;
@@ -31,8 +32,8 @@ public class AddHashTagsInPlaceFunction implements IExternalScalarFunction {
     private JUnorderedList list = null;
 
     @Override
-    public void initialize(IFunctionHelper functionHelper) throws Exception {
-        list = new JUnorderedList(functionHelper.getObject(JTypeTag.STRING));
+    public void initialize(IFunctionHelper functionHelper) {
+        list = new JUnorderedList(JBuiltinType.JSTRING);
     }
 
     @Override

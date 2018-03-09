@@ -21,7 +21,6 @@ package org.apache.asterix.external.library.java;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IJListAccessor;
 import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.external.api.IJObjectAccessor;

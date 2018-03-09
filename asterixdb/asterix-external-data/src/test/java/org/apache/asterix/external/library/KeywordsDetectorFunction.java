@@ -21,7 +21,9 @@ package org.apache.asterix.external.library;
 
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionHelper;
-import org.apache.asterix.external.library.java.JObjects;
+import org.apache.asterix.external.library.java.base.JRecord;
+import org.apache.asterix.external.library.java.base.JBoolean;
+import org.apache.asterix.external.library.java.base.JString;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -36,10 +38,10 @@ public class KeywordsDetectorFunction implements IExternalScalarFunction {
 
     @Override
     public void evaluate(IFunctionHelper functionHelper) throws Exception {
-        JObjects.JRecord inputRecord = (JObjects.JRecord) functionHelper.getArgument(0);
-        JObjects.JRecord outputRecord = (JObjects.JRecord) functionHelper.getResultObject();
-        JObjects.JBoolean chkVal = new JObjects.JBoolean(false);
-        String fieldValue = ((JObjects.JString) inputRecord.getValueByName(fieldName)).getValue();
+        JRecord inputRecord = (JRecord) functionHelper.getArgument(0);
+        JRecord outputRecord = (JRecord) functionHelper.getResultObject();
+        JBoolean chkVal = new JBoolean(false);
+        String fieldValue = ((JString) inputRecord.getValueByName(fieldName)).getValue();
 
         chkVal.setValue(keywordsList.contains(fieldValue));
 

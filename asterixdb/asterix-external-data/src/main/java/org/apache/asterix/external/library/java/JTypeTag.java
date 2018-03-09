@@ -19,7 +19,6 @@
 package org.apache.asterix.external.library.java;
 
 public enum JTypeTag {
-
     INT,
     STRING,
     LONG,

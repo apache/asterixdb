@@ -16,19 +16,44 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.api;
+package org.apache.asterix.external.library.java.base;
 
-import org.apache.asterix.external.library.java.JObjectPointableVisitor;
-import org.apache.asterix.external.library.java.base.JRecord;
-import org.apache.asterix.om.pointables.ARecordVisitablePointable;
-import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IJRecordAccessor {
+import java.io.DataOutput;
 
-    JRecord access(ARecordVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
-            ARecordType recordType, JObjectPointableVisitor pointableVisitor) throws HyracksDataException;
+/*
+ *  This class is necessary to be able to serialize null base
+ *  in cases of setting "null" results
+ *
+ */
+public final class JNull extends JObject {
+
+    public final static JNull INSTANCE = new JNull();
+
+    @Override
+    public IAType getIAType() {
+        return BuiltinType.ANULL;
+    }
+
+    @Override
+    public IAObject getIAObject() {
+        return ANull.NULL;
+    }
+
+    @Override
+    public void serialize(DataOutput dataOutput, boolean writeTypeTag) throws HyracksDataException {
+        serializeTypeTag(writeTypeTag, dataOutput, ATypeTag.NULL);
+    }
+
+    @Override
+    public void reset() {
+        // no op for NULL
+    }
 
 }
