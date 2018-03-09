@@ -274,15 +274,6 @@
    even a nice Tweet is enough. Of course if you want, you can say thank you and
    support me by buying more icons on GLYPHICONS.com.
 ---
-   Portions of the AsterixDB runtime
-       located at:
-         asterix-hivecompat/src/main/java/org/apache/asterix/hivecompat/io/*
-
-   are available under The Apache License, Version 2.0:
----
-   Source files in asterix-hivecompat are derived from portions of Apache Hive
-   Query Language v0.13.0 (org.apache.hive:hive-exec).
----
    Portions of the AsterixDB WebUI
        located at:
          asterix-app/src/main/resources/webui/static/js/jquery.json-viewer.js,
@@ -311,14 +302,22 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
 ---
-
-   Portions of the  File Saver portions of the AsterixDB Dashboard
+   Portions of the AsterixDB runtime
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.ts,
-       and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static
+         asterix-hivecompat/src/main/java/org/apache/asterix/hivecompat/io/*
 
-   are available under  the MIT license :
+   are available under The Apache License, Version 2.0:
+---
+   Source files in asterix-hivecompat are derived from portions of Apache Hive
+   Query Language v0.13.0 (org.apache.hive:hive-exec).
+---
+   Portions of the File Saver portions of the AsterixDB Dashboard
+       located at:
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.ts,
+       and
+         asterix-dashboard/src/main/resources/dashboard/static
+
+   are available under The MIT license :
 ---
    The MIT License
 
@@ -343,15 +342,15 @@
 ---
    Portions of the ReactiveX/rxjs
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datasets-collection/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datatypes-collection/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/dataverses-collection/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datasets-collection/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datatypes-collection/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/dataverses-collection/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static
+         asterix-dashboard/src/main/resources/dashboard/static
 
    are available under Apache License 2.0:
 ---
@@ -557,16 +556,16 @@
     See the License for the specific language governing permissions and
    limitations under the License.
 ---
-   Portions of the  PrimeNG components of the AsterixDB dashboard
+   Portions of the PrimeNG components of the AsterixDB dashboard
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.ts,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.html,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.scss,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.ts,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.html,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.scss,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.ts,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.html,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.scss,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.ts,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.html,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.scss,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static
+         asterix-dashboard/src/main/resources/dashboard/static
 
    are available under The MIT License:
 ---
@@ -593,23 +592,23 @@
 ---
    Portions of the NGRX portions of the AsterixDB dashboard
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datasets-collection/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datatypes-collection/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/dataverses-collection/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datasets-collection/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datatypes-collection/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/dataverses-collection/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/,
+         asterix-dashboard/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js,
+         asterix-dashboard/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle,
+         asterix-dashboard/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js,
+         asterix-dashboard/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js,
+         asterix-dashboard/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static/index.html
+         asterix-dashboard/src/main/resources/dashboard/static/index.html
 
-   are available under  The MIT License:
+   are available under The MIT License:
 ---
    The MIT License (MIT)
 
@@ -635,18 +634,18 @@
 ---
    Portions of the Codemirror portions of the AsterixDB dashboard
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/input.component.ts,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/input.component.html,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/input.component.scss,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/codemirror.component.ts,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/codemirror.component.scss,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.ts,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.html,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.scss,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/codemirror-metadata.component.ts,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/codemirror-metadata.component.scss,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/input.component.ts,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/input.component.html,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/input.component.scss,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/codemirror.component.ts,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/codemirror.component.scss,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.ts,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.html,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.scss,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/codemirror-metadata.component.ts,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/codemirror-metadata.component.scss,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static
+         asterix-dashboard/src/main/resources/dashboard/static
 
    are available under The MIT License:
 ---
@@ -672,9 +671,9 @@
 ---
    Portions of the AngularJS portions of the AsterixDB dashboard
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/,
+         asterix-dashboard/src/main/resources/dashboard/src/,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static
+         asterix-dashboard/src/main/resources/dashboard/static
 
    are available under The MIT License:
 ---
@@ -702,11 +701,11 @@
 ---
    Portions of the Angular Material and HammerJS portions of the AsterixDB dashboard
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/app/material.module.ts,
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/main.ts,
+         asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/,
+         asterix-dashboard/src/main/resources/dashboard/src/app/material.module.ts,
+         asterix-dashboard/src/main/resources/dashboard/src/main.ts,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static
+         asterix-dashboard/src/main/resources/dashboard/static
 
    are available under The MIT License:
 ---
@@ -732,9 +731,9 @@
 ---
    Portions of the CoreJS portions of the AsterixDB dashboard
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/,
+         asterix-dashboard/src/main/resources/dashboard/src/,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static
+         asterix-dashboard/src/main/resources/dashboard/static
 
    are available under The MIT License:
 ---
@@ -760,9 +759,9 @@
 ---
    Portions of the Roboto Font portions of the AsterixDB dashboard
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/index.html,
+         asterix-dashboard/src/main/resources/dashboard/src/index.html,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static
+         asterix-dashboard/src/main/resources/dashboard/static
 
    are available under Apache License 2.0:
 ---
@@ -971,9 +970,9 @@
 
    Portions of the Font Awesome portions of the AsterixDB dashboard
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/index.html,
+         asterix-dashboard/src/main/resources/dashboard/src/index.html,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static/index.html
+         asterix-dashboard/src/main/resources/dashboard/static/index.html
 
    are available under The MIT License:
 ---
@@ -983,12 +982,12 @@
    index.html License: MIT License URL:
    http://opensource.org/licenses/mit-license.html
 ---
-   Portions of the  webpack portions of the AsterixDB dashboard
+   Portions of the webpack portions of the AsterixDB dashboard
        located at:
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/
+         asterix-dashboard/src/main/resources/dashboard/
 
-   are available under  The MIT License:
+   are available under The MIT License:
 ---
    Copyright JS Foundation and other contributors
 
@@ -1011,14 +1010,13 @@
    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ---
-
    Portions of the zonejs portions of the AsterixDB dashboard
        located at:
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/src/,
+         asterix-dashboard/src/main/resources/dashboard/src/,
        and
-         asterix-app/src/main/resources/asterix-dashboard/src/main/resources/dashboard/static
+         asterix-dashboard/src/main/resources/dashboard/static
 
-   are available under  The MIT License:
+   are available under The MIT License:
 ---
    Copyright (c) 2016 Google, Inc.
 

@@ -16,36 +16,42 @@
  ! specific language governing permissions and limitations
  ! under the License.
 -->
-<#macro license files component="AsterixDB WebUI" location="${asterixAppLocation!}"
-                filePrefix="${asterixAppResourcesPrefix!}"
-                licenseName="the following license">
+<#macro license files component="${licenseComponent}" location="${licenseLocation}"
+        filePrefix="${licenseFilePrefix}"
+        licenseName="the following license">
    Portions of the ${component}
-<#if location?has_content>
+<#if !licenseSkipLocations!false>
+    <#if location?has_content>
        in: ${location}
-</#if>
+    </#if>
        located at:
-<#if files?is_sequence>
-<#list files as file>
-<#if file?counter < files?size>
+    <#if files?is_sequence>
+        <#list files as file>
+            <#if file?counter < files?size>
          ${filePrefix}${file},
-<#else>
+            <#else>
        and
          ${filePrefix}${file}
-</#if>
-</#list>
-<#else>
+            </#if>
+        </#list>
+    <#else>
          ${filePrefix}${files}
+    </#if>
 </#if>
 
    are available under ${licenseName}:
 ---
-<@indent spaces=3 unpad=true wrap=true>
-<#nested>
-</@indent>
+    <@indent spaces=3 unpad=true wrap=true>
+        <#nested>
+    </@indent>
 ---
 </#macro>
-<@license files=["webui/static/js/jquery.min.js", "webui/static/js/jquery.autosize-min.js", "queryui/js/jquery-1.12.4.min.js"]
-          licenseName="an MIT-style license">
+<#if !asterixAppSkip!false>
+    <#assign licenseComponent="AsterixDB WebUI"/>
+    <#assign licenseLocation="${asterixAppLocation!}"/>
+    <#assign licenseFilePrefix="${asterixAppResourcesPrefix!}"/>
+    <@license files=["webui/static/js/jquery.min.js", "webui/static/js/jquery.autosize-min.js", "queryui/js/jquery-1.12.4.min.js"]
+              licenseName="an MIT-style license">
    Copyright jQuery Foundation and other contributors, https://jquery.org/
 
    This software consists of voluntary contributions made by many
@@ -82,8 +88,13 @@
    externally maintained libraries used by this software which have their
    own licenses; we recommend you read them, as their terms may differ from
    the terms above.
-</@license>
-<@license files=["webui/static/js/bootstrap.min.js", "webui/static/css/bootstrap-responsive.min.css", "webui/static/css/bootstrap.min.css", "webui/static/img/glyphicons-halflings-white.png", "webui/static/img/glyphicons-halflings.png"]>
+    </@license>
+    <@license files=[
+        "webui/static/js/bootstrap.min.js",
+        "webui/static/css/bootstrap-responsive.min.css",
+        "webui/static/css/bootstrap.min.css",
+        "webui/static/img/glyphicons-halflings-white.png",
+        "webui/static/img/glyphicons-halflings.png"]>
    Copyright 2012 Twitter, Inc.
    http://www.apache.org/licenses/LICENSE-2.0.txt
 
@@ -96,14 +107,9 @@
    Bootstrap-based projects, I would certainly appreciate any form of support,
    even a nice Tweet is enough. Of course if you want, you can say thank you and
    support me by buying more icons on GLYPHICONS.com.
-</@license>
-<@license component="AsterixDB runtime" files="org/apache/asterix/hivecompat/io/*"
-          licenseName="The Apache License, Version 2.0"
-          location="${hivecompatLocation!}" filePrefix="${hivecompatPrefix!}">
-Source files in asterix-hivecompat are derived from portions of Apache Hive Query Language v0.13.0 (org.apache.hive:hive-exec).
-</@license>
-<@license component="AsterixDB WebUI" licenseName="The MIT License"
-        files=["webui/static/js/jquery.json-viewer.js","webui/static/css/jquery.json-viewer.css"]>
+    </@license>
+    <@license component="AsterixDB WebUI" licenseName="The MIT License"
+            files=["webui/static/js/jquery.json-viewer.js","webui/static/css/jquery.json-viewer.css"]>
     Copyright (c) 2014 Alexandre Bodelot
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -123,13 +129,24 @@ Source files in asterix-hivecompat are derived from portions of Apache Hive Quer
     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
-</@license>
-
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.ts",
-"asterix-dashboard/src/main/resources/dashboard/static"]
- component=" File Saver portions of the AsterixDB Dashboard"
- licenseName=" the MIT license ">
+    </@license>
+</#if>
+<#if !hivecompatSkip!false>
+    <@license component="AsterixDB runtime" files="org/apache/asterix/hivecompat/io/*"
+        licenseName="The Apache License, Version 2.0"
+        location="${hivecompatLocation!}" filePrefix="${hivecompatPrefix!}">
+Source files in asterix-hivecompat are derived from portions of Apache Hive Query Language v0.13.0 (org.apache.hive:hive-exec).
+    </@license>
+</#if>
+<#if !asterixDashboardSkip!false>
+    <#assign licenseComponent="AsterixDB Dashboard"/>
+    <#assign licenseLocation="${asterixDashboardLocation!}"/>
+    <#assign licenseFilePrefix="${asterixDashboardResourcesPrefix!}"/>
+    <@license files=[
+        "dashboard/src/app/dashboard/query/output.component.ts",
+        "dashboard/static"]
+     component="File Saver portions of the AsterixDB Dashboard"
+     licenseName="The MIT license ">
 The MIT License
 
 Copyright © 2016 Eli Grey.
@@ -150,18 +167,18 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-</@license>
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datasets-collection/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datatypes-collection/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/dataverses-collection/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/",
-"asterix-dashboard/src/main/resources/dashboard/static"]
- component="ReactiveX/rxjs"
- licenseName="Apache License 2.0">
+    </@license>
+    <@license files=[
+        "dashboard/src/app/dashboard/metadata/",
+        "dashboard/src/app/dashboard/metadata/datasets-collection/",
+        "dashboard/src/app/dashboard/metadata/datatypes-collection/",
+        "dashboard/src/app/dashboard/metadata/dataverses-collection/",
+        "dashboard/src/app/dashboard/query/",
+        "dashboard/src/app/dashboard/",
+        "dashboard/src/app/",
+        "dashboard/static"]
+     component="ReactiveX/rxjs"
+     licenseName="Apache License 2.0">
                                Apache License
                          Version 2.0, January 2004
                       http://www.apache.org/licenses/
@@ -363,19 +380,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
 limitations under the License.
-</@license>
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.ts",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.html",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/output.component.scss",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.ts",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.html",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/metadata.component.scss",
-"asterix-dashboard/src/main/resources/dashboard/static"]
- component=" PrimeNG components of the AsterixDB dashboard"
- licenseName="The MIT License">
-
-
+    </@license>
+    <@license files=[
+        "dashboard/src/app/dashboard/query/output.component.ts",
+        "dashboard/src/app/dashboard/query/output.component.html",
+        "dashboard/src/app/dashboard/query/output.component.scss",
+        "dashboard/src/app/dashboard/query/metadata.component.ts",
+        "dashboard/src/app/dashboard/query/metadata.component.html",
+        "dashboard/src/app/dashboard/query/metadata.component.scss",
+        "dashboard/static"]
+     component="PrimeNG components of the AsterixDB dashboard"
+     licenseName="The MIT License">
 The MIT License (MIT)
 
 Copyright (c) 2016-2017 PrimeTek
@@ -396,27 +411,24 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-</@license>
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datasets-collection/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/datatypes-collection/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/dataverses-collection/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/",
-"asterix-dashboard/src/main/resources/dashboard/static/main.37b7b7cad656490b195a.bundle.js",
-"asterix-dashboard/src/main/resources/dashboard/static/styles.9f50282210bba5318775.bundle",
-"asterix-dashboard/src/main/resources/dashboard/static/scripts.da68998bdd77aff4e764.bundle.js",
-"asterix-dashboard/src/main/resources/dashboard/static/polyfills.32ca5670d6503e090789.bundle.js",
-"asterix-dashboard/src/main/resources/dashboard/static/inline.66bd6b83f86cf773a001.bundle.js",
-"asterix-dashboard/src/main/resources/dashboard/static/index.html"]
- component="NGRX portions of the AsterixDB dashboard"
- licenseName=" The MIT License">
-
-
+    </@license>
+    <@license files=[
+        "dashboard/src/app/dashboard/metadata/",
+        "dashboard/src/app/dashboard/metadata/datasets-collection/",
+        "dashboard/src/app/dashboard/metadata/datatypes-collection/",
+        "dashboard/src/app/dashboard/metadata/dataverses-collection/",
+        "dashboard/src/app/dashboard/query/",
+        "dashboard/src/app/dashboard/",
+        "dashboard/src/app/dashboard/",
+        "dashboard/src/app/",
+        "dashboard/static/main.37b7b7cad656490b195a.bundle.js",
+        "dashboard/static/styles.9f50282210bba5318775.bundle",
+        "dashboard/static/scripts.da68998bdd77aff4e764.bundle.js",
+        "dashboard/static/polyfills.32ca5670d6503e090789.bundle.js",
+        "dashboard/static/inline.66bd6b83f86cf773a001.bundle.js",
+        "dashboard/static/index.html"]
+     component="NGRX portions of the AsterixDB dashboard"
+     licenseName="The MIT License">
 The MIT License (MIT)
 
 Copyright (c) 2017 Brandon Roberts, Mike Ryan, Victor Savkin, Rob Wormald
@@ -438,24 +450,21 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-</@license>
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/input.component.ts",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/input.component.html",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/input.component.scss",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/codemirror.component.ts",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/query/codemirror.component.scss",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.ts",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.html",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/input-metadata.component.scss",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/codemirror-metadata.component.ts",
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/metadata/codemirror-metadata.component.scss",
-"asterix-dashboard/src/main/resources/dashboard/static"]
- component="Codemirror portions of the AsterixDB dashboard"
- licenseName="The MIT License">
-
-
+    </@license>
+    <@license files=[
+        "dashboard/src/app/dashboard/query/input.component.ts",
+        "dashboard/src/app/dashboard/query/input.component.html",
+        "dashboard/src/app/dashboard/query/input.component.scss",
+        "dashboard/src/app/dashboard/query/codemirror.component.ts",
+        "dashboard/src/app/dashboard/query/codemirror.component.scss",
+        "dashboard/src/app/dashboard/metadata/input-metadata.component.ts",
+        "dashboard/src/app/dashboard/metadata/input-metadata.component.html",
+        "dashboard/src/app/dashboard/metadata/input-metadata.component.scss",
+        "dashboard/src/app/dashboard/metadata/codemirror-metadata.component.ts",
+        "dashboard/src/app/dashboard/metadata/codemirror-metadata.component.scss",
+        "dashboard/static"]
+     component="Codemirror portions of the AsterixDB dashboard"
+     licenseName="The MIT License">
 Copyright (C) 2017 by Marijn Haverbeke <marijnh@gmail.com> and others
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -475,15 +484,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-</@license>
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/",
-"asterix-dashboard/src/main/resources/dashboard/static"]
- component="AngularJS portions of the AsterixDB dashboard"
- licenseName="The MIT License">
-
-
+    </@license>
+    <@license files=[
+        "dashboard/src/",
+        "dashboard/static"]
+     component="AngularJS portions of the AsterixDB dashboard"
+     licenseName="The MIT License">
 The MIT License
 
 Copyright (c) 2014-2017 Google, Inc. http://angular.io
@@ -505,16 +511,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-</@license>
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/app/dashboard/",
-"asterix-dashboard/src/main/resources/dashboard/src/app/material.module.ts",
-"asterix-dashboard/src/main/resources/dashboard/src/main.ts",
-"asterix-dashboard/src/main/resources/dashboard/static"]
- component="Angular Material and HammerJS portions of the AsterixDB dashboard"
- licenseName="The MIT License">
-
+    </@license>
+    <@license files=[
+        "dashboard/src/app/dashboard/",
+        "dashboard/src/app/material.module.ts",
+        "dashboard/src/main.ts",
+        "dashboard/static"]
+     component="Angular Material and HammerJS portions of the AsterixDB dashboard"
+     licenseName="The MIT License">
 Copyright (c) 2017 Google LLC.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -534,15 +538,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-</@license>
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/",
-"asterix-dashboard/src/main/resources/dashboard/static"]
- component="CoreJS portions of the AsterixDB dashboard"
- licenseName="The MIT License">
-
-
+    </@license>
+    <@license files=[
+        "dashboard/src/",
+        "dashboard/static"]
+     component="CoreJS portions of the AsterixDB dashboard"
+     licenseName="The MIT License">
 Copyright (c) 2014-2017 Denis Pushkarev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -562,13 +563,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-</@license>
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/index.html",
-"asterix-dashboard/src/main/resources/dashboard/static"]
- component="Roboto Font portions of the AsterixDB dashboard"
- licenseName="Apache License 2.0">
+    </@license>
+    <@license files=[
+        "dashboard/src/index.html",
+        "dashboard/static"]
+    component="Roboto Font portions of the AsterixDB dashboard"
+    licenseName="Apache License 2.0">
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -771,8 +771,8 @@ THE SOFTWARE.
    See the License for the specific language governing permissions and
 limitations under the License.</@license>
 <@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/index.html",
-"asterix-dashboard/src/main/resources/dashboard/static/index.html"]
+"dashboard/src/index.html",
+"dashboard/static/index.html"]
  component="Font Awesome portions of the AsterixDB dashboard"
  licenseName="The MIT License">
 
@@ -782,11 +782,10 @@ limitations under the License.</@license>
     index.html License: MIT License URL:
     http://opensource.org/licenses/mit-license.html
 
-
 </@license>
-<@license files=["asterix-dashboard/src/main/resources/dashboard/"]
- component=" webpack portions of the AsterixDB dashboard"
- licenseName=" The MIT License">
+<@license files=["dashboard/"]
+ component="webpack portions of the AsterixDB dashboard"
+ licenseName="The MIT License">
 Copyright JS Foundation and other contributors
 
 Permission is hereby granted, free of charge, to any person obtaining
@@ -807,15 +806,12 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-</@license>
-
-<@license files=[
-"asterix-dashboard/src/main/resources/dashboard/src/",
-"asterix-dashboard/src/main/resources/dashboard/static"]
- component="zonejs portions of the AsterixDB dashboard"
- licenseName=" The MIT License">
-
+    </@license>
+    <@license files=[
+        "dashboard/src/",
+        "dashboard/static"]
+    component="zonejs portions of the AsterixDB dashboard"
+    licenseName="The MIT License">
 Copyright (c) 2016 Google, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -835,4 +831,5 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-</@license>
+    </@license>
+</#if>

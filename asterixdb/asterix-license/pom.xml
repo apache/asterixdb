@@ -89,6 +89,7 @@
           <templateProperties>
             <asterixAppResourcesPrefix>asterix-app/src/main/resources/</asterixAppResourcesPrefix>
             <hivecompatPrefix>asterix-hivecompat/src/main/java/</hivecompatPrefix>
+            <asterixDashboardResourcesPrefix>asterix-dashboard/src/main/resources/</asterixDashboardResourcesPrefix>
             <packageName />
           </templateProperties>
         </configuration>

@@ -233,6 +233,7 @@
             <asterixAppLocation>repo/asterix-app-${project.version}.jar, within this assembly</asterixAppLocation>
             <hyracksControlCcLocation>repo/hyracks-control-cc-${project.version}.jar, within this assembly</hyracksControlCcLocation>
             <hivecompatLocation>repo/asterix-hivecompat-${project.version}.jar, within this assembly</hivecompatLocation>
+            <asterixDashboardLocation>repo/asterix-dashboard-${project.version}.jar, within this assembly</asterixDashboardLocation>
           </templateProperties>
         </configuration>
       </plugin>
