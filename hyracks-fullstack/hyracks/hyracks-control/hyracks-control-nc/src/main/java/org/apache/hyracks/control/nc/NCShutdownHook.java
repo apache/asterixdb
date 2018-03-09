@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.nc;
 
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -52,11 +53,11 @@ public class NCShutdownHook extends Thread {
                     try {
                         LOGGER.info("Watchdog is angry. Killing shutdown hook");
                     } finally {
-                        Runtime.getRuntime().halt(66); // NOSONAR last resort
+                        ExitUtil.halt(ExitUtil.EXIT_CODE_SHUTDOWN_TIMED_OUT);
                     }
                 }
             } catch (Throwable th) { // NOSONAR must catch them all
-                Runtime.getRuntime().halt(77); // NOSONAR last resort
+                ExitUtil.halt(ExitUtil.EXIT_CODE_WATCHDOG_FAILED);
             }
         };
     }

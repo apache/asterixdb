@@ -56,6 +56,7 @@ import org.apache.asterix.common.transactions.MutableLong;
 import org.apache.asterix.common.transactions.TxnLogFile;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.util.InvokeUtil;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
@@ -714,8 +715,9 @@ class LogFlusher implements Callable<Boolean> {
                 emptyQ.add(flushPage.getLogPageSize() == logMgr.getLogPageSize() ? flushPage : stashQ.remove());
             }
         } catch (Exception e) {
-            LOGGER.log(Level.ERROR, "LogFlusher is terminating abnormally. System is in unusable state.", e);
-            throw e;
+            LOGGER.log(Level.ERROR, "LogFlusher is terminating abnormally. System is in unusable state; halting", e);
+            ExitUtil.halt(44);
+            throw new AssertionError("not reachable");
         } finally {
             if (interrupted) {
                 Thread.currentThread().interrupt();

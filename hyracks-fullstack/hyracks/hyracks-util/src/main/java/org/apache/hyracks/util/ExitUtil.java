@@ -28,6 +28,9 @@ public class ExitUtil {
 
     private static final ExitThread exitThread = new ExitThread();
 
+    public static final int EXIT_CODE_SHUTDOWN_TIMED_OUT = 66;
+    public static final int EXIT_CODE_WATCHDOG_FAILED = 77;
+
     private ExitUtil() {
     }
 
@@ -38,6 +41,18 @@ public class ExitUtil {
     public static void exit(int status) {
         exitThread.setStatus(status);
         exitThread.start();
+    }
+
+    @SuppressWarnings("squid:S2142") // catch interrupted
+    public static void halt(int status) {
+        LOGGER.fatal("JVM halting with status " + status + "; bye!", new Throwable("halt stacktrace"));
+        try {
+            // try to give time for the log to be emitted...
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        Runtime.getRuntime().halt(status);
     }
 
     private static class ExitThread extends Thread {
