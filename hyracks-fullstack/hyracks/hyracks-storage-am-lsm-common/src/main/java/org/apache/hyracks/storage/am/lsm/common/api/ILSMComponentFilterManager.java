@@ -22,11 +22,13 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 
 public interface ILSMComponentFilterManager {
 
-    void updateFilter(ILSMComponentFilter filter, List<ITupleReference> filterTuples) throws HyracksDataException;
+    void updateFilter(ILSMComponentFilter filter, List<ITupleReference> filterTuples,
+            IExtendedModificationOperationCallback opCallback) throws HyracksDataException;
 
     boolean readFilter(ILSMComponentFilter filter, ITreeIndex index) throws HyracksDataException;
 

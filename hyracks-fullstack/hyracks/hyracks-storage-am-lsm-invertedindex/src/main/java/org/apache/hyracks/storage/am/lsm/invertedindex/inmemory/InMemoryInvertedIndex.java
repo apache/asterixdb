@@ -182,13 +182,6 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
                 (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
     }
 
-    public InMemoryInvertedIndexAccessor createAccessor(IIndexAccessParameters iap, int[] nonIndexFields)
-            throws HyracksDataException {
-        return new InMemoryInvertedIndexAccessor(this,
-                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory), nonIndexFields,
-                (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
-    }
-
     @Override
     public IBufferCache getBufferCache() {
         return btree.getBufferCache();

@@ -34,12 +34,6 @@ public class PartitionedInMemoryInvertedIndexAccessor extends InMemoryInvertedIn
         super(index, opCtx, (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
     }
 
-    public PartitionedInMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx,
-            int[] nonIndexFields, IIndexAccessParameters iap) throws HyracksDataException {
-        super(index, opCtx, nonIndexFields,
-                (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
-    }
-
     protected IInvertedIndexSearcher createSearcher() throws HyracksDataException {
         return new PartitionedTOccurrenceSearcher(index, ctx);
     }

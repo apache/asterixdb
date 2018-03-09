@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -54,18 +55,14 @@ public class LSMInvertedIndexOpContext extends AbstractLSMIndexOperationContext 
             IIndexAccessParameters iap, int[] invertedIndexFields, int[] filterFields,
             IBinaryComparatorFactory[] filterComparatorFactories, ITracer tracer) throws HyracksDataException {
         super(index, invertedIndexFields, filterFields, filterComparatorFactories, iap.getSearchOperationCallback(),
-                iap.getModificationCallback(), tracer);
+                (IExtendedModificationOperationCallback) iap.getModificationCallback(), tracer);
         mutableInvIndexAccessors = new IInvertedIndexAccessor[mutableComponents.size()];
         deletedKeysBTreeAccessors = new IIndexAccessor[mutableComponents.size()];
         for (int i = 0; i < mutableComponents.size(); i++) {
             LSMInvertedIndexMemoryComponent mutableComponent =
                     (LSMInvertedIndexMemoryComponent) mutableComponents.get(i);
-            if (allFields != null) {
-                mutableInvIndexAccessors[i] = mutableComponent.getIndex().createAccessor(iap, allFields);
-            } else {
-                mutableInvIndexAccessors[i] =
-                        mutableComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            }
+            mutableInvIndexAccessors[i] =
+                    mutableComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
             deletedKeysBTreeAccessors[i] =
                     mutableComponent.getBuddyIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
         }

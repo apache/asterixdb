@@ -39,7 +39,6 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
@@ -57,7 +56,6 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
     private final IBTreeInteriorFrame interiorFrame;
     private final IPageManager freePageManager;
     private final ITreeIndexMetadataFrame metaFrame;
-    private PermutingTupleReference tupleWithNonIndexFields; // Optional, for filtered LSM Index transaction support
     private ITreeIndexFrameFactory leafFrameFactory;
     private IBTreeLeafFrame leafFrame;
     private IndexOperation op;
@@ -113,15 +111,6 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
         // Debug
         this.validationInfos = new ArrayDeque<>(INIT_ARRAYLIST_SIZE);
         this.interiorFrameTuple = getInteriorFrame().createTupleReference();
-    }
-
-    public BTreeOpContext(IIndexAccessor accessor, ITreeIndexFrameFactory leafFrameFactory,
-            ITreeIndexFrameFactory interiorFrameFactory, IPageManager freePageManager,
-            IBinaryComparatorFactory[] cmpFactories, IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback, int[] nonIndexFields) {
-        this(accessor, leafFrameFactory, interiorFrameFactory, freePageManager, cmpFactories, modificationCallback,
-                searchCallback);
-        this.tupleWithNonIndexFields = new PermutingTupleReference(nonIndexFields);
     }
 
     @Override
@@ -376,14 +365,6 @@ public class BTreeOpContext implements IIndexOperationContext, IExtraPageBlockHe
 
     public void setLeafFrameFactory(ITreeIndexFrameFactory leafFrameFactory) {
         this.leafFrameFactory = leafFrameFactory;
-    }
-
-    public ITupleReference getTupleWithNonIndexFields() {
-        return tupleWithNonIndexFields;
-    }
-
-    public void resetNonIndexFieldsTuple(ITupleReference newValue) {
-        tupleWithNonIndexFields.reset(newValue);
     }
 
     @Override

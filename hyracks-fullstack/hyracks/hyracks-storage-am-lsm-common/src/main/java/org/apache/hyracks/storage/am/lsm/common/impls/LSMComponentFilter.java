@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
@@ -63,10 +64,14 @@ public class LSMComponentFilter implements ILSMComponentFilter {
     }
 
     @Override
-    public void update(ITupleReference tuple, MultiComparator cmp) throws HyracksDataException {
+    public void update(ITupleReference tuple, MultiComparator cmp, IExtendedModificationOperationCallback opCallback)
+            throws HyracksDataException {
+        boolean logged = false;
         if (minTuple == null) {
             int numBytes = tupleWriter.bytesRequired(tuple);
             minTupleBytes = new byte[numBytes];
+            opCallback.after(tuple);
+            logged = true;
             tupleWriter.writeTuple(tuple, minTupleBytes, 0);
             minTupleBuf = ByteBuffer.wrap(minTupleBytes);
             minTuple = tupleWriter.createTupleReference();
@@ -74,6 +79,8 @@ public class LSMComponentFilter implements ILSMComponentFilter {
         } else {
             int c = cmp.compare(tuple, minTuple);
             if (c < 0) {
+                opCallback.after(tuple);
+                logged = true;
                 int numBytes = tupleWriter.bytesRequired(tuple);
                 if (minTupleBytes.length < numBytes) {
                     minTupleBytes = new byte[numBytes];
@@ -88,6 +95,9 @@ public class LSMComponentFilter implements ILSMComponentFilter {
         if (maxTuple == null) {
             int numBytes = tupleWriter.bytesRequired(tuple);
             maxTupleBytes = new byte[numBytes];
+            if (!logged) {
+                opCallback.after(tuple);
+            }
             tupleWriter.writeTuple(tuple, maxTupleBytes, 0);
             maxTupleBuf = ByteBuffer.wrap(maxTupleBytes);
             maxTuple = tupleWriter.createTupleReference();
@@ -95,6 +105,9 @@ public class LSMComponentFilter implements ILSMComponentFilter {
         } else {
             int c = cmp.compare(tuple, maxTuple);
             if (c > 0) {
+                if (!logged) {
+                    opCallback.after(tuple);
+                }
                 int numBytes = tupleWriter.bytesRequired(tuple);
                 if (maxTupleBytes.length < numBytes) {
                     maxTupleBytes = new byte[numBytes];

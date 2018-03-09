@@ -91,14 +91,6 @@ public class PartitionedInMemoryInvertedIndex extends InMemoryInvertedIndex impl
     }
 
     @Override
-    public PartitionedInMemoryInvertedIndexAccessor createAccessor(IIndexAccessParameters iap, int[] nonIndexFields)
-            throws HyracksDataException {
-        return new PartitionedInMemoryInvertedIndexAccessor(this,
-                new PartitionedInMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory),
-                nonIndexFields, iap);
-    }
-
-    @Override
     public boolean openInvertedListPartitionCursors(IInvertedIndexSearcher searcher, IIndexOperationContext ictx,
             short numTokensLowerBound, short numTokensUpperBound, InvertedListPartitions invListPartitions)
             throws HyracksDataException {

@@ -35,6 +35,7 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -155,13 +156,12 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         if (ctx.getIndexTuple() != null) {
             ctx.getIndexTuple().reset(tuple);
             indexTuple = ctx.getIndexTuple();
-            ((InMemoryInvertedIndexAccessor) (ctx.getCurrentMutableInvIndexAccessors())).resetLogTuple(tuple);
         } else {
             indexTuple = tuple;
         }
 
-        ctx.getModificationCallback().before(tuple);
-        ctx.getModificationCallback().found(null, tuple);
+        ctx.getModificationCallback().before(indexTuple);
+        ctx.getModificationCallback().found(null, indexTuple);
         switch (ctx.getOperation()) {
             case INSERT:
                 // Insert into the in-memory inverted index.
@@ -336,7 +336,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             List<ITupleReference> filterTuples = new ArrayList<>();
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
             filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
-            filterManager.updateFilter(component.getLSMComponentFilter(), filterTuples);
+            filterManager.updateFilter(component.getLSMComponentFilter(), filterTuples, NoOpOperationCallback.INSTANCE);
             filterManager.writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
         }
         flushingComponent.getMetadata().copy(component.getMetadata());
@@ -399,7 +399,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                         filterTuples.add(max);
                     }
                 }
-                getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples);
+                getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples,
+                        NoOpOperationCallback.INSTANCE);
                 getFilterManager().writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
             }
             componentBulkLoader.end();

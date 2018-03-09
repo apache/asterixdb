@@ -104,10 +104,10 @@ public class PrimaryIndexModificationOperationCallback extends AbstractIndexModi
     }
 
     private void logWait() throws ACIDException {
-        logRecord.setLogType(LogType.WAIT);
-        logRecord.computeAndSetLogSize();
-        txnSubsystem.getLogManager().log(logRecord);
+        indexRecord.setLogType(LogType.WAIT);
+        indexRecord.computeAndSetLogSize();
+        txnSubsystem.getLogManager().log(indexRecord);
         // set the log type back to UPDATE for normal updates
-        logRecord.setLogType(LogType.UPDATE);
+        indexRecord.setLogType(LogType.UPDATE);
     }
 }

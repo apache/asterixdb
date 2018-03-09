@@ -56,16 +56,6 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
         this.btreeAccessor = index.getBTree().createAccessor(NoOpIndexAccessParameters.INSTANCE);
     }
 
-    public InMemoryInvertedIndexAccessor(InMemoryInvertedIndex index, IIndexOperationContext opCtx,
-            int[] nonIndexFields, IHyracksTaskContext ctx) throws HyracksDataException {
-        this.ctx = ctx;
-        this.opCtx = opCtx;
-        this.index = index;
-        this.searcher = null;
-        this.btreeAccessor = index.getBTree().createAccessor(NoOpOperationCallback.INSTANCE,
-                NoOpOperationCallback.INSTANCE, nonIndexFields);
-    }
-
     @Override
     public void insert(ITupleReference tuple) throws HyracksDataException {
         opCtx.setOperation(IndexOperation.INSERT);
@@ -135,10 +125,6 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
             return new TOccurrenceSearcher(index, ctx);
         }
         return null;
-    }
-
-    public void resetLogTuple(ITupleReference newTuple) {
-        btreeAccessor.getOpContext().resetNonIndexFieldsTuple(newTuple);
     }
 
     @Override

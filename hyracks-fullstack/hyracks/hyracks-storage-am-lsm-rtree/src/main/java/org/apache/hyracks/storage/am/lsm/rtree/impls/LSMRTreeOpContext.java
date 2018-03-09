@@ -26,6 +26,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTreeOpContext;
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
@@ -57,7 +58,7 @@ public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
 
     public LSMRTreeOpContext(ILSMIndex index, List<ILSMMemoryComponent> mutableComponents,
             ITreeIndexFrameFactory rtreeLeafFrameFactory, ITreeIndexFrameFactory rtreeInteriorFrameFactory,
-            ITreeIndexFrameFactory btreeLeafFrameFactory, IModificationOperationCallback modificationCallback,
+            ITreeIndexFrameFactory btreeLeafFrameFactory, IExtendedModificationOperationCallback modificationCallback,
             ISearchOperationCallback searchCallback, int[] rtreeFields, int[] filterFields, ILSMHarness lsmHarness,
             int[] comparatorFields, IBinaryComparatorFactory[] linearizerArray,
             IBinaryComparatorFactory[] filterComparatorFactories, ITracer tracer) {
@@ -69,13 +70,7 @@ public final class LSMRTreeOpContext extends AbstractLSMIndexOperationContext {
         btreeOpContexts = new BTreeOpContext[mutableComponents.size()];
         for (int i = 0; i < mutableComponents.size(); i++) {
             LSMRTreeMemoryComponent mutableComponent = (LSMRTreeMemoryComponent) mutableComponents.get(i);
-            if (allFields != null) {
-                mutableRTreeAccessors[i] = mutableComponent.getIndex().createAccessor(NoOpOperationCallback.INSTANCE,
-                        NoOpOperationCallback.INSTANCE, allFields);
-            } else {
-                mutableRTreeAccessors[i] =
-                        mutableComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            }
+            mutableRTreeAccessors[i] = mutableComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
             mutableBTreeAccessors[i] =
                     mutableComponent.getBuddyIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
 

@@ -16,26 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.lsm.common.api;
+package org.apache.hyracks.storage.am.common.api;
 
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
-import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.IModificationOperationCallback;
 
-public interface ILSMComponentFilter {
+public interface IExtendedModificationOperationCallback extends IModificationOperationCallback {
+    /**
+     * Called after the action taken in found, to take action on a tuple that is not part of the index
+     * itself but is part of an ancillary structure that is updated alongside the index. An example would
+     * be a simple statistic on the index that records the minimum and maximum values.
+     *
+     * @param after
+     *            The tuple to feed to the ancilliary structure
+     * @throws HyracksDataException
+     */
 
-    boolean satisfy(ITupleReference min, ITupleReference max, MultiComparator cmp) throws HyracksDataException;
-
-    void update(ITupleReference tuple, MultiComparator cmp, IExtendedModificationOperationCallback opCallback)
-            throws HyracksDataException;
-
-    ITupleReference getMinTuple();
-
-    ITupleReference getMaxTuple();
-
-    IBinaryComparatorFactory[] getFilterCmpFactories();
-
-    void reset();
+    void after(ITupleReference after) throws HyracksDataException;
 }

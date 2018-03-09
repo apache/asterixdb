@@ -29,20 +29,24 @@ import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 
 public abstract class AbstractIndexModificationOperationCallback extends AbstractOperationCallback
-        implements IModificationOperationCallback {
+        implements IExtendedModificationOperationCallback {
     public static final byte INSERT_BYTE = 0x01;
     public static final byte DELETE_BYTE = 0x02;
     public static final byte UPSERT_BYTE = 0x03;
+    public static final byte FILTER_BYTE = 0x04;
 
     public enum Operation {
         INSERT(INSERT_BYTE),
         DELETE(DELETE_BYTE),
-        UPSERT(UPSERT_BYTE);
+        UPSERT(UPSERT_BYTE),
+        FILTER_MOD(FILTER_BYTE);
+
         private byte value;
 
         Operation(byte value) {
@@ -59,6 +63,8 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
                     return DELETE;
                 case INSERT:
                     return INSERT;
+                case FILTER_MOD:
+                    return FILTER_MOD;
                 case UPSERT:
                     return UPSERT;
                 default:
@@ -71,7 +77,8 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
     protected final byte resourceType;
     protected final Operation indexOp;
     protected final ITransactionSubsystem txnSubsystem;
-    protected final ILogRecord logRecord;
+    protected final ILogRecord indexRecord;
+    protected final ILogRecord filterRecord;
 
     protected AbstractIndexModificationOperationCallback(DatasetId datasetId, int[] primaryKeyFields,
             ITransactionContext txnCtx, ILockManager lockManager, ITransactionSubsystem txnSubsystem, long resourceId,
@@ -80,35 +87,52 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
         this.resourceType = resourceType;
         this.indexOp = indexOp;
         this.txnSubsystem = txnSubsystem;
-        logRecord = new LogRecord();
-        logRecord.setTxnCtx(txnCtx);
-        logRecord.setLogType(LogType.UPDATE);
-        logRecord.setTxnId(txnCtx.getTxnId().getId());
-        logRecord.setDatasetId(datasetId.getId());
-        logRecord.setResourceId(resourceId);
-        logRecord.setResourcePartition(resourcePartition);
-        logRecord.setNewOp(indexOp.value());
+        indexRecord = new LogRecord();
+        indexRecord.setTxnCtx(txnCtx);
+        indexRecord.setLogType(LogType.UPDATE);
+        indexRecord.setTxnId(txnCtx.getTxnId().getId());
+        indexRecord.setDatasetId(datasetId.getId());
+        indexRecord.setResourceId(resourceId);
+        indexRecord.setResourcePartition(resourcePartition);
+        indexRecord.setNewOp(indexOp.value());
+        filterRecord = new LogRecord();
+        filterRecord.setTxnCtx(txnCtx);
+        filterRecord.setLogType(LogType.FILTER);
+        filterRecord.setDatasetId(datasetId.getId());
+        filterRecord.setTxnId(txnCtx.getTxnId().getId());
+        filterRecord.setResourceId(resourceId);
+        filterRecord.setResourcePartition(resourcePartition);
+        filterRecord.setNewOp(Operation.FILTER_MOD.value());
     }
 
     protected void log(int PKHash, ITupleReference newValue, ITupleReference oldValue) throws ACIDException {
-        logRecord.setPKHashValue(PKHash);
-        logRecord.setPKFields(primaryKeyFields);
-        logRecord.setPKValue(newValue);
-        logRecord.computeAndSetPKValueSize();
+        indexRecord.setPKHashValue(PKHash);
+        indexRecord.setPKFields(primaryKeyFields);
+        indexRecord.setPKValue(newValue);
+        indexRecord.computeAndSetPKValueSize();
         if (newValue != null) {
-            logRecord.setNewValueSize(SimpleTupleWriter.INSTANCE.bytesRequired(newValue));
-            logRecord.setNewValue(newValue);
+            indexRecord.setNewValueSize(SimpleTupleWriter.INSTANCE.bytesRequired(newValue));
+            indexRecord.setNewValue(newValue);
         } else {
-            logRecord.setNewValueSize(0);
+            indexRecord.setNewValueSize(0);
         }
         if (oldValue != null) {
-            logRecord.setOldValueSize(SimpleTupleWriter.INSTANCE.bytesRequired(oldValue));
-            logRecord.setOldValue(oldValue);
+            indexRecord.setOldValueSize(SimpleTupleWriter.INSTANCE.bytesRequired(oldValue));
+            indexRecord.setOldValue(oldValue);
         } else {
-            logRecord.setOldValueSize(0);
+            indexRecord.setOldValueSize(0);
         }
-        logRecord.computeAndSetLogSize();
-        txnSubsystem.getLogManager().log(logRecord);
+        indexRecord.computeAndSetLogSize();
+        txnSubsystem.getLogManager().log(indexRecord);
+    }
+
+    public void after(ITupleReference newValue) throws HyracksDataException {
+        if (newValue != null) {
+            filterRecord.setNewValueSize(SimpleTupleWriter.INSTANCE.bytesRequired(newValue));
+            filterRecord.setNewValue(newValue);
+            filterRecord.computeAndSetLogSize();
+            txnSubsystem.getLogManager().log(filterRecord);
+        }
     }
 
     /**
@@ -116,9 +140,8 @@ public abstract class AbstractIndexModificationOperationCallback extends Abstrac
      * a single operator to perform different operations per tuple
      *
      * @param op
-     * @throws HyracksDataException
      */
-    public void setOp(Operation op) throws HyracksDataException {
-        logRecord.setNewOp(op.value());
+    public void setOp(Operation op) {
+        indexRecord.setNewOp(op.value());
     }
 }

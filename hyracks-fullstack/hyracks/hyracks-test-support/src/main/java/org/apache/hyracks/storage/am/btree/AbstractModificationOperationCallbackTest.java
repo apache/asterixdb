@@ -23,6 +23,7 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
@@ -84,7 +85,7 @@ public abstract class AbstractModificationOperationCallbackTest extends Abstract
         }
     }
 
-    private class VeriyfingModificationCallback implements IModificationOperationCallback {
+    private class VeriyfingModificationCallback implements IExtendedModificationOperationCallback {
 
         @Override
         public void before(ITupleReference tuple) throws HyracksDataException {
@@ -99,6 +100,11 @@ public abstract class AbstractModificationOperationCallbackTest extends Abstract
                 Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, before));
             }
             Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, after));
+        }
+
+        @Override
+        public void after(ITupleReference tuple) throws HyracksDataException {
+            Assert.assertEquals(0, cmp.compare(AbstractModificationOperationCallbackTest.this.tuple, tuple));
         }
     }
 

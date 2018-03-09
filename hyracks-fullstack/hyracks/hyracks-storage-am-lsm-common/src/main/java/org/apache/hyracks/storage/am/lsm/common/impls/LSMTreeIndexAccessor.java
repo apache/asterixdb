@@ -205,6 +205,7 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
         return cursorFactory.create(ctx);
     }
 
+    @Override
     public void updateFilter(ITupleReference tuple) throws HyracksDataException {
         ctx.setOperation(IndexOperation.UPSERT);
         lsmHarness.updateFilter(ctx, tuple);

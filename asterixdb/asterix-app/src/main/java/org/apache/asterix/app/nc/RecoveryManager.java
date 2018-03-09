@@ -77,6 +77,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IIndex;
@@ -221,6 +222,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 case LogType.FLUSH:
                 case LogType.WAIT:
                 case LogType.MARKER:
+                case LogType.FILTER:
                     break;
                 default:
                     throw new ACIDException("Unsupported LogType: " + logRecord.getLogType());
@@ -315,59 +317,64 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                     foundWinner = true;
                                 }
                             }
-                            if (foundWinner) {
-                                resourceId = logRecord.getResourceId();
-                                localResource = resourcesMap.get(resourceId);
-                                /*******************************************************************
-                                 * [Notice]
-                                 * -> Issue
-                                 * Delete index may cause a problem during redo.
-                                 * The index operation to be redone couldn't be redone because the corresponding index
-                                 * may not exist in NC due to the possible index drop DDL operation.
-                                 * -> Approach
-                                 * Avoid the problem during redo.
-                                 * More specifically, the problem will be detected when the localResource of
-                                 * the corresponding index is retrieved, which will end up with 'null'.
-                                 * If null is returned, then just go and process the next
-                                 * log record.
-                                 *******************************************************************/
-                                if (localResource == null) {
-                                    LOGGER.log(Level.WARN, "resource was not found for resource id " + resourceId);
-                                    logRecord = logReader.next();
-                                    continue;
-                                }
-                                /*******************************************************************/
+                            if (!foundWinner) {
+                                break;
+                            }
+                        }
+                        //fall through as FILTER is a subset of UPDATE
+                    case LogType.FILTER:
+                        if (partitions.contains(logRecord.getResourcePartition())) {
+                            resourceId = logRecord.getResourceId();
+                            localResource = resourcesMap.get(resourceId);
+                            /*******************************************************************
+                             * [Notice]
+                             * -> Issue
+                             * Delete index may cause a problem during redo.
+                             * The index operation to be redone couldn't be redone because the corresponding index
+                             * may not exist in NC due to the possible index drop DDL operation.
+                             * -> Approach
+                             * Avoid the problem during redo.
+                             * More specifically, the problem will be detected when the localResource of
+                             * the corresponding index is retrieved, which will end up with 'null'.
+                             * If null is returned, then just go and process the next
+                             * log record.
+                             *******************************************************************/
+                            if (localResource == null) {
+                                LOGGER.log(Level.WARN, "resource was not found for resource id " + resourceId);
+                                logRecord = logReader.next();
+                                continue;
+                            }
+                            /*******************************************************************/
 
-                                //get index instance from IndexLifeCycleManager
-                                //if index is not registered into IndexLifeCycleManager,
-                                //create the index using LocalMetadata stored in LocalResourceRepository
-                                //get partition path in this node
-                                localResourceMetadata = (DatasetLocalResource) localResource.getResource();
-                                index = (ILSMIndex) datasetLifecycleManager.get(localResource.getPath());
-                                if (index == null) {
-                                    //#. create index instance and register to indexLifeCycleManager
-                                    index = (ILSMIndex) localResourceMetadata.createInstance(serviceCtx);
-                                    datasetLifecycleManager.register(localResource.getPath(), index);
-                                    datasetLifecycleManager.open(localResource.getPath());
-                                    try {
-                                        final DatasetResourceReference resourceReference =
-                                                DatasetResourceReference.of(localResource);
-                                        maxDiskLastLsn =
-                                                indexCheckpointManagerProvider.get(resourceReference).getLowWatermark();
-                                    } catch (HyracksDataException e) {
-                                        datasetLifecycleManager.close(localResource.getPath());
-                                        throw e;
-                                    }
-                                    //#. set resourceId and maxDiskLastLSN to the map
-                                    resourceId2MaxLSNMap.put(resourceId, maxDiskLastLsn);
-                                } else {
-                                    maxDiskLastLsn = resourceId2MaxLSNMap.get(resourceId);
+                            //get index instance from IndexLifeCycleManager
+                            //if index is not registered into IndexLifeCycleManager,
+                            //create the index using LocalMetadata stored in LocalResourceRepository
+                            //get partition path in this node
+                            localResourceMetadata = (DatasetLocalResource) localResource.getResource();
+                            index = (ILSMIndex) datasetLifecycleManager.get(localResource.getPath());
+                            if (index == null) {
+                                //#. create index instance and register to indexLifeCycleManager
+                                index = (ILSMIndex) localResourceMetadata.createInstance(serviceCtx);
+                                datasetLifecycleManager.register(localResource.getPath(), index);
+                                datasetLifecycleManager.open(localResource.getPath());
+                                try {
+                                    final DatasetResourceReference resourceReference =
+                                            DatasetResourceReference.of(localResource);
+                                    maxDiskLastLsn =
+                                            indexCheckpointManagerProvider.get(resourceReference).getLowWatermark();
+                                } catch (HyracksDataException e) {
+                                    datasetLifecycleManager.close(localResource.getPath());
+                                    throw e;
                                 }
-                                // lsn @ maxDiskLastLsn is either a flush log or a master replica log
-                                if (lsn >= maxDiskLastLsn) {
-                                    redo(logRecord, datasetLifecycleManager);
-                                    redoCount++;
-                                }
+                                //#. set resourceId and maxDiskLastLSN to the map
+                                resourceId2MaxLSNMap.put(resourceId, maxDiskLastLsn);
+                            } else {
+                                maxDiskLastLsn = resourceId2MaxLSNMap.get(resourceId);
+                            }
+                            // lsn @ maxDiskLastLsn is either a flush log or a master replica log
+                            if (lsn >= maxDiskLastLsn) {
+                                redo(logRecord, datasetLifecycleManager);
+                                redoCount++;
                             }
                         }
                         break;
@@ -659,6 +666,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         throw new ACIDException("Unexpected LogType(" + logRecord.getLogType() + ") during abort.");
                     case LogType.ABORT:
                     case LogType.FLUSH:
+                    case LogType.FILTER:
                     case LogType.WAIT:
                     case LogType.MARKER:
                         //ignore
@@ -741,6 +749,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         // undo, upsert the old value if found, otherwise, physical delete
                         undoUpsertOrDelete(indexAccessor, logRecord);
                         break;
+                    case AbstractIndexModificationOperationCallback.FILTER_BYTE:
+                        //do nothing, can't undo filters
+                        break;
                     default:
                         throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
                 }
@@ -775,6 +786,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             long resourceId = logRecord.getResourceId();
             ILSMIndex index = (ILSMIndex) datasetLifecycleManager.getIndex(datasetId, resourceId);
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+            ILSMIndexOperationContext opCtx = indexAccessor.getOpContext();
+            opCtx.setFilterSkip(true);
+            opCtx.setRecovery(true);
             if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.INSERT_BYTE) {
                 indexAccessor.forceInsert(logRecord.getNewValue());
             } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.DELETE_BYTE) {
@@ -782,6 +796,9 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.UPSERT_BYTE) {
                 // redo, upsert the new value
                 indexAccessor.forceUpsert(logRecord.getNewValue());
+            } else if (logRecord.getNewOp() == AbstractIndexModificationOperationCallback.FILTER_BYTE) {
+                opCtx.setFilterSkip(false);
+                indexAccessor.updateFilter(logRecord.getNewValue());
             } else {
                 throw new IllegalStateException("Unsupported OperationType: " + logRecord.getNewOp());
             }

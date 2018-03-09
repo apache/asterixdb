@@ -21,13 +21,15 @@ package org.apache.hyracks.storage.am.common.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 /**
  * Dummy operation callback that simply does nothing.
  */
-public enum NoOpOperationCallback implements IModificationOperationCallback, ISearchOperationCallback {
+public enum NoOpOperationCallback
+        implements IModificationOperationCallback, ISearchOperationCallback, IExtendedModificationOperationCallback {
     INSTANCE;
 
     @Override
@@ -58,5 +60,10 @@ public enum NoOpOperationCallback implements IModificationOperationCallback, ISe
     @Override
     public void complete(ITupleReference tuple) throws HyracksDataException {
         // Do nothing.
+    }
+
+    @Override
+    public void after(ITupleReference tuple) throws HyracksDataException {
+        //Do nothing.
     }
 }

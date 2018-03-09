@@ -157,12 +157,6 @@ public class RTree extends AbstractTreeIndex {
                 modificationCallback);
     }
 
-    private RTreeOpContext createOpContext(IModificationOperationCallback modificationCallback, int[] nonIndexFields) {
-        return new RTreeOpContext((IRTreeLeafFrame) leafFrameFactory.createFrame(),
-                (IRTreeInteriorFrame) interiorFrameFactory.createFrame(), freePageManager, cmpFactories,
-                modificationCallback, nonIndexFields);
-    }
-
     private ICachedPage findLeaf(RTreeOpContext ctx) throws HyracksDataException {
         int pageId = rootPage;
         boolean writeLatched = false;
@@ -305,7 +299,7 @@ public class RTree extends AbstractTreeIndex {
                     if (!isLeaf) {
                         ctx.getInteriorFrame().insert(tuple, -1);
                     } else {
-                        foundModCallback(ctx, null, tuple);
+                        ctx.getModificationCallback().found(null, tuple);
                         ctx.getLeafFrame().insert(tuple, -1);
                     }
                     succeeded = true;
@@ -330,7 +324,7 @@ public class RTree extends AbstractTreeIndex {
                         ctx.getInteriorFrame().insert(tuple, -1);
                     } else {
                         ctx.getLeafFrame().compact();
-                        foundModCallback(ctx, null, tuple);
+                        ctx.getModificationCallback().found(null, tuple);
                         ctx.getLeafFrame().insert(tuple, -1);
                     }
                     succeeded = true;
@@ -368,7 +362,7 @@ public class RTree extends AbstractTreeIndex {
                         rightFrame.setPage(rightNode);
                         rightFrame.initBuffer((byte) 0);
                         rightFrame.setRightPage(ctx.getInteriorFrame().getRightPage());
-                        foundModCallback(ctx, null, tuple);
+                        ctx.getModificationCallback().found(null, tuple);
                         ctx.getLeafFrame().split(rightFrame, tuple, ctx.getSplitKey(), ctx, bufferCache);
                         ctx.getLeafFrame().setRightPage(rightPageId);
                     }
@@ -761,11 +755,6 @@ public class RTree extends AbstractTreeIndex {
         return new RTreeAccessor(this, iap.getModificationCallback(), iap.getSearchOperationCallback());
     }
 
-    public RTreeAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback, int[] nonIndexFields) {
-        return new RTreeAccessor(this, modificationCallback, searchCallback, nonIndexFields);
-    }
-
     public class RTreeAccessor implements ITreeIndexAccessor {
         private RTree rtree;
         private RTreeOpContext ctx;
@@ -775,12 +764,6 @@ public class RTree extends AbstractTreeIndex {
                 ISearchOperationCallback searchCallback) {
             this.rtree = rtree;
             this.ctx = rtree.createOpContext(modificationCallback);
-        }
-
-        public RTreeAccessor(RTree rtree, IModificationOperationCallback modificationCallback,
-                ISearchOperationCallback searchCallback, int[] nonIndexFields) {
-            this.rtree = rtree;
-            this.ctx = rtree.createOpContext(modificationCallback, nonIndexFields);
         }
 
         public void reset(RTree rtree, IModificationOperationCallback modificationCallback) {
@@ -1125,14 +1108,5 @@ public class RTree extends AbstractTreeIndex {
     @Override
     public int getNumOfFilterFields() {
         return 0;
-    }
-
-    private void foundModCallback(RTreeOpContext ctx, ITupleReference before, ITupleReference after)
-            throws HyracksDataException {
-        if (ctx.getTupleWithNonIndexFields() != null) {
-            ctx.getModificationCallback().found(before, ctx.getTupleWithNonIndexFields());
-        } else {
-            ctx.getModificationCallback().found(before, after);
-        }
     }
 }

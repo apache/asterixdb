@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
@@ -174,7 +175,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 List<ITupleReference> filterTuples = new ArrayList<>();
                 filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
                 filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
-                getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples);
+                getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples,
+                        NoOpOperationCallback.INSTANCE);
                 getFilterManager().writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
             }
             flushingComponent.getMetadata().copy(component.getMetadata());
@@ -249,7 +251,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMinTuple());
                 filterTuples.add(mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMaxTuple());
             }
-            getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples);
+            getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples,
+                    NoOpOperationCallback.INSTANCE);
             getFilterManager().writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
         }
 

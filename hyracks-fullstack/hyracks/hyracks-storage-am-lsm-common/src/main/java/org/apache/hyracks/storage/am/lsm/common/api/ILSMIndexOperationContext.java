@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
 
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
@@ -35,7 +36,7 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
 
     ISearchOperationCallback getSearchOperationCallback();
 
-    IModificationOperationCallback getModificationCallback();
+    IExtendedModificationOperationCallback getModificationCallback();
 
     void setCurrentMutableComponentId(int currentMutableComponentId);
 
@@ -83,6 +84,14 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
      * @return true if performance tracing is enabled, false otherwise
      */
     boolean isTracingEnabled();
+
+    boolean isFilterSkipped();
+
+    void setFilterSkip(boolean skip);
+
+    boolean isRecovery();
+
+    void setRecovery(boolean recovery);
 
     /**
      * @return the IO Operation type associated with this context

@@ -50,121 +50,125 @@ public interface ILogRecord {
     int FLUSHING_COMPONENT_MAXID_LEN = Long.BYTES;
 
     int ALL_RECORD_HEADER_LEN = LOG_SOURCE_LEN + TYPE_LEN + TxnId.BYTES;
-    int ENTITYCOMMIT_UPDATE_HEADER_LEN = RS_PARTITION_LEN + DatasetId.BYTES + PKHASH_LEN + PKSZ_LEN;
+    int ENTITY_RESOURCE_HEADER_LEN = RS_PARTITION_LEN + DatasetId.BYTES;
+    int ENTITY_VALUE_HEADER_LEN = PKHASH_LEN + PKSZ_LEN;
     int UPDATE_LSN_HEADER = RSID_LEN + LOGRCD_SZ_LEN;
     int UPDATE_BODY_HEADER = FLDCNT_LEN + NEWOP_LEN + NEWVALSZ_LEN;
 
     int JOB_TERMINATE_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
-    int ENTITY_COMMIT_LOG_BASE_SIZE = ALL_RECORD_HEADER_LEN + ENTITYCOMMIT_UPDATE_HEADER_LEN + CHKSUM_LEN;
+    int ENTITY_COMMIT_LOG_BASE_SIZE =
+            ALL_RECORD_HEADER_LEN + ENTITY_RESOURCE_HEADER_LEN + ENTITY_VALUE_HEADER_LEN + CHKSUM_LEN;
     int UPDATE_LOG_BASE_SIZE = ENTITY_COMMIT_LOG_BASE_SIZE + UPDATE_LSN_HEADER + UPDATE_BODY_HEADER;
+    int FILTER_LOG_BASE_SIZE =
+            ALL_RECORD_HEADER_LEN + ENTITY_RESOURCE_HEADER_LEN + UPDATE_BODY_HEADER + UPDATE_LSN_HEADER + CHKSUM_LEN;
     int FLUSH_LOG_SIZE = ALL_RECORD_HEADER_LEN + DS_LEN + RS_PARTITION_LEN + FLUSHING_COMPONENT_MINID_LEN
             + FLUSHING_COMPONENT_MAXID_LEN + CHKSUM_LEN;
     int WAIT_LOG_SIZE = ALL_RECORD_HEADER_LEN + CHKSUM_LEN;
     int MARKER_BASE_LOG_SIZE =
             ALL_RECORD_HEADER_LEN + CHKSUM_LEN + DS_LEN + RS_PARTITION_LEN + PRVLSN_LEN + LOGRCD_SZ_LEN;
 
-    public RecordReadStatus readLogRecord(ByteBuffer buffer);
+    RecordReadStatus readLogRecord(ByteBuffer buffer);
 
-    public void writeLogRecord(ByteBuffer buffer);
+    void writeLogRecord(ByteBuffer buffer);
 
-    public ITransactionContext getTxnCtx();
+    ITransactionContext getTxnCtx();
 
-    public void setTxnCtx(ITransactionContext txnCtx);
+    void setTxnCtx(ITransactionContext txnCtx);
 
-    public boolean isFlushed();
+    boolean isFlushed();
 
-    public void isFlushed(boolean isFlushed);
+    void isFlushed(boolean isFlushed);
 
-    public byte getLogType();
+    byte getLogType();
 
-    public void setLogType(byte logType);
+    void setLogType(byte logType);
 
     long getTxnId();
 
     void setTxnId(long jobId);
 
-    public int getDatasetId();
+    int getDatasetId();
 
-    public void setDatasetId(int datasetId);
+    void setDatasetId(int datasetId);
 
-    public int getPKHashValue();
+    int getPKHashValue();
 
-    public void setPKHashValue(int PKHashValue);
+    void setPKHashValue(int PKHashValue);
 
-    public long getResourceId();
+    long getResourceId();
 
-    public void setResourceId(long resourceId);
+    void setResourceId(long resourceId);
 
-    public int getLogSize();
+    int getLogSize();
 
-    public void setLogSize(int logSize);
+    void setLogSize(int logSize);
 
-    public byte getNewOp();
+    byte getNewOp();
 
-    public void setNewOp(byte newOp);
+    void setNewOp(byte newOp);
 
-    public void setNewValueSize(int newValueSize);
+    void setNewValueSize(int newValueSize);
 
-    public ITupleReference getNewValue();
+    ITupleReference getNewValue();
 
-    public void setNewValue(ITupleReference newValue);
+    void setNewValue(ITupleReference newValue);
 
-    public long getChecksum();
+    long getChecksum();
 
-    public void setChecksum(long checksum);
+    void setChecksum(long checksum);
 
-    public long getLSN();
+    long getLSN();
 
-    public void setLSN(long LSN);
+    void setLSN(long LSN);
 
-    public String getLogRecordForDisplay();
+    String getLogRecordForDisplay();
 
-    public void computeAndSetLogSize();
+    void computeAndSetLogSize();
 
-    public int getPKValueSize();
+    int getPKValueSize();
 
-    public ITupleReference getPKValue();
+    ITupleReference getPKValue();
 
-    public void setPKFields(int[] primaryKeyFields);
+    void setPKFields(int[] primaryKeyFields);
 
-    public void computeAndSetPKValueSize();
+    void computeAndSetPKValueSize();
 
-    public void setPKValue(ITupleReference PKValue);
+    void setPKValue(ITupleReference PKValue);
 
-    public void readRemoteLog(ByteBuffer buffer);
+    void readRemoteLog(ByteBuffer buffer);
 
-    public void setLogSource(byte logSource);
+    void setLogSource(byte logSource);
 
-    public byte getLogSource();
+    byte getLogSource();
 
-    public int getRemoteLogSize();
+    int getRemoteLogSize();
 
-    public int getResourcePartition();
+    int getResourcePartition();
 
-    public void setResourcePartition(int resourcePartition);
+    void setResourcePartition(int resourcePartition);
 
-    public void setReplicated(boolean replicated);
+    void setReplicated(boolean replicated);
 
     /**
      * @return a flag indicating whether the log was replicated
      */
-    public boolean isReplicated();
+    boolean isReplicated();
 
-    public void writeRemoteLogRecord(ByteBuffer buffer);
+    void writeRemoteLogRecord(ByteBuffer buffer);
 
-    public ITupleReference getOldValue();
+    ITupleReference getOldValue();
 
-    public void setOldValue(ITupleReference tupleBefore);
+    void setOldValue(ITupleReference tupleBefore);
 
-    public void setOldValueSize(int beforeSize);
+    void setOldValueSize(int beforeSize);
 
-    public boolean isMarker();
+    boolean isMarker();
 
-    public ByteBuffer getMarker();
+    ByteBuffer getMarker();
 
-    public void logAppended(long lsn);
+    void logAppended(long lsn);
 
-    public long getPreviousMarkerLSN();
+    long getPreviousMarkerLSN();
 
     /**
      * Sets flag indicating if this log should be replicated or not

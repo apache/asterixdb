@@ -208,6 +208,11 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
 
     @Override
+    public void updateFilter(ITupleReference tuple) throws HyracksDataException {
+        lsmHarness.updateFilter(ctx, tuple);
+    }
+
+    @Override
     public void scanDiskComponents(IIndexCursor cursor) throws HyracksDataException {
         throw HyracksDataException.create(ErrorCode.DISK_COMPONENT_SCAN_NOT_ALLOWED_FOR_SECONDARY_INDEX);
     }

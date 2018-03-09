@@ -198,22 +198,11 @@ public class DiskBTree extends BTree {
         return new DiskBTreeAccessor(this, iap.getModificationCallback(), iap.getSearchOperationCallback());
     }
 
-    @Override
-    public DiskBTreeAccessor createAccessor(IModificationOperationCallback modificationCallback,
-            ISearchOperationCallback searchCallback, int[] logTupleFields) {
-        return new DiskBTreeAccessor(this, modificationCallback, searchCallback, logTupleFields);
-    }
-
     public class DiskBTreeAccessor extends BTreeAccessor {
 
         public DiskBTreeAccessor(DiskBTree btree, IModificationOperationCallback modificationCalback,
                 ISearchOperationCallback searchCallback) {
             super(btree, modificationCalback, searchCallback);
-        }
-
-        public DiskBTreeAccessor(DiskBTree btree, IModificationOperationCallback modificationCalback,
-                ISearchOperationCallback searchCallback, int[] logTupleFields) {
-            super(btree, modificationCalback, searchCallback, logTupleFields);
         }
 
         @Override

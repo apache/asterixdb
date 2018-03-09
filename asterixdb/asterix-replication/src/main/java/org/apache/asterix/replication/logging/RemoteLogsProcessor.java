@@ -53,6 +53,7 @@ public class RemoteLogsProcessor implements ILogRequester {
             switch (reusableLog.getLogType()) {
                 case LogType.UPDATE:
                 case LogType.ENTITY_COMMIT:
+                case LogType.FILTER:
                     logManager.log(reusableLog);
                     break;
                 case LogType.JOB_COMMIT:

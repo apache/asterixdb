@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
@@ -45,6 +46,8 @@ public class TestLSMIndexOperationContext implements ILSMIndexOperationContext {
     private IndexOperation op;
     private LSMIOOperationType ioOperationType;
     private ILSMDiskComponent newComponent;
+    private boolean filterSkip = false;
+    private boolean isRecovery = false;
 
     public TestLSMIndexOperationContext(ILSMIndex index) {
         this.index = index;
@@ -89,7 +92,7 @@ public class TestLSMIndexOperationContext implements ILSMIndexOperationContext {
     }
 
     @Override
-    public IModificationOperationCallback getModificationCallback() {
+    public IExtendedModificationOperationCallback getModificationCallback() {
         return NoOpOperationCallback.INSTANCE;
     }
 
@@ -153,6 +156,27 @@ public class TestLSMIndexOperationContext implements ILSMIndexOperationContext {
     @Override
     public boolean isTracingEnabled() {
         return false;
+    }
+
+    @Override
+    public boolean isFilterSkipped() {
+        return filterSkip;
+    }
+
+    @Override
+    public void setFilterSkip(boolean skip) {
+        this.filterSkip = skip;
+    }
+
+    @Override
+    public boolean isRecovery() {
+        return isRecovery;
+    }
+
+    @Override
+    public void setRecovery(boolean recovery) {
+        this.isRecovery = recovery;
+
     }
 
     @Override

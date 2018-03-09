@@ -29,6 +29,7 @@ import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.AbstractOperationCallbackTest;
 import org.apache.hyracks.storage.am.common.api.IBTreeIndexTupleReference;
+import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
@@ -153,7 +154,7 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
         test((IIndexAccessor a) -> a.upsert(tuple), (IIndexAccessor a) -> a.upsert(tuple));
     }
 
-    private class VerifyingUpdateModificationCallback implements IModificationOperationCallback {
+    private class VerifyingUpdateModificationCallback implements IExtendedModificationOperationCallback {
 
         private final ITupleReference tuple;
 
@@ -175,6 +176,11 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
                 Assert.assertEquals(isUpdated, ((IBTreeIndexTupleReference) before).isUpdated());
             }
             Assert.assertEquals(0, cmp.compare(this.tuple, after));
+        }
+
+        @Override
+        public void after(ITupleReference tuple) {
+            //Nothing to do there, not testing filters
         }
     }
 
