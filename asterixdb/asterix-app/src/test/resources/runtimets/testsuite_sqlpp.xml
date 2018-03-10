@@ -3022,8 +3022,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
-      <compilation-unit name="btree-primary-to-secondary-indexonly-plan-equi-join_01">
-        <output-dir compare="Text">btree-primary-to-secondary-indexonly-plan-equi-join_01</output-dir>
+      <compilation-unit name="btree-pidx-to-sidx-idxonly-equi-join_01">
+        <output-dir compare="Text">btree-pidx-to-sidx-idxonly-equi-join_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
@@ -3047,23 +3047,23 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
-      <compilation-unit name="btree-secondary-indexonly-plan-to-primary-equi-join_01">
-        <output-dir compare="Text">btree-secondary-indexonly-plan-to-primary-equi-join_01</output-dir>
+      <compilation-unit name="btree-sidx-idxonly-to-pidx-equi-join_01">
+        <output-dir compare="Text">btree-sidx-idxonly-to-pidx-equi-join_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
-      <compilation-unit name="btree-secondary-indexonly-plan-to-secondary-indexonly-plan-equi-join_01">
-        <output-dir compare="Text">btree-secondary-indexonly-plan-to-secondary-indexonly-plan-equi-join_01</output-dir>
+      <compilation-unit name="btree-sidx-idxonly-to-sidx-idxonly-equi-join_01">
+        <output-dir compare="Text">btree-sidx-idxonly-to-sidx-idxonly-equi-join_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
-      <compilation-unit name="btree-secondary-non-indexonly-plan-to-primary-equi-join_01">
-        <output-dir compare="Text">btree-secondary-non-indexonly-plan-to-primary-equi-join_01</output-dir>
+      <compilation-unit name="btree-sidx-non-idxonly-to-pidx-equi-join_01">
+        <output-dir compare="Text">btree-sidx-non-idxonly-to-pidx-equi-join_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
-      <compilation-unit name="btree-secondary-non-indexonly-plan-to-secondary-indexonly-plan-equi-join_01">
-        <output-dir compare="Text">btree-secondary-non-indexonly-plan-to-secondary-indexonly-plan-equi-join_01</output-dir>
+      <compilation-unit name="btree-sidx-non-idxonly-to-sidx-idxonly-equi-join_01">
+        <output-dir compare="Text">btree-sidx-non-idxonly-to-sidx-idxonly-equi-join_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
@@ -3134,28 +3134,28 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
-      <compilation-unit name="btree-secondary-composite-index-indexonly-plan-01">
-        <output-dir compare="Text">btree-secondary-composite-index-indexonly-plan-01</output-dir>
+      <compilation-unit name="btree-sidx-composite-idxonly-01">
+        <output-dir compare="Text">btree-sidx-composite-idxonly-01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
-      <compilation-unit name="btree-secondary-composite-index-indexonly-plan-02">
-        <output-dir compare="Text">btree-secondary-composite-index-indexonly-plan-02</output-dir>
+      <compilation-unit name="btree-sidx-composite-idxonly-02">
+        <output-dir compare="Text">btree-sidx-composite-idxonly-02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
-      <compilation-unit name="btree-secondary-composite-index-indexonly-plan-03">
-        <output-dir compare="Text">btree-secondary-composite-index-indexonly-plan-03</output-dir>
+      <compilation-unit name="btree-sidx-composite-idxonly-03">
+        <output-dir compare="Text">btree-sidx-composite-idxonly-03</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
-      <compilation-unit name="btree-secondary-index-indexonly-plan-01">
-        <output-dir compare="Text">btree-secondary-index-indexonly-plan-01</output-dir>
+      <compilation-unit name="btree-sidx-idxonly-01">
+        <output-dir compare="Text">btree-sidx-idxonly-01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
-      <compilation-unit name="btree-secondary-index-non-indexonly-plan-01">
-        <output-dir compare="Text">btree-secondary-index-non-indexonly-plan-01</output-dir>
+      <compilation-unit name="btree-sidx-non-idxonly-01">
+        <output-dir compare="Text">btree-sidx-non-idxonly-01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -3279,18 +3279,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
-      <compilation-unit name="rtree-secondary-index-indexonly-plan-01">
-        <output-dir compare="Text">rtree-secondary-index-indexonly-plan-01</output-dir>
+      <compilation-unit name="rtree-sidx-idxonly-01">
+        <output-dir compare="Text">rtree-sidx-idxonly-01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
-      <compilation-unit name="rtree-secondary-index-non-indexonly-plan-01">
-        <output-dir compare="Text">rtree-secondary-index-non-indexonly-plan-01</output-dir>
+      <compilation-unit name="rtree-sidx-non-idxonly-01">
+        <output-dir compare="Text">rtree-sidx-non-idxonly-01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
-      <compilation-unit name="rtree-secondary-index-non-indexonly-plan-02">
-        <output-dir compare="Text">rtree-secondary-index-non-indexonly-plan-02</output-dir>
+      <compilation-unit name="rtree-sidx-non-idxonly-02">
+        <output-dir compare="Text">rtree-sidx-non-idxonly-02</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -8949,8 +8949,8 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-pidx-with-join-btree-sidx3-indexonly-plan">
-        <output-dir compare="Text">probe-pidx-with-join-btree-sidx3-indexonly-plan</output-dir>
+      <compilation-unit name="probe-pidx-join-btree-sidx3-idxonly">
+        <output-dir compare="Text">probe-pidx-join-btree-sidx3-idxonly</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-leftouterjoin">
@@ -8974,23 +8974,23 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-sidx-btree-indexonly-plan-with-join-btree-pidx1">
-        <output-dir compare="Text">probe-sidx-btree-indexonly-plan-with-join-btree-pidx1</output-dir>
+      <compilation-unit name="probe-sidx-btree-idxonly-join-btree-pidx1">
+        <output-dir compare="Text">probe-sidx-btree-idxonly-join-btree-pidx1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-sidx-btree-indexonly-plan-with-join-btree-sidx1-indexonly-plan">
-        <output-dir compare="Text">probe-sidx-btree-indexonly-plan-with-join-btree-sidx1-indexonly-plan</output-dir>
+      <compilation-unit name="probe-sidx-btree-idxonly-join-btree-sidx1-idxonly">
+        <output-dir compare="Text">probe-sidx-btree-idxonly-join-btree-sidx1-idxonly</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-sidx-btree-non-indexonly-plan-with-join-btree-pidx1">
-        <output-dir compare="Text">probe-sidx-btree-non-indexonly-plan-with-join-btree-pidx1</output-dir>
+      <compilation-unit name="probe-sidx-btree-non-idxonly-join-btree-pidx1">
+        <output-dir compare="Text">probe-sidx-btree-non-idxonly-join-btree-pidx1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-leftouterjoin">
-      <compilation-unit name="probe-sidx-btree-non-indexonly-plan-with-join-btree-sidx1-indexonly-plan">
-        <output-dir compare="Text">probe-sidx-btree-non-indexonly-plan-with-join-btree-sidx1-indexonly-plan</output-dir>
+      <compilation-unit name="probe-sidx-btree-non-idxonly-join-btree-sidx1-idxonly">
+        <output-dir compare="Text">probe-sidx-btree-non-idxonly-join-btree-sidx1-idxonly</output-dir>
       </compilation-unit>
     </test-case>
 
