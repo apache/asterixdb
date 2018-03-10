@@ -382,6 +382,11 @@ public class ClusterControllerService implements IControllerService {
         return executor;
     }
 
+    @Override
+    public Timer getTimer() {
+        return timer;
+    }
+
     public CCConfig getConfig() {
         return ccConfig;
     }

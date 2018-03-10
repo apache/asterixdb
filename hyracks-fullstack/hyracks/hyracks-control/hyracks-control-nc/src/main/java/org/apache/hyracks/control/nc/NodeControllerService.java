@@ -625,6 +625,11 @@ public class NodeControllerService implements IControllerService {
         return executor;
     }
 
+    @Override
+    public Timer getTimer() {
+        return timer;
+    }
+
     public NCConfig getConfiguration() {
         return ncConfig;
     }

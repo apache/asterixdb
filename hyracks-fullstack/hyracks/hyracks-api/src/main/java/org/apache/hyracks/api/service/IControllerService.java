@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.service;
 
+import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.application.IServiceContext;
@@ -30,6 +31,8 @@ public interface IControllerService {
     IServiceContext getContext();
 
     ExecutorService getExecutor();
+
+    Timer getTimer();
 
     Object getApplicationContext();
 }
