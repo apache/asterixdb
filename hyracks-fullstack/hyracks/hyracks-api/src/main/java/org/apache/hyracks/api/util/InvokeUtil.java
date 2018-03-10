@@ -24,6 +24,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.IOInterruptibleAction;
+import org.apache.hyracks.util.InterruptibleAction;
+import org.apache.hyracks.util.ThrowingAction;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -230,20 +233,5 @@ public class InvokeUtil {
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    @FunctionalInterface
-    public interface InterruptibleAction {
-        void run() throws InterruptedException;
-    }
-
-    @FunctionalInterface
-    public interface ThrowingAction {
-        void run() throws Exception; // NOSONAR
-    }
-
-    @FunctionalInterface
-    public interface IOInterruptibleAction {
-        void run() throws IOException, InterruptedException;
     }
 }

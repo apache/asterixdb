@@ -24,7 +24,7 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IAsyncRequest;
 import org.apache.hyracks.api.io.IFileHandle;
-import org.apache.hyracks.api.util.InvokeUtil.InterruptibleAction;
+import org.apache.hyracks.util.InterruptibleAction;
 
 public class IoRequest implements IAsyncRequest, InterruptibleAction {
 

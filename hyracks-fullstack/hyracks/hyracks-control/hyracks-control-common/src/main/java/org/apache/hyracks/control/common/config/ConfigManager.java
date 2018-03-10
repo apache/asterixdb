@@ -31,6 +31,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -69,27 +70,32 @@ public class ConfigManager implements IConfigManager, Serializable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private HashSet<IOption> registeredOptions = new HashSet<>();
-    private HashMap<IOption, Object> definedMap = new HashMap<>();
-    private HashMap<IOption, Object> defaultMap = new HashMap<>();
-    private CompositeMap<IOption, Object> configurationMap =
-            new CompositeMap<>(definedMap, defaultMap, new NoOpMapMutator());
+    @SuppressWarnings("squid:S1948") // HashMap is serializable, and therefore so is its synchronized map
+    private Map<IOption, Object> definedMap = Collections.synchronizedMap(new HashMap<>());
+    @SuppressWarnings("squid:S1948") // HashMap is serializable, and therefore so is its synchronized map
+    private Map<IOption, Object> defaultMap = Collections.synchronizedMap(new HashMap<>());
+    @SuppressWarnings("squid:S1948") // CompositeMap and his encapsulated maps are serializable, therefore so is this
+    private Map<IOption, Object> configurationMap =
+            Collections.synchronizedMap(new CompositeMap<>(definedMap, defaultMap, new NoOpMapMutator()));
     private EnumMap<Section, Map<String, IOption>> sectionMap = new EnumMap<>(Section.class);
     @SuppressWarnings("squid:S1948") // TreeMap is serializable, and therefore so is its synchronized map
     private Map<String, Map<IOption, Object>> nodeSpecificDefinedMap = Collections.synchronizedMap(new TreeMap<>());
     @SuppressWarnings("squid:S1948") // TreeMap is serializable, and therefore so is its synchronized map
     private Map<String, Map<IOption, Object>> nodeSpecificDefaultMap = Collections.synchronizedMap(new TreeMap<>());
+    @SuppressWarnings("squid:S1948") // TreeMap is serializable, and therefore so is its synchronized map
+    private Map<String, Map<IOption, Object>> nodeEffectiveMaps = Collections.synchronizedMap(new HashMap<>());
     private transient ArrayListValuedHashMap<IOption, IConfigSetter> optionSetters = new ArrayListValuedHashMap<>();
     private final String[] args;
     private ConfigManagerApplicationConfig appConfig = new ConfigManagerApplicationConfig(this);
     private Set<String> allSections = new HashSet<>();
     private transient Collection<Consumer<List<String>>> argListeners = new ArrayList<>();
     private transient Collection<IOption> iniPointerOptions = new ArrayList<>();
-    private transient Collection<Section> cmdLineSections = new ArrayList<>();;
+    private transient Collection<Section> cmdLineSections = new ArrayList<>();
     private transient OptionHandlerFilter usageFilter;
     private transient SortedMap<Integer, List<IConfigurator>> configurators = new TreeMap<>();
     private boolean configured;
     private String versionString = "version undefined";
-    private transient Map<String, Set<Map.Entry<String, String>>> extensionOptions = new TreeMap();
+    private transient Map<String, Set<Map.Entry<String, String>>> extensionOptions = new TreeMap<>();
 
     public ConfigManager() {
         this(null);
@@ -171,15 +177,28 @@ public class ConfigManager implements IConfigManager, Serializable {
         if (node == null) {
             return isDefault ? defaultMap : definedMap;
         } else {
-            ensureNode(node);
-            return isDefault ? nodeSpecificDefaultMap.get(node) : nodeSpecificDefinedMap.get(node);
+            synchronized (this) {
+                ensureNode(node);
+                return isDefault ? nodeSpecificDefaultMap.get(node) : nodeSpecificDefinedMap.get(node);
+            }
         }
     }
 
-    public void ensureNode(String nodeId) {
+    public synchronized void ensureNode(String nodeId) {
         LOGGER.debug("ensureNode: " + nodeId);
-        nodeSpecificDefinedMap.computeIfAbsent(nodeId, this::createNodeSpecificMap);
-        nodeSpecificDefaultMap.computeIfAbsent(nodeId, this::createNodeSpecificMap);
+        Map<IOption, Object> nodeDefinedMap =
+                nodeSpecificDefinedMap.computeIfAbsent(nodeId, this::createNodeSpecificMap);
+        Map<IOption, Object> nodeDefaultMap =
+                nodeSpecificDefaultMap.computeIfAbsent(nodeId, this::createNodeSpecificMap);
+        nodeEffectiveMaps.computeIfAbsent(nodeId, id -> Collections
+                .synchronizedMap(compositeFrom(Stream.of(nodeDefinedMap, nodeDefaultMap, definedMap))));
+    }
+
+    public synchronized void forgetNode(String nodeId) {
+        LOGGER.debug("forgetNode: " + nodeId);
+        nodeSpecificDefinedMap.remove(nodeId);
+        nodeSpecificDefaultMap.remove(nodeId);
+        nodeEffectiveMaps.remove(nodeId);
     }
 
     private Map<IOption, Object> createNodeSpecificMap(String nodeId) {
@@ -236,7 +255,7 @@ public class ConfigManager implements IConfigManager, Serializable {
         invokeSetters(option, option.type().parse(String.valueOf(value)), null);
     }
 
-    private void invokeSetters(IOption option, Object value, String nodeId) {
+    private synchronized void invokeSetters(IOption option, Object value, String nodeId) {
         optionSetters.get(option).forEach(setter -> setter.set(nodeId, value, false));
     }
 
@@ -369,7 +388,7 @@ public class ConfigManager implements IConfigManager, Serializable {
         });
     }
 
-    private Object getOrDefault(Map<IOption, Object> map, IOption option, String nodeId) {
+    private synchronized Object getOrDefault(Map<IOption, Object> map, IOption option, String nodeId) {
         if (map.containsKey(option)) {
             return map.get(option);
         } else {
@@ -426,7 +445,7 @@ public class ConfigManager implements IConfigManager, Serializable {
 
     @Override
     public Set<IOption> getOptions(Section section) {
-        return getSectionOptionMap(section).values().stream().collect(Collectors.toSet());
+        return new HashSet<>(getSectionOptionMap(section).values());
     }
 
     private Map<String, IOption> getSectionOptionMap(Section section) {
@@ -438,7 +457,7 @@ public class ConfigManager implements IConfigManager, Serializable {
         return Collections.unmodifiableList(new ArrayList<>(nodeSpecificDefinedMap.keySet()));
     }
 
-    public IApplicationConfig getNodeEffectiveConfig(String nodeId) {
+    public synchronized IApplicationConfig getNodeEffectiveConfig(String nodeId) {
         ensureNode(nodeId);
         final Map<IOption, Object> nodeMap = nodeSpecificDefaultMap.get(nodeId);
         Map<IOption, Object> nodeEffectiveMap = getNodeEffectiveMap(nodeId);
@@ -454,15 +473,22 @@ public class ConfigManager implements IConfigManager, Serializable {
         };
     }
 
-    private Map<IOption, Object> getNodeEffectiveMap(String nodeId) {
+    private synchronized Map<IOption, Object> getNodeEffectiveMap(String nodeId) {
         ensureNode(nodeId);
-        return new CompositeMap<>(
-                Stream.of(nodeSpecificDefinedMap.get(nodeId), nodeSpecificDefaultMap.get(nodeId), definedMap)
-                        .toArray(Map[]::new),
-                new NoOpMapMutator());
+        return nodeEffectiveMaps.get(nodeId);
     }
 
-    public Ini toIni(boolean includeDefaults) {
+    private synchronized CompositeMap<IOption, Object> compositeFrom(Stream<Map<IOption, Object>> stream) {
+        List<Map<IOption, Object>> list = stream.collect(Collectors.toList());
+        CompositeMap<IOption, Object> map = new CompositeMap<>();
+        map.setMutator(new NoOpMapMutator());
+        for (ListIterator<Map<IOption, Object>> iter = list.listIterator(list.size()); iter.hasPrevious();) {
+            map.addComposited(iter.previous());
+        }
+        return map;
+    }
+
+    public synchronized Ini toIni(boolean includeDefaults) {
         Ini ini = new Ini();
         (includeDefaults ? configurationMap : definedMap).forEach((option, value) -> {
             if (value != null) {
@@ -474,12 +500,10 @@ public class ConfigManager implements IConfigManager, Serializable {
             ensureNode(key);
             Map<IOption, Object> nodeValueMap =
                     includeDefaults ? getNodeEffectiveMap(key) : nodeSpecificDefinedMap.get(key);
-            synchronized (nodeValueMap) {
-                for (Map.Entry<IOption, Object> entry : nodeValueMap.entrySet()) {
-                    if (entry.getValue() != null) {
-                        final IOption option = entry.getKey();
-                        ini.add(section, option.ini(), option.type().serializeToIni(entry.getValue()));
-                    }
+            for (Map.Entry<IOption, Object> entry : nodeValueMap.entrySet()) {
+                if (entry.getValue() != null) {
+                    final IOption option = entry.getKey();
+                    ini.add(section, option.ini(), option.type().serializeToIni(entry.getValue()));
                 }
             }
         }
@@ -492,7 +516,7 @@ public class ConfigManager implements IConfigManager, Serializable {
         set(null, option, value);
     }
 
-    public void set(String nodeId, IOption option, Object value) {
+    public synchronized void set(String nodeId, IOption option, Object value) {
         invokeSetters(option, copyIfArray(value), nodeId);
     }
 
