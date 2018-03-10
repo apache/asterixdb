@@ -369,7 +369,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         AbstractLSMIndexOperationContext opCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
         opCtx.setOperation(ctx.getOperation());
         opCtx.getComponentHolder().addAll(mergingComponents);
-        opCtx.getComponentsToBeMerged().addAll(ctx.getComponentsToBeMerged());
+        mergingComponents.stream().map(ILSMDiskComponent.class::cast).forEach(opCtx.getComponentsToBeMerged()::add);
         ILSMDiskComponent firstComponent = (ILSMDiskComponent) mergingComponents.get(0);
         ILSMDiskComponent lastComponent = (ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1);
         LSMComponentFileReferences mergeFileRefs = getMergeFileReferences(firstComponent, lastComponent);
