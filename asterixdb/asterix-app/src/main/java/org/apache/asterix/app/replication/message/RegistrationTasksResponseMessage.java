@@ -28,7 +28,6 @@ import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
-import org.apache.hyracks.control.nc.NCShutdownHook;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -80,7 +79,7 @@ public class RegistrationTasksResponseMessage extends CcIdentifiedMessage
         } finally {
             if (!success) {
                 // stop NC so that it can be started again
-                ExitUtil.exit(NCShutdownHook.FAILED_TO_STARTUP_EXIT_CODE);
+                ExitUtil.exit(ExitUtil.EC_FAILED_TO_STARTUP);
             }
         }
     }

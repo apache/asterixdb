@@ -19,6 +19,9 @@
 
 package org.apache.hyracks.control.cc.work;
 
+import static org.apache.hyracks.util.ExitUtil.EC_ABNORMAL_TERMINATION;
+import static org.apache.hyracks.util.ExitUtil.EC_NORMAL_TERMINATION;
+
 import java.util.Collection;
 
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -82,7 +85,7 @@ public class ClusterShutdownWork extends SynchronizableWork {
                     }
                     callback.setValue(cleanShutdown);
                     ccs.stop(terminateNCService);
-                    ExitUtil.exit(cleanShutdown ? 0 : 1);
+                    ExitUtil.exit(cleanShutdown ? EC_NORMAL_TERMINATION : EC_ABNORMAL_TERMINATION);
                 } catch (Exception e) {
                     callback.setException(e);
                 }

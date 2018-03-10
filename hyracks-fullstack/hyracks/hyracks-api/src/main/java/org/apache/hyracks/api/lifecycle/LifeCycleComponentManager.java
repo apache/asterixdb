@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.api.lifecycle;
 
+import static org.apache.hyracks.util.ExitUtil.EC_UNHANDLED_EXCEPTION;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -57,7 +59,7 @@ public class LifeCycleComponentManager implements ILifeCycleComponentManager {
         try {
             LOGGER.log(Level.ERROR, "Uncaught Exception from thread " + t.getName() + ". Calling shutdown hook", e);
         } finally {
-            ExitUtil.exit(99);
+            ExitUtil.exit(EC_UNHANDLED_EXCEPTION);
         }
     }
 

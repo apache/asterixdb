@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.util;
 
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,10 +29,26 @@ public class ExitUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ExitThread exitThread = new ExitThread();
+    public static final int EC_NORMAL_TERMINATION = 0;
+    public static final int EC_ABNORMAL_TERMINATION = 1;
+    public static final int EC_FAILED_TO_STARTUP = 2;
+    public static final int EC_FAILED_TO_RECOVER = 3;
+    public static final int EC_UNHANDLED_EXCEPTION = 11;
+    public static final int EC_IMMEDIATE_HALT = 33;
+    public static final int EC_HALT_ABNORMAL_RESERVED_44 = 44;
+    public static final int EC_HALT_ABNORMAL_RESERVED_55 = 55;
+    public static final int EC_HALT_SHUTDOWN_TIMED_OUT = 66;
+    public static final int EC_HALT_WATCHDOG_FAILED = 77;
+    public static final int EC_HALT_ABNORMAL_RESERVED_88 = 88;
+    public static final int EC_TERMINATE_NC_SERVICE_DIRECTIVE = 99;
 
-    public static final int EXIT_CODE_SHUTDOWN_TIMED_OUT = 66;
-    public static final int EXIT_CODE_WATCHDOG_FAILED = 77;
+    private static final ExitThread exitThread = new ExitThread();
+    private static final ShutdownWatchdog watchdogThread = new ShutdownWatchdog();
+    private static final MutableLong shutdownHaltDelay = new MutableLong(10 * 60 * 1000L); // 10 minutes default
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(watchdogThread::start));
+    }
 
     private ExitUtil() {
     }
@@ -39,8 +58,20 @@ public class ExitUtil {
     }
 
     public static void exit(int status) {
-        exitThread.setStatus(status);
-        exitThread.start();
+        synchronized (exitThread) {
+            if (exitThread.isAlive()) {
+                LOGGER.warn("ignoring duplicate request to exit with status " + status
+                        + "; already exiting with status " + exitThread.status + "...");
+            } else {
+                exitThread.setStatus(status);
+                exitThread.start();
+            }
+        }
+    }
+
+    public static void exit(int status, long timeBeforeHalt, TimeUnit timeBeforeHaltUnit) {
+        shutdownHaltDelay.setValue(timeBeforeHaltUnit.toMillis(timeBeforeHalt));
+        exit(status);
     }
 
     @SuppressWarnings("squid:S2142") // catch interrupted
@@ -53,6 +84,30 @@ public class ExitUtil {
             // ignore
         }
         Runtime.getRuntime().halt(status);
+    }
+
+    private static class ShutdownWatchdog extends Thread {
+
+        private ShutdownWatchdog() {
+            super("ShutdownWatchdog");
+            setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            try {
+                exitThread.join(shutdownHaltDelay.getValue()); // 10 min
+                if (exitThread.isAlive()) {
+                    try {
+                        LOGGER.info("Watchdog is angry. Killing shutdown hook");
+                    } finally {
+                        ExitUtil.halt(EC_HALT_SHUTDOWN_TIMED_OUT);
+                    }
+                }
+            } catch (Throwable th) { // NOSONAR must catch them all
+                ExitUtil.halt(EC_HALT_WATCHDOG_FAILED);
+            }
+        }
     }
 
     private static class ExitThread extends Thread {

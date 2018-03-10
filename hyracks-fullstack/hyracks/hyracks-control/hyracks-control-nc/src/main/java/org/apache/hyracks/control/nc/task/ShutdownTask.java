@@ -19,6 +19,9 @@
 
 package org.apache.hyracks.control.nc.task;
 
+import static org.apache.hyracks.util.ExitUtil.EC_NORMAL_TERMINATION;
+import static org.apache.hyracks.util.ExitUtil.EC_TERMINATE_NC_SERVICE_DIRECTIVE;
+
 import org.apache.hyracks.util.ExitUtil;
 
 public class ShutdownTask implements Runnable {
@@ -30,7 +33,7 @@ public class ShutdownTask implements Runnable {
 
     @Override
     public void run() {
-        ExitUtil.exit(terminateNCService ? 99 : 0);
+        ExitUtil.exit(terminateNCService ? EC_TERMINATE_NC_SERVICE_DIRECTIVE : EC_NORMAL_TERMINATION);
     }
 
 }

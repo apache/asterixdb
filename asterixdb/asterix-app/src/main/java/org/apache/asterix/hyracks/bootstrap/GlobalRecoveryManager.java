@@ -46,7 +46,6 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.control.nc.NCShutdownHook;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -99,7 +98,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                             recover(appCtx);
                         } catch (HyracksDataException e) {
                             LOGGER.log(Level.ERROR, "Global recovery failed. Shutting down...", e);
-                            ExitUtil.exit(NCShutdownHook.FAILED_TO_RECOVER_EXIT_CODE);
+                            ExitUtil.exit(ExitUtil.EC_FAILED_TO_RECOVER);
                         }
                     });
                 }
