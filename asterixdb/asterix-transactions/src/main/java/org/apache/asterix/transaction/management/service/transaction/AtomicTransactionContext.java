@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
@@ -57,16 +57,6 @@ public class AtomicTransactionContext extends AbstractTransactionContext {
     }
 
     @Override
-    public void notifyUpdateCommitted(long resourceId) {
-        try {
-            opTrackers.get(resourceId).completeOperation(null, LSMOperationType.MODIFICATION, null,
-                    callbacks.get(resourceId));
-        } catch (HyracksDataException e) {
-            throw new ACIDException(e);
-        }
-    }
-
-    @Override
     public void notifyEntityCommitted(int partition) {
         throw new IllegalStateException("Unexpected entity commit in atomic transaction");
     }
@@ -82,10 +72,26 @@ public class AtomicTransactionContext extends AbstractTransactionContext {
     }
 
     @Override
-    public void cleanupForAbort() {
-        // each opTracker should be cleaned
-        opTrackers.forEach((resId, opTracker) -> ((PrimaryIndexOperationTracker) opTracker)
-                .cleanupNumActiveOperationsForAbortedJob(indexPendingOps.get(resId).get()));
+    public void cleanup() {
+        switch (getTxnState()) {
+            case ITransactionManager.ABORTED:
+            case ITransactionManager.COMMITTED:
+                for (Map.Entry<Long, ILSMOperationTracker> opTracker : opTrackers.entrySet()) {
+                    try {
+                        final long resId = opTracker.getKey();
+                        final int idxPendingOps = indexPendingOps.get(resId).intValue();
+                        for (int i = 0; i < idxPendingOps; i++) {
+                            opTracker.getValue().completeOperation(null, LSMOperationType.FORCE_MODIFICATION, null,
+                                    callbacks.get(resId));
+                        }
+                    } catch (HyracksDataException e) {
+                        throw new ACIDException(e);
+                    }
+                }
+                break;
+            default:
+                throw new IllegalStateException("invalid state in txn clean up: " + getTxnState());
+        }
     }
 
     @Override

@@ -23,9 +23,8 @@ import org.apache.hyracks.storage.common.IModificationOperationCallback;
 
 /**
  * A typical transaction lifecycle goes through the following steps:
- * 1. {@link ITransactionContext#register(long, ILSMIndex, IModificationOperationCallback, boolean)}
+ * 1. {@link ITransactionContext#register(long, int, ILSMIndex, IModificationOperationCallback, boolean)}
  * 2. {@link ITransactionContext#beforeOperation(long)}
- * 3. {@link ITransactionContext#notifyUpdateCommitted(long)}
  * 4. {@link ITransactionContext#notifyEntityCommitted}
  * 5. {@link ITransactionContext#afterOperation(long)}
  * 6. {@link ITransactionContext#complete()}
@@ -123,15 +122,6 @@ public interface ITransactionContext {
      * @param resourceId
      */
     void beforeOperation(long resourceId);
-
-    /**
-     * Called to notify the transaction that an update log belonging
-     * to this transaction on index with {@code resourceId} has been
-     * flushed to disk.
-     *
-     * @param resourceId
-     */
-    void notifyUpdateCommitted(long resourceId);
 
     /**
      * Called to notify the transaction that an entity commit

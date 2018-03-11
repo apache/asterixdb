@@ -19,8 +19,10 @@
 package org.apache.asterix.test.metadata;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -31,19 +33,25 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
+import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
+import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
+import org.apache.hyracks.test.support.TestUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -243,6 +251,68 @@ public class MetadataTxnTest {
         } finally {
             MetadataManager.INSTANCE.commitTransaction(readMdTxn);
         }
+    }
+
+    @Test
+    public void failedFlushOnUncommittedMetadataTxn() throws Exception {
+        ICcApplicationContext ccAppCtx =
+                (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
+        final MetadataProvider metadataProvider = new MetadataProvider(ccAppCtx, null);
+        final MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxn);
+        final String nodeGroupName = "ng";
+        try {
+            final List<String> ngNodes = Collections.singletonList("asterix_nc1");
+            MetadataManager.INSTANCE.addNodegroup(mdTxn, new NodeGroup(nodeGroupName, ngNodes));
+            MetadataManager.INSTANCE.commitTransaction(mdTxn);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+        INcApplicationContext appCtx = (INcApplicationContext) integrationUtil.ncs[0].getApplicationContext();
+        IDatasetLifecycleManager dlcm = appCtx.getDatasetLifecycleManager();
+        dlcm.flushAllDatasets();
+        IMetadataIndex idx = MetadataPrimaryIndexes.NODEGROUP_DATASET;
+        DatasetInfo datasetInfo = dlcm.getDatasetInfo(idx.getDatasetId().getId());
+        AbstractLSMIndex index = (AbstractLSMIndex) appCtx.getDatasetLifecycleManager()
+                .getIndex(idx.getDatasetId().getId(), idx.getResourceId());
+        PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) index.getOperationTracker();
+        final MetadataTransactionContext mdTxn2 = MetadataManager.INSTANCE.beginTransaction();
+        int mutableComponentBeforeFlush = index.getCurrentMemoryComponentIndex();
+        int diskComponentsBeforeFlush = index.getDiskComponents().size();
+        // lock opTracker to prevent log flusher from triggering flush
+        synchronized (opTracker) {
+            opTracker.setFlushOnExit(true);
+            opTracker.flushIfNeeded();
+            Assert.assertTrue(opTracker.isFlushLogCreated());
+            metadataProvider.setMetadataTxnContext(mdTxn2);
+            // make sure force operation will processed
+            MetadataManager.INSTANCE.dropNodegroup(mdTxn2, nodeGroupName, false);
+            Assert.assertEquals(1, opTracker.getNumActiveOperations());
+            Assert.assertFalse(index.hasFlushRequestForCurrentMutableComponent());
+            // release opTracker lock now to allow log flusher to schedule the flush
+            InvokeUtil.runWithTimeout(() -> {
+                synchronized (opTracker) {
+                    opTracker.wait(1000);
+                }
+            }, () -> !opTracker.isFlushLogCreated(), 10, TimeUnit.SECONDS);
+        }
+        // ensure flush failed to be scheduled
+        datasetInfo.waitForIO();
+        Assert.assertEquals(mutableComponentBeforeFlush, index.getCurrentMemoryComponentIndex());
+        Assert.assertEquals(diskComponentsBeforeFlush, index.getDiskComponents().size());
+        // after committing, the flush should be scheduled successfully
+        opTracker.setFlushOnExit(true);
+        MetadataManager.INSTANCE.commitTransaction(mdTxn2);
+        metadataProvider.getLocks().unlock();
+        InvokeUtil.runWithTimeout(() -> {
+            synchronized (opTracker) {
+                opTracker.wait(1000);
+            }
+        }, () -> !opTracker.isFlushLogCreated(), 10, TimeUnit.SECONDS);
+        // ensure flush completed successfully and the component was switched
+        datasetInfo.waitForIO();
+        Assert.assertNotEquals(mutableComponentBeforeFlush, index.getCurrentMemoryComponentIndex());
+        Assert.assertEquals(diskComponentsBeforeFlush + 1, index.getDiskComponents().size());
     }
 
     private void addDataset(ICcApplicationContext appCtx, Dataset source, int datasetPostfix, boolean abort)

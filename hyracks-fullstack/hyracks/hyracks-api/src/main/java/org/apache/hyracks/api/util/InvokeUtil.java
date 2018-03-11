@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.BooleanSupplier;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.IOInterruptibleAction;
@@ -232,6 +234,22 @@ public class InvokeUtil {
             if (interrupted) {
                 Thread.currentThread().interrupt();
             }
+        }
+    }
+
+    /**
+     * Runs the supplied {@code action} until {@code stopCondition} is met or timeout.
+     */
+    public static void runWithTimeout(ThrowingAction action, BooleanSupplier stopCondition, long timeout, TimeUnit unit)
+            throws Exception {
+        long remainingTime = unit.toNanos(timeout);
+        final long startTime = System.nanoTime();
+        while (!stopCondition.getAsBoolean()) {
+            if (remainingTime <= 0) {
+                throw new TimeoutException("Stop condition was not met after " + unit.toSeconds(timeout) + " seconds.");
+            }
+            action.run();
+            remainingTime -= System.nanoTime() - startTime;
         }
     }
 }

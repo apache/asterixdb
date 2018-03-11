@@ -20,11 +20,11 @@ package org.apache.asterix.transaction.management.service.transaction;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -56,8 +56,7 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
             resourcePendingOps.put(resourceId, pendingOps);
             if (primaryIndex) {
                 Pair<PrimaryIndexOperationTracker, IModificationOperationCallback> pair =
-                        new Pair<PrimaryIndexOperationTracker, IModificationOperationCallback>(
-                                (PrimaryIndexOperationTracker) index.getOperationTracker(), callback);
+                        new Pair<>((PrimaryIndexOperationTracker) index.getOperationTracker(), callback);
                 primaryIndexTrackers.put(partition, pair);
             }
         }
@@ -66,11 +65,6 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
     @Override
     public void beforeOperation(long resourceId) {
         resourcePendingOps.get(resourceId).incrementAndGet();
-    }
-
-    @Override
-    public void notifyUpdateCommitted(long resourceId) {
-        // no op
     }
 
     @Override
@@ -90,11 +84,18 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
     }
 
     @Override
-    protected void cleanupForAbort() {
-        for (Entry<Integer, Pair<PrimaryIndexOperationTracker, IModificationOperationCallback>> e : primaryIndexTrackers
-                .entrySet()) {
-            AtomicInteger pendingOps = partitionPendingOps.get(e.getKey());
-            e.getValue().first.cleanupNumActiveOperationsForAbortedJob(pendingOps.get());
+    protected void cleanup() {
+        if (getTxnState() == ITransactionManager.ABORTED) {
+            primaryIndexTrackers.forEach((partitionId, opTracker) -> {
+                int pendingOps = partitionPendingOps.get(partitionId).intValue();
+                for (int i = 0; i < pendingOps; i++) {
+                    try {
+                        opTracker.first.completeOperation(null, LSMOperationType.MODIFICATION, null, opTracker.second);
+                    } catch (HyracksDataException ex) {
+                        throw new ACIDException(ex);
+                    }
+                }
+            });
         }
     }
 

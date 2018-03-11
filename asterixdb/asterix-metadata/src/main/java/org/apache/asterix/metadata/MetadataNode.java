@@ -490,19 +490,17 @@ public class MetadataNode implements IMetadataNode {
             LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) lsmIndex, transactionSubsystem.getLogManager());
             switch (op) {
                 case INSERT:
-                    indexAccessor.insert(tuple);
+                    indexAccessor.forceInsert(tuple);
                     break;
                 case DELETE:
-                    indexAccessor.delete(tuple);
+                    indexAccessor.forceDelete(tuple);
                     break;
                 case UPSERT:
-                    indexAccessor.upsert(tuple);
+                    indexAccessor.forceUpsert(tuple);
                     break;
                 default:
                     throw new IllegalStateException("Unknown operation type: " + op);
             }
-            PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) lsmIndex.getOperationTracker();
-            opTracker.flushIfNeeded(); // there is a window where the flush is not triggerred after an operation
         } finally {
             datasetLifecycleManager.close(resourceName);
         }

@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
@@ -95,7 +96,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     }
 
     public synchronized void flushIfNeeded() throws HyracksDataException {
-        if (numActiveOperations.get() == 0) {
+        if (canSafelyFlush()) {
             flushIfRequested();
         }
     }
@@ -117,7 +118,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
 
         if (needsFlush || flushOnExit) {
-            //Make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering them until the current flush is scheduled.
+            // make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering
+            // them until the current flush is scheduled.
             LSMComponentId primaryId = null;
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMOperationTracker opTracker = lsmIndex.getOperationTracker();
@@ -137,7 +139,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             LogRecord logRecord = new LogRecord();
             flushOnExit = false;
             if (dsInfo.isDurable()) {
-                /**
+                /*
                  * Generate a FLUSH log.
                  * Flush will be triggered when the log is written to disk by LogFlusher.
                  */
@@ -158,18 +160,30 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
 
     //This method is called sequentially by LogPage.notifyFlushTerminator in the sequence flushes were scheduled.
     public synchronized void triggerScheduleFlush(LogRecord logRecord) throws HyracksDataException {
-        idGenerator.refresh();
-        for (ILSMIndex lsmIndex : dsInfo.getDatasetPartitionOpenIndexes(partition)) {
-            //get resource
-            ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            //update resource lsn
-            AbstractLSMIOOperationCallback ioOpCallback =
-                    (AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback();
-            ioOpCallback.updateLastLSN(logRecord.getLSN());
-            //schedule flush after update
-            accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
+        try {
+            if (!canSafelyFlush()) {
+                // if a force modification operation started before the flush is scheduled, this flush will fail
+                // and a next attempt will be made when that operation completes. This is only expected for metadata
+                // datasets since they always use force modification
+                if (MetadataIndexImmutableProperties.isMetadataDataset(datasetID)) {
+                    return;
+                }
+                throw new IllegalStateException("Operation started while index was pending scheduling a flush");
+            }
+            idGenerator.refresh();
+            for (ILSMIndex lsmIndex : dsInfo.getDatasetPartitionOpenIndexes(partition)) {
+                //get resource
+                ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                //update resource lsn
+                AbstractLSMIOOperationCallback ioOpCallback =
+                        (AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback();
+                ioOpCallback.updateLastLSN(logRecord.getLSN());
+                //schedule flush after update
+                accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
+            }
+        } finally {
+            flushLogCreated = false;
         }
-        flushLogCreated = false;
     }
 
     public int getNumActiveOperations() {
@@ -194,14 +208,6 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
     }
 
-    public void cleanupNumActiveOperationsForAbortedJob(int numberOfActiveOperations) {
-        numberOfActiveOperations *= -1;
-        numActiveOperations.getAndAdd(numberOfActiveOperations);
-        if (numActiveOperations.get() < 0) {
-            throw new IllegalStateException("The number of active operations cannot be negative!");
-        }
-    }
-
     public boolean isFlushOnExit() {
         return flushOnExit;
     }
@@ -218,4 +224,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         return partition;
     }
 
+    private boolean canSafelyFlush() {
+        return numActiveOperations.get() == 0;
+    }
 }

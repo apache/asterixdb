@@ -226,10 +226,6 @@ public class LogBuffer implements ILogBuffer {
                         if (txnSubsystem.getTransactionProperties().isCommitProfilerEnabled()) {
                             txnSubsystem.incrementEntityCommitCount();
                         }
-                    } else if (logRecord.getLogType() == LogType.UPDATE) {
-                        reusableTxnId.setId(logRecord.getTxnId());
-                        txnCtx = txnSubsystem.getTransactionManager().getTransactionContext(reusableTxnId);
-                        txnCtx.notifyUpdateCommitted(logRecord.getResourceId());
                     } else if (logRecord.getLogType() == LogType.JOB_COMMIT
                             || logRecord.getLogType() == LogType.ABORT) {
                         notifyJobTermination();

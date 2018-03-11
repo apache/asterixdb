@@ -107,8 +107,8 @@ public abstract class AbstractTransactionContext implements ITransactionContext 
     @Override
     public void complete() {
         try {
-            if (txnState.get() == ITransactionManager.ABORTED) {
-                cleanupForAbort();
+            if (isWriteTxn()) {
+                cleanup();
             }
         } finally {
             synchronized (txnOpTrackers) {
@@ -141,5 +141,5 @@ public abstract class AbstractTransactionContext implements ITransactionContext 
         return sb.toString();
     }
 
-    protected abstract void cleanupForAbort();
+    protected abstract void cleanup();
 }
