@@ -112,11 +112,13 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     private void process(RegistrationTasksRequestMessage msg) throws HyracksDataException {
         final String nodeId = msg.getNodeId();
         List<INCLifecycleTask> tasks = buildNCRegTasks(msg.getNodeId(), msg.getNodeStatus(), msg.getState());
-        RegistrationTasksResponseMessage response = new RegistrationTasksResponseMessage(nodeId, tasks);
-        try {
-            messageBroker.sendApplicationMessageToNC(response, msg.getNodeId());
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+        if (!tasks.isEmpty()) {
+            RegistrationTasksResponseMessage response = new RegistrationTasksResponseMessage(nodeId, tasks);
+            try {
+                messageBroker.sendApplicationMessageToNC(response, msg.getNodeId());
+            } catch (Exception e) {
+                throw HyracksDataException.create(e);
+            }
         }
     }
 
@@ -136,39 +138,17 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     }
 
     protected List<INCLifecycleTask> buildNCRegTasks(String nodeId, NodeStatus nodeStatus, SystemState state) {
-        LOGGER.log(Level.INFO, () -> "Building registration tasks for node: " + nodeId + " with state: " + state);
+        LOGGER.info("Building registration tasks for node {} with status {} and system state: {}", nodeId, nodeStatus,
+                state);
         final boolean isMetadataNode = nodeId.equals(metadataNodeId);
-        if (nodeStatus == NodeStatus.ACTIVE) {
-            /*
-             * if the node state is already ACTIVE then it completed
-             * booting and just re-registering with a new/failed CC.
-             */
-            return buildActiveNCRegTasks(isMetadataNode);
+        switch (nodeStatus) {
+            case ACTIVE:
+                return buildActiveNCRegTasks(isMetadataNode);
+            case IDLE:
+                return buildIdleNcRegTasks(nodeId, isMetadataNode, state);
+            default:
+                return new ArrayList<>();
         }
-        final List<INCLifecycleTask> tasks = new ArrayList<>();
-        tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING));
-        if (state == SystemState.CORRUPTED) {
-            //need to perform local recovery for node partitions
-            LocalRecoveryTask rt = new LocalRecoveryTask(Arrays.asList(clusterManager.getNodePartitions(nodeId))
-                    .stream().map(ClusterPartition::getPartitionId).collect(Collectors.toSet()));
-            tasks.add(rt);
-        }
-        if (replicationEnabled) {
-            tasks.add(new StartReplicationServiceTask());
-        }
-        if (isMetadataNode) {
-            tasks.add(new MetadataBootstrapTask(clusterManager.getMetadataPartition().getPartitionId()));
-        }
-        tasks.add(new ExternalLibrarySetupTask(isMetadataNode));
-        tasks.add(new CheckpointTask());
-        tasks.add(new StartLifecycleComponentsTask());
-        if (isMetadataNode) {
-            tasks.add(new ExportMetadataNodeTask(true));
-            tasks.add(new BindMetadataNodeTask());
-        }
-        tasks.add(new ReportLocalCountersTask());
-        tasks.add(new UpdateNodeStatusTask(NodeStatus.ACTIVE));
-        return tasks;
     }
 
     protected List<INCLifecycleTask> buildActiveNCRegTasks(boolean metadataNode) {
@@ -199,6 +179,33 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         } else {
             requestMetadataNodeTakeover(node);
         }
+    }
+
+    protected List<INCLifecycleTask> buildIdleNcRegTasks(String nodeId, boolean metadataNode, SystemState state) {
+        final List<INCLifecycleTask> tasks = new ArrayList<>();
+        tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING));
+        if (state == SystemState.CORRUPTED) {
+            // need to perform local recovery for node partitions
+            LocalRecoveryTask rt = new LocalRecoveryTask(Arrays.stream(clusterManager.getNodePartitions(nodeId))
+                    .map(ClusterPartition::getPartitionId).collect(Collectors.toSet()));
+            tasks.add(rt);
+        }
+        if (replicationEnabled) {
+            tasks.add(new StartReplicationServiceTask());
+        }
+        if (metadataNode) {
+            tasks.add(new MetadataBootstrapTask(clusterManager.getMetadataPartition().getPartitionId()));
+        }
+        tasks.add(new ExternalLibrarySetupTask(metadataNode));
+        tasks.add(new CheckpointTask());
+        tasks.add(new StartLifecycleComponentsTask());
+        if (metadataNode) {
+            tasks.add(new ExportMetadataNodeTask(true));
+            tasks.add(new BindMetadataNodeTask());
+        }
+        tasks.add(new ReportLocalCountersTask());
+        tasks.add(new UpdateNodeStatusTask(NodeStatus.ACTIVE));
+        return tasks;
     }
 
     private void process(MetadataNodeResponseMessage response) throws HyracksDataException {
