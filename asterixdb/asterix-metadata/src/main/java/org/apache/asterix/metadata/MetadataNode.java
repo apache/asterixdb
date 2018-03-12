@@ -127,8 +127,6 @@ import org.apache.hyracks.storage.common.MultiComparator;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
-    private static final DatasetId METADATA_DATASET_ID =
-            new ImmutableDatasetId(MetadataPrimaryIndexes.PROPERTIES_METADATA.getDatasetId());
 
     // shared between core and extension
     private IDatasetLifecycleManager datasetLifecycleManager;
@@ -182,18 +180,6 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void abortTransaction(TxnId txnId) throws RemoteException, ACIDException {
         transactionSubsystem.getTransactionManager().abortTransaction(txnId);
-    }
-
-    @Override
-    public void lock(TxnId txnId, byte lockMode) throws ACIDException, RemoteException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(txnId);
-        transactionSubsystem.getLockManager().lock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
-    }
-
-    @Override
-    public void unlock(TxnId txnId, byte lockMode) throws ACIDException, RemoteException {
-        ITransactionContext txnCtx = transactionSubsystem.getTransactionManager().getTransactionContext(txnId);
-        transactionSubsystem.getLockManager().unlock(METADATA_DATASET_ID, -1, lockMode, txnCtx);
     }
 
     // TODO(amoudi): make all metadata operations go through the generic methods

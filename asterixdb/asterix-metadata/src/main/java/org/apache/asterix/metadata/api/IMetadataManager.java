@@ -86,29 +86,6 @@ public interface IMetadataManager extends IMetadataBootstrap {
     void abortTransaction(MetadataTransactionContext ctx) throws ACIDException, RemoteException;
 
     /**
-     * Locks the metadata in given mode. The lock acquisition is delegated to the
-     * metadata node. This method blocks until the lock can be acquired.
-     *
-     * @param ctx
-     *            MetadataTransactionContext of an active metadata transaction.
-     * @param lockMode
-     *            Desired lockode.
-     * @throws ACIDException
-     * @throws RemoteException
-     */
-    void lock(MetadataTransactionContext ctx, byte lockMode) throws ACIDException, RemoteException;
-
-    /**
-     * Releases all locks on the metadata held by the given transaction id.
-     *
-     * @param ctx
-     *            MetadataTransactionContext of an active metadata transaction.
-     * @throws ACIDException
-     * @throws RemoteException
-     */
-    void unlock(MetadataTransactionContext ctx, byte lockMode) throws ACIDException, RemoteException;
-
-    /**
      * Inserts a new dataverse into the metadata.
      *
      * @param ctx

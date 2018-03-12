@@ -79,23 +79,6 @@ public interface IMetadataNode extends Remote, Serializable {
     void abortTransaction(TxnId txnId) throws ACIDException, RemoteException;
 
     /**
-     * Locally locks the entire metadata in given mode on behalf of given
-     * transaction id.
-     *
-     * @throws ACIDException
-     * @throws RemoteException
-     */
-    void lock(TxnId txnId, byte lockMode) throws ACIDException, RemoteException;
-
-    /**
-     * Releases all local locks of given transaction id.
-     *
-     * @throws ACIDException
-     * @throws RemoteException
-     */
-    void unlock(TxnId txnId, byte lockMode) throws ACIDException, RemoteException;
-
-    /**
      * Inserts a new dataverse into the metadata, acquiring local locks on behalf of
      * the given transaction id.
      *

@@ -144,10 +144,6 @@ public class MetadataBootstrap {
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         try {
-            // Begin a transaction against the metadata.
-            // Lock the metadata in X mode.
-            MetadataManager.INSTANCE.lock(mdTxnCtx, LockMode.X);
-
             for (int i = 0; i < PRIMARY_INDEXES.length; i++) {
                 enlistMetadataDataset(ncServiceContext, PRIMARY_INDEXES[i]);
             }

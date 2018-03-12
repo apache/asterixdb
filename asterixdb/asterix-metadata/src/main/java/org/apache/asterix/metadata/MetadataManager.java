@@ -146,16 +146,6 @@ public abstract class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void lock(MetadataTransactionContext ctx, byte lockMode) throws RemoteException, ACIDException {
-        metadataNode.lock(ctx.getTxnId(), lockMode);
-    }
-
-    @Override
-    public void unlock(MetadataTransactionContext ctx, byte lockMode) throws RemoteException, ACIDException {
-        metadataNode.unlock(ctx.getTxnId(), lockMode);
-    }
-
-    @Override
     public void addDataverse(MetadataTransactionContext ctx, Dataverse dataverse) throws AlgebricksException {
         try {
             metadataNode.addDataverse(ctx.getTxnId(), dataverse);
