@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.api.http.server;
 
+import static org.apache.asterix.api.http.server.NodeControllerDetailsHelper.fixupKeys;
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
 
 import java.io.IOException;
@@ -135,7 +136,7 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         return result;
     }
 
-    protected void resolveFutures(Map<String, Future<JsonNode>> futureMap, Map<String, JsonNode> outputMap,
+    public static void resolveFutures(Map<String, Future<JsonNode>> futureMap, Map<String, JsonNode> outputMap,
             Map<String, JsonNode> errorMap) throws InterruptedException {
         for (Map.Entry<String, Future<JsonNode>> entry : futureMap.entrySet()) {
             try {
