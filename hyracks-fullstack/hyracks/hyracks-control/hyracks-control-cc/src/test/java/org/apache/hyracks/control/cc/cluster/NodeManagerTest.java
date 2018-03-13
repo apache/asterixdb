@@ -22,6 +22,8 @@ package org.apache.hyracks.control.cc.cluster;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.Executors;
+
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -134,6 +136,7 @@ public class NodeManagerTest {
         Mockito.when(ccs.getClusterIPC()).thenReturn(ipcSystem);
         Mockito.when(ipcSystem.getHandle(Mockito.any())).thenReturn(ipcHandle);
         Mockito.when(ipcSystem.getHandle(Mockito.any(), Mockito.anyInt())).thenReturn(ipcHandle);
+        Mockito.when(ccs.getExecutor()).thenReturn(Executors.newCachedThreadPool());
         return ccs;
     }
 
