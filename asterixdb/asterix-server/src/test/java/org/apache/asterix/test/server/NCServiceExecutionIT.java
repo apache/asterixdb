@@ -237,7 +237,7 @@ public class NCServiceExecutionIT {
                 case NC1:
                     LOGGER.info("Killing NC1...");
                     nc1.stop(); // we can't kill due to ASTERIXDB-1941
-                    testExecutor.waitForClusterState("UNUSABLE", 60, TimeUnit.SECONDS); // wait for missed heartbeats...
+                    testExecutor.waitForClusterState("UNUSABLE", 90, TimeUnit.SECONDS); // wait for missed heartbeats...
                     nc1.start(); // this restarts the NC service
                     testExecutor.startNC("asterix_nc1");
                     break;
@@ -245,7 +245,7 @@ public class NCServiceExecutionIT {
                 case NC2:
                     LOGGER.info("Killing NC2...");
                     nc2.stop(); // we can't kill due to ASTERIXDB-1941
-                    testExecutor.waitForClusterState("UNUSABLE", 60, TimeUnit.SECONDS); // wait for missed heartbeats...
+                    testExecutor.waitForClusterState("UNUSABLE", 90, TimeUnit.SECONDS); // wait for missed heartbeats...
                     nc2.start(); // this restarts the NC service
                     testExecutor.startNC("asterix_nc2");
                     break;
@@ -254,7 +254,7 @@ public class NCServiceExecutionIT {
                     Assert.fail("killType: " + killType);
             }
             try {
-                testExecutor.waitForClusterActive(30, TimeUnit.SECONDS);
+                testExecutor.waitForClusterActive(90, TimeUnit.SECONDS);
             } catch (Exception e) {
                 // stop executing the rest of the tests since the cluster is not ACTIVE
                 LOGGER.log(Level.ERROR, "Cannot continue since cluster is not ACTIVE", e);
