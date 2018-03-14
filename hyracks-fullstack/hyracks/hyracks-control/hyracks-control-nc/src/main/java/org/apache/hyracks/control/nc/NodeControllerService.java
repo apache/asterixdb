@@ -18,10 +18,10 @@
  */
 package org.apache.hyracks.control.nc;
 
-import static org.apache.hyracks.control.common.utils.MXHelper.gcMXBeans;
-import static org.apache.hyracks.control.common.utils.MXHelper.memoryMXBean;
-import static org.apache.hyracks.control.common.utils.MXHelper.osMXBean;
-import static org.apache.hyracks.control.common.utils.MXHelper.runtimeMXBean;
+import static org.apache.hyracks.util.MXHelper.gcMXBeans;
+import static org.apache.hyracks.util.MXHelper.memoryMXBean;
+import static org.apache.hyracks.util.MXHelper.osMXBean;
+import static org.apache.hyracks.util.MXHelper.runtimeMXBean;
 
 import java.io.File;
 import java.io.IOException;

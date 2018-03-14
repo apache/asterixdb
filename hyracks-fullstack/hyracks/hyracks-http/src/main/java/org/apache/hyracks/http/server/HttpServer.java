@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServlet;
+import org.apache.hyracks.util.MXHelper;
 import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -251,6 +252,7 @@ public class HttpServer {
                     return;
                 }
                 LOGGER.log(Level.WARN, "{} has stopped unexpectedly. Starting server recovery", this);
+                MXHelper.logFileDescriptors();
                 triggerRecovery();
             }
         });

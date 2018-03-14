@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.control.common.heartbeat;
 
-import static org.apache.hyracks.control.common.utils.MXHelper.gcMXBeans;
+import static org.apache.hyracks.util.MXHelper.gcMXBeans;
 
 import java.io.DataInput;
 import java.io.DataOutput;
