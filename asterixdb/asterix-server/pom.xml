@@ -620,5 +620,10 @@
       <artifactId>asterix-fuzzyjoin</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-test-support</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

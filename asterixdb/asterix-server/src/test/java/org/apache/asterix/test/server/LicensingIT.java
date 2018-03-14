@@ -18,77 +18,56 @@
  */
 package org.apache.asterix.test.server;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.hyracks.test.support.LicensingTestBase;
 import org.apache.hyracks.util.file.FileUtil;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.JVM)
-public class LicensingIT {
-
-    protected String installerDir;
+public class LicensingIT extends LicensingTestBase {
 
     @Before
     public void setup() {
-        final String pattern = getInstallerDirPattern();
-        final String targetDir = getTargetDir();
-        final String[] list = new File(targetDir).list((dir, name) -> name.matches(pattern));
-        Assert.assertNotNull("installerDir", list);
-        Assert.assertFalse("Ambiguous install dir (" + pattern + "): " + Arrays.toString(list), list.length > 1);
-        Assert.assertEquals("Can't find install dir (" + pattern + ")", 1, list.length);
-        installerDir = FileUtil.joinPath(targetDir, list[0]);
+        initInstallerDir();
     }
 
+    @Override
     protected String getTargetDir() {
         return FileUtil.joinPath("target");
     }
 
+    @Override
     protected String getInstallerDirPattern() {
         return "asterix-server.*-binary-assembly";
     }
 
+    @Override
     protected String pathToLicensingFiles() {
         return "";
     }
 
-    @Test
-    public void testLicenseNoticeFilesPresent() throws IOException {
-        for (String name : getRequiredArtifactNames()) {
-            final String fileName = FileUtil.joinPath(installerDir, pathToLicensingFiles(), name);
-            Assert.assertTrue(fileName + " missing", new File(fileName).exists());
-        }
-    }
-
+    @Override
     protected String[] getRequiredArtifactNames() {
         return org.apache.commons.lang3.ArrayUtils.add(getLicenseArtifactNames(), "NOTICE");
     }
 
-    @Test
-    public void ensureNoMissingLicenses() throws IOException {
-        for (String licenseArtifactName : getLicenseArtifactNames()) {
-            final File licenseFile =
-                    new File(FileUtil.joinPath(installerDir, pathToLicensingFiles(), licenseArtifactName));
-            List<String> badLines = new ArrayList<>();
-            for (String line : FileUtils.readLines(licenseFile, StandardCharsets.UTF_8)) {
-                if (line.matches("^\\s*MISSING:.*")) {
-                    badLines.add(line.trim());
-                }
-            }
-            Assert.assertEquals("Missing licenses in " + licenseFile + ": " + badLines, 0, badLines.size());
-        }
-    }
-
+    @Override
     protected String[] getLicenseArtifactNames() {
         return new String[] { "LICENSE" };
     }
+
+    @Test
+    public void testLicenseNoticeFilesPresent() {
+        verifyAllRequiredArtifactsPresent();
+    }
+
+    @Test
+    public void ensureNoMissingLicenses() throws IOException {
+        verifyMissingLicenses();
+    }
+
 }
