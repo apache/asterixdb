@@ -371,6 +371,7 @@
             <usedDependency>org.apache.hyracks:hyracks-nc-service</usedDependency>
             <usedDependency>org.apache.asterix:asterix-external-data</usedDependency>
             <usedDependency>org.codehaus.mojo.appassembler:appassembler-booter</usedDependency>
+            <usedDependency>org.apache.asterix:asterix-fuzzyjoin</usedDependency>
           </usedDependencies>
         </configuration>
       </plugin>
@@ -613,6 +614,11 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-fuzzyjoin</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 </project>

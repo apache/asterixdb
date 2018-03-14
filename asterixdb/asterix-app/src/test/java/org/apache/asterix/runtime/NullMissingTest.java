@@ -55,8 +55,9 @@ public class NullMissingTest {
                 ++testedFunctions;
             }
         }
-        // 208 is the current number of functions with generated code.
-        Assert.assertTrue(testedFunctions >= 208);
+        // 217 is the current number of functions with generated code.
+        Assert.assertTrue("expected >= 217 generated functions to be tested, but was " + testedFunctions,
+                testedFunctions >= 217);
     }
 
     private void testFunction(IFunctionDescriptorFactory funcFactory) throws Exception {

@@ -23,7 +23,6 @@
     <groupId>org.apache.asterix</groupId>
     <version>0.9.4-SNAPSHOT</version>
   </parent>
-  <groupId>org.apache.asterix</groupId>
   <artifactId>asterix-fuzzyjoin</artifactId>
 
   <licenses>
@@ -42,6 +41,23 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.asterix</groupId>
+        <artifactId>asterix-evaluator-generator-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <configuration>
+          <evaluatorPackagePrefix>org.apache.asterix.runtime.evaluators</evaluatorPackagePrefix>
+        </configuration>
+        <executions>
+          <execution>
+            <id>generate-evaluator</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>generate-evaluator</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
@@ -52,17 +68,6 @@
             <phase>test-compile</phase>
           </execution>
         </executions>
-        <configuration>
-          <outputDirectory>${basedir}/target</outputDirectory>
-          <includes>
-            <include>**/*.class</include>
-            <include>**/*.txt</include>
-            <include>**/README*</include>
-            <include>**/NOTICE*</include>
-            <include>**/LICENSE*</include>
-            <include>**/DEPENDENCIES*</include>
-          </includes>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.rat</groupId>
@@ -101,6 +106,41 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-data-std</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-om</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-runtime</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-storage-am-lsm-invertedindex</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-runtime</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-dataflow-common</artifactId>
     </dependency>
   </dependencies>
 

@@ -22,9 +22,12 @@ package org.apache.asterix.runtime.functions;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ServiceLoader;
 
 import org.apache.asterix.common.utils.CodeGenHelper;
+import org.apache.asterix.om.functions.IFunctionCollection;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.functions.IFunctionRegistrant;
 import org.apache.asterix.runtime.aggregates.collections.FirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.ListifyAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.collections.LocalFirstElementAggregateDescriptor;
@@ -139,8 +142,6 @@ import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeLaxDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CheckUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CodePointToStringDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.CountHashedGramTokensDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.CountHashedWordTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateCircleDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateLineDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateMBRDescriptor;
@@ -150,23 +151,15 @@ import org.apache.asterix.runtime.evaluators.functions.CreateQueryUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateRectangleDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CreateUUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.DeepEqualityDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.EditDistanceCheckDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.EditDistanceContainsDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.EditDistanceDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.EditDistanceListIsFilterableDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.EditDistanceStringIsFilterableDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsWithoutOptionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetItemDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetJobParameterByNameDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.GramTokensDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.HashedGramTokensDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.HashedWordTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfInfDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.IfNanOrInfDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfMissingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfMissingOrNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfNanDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.IfNanOrInfDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IfNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.InjectFailureDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsArrayDescriptor;
@@ -208,18 +201,10 @@ import org.apache.asterix.runtime.evaluators.functions.NumericTanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericTruncDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.OrDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.PrefixLenJaccardDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardCheckDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixCheckDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardSortedCheckDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardSortedDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SleepDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialDistanceDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.SpatialIntersectDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringEndsWithDescriptor;
@@ -262,7 +247,6 @@ import org.apache.asterix.runtime.evaluators.functions.ToDoubleDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToNumberDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToStringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.UUIDDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.WordTokensDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.BinaryConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.BinaryLengthDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.FindBinaryDescriptor;
@@ -343,16 +327,18 @@ import org.apache.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescrip
 /**
  * This class holds a list of function descriptor factories.
  */
-public final class FunctionCollection {
+public final class FunctionCollection implements IFunctionCollection {
 
     private static final String FACTORY = "FACTORY";
 
-    private final List<IFunctionDescriptorFactory> descriptorFactories = new ArrayList<>();
+    private final ArrayList<IFunctionDescriptorFactory> descriptorFactories = new ArrayList<>();
 
+    @Override
     public void add(IFunctionDescriptorFactory descriptorFactory) {
         descriptorFactories.add(descriptorFactory);
     }
 
+    @Override
     public void addGenerated(IFunctionDescriptorFactory descriptorFactory) {
         add(getGeneratedFunctionDescriptorFactory(descriptorFactory.createFunctionDescriptor().getClass()));
     }
@@ -472,11 +458,6 @@ public final class FunctionCollection {
         fc.add(CurrentDateDescriptor.FACTORY);
         fc.add(CurrentTimeDescriptor.FACTORY);
         fc.add(CurrentDateTimeDescriptor.FACTORY);
-
-        // TODO: decide how should we deal these two weird functions as
-        // the number of arguments of the function depend on the first few arguments.
-        fc.add(SimilarityJaccardPrefixDescriptor.FACTORY);
-        fc.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
 
         // functions that need generated class for null-handling.
 
@@ -614,7 +595,6 @@ public final class FunctionCollection {
         fc.addGenerated(CreateRectangleDescriptor.FACTORY);
         fc.addGenerated(SpatialAreaDescriptor.FACTORY);
         fc.addGenerated(SpatialDistanceDescriptor.FACTORY);
-        fc.addGenerated(SpatialIntersectDescriptor.FACTORY);
         fc.addGenerated(CreateMBRDescriptor.FACTORY);
         fc.addGenerated(SpatialCellDescriptor.FACTORY);
         fc.addGenerated(PointXCoordinateAccessor.FACTORY);
@@ -622,24 +602,6 @@ public final class FunctionCollection {
         fc.addGenerated(CircleRadiusAccessor.FACTORY);
         fc.addGenerated(CircleCenterAccessor.FACTORY);
         fc.addGenerated(LineRectanglePolygonAccessor.FACTORY);
-
-        // fuzzyjoin function
-        fc.addGenerated(PrefixLenJaccardDescriptor.FACTORY);
-        fc.addGenerated(WordTokensDescriptor.FACTORY);
-        fc.addGenerated(HashedWordTokensDescriptor.FACTORY);
-        fc.addGenerated(CountHashedWordTokensDescriptor.FACTORY);
-        fc.addGenerated(GramTokensDescriptor.FACTORY);
-        fc.addGenerated(HashedGramTokensDescriptor.FACTORY);
-        fc.addGenerated(CountHashedGramTokensDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceCheckDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceStringIsFilterableDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceListIsFilterableDescriptor.FACTORY);
-        fc.addGenerated(EditDistanceContainsDescriptor.FACTORY);
-        fc.addGenerated(SimilarityJaccardDescriptor.FACTORY);
-        fc.addGenerated(SimilarityJaccardCheckDescriptor.FACTORY);
-        fc.addGenerated(SimilarityJaccardSortedDescriptor.FACTORY);
-        fc.addGenerated(SimilarityJaccardSortedCheckDescriptor.FACTORY);
 
         // full-text function
         fc.addGenerated(FullTextContainsDescriptor.FACTORY);
@@ -742,6 +704,7 @@ public final class FunctionCollection {
         // Record function
         fc.addGenerated(RecordPairsDescriptor.FACTORY);
 
+        ServiceLoader.load(IFunctionRegistrant.class).iterator().forEachRemaining(c -> c.register(fc));
         return fc;
     }
 
