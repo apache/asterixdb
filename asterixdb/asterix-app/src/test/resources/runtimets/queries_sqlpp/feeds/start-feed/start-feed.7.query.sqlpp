@@ -25,4 +25,4 @@
  */
 
 use experiments;
-select value count(*) from Tweets1;
+select value count(*) from Tweets2;
