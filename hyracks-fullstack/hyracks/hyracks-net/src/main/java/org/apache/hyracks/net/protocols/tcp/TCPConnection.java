@@ -101,4 +101,9 @@ public class TCPConnection {
             LOGGER.error(() -> "Error closing channel at: " + remoteAddress, e);
         }
     }
+
+    @Override
+    public String toString() {
+        return "TCPConnection[Remote Address: " + remoteAddress + " Local Address: " + endpoint.getLocalAddress() + "]";
+    }
 }
