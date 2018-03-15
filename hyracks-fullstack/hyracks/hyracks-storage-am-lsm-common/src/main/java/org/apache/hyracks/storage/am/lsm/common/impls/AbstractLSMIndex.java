@@ -41,7 +41,6 @@ import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId.IdCompareResult;
@@ -97,7 +96,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     protected final boolean durable;
     protected boolean isActive;
     protected final AtomicBoolean[] flushRequests;
-    protected boolean memoryComponentsAllocated = false;
+    protected volatile boolean memoryComponentsAllocated = false;
     protected ITracer tracer;
     // Factory for creating on-disk index components during flush and merge.
     protected final ILSMDiskComponentFactory componentFactory;
@@ -219,7 +218,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         isActive = false;
     }
 
-    protected void flushMemoryComponent() throws HyracksDataException {
+    private void flushMemoryComponent() throws HyracksDataException {
         BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(ioOpCallback);
         ILSMIndexAccessor accessor = createAccessor(NoOpIndexAccessParameters.INSTANCE);
         accessor.scheduleFlush(cb);
@@ -247,7 +246,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     }
 
     @Override
-    public void destroy() throws HyracksDataException {
+    public synchronized void destroy() throws HyracksDataException {
         if (isActive) {
             throw HyracksDataException.create(ErrorCode.CANNOT_DESTROY_ACTIVE_INDEX);
         }
@@ -262,7 +261,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     }
 
     @Override
-    public void clear() throws HyracksDataException {
+    public synchronized void clear() throws HyracksDataException {
         if (!isActive) {
             throw HyracksDataException.create(ErrorCode.CANNOT_CLEAR_INACTIVE_INDEX);
         }
@@ -570,18 +569,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException {
         //check if the current memory component has been modified
         return !memoryComponents.get(currentMutableComponentId.get()).isModified();
-    }
-
-    public void setCurrentMutableComponentState(ComponentState componentState) {
-        memoryComponents.get(currentMutableComponentId.get()).setState(componentState);
-    }
-
-    public ComponentState getCurrentMutableComponentState() {
-        return memoryComponents.get(currentMutableComponentId.get()).getState();
-    }
-
-    public int getCurrentMutableComponentWriterCount() {
-        return memoryComponents.get(currentMutableComponentId.get()).getWriterCount();
     }
 
     @Override
