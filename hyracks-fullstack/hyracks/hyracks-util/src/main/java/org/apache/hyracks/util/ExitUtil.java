@@ -74,15 +74,10 @@ public class ExitUtil {
         exit(status);
     }
 
-    @SuppressWarnings("squid:S2142") // catch interrupted
     public static void halt(int status) {
         LOGGER.fatal("JVM halting with status " + status + "; bye!", new Throwable("halt stacktrace"));
-        try {
-            // try to give time for the log to be emitted...
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
+        // try to give time for the log to be emitted...
+        LogManager.shutdown();
         Runtime.getRuntime().halt(status);
     }
 
