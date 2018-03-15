@@ -31,6 +31,8 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
+import org.apache.asterix.common.storage.ResourceStorageStats;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -69,6 +71,8 @@ public class StorageApiServlet extends AbstractServlet {
                 json = getStatus(p -> true);
             } else if (path.startsWith("/partition")) {
                 json = getPartitionStatus(path);
+            } else if (path.startsWith("/stats")) {
+                json = getStats();
             } else {
                 throw new IllegalArgumentException();
             }
@@ -187,5 +191,14 @@ public class StorageApiServlet extends AbstractServlet {
         }
         appCtx.getReplicaManager().release(Integer.valueOf(partition));
         response.setStatus(HttpResponseStatus.OK);
+    }
+
+    private JsonNode getStats() throws HyracksDataException {
+        final PersistentLocalResourceRepository localResourceRepository =
+                (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
+        final ArrayNode result = OBJECT_MAPPER.createArrayNode();
+        final List<ResourceStorageStats> storageStats = localResourceRepository.getStorageStats();
+        storageStats.stream().map(ResourceStorageStats::asJson).forEach(result::add);
+        return result;
     }
 }

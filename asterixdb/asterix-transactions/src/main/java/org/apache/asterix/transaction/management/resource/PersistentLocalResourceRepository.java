@@ -58,6 +58,7 @@ import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
+import org.apache.asterix.common.storage.ResourceStorageStats;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
@@ -395,6 +396,19 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
+    public List<ResourceStorageStats> getStorageStats() throws HyracksDataException {
+        final List<DatasetResourceReference> allResources = loadAndGetAllResources().values().stream()
+                .map(DatasetResourceReference::of).collect(Collectors.toList());
+        final List<ResourceStorageStats> resourcesStats = new ArrayList<>();
+        for (DatasetResourceReference res : allResources) {
+            final ResourceStorageStats resourceStats = getResourceStats(res);
+            if (resourceStats != null) {
+                resourcesStats.add(resourceStats);
+            }
+        }
+        return resourcesStats;
+    }
+
     private void deleteIndexMaskedFiles(File index) throws IOException {
         File[] masks = index.listFiles(MASK_FILES_FILTER);
         if (masks != null) {
@@ -463,6 +477,29 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
+    private ResourceStorageStats getResourceStats(DatasetResourceReference resource) {
+        try {
+            final FileReference resolvedPath = ioManager.resolve(resource.getRelativePath().toString());
+            long totalSize = 0;
+            final File[] indexFiles = resolvedPath.getFile().listFiles();
+            final Map<String, Long> componentsStats = new HashMap<>();
+            if (indexFiles != null) {
+                for (File file : indexFiles) {
+                    long fileSize = file.length();
+                    totalSize += fileSize;
+                    if (isComponentFile(resolvedPath.getFile(), file.getName())) {
+                        String componentId = getComponentId(file.getAbsolutePath());
+                        componentsStats.put(componentId, componentsStats.getOrDefault(componentId, 0L) + fileSize);
+                    }
+                }
+            }
+            return new ResourceStorageStats(resource, componentsStats, totalSize);
+        } catch (Exception e) {
+            LOGGER.warn("Couldn't get stats for resource {}", resource.getRelativePath(), e);
+        }
+        return null;
+    }
+
     /**
      * Gets a component id based on its unique timestamp.
      * e.g. a component file 2018-01-08-01-08-50-439_2018-01-08-01-08-50-439_b
@@ -478,5 +515,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     private static boolean isComponentMask(File mask) {
         return mask.getName().startsWith(StorageConstants.COMPONENT_MASK_FILE_PREFIX);
+    }
+
+    private static boolean isComponentFile(File indexDir, String fileName) {
+        return COMPONENT_FILES_FILTER.accept(indexDir, fileName);
     }
 }
