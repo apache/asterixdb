@@ -16,9 +16,3 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create UDF and invoke with negative inputs.
- * Expected Res : Failure
- * Date         : 5th Sep 2012
- */
-

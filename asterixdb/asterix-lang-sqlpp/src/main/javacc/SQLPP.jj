@@ -748,7 +748,8 @@ CreateFunctionStatement FunctionSpecification() throws ParseException:
   {
      beginPos = token;
   }
-  functionBodyExpr = Expression() <RIGHTBRACE>
+  (functionBodyExpr = SelectExpression(true) | functionBodyExpr = Expression())
+  <RIGHTBRACE>
     {
       endPos = token;
       functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine, endPos.beginColumn);
@@ -1734,16 +1735,19 @@ FunctionDecl FunctionDeclaration() throws ParseException:
   createNewScope();
 }
 {
-  <DECLARE> <FUNCTION> functionName = Identifier()
-  paramList = ParameterList()
-  <LEFTBRACE> funcBody = Expression() <RIGHTBRACE>
-    {
-      signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
-      getCurrentScope().addFunctionDescriptor(signature, false);
-      funcDecl = new FunctionDecl(signature, paramList, funcBody);
-      removeCurrentScope();
-      return funcDecl;
-    }
+  <DECLARE> <FUNCTION>
+    functionName = Identifier()
+    paramList = ParameterList()
+  <LEFTBRACE>
+    (funcBody = SelectExpression(true) | funcBody = Expression())
+  <RIGHTBRACE>
+  {
+    signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
+    getCurrentScope().addFunctionDescriptor(signature, false);
+    funcDecl = new FunctionDecl(signature, paramList, funcBody);
+    removeCurrentScope();
+    return funcDecl;
+  }
 }
 
 Query ExplainStatement() throws ParseException:
@@ -1809,19 +1813,19 @@ Expression OperatorExpr()throws ParseException:
         if (op == null) {
           op = new OperatorExpr();
           op.addOperand(operand);
-        op.setCurrentop(true);
+          op.setCurrentop(true);
         }
         try{
             op.addOperator(token.image.toLowerCase());
         } catch (Exception e){
             throw new ParseException(e.getMessage());
         }
-    }
+      }
 
-    operand = AndExpr()
-    {
-      op.addOperand(operand);
-    }
+      operand = AndExpr()
+      {
+        op.addOperand(operand);
+      }
 
     )*
 

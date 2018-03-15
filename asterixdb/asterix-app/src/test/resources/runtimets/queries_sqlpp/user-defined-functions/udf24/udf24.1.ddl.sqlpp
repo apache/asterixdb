@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-// Returns java.lang.ClassCastException : Issue 195
 
 drop dataverse test if exists;
 create dataverse test;

@@ -8146,13 +8146,11 @@
         <output-dir compare="Text">udf02</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- causes NPE: Issue 200
-        <test-case FilePath="user-defined-functions">
-          <compilation-unit name="udf03">
-            <output-dir compare="Text">udf03</output-dir>
-          </compilation-unit>
-        </test-case>
-        -->
+  <test-case FilePath="user-defined-functions">
+    <compilation-unit name="udf03">
+      <output-dir compare="Text">udf03</output-dir>
+    </compilation-unit>
+  </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf04">
         <output-dir compare="Text">udf04</output-dir>
@@ -8208,13 +8206,11 @@
         <output-dir compare="Text">udf14</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Issue 166
-        <test-case FilePath="user-defined-functions">
-          <compilation-unit name="udf15">
-            <output-dir compare="Text">udf15</output-dir>
-          </compilation-unit>
-        </test-case>
-        -->
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf15">
+        <output-dir compare="Text">udf15</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf16">
         <output-dir compare="Text">udf16</output-dir>
@@ -8255,20 +8251,16 @@
         <output-dir compare="Text">udf23</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- Issue 195
-        <test-case FilePath="user-defined-functions">
-          <compilation-unit name="udf24">
-            <output-dir compare="Text">udf24</output-dir>
-          </compilation-unit>
-        </test-case>
-        -->
-    <!-- Issue 218
-        <test-case FilePath="user-defined-functions">
-          <compilation-unit name="udf25">
-            <output-dir compare="Text">udf25</output-dir>
-          </compilation-unit>
-        </test-case>
-        -->
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf24">
+        <output-dir compare="Text">udf24</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf25">
+        <output-dir compare="Text">udf25</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf27">
         <output-dir compare="Text">udf27</output-dir>
@@ -8289,6 +8281,11 @@
       <compilation-unit name="udf30">
         <output-dir compare="Text">udf30</output-dir>
         <expected-error>Cannot find dataset y in dataverse Default nor an alias with name y</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf31">
+        <output-dir compare="Text">udf31</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

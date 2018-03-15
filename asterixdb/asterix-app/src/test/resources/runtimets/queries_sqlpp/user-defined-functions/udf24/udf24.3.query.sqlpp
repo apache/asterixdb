@@ -20,12 +20,11 @@
  * Description  : Create UDF that returns a range
  * Expected Res : Success
  * Date         : Sep 5 2012
- * Ignored      : Not part of current test build because of Issue 201
  */
 
 use test;
 
 
 select element i
-from  test.myRangeFn(100) as i
+from  test.myRangeFn(10) as i
 ;

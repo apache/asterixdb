@@ -21,5 +21,4 @@ use emergencyTest;
 
 
 select element result
-from  emergencyTest.mostIntenseEarthquakeNearLocation() as result
-;
+from  emergencyTest.mostIntenseEarthquakeNearLocation() as result;

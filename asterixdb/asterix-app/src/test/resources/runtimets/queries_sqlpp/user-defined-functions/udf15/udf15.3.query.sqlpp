@@ -21,12 +21,11 @@
  *              : invoke the UDF in the FOR expression of FLWOR
  * Expected Res : Success
  * Date         : Sep 5th 2012
- * Ignored      : Not part of current tests because of Issue 200
  */
 
 use test;
 
 
 select element a
-from  test.OList2() as a
+from  test.OList2() as a limit 1
 ;

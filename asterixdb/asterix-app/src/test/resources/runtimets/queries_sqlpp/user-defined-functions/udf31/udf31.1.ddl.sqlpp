@@ -16,12 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-/*
- * Description  : Declare a UDF that has a LIMIT in it and try to execute that function.
- * Expected Res : Success
- */
-
 drop dataverse emergencyTest if exists;
 create dataverse emergencyTest;
 use emergencyTest;
@@ -38,8 +32,8 @@ primary key id;
 
 create function mostIntenseEarthquakeNearLocation()
 {
-  from EmergencyReports as emergency
-  order by emergency.id
-  limit 1
-  select element emergency.message
+    select element emergency.message
+    from EmergencyReports as emergency
+    order by emergency.id
+    limit 1
 };
