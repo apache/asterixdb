@@ -178,7 +178,7 @@ public class ActiveManager {
 
     private void stopIfRunning(ActiveRuntimeId runtimeId, IActiveRuntime runtime)
             throws HyracksDataException, InterruptedException {
-        if (runtimes.remove(runtimeId) != null) {
+        if (runtimes.containsKey(runtimeId)) {
             runtime.stop();
         } else {
             LOGGER.info("Not stopping already stopped runtime " + runtimeId);
