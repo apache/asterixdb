@@ -162,11 +162,11 @@
       <output-dir compare="Text">highly-nested-open</output-dir>
     </compilation-unit>
   </test-case>
-  <!--test-case FilePath="objects/object-remove-fields">
+  <test-case FilePath="objects/object-remove-fields">
     <compilation-unit name="documentation-example">
       <output-dir compare="Text">documentation-example</output-dir>
     </compilation-unit>
-  </test-case-->
+  </test-case>
   <test-case FilePath="objects/object-remove-fields">
     <compilation-unit name="tiny-social-example">
       <output-dir compare="Text">tiny-social-example</output-dir>

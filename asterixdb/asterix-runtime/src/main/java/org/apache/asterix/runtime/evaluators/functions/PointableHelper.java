@@ -44,22 +44,26 @@ public class PointableHelper {
 
     private static final byte[] NULL_BYTES = new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG };
 
-    private static final IBinaryComparator STRING_BINARY_COMPARATOR =
-            PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
     private final UTF8StringWriter utf8Writer;
 
     public PointableHelper() {
         utf8Writer = new UTF8StringWriter();
     }
 
-    public static int compareStringBinValues(IValueReference a, IValueReference b) throws HyracksDataException {
-        // start+1 and len-1 due to type tag ignore (only interested in String value)
-        return STRING_BINARY_COMPARATOR.compare(a.getByteArray(), a.getStartOffset() + 1, a.getLength() - 1,
-                b.getByteArray(), b.getStartOffset() + 1, b.getLength() - 1);
+    public static IBinaryComparator createStringBinaryComparator() {
+        return PointableBinaryComparatorFactory.of(UTF8StringPointable.FACTORY).createBinaryComparator();
     }
 
-    public static boolean isEqual(IValueReference a, IValueReference b) throws HyracksDataException {
-        return (compareStringBinValues(a, b) == 0);
+    public static int compareStringBinValues(IValueReference a, IValueReference b, IBinaryComparator comparator)
+            throws HyracksDataException {
+        // start+1 and len-1 due to type tag ignore (only interested in String value)
+        return comparator.compare(a.getByteArray(), a.getStartOffset() + 1, a.getLength() - 1, b.getByteArray(),
+                b.getStartOffset() + 1, b.getLength() - 1);
+    }
+
+    public static boolean isEqual(IValueReference a, IValueReference b, IBinaryComparator comparator)
+            throws HyracksDataException {
+        return compareStringBinValues(a, b, comparator) == 0;
     }
 
     public static boolean byteArrayEqual(IValueReference valueRef1, IValueReference valueRef2) {

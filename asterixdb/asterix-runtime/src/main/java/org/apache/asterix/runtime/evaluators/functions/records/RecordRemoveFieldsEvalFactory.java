@@ -27,8 +27,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -40,9 +38,11 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.runtime.RuntimeRecordTypeInfo;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -78,6 +78,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
         final IPointable inputArg1 = new VoidPointable();
         final IScalarEvaluator eval0 = inputRecordEvalFactory.createScalarEvaluator(ctx);
         final IScalarEvaluator eval1 = removeFieldPathsFactory.createScalarEvaluator(ctx);
+        final IBinaryComparator stringBinaryComparator = PointableHelper.createStringBinaryComparator();
 
         return new IScalarEvaluator() {
             private final RuntimeRecordTypeInfo runtimeRecordTypeInfo = new RuntimeRecordTypeInfo();
@@ -197,7 +198,8 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
                             boolean match = true;
                             Iterator<IVisitablePointable> fpi = recordPath.iterator();
                             for (int j = inputPathItems.size() - 1; j >= 0; j--) {
-                                match &= PointableHelper.isEqual(inputPathItems.get(j), fpi.next());
+                                match &= PointableHelper.isEqual(inputPathItems.get(j), fpi.next(),
+                                        stringBinaryComparator);
                                 if (!match) {
                                     break;
                                 }
@@ -207,7 +209,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
                             }
                         }
                     } else {
-                        if (PointableHelper.isEqual(recordPath.getFirst(), item)) {
+                        if (PointableHelper.isEqual(recordPath.getFirst(), item, stringBinaryComparator)) {
                             return false;
                         }
                     }
