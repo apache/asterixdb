@@ -23,6 +23,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.transactions.ILogManager;
+import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.asterix.common.transactions.LogType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.logging.log4j.LogManager;
@@ -35,6 +38,8 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     // resourceID -> index
     private final Map<Long, IndexInfo> indexes;
     private final int datasetID;
+    private final ILogManager logManager;
+    private final LogRecord waitLog = new LogRecord();
     private int numActiveIOOps;
     private long lastAccess;
     private boolean isExternal;
@@ -42,13 +47,16 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     private boolean memoryAllocated;
     private boolean durable;
 
-    public DatasetInfo(int datasetID) {
+    public DatasetInfo(int datasetID, ILogManager logManager) {
         this.partitionIndexes = new HashMap<>();
         this.indexes = new HashMap<>();
         this.setLastAccess(-1);
         this.datasetID = datasetID;
         this.setRegistered(false);
         this.setMemoryAllocated(false);
+        this.logManager = logManager;
+        waitLog.setLogType(LogType.WAIT);
+        waitLog.computeAndSetLogSize();
     }
 
     @Override
@@ -199,23 +207,26 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         this.lastAccess = lastAccess;
     }
 
-    public synchronized void waitForIO() throws HyracksDataException {
-        while (numActiveIOOps > 0) {
-            try {
-                /**
-                 * Will be Notified by {@link DatasetInfo#undeclareActiveIOOperation()}
-                 */
-                wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw HyracksDataException.create(e);
+    public void waitForIO() throws HyracksDataException {
+        logManager.log(waitLog);
+        synchronized (this) {
+            while (numActiveIOOps > 0) {
+                try {
+                    /**
+                     * Will be Notified by {@link DatasetInfo#undeclareActiveIOOperation()}
+                     */
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
+                }
             }
-        }
-        if (numActiveIOOps < 0) {
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Number of IO operations cannot be negative for dataset: " + this);
+            if (numActiveIOOps < 0) {
+                if (LOGGER.isErrorEnabled()) {
+                    LOGGER.error("Number of IO operations cannot be negative for dataset: " + this);
+                }
+                throw new IllegalStateException("Number of IO operations cannot be negative");
             }
-            throw new IllegalStateException("Number of IO operations cannot be negative");
         }
     }
 }

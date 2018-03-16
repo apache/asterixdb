@@ -239,7 +239,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         synchronized (datasets) {
             dsr = datasets.get(did);
             if (dsr == null) {
-                DatasetInfo dsInfo = new DatasetInfo(did);
+                DatasetInfo dsInfo = new DatasetInfo(did, logManager);
                 int partitions = MetadataIndexImmutableProperties.isMetadataDataset(did) ? METADATA_DATASETS_PARTITIONS
                         : numPartitions;
                 DatasetVirtualBufferCaches vbcs = new DatasetVirtualBufferCaches(did, storageProperties,

@@ -189,7 +189,7 @@ public class CorrelatedPrefixMergePolicyTest extends TestCase {
         properties.put("max-tolerance-component-count", String.valueOf(MAX_COMPONENT_COUNT));
         properties.put("max-mergable-component-size", String.valueOf(MAX_COMPONENT_SIZE));
 
-        DatasetInfo dsInfo = new DatasetInfo(DATASET_ID);
+        DatasetInfo dsInfo = new DatasetInfo(DATASET_ID, null);
         for (IndexInfo index : indexInfos) {
             dsInfo.addIndex(index.getResourceId(), index);
         }
