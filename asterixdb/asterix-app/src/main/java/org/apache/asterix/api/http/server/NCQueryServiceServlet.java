@@ -47,7 +47,10 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.server.HttpServer;
+import org.apache.hyracks.http.server.InterruptOnCloseHandler;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.logging.log4j.Level;
 
@@ -159,5 +162,10 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         } else {
             super.handleExecuteStatementException(t, execution);
         }
+    }
+
+    @Override
+    public IChannelClosedHandler getChannelClosedHandler(HttpServer server) {
+        return InterruptOnCloseHandler.INSTANCE;
     }
 }

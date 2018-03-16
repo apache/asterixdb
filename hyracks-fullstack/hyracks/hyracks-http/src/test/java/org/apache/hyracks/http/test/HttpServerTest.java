@@ -33,6 +33,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.http.server.HttpServer;
+import org.apache.hyracks.http.server.InterruptOnCloseHandler;
 import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.http.servlet.ChattyServlet;
@@ -301,7 +302,7 @@ public class HttpServerTest {
         int numExecutors = 1;
         int queueSize = 1;
         HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, numExecutors, queueSize,
-                (reqServer, reqServlet, reqTask) -> reqTask.cancel(true));
+                InterruptOnCloseHandler.INSTANCE);
         SleepyServlet servlet = new SleepyServlet(server.ctx(), new String[] { PATH });
         server.addServlet(servlet);
         webMgr.add(server);
