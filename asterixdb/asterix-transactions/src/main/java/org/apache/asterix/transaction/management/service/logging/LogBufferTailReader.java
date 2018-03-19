@@ -19,12 +19,17 @@
 package org.apache.asterix.transaction.management.service.logging;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.apache.asterix.common.transactions.ILogRecord.RecordReadStatus;
 import org.apache.asterix.common.transactions.LogRecord;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LogBufferTailReader {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ByteBuffer buffer;
     private final LogRecord logRecord;
     private int endOffset;
@@ -46,8 +51,19 @@ public class LogBufferTailReader {
         RecordReadStatus status = logRecord.readLogRecord(buffer);
         //underflow is not expected because we are at the very tail of the current log buffer
         if (status != RecordReadStatus.OK) {
-            throw new IllegalStateException();
+            logReadFailure(status);
+            throw new IllegalStateException("Unexpected log read status: " + status);
         }
         return logRecord;
+    }
+
+    private void logReadFailure(RecordReadStatus status) {
+        final int bufferRemaining = endOffset - buffer.position();
+        final byte[] remainingData = new byte[bufferRemaining];
+        buffer.get(remainingData);
+        final char[] hexData = Hex.encodeHex(remainingData);
+        LOGGER.error(
+                "Unexpected read status {}, read Log: {},  buffer remaining at read: {}, buffer remaining content: {}",
+                status, bufferRemaining, logRecord.getLogRecordForDisplay(), Arrays.toString(hexData));
     }
 }
