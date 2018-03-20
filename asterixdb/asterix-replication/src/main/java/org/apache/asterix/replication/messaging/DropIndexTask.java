@@ -52,7 +52,7 @@ public class DropIndexTask implements IReplicaTask {
             final File indexFile = ioManager.resolve(file).getFile();
             if (indexFile.exists()) {
                 File indexDir = indexFile.getParentFile();
-                IoUtil.deleteDirectory(indexDir);
+                IoUtil.delete(indexDir);
                 LOGGER.info(() -> "Deleted index: " + indexFile.getAbsolutePath());
             } else {
                 LOGGER.warning(() -> "Requested to delete a non-existing index: " + indexFile.getAbsolutePath());
