@@ -33,6 +33,7 @@ import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMRTreeDeletedKeysBTreeMergeCursor extends LSMIndexSearchCursor {
 
@@ -65,7 +66,13 @@ public class LSMRTreeDeletedKeysBTreeMergeCursor extends LSMIndexSearchCursor {
             btreeAccessors[i] = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             btreeAccessors[i].search(rangeCursors[i], btreePredicate);
         }
-        setPriorityQueueComparator();
-        initPriorityQueue();
+        IndexCursorUtils.open(btreeAccessors, rangeCursors, btreePredicate);
+        try {
+            setPriorityQueueComparator();
+            initPriorityQueue();
+        } catch (Throwable th) { // NOSONAR: Must catch all failures
+            IndexCursorUtils.close(rangeCursors, th);
+            throw HyracksDataException.create(th);
+        }
     }
 }

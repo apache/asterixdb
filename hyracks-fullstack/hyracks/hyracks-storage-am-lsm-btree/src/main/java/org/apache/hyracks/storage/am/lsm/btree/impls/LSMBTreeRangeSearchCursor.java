@@ -42,6 +42,7 @@ import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     private final ArrayTupleReference copyTuple;
@@ -349,7 +350,6 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             rangeCursors = new IIndexCursor[numBTrees];
             btreeAccessors = new BTreeAccessor[numBTrees];
         }
-
         for (int i = 0; i < numBTrees; i++) {
             ILSMComponent component = operationalComponents.get(i);
             BTree btree;
@@ -365,12 +365,16 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                 btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                 rangeCursors[i].close();
             }
-            btreeAccessors[i].search(rangeCursors[i], searchPred);
         }
-
-        setPriorityQueueComparator();
-        initPriorityQueue();
-        canCallProceed = true;
+        IndexCursorUtils.open(btreeAccessors, rangeCursors, searchPred);
+        try {
+            setPriorityQueueComparator();
+            initPriorityQueue();
+            canCallProceed = true;
+        } catch (Throwable th) { // NOSONAR Must catch all
+            IndexCursorUtils.close(rangeCursors, th);
+            throw HyracksDataException.create(th);
+        }
     }
 
     @Override

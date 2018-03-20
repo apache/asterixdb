@@ -61,6 +61,15 @@ public interface ILSMIndex extends IIndex {
 
     void modify(IIndexOperationContext ictx, ITupleReference tuple) throws HyracksDataException;
 
+    /**
+     * If this method returns successfully, then the cursor has been opened, and need to be closed
+     * Otherwise, it has not been opened
+     *
+     * @param ictx
+     * @param cursor
+     * @param pred
+     * @throws HyracksDataException
+     */
     void search(ILSMIndexOperationContext ictx, IIndexCursor cursor, ISearchPredicate pred) throws HyracksDataException;
 
     public void scanDiskComponents(ILSMIndexOperationContext ctx, IIndexCursor cursor) throws HyracksDataException;

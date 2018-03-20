@@ -25,6 +25,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMBTreeWithBuddySortedCursor extends LSMBTreeWithBuddyAbstractCursor {
     // TODO: This class can be removed and instead use a search cursor that uses
@@ -160,12 +161,21 @@ public class LSMBTreeWithBuddySortedCursor extends LSMBTreeWithBuddyAbstractCurs
         foundNext = false;
         for (int i = 0; i < numberOfTrees; i++) {
             btreeCursors[i].close();
-            btreeAccessors[i].search(btreeCursors[i], btreeRangePredicate);
-            if (btreeCursors[i].hasNext()) {
-                btreeCursors[i].next();
-            } else {
-                depletedBtreeCursors[i] = true;
+        }
+        IndexCursorUtils.open(btreeAccessors, btreeCursors, btreeRangePredicate);
+        try {
+            for (int i = 0; i < numberOfTrees; i++) {
+                if (btreeCursors[i].hasNext()) {
+                    btreeCursors[i].next();
+                } else {
+                    depletedBtreeCursors[i] = true;
+                }
             }
+        } catch (Throwable th) { // NOSONAR Must catch all failures to close before throwing
+            for (int i = 0; i < numberOfTrees; i++) {
+                IndexCursorUtils.close(btreeCursors[i], th);
+            }
+            throw HyracksDataException.create(th);
         }
     }
 }

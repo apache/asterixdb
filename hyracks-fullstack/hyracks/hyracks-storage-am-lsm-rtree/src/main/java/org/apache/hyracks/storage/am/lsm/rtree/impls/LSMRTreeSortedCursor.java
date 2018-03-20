@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
 
@@ -163,14 +164,19 @@ public class LSMRTreeSortedCursor extends LSMRTreeAbstractCursor {
         super.doOpen(initialState, searchPred);
         depletedRtreeCursors = new boolean[numberOfTrees];
         foundNext = false;
-        for (int i = 0; i < numberOfTrees; i++) {
-            rtreeCursors[i].close();
-            rtreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
-            if (rtreeCursors[i].hasNext()) {
-                rtreeCursors[i].next();
-            } else {
-                depletedRtreeCursors[i] = true;
+        try {
+            for (int i = 0; i < numberOfTrees; i++) {
+                rtreeCursors[i].close();
+                rtreeAccessors[i].search(rtreeCursors[i], rtreeSearchPredicate);
+                if (rtreeCursors[i].hasNext()) {
+                    rtreeCursors[i].next();
+                } else {
+                    depletedRtreeCursors[i] = true;
+                }
             }
+        } catch (Throwable th) { // NOSONAR. Must catch all failures
+            IndexCursorUtils.close(rtreeCursors, th);
+            throw HyracksDataException.create(th);
         }
     }
 }

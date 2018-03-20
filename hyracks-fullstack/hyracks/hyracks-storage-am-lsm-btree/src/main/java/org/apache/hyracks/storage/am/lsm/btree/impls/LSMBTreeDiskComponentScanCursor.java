@@ -40,6 +40,7 @@ import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
 
@@ -77,15 +78,20 @@ public class LSMBTreeDiskComponentScanCursor extends LSMIndexSearchCursor {
             BTree btree = (BTree) component.getIndex();
             btreeAccessors[i] = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             rangeCursors[i] = btreeAccessors[i].createSearchCursor(false);
-            btreeAccessors[i].search(rangeCursors[i], searchPred);
         }
-
-        cursorIndexPointable = new IntegerPointable();
-        int length = IntegerPointable.TYPE_TRAITS.getFixedLength();
-        cursorIndexPointable.set(new byte[length], 0, length);
-
-        setPriorityQueueComparator();
-        initPriorityQueue();
+        IndexCursorUtils.open(btreeAccessors, rangeCursors, searchPred);
+        try {
+            cursorIndexPointable = new IntegerPointable();
+            int length = IntegerPointable.TYPE_TRAITS.getFixedLength();
+            cursorIndexPointable.set(new byte[length], 0, length);
+            setPriorityQueueComparator();
+            initPriorityQueue();
+        } catch (Throwable th) { // NOSONAR: Must call this on
+            for (int i = 0; i < numBTrees; i++) {
+                IndexCursorUtils.close(rangeCursors[i], th);
+            }
+            throw HyracksDataException.create(th);
+        }
     }
 
     @Override
