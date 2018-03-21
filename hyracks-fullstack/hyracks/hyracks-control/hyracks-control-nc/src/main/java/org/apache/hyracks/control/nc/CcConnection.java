@@ -18,10 +18,15 @@
  */
 package org.apache.hyracks.control.nc;
 
+import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.hyracks.api.control.CcId;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.control.common.base.IClusterController;
 import org.apache.hyracks.control.common.controllers.NodeParameters;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +36,7 @@ public class CcConnection {
 
     private final IClusterController ccs;
     private boolean registrationPending;
+    private boolean registrationCompleted;
     private Exception registrationException;
     private NodeParameters nodeParameters;
 
@@ -57,12 +63,14 @@ public class CcConnection {
     public synchronized CcId registerNode(NodeRegistration nodeRegistration, int registrationId) throws Exception {
         registrationPending = true;
         ccs.registerNode(nodeRegistration, registrationId);
-        while (registrationPending) {
-            wait();
+        try {
+            InvokeUtil.runWithTimeout(this::wait, () -> !registrationPending, 2, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            registrationException = e;
         }
         if (registrationException != null) {
-            LOGGER.log(Level.WARN, "Registering with {} failed with exception", this, registrationException);
-            throw registrationException;
+            LOGGER.fatal("Registering with {} failed with exception", this, registrationException);
+            ExitUtil.halt(ExitUtil.EC_IMMEDIATE_HALT);
         }
         return getCcId();
     }
@@ -73,5 +81,28 @@ public class CcConnection {
 
     public NodeParameters getNodeParameters() {
         return nodeParameters;
+    }
+
+    public synchronized void notifyConnectionRestored(NodeControllerService ncs, InetSocketAddress ccAddress)
+            throws InterruptedException {
+        if (registrationCompleted) {
+            registrationCompleted = false;
+            ncs.getExecutor().submit(() -> {
+                try {
+                    return ncs.registerNode(this, ccAddress);
+                } catch (Exception e) {
+                    LOGGER.log(Level.ERROR, "Failed registering with cc", e);
+                    throw new IllegalStateException(e);
+                }
+            });
+        }
+        while (!registrationCompleted) {
+            wait();
+        }
+    }
+
+    public synchronized void notifyRegistrationCompleted() {
+        registrationCompleted = true;
+        notifyAll();
     }
 }
