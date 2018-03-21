@@ -76,7 +76,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     private final String logFilePrefix;
     private final MutableLong flushLSN;
     private final String nodeId;
-    private final HashMap<Long, Integer> txnLogFileId2ReaderCount = new HashMap<>();
     private final long logFileSize;
     private final int logPageSize;
     private final AtomicLong appendLSN;
@@ -407,24 +406,20 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             /**
              * At this point, any future LogReader should read from LSN >= checkpointLSN
              */
-            synchronized (txnLogFileId2ReaderCount) {
-                for (Long id : logFileIds) {
-                    /**
-                     * Stop deletion if:
-                     * The log file which contains the checkpointLSN has been reached.
-                     * The oldest log file being accessed by a LogReader has been reached.
-                     */
-                    if (id >= checkpointLSNLogFileID
-                            || (txnLogFileId2ReaderCount.containsKey(id) && txnLogFileId2ReaderCount.get(id) > 0)) {
-                        break;
-                    }
-                    //delete old log file
-                    File file = new File(getLogFilePath(id));
-                    file.delete();
-                    txnLogFileId2ReaderCount.remove(id);
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info("Deleted log file " + file.getAbsolutePath());
-                    }
+            for (Long id : logFileIds) {
+                /**
+                 * Stop deletion if:
+                 * The log file which contains the checkpointLSN has been reached.
+                 * The oldest log file being accessed by a LogReader has been reached.
+                 */
+                if (id >= checkpointLSNLogFileID) {
+                    break;
+                }
+                //delete old log file
+                File file = new File(getLogFilePath(id));
+                file.delete();
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Deleted log file " + file.getAbsolutePath());
                 }
             }
         }
@@ -450,7 +445,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     private long deleteAllLogFiles() {
-        txnLogFileId2ReaderCount.clear();
         List<Long> logFileIds = getLogFileIds();
         if (!logFileIds.isEmpty()) {
             for (Long id : logFileIds) {
@@ -607,7 +601,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         RandomAccessFile raf = new RandomAccessFile(new File(logFilePath), "r");
         FileChannel newFileChannel = raf.getChannel();
         TxnLogFile logFile = new TxnLogFile(this, newFileChannel, fileId, fileId * logFileSize);
-        touchLogFile(fileId);
         return logFile;
     }
 
@@ -617,32 +610,6 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             LOGGER.warn(() -> "Closing log file with id(" + logFileRef.getLogFileId() + ") with a closed channel.");
         }
         fileChannel.close();
-        untouchLogFile(logFileRef.getLogFileId());
-    }
-
-    private void touchLogFile(long fileId) {
-        synchronized (txnLogFileId2ReaderCount) {
-            if (txnLogFileId2ReaderCount.containsKey(fileId)) {
-                txnLogFileId2ReaderCount.put(fileId, txnLogFileId2ReaderCount.get(fileId) + 1);
-            } else {
-                txnLogFileId2ReaderCount.put(fileId, 1);
-            }
-        }
-    }
-
-    private void untouchLogFile(long fileId) {
-        synchronized (txnLogFileId2ReaderCount) {
-            if (txnLogFileId2ReaderCount.containsKey(fileId)) {
-                int newReaderCount = txnLogFileId2ReaderCount.get(fileId) - 1;
-                if (newReaderCount < 0) {
-                    throw new IllegalStateException(
-                            "Invalid log file reader count (ID=" + fileId + ", count: " + newReaderCount + ")");
-                }
-                txnLogFileId2ReaderCount.put(fileId, newReaderCount);
-            } else {
-                throw new IllegalStateException("Trying to close log file id(" + fileId + ") which was not opened.");
-            }
-        }
     }
 
     /**
