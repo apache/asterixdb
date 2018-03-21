@@ -211,6 +211,7 @@ public class NCApplication extends BaseNCApplication {
                 ? getCurrentSystemState() : SystemState.HEALTHY;
         RegistrationTasksRequestMessage.send(ccId, (NodeControllerService) ncServiceCtx.getControllerService(),
                 currentStatus, systemState);
+        ncs.notifyRegistrationCompleted(ccId);
     }
 
     @Override

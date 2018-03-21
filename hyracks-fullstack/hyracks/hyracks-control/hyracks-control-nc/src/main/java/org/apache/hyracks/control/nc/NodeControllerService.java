@@ -363,8 +363,7 @@ public class NodeControllerService implements IControllerService {
             };
             ClusterControllerRemoteProxy ccProxy = new ClusterControllerRemoteProxy(
                     ipc.getHandle(ccAddress, ncConfig.getClusterConnectRetries(), 1, ipcEventListener));
-            CcConnection ccc = new CcConnection(ccProxy);
-            return registerNode(ccc, ccAddress);
+            return registerNode(new CcConnection(ccProxy), ccAddress);
         }
     }
 
@@ -415,7 +414,6 @@ public class NodeControllerService implements IControllerService {
 
     public CcId registerNode(CcConnection ccc, InetSocketAddress ccAddress) throws Exception {
         LOGGER.info("Registering with Cluster Controller {}", ccc);
-
         int registrationId = nextRegistrationId.incrementAndGet();
         pendingRegistrations.put(registrationId, ccc);
         CcId ccId = ccc.registerNode(nodeRegistration, registrationId);
@@ -425,10 +423,8 @@ public class NodeControllerService implements IControllerService {
         if (distributedState != null) {
             getDistributedState().put(ccId, distributedState);
         }
-        application.onRegisterNode(ccId);
         IClusterController ccs = ccc.getClusterControllerService();
         NodeParameters nodeParameters = ccc.getNodeParameters();
-
         // Start heartbeat generator.
         if (!heartbeatThreads.containsKey(ccId)) {
             Thread heartbeatThread = new Thread(
@@ -445,8 +441,6 @@ public class NodeControllerService implements IControllerService {
             ccTimer.schedule(new ProfileDumpTask(ccs, ccId), 0, nodeParameters.getProfileDumpPeriod());
             ccTimers.put(ccId, ccTimer);
         }
-        ccc.notifyRegistrationCompleted();
-        LOGGER.info("Registering with Cluster Controller {} complete", ccc);
         return ccId;
     }
 
@@ -708,7 +702,6 @@ public class NodeControllerService implements IControllerService {
     }
 
     private class TraceCurrentTimeTask extends TimerTask {
-
         private ITracer tracer;
         private long traceCategory;
 
@@ -725,5 +718,15 @@ public class NodeControllerService implements IControllerService {
                 LOGGER.log(Level.WARN, "Exception tracing current time", e);
             }
         }
+    }
+
+    public INCApplication getApplication() {
+        return application;
+    }
+
+    public void notifyRegistrationCompleted(CcId ccId) {
+        CcConnection ccc = getCcConnection(ccId);
+        ccc.notifyRegistrationCompleted();
+        LOGGER.info("Registering with Cluster Controller {} complete", ccc);
     }
 }

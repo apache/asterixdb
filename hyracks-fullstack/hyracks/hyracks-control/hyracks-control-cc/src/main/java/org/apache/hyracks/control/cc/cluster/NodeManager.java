@@ -103,14 +103,13 @@ public class NodeManager implements INodeManager {
         if (nodeRegistry.containsKey(nodeId)) {
             LOGGER.warn("Node with name " + nodeId + " has already registered; failing the node then re-registering.");
             failNode(nodeId);
-        } else {
-            try {
-                // TODO(mblow): it seems we should close IPC handles when we're done with them (like here)
-                IIPCHandle ncIPCHandle = ccs.getClusterIPC().getHandle(ncState.getNodeController().getAddress());
-                ncIPCHandle.send(-1, new AbortCCJobsFunction(ccConfig.getCcId()), null);
-            } catch (IPCException e) {
-                throw HyracksDataException.create(e);
-            }
+        }
+        try {
+            // TODO(mblow): it seems we should close IPC handles when we're done with them (like here)
+            IIPCHandle ncIPCHandle = ccs.getClusterIPC().getHandle(ncState.getNodeController().getAddress());
+            ncIPCHandle.send(-1, new AbortCCJobsFunction(ccConfig.getCcId()), null);
+        } catch (IPCException e) {
+            throw HyracksDataException.create(e);
         }
         LOGGER.warn("adding node to registry");
         nodeRegistry.put(nodeId, ncState);
