@@ -60,7 +60,6 @@ public class LSMInvertedIndexDeletedKeysBTreeMergeCursor extends LSMIndexSearchC
         ArrayList<IIndexAccessor> btreeAccessors = lsmInitialState.getDeletedKeysBTreeAccessors();
         for (int i = 0; i < numBTrees; i++) {
             rangeCursors[i] = btreeAccessors.get(i).createSearchCursor(false);
-            btreeAccessors.get(i).search(rangeCursors[i], btreePredicate);
         }
         IndexCursorUtils.open(btreeAccessors, rangeCursors, btreePredicate);
         try {
