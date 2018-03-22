@@ -352,10 +352,11 @@ public class NodeControllerService implements IControllerService {
                 @Override
                 public void ipcHandleRestored(IIPCHandle handle) throws IPCException {
                     // we need to re-register in case of NC -> CC connection reset
+                    final CcConnection ccConnection = getCcConnection(ccAddressMap.get(ccAddress));
                     try {
-                        registerNode(getCcConnection(ccAddressMap.get(ccAddress)), ccAddress);
-                    } catch (Exception e) {
-                        LOGGER.log(Level.WARN, "Failed Registering with cc", e);
+                        ccConnection.notifyConnectionRestored(NodeControllerService.this, ccAddress);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                         throw new IPCException(e);
                     }
                 }
@@ -412,7 +413,7 @@ public class NodeControllerService implements IControllerService {
         }
     }
 
-    private CcId registerNode(CcConnection ccc, InetSocketAddress ccAddress) throws Exception {
+    public CcId registerNode(CcConnection ccc, InetSocketAddress ccAddress) throws Exception {
         LOGGER.info("Registering with Cluster Controller {}", ccc);
 
         int registrationId = nextRegistrationId.incrementAndGet();
@@ -444,7 +445,7 @@ public class NodeControllerService implements IControllerService {
             ccTimer.schedule(new ProfileDumpTask(ccs, ccId), 0, nodeParameters.getProfileDumpPeriod());
             ccTimers.put(ccId, ccTimer);
         }
-
+        ccc.notifyRegistrationCompleted();
         LOGGER.info("Registering with Cluster Controller {} complete", ccc);
         return ccId;
     }

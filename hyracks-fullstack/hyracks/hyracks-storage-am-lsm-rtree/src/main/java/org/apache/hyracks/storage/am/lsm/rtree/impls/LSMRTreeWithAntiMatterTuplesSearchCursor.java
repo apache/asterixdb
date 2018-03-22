@@ -42,6 +42,7 @@ import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCursor {
 
@@ -113,19 +114,25 @@ public class LSMRTreeWithAntiMatterTuplesSearchCursor extends LSMIndexSearchCurs
         rangeCursors = new RTreeSearchCursor[numImmutableComponents];
         ITreeIndexAccessor[] immutableRTreeAccessors = new ITreeIndexAccessor[numImmutableComponents];
         int j = 0;
-        for (int i = numMemoryComponents; i < operationalComponents.size(); i++) {
-            ILSMComponent component = operationalComponents.get(i);
-            rangeCursors[j] = new RTreeSearchCursor(
-                    (IRTreeInteriorFrame) lsmInitialState.getRTreeInteriorFrameFactory().createFrame(),
-                    (IRTreeLeafFrame) lsmInitialState.getRTreeLeafFrameFactory().createFrame());
-            RTree rtree = ((LSMRTreeWithAntimatterDiskComponent) component).getIndex();
-            immutableRTreeAccessors[j] = rtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            immutableRTreeAccessors[j].search(rangeCursors[j], searchPred);
-            j++;
+        try {
+            for (int i = numMemoryComponents; i < operationalComponents.size(); i++) {
+                ILSMComponent component = operationalComponents.get(i);
+                rangeCursors[j] = new RTreeSearchCursor(
+                        (IRTreeInteriorFrame) lsmInitialState.getRTreeInteriorFrameFactory().createFrame(),
+                        (IRTreeLeafFrame) lsmInitialState.getRTreeLeafFrameFactory().createFrame());
+                RTree rtree = ((LSMRTreeWithAntimatterDiskComponent) component).getIndex();
+                immutableRTreeAccessors[j] = rtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                immutableRTreeAccessors[j].search(rangeCursors[j], searchPred);
+                j++;
+            }
+            searchNextCursor();
+            setPriorityQueueComparator();
+            initPriorityQueue();
+        } catch (Throwable th) { // NOSONAR: Must catch all failures
+            IndexCursorUtils.close(rangeCursors, th);
+            IndexCursorUtils.close(mutableRTreeCursors, th);
+            throw HyracksDataException.create(th);
         }
-        searchNextCursor();
-        setPriorityQueueComparator();
-        initPriorityQueue();
         open = true;
     }
 

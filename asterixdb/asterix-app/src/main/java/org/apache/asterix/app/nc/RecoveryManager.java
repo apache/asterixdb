@@ -59,6 +59,7 @@ import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogType;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
@@ -104,6 +105,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     private SystemState state;
     private final INCServiceContext serviceCtx;
     private final INcApplicationContext appCtx;
+    private static final TxnId recoveryTxnId = new TxnId(-1);
 
     public RecoveryManager(ITransactionSubsystem txnSubsystem, INCServiceContext serviceCtx) {
         this.serviceCtx = serviceCtx;
@@ -505,21 +507,24 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     @Override
-    public void replayReplicaPartitionLogs(Set<Integer> partitions, boolean flush) throws HyracksDataException {
-        long minLSN = getPartitionsMinLSN(partitions);
-        long readableSmallestLSN = logMgr.getReadableSmallestLSN();
-        if (minLSN < readableSmallestLSN) {
-            minLSN = readableSmallestLSN;
-        }
-
+    public synchronized void replayReplicaPartitionLogs(Set<Integer> partitions, boolean flush)
+            throws HyracksDataException {
         //replay logs > minLSN that belong to these partitions
         try {
+            checkpointManager.secure(recoveryTxnId);
+            long minLSN = getPartitionsMinLSN(partitions);
+            long readableSmallestLSN = logMgr.getReadableSmallestLSN();
+            if (minLSN < readableSmallestLSN) {
+                minLSN = readableSmallestLSN;
+            }
             replayPartitionsLogs(partitions, logMgr.getLogReader(true), minLSN);
             if (flush) {
                 appCtx.getDatasetLifecycleManager().flushAllDatasets();
             }
         } catch (IOException | ACIDException e) {
             throw HyracksDataException.create(e);
+        } finally {
+            checkpointManager.completed(recoveryTxnId);
         }
     }
 

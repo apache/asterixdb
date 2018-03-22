@@ -27,6 +27,7 @@ import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMRTreeWithAntiMatterTuplesFlushCursor extends EnforcedIndexCursor implements ILSMIndexCursor {
     private final TreeTupleSorter rTreeTupleSorter;
@@ -49,17 +50,13 @@ public class LSMRTreeWithAntiMatterTuplesFlushCursor extends EnforcedIndexCursor
 
     @Override
     public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
-        boolean rtreeOpen = false;
-        boolean btreeOpen = false;
         try {
             rTreeTupleSorter.open(initialState, searchPred);
-            rtreeOpen = true;
             bTreeTupleSorter.open(initialState, searchPred);
-            btreeOpen = true;
-        } finally {
-            if (rtreeOpen && !btreeOpen) {
-                rTreeTupleSorter.close();
-            }
+        } catch (Throwable th) { // NOSONAR: Must catch all failures
+            IndexCursorUtils.close(bTreeTupleSorter, th);
+            IndexCursorUtils.close(rTreeTupleSorter, th);
+            throw HyracksDataException.create(th);
         }
     }
 

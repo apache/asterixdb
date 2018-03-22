@@ -46,30 +46,29 @@ public class IoUtil {
     /**
      * Delete a file
      *
-     * @param fileRef
-     *            the file to be deleted
-     * @throws HyracksDataException
-     *             if the file couldn't be deleted
+     * @param fileRef the file to be deleted
+     * @throws HyracksDataException if the file couldn't be deleted
      */
     public static void delete(FileReference fileRef) throws HyracksDataException {
         delete(fileRef.getFile());
     }
 
     /**
-     * Delete a file
+     * Delete a file or directory
      *
-     * @param file
-     *            the file to be deleted
-     * @throws HyracksDataException
-     *             if the file couldn't be deleted
+     * @param file the file to be deleted
+     * @throws HyracksDataException if the file (or directory if exists) couldn't be deleted
      */
     public static void delete(File file) throws HyracksDataException {
         try {
             if (file.isDirectory()) {
-                deleteDirectory(file);
-            } else {
-                Files.delete(file.toPath());
+                if (!file.exists()) {
+                    return;
+                } else if (!FileUtils.isSymlink(file)) {
+                    cleanDirectory(file);
+                }
             }
+            Files.delete(file.toPath());
         } catch (NoSuchFileException | FileNotFoundException e) {
             LOGGER.warn(() -> FILE_NOT_FOUND_MSG + ": " + e.getMessage(), e);
         } catch (IOException e) {
@@ -80,10 +79,8 @@ public class IoUtil {
     /**
      * Create a file on disk
      *
-     * @param fileRef
-     *            the file to create
-     * @throws HyracksDataException
-     *             if the file already exists or if it couldn't be created
+     * @param fileRef the file to create
+     * @throws HyracksDataException if the file already exists or if it couldn't be created
      */
     public static void create(FileReference fileRef) throws HyracksDataException {
         if (fileRef.getFile().exists()) {
@@ -99,17 +96,7 @@ public class IoUtil {
         }
     }
 
-    public static void deleteDirectory(File directory) throws IOException {
-        if (!directory.exists()) {
-            return;
-        }
-        if (!FileUtils.isSymlink(directory)) {
-            cleanDirectory(directory);
-        }
-        Files.delete(directory.toPath());
-    }
-
-    public static void cleanDirectory(final File directory) throws IOException {
+    private static void cleanDirectory(final File directory) throws IOException {
         final File[] files = verifiedListFiles(directory);
         for (final File file : files) {
             delete(file);
@@ -133,4 +120,5 @@ public class IoUtil {
         }
         return files;
     }
+
 }

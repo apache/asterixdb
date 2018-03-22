@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 
 public class LSMBuddyBTreeMergeCursor extends LSMIndexSearchCursor {
 
@@ -55,7 +56,6 @@ public class LSMBuddyBTreeMergeCursor extends LSMIndexSearchCursor {
         lsmHarness = null;
         int numBTrees = operationalComponents.size();
         rangeCursors = new IIndexCursor[numBTrees];
-
         RangePredicate btreePredicate = new RangePredicate(null, null, true, true, cmp, cmp);
         IIndexAccessor[] btreeAccessors = new ITreeIndexAccessor[numBTrees];
         for (int i = 0; i < numBTrees; i++) {
@@ -64,9 +64,14 @@ public class LSMBuddyBTreeMergeCursor extends LSMIndexSearchCursor {
             rangeCursors[i] = new BTreeRangeSearchCursor(leafFrame, false);
             BTree buddyBtree = ((LSMBTreeWithBuddyDiskComponent) component).getBuddyIndex();
             btreeAccessors[i] = buddyBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            btreeAccessors[i].search(rangeCursors[i], btreePredicate);
         }
-        setPriorityQueueComparator();
-        initPriorityQueue();
+        IndexCursorUtils.open(btreeAccessors, rangeCursors, btreePredicate);
+        try {
+            setPriorityQueueComparator();
+            initPriorityQueue();
+        } catch (Throwable th) { // NOSONAR: Must catch all failures
+            IndexCursorUtils.close(rangeCursors, th);
+            throw HyracksDataException.create(th);
+        }
     }
 }

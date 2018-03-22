@@ -33,6 +33,7 @@ import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.TransactionUtil;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.Level;
@@ -103,10 +104,11 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
                 LogRecord logRecord = new LogRecord();
                 TransactionUtil.formJobTerminateLogRecord(txnCtx, logRecord, false);
                 txnSubsystem.getLogManager().log(logRecord);
+                txnSubsystem.getCheckpointManager().secure(txnId);
                 txnSubsystem.getRecoveryManager().rollbackTransaction(txnCtx);
                 txnCtx.setTxnState(ITransactionManager.ABORTED);
             }
-        } catch (ACIDException e) {
+        } catch (HyracksDataException e) {
             String msg = "Could not complete rollback! System is in an inconsistent state";
             if (LOGGER.isErrorEnabled()) {
                 LOGGER.log(Level.ERROR, msg, e);
@@ -116,6 +118,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             txnCtx.complete();
             txnSubsystem.getLockManager().releaseLocks(txnCtx);
             txnCtxRepository.remove(txnCtx.getTxnId());
+            txnSubsystem.getCheckpointManager().completed(txnId);
         }
     }
 
