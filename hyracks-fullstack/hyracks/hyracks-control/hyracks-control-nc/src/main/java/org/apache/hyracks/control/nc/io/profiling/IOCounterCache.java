@@ -19,29 +19,23 @@
 
 package org.apache.hyracks.control.nc.io.profiling;
 
-public class IOCounterFactory {
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
-    public static final IOCounterFactory INSTANCE = new IOCounterFactory();
+import org.apache.hyracks.util.Span;
 
-    private IOCounterFactory() {
-    }
+abstract class IOCounterCache<T> implements IIOCounter {
+    private static final long TTL_NANOS = TimeUnit.MILLISECONDS.toNanos(500);
+    private Span span;
+    private T info;
 
-    /**
-     * Get the IOCounter for the specific underlying OS
-     *
-     * @return an IIOCounter instance
-     */
-    public IIOCounter getIOCounter() {
-        String osName = System.getProperty("os.name").toLowerCase();
-        if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
-            if (IOCounterProc.STATFILE.exists()) {
-                return new IOCounterProc();
-            }
-            return new IOCounterIoStat();
-        } else if (osName.contains("mac")) {
-            return new IOCounterOSX();
-        } else {
-            return new IOCounterDefault();
+    protected synchronized T getInfo() throws IOException {
+        if (info == null || span.elapsed()) {
+            span = Span.start(TTL_NANOS, TimeUnit.NANOSECONDS);
+            info = calculateInfo();
         }
+        return info;
     }
+
+    protected abstract T calculateInfo() throws IOException;
 }

@@ -19,16 +19,18 @@
 
 package org.apache.hyracks.control.nc.io.profiling;
 
+import static org.apache.hyracks.control.nc.io.profiling.IOCounterDefault.IO_COUNTER_UNAVAILABLE;
+
 public class IOCounterOSX implements IIOCounter {
 
     @Override
     public long getReads() {
-        return 0;
+        return IO_COUNTER_UNAVAILABLE;
     }
 
     @Override
     public long getWrites() {
-        return 0;
+        return IO_COUNTER_UNAVAILABLE;
     }
 
 }
