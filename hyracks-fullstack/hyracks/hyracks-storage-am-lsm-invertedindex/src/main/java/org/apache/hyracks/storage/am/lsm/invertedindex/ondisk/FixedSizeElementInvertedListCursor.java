@@ -220,9 +220,11 @@ public class FixedSizeElementInvertedListCursor extends InvertedListCursor {
             // Assumption: processing inverted list takes time; so, we don't want to keep them on the buffer cache.
             // Rather, we utilize the assigned working memory (buffers).
             tmpBuffer = page.getBuffer();
-            tmpBuffer.rewind();
-            buffers.get(currentBufferIdx).rewind();
-            buffers.get(currentBufferIdx).put(tmpBuffer);
+
+            // Copies the entire content of the page to the current buffer in the working memory.
+            System.arraycopy(tmpBuffer.array(), 0, buffers.get(currentBufferIdx).array(), 0,
+                    buffers.get(currentBufferIdx).capacity());
+            buffers.get(currentBufferIdx).position(buffers.get(currentBufferIdx).capacity());
 
             currentBufferIdx++;
             bufferCache.unpin(page);
