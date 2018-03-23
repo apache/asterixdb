@@ -26,7 +26,6 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
-import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
@@ -41,7 +40,7 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
 
     private final BTree btree;
     private final IIndexAccessor btreeAccessor;
-    private final IInPlaceInvertedIndex invIndex;
+    private final OnDiskInvertedIndex invIndex;
     private final IIndexOperationContext opCtx;
     private final InvertedListCursor invListRangeSearchCursor;
     private boolean isInvListCursorOpen;
@@ -50,11 +49,11 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
     private RangePredicate btreePred;
 
     private final PermutingTupleReference tokenTuple;
-    private ConcatenatingTupleReference concatTuple;
+    private final ConcatenatingTupleReference concatTuple;
 
-    public OnDiskInvertedIndexRangeSearchCursor(IInPlaceInvertedIndex invIndex, IIndexOperationContext opCtx)
+    public OnDiskInvertedIndexRangeSearchCursor(OnDiskInvertedIndex invIndex, IIndexOperationContext opCtx)
             throws HyracksDataException {
-        this.btree = ((OnDiskInvertedIndex) invIndex).getBTree();
+        this.btree = invIndex.getBTree();
         this.btreeAccessor = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
         this.invIndex = invIndex;
         this.opCtx = opCtx;
@@ -87,11 +86,7 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
             return true;
         }
         // The current inverted-list-range-search cursor is exhausted.
-        try {
-            invListRangeSearchCursor.unloadPages();
-        } finally {
-            invListRangeSearchCursor.close();
-        }
+        invListRangeSearchCursor.close();
         isInvListCursorOpen = false;
         openInvListRangeSearchCursor();
         return isInvListCursorOpen;
@@ -109,14 +104,8 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
     @Override
     public void doDestroy() throws HyracksDataException {
         try {
-            if (isInvListCursorOpen) {
-                try {
-                    invListRangeSearchCursor.unloadPages();
-                } finally {
-                    isInvListCursorOpen = false;
-                    invListRangeSearchCursor.destroy();
-                }
-            }
+            invListRangeSearchCursor.destroy();
+            isInvListCursorOpen = false;
         } finally {
             btreeCursor.destroy();
         }
@@ -125,14 +114,8 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
     @Override
     public void doClose() throws HyracksDataException {
         try {
-            if (isInvListCursorOpen) {
-                try {
-                    invListRangeSearchCursor.unloadPages();
-                } finally {
-                    invListRangeSearchCursor.close();
-                }
-                isInvListCursorOpen = false;
-            }
+            invListRangeSearchCursor.close();
+            isInvListCursorOpen = false;
         } finally {
             btreeCursor.close();
         }
@@ -148,7 +131,8 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
         if (btreeCursor.hasNext()) {
             btreeCursor.next();
             tokenTuple.reset(btreeCursor.getTuple());
-            invIndex.openInvertedListCursor(invListRangeSearchCursor, tokenTuple, opCtx);
+            invIndex.openInvertedListCursor(btreeCursor.getTuple(), invListRangeSearchCursor,
+                    (OnDiskInvertedIndexOpContext) opCtx);
             invListRangeSearchCursor.prepareLoadPages();
             invListRangeSearchCursor.loadPages();
             concatTuple.reset();

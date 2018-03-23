@@ -98,10 +98,9 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
         keysOnlyTuple.reset(checkElement.getTuple());
         int end = checkElement.getCursorIndex();
         for (int i = 0; i < end; i++) {
-            if (bloomFilters[i] != null && bloomFilters[i].contains(keysOnlyTuple, hashes)) {
+            if (bloomFilters[i] != null && !bloomFilters[i].contains(keysOnlyTuple, hashes)) {
                 continue;
             }
-            deletedKeysBTreeCursors[i].close();
             deletedKeysBTreeAccessors.get(i).search(deletedKeysBTreeCursors[i], keySearchPred);
             try {
                 if (deletedKeysBTreeCursors[i].hasNext()) {
@@ -112,6 +111,33 @@ public class LSMInvertedIndexRangeSearchCursor extends LSMIndexSearchCursor {
             }
         }
         return false;
+    }
+
+    @Override
+    public void doClose() throws HyracksDataException {
+        try {
+            super.doClose();
+        } finally {
+            if (deletedKeysBTreeCursors != null) {
+                for (int i = 0; i < deletedKeysBTreeCursors.length; i++) {
+                    deletedKeysBTreeCursors[i].close();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void doDestroy() throws HyracksDataException {
+        try {
+            super.doDestroy();
+        } finally {
+            if (deletedKeysBTreeCursors != null) {
+                for (int i = 0; i < deletedKeysBTreeCursors.length; i++) {
+                    deletedKeysBTreeCursors[i].destroy();
+                }
+                deletedKeysBTreeCursors = null;
+            }
+        }
     }
 
 }

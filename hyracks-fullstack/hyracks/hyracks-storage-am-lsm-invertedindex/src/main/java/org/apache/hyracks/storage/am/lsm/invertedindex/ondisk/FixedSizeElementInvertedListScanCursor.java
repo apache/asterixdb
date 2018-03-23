@@ -53,6 +53,7 @@ public class FixedSizeElementInvertedListScanCursor extends InvertedListCursor {
     protected ICachedPage page;
 
     protected boolean pinned;
+    protected int pinnedPageId = -1;
 
     public FixedSizeElementInvertedListScanCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields)
             throws HyracksDataException {
@@ -103,14 +104,18 @@ public class FixedSizeElementInvertedListScanCursor extends InvertedListCursor {
      */
     @Override
     public void loadPages() throws HyracksDataException {
-        if (pinned) {
-            unloadPages();
-        }
         if (currentPageId == endPageId) {
+            // inverted list exhausted, return
             return;
         }
         currentPageId++;
+        if (pinned && pinnedPageId == currentPageId) {
+            // already pinned, return
+            return;
+        }
+        unloadPages();
         page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
+        pinnedPageId = currentPageId;
         pinned = true;
     }
 
@@ -134,7 +139,6 @@ public class FixedSizeElementInvertedListScanCursor extends InvertedListCursor {
         // Deducts 1 since the startPage would be set to bufferCurrentPageId + 1 in loadPages().
         this.currentPageId = startPageId - 1;
         this.numPages = endPageId - startPageId + 1;
-        this.pinned = false;
     }
 
     @Override
@@ -158,16 +162,14 @@ public class FixedSizeElementInvertedListScanCursor extends InvertedListCursor {
 
     @Override
     public void doClose() throws HyracksDataException {
-        if (pinned) {
-            unloadPages();
-        }
+        // No op
+        // We allow the inverted list cursor to hold at most one page to avoid
+        // unnecessary pins
     }
 
     @Override
     public void doDestroy() throws HyracksDataException {
-        if (pinned) {
-            unloadPages();
-        }
+        unloadPages();
     }
 
     @Override

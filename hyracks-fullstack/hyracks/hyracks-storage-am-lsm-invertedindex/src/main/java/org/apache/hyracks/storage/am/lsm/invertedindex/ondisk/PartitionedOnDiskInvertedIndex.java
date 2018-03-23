@@ -117,7 +117,7 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
                 short numTokens = ShortPointable.getShort(btreeTuple.getFieldData(PARTITIONING_NUM_TOKENS_FIELD),
                         btreeTuple.getFieldStart(PARTITIONING_NUM_TOKENS_FIELD));
                 InvertedListCursor invListCursor = partSearcher.getCachedInvertedListCursor();
-                openInvertedListCursor(btreeTuple, invListCursor);
+                openInvertedListCursor(btreeTuple, invListCursor, ctx);
                 invListPartitions.addInvertedListCursor(invListCursor, numTokens);
                 tokenExists = true;
             }

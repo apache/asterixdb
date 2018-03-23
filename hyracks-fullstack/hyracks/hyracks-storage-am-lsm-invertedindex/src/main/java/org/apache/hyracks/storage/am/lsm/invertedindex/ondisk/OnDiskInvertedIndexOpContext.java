@@ -25,6 +25,7 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexSearchCursorInitialState;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -32,12 +33,13 @@ import org.apache.hyracks.storage.common.MultiComparator;
 public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
 
     private final RangePredicate btreePred = new RangePredicate(null, null, true, true, null, null);
-    private IIndexAccessor btreeAccessor;
-    private IIndexCursor btreeCursor;
-    private MultiComparator searchCmp;
+    private final IIndexAccessor btreeAccessor;
+    private final IIndexCursor btreeCursor;
+    private final MultiComparator searchCmp;
     // For prefix search on partitioned indexes.
     private MultiComparator prefixSearchCmp;
     private boolean destroyed = false;
+    private LSMInvertedIndexSearchCursorInitialState cursorInitialState;
 
     public OnDiskInvertedIndexOpContext(BTree btree) throws HyracksDataException {
         // TODO: Ignore opcallbacks for now.
@@ -95,5 +97,12 @@ public class OnDiskInvertedIndexOpContext implements IIndexOperationContext {
         } finally {
             btreeCursor.destroy();
         }
+    }
+
+    public LSMInvertedIndexSearchCursorInitialState getCursorInitialState() {
+        if (cursorInitialState == null) {
+            cursorInitialState = new LSMInvertedIndexSearchCursorInitialState();
+        }
+        return cursorInitialState;
     }
 }

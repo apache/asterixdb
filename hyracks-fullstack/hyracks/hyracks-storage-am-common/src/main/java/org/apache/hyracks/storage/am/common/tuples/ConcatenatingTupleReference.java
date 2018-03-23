@@ -19,8 +19,6 @@
 
 package org.apache.hyracks.storage.am.common.tuples;
 
-import java.util.Arrays;
-
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
@@ -96,14 +94,17 @@ public class ConcatenatingTupleReference implements ITupleReference {
         return tuples[tupleIndex].getFieldLength(fieldIndex);
     }
 
+    /**
+     * Right now this class is only used by inverted index, and only contains 2 tuples.
+     * As a result, sequential search would be more efficient than binary search
+     */
     private int getTupleIndex(int fIdx) {
-        int tupleIndex = Arrays.binarySearch(fieldCounts, 0, numTuples - 1, fIdx);
-        if (tupleIndex < 0) {
-            tupleIndex = -tupleIndex - 1;
-        } else {
-            ++tupleIndex;
+        for (int i = 0; i < numTuples; i++) {
+            if (fIdx < fieldCounts[i]) {
+                return i;
+            }
         }
-        return tupleIndex;
+        throw new IllegalArgumentException("Illegal field index " + fIdx);
     }
 
     private int getFieldIndex(int tupleIndex, int fIdx) {

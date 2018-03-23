@@ -55,6 +55,9 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokeniz
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestUtils.HyracksTaskTestContext;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
+import org.apache.hyracks.util.trace.ITraceCategoryRegistry;
+import org.apache.hyracks.util.trace.TraceCategoryRegistry;
+import org.apache.hyracks.util.trace.Tracer;
 
 @SuppressWarnings("rawtypes")
 public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
@@ -184,7 +187,9 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getMergePolicy(), harness.getOperationTracker(), harness.getIOScheduler(),
                         harness.getIOOperationCallbackFactory(), invertedIndexFields, filterTypeTraits,
                         filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps, true, harness.getMetadataPageManagerFactory());
+                        invertedIndexFieldsForNonBulkLoadOps, true, harness.getMetadataPageManagerFactory(),
+                        new Tracer(LSMInvertedIndexTestContext.class.getSimpleName(),
+                                ITraceCategoryRegistry.CATEGORIES_ALL, new TraceCategoryRegistry()));
                 break;
             }
             case PARTITIONED_LSM: {
@@ -195,7 +200,9 @@ public class LSMInvertedIndexTestContext extends OrderedIndexTestContext {
                         harness.getOperationTracker(), harness.getIOScheduler(),
                         harness.getIOOperationCallbackFactory(), invertedIndexFields, filterTypeTraits,
                         filterCmpFactories, filterFields, filterFieldsForNonBulkLoadOps,
-                        invertedIndexFieldsForNonBulkLoadOps, true, harness.getMetadataPageManagerFactory());
+                        invertedIndexFieldsForNonBulkLoadOps, true, harness.getMetadataPageManagerFactory(),
+                        new Tracer(LSMInvertedIndexTestContext.class.getSimpleName(),
+                                ITraceCategoryRegistry.CATEGORIES_ALL, new TraceCategoryRegistry()));
                 break;
             }
             default: {

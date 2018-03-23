@@ -204,9 +204,9 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         try {
             if (ctx.getBtreeCursor().hasNext()) {
                 ctx.getBtreeCursor().next();
-                openInvertedListCursor(ctx.getBtreeCursor().getTuple(), listCursor);
+                openInvertedListCursor(ctx.getBtreeCursor().getTuple(), listCursor, ctx);
             } else {
-                LSMInvertedIndexSearchCursorInitialState initState = new LSMInvertedIndexSearchCursorInitialState();
+                LSMInvertedIndexSearchCursorInitialState initState = ctx.getCursorInitialState();
                 initState.setInvertedListInfo(0, 0, 0, 0);
                 listCursor.open(initState, null);
             }
@@ -215,8 +215,8 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         }
     }
 
-    public void openInvertedListCursor(ITupleReference btreeTuple, InvertedListCursor listCursor)
-            throws HyracksDataException {
+    public void openInvertedListCursor(ITupleReference btreeTuple, InvertedListCursor listCursor,
+            OnDiskInvertedIndexOpContext opCtx) throws HyracksDataException {
         int startPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartPageIdField),
                 btreeTuple.getFieldStart(invListStartPageIdField));
         int endPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListEndPageIdField),
@@ -225,7 +225,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
                 btreeTuple.getFieldStart(invListStartOffField));
         int numElements = IntegerPointable.getInteger(btreeTuple.getFieldData(invListNumElementsField),
                 btreeTuple.getFieldStart(invListNumElementsField));
-        LSMInvertedIndexSearchCursorInitialState initState = new LSMInvertedIndexSearchCursorInitialState();
+        LSMInvertedIndexSearchCursorInitialState initState = opCtx.getCursorInitialState();
         initState.setInvertedListInfo(startPageId, endPageId, startOff, numElements);
         listCursor.open(initState, null);
     }
