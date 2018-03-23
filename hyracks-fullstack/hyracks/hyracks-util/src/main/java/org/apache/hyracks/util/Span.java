@@ -34,15 +34,19 @@ public class Span {
     }
 
     public boolean elapsed() {
-        return remaining(TimeUnit.NANOSECONDS) > spanNanos;
+        return elapsed(TimeUnit.NANOSECONDS) > spanNanos;
     }
 
-    public long remaining(TimeUnit unit) {
+    public long elapsed(TimeUnit unit) {
         return unit.convert(System.nanoTime() - startNanos, TimeUnit.NANOSECONDS);
     }
 
     public void sleep(long sleep, TimeUnit unit) throws InterruptedException {
-        TimeUnit.NANOSECONDS.sleep(Math.min(remaining(TimeUnit.NANOSECONDS), unit.toNanos(sleep)));
+        TimeUnit.NANOSECONDS.sleep(Math.min(elapsed(TimeUnit.NANOSECONDS), unit.toNanos(sleep)));
+    }
+
+    public long remaining(TimeUnit unit) {
+        return unit.convert(Long.max(spanNanos - elapsed(TimeUnit.NANOSECONDS), 0L), TimeUnit.NANOSECONDS);
     }
 
     public void loopUntilExhausted(ThrowingAction action) throws Exception {
@@ -52,7 +56,7 @@ public class Span {
     public void loopUntilExhausted(ThrowingAction action, long delay, TimeUnit delayUnit) throws Exception {
         while (!elapsed()) {
             action.run();
-            if (remaining(delayUnit) < delay) {
+            if (elapsed(delayUnit) < delay) {
                 break;
             }
             delayUnit.sleep(delay);

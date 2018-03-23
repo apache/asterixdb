@@ -154,6 +154,7 @@ public class TestExecutor {
     protected int endpointSelector;
     protected IExternalUDFLibrarian librarian;
     private Map<File, TestLoop> testLoops = new HashMap<>();
+    private double timeoutMultiplier = 1;
 
     public TestExecutor() {
         this(Inet4Address.getLoopbackAddress().getHostAddress(), 19002);
@@ -181,6 +182,10 @@ public class TestExecutor {
 
     public void setNcReplicationAddress(Map<String, InetSocketAddress> replicationAddress) {
         this.replicationAddress = replicationAddress;
+    }
+
+    public void setTimeoutMultiplier(double timeoutMultiplier) {
+        this.timeoutMultiplier = timeoutMultiplier;
     }
 
     /**
@@ -1449,10 +1454,10 @@ public class TestExecutor {
         return false;
     }
 
-    public static int getTimeoutSecs(String statement) {
+    public int getTimeoutSecs(String statement) {
         final Matcher timeoutMatcher = POLL_TIMEOUT_PATTERN.matcher(statement);
         if (timeoutMatcher.find()) {
-            return Integer.parseInt(timeoutMatcher.group(1));
+            return (int) (Integer.parseInt(timeoutMatcher.group(1)) * timeoutMultiplier);
         } else {
             throw new IllegalArgumentException("ERROR: polltimeoutsecs=nnn must be present in poll file");
         }
@@ -1796,7 +1801,8 @@ public class TestExecutor {
         waitForClusterState("ACTIVE", timeoutSecs, timeUnit);
     }
 
-    public void waitForClusterState(String desiredState, int timeout, TimeUnit timeUnit) throws Exception {
+    public void waitForClusterState(String desiredState, int baseTimeout, TimeUnit timeUnit) throws Exception {
+        int timeout = (int) (baseTimeout * timeoutMultiplier);
         LOGGER.info("Waiting for cluster state " + desiredState + "...");
         Thread t = new Thread(() -> {
             while (true) {
@@ -1874,7 +1880,7 @@ public class TestExecutor {
         }
         String host = command[0];
         int port = Integer.parseInt(command[1]);
-        int timeoutSec = Integer.parseInt(command[2]);
+        int timeoutSec = (int) (Integer.parseInt(command[2]) * timeoutMultiplier);
         while (isPortActive(host, port)) {
             TimeUnit.SECONDS.sleep(1);
             timeoutSec--;

@@ -18,7 +18,9 @@
  */
 package org.apache.hyracks.control.nc.work;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
@@ -50,13 +52,14 @@ public class AbortAllJobsWork extends SynchronizableWork {
         if (dpm == null) {
             LOGGER.log(Level.WARN, "DatasetPartitionManager is null on " + ncs.getId());
         }
+        Deque<Task> abortedTasks = new ArrayDeque<>();
         Collection<Joblet> joblets = ncs.getJobletMap().values();
         // TODO(mblow): should we have one jobletmap per cc?
         joblets.stream().filter(joblet -> joblet.getJobId().getCcId().equals(ccId)).forEach(joblet -> {
-            Collection<Task> tasks = joblet.getTaskMap().values();
-            for (Task task : tasks) {
+            joblet.getTaskMap().values().forEach(task -> {
                 task.abort();
-            }
+                abortedTasks.add(task);
+            });
             final JobId jobId = joblet.getJobId();
             if (dpm != null) {
                 dpm.abortReader(jobId);
@@ -64,5 +67,6 @@ public class AbortAllJobsWork extends SynchronizableWork {
             }
             ncs.getWorkQueue().schedule(new CleanupJobletWork(ncs, jobId, JobStatus.FAILURE));
         });
+        ncs.getExecutor().submit(new EnsureAllCcTasksCompleted(ncs, ccId, abortedTasks));
     }
 }

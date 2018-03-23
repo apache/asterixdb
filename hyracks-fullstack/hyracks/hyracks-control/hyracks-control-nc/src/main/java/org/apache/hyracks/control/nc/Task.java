@@ -22,6 +22,7 @@ import static org.apache.hyracks.api.exceptions.ErrorCode.TASK_ABORTED;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashSet;
@@ -111,6 +112,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     private final Set<JobFlag> jobFlags;
 
     private final IStatsCollector statsCollector;
+
+    private volatile boolean completed = false;
 
     public Task(Joblet joblet, Set<JobFlag> jobFlags, TaskAttemptId taskId, String displayName,
             ExecutorService executor, NodeControllerService ncs,
@@ -255,8 +258,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         if (aborted) {
             return false;
         }
-        pendingThreads.add(t);
-        return true;
+        return pendingThreads.add(t);
+    }
+
+    public synchronized List<Thread> getPendingThreads() {
+        return new ArrayList<>(pendingThreads);
     }
 
     private synchronized void removePendingThread(Thread t) {
@@ -300,8 +306,6 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                         executorService.execute(() -> {
                             try {
                                 Thread thread = Thread.currentThread();
-                                // Calls synchronized addPendingThread(..) to make sure that in the abort() method,
-                                // the thread is not escaped from interruption.
                                 if (!addPendingThread(thread)) {
                                     return;
                                 }
@@ -345,6 +349,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         } finally {
             close();
             removePendingThread(ct);
+            completed = true;
         }
         if (!exceptions.isEmpty()) {
             if (LOGGER.isWarnEnabled()) {
@@ -459,5 +464,9 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public IStatsCollector getStatsCollector() {
         return statsCollector;
+    }
+
+    public boolean isCompleted() {
+        return completed;
     }
 }

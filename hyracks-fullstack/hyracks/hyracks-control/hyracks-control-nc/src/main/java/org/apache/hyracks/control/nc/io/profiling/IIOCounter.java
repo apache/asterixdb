@@ -22,12 +22,12 @@ package org.apache.hyracks.control.nc.io.profiling;
 public interface IIOCounter {
 
     /**
-     * @return the number of block reads from the very beginning
+     * @return the number of block reads from the very beginning, or -1 if not available on this platform
      */
-    public long getReads();
+    long getReads();
 
     /**
-     * @return the number of block writes from the very beginning
+     * @return the number of block writes from the very beginning, or -1 if not available on this platform
      */
-    public long getWrites();
+    long getWrites();
 }
