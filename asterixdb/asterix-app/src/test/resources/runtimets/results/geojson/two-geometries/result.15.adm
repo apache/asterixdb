@@ -1,0 +1,10 @@
+{ "Distance": 0.0, "Intersects": true, "Contains": false, "Crosses": false, "Disjoint": false, "Equals": false, "Overlaps": false, "Relate": false, "Touches": true, "Within": false }
+{ "Distance": 0.0, "Intersects": true, "Contains": true, "Crosses": false, "Disjoint": false, "Equals": false, "Overlaps": false, "Relate": false, "Touches": false, "Within": false }
+{ "Distance": 1.4142135623730951, "Intersects": false, "Contains": false, "Crosses": false, "Disjoint": true, "Equals": false, "Overlaps": false, "Relate": false, "Touches": false, "Within": false }
+{ "Distance": 0.0, "Intersects": true, "Contains": true, "Crosses": false, "Disjoint": false, "Equals": true, "Overlaps": false, "Relate": false, "Touches": false, "Within": true }
+{ "Distance": 2.8284271247461903, "Intersects": false, "Contains": false, "Crosses": false, "Disjoint": true, "Equals": false, "Overlaps": false, "Relate": false, "Touches": false, "Within": false }
+{ "Distance": 0.0, "Intersects": true, "Contains": false, "Crosses": false, "Disjoint": false, "Equals": false, "Overlaps": true, "Relate": false, "Touches": false, "Within": false }
+{ "Distance": 0.0, "Intersects": true, "Contains": false, "Crosses": true, "Disjoint": false, "Equals": false, "Overlaps": false, "Relate": false, "Touches": false, "Within": false }
+{ "Distance": 0.0, "Intersects": true, "Contains": false, "Crosses": false, "Disjoint": false, "Equals": false, "Overlaps": false, "Relate": false, "Touches": true, "Within": false }
+{ "Distance": 0.0, "Intersects": true, "Contains": false, "Crosses": false, "Disjoint": false, "Equals": false, "Overlaps": false, "Relate": false, "Touches": false, "Within": true }
+{ "Distance": 0.0, "Intersects": true, "Contains": false, "Crosses": false, "Disjoint": false, "Equals": false, "Overlaps": false, "Relate": false, "Touches": true, "Within": false }

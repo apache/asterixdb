@@ -1,0 +1,4 @@
+{ "Length": 0.004058119099397876, "Boundary": {"type":"MultiPoint","coordinates":[[-69.1991349,-12.6006222],[-69.1975081,-12.6010968]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}} }
+{ "Length": 78.9292222699217, "Boundary": {"type":"MultiPoint","coordinates":[[10,10],[10,40],[40,40],[30,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}} }
+{ "Length": 0.0031622776601655037, "Boundary": {"type":"MultiPoint","coordinates":[[-113.98,39.198],[-113.981,39.195]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}} }
+{ "Length": 8.48528137423857, "Boundary": {"type":"MultiPoint","coordinates":[[1,2],[7,8]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}} }

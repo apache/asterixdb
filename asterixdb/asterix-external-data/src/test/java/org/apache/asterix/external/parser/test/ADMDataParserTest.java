@@ -18,16 +18,34 @@
  */
 package org.apache.asterix.external.parser.test;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.esri.core.geometry.ogc.OGCGeometry;
+import com.esri.core.geometry.ogc.OGCPoint;
 import org.apache.asterix.external.parser.ADMDataParser;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.AGeometry;
+import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableDate;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.AMutableTime;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.hadoop.io.DataInputByteBuffer;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.dataflow.common.comm.io.FrameDeserializer;
+import org.apache.hyracks.dataflow.common.comm.io.FrameDeserializingDataReader;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -112,5 +130,51 @@ public class ADMDataParserTest {
         }
         // Asserts no failure.
         Assert.assertTrue(errorCount.get() == 0);
+    }
+
+    @Test
+    public void testWKTParser() {
+        try {
+            ARecordType recordType = new ARecordType("POIType", new String[] { "id", "coord" },
+                    new IAType[] { BuiltinType.AINT32, BuiltinType.AGEOMETRY }, false);
+
+            String wktObject = "{\"id\": 123, \"coord\": \"POINT(3 4)\"}";
+            InputStream in = new ByteArrayInputStream(wktObject.getBytes());
+            ADMDataParser parser = new ADMDataParser(recordType, true);
+            parser.setInputStream(in);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(baos);
+            parser.parse(out);
+            out.close();
+            byte[] serialized = baos.toByteArray();
+
+            // Parse to make sure it was correct
+            ByteBuffer bb = ByteBuffer.wrap(serialized);
+            Assert.assertEquals(ATypeTag.SERIALIZED_RECORD_TYPE_TAG, bb.get());
+            Assert.assertEquals(serialized.length, bb.getInt()); // Total record size including header
+            Assert.assertEquals(2, bb.getInt()); // # of records
+            int offsetOfID = bb.getInt();
+            int offsetOfGeometry = bb.getInt();
+            ISerializerDeserializer intDeser =
+                    SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.AINT32);
+            Assert.assertEquals(offsetOfID, bb.position());
+            // Serialize the two records
+            DataInputByteBuffer dataIn = new DataInputByteBuffer();
+            dataIn.reset(bb);
+            Object o = intDeser.deserialize(dataIn);
+            Assert.assertEquals(new AInt32(123), o);
+            ISerializerDeserializer geomDeser =
+                    SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.AGEOMETRY);
+            Object point = geomDeser.deserialize(dataIn);
+            Assert.assertTrue(point instanceof AGeometry);
+            Assert.assertTrue(((AGeometry) point).getGeometry() instanceof OGCPoint);
+            OGCPoint p = (OGCPoint) ((AGeometry) point).getGeometry();
+            Assert.assertEquals(3.0, p.X(), 1E-5);
+            Assert.assertEquals(4.0, p.Y(), 1E-5);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Assert.fail("Error in parsing");
+        }
+
     }
 }

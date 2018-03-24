@@ -31,6 +31,7 @@ import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AFloat;
+import org.apache.asterix.om.base.AGeometry;
 import org.apache.asterix.om.base.AInt16;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
@@ -45,6 +46,7 @@ import org.apache.asterix.om.base.AMutableDayTimeDuration;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.base.AMutableFloat;
+import org.apache.asterix.om.base.AMutableGeometry;
 import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
@@ -93,6 +95,7 @@ public abstract class AbstractDataParser implements IDataParser {
     protected AMutableBinary aBinary = new AMutableBinary(null, 0, 0);
     protected AMutableString aStringFieldName = new AMutableString("");
     protected AMutableUUID aUUID = new AMutableUUID();
+    protected AMutableGeometry aGeomtry = new AMutableGeometry(null);
     // For temporal and spatial data types
     protected AMutableTime aTime = new AMutableTime(0);
     protected AMutableDateTime aDateTime = new AMutableDateTime(0L);
@@ -149,6 +152,9 @@ public abstract class AbstractDataParser implements IDataParser {
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<AUUID> uuidSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AUUID);
+
+    protected ISerializerDeserializer<AGeometry> geomSerde =
+            SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.AGEOMETRY);
 
     // To avoid race conditions, the serdes for temporal and spatial data types needs to be one per parser
     // ^^^^^^^^^^^^^^^^^^^^^^^^ ??? then why all these serdes are static?

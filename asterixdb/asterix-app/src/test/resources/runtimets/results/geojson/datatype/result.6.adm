@@ -1,0 +1,4 @@
+{ "NumInteriorRings": 0, "ExteriorRing": {"type":"LineString","coordinates":[[8.7599721,49.7103028],[8.759997,49.7102752],[8.7600145,49.7102818],[8.7600762,49.7102133],[8.760178,49.7102516],[8.7600914,49.7103478],[8.7599721,49.7103028]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}} }
+{ "NumInteriorRings": 0, "ExteriorRing": {"type":"LineString","coordinates":[[743238,2967416],[743265.625,2967416],[743265,2967450],[743238,2967450],[743238,2967416]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}} }
+{ "NumInteriorRings": 0, "ExteriorRing": {"type":"LineString","coordinates":[[10,10],[11,10],[11,11],[10,11],[10,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}} }
+{ "NumInteriorRings": 1, "ExteriorRing": {"type":"LineString","coordinates":[[35,10],[45,45],[15,40],[10,20],[35,10]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}} }

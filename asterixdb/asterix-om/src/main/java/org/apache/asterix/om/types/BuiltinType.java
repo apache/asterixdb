@@ -682,6 +682,33 @@ public abstract class BuiltinType implements IAType {
         }
     };
 
+    public final static BuiltinType AGEOMETRY = new LowerCaseConstructorType() {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String getDisplayName() {
+            return "AGEOMETRY";
+        }
+
+        @Override
+        public ATypeTag getTypeTag() {
+            return ATypeTag.GEOMETRY;
+        }
+
+        @Override
+        public String getTypeName() {
+            return "geometry";
+        }
+
+        @Override
+        public ObjectNode toJSON() {
+            ObjectNode type = new ObjectMapper().createObjectNode();
+            type.put("type", "AGEOMETRY");
+            return type;
+        }
+    };
+
     public final static BuiltinType ACIRCLE = new LowerCaseConstructorType() {
 
         private static final long serialVersionUID = 1L;

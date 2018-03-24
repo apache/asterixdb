@@ -66,7 +66,8 @@ public enum ATypeTag implements IEnumSerializer {
     DAYTIMEDURATION(37),
     UUID(38),
     SHORTWITHOUTTYPEINFO(40),
-    NULL(41);
+    NULL(41),
+    GEOMETRY(42);
 
     /*
      * Serialized Tags begin
@@ -100,6 +101,7 @@ public enum ATypeTag implements IEnumSerializer {
     public static final byte SERIALIZED_FLOAT_TYPE_TAG = FLOAT.serialize();
     public static final byte SERIALIZED_BINARY_TYPE_TAG = BINARY.serialize();
     public static final byte SERIALIZED_UUID_TYPE_TAG = UUID.serialize();
+    public static final byte SERIALIZED_GEOMETRY_TYPE_TAG = GEOMETRY.serialize();
 
     /*
      * Serialized Tags end

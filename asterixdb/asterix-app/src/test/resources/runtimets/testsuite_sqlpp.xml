@@ -19,6 +19,7 @@
 <!DOCTYPE test-suite [
   <!ENTITY ObjectsQueries SYSTEM "queries_sqlpp/objects/ObjectsQueries.xml">
   <!ENTITY AsyncDeferredQueries SYSTEM "queries_sqlpp/async-deferred/AsyncDeferredQueries.xml">
+  <!ENTITY GeoQueries SYSTEM "queries_sqlpp/geojson/GeoJSONQueries.xml">
 ]>
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   &AsyncDeferredQueries;
@@ -9749,4 +9750,5 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  &GeoQueries;
 </test-suite>

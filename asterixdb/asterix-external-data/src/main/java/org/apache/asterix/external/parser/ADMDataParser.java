@@ -39,6 +39,7 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.AGeometry;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -46,6 +47,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
@@ -264,6 +266,13 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                             admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
                     aUUID.parseUUIDString(tokenImage);
                     uuidSerde.serialize(aUUID, out);
+                } else if (checkType(ATypeTag.GEOMETRY, objectType)) {
+                    // Parse the string as a WKT-encoded geometry
+                    String tokenImage =
+                            admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
+                    aGeomtry.parseWKT(tokenImage);
+                    out.writeByte(ATypeTag.GEOMETRY.serialize());
+                    geomSerde.serialize(aGeomtry, out);
                 } else {
                     throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_TYPE_MISMATCH, objectType.getTypeName());
                 }

@@ -32,6 +32,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializ
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
@@ -162,6 +163,8 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
                 return AUUIDSerializerDeserializer.INSTANCE;
             case SHORTWITHOUTTYPEINFO:
                 return ShortSerializerDeserializer.INSTANCE;
+            case GEOMETRY:
+                return AGeometrySerializerDeserializer.INSTANCE;
             default:
                 throw new NotImplementedException(
                         "No serializer/deserializer implemented for type " + aqlType.getTypeTag() + " .");

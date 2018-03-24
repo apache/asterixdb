@@ -21,6 +21,7 @@ package org.apache.asterix.om.utils;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
@@ -68,6 +69,7 @@ public final class NonTaggedFormatUtil {
             case ARRAY:
             case MULTISET:
             case POLYGON:
+            case GEOMETRY:
             case ANY:
                 return false;
             default:
@@ -192,6 +194,14 @@ public final class NonTaggedFormatUtil {
                             - 1;
                 } else {
                     return AUnorderedListSerializerDeserializer.getUnorderedListLength(serNonTaggedAObject, offset) - 1;
+                }
+            case GEOMETRY:
+                // Since Geometry is variable size, we store its size at the first 32 bits for efficiency
+                // @see: STGeomFromTextDescriptor#createEvaluatorFactory, AGeometrySerializerDeserializer#serialize
+                if (tagged) {
+                    return AInt32SerializerDeserializer.getInt(serNonTaggedAObject, offset + 1) + 4;
+                } else {
+                    return AInt32SerializerDeserializer.getInt(serNonTaggedAObject, offset) + 4;
                 }
             default:
                 throw new NotImplementedException(

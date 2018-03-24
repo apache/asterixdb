@@ -113,6 +113,9 @@ public class AObjectPrinterFactory implements IPrinterFactory {
             case UUID:
                 AUUIDPrinterFactory.PRINTER.print(b, s, l, ps);
                 return true;
+            case GEOMETRY:
+                AGeometryPrinterFactory.PRINTER.print(b, s, l, ps);
+                return true;
             default:
                 return false;
         }

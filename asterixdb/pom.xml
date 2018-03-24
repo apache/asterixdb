@@ -802,6 +802,7 @@
     <module>asterix-active</module>
     <module>asterix-client-helper</module>
     <module>asterix-license</module>
+    <module>asterix-geo</module>
   </modules>
 
   <dependencyManagement>
