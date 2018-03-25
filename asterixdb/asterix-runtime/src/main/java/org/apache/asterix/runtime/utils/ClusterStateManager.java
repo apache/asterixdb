@@ -280,6 +280,7 @@ public class ClusterStateManager implements IClusterStateManager {
                 clusterActiveLocations.add(p.getActiveNodeId());
             }
         }
+        clusterActiveLocations.removeAll(pendingRemoval);
         clusterPartitionConstraint =
                 new AlgebricksAbsolutePartitionConstraint(clusterActiveLocations.toArray(new String[] {}));
     }
