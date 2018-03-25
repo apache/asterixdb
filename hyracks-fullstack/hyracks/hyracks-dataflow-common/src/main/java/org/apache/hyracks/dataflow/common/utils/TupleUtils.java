@@ -164,4 +164,30 @@ public class TupleUtils {
             tupleBuilder.addField(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
         }
     }
+
+    public static boolean equalTuples(ITupleReference tuple1, ITupleReference tuple2, int numCmpFields) {
+        for (int i = 0; i < numCmpFields; i++) {
+            if (!equalFields(tuple1, tuple2, i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean equalFields(ITupleReference tuple1, ITupleReference tuple2, int fIdx) {
+        return equalFields(tuple1.getFieldData(fIdx), tuple1.getFieldStart(fIdx), tuple1.getFieldLength(fIdx),
+                tuple2.getFieldData(fIdx), tuple2.getFieldStart(fIdx), tuple2.getFieldLength(fIdx));
+    }
+
+    public static boolean equalFields(byte[] a, int aOffset, int aLength, byte[] b, int bOffset, int bLength) {
+        if (aLength != bLength) {
+            return false;
+        }
+        for (int i = 0; i < aLength; i++) {
+            if (a[aOffset + i] != b[bOffset + i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

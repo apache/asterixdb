@@ -276,7 +276,7 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
 
     private boolean equalPrimaryKeys(ITupleReference tuple1, ITupleReference tuple2) {
         for (int i = numTagFields + numSecondaryKeys; i < numTagFields + numPrimaryKeys + numSecondaryKeys; i++) {
-            if (!equalField(tuple1, tuple2, i)) {
+            if (!TupleUtils.equalFields(tuple1, tuple2, i)) {
                 return false;
             }
         }
@@ -285,16 +285,10 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
 
     private boolean equalSecondaryKeys(ITupleReference tuple1, ITupleReference tuple2) {
         for (int i = numTagFields; i < numTagFields + numSecondaryKeys; i++) {
-            if (!equalField(tuple1, tuple2, i)) {
+            if (!TupleUtils.equalFields(tuple1, tuple2, i)) {
                 return false;
             }
         }
         return true;
-    }
-
-    private boolean equalField(ITupleReference tuple1, ITupleReference tuple2, int fIdx) {
-        return LSMSecondaryUpsertOperatorNodePushable.equals(tuple1.getFieldData(fIdx), tuple1.getFieldStart(fIdx),
-                tuple1.getFieldLength(fIdx), tuple2.getFieldData(fIdx), tuple2.getFieldStart(fIdx),
-                tuple2.getFieldLength(fIdx));
     }
 }

@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.util;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -87,6 +87,8 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccesso
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
+import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexMergeCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizerFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.HashedUTF8NGramTokenFactory;
@@ -276,17 +278,33 @@ public class LSMInvertedIndexTestUtils {
         }
     }
 
+    public static void compareActualAndExpectedIndexesRangeSearch(LSMInvertedIndexTestContext testCtx)
+            throws HyracksDataException {
+        IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
+        IInvertedIndexAccessor invIndexAccessor =
+                (IInvertedIndexAccessor) invIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+        compareActualAndExpectedIndexesRangeSearch(testCtx, invIndexAccessor.createRangeSearchCursor());
+    }
+
+    public static void compareActualAndExpectedIndexesMergeSearch(LSMInvertedIndexTestContext testCtx)
+            throws HyracksDataException {
+        IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
+        LSMInvertedIndexAccessor invIndexAccessor =
+                (LSMInvertedIndexAccessor) invIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+        compareActualAndExpectedIndexesRangeSearch(testCtx,
+                new LSMInvertedIndexMergeCursor(invIndexAccessor.getOpContext()));
+    }
+
     /**
      * Compares actual and expected indexes using the rangeSearch() method of the inverted-index accessor.
      */
-    public static void compareActualAndExpectedIndexesRangeSearch(LSMInvertedIndexTestContext testCtx)
-            throws HyracksDataException {
+    public static void compareActualAndExpectedIndexesRangeSearch(LSMInvertedIndexTestContext testCtx,
+            IIndexCursor invIndexCursor) throws HyracksDataException {
         IInvertedIndex invIndex = (IInvertedIndex) testCtx.getIndex();
         int tokenFieldCount = invIndex.getTokenTypeTraits().length;
         int invListFieldCount = invIndex.getInvListTypeTraits().length;
         IInvertedIndexAccessor invIndexAccessor =
                 (IInvertedIndexAccessor) invIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        IIndexCursor invIndexCursor = invIndexAccessor.createRangeSearchCursor();
         try {
             MultiComparator tokenCmp = MultiComparator.create(invIndex.getTokenCmpFactories());
             IBinaryComparatorFactory[] tupleCmpFactories =

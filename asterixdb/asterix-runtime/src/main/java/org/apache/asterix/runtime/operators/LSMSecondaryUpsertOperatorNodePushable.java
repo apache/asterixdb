@@ -28,6 +28,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -55,7 +56,7 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDel
 public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
     private final PermutingFrameTupleReference prevValueTuple = new PermutingFrameTupleReference();
-    private int numberOfFields;
+    private final int numberOfFields;
     private AbstractIndexModificationOperationCallback abstractModCallback;
 
     public LSMSecondaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
@@ -72,31 +73,6 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
     public void open() throws HyracksDataException {
         super.open();
         abstractModCallback = (AbstractIndexModificationOperationCallback) modCallback;
-    }
-
-    public static boolean equals(byte[] a, int aOffset, int aLength, byte[] b, int bOffset, int bLength) {
-        if (aLength != bLength) {
-            return false;
-        }
-        for (int i = 0; i < aLength; i++) {
-            if (a[aOffset + i] != b[bOffset + i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static boolean equalTuples(PermutingFrameTupleReference t1, PermutingFrameTupleReference t2, int numOfFields)
-            throws HyracksDataException {
-        byte[] t1Data = t1.getFieldData(0);
-        byte[] t2Data = t2.getFieldData(0);
-        for (int i = 0; i < numOfFields; i++) {
-            if (!equals(t1Data, t1.getFieldStart(i), t1.getFieldLength(i), t2Data, t2.getFieldStart(i),
-                    t2.getFieldLength(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override
@@ -117,7 +93,7 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
                 }
                 // At least, one is not null
                 // If they are equal, then we skip
-                if (equalTuples(tuple, prevValueTuple, numberOfFields)) {
+                if (TupleUtils.equalTuples(tuple, prevValueTuple, numberOfFields)) {
                     continue;
                 }
                 if (!isOldValueMissing) {

@@ -246,7 +246,7 @@ public abstract class LSMIndexSearchCursor extends EnforcedIndexCursor implement
         }
     }
 
-    public class PriorityQueueElement {
+    public static class PriorityQueueElement {
         private ITupleReference tuple;
         private final int cursorIndex;
 
@@ -268,7 +268,7 @@ public abstract class LSMIndexSearchCursor extends EnforcedIndexCursor implement
         }
     }
 
-    public class PriorityQueueComparator implements Comparator<PriorityQueueElement> {
+    public static class PriorityQueueComparator implements Comparator<PriorityQueueElement> {
 
         protected MultiComparator cmp;
 

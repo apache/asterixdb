@@ -331,7 +331,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 numElements += ((AbstractLSMWithBloomFilterDiskComponent) mergeOp.getMergingComponents().get(i))
                         .getBloomFilter().getNumElements();
             }
-            componentBulkLoader = mergedComponent.createBulkLoader(1.0f, false, numElements, false, false, false);
+            componentBulkLoader = mergedComponent.createBulkLoader(LSMIOOperationType.MERGE, 1.0f, false, numElements,
+                    false, false, false);
             try {
                 while (buddyBtreeCursor.hasNext()) {
                     buddyBtreeCursor.next();
@@ -342,7 +343,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 buddyBtreeCursor.close();
             }
         } else {
-            componentBulkLoader = mergedComponent.createBulkLoader(1.0f, false, 0L, false, false, false);
+            componentBulkLoader =
+                    mergedComponent.createBulkLoader(LSMIOOperationType.MERGE, 1.0f, false, 0L, false, false, false);
         }
 
         try {
@@ -510,8 +512,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 component = createBulkLoadTarget();
             }
 
-            componentBulkLoader =
-                    component.createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true, false);
+            componentBulkLoader = component.createBulkLoader(LSMIOOperationType.LOAD, fillFactor, verifyInput,
+                    numElementsHint, false, true, false);
         }
 
         @Override

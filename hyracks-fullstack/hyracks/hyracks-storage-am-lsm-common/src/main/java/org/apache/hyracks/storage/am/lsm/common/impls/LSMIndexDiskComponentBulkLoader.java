@@ -22,13 +22,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
 public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
     private final AbstractLSMIndex lsmIndex;
     private final ILSMDiskComponentBulkLoader componentBulkLoader;
-    private ILSMIndexOperationContext opCtx;
+    private final ILSMIndexOperationContext opCtx;
 
     public LSMIndexDiskComponentBulkLoader(AbstractLSMIndex lsmIndex, ILSMIndexOperationContext opCtx, float fillFactor,
             boolean verifyInput, long numElementsHint) throws HyracksDataException {
@@ -37,8 +38,8 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
         // Note that by using a flush target file name, we state that the
         // new bulk loaded component is "newer" than any other merged component.
         opCtx.setNewComponent(lsmIndex.createBulkLoadTarget());
-        this.componentBulkLoader =
-                opCtx.getNewComponent().createBulkLoader(fillFactor, verifyInput, numElementsHint, false, true, true);
+        this.componentBulkLoader = opCtx.getNewComponent().createBulkLoader(LSMIOOperationType.LOAD, fillFactor,
+                verifyInput, numElementsHint, false, true, true);
     }
 
     public ILSMDiskComponent getComponent() {

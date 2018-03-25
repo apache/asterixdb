@@ -25,6 +25,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.datagen.TupleGenerator;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
+import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.JaccardSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.LSMInvertedIndexTestContext;
@@ -84,6 +85,12 @@ public abstract class AbstractInvertedIndexTest {
             LSMInvertedIndexTestUtils.compareActualAndExpectedIndexes(testCtx);
         }
         LSMInvertedIndexTestUtils.compareActualAndExpectedIndexesRangeSearch(testCtx);
+        if (invIndexType == InvertedIndexType.LSM || invIndexType == InvertedIndexType.PARTITIONED_LSM) {
+            LSMInvertedIndex lsmIndex = (LSMInvertedIndex) invIndex;
+            if (!lsmIndex.isMemoryComponentsAllocated() || lsmIndex.isCurrentMutableComponentEmpty()) {
+                LSMInvertedIndexTestUtils.compareActualAndExpectedIndexesMergeSearch(testCtx);
+            }
+        }
     }
 
     /**

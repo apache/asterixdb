@@ -48,6 +48,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -277,7 +278,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             }
             component = createDiskComponent(componentFactory, flushOp.getTarget(), null, flushOp.getBloomFilterTarget(),
                     true);
-            componentBulkLoader = component.createBulkLoader(1.0f, false, numElements, false, false, false);
+            componentBulkLoader =
+                    component.createBulkLoader(LSMIOOperationType.MERGE, 1.0f, false, numElements, false, false, false);
             IIndexCursor scanCursor = accessor.createSearchCursor(false);
             accessor.search(scanCursor, nullPred);
             try {
@@ -336,8 +338,8 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                     long numElements = getNumberOfElements(mergedComponents);
                     mergedComponent = createDiskComponent(componentFactory, mergeOp.getTarget(), null,
                             mergeOp.getBloomFilterTarget(), true);
-                    componentBulkLoader =
-                            mergedComponent.createBulkLoader(1.0f, false, numElements, false, false, false);
+                    componentBulkLoader = mergedComponent.createBulkLoader(LSMIOOperationType.MERGE, 1.0f, false,
+                            numElements, false, false, false);
                     while (cursor.hasNext()) {
                         cursor.next();
                         ITupleReference frameTuple = cursor.getTuple();

@@ -24,9 +24,9 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
-import org.apache.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.InvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tuples.TokenKeyPairTuple;
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexAccessor;
@@ -49,7 +49,7 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
     private RangePredicate btreePred;
 
     private final PermutingTupleReference tokenTuple;
-    private final ConcatenatingTupleReference concatTuple;
+    private final TokenKeyPairTuple resultTuple;
 
     public OnDiskInvertedIndexRangeSearchCursor(OnDiskInvertedIndex invIndex, IIndexOperationContext opCtx)
             throws HyracksDataException {
@@ -64,7 +64,7 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
         }
         tokenTuple = new PermutingTupleReference(fieldPermutation);
         btreeCursor = btreeAccessor.createSearchCursor(false);
-        concatTuple = new ConcatenatingTupleReference(2);
+        resultTuple = new TokenKeyPairTuple(invIndex.getTokenTypeTraits().length, btree.getCmpFactories().length);
         invListRangeSearchCursor = invIndex.createInvertedListRangeSearchCursor();
         isInvListCursorOpen = false;
     }
@@ -95,10 +95,7 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
     @Override
     public void doNext() throws HyracksDataException {
         invListRangeSearchCursor.next();
-        if (concatTuple.hasMaxTuples()) {
-            concatTuple.removeLastTuple();
-        }
-        concatTuple.addTuple(invListRangeSearchCursor.getTuple());
+        resultTuple.setKeyTuple(invListRangeSearchCursor.getTuple());
     }
 
     @Override
@@ -123,7 +120,7 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
 
     @Override
     public ITupleReference doGetTuple() {
-        return concatTuple;
+        return resultTuple;
     }
 
     // Opens an inverted-list-scan cursor for the given tuple.
@@ -135,8 +132,7 @@ public class OnDiskInvertedIndexRangeSearchCursor extends EnforcedIndexCursor {
                     (OnDiskInvertedIndexOpContext) opCtx);
             invListRangeSearchCursor.prepareLoadPages();
             invListRangeSearchCursor.loadPages();
-            concatTuple.reset();
-            concatTuple.addTuple(tokenTuple);
+            resultTuple.setTokenTuple(tokenTuple);
             isInvListCursorOpen = true;
         } else {
             isInvListCursorOpen = false;
