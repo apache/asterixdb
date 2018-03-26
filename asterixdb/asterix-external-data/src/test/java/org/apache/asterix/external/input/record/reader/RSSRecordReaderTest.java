@@ -18,14 +18,15 @@
  */
 package org.apache.asterix.external.input.record.reader;
 
-import com.rometools.rome.feed.synd.SyndEntry;
+import java.io.IOException;
+import java.net.MalformedURLException;
+
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.reader.rss.RSSRecordReader;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
+import com.rometools.rome.feed.synd.SyndEntry;
 
 public class RSSRecordReaderTest {
     @Test
@@ -44,7 +45,6 @@ public class RSSRecordReaderTest {
 
     private static final int NO_RECORDS = 10;
 
-    @Test
     public void fetchFromLoremWebsite() throws MalformedURLException {
         String dummyRssFeedURL = "http://lorem-rss.herokuapp.com/feed";
         RSSRecordReader rssRecordReader = new RSSRecordReader(dummyRssFeedURL);
@@ -59,7 +59,7 @@ public class RSSRecordReaderTest {
         } catch (Exception e) {
             expectedException = e;
         }
-        Assert.assertEquals(cnt, NO_RECORDS);
+        Assert.assertEquals(NO_RECORDS, cnt);
         Assert.assertNull(expectedException);
     }
 }
