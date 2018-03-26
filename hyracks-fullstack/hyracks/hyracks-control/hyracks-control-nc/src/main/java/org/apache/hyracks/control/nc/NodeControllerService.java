@@ -441,6 +441,8 @@ public class NodeControllerService implements IControllerService {
             ccTimer.schedule(new ProfileDumpTask(ccs, ccId), 0, nodeParameters.getProfileDumpPeriod());
             ccTimers.put(ccId, ccTimer);
         }
+        ccc.notifyRegistrationCompleted();
+        LOGGER.info("Registering with Cluster Controller {} completed", ccc);
         return ccId;
     }
 
@@ -661,6 +663,10 @@ public class NodeControllerService implements IControllerService {
         return messagingNetManager;
     }
 
+    public void notifyTasksCompleted(CcId ccId) throws Exception {
+        application.onRegisterNode(ccId);
+    }
+
     private static INCApplication getApplication(NCConfig config)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
         if (config.getAppClass() != null) {
@@ -722,11 +728,5 @@ public class NodeControllerService implements IControllerService {
 
     public INCApplication getApplication() {
         return application;
-    }
-
-    public void notifyRegistrationCompleted(CcId ccId) {
-        CcConnection ccc = getCcConnection(ccId);
-        ccc.notifyRegistrationCompleted();
-        LOGGER.info("Registering with Cluster Controller {} complete", ccc);
     }
 }
