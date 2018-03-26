@@ -23,7 +23,7 @@ import java.io.DataOutput;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
-import org.apache.asterix.om.base.temporal.AsterixTemporalTypeParseException;
+import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -48,10 +48,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = BuiltinFunctions.PARSE_DATETIME;
-    private final static DateTimeFormatUtils DT_UTILS = DateTimeFormatUtils.getInstance();
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
+    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ParseDateTimeDescriptor();
@@ -67,19 +65,22 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable argPtr0 = new VoidPointable();
-                    private IPointable argPtr1 = new VoidPointable();
-                    private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
-                    private IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable argPtr0 = new VoidPointable();
+                    private final IPointable argPtr1 = new VoidPointable();
+                    private final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADateTime> datetimeSerde =
+                    private final ISerializerDeserializer<ADateTime> datetimeSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATETIME);
 
-                    private AMutableDateTime aDateTime = new AMutableDateTime(0);
+                    private final AMutableInt64 aInt64 = new AMutableInt64(0);
+                    private final AMutableDateTime aDateTime = new AMutableDateTime(0);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
+
+                    private final DateTimeFormatUtils util = DateTimeFormatUtils.getInstance();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -109,7 +110,6 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                         utf8Ptr.set(bytes1, offset1 + 1, len1 - 1);
                         int start1 = utf8Ptr.getCharStartOffset();
                         int length1 = utf8Ptr.getUTF8Length();
-                        long chronon = 0;
 
                         int formatStart = start1;
                         int formatLength;
@@ -122,21 +122,15 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                                     break;
                                 }
                             }
-                            try {
-                                chronon = DT_UTILS.parseDateTime(bytes0, start0, length0, bytes1, formatStart,
-                                        formatLength, DateTimeParseMode.DATETIME);
-                            } catch (AsterixTemporalTypeParseException ex) {
-                                formatStart += formatLength + 1;
-                                continue;
-                            }
-                            processSuccessfully = true;
+                            processSuccessfully = util.parseDateTime(aInt64, bytes0, start0, length0, bytes1,
+                                    formatStart, formatLength, DateTimeParseMode.DATETIME, false);
+                            formatStart += formatLength + 1;
                         }
-
                         if (!processSuccessfully) {
                             throw new InvalidDataFormatException(getIdentifier(),
                                     ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
-                        aDateTime.setValue(chronon);
+                        aDateTime.setValue(aInt64.getLongValue());
                         datetimeSerde.serialize(aDateTime, out);
                         result.set(resultStorage);
                     }
@@ -151,7 +145,6 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
      */
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.PARSE_DATETIME;
     }
-
 }

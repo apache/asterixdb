@@ -119,7 +119,7 @@ public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynam
                                     Fields.MILLISECOND, true);
 
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            writer.writeUTF8(sbder.toString(), out);
+                            writer.writeUTF8(sbder, out);
                         } catch (IOException e1) {
                             throw new HyracksDataException(e1);
                         }

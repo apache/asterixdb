@@ -64,11 +64,14 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     public static final int[] DAYS_SINCE_MONTH_BEGIN_ORDI = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
+    public static final int MONTHS_IN_A_YEAR = 12;
+    public static final int DAYS_IN_A_WEEK = 7;
+
     public static final long CHRONON_OF_SECOND = 1000;
     public static final long CHRONON_OF_MINUTE = 60 * CHRONON_OF_SECOND;
     public static final long CHRONON_OF_HOUR = 60 * CHRONON_OF_MINUTE;
     public static final long CHRONON_OF_DAY = 24 * CHRONON_OF_HOUR;
-    public static final int MONTHS_IN_A_YEAR = 12;
+    public static final long CHRONON_OF_WEEK = DAYS_IN_A_WEEK * CHRONON_OF_DAY;
 
     /**
      * Minimum feasible value of each field
@@ -103,6 +106,9 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * From Joda API: GregorianChronology.java
      */
     private static final int DAYS_0000_TO_1970 = 719527;
+
+    // Fixed week day anchor: Thursday, 1 January 1970
+    private final static int ANCHOR_WEEKDAY = 4;
 
     private static final GregorianCalendarSystem instance = new GregorianCalendarSystem();
 
@@ -247,7 +253,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         return chronon - timezone;
     }
 
-    public static int getChrononInDays(long chronon) {
+    public int getChrononInDays(long chronon) {
         if (chronon >= 0) {
             return (int) (chronon / CHRONON_OF_DAY);
         } else {
@@ -274,6 +280,24 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      */
     public void getExtendStringRepUntilField(long chrononTime, int timezone, Appendable sbder, Fields startField,
             Fields untilField, boolean withTimezone) throws IOException {
+        getExtendStringRepUntilField(chrononTime, timezone, sbder, startField, untilField, withTimezone, 'T');
+    }
+
+    /**
+     * Get the extended string representation of the given UTC chronon time under the given time zone. Only fields
+     * before
+     * the given field index will be returned.
+     * <p/>
+     * The extended string representation is like:<br/>
+     * [-]YYYY-MM-DDThh:mm:ss.xxx[Z|[+|-]hh:mm]
+     *
+     * @param chrononTime
+     * @param timezone
+     * @param sbder
+     * @param untilField
+     */
+    public void getExtendStringRepUntilField(long chrononTime, int timezone, Appendable sbder, Fields startField,
+            Fields untilField, boolean withTimezone, char dateTimeSeparator) throws IOException {
 
         int year = getYear(chrononTime);
         int month = getMonthOfYear(chrononTime, year);
@@ -287,7 +311,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 }
             case MONTH:
                 if (startField != Fields.MONTH) {
-                    sbder.append("-");
+                    sbder.append('-');
                 }
                 sbder.append(String.format("%02d", month));
                 if (untilField == Fields.MONTH) {
@@ -295,7 +319,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 }
             case DAY:
                 if (startField != Fields.DAY) {
-                    sbder.append("-");
+                    sbder.append('-');
                 }
                 sbder.append(String.format("%02d", getDayOfMonthYear(chrononTime, year, month)));
                 if (untilField == Fields.DAY) {
@@ -303,7 +327,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 }
             case HOUR:
                 if (startField != Fields.HOUR) {
-                    sbder.append("T");
+                    sbder.append(dateTimeSeparator);
                 }
                 sbder.append(String.format("%02d", getHourOfDay(chrononTime)));
                 if (untilField == Fields.HOUR) {
@@ -311,7 +335,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 }
             case MINUTE:
                 if (startField != Fields.MINUTE) {
-                    sbder.append(":");
+                    sbder.append(':');
                 }
                 sbder.append(String.format("%02d", getMinOfHour(chrononTime)));
                 if (untilField == Fields.MINUTE) {
@@ -319,25 +343,29 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 }
             case SECOND:
                 if (startField != Fields.SECOND) {
-                    sbder.append(":");
+                    sbder.append(':');
                 }
                 sbder.append(String.format("%02d", getSecOfMin(chrononTime)));
+                if (untilField == Fields.SECOND) {
+                    break;
+                }
+            case MILLISECOND:
+                if (startField != Fields.MILLISECOND) {
+                    sbder.append('.');
+                }
                 // add millisecond as the precision fields of a second
-                sbder.append(".").append(String.format("%03d", getMillisOfSec(chrononTime)));
+                sbder.append(String.format("%03d", getMillisOfSec(chrononTime)));
                 break;
         }
 
         if (withTimezone) {
             if (timezone == 0) {
-                sbder.append("Z");
+                sbder.append('Z');
             } else {
-                int tzMin = (int) (timezone % CHRONON_OF_HOUR / CHRONON_OF_MINUTE);
-                if (tzMin < 0) {
-                    tzMin = (short) (-1 * tzMin);
-                }
+                int tzMin = (int) ((timezone % CHRONON_OF_HOUR) / CHRONON_OF_MINUTE);
                 int tzHr = (int) (timezone / CHRONON_OF_HOUR);
-                sbder.append((tzHr >= 0 ? "-" : "+")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
-                        .append(":").append(String.format("%02d", tzMin));
+                sbder.append(tzHr >= 0 ? '-' : '+').append(String.format("%02d", tzHr < 0 ? -tzHr : tzHr)).append(':')
+                        .append(String.format("%02d", tzMin < 0 ? -tzMin : tzMin));
             }
         }
     }
@@ -390,14 +418,14 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
         if (withTimezone) {
             if (timezone == 0) {
-                sbder.append("Z");
+                sbder.append('Z');
             } else {
                 int tzMin = (int) (timezone % CHRONON_OF_HOUR / CHRONON_OF_MINUTE);
                 if (tzMin < 0) {
                     tzMin = (short) (-1 * tzMin);
                 }
                 int tzHr = (int) (timezone / CHRONON_OF_HOUR);
-                sbder.append((tzHr >= 0 ? "-" : "+")).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
+                sbder.append((tzHr >= 0 ? '-' : '+')).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
                         .append(String.format("%02d", tzMin));
             }
         }
@@ -434,20 +462,36 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         int day = getDurationDay(milliseconds);
 
         if (!positive) {
-            sbder.append("-");
+            sbder.append('-');
         }
-        sbder.append("P");
-        sbder.append((year != 0) ? year + "Y" : "");
-        sbder.append((month != 0) ? month + "M" : "");
-        sbder.append((day != 0) ? day + "D" : "");
-        sbder.append((hour != 0 || minute != 0 || second != 0 || millisecond != 0) ? "T" : "");
-        sbder.append((hour != 0) ? hour + "H" : "");
-        sbder.append((minute != 0) ? minute + "M" : "");
-        sbder.append((second != 0 || millisecond != 0) ? second : "");
+        sbder.append('P');
+        if (year != 0) {
+            sbder.append(year).append('Y');
+        }
+        if (month != 0) {
+            sbder.append(month).append('M');
+        }
+        if (day != 0) {
+            sbder.append(day).append('D');
+        }
+        if (hour != 0 || minute != 0 || second != 0 || millisecond != 0) {
+            sbder.append('T');
+        }
+        if (hour != 0) {
+            sbder.append(hour).append('H');
+        }
+        if (minute != 0) {
+            sbder.append(minute).append('M');
+        }
+        if (second != 0 || millisecond != 0) {
+            sbder.append(second);
+        }
         if (millisecond > 0) {
-            sbder.append("." + millisecond);
+            sbder.append('.').append(millisecond);
         }
-        sbder.append((second != 0 || millisecond != 0) ? "S" : "");
+        if (second != 0 || millisecond != 0) {
+            sbder.append('S');
+        }
     }
 
     /**
@@ -617,6 +661,32 @@ public class GregorianCalendarSystem implements ICalendarSystem {
     }
 
     /**
+     * Get the day number in the year for the input chronon time.
+     * @param millis
+     * @param year
+     * @return
+     */
+    public int getDayOfYear(long millis, int year) {
+        long dateMillis = chrononizeBeginningOfYear(year);
+        return (int) ((millis - dateMillis) / CHRONON_OF_DAY) + 1;
+    }
+
+    /**
+     * Get the week number in the year for the input chronon time.
+     * @param millis
+     * @param year
+     * @return
+     */
+    public int getWeekOfYear(long millis, int year) {
+        int doy = getDayOfYear(millis, year);
+        int week = doy / DAYS_IN_A_WEEK;
+        if (doy % DAYS_IN_A_WEEK > 0) {
+            week++;
+        }
+        return week;
+    }
+
+    /**
      * Get the hour of the day for the given chronon time.
      *
      * @param millis
@@ -690,6 +760,26 @@ public class GregorianCalendarSystem implements ICalendarSystem {
             ms += 1000;
         }
         return ms;
+    }
+
+    /**
+     * Get the day of week for the given chronon time. 0 (Sunday) to 7 (Saturday)
+     *
+     * @param millis
+     * @return
+     */
+    public int getDayOfWeek(long millis) {
+        long daysSinceAnchor = getChrononInDays(millis);
+
+        // compute the weekday (0-based, and 0 = Sunday). Adjustment is needed as the anchor day is Thursday.
+        int weekday = (int) ((daysSinceAnchor + ANCHOR_WEEKDAY) % DAYS_IN_A_WEEK);
+
+        // handle the negative weekday
+        if (weekday < 0) {
+            weekday += DAYS_IN_A_WEEK;
+        }
+
+        return weekday;
     }
 
     public int getDurationMonth(int months) {

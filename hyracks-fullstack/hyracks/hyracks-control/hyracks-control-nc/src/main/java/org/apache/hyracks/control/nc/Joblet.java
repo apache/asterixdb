@@ -103,9 +103,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final IJobletEventListenerFactory jobletEventListenerFactory;
 
+    private final long jobStartTime;
+
     public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
             INCServiceContext serviceCtx, ActivityClusterGraph acg,
-            IJobletEventListenerFactory jobletEventListenerFactory) {
+            IJobletEventListenerFactory jobletEventListenerFactory, long jobStartTime) {
         this.nodeController = nodeController;
         this.serviceCtx = serviceCtx;
         this.deploymentId = deploymentId;
@@ -131,6 +133,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         }
         IGlobalJobDataFactory gjdf = acg.getGlobalJobDataFactory();
         globalJobData = gjdf != null ? gjdf.createGlobalJobData(this) : null;
+        this.jobStartTime = jobStartTime;
     }
 
     @Override
@@ -149,6 +152,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public IOperatorEnvironment getEnvironment() {
         return env;
+    }
+
+    @Override
+    public long getJobStartTime() {
+        return jobStartTime;
     }
 
     public void addTask(Task task) {

@@ -57,7 +57,6 @@ public class SleepDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        evalValue.evaluate(tuple, result);
                         evalTime.evaluate(tuple, argTime);
 
                         final byte[] bytes = argTime.getByteArray();
@@ -76,6 +75,8 @@ public class SleepDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 LOGGER.log(Level.INFO, ctx.getTaskAttemptId() + " done sleeping for " + time + " ms");
                             }
                         }
+
+                        evalValue.evaluate(tuple, result);
                     }
                 };
             }

@@ -32,66 +32,66 @@ public class CommonFunctionMapUtil {
     private static final Map<String, String> FUNCTION_NAME_MAP = new HashMap<>();
 
     static {
-        FUNCTION_NAME_MAP.put("ceil", "ceiling"); //ceil,  internal: ceiling
-        FUNCTION_NAME_MAP.put("length", "string-length"); // length,  internal: string-length
-        FUNCTION_NAME_MAP.put("lower", "lowercase"); // lower, internal: lowercase
-        FUNCTION_NAME_MAP.put("substr", "substring"); // substr,  internal: substring
-        FUNCTION_NAME_MAP.put("upper", "uppercase"); // upper, internal: uppercase
-        FUNCTION_NAME_MAP.put("title", "initcap"); // title, internal: initcap
-        FUNCTION_NAME_MAP.put("regexp_contains", "matches"); // regexp_contains, internal: matches
-        FUNCTION_NAME_MAP.put("power", "caret"); //pow, internal: caret
-        FUNCTION_NAME_MAP.put("int", "integer"); // int, internal: integer
+        addFunctionMapping("ceil", "ceiling"); //ceil,  internal: ceiling
+        addFunctionMapping("length", "string-length"); // length,  internal: string-length
+        addFunctionMapping("lower", "lowercase"); // lower, internal: lowercase
+        addFunctionMapping("substr", "substring"); // substr,  internal: substring
+        addFunctionMapping("upper", "uppercase"); // upper, internal: uppercase
+        addFunctionMapping("title", "initcap"); // title, internal: initcap
+        addFunctionMapping("regexp_contains", "matches"); // regexp_contains, internal: matches
+        addFunctionMapping("power", "caret"); //pow, internal: caret
+        addFunctionMapping("int", "integer"); // int, internal: integer
 
         // The "mapped-to" names are to be deprecated.
-        FUNCTION_NAME_MAP.put("tinyint", "int8"); // tinyint, internal: int8
-        FUNCTION_NAME_MAP.put("smallint", "int16"); // smallint, internal: int16
-        FUNCTION_NAME_MAP.put("integer", "int32"); // integer, internal: int32
-        FUNCTION_NAME_MAP.put("bigint", "int64"); // bigint, internal: int64
+        addFunctionMapping("tinyint", "int8"); // tinyint, internal: int8
+        addFunctionMapping("smallint", "int16"); // smallint, internal: int16
+        addFunctionMapping("integer", "int32"); // integer, internal: int32
+        addFunctionMapping("bigint", "int64"); // bigint, internal: int64
 
         // Type functions.
-        FUNCTION_NAME_MAP.put("isnull", "is-null"); // isnull, internal: is-null
-        FUNCTION_NAME_MAP.put("ismissing", "is-missing"); // ismissing, internal: is-missing
-        FUNCTION_NAME_MAP.put("isunknown", "is-unknown"); // isunknown, internal: is-unknown
-        FUNCTION_NAME_MAP.put("isatomic", "is-atomic"); // isatomic, internal: is-atomic
-        FUNCTION_NAME_MAP.put("isatom", "is-atomic"); // isatom, internal: is-atomic
-        FUNCTION_NAME_MAP.put("isboolean", "is-boolean"); // isboolean, internal: is-boolean
-        FUNCTION_NAME_MAP.put("isbool", "is-boolean"); // isbool, internal: is-boolean
-        FUNCTION_NAME_MAP.put("isnumber", "is-number"); // isnumber, internal: is-number
-        FUNCTION_NAME_MAP.put("isnum", "is-number"); // isnum, internal: is-number
-        FUNCTION_NAME_MAP.put("isstring", "is-string"); // isstring, internal: is-string
-        FUNCTION_NAME_MAP.put("isstr", "is-string"); // isstr, internal: is-string
-        FUNCTION_NAME_MAP.put("isarray", "is-array"); // isarray, internal: is-array
-        FUNCTION_NAME_MAP.put("isobject", "is-object"); // isobject, internal: is-object
-        FUNCTION_NAME_MAP.put("isobj", "is-object"); // isobj, internal: is-object
-        FUNCTION_NAME_MAP.put("ifmissing", "if-missing"); // ifmissing, internal: if-missing
-        FUNCTION_NAME_MAP.put("ifnull", "if-null"); // ifnull, internal: if-null
-        FUNCTION_NAME_MAP.put("ifmissingornull", "if-missing-or-null"); // ifmissingornull, internal: if-missing-or-null
-        FUNCTION_NAME_MAP.put("ifinf", "if-inf"); // ifinf, internal: if-inf
-        FUNCTION_NAME_MAP.put("ifnan", "if-nan"); // ifnan, internal: if-nan
-        FUNCTION_NAME_MAP.put("ifnanorinf", "if-nan-or-inf"); // ifnanorinf, internal: if-nan-or-inf
-        FUNCTION_NAME_MAP.put("toboolean", "to-boolean"); // toboolean, internal: to-boolean
-        FUNCTION_NAME_MAP.put("tostring", "to-string"); // tostring, internal: to-string
-        FUNCTION_NAME_MAP.put("todouble", "to-double"); // todouble, internal: to-double
-        FUNCTION_NAME_MAP.put("tobigint", "to-bigint"); // tobigint, internal: to-bigint
-        FUNCTION_NAME_MAP.put("tonumber", "to-number"); // tonumber, internal: to-number
-        FUNCTION_NAME_MAP.put("tonum", "to-number"); // tonum, internal: to-number
+        addFunctionMapping("isnull", "is-null"); // isnull, internal: is-null
+        addFunctionMapping("ismissing", "is-missing"); // ismissing, internal: is-missing
+        addFunctionMapping("isunknown", "is-unknown"); // isunknown, internal: is-unknown
+        addFunctionMapping("isatomic", "is-atomic"); // isatomic, internal: is-atomic
+        addFunctionMapping("isatom", "is-atomic"); // isatom, internal: is-atomic
+        addFunctionMapping("isboolean", "is-boolean"); // isboolean, internal: is-boolean
+        addFunctionMapping("isbool", "is-boolean"); // isbool, internal: is-boolean
+        addFunctionMapping("isnumber", "is-number"); // isnumber, internal: is-number
+        addFunctionMapping("isnum", "is-number"); // isnum, internal: is-number
+        addFunctionMapping("isstring", "is-string"); // isstring, internal: is-string
+        addFunctionMapping("isstr", "is-string"); // isstr, internal: is-string
+        addFunctionMapping("isarray", "is-array"); // isarray, internal: is-array
+        addFunctionMapping("isobject", "is-object"); // isobject, internal: is-object
+        addFunctionMapping("isobj", "is-object"); // isobj, internal: is-object
+        addFunctionMapping("ifmissing", "if-missing"); // ifmissing, internal: if-missing
+        addFunctionMapping("ifnull", "if-null"); // ifnull, internal: if-null
+        addFunctionMapping("ifmissingornull", "if-missing-or-null"); // ifmissingornull, internal: if-missing-or-null
+        addFunctionMapping("ifinf", "if-inf"); // ifinf, internal: if-inf
+        addFunctionMapping("ifnan", "if-nan"); // ifnan, internal: if-nan
+        addFunctionMapping("ifnanorinf", "if-nan-or-inf"); // ifnanorinf, internal: if-nan-or-inf
+        addFunctionMapping("toboolean", "to-boolean"); // toboolean, internal: to-boolean
+        addFunctionMapping("tostring", "to-string"); // tostring, internal: to-string
+        addFunctionMapping("todouble", "to-double"); // todouble, internal: to-double
+        addFunctionMapping("tobigint", "to-bigint"); // tobigint, internal: to-bigint
+        addFunctionMapping("tonumber", "to-number"); // tonumber, internal: to-number
+        addFunctionMapping("tonum", "to-number"); // tonum, internal: to-number
 
         // Object functions
         // record-merge, internal: object-merge
-        FUNCTION_NAME_MAP.put("record-merge", "object-merge");
+        addFunctionMapping("record-merge", "object-merge");
         // record-concat, internal: object-concat
-        FUNCTION_NAME_MAP.put("record-concat", "object-concat");
+        addFunctionMapping("record-concat", "object-concat");
         // record-get-fields, internal: object-get-fields
-        FUNCTION_NAME_MAP.put("record-get-fields", "object-get-fields");
+        addFunctionMapping("record-get-fields", "object-get-fields");
         // record-get-field-value, internal: object-get-field-value
-        FUNCTION_NAME_MAP.put("record-get-field-value", "object-get-field-value");
+        addFunctionMapping("record-get-field-value", "object-get-field-value");
         // record-add-fields, internal: object-add-fields
-        FUNCTION_NAME_MAP.put("record-add-fields", "object-add-fields");
+        addFunctionMapping("record-add-fields", "object-add-fields");
         // record-remove-fields, internal: object-remove-fields
-        FUNCTION_NAME_MAP.put("record-remove-fields", "object-remove-fields");
+        addFunctionMapping("record-remove-fields", "object-remove-fields");
 
         // Array/Mutliset functions
-        FUNCTION_NAME_MAP.put("array_length", "len");
+        addFunctionMapping("array_length", "len");
     }
 
     private CommonFunctionMapUtil() {
@@ -117,5 +117,9 @@ public class CommonFunctionMapUtil {
         String understoreName = lowerCaseName.replace('_', '-');
         FunctionSignature newFs = new FunctionSignature(fs.getNamespace(), understoreName, fs.getArity());
         return BuiltinFunctions.isBuiltinCompilerFunction(newFs, true) ? newFs : fs;
+    }
+
+    public static void addFunctionMapping(String alias, String functionName) {
+        FUNCTION_NAME_MAP.put(alias, functionName);
     }
 }

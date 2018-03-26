@@ -47,8 +47,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.DAY_OF_WEEK;
-    // Fixed week day anchor: Thursday, 1 January 1970
-    private final static int ANCHOR_WEEKDAY = 4;
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -73,6 +71,8 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     private IPointable argPtr = new VoidPointable();
                     private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
 
+                    private GregorianCalendarSystem cal = GregorianCalendarSystem.getInstance();
+
                     // possible returning types
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<AInt64> int64Serde =
@@ -87,37 +87,22 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         byte[] bytes = argPtr.getByteArray();
                         int offset = argPtr.getStartOffset();
 
-                        int daysSinceAnchor;
-                        int reminder = 0;
+                        long chronon;
                         if (bytes[offset] == ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
-                            daysSinceAnchor = (int) (ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1)
-                                    / GregorianCalendarSystem.CHRONON_OF_DAY);
-                            reminder = (int) (ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1)
-                                    % GregorianCalendarSystem.CHRONON_OF_DAY);
+                            chronon = ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1);
                         } else if (bytes[offset] == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
-                            daysSinceAnchor = ADateSerializerDeserializer.getChronon(bytes, offset + 1);
+                            chronon = ADateSerializerDeserializer.getChronon(bytes, offset + 1)
+                                    * GregorianCalendarSystem.CHRONON_OF_DAY;
                         } else {
                             throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_DATETIME_TYPE_TAG, ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                         }
 
-                        // adjust the day before 1970-01-01
-                        if (daysSinceAnchor < 0 && reminder != 0) {
-                            daysSinceAnchor -= 1;
-                        }
-
-                        // compute the weekday (0-based, and 0 = Sunday). Adjustment is needed as
-                        // the anchor day is Thursday.
-                        int weekday = (daysSinceAnchor + ANCHOR_WEEKDAY) % 7;
-
-                        // handle the negative weekday
-                        if (weekday < 0) {
-                            weekday += 7;
-                        }
+                        int weekday = cal.getDayOfWeek(chronon);
 
                         // convert from 0-based to 1-based (so 7 = Sunday)
                         if (weekday == 0) {
-                            weekday = 7;
+                            weekday = GregorianCalendarSystem.DAYS_IN_A_WEEK;
                         }
 
                         aInt64.setValue(weekday);

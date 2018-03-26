@@ -136,7 +136,7 @@ public class ParseDurationTest {
     public void testDurationFormatNanos() throws Exception {
         Assert.assertEquals("123.456789012s", Duration.formatNanos(123456789012l));
         Assert.assertEquals("12.345678901s", Duration.formatNanos(12345678901l));
-        Assert.assertEquals("1.234567890s", Duration.formatNanos(1234567890l));
+        Assert.assertEquals("1.23456789s", Duration.formatNanos(1234567890l));
         Assert.assertEquals("123.456789ms", Duration.formatNanos(123456789l));
         Assert.assertEquals("12.345678ms", Duration.formatNanos(12345678l));
         Assert.assertEquals("1.234567ms", Duration.formatNanos(1234567l));
@@ -147,7 +147,7 @@ public class ParseDurationTest {
         Assert.assertEquals("12ns", Duration.formatNanos(12l));
         Assert.assertEquals("1ns", Duration.formatNanos(1l));
         Assert.assertEquals("-123.456789012s", Duration.formatNanos(-123456789012l));
-        Assert.assertEquals("120.000000000s", Duration.formatNanos(120000000000l));
+        Assert.assertEquals("120s", Duration.formatNanos(120000000000l));
         Assert.assertEquals("-12ns", Duration.formatNanos(-12l));
     }
 
