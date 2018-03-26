@@ -20,6 +20,7 @@ package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -27,13 +28,19 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class OrderedListOfAStringTypeComputer extends AbstractResultTypeComputer {
 
-    public static final OrderedListOfAStringTypeComputer INSTANCE = new OrderedListOfAStringTypeComputer();
+    public static final OrderedListOfAStringTypeComputer INSTANCE = new OrderedListOfAStringTypeComputer(false);
 
-    private OrderedListOfAStringTypeComputer() {
+    public static final OrderedListOfAStringTypeComputer INSTANCE_NULLABLE = new OrderedListOfAStringTypeComputer(true);
+
+    private final IAType type;
+
+    private OrderedListOfAStringTypeComputer(boolean nullable) {
+        IAType t = new AOrderedListType(BuiltinType.ASTRING, null);
+        type = nullable ? AUnionType.createNullableType(t) : t;
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return new AOrderedListType(BuiltinType.ASTRING, null);
+        return type;
     }
 }

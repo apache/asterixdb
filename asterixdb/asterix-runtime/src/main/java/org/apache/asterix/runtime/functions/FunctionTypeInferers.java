@@ -149,36 +149,41 @@ public final class FunctionTypeInferers {
         }
     }
 
-    public static final class GetRecordFieldsTypeInferer implements IFunctionTypeInferer {
-        @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
-                CompilerProperties compilerProps) throws AlgebricksException {
-            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-            IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
-            ATypeTag typeTag = t.getTypeTag();
-            if (typeTag.equals(ATypeTag.OBJECT)) {
-                fd.setImmutableStates(t);
-            } else if (typeTag.equals(ATypeTag.ANY)) {
-                fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
-            } else {
-                throw new NotImplementedException("get-record-fields for data of type " + t);
-            }
-        }
-    }
+    public static final class RecordAccessorTypeInferer implements IFunctionTypeInferer {
 
-    public static final class GetRecordFieldValueTypeInferer implements IFunctionTypeInferer {
+        public static final IFunctionTypeInferer INSTANCE_STRICT = new RecordAccessorTypeInferer(true);
+
+        public static final IFunctionTypeInferer INSTANCE_LAX = new RecordAccessorTypeInferer(false);
+
+        private final boolean strict;
+
+        private RecordAccessorTypeInferer(boolean strict) {
+            this.strict = strict;
+        }
+
         @Override
         public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
                 CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
             IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
             ATypeTag typeTag = t.getTypeTag();
-            if (typeTag.equals(ATypeTag.OBJECT)) {
-                fd.setImmutableStates(t);
-            } else if (typeTag.equals(ATypeTag.ANY)) {
-                fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
-            } else {
-                throw new NotImplementedException("get-record-field-value for data of type " + t);
+            switch (typeTag) {
+                case OBJECT: {
+                    fd.setImmutableStates(t);
+                    break;
+                }
+                case ANY: {
+                    fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
+                    break;
+                }
+                default: {
+                    if (strict) {
+                        throw new NotImplementedException(fd.getIdentifier().getName() + " for data of type " + t);
+                    } else {
+                        fd.setImmutableStates(new Object[] { null });
+                    }
+                    break;
+                }
             }
         }
     }
@@ -240,23 +245,6 @@ public final class FunctionTypeInferers {
             IAType type0 = (IAType) context.getType(f.getArguments().get(0).getValue());
             IAType type1 = (IAType) context.getType(f.getArguments().get(1).getValue());
             fd.setImmutableStates(outType, type0, type1);
-        }
-    }
-
-    public static final class RecordPairsTypeInferer implements IFunctionTypeInferer {
-        @Override
-        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
-                CompilerProperties compilerProps) throws AlgebricksException {
-            AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-            IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
-            ATypeTag typeTag = t.getTypeTag();
-            if (typeTag.equals(ATypeTag.OBJECT)) {
-                fd.setImmutableStates(t);
-            } else if (typeTag.equals(ATypeTag.ANY)) {
-                fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE);
-            } else {
-                throw new NotImplementedException("record-fields with data of type " + t);
-            }
         }
     }
 

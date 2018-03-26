@@ -38,7 +38,7 @@ public class GetRecordFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
 
         @Override
         public IFunctionTypeInferer createFunctionTypeInferer() {
-            return new FunctionTypeInferers.GetRecordFieldsTypeInferer();
+            return FunctionTypeInferers.RecordAccessorTypeInferer.INSTANCE_STRICT;
         }
     };
 

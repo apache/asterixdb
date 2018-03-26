@@ -59,7 +59,7 @@ public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescript
 
         @Override
         public IFunctionTypeInferer createFunctionTypeInferer() {
-            return new FunctionTypeInferers.RecordPairsTypeInferer();
+            return FunctionTypeInferers.RecordAccessorTypeInferer.INSTANCE_STRICT;
         }
     };
 

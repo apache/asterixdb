@@ -1,0 +1,1 @@
+{ "t1": [ true, true, true, true, true ], "t2": [ [  ], [ "a" ], [ "a", "b" ], [ "a", "b", "c" ] ], "t3": [ [ "x", "y" ], [ "x", "y" ], [ "x", "y" ] ], "t4": [ { "res": "followers_count,friends_count,lang,name,screen-name,statuses_count" } ], "t5": [ { "res": "message-text,referred-topics,send-time,sender-location,tweetid,user" } ] }

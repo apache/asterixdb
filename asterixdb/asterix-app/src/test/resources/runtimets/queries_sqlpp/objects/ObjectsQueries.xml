@@ -108,6 +108,16 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
+    <compilation-unit name="object_length">
+      <output-dir compare="Text">object_length</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
+    <compilation-unit name="object_names">
+      <output-dir compare="Text">object_names</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
     <compilation-unit name="object_pairs">
       <output-dir compare="Text">object_pairs</output-dir>
     </compilation-unit>
