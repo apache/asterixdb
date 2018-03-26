@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
@@ -70,6 +71,7 @@ public class AsterixHyracksIntegrationUtil {
             joinPath(getProjectPath().toString(), "src", "test", "resources", "cc.conf");
     private static final String DEFAULT_STORAGE_PATH = joinPath("target", "io", "dir");
     private static String storagePath = DEFAULT_STORAGE_PATH;
+    private static final long RESULT_TTL = TimeUnit.MINUTES.toMillis(5);
 
     static {
         System.setProperty("java.util.logging.manager", org.apache.logging.log4j.jul.LogManager.class.getName());
@@ -198,7 +200,7 @@ public class AsterixHyracksIntegrationUtil {
         ccConfig.setClientListenAddress(Inet4Address.getLoopbackAddress().getHostAddress());
         ccConfig.setClientListenPort(DEFAULT_HYRACKS_CC_CLIENT_PORT);
         ccConfig.setClusterListenPort(DEFAULT_HYRACKS_CC_CLUSTER_PORT);
-        ccConfig.setResultTTL(120000L);
+        ccConfig.setResultTTL(RESULT_TTL);
         ccConfig.setResultSweepThreshold(1000L);
         ccConfig.setEnforceFrameWriterProtocol(true);
         configManager.set(ControllerConfig.Option.DEFAULT_DIR, joinPath(getDefaultStoragePath(), "asterixdb"));
@@ -217,7 +219,7 @@ public class AsterixHyracksIntegrationUtil {
         ncConfig.setDataListenAddress(Inet4Address.getLoopbackAddress().getHostAddress());
         ncConfig.setResultListenAddress(Inet4Address.getLoopbackAddress().getHostAddress());
         ncConfig.setMessagingListenAddress(Inet4Address.getLoopbackAddress().getHostAddress());
-        ncConfig.setResultTTL(120000L);
+        ncConfig.setResultTTL(RESULT_TTL);
         ncConfig.setResultSweepThreshold(1000L);
         ncConfig.setVirtualNC();
         configManager.set(ControllerConfig.Option.DEFAULT_DIR, joinPath(getDefaultStoragePath(), "asterixdb", ncName));
