@@ -9305,6 +9305,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="filters">
+      <compilation-unit name="filter-auto-key">
+        <output-dir compare="Text">filter-auto-key</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="filters">
       <compilation-unit name="load">
         <output-dir compare="Text">load</output-dir>
       </compilation-unit>
