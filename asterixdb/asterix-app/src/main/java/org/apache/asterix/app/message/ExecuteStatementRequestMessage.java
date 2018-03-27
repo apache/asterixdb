@@ -34,6 +34,8 @@ import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
@@ -95,7 +97,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         ClusterControllerService ccSrv = (ClusterControllerService) ccSrvContext.getControllerService();
         CCApplication ccApp = (CCApplication) ccSrv.getApplication();
         CCMessageBroker messageBroker = (CCMessageBroker) ccSrvContext.getMessageBroker();
-        final String rejectionReason = getRejectionReason(ccSrv);
+        final RuntimeDataException rejectionReason = getRejectionReason(ccSrv);
         if (rejectionReason != null) {
             sendRejection(rejectionReason, messageBroker);
             return;
@@ -145,22 +147,22 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         }
     }
 
-    private String getRejectionReason(ClusterControllerService ccSrv) {
+    private RuntimeDataException getRejectionReason(ClusterControllerService ccSrv) {
         if (ccSrv.getNodeManager().getNodeControllerState(requestNodeId) == null) {
-            return "Node is not registerted with the CC";
+            return new RuntimeDataException(ErrorCode.REJECT_NODE_UNREGISTERED);
         }
         ICcApplicationContext appCtx = (ICcApplicationContext) ccSrv.getApplicationContext();
         IClusterStateManager csm = appCtx.getClusterStateManager();
         final IClusterManagementWork.ClusterState clusterState = csm.getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
-            return "Cannot execute request, cluster is " + clusterState;
+            return new RuntimeDataException(ErrorCode.REJECT_BAD_CLUSTER_STATE, clusterState);
         }
         return null;
     }
 
-    private void sendRejection(String reason, CCMessageBroker messageBroker) {
+    private void sendRejection(RuntimeDataException reason, CCMessageBroker messageBroker) {
         ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
-        responseMsg.setError(new Exception(reason));
+        responseMsg.setError(reason);
         try {
             messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);
         } catch (Exception e) {

@@ -154,13 +154,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     }
 
     @Override
-    protected void handleExecuteStatementException(Throwable t, RequestExecutionState execution) {
-        if (t instanceof TimeoutException
+    protected void handleExecuteStatementException(Throwable t, RequestExecutionState state, RequestParameters param) {
+        if (t instanceof TimeoutException // TODO(mblow): I don't think t can ever been an instance of TimeoutException
                 || ExceptionUtils.matchingCause(t, candidate -> candidate instanceof IPCException)) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, t.toString(), t);
-            execution.setStatus(ResultStatus.FAILED, HttpResponseStatus.SERVICE_UNAVAILABLE);
+            state.setStatus(ResultStatus.FAILED, HttpResponseStatus.SERVICE_UNAVAILABLE);
         } else {
-            super.handleExecuteStatementException(t, execution);
+            super.handleExecuteStatementException(t, state, param);
         }
     }
 

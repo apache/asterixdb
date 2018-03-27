@@ -72,6 +72,8 @@ public class ErrorCode {
     public static final int UNKNOWN_DURATION_UNIT = 29;
     public static final int QUERY_TIMEOUT = 30;
     public static final int INVALID_TYPE_CASTING_MATH_FUNCTION = 31;
+    public static final int REJECT_BAD_CLUSTER_STATE = 32;
+    public static final int REJECT_NODE_UNREGISTERED = 33;
 
     public static final int INSTANTIATION_ERROR = 100;
 
