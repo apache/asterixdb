@@ -57,6 +57,7 @@ public class ReplicaManager implements IReplicaManager {
      * current replicas
      */
     private final Map<ReplicaIdentifier, PartitionReplica> replicas = new HashMap<>();
+    private final Object replicaSyncLock = new Object();
 
     public ReplicaManager(INcApplicationContext appCtx, Set<Integer> partitions) {
         this.appCtx = appCtx;
@@ -124,6 +125,11 @@ public class ReplicaManager implements IReplicaManager {
             appCtx.getReplicationManager().unregister(replica);
         }
         partitions.remove(partition);
+    }
+
+    @Override
+    public Object getReplicaSyncLock() {
+        return replicaSyncLock;
     }
 
     private void closePartitionResources(int partition) throws HyracksDataException {

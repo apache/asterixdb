@@ -189,7 +189,7 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
                         return ANull.NULL;
                     }
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
                 return (IAObject) nonTaggedSerde.deserialize(in);
             }

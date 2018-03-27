@@ -49,7 +49,7 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
         try {
             return lockManager.tryLock(datasetId, -1, LockMode.S, txnCtx);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -58,7 +58,7 @@ public class PrimaryIndexSearchOperationCallback extends AbstractOperationCallba
         try {
             lockManager.lock(datasetId, -1, LockMode.S, txnCtx);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

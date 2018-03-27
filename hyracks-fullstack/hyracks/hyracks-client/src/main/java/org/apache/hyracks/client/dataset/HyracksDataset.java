@@ -56,7 +56,7 @@ public class HyracksDataset implements IHyracksDataset {
             reader = new HyracksDatasetReader(datasetDirectoryServiceConnection, netManager, datasetClientCtx, jobId,
                     resultSetId);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         return reader;
     }

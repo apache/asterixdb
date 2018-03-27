@@ -87,6 +87,7 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                     private ISerializerDeserializer<AInterval> intervalSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINTERVAL);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
+                    private final GregorianCalendarSystem cal = GregorianCalendarSystem.getInstance();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -142,8 +143,8 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
                                         ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
-                            intervalStart = GregorianCalendarSystem.getChrononInDays(intervalStart);
-                            intervalEnd = GregorianCalendarSystem.getChrononInDays(intervalEnd);
+                            intervalStart = cal.getChrononInDays(intervalStart);
+                            intervalEnd = cal.getChrononInDays(intervalEnd);
 
                             if (intervalEnd < intervalStart) {
                                 throw new InvalidDataFormatException(getIdentifier(),

@@ -97,6 +97,10 @@ public class AlgebricksException extends Exception {
         return component;
     }
 
+    public int getErrorCode() {
+        return errorCode;
+    }
+
     public Object[] getParams() {
         return params;
     }

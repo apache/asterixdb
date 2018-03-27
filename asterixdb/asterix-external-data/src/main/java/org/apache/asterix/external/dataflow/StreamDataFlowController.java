@@ -47,7 +47,7 @@ public class StreamDataFlowController extends AbstractDataFlowController {
             }
             tupleForwarder.complete();
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

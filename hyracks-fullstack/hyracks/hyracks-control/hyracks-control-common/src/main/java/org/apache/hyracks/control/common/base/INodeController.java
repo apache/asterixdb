@@ -38,7 +38,7 @@ import org.apache.hyracks.control.common.job.TaskAttemptDescriptor;
 public interface INodeController {
     void startTasks(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
             List<TaskAttemptDescriptor> taskDescriptors, Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies,
-            Set<JobFlag> flags, Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId)
+            Set<JobFlag> flags, Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId, long startTime)
             throws Exception;
 
     void abortTasks(JobId jobId, List<TaskAttemptId> tasks) throws Exception;

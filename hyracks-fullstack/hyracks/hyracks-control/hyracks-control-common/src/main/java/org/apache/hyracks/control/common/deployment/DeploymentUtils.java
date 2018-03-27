@@ -72,7 +72,7 @@ public class DeploymentUtils {
                 FileUtils.forceDelete(dFile);
             }
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -123,7 +123,7 @@ public class DeploymentUtils {
                     deploymentId == null ? null : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
             return jobSerDe == null ? JavaSerializationUtils.deserialize(bytes) : jobSerDe.deserialize(bytes);
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -144,7 +144,7 @@ public class DeploymentUtils {
                     deploymentId == null ? null : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
             return jobSerDe == null ? JavaSerializationUtils.loadClass(className) : jobSerDe.loadClass(className);
         } catch (ClassNotFoundException | IOException e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -216,6 +216,6 @@ public class DeploymentUtils {
                 trace = e;
             }
         }
-        throw new HyracksException(trace);
+        throw HyracksException.create(trace);
     }
 }

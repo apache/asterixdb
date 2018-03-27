@@ -438,7 +438,7 @@ public class ClusterControllerService implements IControllerService {
             try {
                 workQueue.scheduleAndSync(ginmw);
             } catch (Exception e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
 

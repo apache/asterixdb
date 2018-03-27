@@ -122,7 +122,7 @@ public class TemporalSecondAccessor extends AbstractScalarFunctionDynamicDescrip
                             aMutableInt64.setValue(sec);
                             intSerde.serialize(aMutableInt64, out);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

@@ -172,7 +172,7 @@ public class InMemorySortOperatorDescriptor extends AbstractOperatorDescriptor {
                         state.frameSorter.flush(writer);
                     } catch (Throwable th) {
                         writer.fail();
-                        throw new HyracksDataException(th);
+                        throw HyracksDataException.create(th);
                     } finally {
                         writer.close();
                     }

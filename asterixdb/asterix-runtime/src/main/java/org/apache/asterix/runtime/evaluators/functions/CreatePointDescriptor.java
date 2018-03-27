@@ -98,7 +98,7 @@ public class CreatePointDescriptor extends AbstractScalarFunctionDynamicDescript
                                     ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1));
                             pointSerde.serialize(aPoint, out);
                         } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            throw HyracksDataException.create(e1);
                         }
                         result.set(resultStorage);
                     }

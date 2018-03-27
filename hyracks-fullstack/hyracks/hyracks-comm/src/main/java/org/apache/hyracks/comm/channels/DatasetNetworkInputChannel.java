@@ -102,7 +102,7 @@ public class DatasetNetworkInputChannel implements IInputChannel {
         try {
             ccb = netManager.connect(remoteAddress);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         ccb.getReadInterface().setFullBufferAcceptor(new ReadFullBufferAcceptor());
         ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());

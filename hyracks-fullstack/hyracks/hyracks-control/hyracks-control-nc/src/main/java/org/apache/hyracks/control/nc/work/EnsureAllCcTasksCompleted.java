@@ -18,84 +18,78 @@
  */
 package org.apache.hyracks.control.nc.work;
 
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.control.CcId;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.Task;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.Span;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@SuppressWarnings({ "squid:S1181", "squid:S1166" })
+@SuppressWarnings("squid:S1181")
 public class EnsureAllCcTasksCompleted implements Runnable {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long TIMEOUT = TimeUnit.MINUTES.toMillis(2);
     private final NodeControllerService ncs;
     private final CcId ccId;
-    private final Deque<Task> abortedTasks;
-    private final Span span;
+    private final Deque<Task> runningTasks;
 
-    public EnsureAllCcTasksCompleted(NodeControllerService ncs, CcId ccId, Deque<Task> abortedTasks) {
+    public EnsureAllCcTasksCompleted(NodeControllerService ncs, CcId ccId, Deque<Task> runningTasks) {
         this.ncs = ncs;
         this.ccId = ccId;
-        this.abortedTasks = abortedTasks;
-        span = Span.start(2, TimeUnit.MINUTES);
+        this.runningTasks = runningTasks;
     }
 
     @Override
     public void run() {
         try {
-            LOGGER.log(Level.INFO, "Ensuring all tasks of {} have completed", ccId);
-            while (!span.elapsed()) {
-                removeAborted();
-                if (abortedTasks.isEmpty()) {
+            LOGGER.info("Ensuring all tasks of CC {} have completed", ccId);
+            final Span maxWaitTime = Span.start(2, TimeUnit.MINUTES);
+            while (!maxWaitTime.elapsed()) {
+                removeCompleted();
+                if (runningTasks.isEmpty()) {
                     break;
                 }
-                LOGGER.log(Level.INFO, "{} tasks are still running", abortedTasks.size());
-                Thread.sleep(TimeUnit.SECONDS.toMillis(1)); // Check once a second
+                LOGGER.info("{} tasks are still running", runningTasks.size());
+                TimeUnit.SECONDS.sleep(1); // Check once a second
             }
-            if (abortedTasks.isEmpty()) {
-                LOGGER.log(Level.INFO, "All tasks of {} have completed, Completing registration", ccId);
-                // all tasks has completed
-                ncs.getApplication().onRegisterNode(ccId);
+            if (runningTasks.isEmpty()) {
+                LOGGER.info("All tasks of CC {} have completed", ccId);
+                ncs.notifyTasksCompleted(ccId);
             } else {
-                LOGGER.log(Level.ERROR,
-                        "Failed to abort all previous tasks associated with CC {} after {}ms. Giving up", ccId,
-                        TIMEOUT);
-                LOGGER.log(Level.ERROR, "{} tasks failed to complete within timeout", abortedTasks.size());
-                abortedTasks.forEach(task -> {
-                    List<Thread> pendingThreads = task.getPendingThreads();
-                    LOGGER.log(Level.ERROR, "task {} was stuck. Stuck thread count = {}", task.getTaskAttemptId(),
-                            pendingThreads.size());
-                    pendingThreads.forEach(thread -> {
-                        LOGGER.log(Level.ERROR, "Stuck thread trace: {}", Arrays.toString(thread.getStackTrace()));
-                    });
-                });
+                LOGGER.error("{} tasks associated with CC {} failed to complete after {}ms. Giving up",
+                        runningTasks.size(), ccId, TIMEOUT);
+                logPendingTasks();
                 ExitUtil.halt(ExitUtil.NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS);
             }
         } catch (Throwable th) {
-            try {
-                LOGGER.log(Level.ERROR, "Failed to abort all previous tasks associated with CC {}", ccId, th);
-            } catch (Throwable ignore) {
-                // Ignore logging errors
-            }
+            LOGGER.error("Failed to abort all previous tasks associated with CC {}", ccId, th);
             ExitUtil.halt(ExitUtil.NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS);
         }
     }
 
-    private void removeAborted() {
-        int numTasks = abortedTasks.size();
+    private void removeCompleted() {
+        final int numTasks = runningTasks.size();
         for (int i = 0; i < numTasks; i++) {
-            Task task = abortedTasks.poll();
+            Task task = runningTasks.poll();
             if (!task.isCompleted()) {
-                abortedTasks.add(task);
+                runningTasks.add(task);
+            }
+        }
+    }
+
+    private void logPendingTasks() {
+        for (Task task : runningTasks) {
+            final List<Thread> pendingThreads = task.getPendingThreads();
+            LOGGER.error("task {} was stuck. Stuck thread count = {}", task.getTaskAttemptId(), pendingThreads.size());
+            for (Thread thread : pendingThreads) {
+                LOGGER.error("Stuck thread trace", ExceptionUtils.fromThreadStack(thread));
             }
         }
     }

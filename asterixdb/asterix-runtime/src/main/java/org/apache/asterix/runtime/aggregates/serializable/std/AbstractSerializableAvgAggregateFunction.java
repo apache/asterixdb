@@ -102,7 +102,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
             state.writeLong(0);
             state.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -210,7 +210,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 result.write(avgBytes.getByteArray(), avgBytes.getStartOffset(), avgBytes.getLength());
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -268,7 +268,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 doubleSerde.serialize(aDouble, result);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

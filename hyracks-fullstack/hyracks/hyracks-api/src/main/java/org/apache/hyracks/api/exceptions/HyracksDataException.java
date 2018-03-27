@@ -78,28 +78,8 @@ public class HyracksDataException extends HyracksException {
         super(message);
     }
 
-    /**
-     * @deprecated Error code is needed.
-     */
-    @Deprecated
-    public HyracksDataException(Throwable cause) {
+    protected HyracksDataException(Throwable cause) {
         super(cause);
-    }
-
-    /**
-     * @deprecated Error code is needed.
-     */
-    @Deprecated
-    public HyracksDataException(Throwable cause, String nodeId) {
-        super(cause, nodeId);
-    }
-
-    /**
-     * @deprecated Error code is needed.
-     */
-    @Deprecated
-    public HyracksDataException(String message, Throwable cause, String nodeId) {
-        super(message, cause, nodeId);
     }
 
     /**

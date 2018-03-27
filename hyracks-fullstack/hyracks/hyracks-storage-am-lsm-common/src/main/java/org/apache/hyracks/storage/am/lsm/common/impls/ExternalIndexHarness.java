@@ -200,7 +200,7 @@ public class ExternalIndexHarness extends LSMHarness {
             try {
                 exitComponents(ctx, LSMOperationType.SEARCH, null, false);
             } catch (Exception e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }

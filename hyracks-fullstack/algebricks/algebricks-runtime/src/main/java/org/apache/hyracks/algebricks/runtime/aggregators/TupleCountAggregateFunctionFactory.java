@@ -56,7 +56,7 @@ public class TupleCountAggregateFunctionFactory implements IAggregateEvaluatorFa
                     abvs.getDataOutput().writeInt(cnt);
                     result.set(abvs);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

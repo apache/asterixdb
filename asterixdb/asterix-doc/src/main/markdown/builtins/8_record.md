@@ -233,3 +233,57 @@
           "id": 1
         }
 
+### object_length ###
+ * Syntax:
+
+        object_length(input_object)
+
+ * Returns number of top-level fields in the given object
+ * Arguments:
+    * `input_object` : an object value.
+ * Return Value:
+    * an integer that represents the number of top-level fields in the given object,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value or any other non-object value
+
+ * Example:
+
+        object_length(
+                       {
+                         "id": 1,
+                         "project": "AsterixDB",
+                         "address": {"city": "Irvine", "state": "CA"},
+                       }
+                     );
+
+ * The expected result is:
+
+        3
+
+### object_names ###
+ * Syntax:
+
+        object_names(input_object)
+
+ * Returns names of top-level fields in the given object
+ * Arguments:
+    * `input_object` : an object value.
+ * Return Value:
+    * an array with top-level field names of the given object,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value or any other non-object value
+
+ * Example:
+
+        object_names(
+                       {
+                         "id": 1,
+                         "project": "AsterixDB",
+                         "address": {"city": "Irvine", "state": "CA"},
+                       }
+                     );
+
+ * The expected result is:
+
+        [ "id", "project", "address" ]
+

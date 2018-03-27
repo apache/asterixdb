@@ -46,7 +46,7 @@ public class PrimaryIndexInstantSearchOperationCallback extends AbstractOperatio
         try {
             return lockManager.instantTryLock(datasetId, pkHash, LockMode.S, txnCtx);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

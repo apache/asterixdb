@@ -147,7 +147,7 @@ public final class JRecord implements IJObject {
                 }
             }
         } catch (IOException ae) {
-            throw new HyracksDataException(ae);
+            throw HyracksDataException.create(ae);
         }
         recordBuilder.write(output, writeTypeTag);
     }

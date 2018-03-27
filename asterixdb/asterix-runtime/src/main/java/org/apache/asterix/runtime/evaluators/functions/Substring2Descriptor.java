@@ -102,13 +102,13 @@ public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescri
                         } catch (StringIndexOutOfBoundsException e) {
                             throw new RuntimeDataException(ErrorCode.OUT_OF_BOUND, getIdentifier(), 1, start);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         try {
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             out.write(array.getByteArray(), 0, array.getLength());
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

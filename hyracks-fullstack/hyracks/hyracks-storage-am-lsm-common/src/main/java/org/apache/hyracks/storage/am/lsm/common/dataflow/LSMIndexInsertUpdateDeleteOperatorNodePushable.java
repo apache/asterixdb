@@ -109,7 +109,7 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
             } catch (HyracksDataException e) {
                 throw e;
             } catch (Exception e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         if (nextFlushTupleIndex == 0) {

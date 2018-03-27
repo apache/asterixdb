@@ -56,7 +56,7 @@ public class RecordDataFlowController<T> extends AbstractDataFlowController {
             tupleForwarder.complete();
             recordReader.close();
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

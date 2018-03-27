@@ -96,7 +96,7 @@ public abstract class AbstractSubBinaryEvaluator extends AbstractBinaryScalarEva
             dataOutput.write(byteArrayPointable.getByteArray(), byteArrayPointable.getContentStartOffset() + subStart,
                     subLength);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         result.set(resultStorage);
     }

@@ -122,7 +122,7 @@ public class TemporalMillisecondAccessor extends AbstractScalarFunctionDynamicDe
                             aMutableInt64.setValue(ms);
                             intSerde.serialize(aMutableInt64, out);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

@@ -186,7 +186,7 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
                 try {
                     appendRecord(argPointables[i], argRecordPointables[i], castRequired.get(i));
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
             outRecordBuilder.write(resultOutput, true);
@@ -238,7 +238,7 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
             try {
                 resultOutput.writeByte(typeTag);
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }

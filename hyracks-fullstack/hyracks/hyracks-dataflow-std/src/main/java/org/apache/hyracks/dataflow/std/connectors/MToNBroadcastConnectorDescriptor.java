@@ -74,7 +74,7 @@ public class MToNBroadcastConnectorDescriptor extends AbstractMToNConnectorDescr
                             epWriters[i].fail();
                         } catch (Throwable th) {
                             if (failException == null) {
-                                failException = new HyracksDataException(th);
+                                failException = HyracksDataException.create(th);
                             } else {
                                 failException.addSuppressed(th);
                             }

@@ -518,11 +518,12 @@ public class JobExecutor {
                     byte[] jagBytes = changed ? acgBytes : null;
                     node.getNodeController().startTasks(deploymentId, jobId, jagBytes, taskDescriptors,
                             connectorPolicies, jobRun.getFlags(),
-                            ccs.createOrGetJobParameterByteStore(jobId).getParameterMap(), deployedJobSpecId);
+                            ccs.createOrGetJobParameterByteStore(jobId).getParameterMap(), deployedJobSpecId,
+                            jobRun.getStartTime());
                 }
             }
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 

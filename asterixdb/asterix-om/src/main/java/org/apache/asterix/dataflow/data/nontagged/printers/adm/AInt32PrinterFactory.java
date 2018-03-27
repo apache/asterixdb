@@ -36,7 +36,7 @@ public class AInt32PrinterFactory implements IPrinterFactory {
         try {
             WriteValueTools.writeInt(AInt32SerializerDeserializer.getInt(b, s + 1), ps);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     };
 

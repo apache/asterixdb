@@ -764,11 +764,12 @@ public class CCNCFunctions {
         private final Set<JobFlag> flags;
         private final Map<byte[], byte[]> jobParameters;
         private final DeployedJobSpecId deployedJobSpecId;
+        private final long jobStartTime;
 
         public StartTasksFunction(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
                 List<TaskAttemptDescriptor> taskDescriptors,
                 Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, Set<JobFlag> flags,
-                Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId) {
+                Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId, long jobStartTime) {
             this.deploymentId = deploymentId;
             this.jobId = jobId;
             this.planBytes = planBytes;
@@ -777,6 +778,7 @@ public class CCNCFunctions {
             this.flags = flags;
             this.jobParameters = jobParameters;
             this.deployedJobSpecId = deployedJobSpecId;
+            this.jobStartTime = jobStartTime;
         }
 
         @Override
@@ -814,6 +816,10 @@ public class CCNCFunctions {
 
         public Set<JobFlag> getFlags() {
             return flags;
+        }
+
+        public long getJobStartTime() {
+            return jobStartTime;
         }
 
         public static Object deserialize(ByteBuffer buffer, int length) throws Exception {
@@ -885,8 +891,10 @@ public class CCNCFunctions {
                 deployedJobSpecId = DeployedJobSpecId.create(dis);
             }
 
+            long jobStartTime = dis.readLong();
+
             return new StartTasksFunction(deploymentId, jobId, planBytes, taskDescriptors, connectorPolicies, flags,
-                    jobParameters, deployedJobSpecId);
+                    jobParameters, deployedJobSpecId, jobStartTime);
         }
 
         public static void serialize(OutputStream out, Object object) throws Exception {
@@ -935,11 +943,13 @@ public class CCNCFunctions {
             }
 
             //write deployed job spec id
-            dos.writeBoolean(fn.getDeployedJobSpecId() == null ? false : true);
+            dos.writeBoolean(fn.getDeployedJobSpecId() != null);
             if (fn.getDeployedJobSpecId() != null) {
                 fn.getDeployedJobSpecId().writeFields(dos);
             }
 
+            //write job start time
+            dos.writeLong(fn.jobStartTime);
         }
     }
 

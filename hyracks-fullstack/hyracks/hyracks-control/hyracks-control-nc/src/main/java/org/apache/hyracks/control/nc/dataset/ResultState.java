@@ -178,7 +178,7 @@ public class ResultState implements IStateObject {
             try {
                 wait();
             } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         if ((offset >= size && eos.get()) || failed.get()) {
@@ -201,7 +201,7 @@ public class ResultState implements IStateObject {
                 try {
                     wait();
                 } catch (InterruptedException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 
@@ -330,7 +330,7 @@ public class ResultState implements IStateObject {
             try {
                 wait();
             } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         if (failed.get()) {

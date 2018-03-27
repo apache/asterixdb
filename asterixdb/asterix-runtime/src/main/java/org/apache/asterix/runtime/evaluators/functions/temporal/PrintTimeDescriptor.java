@@ -24,12 +24,12 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
 import org.apache.asterix.om.base.temporal.DateTimeFormatUtils.DateTimeParseMode;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -44,8 +44,6 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public final static FunctionIdentifier FID = BuiltinFunctions.PRINT_TIME;
-    private final static DateTimeFormatUtils DT_UTILS = DateTimeFormatUtils.getInstance();
 
     public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
 
@@ -74,6 +72,8 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                     private final UTF8StringWriter writer = new UTF8StringWriter();
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
+                    private final DateTimeFormatUtils util = DateTimeFormatUtils.getInstance();
+
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         resultStorage.reset();
@@ -100,19 +100,18 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             utf8Ptr.set(bytes1, offset1 + 1, len1 - 1);
                             int formatLength = utf8Ptr.getUTF8Length();
                             sbder.delete(0, sbder.length());
-                            DT_UTILS.printDateTime(chronon, 0, utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
+                            util.printDateTime(chronon, 0, utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
                                     formatLength, sbder, DateTimeParseMode.TIME_ONLY);
 
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            writer.writeUTF8(sbder.toString(), out);
+                            writer.writeUTF8(sbder, out);
                         } catch (IOException ex) {
-                            throw new HyracksDataException(ex);
+                            throw HyracksDataException.create(ex);
                         }
                         result.set(resultStorage);
                     }
                 };
             }
-
         };
     }
 
@@ -121,7 +120,6 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
      */
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.PRINT_TIME;
     }
-
 }

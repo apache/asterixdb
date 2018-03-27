@@ -218,7 +218,7 @@ public class SimilarityJaccardPrefixEvaluator implements IScalarEvaluator {
         try {
             writeResult();
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         result.set(resultStorage);
     }

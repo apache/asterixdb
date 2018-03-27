@@ -70,7 +70,7 @@ public class FileSplitsFactory implements Serializable {
             dos.close();
             return bos.toByteArray();
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

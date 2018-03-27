@@ -86,7 +86,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
             editDistance = computeResult(argPtr1, argPtr2, firstTypeTag);
             writeResult(editDistance);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         result.set(resultStorage);
     }

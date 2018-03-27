@@ -121,7 +121,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
             writer.open();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -144,7 +144,7 @@ public class FeedMetaComputeNodePushable extends AbstractUnaryInputUnaryOutputOp
             writer.nextFrame(buffer);
         } catch (Exception e) {
             LOGGER.log(Level.WARN, e.getMessage(), e);
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

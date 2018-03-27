@@ -39,6 +39,7 @@ public class TestJobletContext implements IHyracksJobletContext {
     private final FrameManager frameManger;
     private JobId jobId;
     private WorkspaceFileFactory fileFactory;
+    private final long jobStartTime;
 
     public TestJobletContext(int frameSize, INCServiceContext serviceContext, JobId jobId) throws HyracksException {
         this.frameSize = frameSize;
@@ -46,6 +47,7 @@ public class TestJobletContext implements IHyracksJobletContext {
         this.jobId = jobId;
         fileFactory = new WorkspaceFileFactory(this, (IIOManager) getIOManager());
         this.frameManger = new FrameManager(frameSize);
+        this.jobStartTime = System.currentTimeMillis();
     }
 
     ByteBuffer allocateFrame() throws HyracksDataException {
@@ -110,6 +112,11 @@ public class TestJobletContext implements IHyracksJobletContext {
     @Override
     public JobId getJobId() {
         return jobId;
+    }
+
+    @Override
+    public long getJobStartTime() {
+        return jobStartTime;
     }
 
     @Override

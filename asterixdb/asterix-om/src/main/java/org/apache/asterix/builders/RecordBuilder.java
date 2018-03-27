@@ -296,7 +296,7 @@ public class RecordBuilder implements IARecordBuilder {
                 out.write(openPartOutputStream.getByteArray(), 0, openPartOutputStream.getLength());
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

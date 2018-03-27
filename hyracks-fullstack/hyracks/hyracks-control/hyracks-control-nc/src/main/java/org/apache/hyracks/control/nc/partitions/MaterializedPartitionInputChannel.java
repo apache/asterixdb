@@ -112,7 +112,7 @@ public class MaterializedPartitionInputChannel implements IInputChannel {
                     try {
                         MaterializedPartitionInputChannel.this.wait();
                     } catch (InterruptedException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                 }
                 ByteBuffer destFrame = emptyQueue.poll();

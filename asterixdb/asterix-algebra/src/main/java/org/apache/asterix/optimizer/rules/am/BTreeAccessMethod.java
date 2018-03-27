@@ -528,11 +528,6 @@ public class BTreeAccessMethod implements IAccessMethod {
             }
         }
 
-        if (primaryIndexPostProccessingIsNeeded) {
-            Arrays.fill(lowKeyInclusive, true);
-            Arrays.fill(highKeyInclusive, true);
-        }
-
         // determine cases when prefix search could be applied
         for (int i = 1; i < lowKeyExprs.length; i++) {
             if (lowKeyLimits[0] == null && lowKeyLimits[i] != null || lowKeyLimits[0] != null && lowKeyLimits[i] == null
@@ -542,6 +537,12 @@ public class BTreeAccessMethod implements IAccessMethod {
                 primaryIndexPostProccessingIsNeeded = true;
             }
         }
+
+        if (primaryIndexPostProccessingIsNeeded) {
+            Arrays.fill(lowKeyInclusive, true);
+            Arrays.fill(highKeyInclusive, true);
+        }
+
         if (lowKeyLimits[0] == null) {
             lowKeyInclusive[0] = true;
         }
@@ -563,8 +564,10 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         BTreeJobGenParams jobGenParams = new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE,
                 dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
-        jobGenParams.setLowKeyInclusive(lowKeyInclusive[0]);
-        jobGenParams.setHighKeyInclusive(highKeyInclusive[0]);
+        jobGenParams
+                .setLowKeyInclusive(lowKeyInclusive[primaryIndexPostProccessingIsNeeded ? 0 : numSecondaryKeys - 1]);
+        jobGenParams
+                .setHighKeyInclusive(highKeyInclusive[primaryIndexPostProccessingIsNeeded ? 0 : numSecondaryKeys - 1]);
         jobGenParams.setIsEqCondition(isEqCondition);
         jobGenParams.setLowKeyVarList(keyVarList, 0, numLowKeys);
         jobGenParams.setHighKeyVarList(keyVarList, numLowKeys, numHighKeys);

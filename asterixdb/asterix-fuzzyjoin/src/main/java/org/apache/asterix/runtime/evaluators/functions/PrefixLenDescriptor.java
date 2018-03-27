@@ -124,7 +124,7 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         try {
                             int32Serde.serialize(res, out);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

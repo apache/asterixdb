@@ -91,7 +91,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
             initAccessAppend(ctx);
             writer.open();
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -108,7 +108,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
                     appendTupleToFrame(t);
                 }
             } catch (ACIDException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         IFrame message = TaskUtil.get(HyracksConstants.KEY_MESSAGE, ctx);
@@ -118,7 +118,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
                 formMarkerLogRecords(message.getBuffer());
                 logMgr.log(logRecord);
             } catch (ACIDException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
             message.reset();
             message.getBuffer().put(MessagingFrameTupleAppender.NULL_FEED_MESSAGE);

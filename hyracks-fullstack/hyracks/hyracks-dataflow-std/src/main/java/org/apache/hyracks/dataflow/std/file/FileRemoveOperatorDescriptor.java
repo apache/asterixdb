@@ -80,7 +80,7 @@ public class FileRemoveOperatorDescriptor extends AbstractSingleActivityOperator
                     try {
                         FileUtils.deleteDirectory(f);
                     } catch (IOException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                 }
             }

@@ -44,7 +44,7 @@ public class PrintTools {
             gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR,
                     GregorianCalendarSystem.Fields.DAY, false);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -55,7 +55,7 @@ public class PrintTools {
             gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR,
                     GregorianCalendarSystem.Fields.MILLISECOND, true);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -106,7 +106,7 @@ public class PrintTools {
                 ps.print("S");
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -139,7 +139,7 @@ public class PrintTools {
                 ps.print("M");
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -202,7 +202,7 @@ public class PrintTools {
                 ps.print("S");
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -213,7 +213,7 @@ public class PrintTools {
             gCalInstance.getExtendStringRepUntilField(time, 0, ps, GregorianCalendarSystem.Fields.HOUR,
                     GregorianCalendarSystem.Fields.MILLISECOND, true);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

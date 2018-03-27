@@ -40,9 +40,9 @@ public class DoubleParserFactory implements IValueParserFactory {
                 try {
                     out.writeDouble(Double.parseDouble(s));
                 } catch (NumberFormatException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

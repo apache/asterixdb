@@ -71,7 +71,7 @@ public class FeedLogManager implements Closeable {
             }
             open();
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

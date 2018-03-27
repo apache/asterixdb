@@ -110,7 +110,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                         unnest.init(tRef);
                         unnesting(t);
                     } catch (IOException ae) {
-                        throw new HyracksDataException(ae);
+                        throw HyracksDataException.create(ae);
                     }
                 }
             }

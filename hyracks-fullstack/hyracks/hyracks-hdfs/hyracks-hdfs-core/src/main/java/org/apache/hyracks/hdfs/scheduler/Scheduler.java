@@ -84,7 +84,7 @@ public class Scheduler {
                     : new RackAwareNcCollectionBuilder(topology);
             loadIPAddressToNCMap(ncNameToNcInfos);
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -101,7 +101,7 @@ public class Scheduler {
             this.ncCollectionBuilder = ncCollectionBuilder;
             loadIPAddressToNCMap(ncNameToNcInfos);
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -210,7 +210,7 @@ public class Scheduler {
             scheduleNonLocalSlots(splits, workloads, locations, upperBoundSlots, scheduled);
             return locations;
         } catch (IOException e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -399,7 +399,7 @@ public class Scheduler {
                 ncNameToIndex.put(NCs[i], i);
             }
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 }

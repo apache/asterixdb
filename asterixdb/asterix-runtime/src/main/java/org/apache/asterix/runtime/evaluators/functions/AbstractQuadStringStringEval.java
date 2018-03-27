@@ -125,7 +125,7 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
             resultBuffer.setValue(res);
             strSerde.serialize(resultBuffer, dout);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         result.set(resultStorage);
     }

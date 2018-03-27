@@ -114,7 +114,7 @@ public class SubsetCollectionDescriptor extends AbstractUnnestingFunctionDynamic
 
                             posCrt = posStart;
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                     }
 

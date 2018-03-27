@@ -52,7 +52,7 @@ public class SecondaryIndexModificationOperationCallback extends AbstractIndexMo
             int pkHash = computePrimaryKeyHashValue(after, primaryKeyFields);
             this.log(pkHash, after, before);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

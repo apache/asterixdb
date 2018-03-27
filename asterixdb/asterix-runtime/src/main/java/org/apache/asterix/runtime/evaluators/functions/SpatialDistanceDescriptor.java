@@ -103,7 +103,7 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                             out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                             out.writeDouble(distance);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

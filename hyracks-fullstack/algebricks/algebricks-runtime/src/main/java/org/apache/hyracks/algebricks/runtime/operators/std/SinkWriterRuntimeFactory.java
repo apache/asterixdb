@@ -73,7 +73,7 @@ public class SinkWriterRuntimeFactory implements IPushRuntimeFactory {
             IAWriter w = writerFactory.createWriter(fields, filePrintStream, printerFactories, inputRecordDesc);
             return new IPushRuntime[] { new SinkWriterRuntime(w, filePrintStream, inputRecordDesc, true) };
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

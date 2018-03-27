@@ -44,7 +44,7 @@ public class ABinaryHexPrinterFactory implements IPrinterFactory {
             HexPrinter.printHexString(b, start, validLength, ps);
             ps.print("\"");
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     };
 

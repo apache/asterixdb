@@ -18,18 +18,19 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.serde;
 
-import com.esri.core.geometry.OperatorImportFromWkb;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.WkbImportFlags;
-import com.esri.core.geometry.ogc.OGCGeometry;
-import org.apache.asterix.om.base.AGeometry;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import org.apache.asterix.om.base.AGeometry;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+import com.esri.core.geometry.OperatorImportFromWkb;
+import com.esri.core.geometry.SpatialReference;
+import com.esri.core.geometry.WkbImportFlags;
+import com.esri.core.geometry.ogc.OGCGeometry;
 
 public class AGeometrySerializerDeserializer implements ISerializerDeserializer<AGeometry> {
 
@@ -55,7 +56,7 @@ public class AGeometrySerializerDeserializer implements ISerializerDeserializer<
                     DEFAULT_CRS);
             return new AGeometry(geometry);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

@@ -30,6 +30,8 @@ public enum Duration {
     MICRO("µs", 3),
     NANO("ns", 0);
 
+    static final Duration[] VALUES = values();
+
     static final long NANOSECONDS = 1;
     static final long MICROSECONDS = 1000 * NANOSECONDS;
     static final long MILLISECONDS = 1000 * MICROSECONDS;
@@ -46,16 +48,29 @@ public enum Duration {
     }
 
     public static String formatNanos(long nanoTime) {
-        final String strTime = String.valueOf(nanoTime);
+        StringBuilder sb = new StringBuilder();
+        formatNanos(nanoTime, sb);
+        return sb.toString();
+    }
+
+    public static void formatNanos(long nanoTime, StringBuilder out) {
+        final String strTime = String.valueOf(Math.abs(nanoTime));
         final int len = strTime.length();
-        for (Duration tu : Duration.values()) {
-            if (len > tu.nanoDigits) {
-                final String integer = strTime.substring(0, len - tu.nanoDigits);
-                final String fractional = strTime.substring(len - tu.nanoDigits);
-                return integer + (fractional.length() > 0 ? "." + fractional : "") + tu.unit;
+        for (Duration tu : VALUES) {
+            int n = len - tu.nanoDigits;
+            if (n > 0) {
+                if (nanoTime < 0) {
+                    out.append('-');
+                }
+                out.append(strTime, 0, n);
+                int k = lastIndexOf(strTime, n, '1', '9');
+                if (k > 0) {
+                    out.append('.').append(strTime, n, k + 1);
+                }
+                out.append(tu.unit);
+                break;
             }
         }
-        return "illegal string value: " + strTime;
     }
 
     // ParseDuration parses a duration string.
@@ -232,5 +247,15 @@ public enum Duration {
             scale *= 10;
         }
         return Triple.of(x, scale, s.substring(i));
+    }
+
+    private static int lastIndexOf(CharSequence seq, int fromIndex, char rangeStart, char rangeEnd) {
+        for (int i = seq.length() - 1; i >= fromIndex; i--) {
+            char c = seq.charAt(i);
+            if (c >= rangeStart && c <= rangeEnd) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

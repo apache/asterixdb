@@ -273,7 +273,7 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
                     try {
                         IntersectOperatorNodePushable.this.wait();
                     } catch (InterruptedException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                 }
 

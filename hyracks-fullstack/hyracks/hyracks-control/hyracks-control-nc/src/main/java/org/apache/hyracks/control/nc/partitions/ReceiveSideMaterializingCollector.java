@@ -149,7 +149,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
                                 }
                             }
                         } catch (InterruptedException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                     }
                 }

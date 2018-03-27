@@ -85,7 +85,7 @@ public abstract class RecordWriter implements IRecordWriter {
             }
             bufferedWriter.write("\n");
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

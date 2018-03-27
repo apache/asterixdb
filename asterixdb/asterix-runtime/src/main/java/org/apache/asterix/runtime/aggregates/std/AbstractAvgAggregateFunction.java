@@ -200,7 +200,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
                 result.set(avgBytes);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -249,7 +249,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
                 doubleSerde.serialize(aDouble, resultStorage.getDataOutput());
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         result.set(resultStorage);
     }

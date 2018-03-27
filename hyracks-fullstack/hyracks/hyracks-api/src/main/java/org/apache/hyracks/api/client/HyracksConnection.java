@@ -157,7 +157,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
         try {
             return hci.getNodeControllersInfo();
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -166,7 +166,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
         try {
             return hci.getClusterTopology();
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 

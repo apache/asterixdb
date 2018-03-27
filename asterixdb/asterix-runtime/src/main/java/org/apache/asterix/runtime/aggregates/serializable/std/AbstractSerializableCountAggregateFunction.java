@@ -66,7 +66,7 @@ public abstract class AbstractSerializableCountAggregateFunction implements ISer
             state.writeBoolean(false);
             state.writeLong(0);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -98,7 +98,7 @@ public abstract class AbstractSerializableCountAggregateFunction implements ISer
                 int64Serde.serialize(result, out);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

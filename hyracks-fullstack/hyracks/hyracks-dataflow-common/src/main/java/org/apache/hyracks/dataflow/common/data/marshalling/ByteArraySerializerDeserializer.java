@@ -77,7 +77,7 @@ public class ByteArraySerializerDeserializer implements ISerializerDeserializer<
         try {
             out.write(byteArrayPtr.getByteArray(), byteArrayPtr.getStartOffset(), byteArrayPtr.getLength());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -89,7 +89,7 @@ public class ByteArraySerializerDeserializer implements ISerializerDeserializer<
             out.write(metaBuffer, 0, metaLength);
             out.write(instance, start, length);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

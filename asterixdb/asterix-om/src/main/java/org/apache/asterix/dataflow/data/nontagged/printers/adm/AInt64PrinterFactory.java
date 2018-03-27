@@ -36,7 +36,7 @@ public class AInt64PrinterFactory implements IPrinterFactory {
         try {
             WriteValueTools.writeLong(AInt64SerializerDeserializer.getLong(b, s + 1), ps);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     };
 

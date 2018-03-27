@@ -77,7 +77,7 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
             }
             stream.close();
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         return false;
     }

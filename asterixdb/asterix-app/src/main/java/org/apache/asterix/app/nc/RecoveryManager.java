@@ -50,6 +50,7 @@ import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
 import org.apache.asterix.common.storage.DatasetResourceReference;
+import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.ICheckpointManager;
@@ -93,6 +94,7 @@ import org.apache.logging.log4j.Logger;
 public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
     public static final boolean IS_DEBUG_MODE = false;
+    private static final long SMALLEST_POSSIBLE_LSN = 0;
     private static final Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger();
     private final ITransactionSubsystem txnSubsystem;
     private final LogManager logMgr;
@@ -499,8 +501,17 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 return dsResource.getPartition() == partition;
             }).values().stream().map(DatasetResourceReference::of).collect(Collectors.toList());
             for (DatasetResourceReference indexRef : partitionResources) {
-                long remoteIndexMaxLSN = idxCheckpointMgrProvider.get(indexRef).getLowWatermark();
-                minRemoteLSN = Math.min(minRemoteLSN, remoteIndexMaxLSN);
+                try {
+                    final IIndexCheckpointManager idxCheckpointMgr = idxCheckpointMgrProvider.get(indexRef);
+                    if (idxCheckpointMgr.getCheckpointCount() > 0) {
+                        long remoteIndexMaxLSN = idxCheckpointMgrProvider.get(indexRef).getLowWatermark();
+                        minRemoteLSN = Math.min(minRemoteLSN, remoteIndexMaxLSN);
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to get min LSN of resource {}", indexRef, e);
+                    // ensure no logs will be deleted in case of unexpected failures
+                    return SMALLEST_POSSIBLE_LSN;
+                }
             }
         }
         return minRemoteLSN;

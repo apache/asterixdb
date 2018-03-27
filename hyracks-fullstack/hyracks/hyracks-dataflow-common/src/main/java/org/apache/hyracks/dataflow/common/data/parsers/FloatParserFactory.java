@@ -40,9 +40,9 @@ public class FloatParserFactory implements IValueParserFactory {
                 try {
                     out.writeFloat(Float.parseFloat(s));
                 } catch (NumberFormatException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

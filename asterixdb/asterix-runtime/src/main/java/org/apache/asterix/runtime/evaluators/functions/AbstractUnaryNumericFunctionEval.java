@@ -207,7 +207,7 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
             serde.serialize(result, dataOutput);
             resultPointable.set(resultStorage);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

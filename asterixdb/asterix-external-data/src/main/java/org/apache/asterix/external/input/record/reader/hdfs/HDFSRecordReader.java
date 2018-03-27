@@ -145,7 +145,7 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
             try {
                 indexer.reset(this);
             } catch (Exception e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         return reader;

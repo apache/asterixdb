@@ -88,7 +88,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                             }
                             resultPointable.set(resultStorage);
                         } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            throw HyracksDataException.create(e1);
                         }
                     }
                 };

@@ -68,7 +68,7 @@ public abstract class AbstractExternalDatasetIndexesOperatorDescriptor
                         performOpOnIndex(indexHelper, ctx);
                     }
                 } catch (Exception e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

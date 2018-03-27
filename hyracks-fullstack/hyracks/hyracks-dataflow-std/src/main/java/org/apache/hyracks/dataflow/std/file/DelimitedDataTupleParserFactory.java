@@ -89,7 +89,7 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                     }
                     appender.write(writer, true);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

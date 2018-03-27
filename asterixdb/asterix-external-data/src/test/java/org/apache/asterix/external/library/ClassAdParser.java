@@ -582,7 +582,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             aDuration.setValue(0, duration.getTimeVal().getRelativeTime());
             durationSerde.serialize(aDuration, out);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -1770,7 +1770,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
             }
             parseRecord(recordType, rootAd, out);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

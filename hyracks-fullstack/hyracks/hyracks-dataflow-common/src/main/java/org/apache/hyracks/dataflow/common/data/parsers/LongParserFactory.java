@@ -122,7 +122,7 @@ public class LongParserFactory implements IValueParserFactory {
                 try {
                     out.writeLong(n * sign);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

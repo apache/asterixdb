@@ -64,7 +64,7 @@ public class RecordColumnarIndexer implements IExternalIndexer {
             nextOffset = offset.getLongValue();
             rowNumber.setValue(0);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -82,7 +82,7 @@ public class RecordColumnarIndexer implements IExternalIndexer {
             tb.addField(intSerde, rowNumber);
             rowNumber.setValue(rowNumber.getIntegerValue() + 1);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

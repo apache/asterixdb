@@ -71,4 +71,12 @@ public interface IReplicaManager {
      * @throws HyracksDataException
      */
     void release(int partition) throws HyracksDataException;
+
+    /**
+     * A lock that can be used to ensure a single replica is being synchronized at a time
+     * by this {@link IReplicaManager}
+     *
+     * @return the synchronization lock
+     */
+    Object getReplicaSyncLock();
 }

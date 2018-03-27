@@ -135,7 +135,7 @@ public class DatasetPartitionWriter implements IFrameWriter {
             if (e instanceof HyracksDataException) {
                 throw (HyracksDataException) e;
             } else {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }

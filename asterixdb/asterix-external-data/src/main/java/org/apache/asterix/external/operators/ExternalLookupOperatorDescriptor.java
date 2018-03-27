@@ -78,7 +78,7 @@ public class ExternalLookupOperatorDescriptor extends AbstractSingleActivityOper
                     indexOpen = true;
                     adapter.open();
                 } catch (Throwable th) {
-                    throw new HyracksDataException(th);
+                    throw HyracksDataException.create(th);
                 }
             }
 
@@ -111,7 +111,7 @@ public class ExternalLookupOperatorDescriptor extends AbstractSingleActivityOper
                 try {
                     adapter.fail();
                 } catch (Throwable th) {
-                    throw new HyracksDataException(th);
+                    throw HyracksDataException.create(th);
                 }
             }
 
@@ -120,7 +120,7 @@ public class ExternalLookupOperatorDescriptor extends AbstractSingleActivityOper
                 try {
                     adapter.nextFrame(buffer);
                 } catch (Throwable th) {
-                    throw new HyracksDataException(th);
+                    throw HyracksDataException.create(th);
                 }
             }
 

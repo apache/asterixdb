@@ -9744,9 +9744,19 @@
         <output-dir compare="Text">query-ASTERIXDB-920</output-dir>
       </compilation-unit>
     </test-case>
+     <test-case FilePath="composite-key">
+       <compilation-unit name="query-ASTERIXDB-2334">
+         <output-dir compare="Text">query-ASTERIXDB-2334</output-dir>
+       </compilation-unit>
+    </test-case>
     <test-case FilePath="composite-key">
       <compilation-unit name="composite-low-high">
         <output-dir compare="Text">composite-low-high</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="composite-key">
+      <compilation-unit name="composite-prefix">
+        <output-dir compare="Text">composite-prefix</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

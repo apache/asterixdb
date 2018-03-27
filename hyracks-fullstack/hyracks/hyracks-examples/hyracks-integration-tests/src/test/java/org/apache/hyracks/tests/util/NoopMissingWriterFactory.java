@@ -41,7 +41,7 @@ public class NoopMissingWriterFactory implements IMissingWriterFactory {
                 try {
                     out.writeShort(0);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

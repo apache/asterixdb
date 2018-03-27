@@ -47,7 +47,7 @@ public class ByteArrayBase64ParserFactory implements IValueParserFactory {
                 try {
                     serializer.serialize(parser.getByteArray(), 0, parser.getLength(), out);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

@@ -69,7 +69,7 @@ public class HyracksException extends IOException {
      * @deprecated Error code is needed.
      */
     @Deprecated
-    public HyracksException(Throwable cause) {
+    protected HyracksException(Throwable cause) {
         this(ErrorMessageUtil.NONE, UNKNOWN, String.valueOf(cause), cause, null);
     }
 
@@ -77,23 +77,7 @@ public class HyracksException extends IOException {
      * @deprecated Error code is needed.
      */
     @Deprecated
-    public HyracksException(Throwable cause, String nodeId) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, String.valueOf(cause), cause, nodeId);
-    }
-
-    /**
-     * @deprecated Error code is needed.
-     */
-    @Deprecated
-    public HyracksException(String message, Throwable cause, String nodeId) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, message, cause, nodeId);
-    }
-
-    /**
-     * @deprecated Error code is needed.
-     */
-    @Deprecated
-    public HyracksException(String message, Throwable cause) {
+    protected HyracksException(String message, Throwable cause) {
         this(ErrorMessageUtil.NONE, UNKNOWN, message, cause, (String) null);
     }
 
@@ -136,9 +120,7 @@ public class HyracksException extends IOException {
     @Override
     public String getMessage() {
         if (msgCache == null) {
-            synchronized (this) {
-                msgCache = ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), params);
-            }
+            msgCache = ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), params);
         }
         return msgCache;
     }

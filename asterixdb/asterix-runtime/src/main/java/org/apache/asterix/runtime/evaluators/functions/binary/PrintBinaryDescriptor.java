@@ -106,7 +106,7 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
                             dataOutput.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             writer.writeUTF8(stringBuilder.toString(), dataOutput);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

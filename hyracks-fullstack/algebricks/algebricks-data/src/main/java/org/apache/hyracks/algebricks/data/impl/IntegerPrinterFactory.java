@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.data.impl;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
@@ -46,7 +45,7 @@ public class IntegerPrinterFactory implements IPrinterFactory {
                 try {
                     WriteValueTools.writeInt(d, ps);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

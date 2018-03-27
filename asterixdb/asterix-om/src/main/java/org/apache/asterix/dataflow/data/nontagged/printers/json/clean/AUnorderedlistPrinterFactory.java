@@ -63,7 +63,7 @@ public class AUnorderedlistPrinterFactory implements IPrinterFactory {
                     arg.first = ps;
                     listAccessor.accept(printVisitor, arg);
                 } catch (Exception e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

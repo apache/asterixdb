@@ -44,7 +44,7 @@ public class UTF8StringPrinterFactory implements IPrinterFactory {
                 try {
                     UTF8StringUtil.printUTF8StringWithQuotes(b, s, l, ps);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

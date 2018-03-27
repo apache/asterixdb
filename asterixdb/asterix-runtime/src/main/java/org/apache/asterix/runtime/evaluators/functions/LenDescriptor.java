@@ -99,7 +99,7 @@ public class LenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         try {
                             int64Serde.serialize(res, out);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

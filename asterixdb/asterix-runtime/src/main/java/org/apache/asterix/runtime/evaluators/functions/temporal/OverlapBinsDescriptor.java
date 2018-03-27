@@ -298,7 +298,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                             }
                             listBuilder.write(out, true);
                         } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            throw HyracksDataException.create(e1);
                         }
                         result.set(resultStorage);
                     }

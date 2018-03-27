@@ -120,7 +120,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
             insertOperator.open();
         } catch (Exception e) {
             LOGGER.log(Level.WARN, "Failed to open feed store operator", e);
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

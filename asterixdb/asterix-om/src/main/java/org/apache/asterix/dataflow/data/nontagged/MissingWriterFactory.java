@@ -43,7 +43,7 @@ public class MissingWriterFactory implements IMissingWriterFactory {
         try {
             out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

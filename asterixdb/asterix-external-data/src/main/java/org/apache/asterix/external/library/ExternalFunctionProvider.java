@@ -57,7 +57,7 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
         try {
             initialize(functionHelper);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -69,7 +69,7 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
             result.set(resultBuffer.getByteArray(), resultBuffer.getStartOffset(), resultBuffer.getLength());
             functionHelper.reset();
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -82,7 +82,7 @@ class ExternalScalarFunction extends ExternalFunction implements IExternalScalar
                 throw new RuntimeDataException(ErrorCode.EXTERNAL_UDF_RESULT_TYPE_ERROR);
             }
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

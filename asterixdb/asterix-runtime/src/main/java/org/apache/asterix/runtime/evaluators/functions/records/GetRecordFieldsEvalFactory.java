@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions.records;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
@@ -77,7 +76,7 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
                 try {
                     rfu.processRecord(recordPointable, recordType, out, 0);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
                 result.set(resultStorage);
             }

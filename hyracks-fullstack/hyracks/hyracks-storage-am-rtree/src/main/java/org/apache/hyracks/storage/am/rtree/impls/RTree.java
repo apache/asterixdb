@@ -746,7 +746,7 @@ public class RTree extends AbstractTreeIndex {
         } catch (Exception e) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

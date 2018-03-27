@@ -194,7 +194,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

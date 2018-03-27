@@ -49,7 +49,7 @@ public class SerializedDataWriterFactory implements IAWriterFactory {
                     baos.writeTo(ps);
                     oos.close();
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

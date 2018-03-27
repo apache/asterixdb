@@ -49,7 +49,7 @@ public abstract class JObject implements IJObject {
             try {
                 dataOutput.writeByte(typeTag.serialize());
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }

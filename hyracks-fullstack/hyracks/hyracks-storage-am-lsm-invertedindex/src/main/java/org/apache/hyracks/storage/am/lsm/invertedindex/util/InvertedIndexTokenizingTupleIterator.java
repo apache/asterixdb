@@ -65,7 +65,7 @@ public class InvertedIndexTokenizingTupleIterator {
         try {
             token.serializeToken(tupleBuilder.getFieldData());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         tupleBuilder.addFieldEndOffset();
         // Add inverted-list element fields.

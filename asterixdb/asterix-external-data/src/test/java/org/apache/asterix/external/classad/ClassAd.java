@@ -839,7 +839,7 @@ public class ClassAd extends ExprTree {
                 successfully_evaluated = false;
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         return successfully_evaluated;
     }

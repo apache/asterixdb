@@ -87,7 +87,7 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
                 frameTuple = new FrameTupleReference();
             }
         } catch (Throwable th) {
-            throw new HyracksDataException(th);
+            throw HyracksDataException.create(th);
         }
     }
 }

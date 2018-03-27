@@ -141,7 +141,7 @@ public class EditDistanceListIsFilterableDescriptor extends AbstractScalarFuncti
                     booleanSerde.serialize(ABoolean.TRUE, output);
                 }
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
             result.set(resultStorage);
         }

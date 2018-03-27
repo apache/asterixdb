@@ -206,6 +206,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-object-fields", 1);
     public static final FunctionIdentifier GET_RECORD_FIELD_VALUE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-object-field-value", 2);
+    public static final FunctionIdentifier RECORD_LENGTH =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-length", 1);
+    public static final FunctionIdentifier RECORD_NAMES =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-names", 1);
     public static final FunctionIdentifier RECORD_PAIRS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-pairs", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier GEOMETRY_CONSTRUCTOR =
@@ -1402,6 +1406,8 @@ public class BuiltinFunctions {
         addFunction(FIELD_ACCESS_BY_NAME, FieldAccessByNameResultType.INSTANCE, true);
         addFunction(GET_RECORD_FIELDS, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addFunction(GET_RECORD_FIELD_VALUE, FieldAccessNestedResultType.INSTANCE, true);
+        addFunction(RECORD_LENGTH, AInt64TypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(RECORD_NAMES, OrderedListOfAStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(RECORD_PAIRS, RecordPairsTypeComputer.INSTANCE, true);
         addFunction(GEOMETRY_CONSTRUCTOR, AGeometryTypeComputer.INSTANCE, true);
 

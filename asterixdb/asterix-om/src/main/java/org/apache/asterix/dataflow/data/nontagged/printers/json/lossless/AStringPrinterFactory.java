@@ -35,7 +35,7 @@ public class AStringPrinterFactory implements IPrinterFactory {
         try {
             PrintTools.writeUTF8StringAsJSON(b, s + 1, l - 1, ps);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     };
 

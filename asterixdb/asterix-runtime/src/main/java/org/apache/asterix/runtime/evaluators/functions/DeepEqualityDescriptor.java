@@ -106,7 +106,7 @@ public class DeepEqualityDescriptor extends AbstractScalarFunctionDynamicDescrip
                             boolSerde.serialize(resultBit, out);
                             result.set(resultStorage);
                         } catch (Exception ioe) {
-                            throw new HyracksDataException(ioe);
+                            throw HyracksDataException.create(ioe);
                         }
                     }
                 };

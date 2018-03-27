@@ -22,9 +22,9 @@ import java.io.IOException;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.replication.IReplicationStrategy;
-import org.apache.asterix.replication.messaging.ReplicationProtocol;
-import org.apache.asterix.replication.messaging.CheckpointPartitionIndexesTask;
 import org.apache.asterix.replication.api.PartitionReplica;
+import org.apache.asterix.replication.messaging.CheckpointPartitionIndexesTask;
+import org.apache.asterix.replication.messaging.ReplicationProtocol;
 
 /**
  * Performs the steps required to ensure any newly added replica
@@ -41,9 +41,12 @@ public class ReplicaSynchronizer {
     }
 
     public void sync() throws IOException {
-        syncFiles();
-        checkpointReplicaIndexes();
-        appCtx.getReplicationManager().register(replica);
+        final Object syncLock = appCtx.getReplicaManager().getReplicaSyncLock();
+        synchronized (syncLock) {
+            syncFiles();
+            checkpointReplicaIndexes();
+            appCtx.getReplicationManager().register(replica);
+        }
     }
 
     private void syncFiles() throws IOException {

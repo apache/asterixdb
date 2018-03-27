@@ -79,7 +79,7 @@ public class ExceptionOnCreatePushRuntimeOperatorDescriptor extends AbstractSing
                         } catch (InterruptedException e) {
                             // can safely interrupt thread since this is a task thread
                             Thread.currentThread().interrupt();
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                     }
                 }
