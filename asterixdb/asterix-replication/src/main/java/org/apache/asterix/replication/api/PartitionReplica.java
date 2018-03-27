@@ -109,13 +109,12 @@ public class PartitionReplica implements IPartitionReplica {
 
     public synchronized void close() {
         try {
-            if (sc != null && sc.isOpen()) {
-                ReplicationProtocol.sendGoodbye(sc);
-                sc.close();
-                sc = null;
+            if (sc != null) {
+                sendGoodBye();
+                NetworkUtil.closeQuietly(sc);
             }
-        } catch (IOException e) {
-            LOGGER.warn("Failed to close channel", e);
+        } finally {
+            sc = null;
         }
     }
 
@@ -165,5 +164,13 @@ public class PartitionReplica implements IPartitionReplica {
         }
         LOGGER.info(() -> "Replica " + this + " status changing: " + this.status + " -> " + status);
         this.status = status;
+    }
+
+    private void sendGoodBye() {
+        try {
+            ReplicationProtocol.sendGoodbye(sc);
+        } catch (IOException e) {
+            LOGGER.warn("Failed to send good bye to {}", this, e);
+        }
     }
 }
