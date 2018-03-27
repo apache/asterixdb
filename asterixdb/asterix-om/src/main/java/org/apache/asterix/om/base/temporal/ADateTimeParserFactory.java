@@ -65,7 +65,7 @@ public class ADateTimeParserFactory implements IValueParserFactory {
                 try {
                     out.writeLong(chrononTimeInMs);
                 } catch (IOException ex) {
-                    throw new HyracksDataException(ex);
+                    throw HyracksDataException.create(ex);
                 }
             }
         };

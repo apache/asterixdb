@@ -382,7 +382,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
             // TODO: This should not be a HyracksDataException. Can't
             // fix this currently because of BTree exception model whose
             // fixes must get in.
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         return typeName;
     }

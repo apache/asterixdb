@@ -104,7 +104,7 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
         Exception e)
 
         {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
 
     }
@@ -130,7 +130,7 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
             }
             recBuilder.write(out, true);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -187,7 +187,7 @@ public class HiveRecordParser implements IRecordDataParser<Writable> {
                     throw new RuntimeDataException(ErrorCode.PARSER_HIVE_FIELD_TYPE, itemType.getTypeTag());
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

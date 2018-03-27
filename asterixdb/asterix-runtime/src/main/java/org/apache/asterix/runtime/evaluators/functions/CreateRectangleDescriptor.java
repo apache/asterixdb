@@ -124,7 +124,7 @@ public class CreateRectangleDescriptor extends AbstractScalarFunctionDynamicDesc
                             rectangle2DSerde.serialize(aRectangle, out);
                             result.set(resultStorage);
                         } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            throw HyracksDataException.create(e1);
                         }
                     }
                 };

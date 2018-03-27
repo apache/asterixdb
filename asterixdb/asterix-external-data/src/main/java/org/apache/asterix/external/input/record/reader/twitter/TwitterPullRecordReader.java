@@ -72,7 +72,7 @@ public class TwitterPullRecordReader implements IRecordReader<String> {
             try {
                 result = twitter.search(query);
             } catch (TwitterException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
             nextTweetIndex = 0;
         }

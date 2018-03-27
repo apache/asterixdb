@@ -29,7 +29,7 @@ public class MiniDFSClusterFactory {
         try {
             return new MiniDFSCluster(conf, numberOfNC, true, null);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

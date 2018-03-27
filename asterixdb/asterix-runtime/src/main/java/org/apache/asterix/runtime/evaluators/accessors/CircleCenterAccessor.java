@@ -97,7 +97,7 @@ public class CircleCenterAccessor extends AbstractScalarFunctionDynamicDescripto
                                         ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

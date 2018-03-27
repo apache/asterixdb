@@ -93,7 +93,7 @@ public class SimilarityJaccardCheckEvaluator extends SimilarityJaccardEvaluator 
         try {
             writeResult(jaccSim);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         result.set(resultStorage);
     }

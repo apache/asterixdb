@@ -108,7 +108,7 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                             }
                             result.set(resultStorage);
                         } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            throw HyracksDataException.create(e1);
                         }
                     }
                 };

@@ -108,7 +108,7 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
                         tpc.convertType(outputVal.getByteArray(), outputVal.getStartOffset() + 1,
                                 outputVal.getLength() - 1, tempValForCasting.getDataOutput());
                     } catch (IOException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                     outputVal.assign(tempValForCasting);
                 }
@@ -125,7 +125,7 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
                         tpc.convertType(inputVal.getByteArray(), inputVal.getStartOffset() + 1,
                                 inputVal.getLength() - 1, tempValForCasting.getDataOutput());
                     } catch (IOException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                     if (cmp.compare(tempValForCasting.getByteArray(), tempValForCasting.getStartOffset(),
                             tempValForCasting.getLength(), outputVal.getByteArray(), outputVal.getStartOffset(),
@@ -164,7 +164,7 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
                 }
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

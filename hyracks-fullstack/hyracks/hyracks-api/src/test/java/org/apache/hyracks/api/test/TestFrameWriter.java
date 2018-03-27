@@ -183,7 +183,7 @@ public class TestFrameWriter implements IFrameWriter {
                     wait(duration);
                 }
             } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }

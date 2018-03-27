@@ -45,7 +45,7 @@ public class ByteArrayHexParserFactory implements IValueParserFactory {
                     parser.generateByteArrayFromHexString(input, start, length);
                     serializer.serialize(parser.getByteArray(), 0, parser.getLength(), out);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

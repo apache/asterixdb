@@ -98,7 +98,7 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
                     dos = dfs.create(new Path(fileName), true);
                     tupleWriter.open(dos);
                 } catch (Exception e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

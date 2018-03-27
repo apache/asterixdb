@@ -114,7 +114,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
                         builder.write(out, true);
                         result.set(resultStorage);
                     } catch (IOException ioe) {
-                        throw new HyracksDataException(ioe);
+                        throw HyracksDataException.create(ioe);
                     }
                 }
 
@@ -127,7 +127,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
                         }
 
                     } catch (IOException ioe) {
-                        throw new HyracksDataException(ioe);
+                        throw HyracksDataException.create(ioe);
                     }
                 }
 
@@ -140,7 +140,7 @@ public class OrderedListConstructorDescriptor extends AbstractScalarFunctionDyna
                         }
 
                     } catch (IOException ioe) {
-                        throw new HyracksDataException(ioe);
+                        throw HyracksDataException.create(ioe);
                     }
                 }
 

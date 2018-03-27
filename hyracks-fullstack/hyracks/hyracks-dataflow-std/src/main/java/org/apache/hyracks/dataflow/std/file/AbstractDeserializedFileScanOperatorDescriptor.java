@@ -72,7 +72,7 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
             try {
                 reader = createRecordReader(split.getFile(null), desc);
             } catch (Exception e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
             if (desc == null) {
                 desc = outRecDescs[0];
@@ -88,7 +88,7 @@ public abstract class AbstractDeserializedFileScanOperatorDescriptor extends Abs
                 }
             } catch (Exception e) {
                 writer.fail();
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             } finally {
                 reader.close();
                 writer.close();

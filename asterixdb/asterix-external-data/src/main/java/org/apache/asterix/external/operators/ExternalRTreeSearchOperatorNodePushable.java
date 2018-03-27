@@ -65,7 +65,7 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
                 try {
                     nonMatchWriter.writeMissing(out);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
                 nonMatchTupleBuild.addFieldEndOffset();
             }
@@ -88,7 +88,7 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

@@ -113,7 +113,7 @@ public class AUUID implements IAObject {
         try {
             out.write(uuidBytes);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -122,7 +122,7 @@ public class AUUID implements IAObject {
         try {
             in.readFully(instance.uuidBytes);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         return instance;
     }

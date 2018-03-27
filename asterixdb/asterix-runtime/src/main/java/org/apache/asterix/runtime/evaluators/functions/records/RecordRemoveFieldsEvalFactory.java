@@ -120,7 +120,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
                     processRecord(requiredRecType, recordPointable, listPointable, 0);
                     rbStack.get(0).write(out, true);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
                 result.set(resultStorage);
             }

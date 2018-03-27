@@ -107,7 +107,7 @@ public class PrintDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             utf8Writer.writeUTF8(sbder, out);
                         } catch (IOException ex) {
-                            throw new HyracksDataException(ex);
+                            throw HyracksDataException.create(ex);
                         }
                         result.set(resultStorage);
                     }

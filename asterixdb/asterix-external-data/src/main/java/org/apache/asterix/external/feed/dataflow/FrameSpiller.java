@@ -79,7 +79,7 @@ public class FrameSpiller {
             this.bis = new BufferedInputStream(new FileInputStream(currentReadFile));
         } catch (Exception e) {
             LOGGER.fatal("Unable to create spill file", e);
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -129,7 +129,7 @@ public class FrameSpiller {
             }
             return frame.getBuffer();
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         } finally {
             synchronized (this) {
                 notify();
@@ -160,7 +160,7 @@ public class FrameSpiller {
             return true;
         } catch (IOException e) {
             close();
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

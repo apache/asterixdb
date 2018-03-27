@@ -213,7 +213,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             try {
                 missingWriter.writeMissing(out);
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
             missingTupleBuilder.addFieldEndOffset();
             searchPred = createSearchPredicate();
@@ -266,7 +266,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             try {
                 searchCallback.release();
             } catch (ACIDException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }

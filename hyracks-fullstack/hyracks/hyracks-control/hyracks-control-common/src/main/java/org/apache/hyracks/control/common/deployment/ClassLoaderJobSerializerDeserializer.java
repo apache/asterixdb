@@ -47,7 +47,7 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
             }
             return JavaSerializationUtils.deserialize(jsBytes, classLoader);
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -59,7 +59,7 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
             }
             return JavaSerializationUtils.serialize(jobSpec, classLoader);
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -83,7 +83,7 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
                 }
             }
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -92,7 +92,7 @@ public class ClassLoaderJobSerializerDeserializer implements IJobSerializerDeser
         try {
             return classLoader.loadClass(className);
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 

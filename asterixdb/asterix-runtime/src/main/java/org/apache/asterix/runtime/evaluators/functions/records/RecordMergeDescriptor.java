@@ -134,7 +134,7 @@ public class RecordMergeDescriptor extends AbstractScalarFunctionDynamicDescript
                             mergeFields(outRecType, rp0, rp1, true, 0);
                             rbStack.get(0).write(out, true);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

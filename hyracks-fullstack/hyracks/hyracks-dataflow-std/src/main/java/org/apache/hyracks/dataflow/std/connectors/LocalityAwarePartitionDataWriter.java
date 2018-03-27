@@ -54,7 +54,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
                 appenders[i] = new FrameTupleAppender();
                 appenders[i].reset(new VSizeFrame(ctx), true);
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         tupleAccessor = new FrameTupleAccessor(recordDescriptor);
@@ -104,7 +104,7 @@ public class LocalityAwarePartitionDataWriter implements IFrameWriter {
                     pWriters[i].fail();
                 } catch (Throwable th) {
                     if (failException == null) {
-                        failException = new HyracksDataException(th);
+                        failException = HyracksDataException.create(th);
                     } else {
                         failException.addSuppressed(th);
                     }

@@ -52,7 +52,7 @@ public class LockThenSearchOperationCallbackFactory extends AbstractOperationCal
             return new LockThenSearchOperationCallback(new DatasetId(datasetId), resourceId, primaryKeyFields,
                     txnSubsystem, txnCtx, operatorNodePushable);
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

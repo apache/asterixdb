@@ -123,7 +123,7 @@ public class ResultPrinter {
         try {
             output.resultPrefix(new AlgebricksAppendable(output.out()));
         } catch (AlgebricksException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
 
         if (conf.is(SessionConfig.FORMAT_WRAPPER_ARRAY)) {
@@ -155,7 +155,7 @@ public class ResultPrinter {
         try {
             output.resultPostfix(new AlgebricksAppendable(output.out()));
         } catch (AlgebricksException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         if (conf.is(SessionConfig.FORMAT_HTML)) {
             output.out().println("</pre>");

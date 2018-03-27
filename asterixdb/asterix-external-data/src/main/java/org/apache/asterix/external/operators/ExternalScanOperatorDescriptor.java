@@ -62,7 +62,7 @@ public class ExternalScanOperatorDescriptor extends AbstractSingleActivityOperat
                     adapter.start(partition, writer);
                 } catch (Exception e) {
                     writer.fail();
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 } finally {
                     writer.close();
                 }

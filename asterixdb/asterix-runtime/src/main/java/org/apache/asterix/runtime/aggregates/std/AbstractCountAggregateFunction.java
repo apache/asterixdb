@@ -81,7 +81,7 @@ public abstract class AbstractCountAggregateFunction implements IAggregateEvalua
             result.setValue(cnt);
             int64Serde.serialize(result, resultStorage.getDataOutput());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         resultPointable.set(resultStorage);
     }

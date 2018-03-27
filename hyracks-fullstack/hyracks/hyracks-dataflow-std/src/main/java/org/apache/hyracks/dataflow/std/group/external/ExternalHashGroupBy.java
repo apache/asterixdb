@@ -69,7 +69,7 @@ public class ExternalHashGroupBy {
             table.clear(partition);
         } catch (Exception ex) {
             writer.fail();
-            throw new HyracksDataException(ex);
+            throw HyracksDataException.create(ex);
         }
     }
 

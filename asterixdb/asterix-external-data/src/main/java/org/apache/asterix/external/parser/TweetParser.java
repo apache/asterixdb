@@ -259,7 +259,7 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
             ObjectMapper om = new ObjectMapper();
             writeRecord(om.readTree(record.get()), out, recordType);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

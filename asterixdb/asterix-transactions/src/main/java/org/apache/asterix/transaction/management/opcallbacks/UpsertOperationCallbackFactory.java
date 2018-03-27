@@ -71,7 +71,7 @@ public class UpsertOperationCallbackFactory extends AbstractOperationCallbackFac
             txnCtx.register(resource.getId(), aResource.getPartition(), index, modCallback, true);
             return modCallback;
         } catch (ACIDException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

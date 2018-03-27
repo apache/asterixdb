@@ -36,7 +36,7 @@ public class AStringPrinterFactory implements IPrinterFactory {
             // ADM uses same escape semantics as JSON for strings
             PrintTools.writeUTF8StringAsJSON(b, s + 1, l - 1, ps);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     };
 

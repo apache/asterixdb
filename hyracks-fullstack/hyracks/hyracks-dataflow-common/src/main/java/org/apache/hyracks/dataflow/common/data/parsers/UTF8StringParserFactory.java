@@ -42,7 +42,7 @@ public class UTF8StringParserFactory implements IValueParserFactory {
                 try {
                     writer.writeUTF8(buffer, start, length, out);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

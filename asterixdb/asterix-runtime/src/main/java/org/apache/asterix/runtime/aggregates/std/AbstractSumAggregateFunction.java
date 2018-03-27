@@ -197,7 +197,7 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
                     throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, aggType.serialize());
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         result.set(resultStorage);
     }

@@ -59,7 +59,7 @@ public class PartitionedInvertedIndexTokenizingTupleIterator extends InvertedInd
             tupleBuilder.getDataOutput().writeShort(numTokens);
             tupleBuilder.addFieldEndOffset();
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         // Add inverted-list element fields.
         for (int i = 0; i < invListFieldCount; i++) {

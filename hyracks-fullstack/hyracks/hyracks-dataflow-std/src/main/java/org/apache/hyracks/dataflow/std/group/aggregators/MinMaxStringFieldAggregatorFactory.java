@@ -138,7 +138,7 @@ public class MinMaxStringFieldAggregatorFactory implements IFieldAggregateDescri
                     try {
                         fieldOutput.writeInt(stateCount);
                     } catch (IOException e) {
-                        throw new HyracksDataException(e.fillInStackTrace());
+                        throw HyracksDataException.create(e.fillInStackTrace());
                     }
                 } else {
                     // Only object-state

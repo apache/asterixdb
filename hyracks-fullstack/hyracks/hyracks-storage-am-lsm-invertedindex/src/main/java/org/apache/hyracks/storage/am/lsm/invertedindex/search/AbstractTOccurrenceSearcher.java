@@ -167,7 +167,7 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
                 queryTokenAppender.append(queryTokenBuilder.getFieldEndOffsets(), queryTokenBuilder.getByteArray(), 0,
                         queryTokenBuilder.getSize());
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }

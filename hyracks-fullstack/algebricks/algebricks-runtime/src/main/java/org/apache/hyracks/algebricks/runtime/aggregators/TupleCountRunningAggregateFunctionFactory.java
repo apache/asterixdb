@@ -48,7 +48,7 @@ public class TupleCountRunningAggregateFunctionFactory implements IRunningAggreg
                     abvs.getDataOutput().writeInt(cnt);
                     result.set(abvs);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

@@ -42,7 +42,7 @@ public class RecordWithPKDataParser<T> implements IRecordWithPKDataParser<T> {
             try {
                 out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         } else {
             recordParser.parse(record, out);

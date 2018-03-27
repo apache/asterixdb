@@ -66,12 +66,12 @@ public class FileScanOperatorDescriptor extends AbstractSingleActivityOperatorDe
                         in = new FileInputStream(f);
                     } catch (FileNotFoundException e) {
                         writer.fail();
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                     tp.parse(in, writer);
                 } catch (Throwable th) {
                     writer.fail();
-                    throw new HyracksDataException(th);
+                    throw HyracksDataException.create(th);
                 } finally {
                     writer.close();
                 }

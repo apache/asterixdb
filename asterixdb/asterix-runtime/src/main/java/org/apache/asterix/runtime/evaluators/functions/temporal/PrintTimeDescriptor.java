@@ -106,7 +106,7 @@ public class PrintTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             writer.writeUTF8(sbder, out);
                         } catch (IOException ex) {
-                            throw new HyracksDataException(ex);
+                            throw HyracksDataException.create(ex);
                         }
                         result.set(resultStorage);
                     }

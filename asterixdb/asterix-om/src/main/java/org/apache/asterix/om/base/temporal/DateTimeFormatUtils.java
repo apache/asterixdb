@@ -1060,7 +1060,7 @@ public class DateTimeFormatUtils {
                         throw new HyracksDataException("Unexpected time state when printing a date value");
                 }
             } catch (IOException ex) {
-                throw new HyracksDataException(ex);
+                throw HyracksDataException.create(ex);
             }
         }
     }

@@ -93,7 +93,7 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntry> {
         try {
             return new RSSRecordReader(urls.get(partition));
         } catch (MalformedURLException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

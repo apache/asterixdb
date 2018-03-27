@@ -121,7 +121,7 @@ public class IntegerParserFactory implements IValueParserFactory {
                 try {
                     out.writeInt(n * sign);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

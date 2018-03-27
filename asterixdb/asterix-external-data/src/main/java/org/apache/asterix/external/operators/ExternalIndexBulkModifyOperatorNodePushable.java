@@ -69,7 +69,7 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
                 ((ITwoPCIndexBulkLoader) bulkLoader).delete(deleteTuple);
             }
         } catch (Throwable e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

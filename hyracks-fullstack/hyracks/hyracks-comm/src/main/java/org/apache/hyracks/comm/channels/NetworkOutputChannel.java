@@ -76,7 +76,7 @@ public class NetworkOutputChannel implements IFrameWriter {
                     try {
                         wait();
                     } catch (InterruptedException e) {
-                        throw new HyracksDataException(e);
+                        throw HyracksDataException.create(e);
                     }
                 }
             }

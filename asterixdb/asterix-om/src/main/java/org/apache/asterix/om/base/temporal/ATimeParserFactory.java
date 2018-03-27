@@ -47,7 +47,7 @@ public class ATimeParserFactory implements IValueParserFactory {
                 try {
                     out.writeInt(parseTimePart(buffer, start, length));
                 } catch (IOException ex) {
-                    throw new HyracksDataException(ex);
+                    throw HyracksDataException.create(ex);
                 }
             }
         };

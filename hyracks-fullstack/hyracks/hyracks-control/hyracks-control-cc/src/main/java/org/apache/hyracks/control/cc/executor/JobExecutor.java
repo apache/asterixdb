@@ -523,7 +523,7 @@ public class JobExecutor {
                 }
             }
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 

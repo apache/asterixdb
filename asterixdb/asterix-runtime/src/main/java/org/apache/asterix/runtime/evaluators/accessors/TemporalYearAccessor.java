@@ -144,7 +144,7 @@ public class TemporalYearAccessor extends AbstractScalarFunctionDynamicDescripto
                             intSerde.serialize(aMutableInt64, out);
                             result.set(resultStorage);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                     }
                 };

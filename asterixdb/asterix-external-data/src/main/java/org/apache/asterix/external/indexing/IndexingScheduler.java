@@ -68,7 +68,7 @@ public class IndexingScheduler {
             this.ncNameToNcInfos = hcc.getNodeControllerInfos();
             loadIPAddressToNCMap(ncNameToNcInfos);
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -136,7 +136,7 @@ public class IndexingScheduler {
             scheduleNonLocalSlots(splits, workloads, locations, upperBoundSlots, scheduled, locationToNumOfAssignement);
             return locations;
         } catch (IOException e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 
@@ -325,7 +325,7 @@ public class IndexingScheduler {
                 ncNameToIndex.put(NCs[i], i);
             }
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 }

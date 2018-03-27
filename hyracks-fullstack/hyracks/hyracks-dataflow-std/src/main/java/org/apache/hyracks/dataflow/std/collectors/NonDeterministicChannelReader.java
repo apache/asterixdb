@@ -77,7 +77,7 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
             try {
                 wait();
             } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         if (--availableFrameCounts[index] == 0) {

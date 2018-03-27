@@ -41,7 +41,7 @@ public class LineFileWriteOperatorDescriptor extends AbstractFileWriteOperatorDe
             try {
                 return new FileOutputStream((File) args[0]);
             } catch (FileNotFoundException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }

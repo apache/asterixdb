@@ -73,7 +73,7 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
             process(stringPtr, resultPointable);
             writeResult(resultPointable);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

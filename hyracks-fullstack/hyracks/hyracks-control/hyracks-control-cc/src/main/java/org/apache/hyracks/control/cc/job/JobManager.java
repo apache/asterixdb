@@ -232,7 +232,7 @@ public class JobManager implements IJobManager {
             } catch (Exception e) {
                 LOGGER.log(Level.ERROR, e.getMessage(), e);
                 if (caughtException == null) {
-                    caughtException = new HyracksException(e);
+                    caughtException = HyracksException.create(e);
                 } else {
                     caughtException.addSuppressed(e);
                 }

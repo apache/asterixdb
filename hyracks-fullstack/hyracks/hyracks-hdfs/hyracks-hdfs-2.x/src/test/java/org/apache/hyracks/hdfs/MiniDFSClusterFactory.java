@@ -32,7 +32,7 @@ public class MiniDFSClusterFactory {
             MiniDFSCluster dfsCluster = builder.build();
             return dfsCluster;
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

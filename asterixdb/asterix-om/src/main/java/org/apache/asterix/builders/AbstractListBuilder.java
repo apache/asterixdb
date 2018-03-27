@@ -136,7 +136,7 @@ public abstract class AbstractListBuilder implements IAsterixListBuilder {
             out.write(offsetArray, 0, metadataInfoSize);
             out.write(outputStorage.getByteArray(), 0, outputStorage.getLength());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

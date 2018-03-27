@@ -64,7 +64,7 @@ public class ListifyAggregateFunctionEvalFactory implements IAggregateEvaluatorF
                     eval.evaluate(tuple, inputVal);
                     builder.addItem(inputVal);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 
@@ -74,7 +74,7 @@ public class ListifyAggregateFunctionEvalFactory implements IAggregateEvaluatorF
                 try {
                     builder.write(resultStorage.getDataOutput(), true);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
                 result.set(resultStorage);
             }

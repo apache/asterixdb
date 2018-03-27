@@ -206,7 +206,7 @@ public class HDFSInputStream extends AsterixInputStream implements IIndexingData
             try {
                 indexer.reset(this);
             } catch (Exception e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         return reader;

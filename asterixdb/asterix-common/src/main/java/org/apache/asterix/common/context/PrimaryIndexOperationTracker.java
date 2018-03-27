@@ -148,7 +148,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                 try {
                     logManager.log(logRecord);
                 } catch (ACIDException e) {
-                    throw new HyracksDataException("could not write flush log", e);
+                    throw new IllegalStateException("could not write flush log", e);
                 }
                 flushLogCreated = true;
             } else {

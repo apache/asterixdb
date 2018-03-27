@@ -114,7 +114,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             }
             return false;
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -129,7 +129,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     break;
                 }
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
             fieldValueBuffer.reset();
 
@@ -162,7 +162,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     recBuilder.addField(fldIds[i], fieldValueBuffer);
                 }
             } catch (IOException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
     }
@@ -172,7 +172,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         try {
             cursor.nextRecord(record.get(), record.size());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         parseRecord();
         if (!areAllNullFields) {

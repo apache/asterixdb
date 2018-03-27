@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.tests.pushruntime;
 
 import java.io.IOException;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -63,7 +62,7 @@ public class IntegerAddEvalFactory implements IScalarEvaluatorFactory {
                     argOut.getDataOutput().writeInt(v1 + v2);
                     result.set(argOut);
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
         };

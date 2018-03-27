@@ -117,7 +117,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
                         builder.write(out, true);
                         result.set(resultStorage);
                     } catch (IOException ioe) {
-                        throw new HyracksDataException(ioe);
+                        throw HyracksDataException.create(ioe);
                     }
                 }
 
@@ -129,7 +129,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
                             builder.addItem(inputVal);
                         }
                     } catch (IOException ioe) {
-                        throw new HyracksDataException(ioe);
+                        throw HyracksDataException.create(ioe);
                     }
                 }
 
@@ -141,7 +141,7 @@ public class UnorderedListConstructorDescriptor extends AbstractScalarFunctionDy
                             builder.addItem(inputVal);
                         }
                     } catch (IOException ioe) {
-                        throw new HyracksDataException(ioe);
+                        throw HyracksDataException.create(ioe);
                     }
                 }
 

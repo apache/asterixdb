@@ -148,7 +148,7 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             try {
                 nullSerde.serialize(ANull.NULL, out);
             } catch (HyracksDataException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
             result.set(resultStorage);
             return;
@@ -158,7 +158,7 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             ABoolean b = fullTextContainsWithArg(typeTag2, argLeft, argRight) ? ABoolean.TRUE : ABoolean.FALSE;
             serde.serialize(b, out);
         } catch (HyracksDataException e1) {
-            throw new HyracksDataException(e1);
+            throw HyracksDataException.create(e1);
         }
         result.set(resultStorage);
     }

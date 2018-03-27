@@ -36,7 +36,7 @@ public class AInt8PrinterFactory implements IPrinterFactory {
         try {
             WriteValueTools.writeInt(AInt8SerializerDeserializer.getByte(b, s + 1), ps);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     };
 

@@ -215,7 +215,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             restoreConfig(ctx);
             return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, files, indexer);
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

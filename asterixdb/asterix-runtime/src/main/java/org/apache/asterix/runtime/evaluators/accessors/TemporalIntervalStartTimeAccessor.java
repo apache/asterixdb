@@ -100,7 +100,7 @@ public class TemporalIntervalStartTimeAccessor extends AbstractScalarFunctionDyn
                                         ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

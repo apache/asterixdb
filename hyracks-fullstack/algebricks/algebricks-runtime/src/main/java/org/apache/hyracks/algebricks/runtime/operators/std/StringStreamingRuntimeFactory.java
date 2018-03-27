@@ -142,7 +142,7 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
                     dumpStderr = new Thread(disps);
                     dumpStderr.start();
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

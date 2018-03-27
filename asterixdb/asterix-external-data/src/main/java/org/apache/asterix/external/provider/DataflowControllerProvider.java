@@ -108,7 +108,7 @@ public class DataflowControllerProvider {
                             dataSourceFactory.getDataSourceType());
             }
         } catch (IOException | AsterixException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 }

@@ -56,7 +56,7 @@ public class FileOffsetIndexer implements IExternalIndexer {
             recordReader = dataSource.getReader();
             offset.setValue(recordReader.getPos());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -68,7 +68,7 @@ public class FileOffsetIndexer implements IExternalIndexer {
             // Get position for next index(tb) call
             offset.setValue(recordReader.getPos());
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

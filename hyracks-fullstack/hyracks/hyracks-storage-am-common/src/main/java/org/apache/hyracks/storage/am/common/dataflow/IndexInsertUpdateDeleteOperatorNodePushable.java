@@ -90,7 +90,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                 frameTuple = new FrameTupleReference();
             }
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -147,7 +147,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
             } catch (HyracksDataException e) {
                 throw e;
             } catch (Exception e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         // Pass a copy of the frame to next op.

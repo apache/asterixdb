@@ -78,7 +78,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
             this.splitsFactory = new InputSplitsFactory(splits);
             this.confFactory = new ConfFactory(conf);
         } catch (Exception e) {
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
         this.scheduledLocations = scheduledLocations;
         this.executed = new boolean[scheduledLocations.length];
@@ -142,7 +142,7 @@ public class HDFSReadOperatorDescriptor extends AbstractSingleActivityOperatorDe
                     }
                 } catch (Throwable th) {
                     writer.fail();
-                    throw new HyracksDataException(th);
+                    throw HyracksDataException.create(th);
                 } finally {
                     writer.close();
                     Thread.currentThread().setContextClassLoader(ctxCL);

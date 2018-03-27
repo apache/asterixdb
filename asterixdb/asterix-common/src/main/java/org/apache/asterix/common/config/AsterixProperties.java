@@ -44,7 +44,7 @@ public class AsterixProperties {
             try {
                 PropertiesAccessor.getInstance(configManager.getAppConfig());
             } catch (AsterixException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         });
     }

@@ -94,7 +94,7 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
         try {
             process(leftPtr, rightPtr, resultPointable);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

@@ -116,7 +116,7 @@ public class CreateLineDescriptor extends AbstractScalarFunctionDynamicDescripto
                             aLine.setValue(aPoint[0], aPoint[1]);
                             lineSerde.serialize(aLine, out);
                         } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            throw HyracksDataException.create(e1);
                         }
                         result.set(resultStorage);
                     }

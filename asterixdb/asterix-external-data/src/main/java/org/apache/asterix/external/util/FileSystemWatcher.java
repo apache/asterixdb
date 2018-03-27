@@ -101,7 +101,7 @@ public class FileSystemWatcher {
                 }
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

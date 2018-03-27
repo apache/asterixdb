@@ -124,7 +124,7 @@ public class TemporalHourAccessor extends AbstractScalarFunctionDynamicDescripto
                             aMutableInt64.setValue(hour);
                             intSerde.serialize(aMutableInt64, out);
                         } catch (IOException e) {
-                            throw new HyracksDataException(e);
+                            throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
                     }

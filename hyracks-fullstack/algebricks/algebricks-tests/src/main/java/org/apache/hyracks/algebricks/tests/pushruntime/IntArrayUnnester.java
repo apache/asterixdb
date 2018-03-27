@@ -66,7 +66,7 @@ public class IntArrayUnnester implements IUnnestingEvaluatorFactory {
                     }
 
                 } catch (IOException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

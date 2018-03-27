@@ -49,7 +49,7 @@ public class TextTupleWriterFactory implements ITupleWriterFactory {
                     output.write(data, start, len);
                     output.writeByte(newLine);
                 } catch (Exception e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 

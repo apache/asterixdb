@@ -138,7 +138,7 @@ public class IOManager implements IIOManager {
         try {
             fHandle.open(rwMode, syncMode);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
         return fHandle;
     }
@@ -197,7 +197,7 @@ public class IOManager implements IIOManager {
         } catch (HyracksDataException e) {
             throw e;
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -229,7 +229,7 @@ public class IOManager implements IIOManager {
         } catch (HyracksDataException e) {
             throw e;
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -350,7 +350,7 @@ public class IOManager implements IIOManager {
         try {
             ((FileHandle) fileHandle).getFileChannel().force(metadata);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

@@ -208,7 +208,7 @@ public class SplitOperatorDescriptor extends AbstractReplicateOperatorDescriptor
                                 writers[i].fail();
                             } catch (Throwable th) {
                                 if (hde == null) {
-                                    hde = new HyracksDataException(th);
+                                    hde = HyracksDataException.create(th);
                                 } else {
                                     hde.addSuppressed(th);
                                 }

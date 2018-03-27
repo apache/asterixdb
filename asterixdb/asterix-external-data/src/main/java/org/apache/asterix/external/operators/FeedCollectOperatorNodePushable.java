@@ -68,7 +68,7 @@ public class FeedCollectOperatorNodePushable extends AbstractUnaryInputUnaryOutp
                 writer = new SyncFeedRuntimeInputHandler(ctx, writer, tAccessor);
             }
         } catch (Exception e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

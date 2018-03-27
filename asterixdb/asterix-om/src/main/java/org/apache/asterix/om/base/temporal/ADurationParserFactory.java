@@ -58,7 +58,7 @@ public class ADurationParserFactory implements IValueParserFactory {
                     out.writeInt(aMutableDuration.getMonths());
                     out.writeLong(aMutableDuration.getMilliseconds());
                 } catch (IOException ex) {
-                    throw new HyracksDataException(ex);
+                    throw HyracksDataException.create(ex);
                 }
             }
         };

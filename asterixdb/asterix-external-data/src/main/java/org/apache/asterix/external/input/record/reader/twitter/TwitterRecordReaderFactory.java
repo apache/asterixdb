@@ -146,7 +146,7 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
                             : new TwitterPushRecordReader(TwitterUtil.getTwitterStream(configuration),
                                     TwitterUtil.getTweetListener(), query);
                 } catch (AsterixException e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
                 break;
             case ExternalDataConstants.READER_USER_STREAM_TWITTER:

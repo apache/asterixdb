@@ -75,7 +75,7 @@ public class WorkQueue {
             thread.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new HyracksException(e);
+            throw HyracksException.create(e);
         }
     }
 

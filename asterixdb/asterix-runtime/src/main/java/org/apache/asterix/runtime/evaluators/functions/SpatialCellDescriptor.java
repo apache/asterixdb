@@ -146,7 +146,7 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                             }
                             result.set(resultStorage);
                         } catch (IOException e1) {
-                            throw new HyracksDataException(e1);
+                            throw HyracksDataException.create(e1);
                         }
                     }
                 };

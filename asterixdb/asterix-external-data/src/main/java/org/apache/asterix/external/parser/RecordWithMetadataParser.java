@@ -82,7 +82,7 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser
                 recordParser.parse(rwm.getRecord(), out);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -102,7 +102,7 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser
                 metaBuilder.write(out, true);
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

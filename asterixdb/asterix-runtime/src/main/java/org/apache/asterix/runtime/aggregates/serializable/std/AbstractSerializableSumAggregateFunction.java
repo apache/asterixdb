@@ -78,7 +78,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
             state.writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
             state.writeDouble(0.0);
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -209,7 +209,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
                     throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, aggType.serialize());
             }
         } catch (IOException e) {
-            throw new HyracksDataException(e);
+            throw HyracksDataException.create(e);
         }
     }
 

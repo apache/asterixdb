@@ -94,7 +94,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
                     bbis = new ByteBufferInputStream();
                     di = new DataInputStream(bbis);
                 } catch (Exception e) {
-                    throw new HyracksDataException(e);
+                    throw HyracksDataException.create(e);
                 }
             }
 
@@ -118,7 +118,7 @@ public class PlainFileWriterOperatorDescriptor extends AbstractSingleActivityOpe
                         out.write("\n");
                     }
                 } catch (IOException ex) {
-                    throw new HyracksDataException(ex);
+                    throw HyracksDataException.create(ex);
                 }
             }
 

@@ -74,7 +74,7 @@ public class NonDeterministicPartitionBatchManager implements IPartitionBatchMan
             try {
                 wait();
             } catch (InterruptedException e) {
-                throw new HyracksDataException(e);
+                throw HyracksDataException.create(e);
             }
         }
         this.batch = null;
