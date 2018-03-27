@@ -40,6 +40,7 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -243,6 +244,11 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                     callback.frameCompleted();
                     appender.write(writer, true);
                 }
+
+                @Override
+                public void close() throws IOException {
+                    callback.close();
+                }
             };
         } catch (Throwable e) { // NOSONAR: Re-thrown
             throw HyracksDataException.create(e);
@@ -360,16 +366,12 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
     @Override
     public void close() throws HyracksDataException {
-        try {
-            try {
-                if (cursor != null) {
-                    cursor.destroy();
-                }
-            } finally {
-                writer.close();
-            }
-        } finally {
-            indexHelper.close();
+        Throwable failure = CleanupUtils.close(frameOpCallback, null);
+        failure = CleanupUtils.destroy(failure, cursor);
+        failure = CleanupUtils.close(writer, failure);
+        failure = CleanupUtils.close(indexHelper, failure);
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
         }
     }
 
