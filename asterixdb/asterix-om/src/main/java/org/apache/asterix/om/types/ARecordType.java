@@ -28,7 +28,10 @@ import java.util.Set;
 
 import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -223,6 +226,39 @@ public class ARecordType extends AbstractComplexType {
             subRecordType = ((ARecordType) subRecordType).getFieldType(subFieldName.get(i));
         }
         return subRecordType;
+    }
+
+    /**
+     *
+     * @param subFieldName
+     *            The full pathname of the field
+     * @return The nullability of the field
+     * @throws AlgebricksException
+     */
+    public boolean isSubFieldNullable(List<String> subFieldName) throws AlgebricksException {
+        IAType subRecordType = getFieldType(subFieldName.get(0));
+        for (int i = 1; i < subFieldName.size(); i++) {
+            if (subRecordType == null) {
+                // open field is nullable
+                return true;
+            }
+            if (subRecordType.getTypeTag().equals(ATypeTag.UNION)) {
+                if (NonTaggedFormatUtil.isOptional(subRecordType)) {
+                    return true;
+                }
+                subRecordType = ((AUnionType) subRecordType).getActualType();
+                if (subRecordType.getTypeTag() != ATypeTag.OBJECT) {
+                    throw new AsterixException(
+                            "Field accessor is not defined for values of type " + subRecordType.getTypeTag());
+                }
+            }
+            if (!(subRecordType instanceof ARecordType)) {
+                throw CompilationException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                        "Illegal field type " + subRecordType.getTypeTag() + " when checking field nullability");
+            }
+            subRecordType = ((ARecordType) subRecordType).getFieldType(subFieldName.get(i));
+        }
+        return subRecordType == null || NonTaggedFormatUtil.isOptional(subRecordType);
     }
 
     /**

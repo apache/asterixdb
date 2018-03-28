@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.entities;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
@@ -153,8 +154,18 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             ARecordType recType) throws AlgebricksException {
         Pair<IAType, Boolean> keyPairType = null;
         IAType subType = recType;
+        boolean nullable = false;
         for (int i = 0; i < fieldName.size(); i++) {
-            subType = ((ARecordType) subType).getFieldType(fieldName.get(i));
+            if (subType instanceof AUnionType) {
+                nullable = nullable || ((AUnionType) subType).isUnknownableType();
+                subType = ((AUnionType) subType).getActualType();
+            }
+            if (subType instanceof ARecordType) {
+                subType = ((ARecordType) subType).getFieldType(fieldName.get(i));
+            } else {
+                throw AsterixException.create(ErrorCode.COMPILATION_ILLEGAL_STATE, "Unexpected type " + fieldType);
+            }
+
             if (subType == null) {
                 keyPairType = Index.getNonNullableType(fieldType);
                 break;
@@ -163,13 +174,16 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         if (subType != null) {
             keyPairType = Index.getNonNullableKeyFieldType(fieldName, recType);
         }
+        keyPairType.second = keyPairType.second || nullable;
         return keyPairType;
     }
 
     public static Pair<IAType, Boolean> getNonNullableKeyFieldType(List<String> expr, ARecordType recType)
             throws AlgebricksException {
         IAType keyType = Index.keyFieldType(expr, recType);
-        return getNonNullableType(keyType);
+        Pair<IAType, Boolean> pair = getNonNullableType(keyType);
+        pair.second = pair.second || recType.isSubFieldNullable(expr);
+        return pair;
     }
 
     private static IAType keyFieldType(List<String> expr, ARecordType recType) throws AlgebricksException {

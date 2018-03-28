@@ -4399,6 +4399,11 @@
           <output-dir compare="Text">rtree-secondary-index-open</output-dir>
         </compilation-unit>
       </test-case>
+      <test-case FilePath="nested-index/index-selection">
+        <compilation-unit name="rtree-secondary-index-optional">
+          <output-dir compare="Text">rtree-secondary-index-open</output-dir>
+        </compilation-unit>
+      </test-case>
     </test-group>
     <test-group name="nested-index/external-indexing">
       <test-case FilePath="nested-index/external-indexing">
@@ -4579,6 +4584,12 @@
     <test-case FilePath="nestrecords">
       <compilation-unit name="nestrecord">
         <output-dir compare="Text">nestrecord</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="nestrecords">
+      <compilation-unit name="nested-optional-pk">
+        <output-dir compare="Text">nested-optional-pk</output-dir>
+        <expected-error>ASX1021: The primary key field "nested.id" cannot be nullable</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

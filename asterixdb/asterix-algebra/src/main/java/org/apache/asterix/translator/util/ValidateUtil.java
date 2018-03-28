@@ -131,11 +131,19 @@ public class ValidateUtil {
         } else {
             partitioningExprTypes =
                     KeyFieldTypeUtil.getKeyTypes(recType, metaRecType, partitioningExprs, keySourceIndicators);
-            for (int fidx = 0; fidx < partitioningExprTypes.size(); ++fidx) {
-                IAType fieldType = partitioningExprTypes.get(fidx);
+            for (int i = 0; i < partitioningExprs.size(); i++) {
+                List<String> partitioningExpr = partitioningExprs.get(i);
+                IAType fieldType = partitioningExprTypes.get(i);
                 if (fieldType == null) {
                     throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND,
-                            RecordUtil.toFullyQualifiedName(partitioningExprs.get(fidx)));
+                            RecordUtil.toFullyQualifiedName(partitioningExpr));
+                }
+                boolean nullable = KeyFieldTypeUtil.chooseSource(keySourceIndicators, i, recType, metaRecType)
+                        .isSubFieldNullable(partitioningExpr);
+                if (nullable) {
+                    // key field is nullable
+                    throw new CompilationException(ErrorCode.COMPILATION_PRIMARY_KEY_CANNOT_BE_NULLABLE,
+                            RecordUtil.toFullyQualifiedName(partitioningExpr));
                 }
                 switch (fieldType.getTypeTag()) {
                     case TINYINT:
@@ -155,7 +163,7 @@ public class ValidateUtil {
                         break;
                     case UNION:
                         throw new CompilationException(ErrorCode.COMPILATION_PRIMARY_KEY_CANNOT_BE_NULLABLE,
-                                RecordUtil.toFullyQualifiedName(partitioningExprs.get(fidx)));
+                                RecordUtil.toFullyQualifiedName(partitioningExpr));
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_PRIMARY_KEY_TYPE,
                                 fieldType.getTypeTag());
