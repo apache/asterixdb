@@ -91,10 +91,14 @@ public class AlgebricksHyracksIntegrationUtil {
     }
 
     public static void runJob(JobSpecification spec) throws Exception {
-        AlgebricksConfig.ALGEBRICKS_LOGGER.info(spec.toJSON().toString());
+        boolean loggerInfoEnabled = AlgebricksConfig.ALGEBRICKS_LOGGER.isInfoEnabled();
+        if (loggerInfoEnabled) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.info(spec.toJSON().toString());
+        }
         JobId jobId = hcc.startJob(spec, EnumSet.of(JobFlag.PROFILE_RUNTIME));
-        AlgebricksConfig.ALGEBRICKS_LOGGER.info(jobId.toString());
+        if (loggerInfoEnabled) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.info(jobId.toString());
+        }
         hcc.waitForCompletion(jobId);
     }
-
 }

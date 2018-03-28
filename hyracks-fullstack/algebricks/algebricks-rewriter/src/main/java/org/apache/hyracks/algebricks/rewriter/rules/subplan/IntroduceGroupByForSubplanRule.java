@@ -201,7 +201,9 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
             //retain the intersection
             pkVars.retainAll(producedVars);
         }
-        AlgebricksConfig.ALGEBRICKS_LOGGER.debug("Found FD for introducing group-by: " + pkVars);
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled()) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.debug("Found FD for introducing group-by: " + pkVars);
+        }
 
         Mutable<ILogicalOperator> rightRef = join.getInputs().get(1);
         LogicalVariable testForNull = null;
