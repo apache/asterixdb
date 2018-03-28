@@ -18,10 +18,13 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.exceptions.OverflowException;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -44,10 +47,10 @@ public class NumericDivideDescriptor extends AbstractNumericArithmeticEval {
     @Override
     protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
         if (rhs == 0) {
-            throw new ArithmeticException("Division by Zero.");
+            throw new RuntimeDataException(ErrorCode.DIVISION_BY_ZERO);
         }
         if ((lhs == Long.MIN_VALUE) && (rhs == -1L)) {
-            throw new ArithmeticException(("Overflow in integer division"));
+            throw new OverflowException(getIdentifier());
         }
         return lhs / rhs;
     }
