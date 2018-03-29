@@ -18,12 +18,9 @@
  */
 package org.apache.asterix.replication.sync;
 
-import static org.apache.asterix.common.utils.StorageConstants.METADATA_FILE_NAME;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,13 +39,6 @@ import org.apache.asterix.transaction.management.resource.PersistentLocalResourc
  * Ensures that the files between master and a replica are synchronized
  */
 public class ReplicaFilesSynchronizer {
-
-    private static final Comparator<String> REPLICATED_FILES_COMPARATOR = (file, anotherFile) -> {
-        if (file.endsWith(METADATA_FILE_NAME) && !anotherFile.endsWith(METADATA_FILE_NAME)) {
-            return -1;
-        }
-        return file.compareTo(anotherFile);
-    };
 
     private final PartitionReplica replica;
     private final INcApplicationContext appCtx;
@@ -89,8 +79,8 @@ public class ReplicaFilesSynchronizer {
 
     private void replicateMissingFiles(List<String> files) {
         final FileSynchronizer sync = new FileSynchronizer(appCtx, replica);
-        // sort files to ensure index metadata files are replicated first
-        files.sort(REPLICATED_FILES_COMPARATOR);
+        // sort files to ensure index metadata files starting with "." are replicated first
+        files.sort(String::compareTo);
         files.forEach(sync::replicate);
     }
 
