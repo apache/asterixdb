@@ -50,14 +50,14 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.FDsAndEquivClassesVisitor;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractPreSortedDistinctByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractPreclusteredGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractStableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.InMemoryStableSortPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreSortedDistinctByPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionExchangePOperator;
@@ -374,15 +374,17 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 hgbyOp.computeColumnSet(gby.getGroupByList());
                 break;
             }
-            case PRE_CLUSTERED_GROUP_BY: {
+            case PRE_CLUSTERED_GROUP_BY:
+            case MICRO_PRE_CLUSTERED_GROUP_BY: {
                 GroupByOperator gby = (GroupByOperator) op;
-                PreclusteredGroupByPOperator preSortedGby = (PreclusteredGroupByPOperator) pOp;
+                AbstractPreclusteredGroupByPOperator preSortedGby = (AbstractPreclusteredGroupByPOperator) pOp;
                 preSortedGby.setGbyColumns(gby.getGbyVarList());
                 break;
             }
-            case PRE_SORTED_DISTINCT_BY: {
+            case PRE_SORTED_DISTINCT_BY:
+            case MICRO_PRE_SORTED_DISTINCT_BY: {
                 DistinctOperator d = (DistinctOperator) op;
-                PreSortedDistinctByPOperator preSortedDistinct = (PreSortedDistinctByPOperator) pOp;
+                AbstractPreSortedDistinctByPOperator preSortedDistinct = (AbstractPreSortedDistinctByPOperator) pOp;
                 preSortedDistinct.setDistinctByColumns(d.getDistinctByVarList());
                 break;
             }
