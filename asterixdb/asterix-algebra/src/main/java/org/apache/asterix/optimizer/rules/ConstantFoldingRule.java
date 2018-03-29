@@ -92,7 +92,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             BuiltinFunctions.GET_RECORD_FIELDS, BuiltinFunctions.GET_RECORD_FIELD_VALUE,
             BuiltinFunctions.FIELD_ACCESS_NESTED, BuiltinFunctions.GET_ITEM, BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
             BuiltinFunctions.FIELD_ACCESS_BY_INDEX, BuiltinFunctions.CAST_TYPE, BuiltinFunctions.META,
-            BuiltinFunctions.META_KEY, BuiltinFunctions.RECORD_CONCAT, BuiltinFunctions.RECORD_CONCAT_STRICT);
+            BuiltinFunctions.META_KEY, BuiltinFunctions.RECORD_CONCAT, BuiltinFunctions.RECORD_CONCAT_STRICT,
+            BuiltinFunctions.TO_ATOMIC, BuiltinFunctions.TO_ARRAY);
 
     /**
      * Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method.

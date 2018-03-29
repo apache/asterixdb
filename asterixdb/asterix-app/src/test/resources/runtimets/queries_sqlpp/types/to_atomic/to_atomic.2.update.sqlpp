@@ -16,25 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- {
-  "t1": tostring(false),
-  "t2": tostr(true),
-  "t3": to_string(int8("8")),
-  "t4": to_string(int16("16")),
-  "t5": to_string(int32("32")),
-  "t6": to_string(int64("64")),
-  "t7": to_string(float("128")),
-  "t8": to_string(double("256")),
-  "t9": to_string("foo"),
-  "t10": is_null(to_string([])),
-  "t11": is_null(to_string({{}})),
-  "t12": is_null(to_string({})),
-  "t13": is_null(to_string(null)),
-  "t14": is_missing(to_string(missing)),
-  "t15": to_string(double("NaN")),
-  "t16": to_string(float("NaN")),
-  "t17": to_string(double("INF")),
-  "t18": to_string(float("INF")),
-  "t19": to_string(double("-INF")),
-  "t20": to_string(float("-INF"))
-}
+
+use test;
+
+insert into t1 select value t
+from [
+  { "id": 1, "v": 2 },
+  { "id": 2, "v": "hello" },
+  { "id": 3, "v": [[[2]]] },
+  { "id": 4, "v": [[[2, 3]]] },
+  { "id": 5, "v": {"a": 2} },
+  { "id": 6, "v": {"a": 2, "b": 3} },
+  { "id": 7, "v": {"a":{"b":{"c":{"d":2}}}} },
+  { "id": 8, "v": {"a":[{"b":[{"c":[2]}]}]} }
+] t

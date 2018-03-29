@@ -293,6 +293,67 @@
 
  The function has an alias `isunknown`.
 
+### to_array ###
+  * Syntax:
+
+        to_array(expr)
+
+  * Converts input value to an `array` value
+  * Arguments:
+     * `expr` : an expression
+  * Return Value:
+     * if the argument is `missing` then `missing` is returned
+     * if the argument is `null` then `null` is returned
+     * if the argument is of `array` type then it is returned as is
+     * if the argument is of `multiset` type then it is returned as an `array` with elements in an undefined order
+     * otherwise an `array` containing the input expression as its single item is returned
+
+ * Example:
+
+        {
+          "v1": to_array("asterix"),
+          "v2": to_array(["asterix"]),
+        };
+
+ * The expected result is:
+
+        { "v1": ["asterix"], "v2": ["asterix"] }
+
+ The function has an alias `toarray`.
+
+### to_atomic ###
+  * Syntax:
+
+        to_atomic(expr)
+
+  * Converts input value to a [primitive](../datamodel.html#PrimitiveTypes) value
+  * Arguments:
+     * `expr` : an expression
+  * Return Value:
+     * if the argument is `missing` then `missing` is returned
+     * if the argument is `null` then `null` is returned
+     * if the argument is of primitive type then it is returned as is
+     * if the argument is of `array` or `multiset` type and has only one element then the result of invoking
+       to_atomic() on that element is returned
+     * if the argument is of `object` type and has only one field then the result of invoking to_atomic() on the
+       value of that field is returned
+     * otherwise `null` is returned
+
+ * Example:
+
+        {
+          "v1": to_atomic("asterix"),
+          "v2": to_atomic(["asterix"]),
+          "v3": to_atomic([0, 1]),
+          "v4": to_atomic({"value": "asterix"}),
+          "v5": to_number({"x": 1, "y": 2})
+        };
+
+ * The expected result is:
+
+        { "v1": "asterix", "v2": "asterix", "v3": null, "v4": "asterix", "v5": null }
+
+ The function has two aliases, `toatomic` or `toatom`.
 
 ### to_boolean ###
   * Syntax:
@@ -325,8 +386,7 @@
 
         { "v1": false, "v2": true, "v3": false, "v4": true }
 
- The function has an alias `toboolean`.
-
+ The function has two aliases, `toboolean` or `tobool`.
 
 ### to_bigint ###
   * Syntax:
@@ -363,7 +423,6 @@
         { "v1": 0, "v2": 1, "v3": 10, "v4": 9223372036854775807, "v5": 9223372036854775807, "v6": 20 }
 
  The function has an alias `tobigint`.
-
 
 ### to_double ###
   * Syntax:
@@ -432,7 +491,34 @@
 
         { "v1": 0, "v2": 1, "v3": 10, "v4": 11.5, "v5": 12.5 }
 
- The function has an alias `tonumber`.
+ The function has two aliases, `tonumber` or `tonum`.
+
+### to_object ###
+  * Syntax:
+
+        to_object(expr)
+
+  * Converts input value to an `object` value
+  * Arguments:
+     * `expr` : an expression
+  * Return Value:
+     * if the argument is `missing` then `missing` is returned
+     * if the argument is `null` then `null` is returned
+     * if the argument is of `object` type then it is returned as is
+     * otherwise an empty `object` is returned
+
+ * Example:
+
+        {
+          "v1": to_object({"value": "asterix"}),
+          "v2": to_object("asterix")
+        };
+
+ * The expected result is:
+
+        { "v1": {"value": "asterix"}, "v2": {} }
+
+ The function has two aliases, `toobject` or `toobj`.
 
 ### to_string ###
   * Syntax:
@@ -465,4 +551,4 @@
 
         { "v1": "false", "v2": "true", "v3": "10", "v4": "11.5", "v5": "asterix" }
 
- The function has an alias `tostring`.
+ The function has two aliases, `tostring` or `tostr`.

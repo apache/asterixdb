@@ -69,12 +69,19 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("ifinf", "if-inf"); // ifinf, internal: if-inf
         addFunctionMapping("ifnan", "if-nan"); // ifnan, internal: if-nan
         addFunctionMapping("ifnanorinf", "if-nan-or-inf"); // ifnanorinf, internal: if-nan-or-inf
+        addFunctionMapping("toarray", "to-array"); // toarray, internal: to-array
+        addFunctionMapping("toatomic", "to-atomic"); // toatomic, internal: to-atomic
+        addFunctionMapping("toatom", "to-atomic"); // toatom, internal: to-atomic
         addFunctionMapping("toboolean", "to-boolean"); // toboolean, internal: to-boolean
-        addFunctionMapping("tostring", "to-string"); // tostring, internal: to-string
-        addFunctionMapping("todouble", "to-double"); // todouble, internal: to-double
+        addFunctionMapping("tobool", "to-boolean"); // tobool, internal: to-boolean
         addFunctionMapping("tobigint", "to-bigint"); // tobigint, internal: to-bigint
+        addFunctionMapping("todouble", "to-double"); // todouble, internal: to-double
+        addFunctionMapping("tostring", "to-string"); // tostring, internal: to-string
+        addFunctionMapping("tostr", "to-string"); // tostr, internal: to-string
         addFunctionMapping("tonumber", "to-number"); // tonumber, internal: to-number
         addFunctionMapping("tonum", "to-number"); // tonum, internal: to-number
+        addFunctionMapping("toobject", "to-object"); // toobject, internal: to-object
+        addFunctionMapping("toobj", "to-object"); // toobj, internal: to-object
 
         // Object functions
         // record-merge, internal: object-merge

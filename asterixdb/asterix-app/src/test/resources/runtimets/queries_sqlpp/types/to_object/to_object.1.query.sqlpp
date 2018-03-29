@@ -16,25 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- {
-  "t1": tostring(false),
-  "t2": tostr(true),
-  "t3": to_string(int8("8")),
-  "t4": to_string(int16("16")),
-  "t5": to_string(int32("32")),
-  "t6": to_string(int64("64")),
-  "t7": to_string(float("128")),
-  "t8": to_string(double("256")),
-  "t9": to_string("foo"),
-  "t10": is_null(to_string([])),
-  "t11": is_null(to_string({{}})),
-  "t12": is_null(to_string({})),
-  "t13": is_null(to_string(null)),
-  "t14": is_missing(to_string(missing)),
-  "t15": to_string(double("NaN")),
-  "t16": to_string(float("NaN")),
-  "t17": to_string(double("INF")),
-  "t18": to_string(float("INF")),
-  "t19": to_string(double("-INF")),
-  "t20": to_string(float("-INF"))
+
+{
+  "t1": [ toobject(missing) is missing, toobj(null) is null ],
+  "t2": is_object(to_object({})),
+  "t3": to_object({}),
+  "t4": to_object({"a":1}),
+  "t5": to_object({"a":1, "b":2}),
+  "t6": (
+    from [
+      int8("1"), int16("2"), int32("3"), int64("4"), float("5"), double("6"),
+      "hello", [7], [ { "a": 1 } ]
+    ] t
+    select value to_object(t)
+  )
 }
