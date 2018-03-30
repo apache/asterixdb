@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.common.util;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
@@ -37,9 +38,10 @@ public class LSMComponentIdUtils {
 
     }
 
-    public static ILSMComponentId readFrom(IComponentMetadata metadata) throws HyracksDataException {
-        long minId = ComponentUtils.getLong(metadata, COMPONENT_ID_MIN_KEY, LSMComponentId.NOT_FOUND);
-        long maxId = ComponentUtils.getLong(metadata, COMPONENT_ID_MAX_KEY, LSMComponentId.NOT_FOUND);
+    public static ILSMComponentId readFrom(IComponentMetadata metadata, ArrayBackedValueStorage buffer)
+            throws HyracksDataException {
+        long minId = ComponentUtils.getLong(metadata, COMPONENT_ID_MIN_KEY, LSMComponentId.NOT_FOUND, buffer);
+        long maxId = ComponentUtils.getLong(metadata, COMPONENT_ID_MAX_KEY, LSMComponentId.NOT_FOUND, buffer);
         if (minId == LSMComponentId.NOT_FOUND || maxId == LSMComponentId.NOT_FOUND) {
             return LSMComponentId.MISSING_COMPONENT_ID;
         } else {

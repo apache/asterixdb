@@ -56,6 +56,7 @@ import org.apache.hyracks.api.test.FrameWriterTestUtils;
 import org.apache.hyracks.api.test.FrameWriterTestUtils.FrameWriterOperation;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.io.MessagingFrameTupleAppender;
@@ -156,9 +157,10 @@ public class LogMarkerTest {
                         iHelperFactory.create(ctx.getJobletContext().getServiceContext(), 0);
                 dataflowHelper.open();
                 LSMBTree btree = (LSMBTree) dataflowHelper.getIndexInstance();
-                LongPointable longPointable = LongPointable.FACTORY.createPointable();
-                ComponentUtils.get(btree, ComponentUtils.MARKER_LSN_KEY, longPointable);
-                long lsn = longPointable.getLong();
+                ArrayBackedValueStorage buffer = new ArrayBackedValueStorage();
+
+                ComponentUtils.get(btree, ComponentUtils.MARKER_LSN_KEY, buffer);
+                long lsn = LongPointable.getLong(buffer.getByteArray(), buffer.getStartOffset());
                 int numOfMarkers = 0;
                 LogReader logReader = (LogReader) nc.getTransactionSubsystem().getLogManager().getLogReader(false);
                 long expectedMarkerId = markerId - 1;

@@ -22,12 +22,22 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Objects;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 
-public class ArrayBackedValueStorage implements IMutableValueStorage {
+public class ArrayBackedValueStorage implements IMutableValueStorage, IPointable {
 
-    private final GrowableArray data = new GrowableArray();
+    private final GrowableArray data;
+
+    public ArrayBackedValueStorage(int size) {
+        data = new GrowableArray(size);
+    }
+
+    public ArrayBackedValueStorage() {
+        data = new GrowableArray();
+    }
 
     @Override
     public void reset() {
@@ -54,16 +64,15 @@ public class ArrayBackedValueStorage implements IMutableValueStorage {
         return data.getLength();
     }
 
-    //TODO: don't swallow, but throw the exception
-    public void append(IValueReference value) {
+    public void append(IValueReference value) throws HyracksDataException {
         try {
             data.append(value);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw HyracksDataException.create(e);
         }
     }
 
-    public void assign(IValueReference value) {
+    public void assign(IValueReference value) throws HyracksDataException {
         reset();
         append(value);
     }
@@ -87,6 +96,33 @@ public class ArrayBackedValueStorage implements IMutableValueStorage {
         }
         ArrayBackedValueStorage other = (ArrayBackedValueStorage) obj;
         return Objects.equals(data, other.data);
+    }
+
+    @Override
+    public void set(byte[] bytes, int start, int length) {
+        reset();
+        if (bytes != null) {
+            try {
+                data.append(bytes, start, length);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    @Override
+    public void set(IValueReference pointer) {
+        try {
+            assign(pointer);
+        } catch (HyracksDataException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public byte[] toByteArray() {
+        byte[] byteArray = new byte[getLength()];
+        System.arraycopy(getByteArray(), getStartOffset(), byteArray, 0, getLength());
+        return byteArray;
     }
 
 }

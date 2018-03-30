@@ -34,7 +34,7 @@ public class BlockingIOOperationCallbackWrapper implements ILSMIOOperationCallba
     }
 
     public synchronized void waitForIO() throws InterruptedException {
-        if (!notified) {
+        while (!notified) {
             wait();
         }
         notified = false;

@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
@@ -59,10 +60,10 @@ public class ComponentUtils {
      * @throws HyracksDataException
      *             If the comopnent was a disk component and an IO error was encountered
      */
-    public static long getLong(IComponentMetadata metadata, IValueReference key, long defaultValue)
-            throws HyracksDataException {
-        IValueReference value = metadata.get(key);
-        return value == null || value.getLength() == 0 ? defaultValue
+    public static long getLong(IComponentMetadata metadata, IValueReference key, long defaultValue,
+            ArrayBackedValueStorage value) throws HyracksDataException {
+        metadata.get(key, value);
+        return value.getLength() == 0 ? defaultValue
                 : LongPointable.getLong(value.getByteArray(), value.getStartOffset());
     }
 
@@ -73,31 +74,36 @@ public class ComponentUtils {
      *
      * @param index
      * @param key
-     * @param pointable
+     * @param value
      * @throws HyracksDataException
      */
-    public static void get(ILSMIndex index, IValueReference key, IPointable pointable) throws HyracksDataException {
+    public static void get(ILSMIndex index, IValueReference key, ArrayBackedValueStorage value)
+            throws HyracksDataException {
         boolean loggable = LOGGER.isDebugEnabled();
+        value.reset();
         if (loggable) {
             LOGGER.log(Level.DEBUG, "Getting " + key + " from index " + index);
         }
         // Lock the opTracker to ensure index components don't change
         synchronized (index.getOperationTracker()) {
-            index.getCurrentMemoryComponent().getMetadata().get(key, pointable);
-            if (pointable.getLength() == 0) {
+            ILSMMemoryComponent cmc = index.getCurrentMemoryComponent();
+            if (cmc.isReadable()) {
+                index.getCurrentMemoryComponent().getMetadata().get(key, value);
+            }
+            if (value.getLength() == 0) {
                 if (loggable) {
                     LOGGER.log(Level.DEBUG, key + " was not found in mutable memory component of " + index);
                 }
                 // was not found in the in current mutable component, search in the other in memory components
-                fromImmutableMemoryComponents(index, key, pointable);
-                if (pointable.getLength() == 0) {
+                fromImmutableMemoryComponents(index, key, value);
+                if (value.getLength() == 0) {
                     if (loggable) {
                         LOGGER.log(Level.DEBUG, key + " was not found in all immmutable memory components of " + index);
                     }
                     // was not found in the in all in memory components, search in the disk components
-                    fromDiskComponents(index, key, pointable);
+                    fromDiskComponents(index, key, value);
                     if (loggable) {
-                        if (pointable.getLength() == 0) {
+                        if (value.getLength() == 0) {
                             LOGGER.log(Level.DEBUG, key + " was not found in all disk components of " + index);
                         } else {
                             LOGGER.log(Level.DEBUG, key + " was found in disk components of " + index);
@@ -134,7 +140,7 @@ public class ComponentUtils {
         }
     }
 
-    private static void fromDiskComponents(ILSMIndex index, IValueReference key, IPointable pointable)
+    private static void fromDiskComponents(ILSMIndex index, IValueReference key, ArrayBackedValueStorage value)
             throws HyracksDataException {
         boolean loggable = LOGGER.isDebugEnabled();
         if (loggable) {
@@ -144,15 +150,16 @@ public class ComponentUtils {
             if (loggable) {
                 LOGGER.log(Level.DEBUG, "Getting " + key + " from disk components " + c);
             }
-            c.getMetadata().get(key, pointable);
-            if (pointable.getLength() != 0) {
+            c.getMetadata().get(key, value);
+            if (value.getLength() != 0) {
                 // Found
                 return;
             }
         }
     }
 
-    private static void fromImmutableMemoryComponents(ILSMIndex index, IValueReference key, IPointable pointable) {
+    private static void fromImmutableMemoryComponents(ILSMIndex index, IValueReference key,
+            ArrayBackedValueStorage value) throws HyracksDataException {
         boolean loggable = LOGGER.isDebugEnabled();
         if (loggable) {
             LOGGER.log(Level.DEBUG, "Getting " + key + " from immutable memory components of " + index);
@@ -174,8 +181,8 @@ public class ComponentUtils {
             }
             ILSMMemoryComponent c = index.getMemoryComponents().get(next);
             if (c.isReadable()) {
-                c.getMetadata().get(key, pointable);
-                if (pointable.getLength() != 0) {
+                c.getMetadata().get(key, value);
+                if (value.getLength() != 0) {
                     // Found
                     return;
                 }

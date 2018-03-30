@@ -28,7 +28,7 @@ import org.apache.asterix.test.base.TestMethodTracer;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.DataUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
@@ -106,7 +106,7 @@ public class FlushMetadataOnlyTest {
         StorageTestUtils.flush(dsLifecycleMgr, lsmBtree, false);
         // assert one disk component
         Assert.assertEquals(1, lsmBtree.getDiskComponents().size());
-        VoidPointable pointable = VoidPointable.FACTORY.createPointable();
+        ArrayBackedValueStorage pointable = new ArrayBackedValueStorage();
         ComponentUtils.get(lsmBtree, key, pointable);
         Assert.assertTrue(DataUtils.equals(pointable, value));
         // ensure that we can search this component

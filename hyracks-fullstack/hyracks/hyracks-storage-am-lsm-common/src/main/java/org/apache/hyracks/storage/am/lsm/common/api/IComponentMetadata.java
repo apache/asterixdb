@@ -19,8 +19,8 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public interface IComponentMetadata {
 
@@ -41,14 +41,5 @@ public interface IComponentMetadata {
      * @param value
      * @throws HyracksDataException
      */
-    void get(IValueReference key, IPointable value) throws HyracksDataException;
-
-    /**
-     * Get the value
-     *
-     * @param key
-     * @return
-     * @throws HyracksDataException
-     */
-    IValueReference get(IValueReference key) throws HyracksDataException;
+    void get(IValueReference key, ArrayBackedValueStorage value) throws HyracksDataException;
 }

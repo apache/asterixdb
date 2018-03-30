@@ -26,8 +26,18 @@ import org.apache.hyracks.data.std.api.IDataOutputProvider;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public class GrowableArray implements IDataOutputProvider {
-    private final ByteArrayAccessibleOutputStream baaos = new ByteArrayAccessibleOutputStream();
-    private final RewindableDataOutputStream dos = new RewindableDataOutputStream(baaos);
+    private final ByteArrayAccessibleOutputStream baaos;
+    private final RewindableDataOutputStream dos;
+
+    public GrowableArray() {
+        baaos = new ByteArrayAccessibleOutputStream();
+        dos = new RewindableDataOutputStream(baaos);
+    }
+
+    public GrowableArray(int size) {
+        baaos = new ByteArrayAccessibleOutputStream(size);
+        dos = new RewindableDataOutputStream(baaos);
+    }
 
     @Override
     public DataOutput getDataOutput() {
@@ -65,7 +75,11 @@ public class GrowableArray implements IDataOutputProvider {
     }
 
     public void append(IValueReference value) throws IOException {
-        dos.write(value.getByteArray(), value.getStartOffset(), value.getLength());
+        append(value.getByteArray(), value.getStartOffset(), value.getLength());
+    }
+
+    public void append(byte[] data, int offset, int length) throws IOException {
+        dos.write(data, offset, length);
     }
 
     public void setSize(int bytesRequired) {

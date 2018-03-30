@@ -601,6 +601,7 @@ public class LSMHarness implements ILSMHarness {
     public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
             throws HyracksDataException {
         if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
+            LOGGER.info("Failed to enter components for merge operation. Calling finalize");
             ctx.setIoOperationType(LSMIOOperationType.MERGE);
             callback.afterFinalize(ctx);
             return;
@@ -871,10 +872,12 @@ public class LSMHarness implements ILSMHarness {
             scheduleMerge(ctx, ioCallback);
         }
         IOOperationUtils.waitForIoOperation(ioCallback);
-        // ensure that merge has succeeded
-        for (ILSMDiskComponent component : toBeDeleted) {
-            if (lsmIndex.getDiskComponents().contains(component)) {
-                throw HyracksDataException.create(ErrorCode.A_MERGE_OPERATION_HAS_FAILED);
+        synchronized (opTracker) {
+            // ensure that merge has succeeded
+            for (ILSMDiskComponent component : toBeDeleted) {
+                if (lsmIndex.getDiskComponents().contains(component)) {
+                    throw HyracksDataException.create(ErrorCode.A_MERGE_OPERATION_HAS_FAILED, component.toString());
+                }
             }
         }
     }
