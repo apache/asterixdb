@@ -109,6 +109,8 @@ public class TestExecutor {
      * Static variables
      */
     protected static final Logger LOGGER = LogManager.getLogger();
+    private static final String AQL = "aql";
+    private static final String SQLPP = "sqlpp";
     // see
     // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
     private static final long MAX_URL_LENGTH = 2000l;
@@ -561,14 +563,6 @@ public class TestExecutor {
         }
     }
 
-    public InputStream executeQuery(String str, OutputFormat fmt, URI uri, List<Parameter> params) throws Exception {
-        HttpUriRequest method = constructHttpMethod(str, uri, "query", false, params);
-        // Set accepted output response type
-        method.setHeader("Accept", fmt.mimeType());
-        HttpResponse response = executeAndCheckHttpRequest(method);
-        return response.getEntity().getContent();
-    }
-
     public InputStream executeQueryService(String str, URI uri, OutputFormat fmt) throws Exception {
         return executeQueryService(str, fmt, uri, new ArrayList<>(), false);
     }
@@ -626,15 +620,9 @@ public class TestExecutor {
     }
 
     private HttpUriRequest constructHttpMethod(String statement, URI uri, String stmtParam, boolean postStmtAsParam,
-            List<Parameter> otherParams) throws URISyntaxException {
-        if (statement.length() + uri.toString().length() < MAX_URL_LENGTH) {
-            // Use GET for small-ish queries
-            return constructGetMethod(uri, upsertParam(otherParams, stmtParam, statement));
-        } else {
-            // Use POST for bigger ones to avoid 413 FULL_HEAD
-            String stmtParamName = (postStmtAsParam ? stmtParam : null);
-            return constructPostMethodUrl(statement, uri, stmtParamName, otherParams);
-        }
+            List<Parameter> otherParams) {
+        String stmtParamName = (postStmtAsParam ? stmtParam : null);
+        return constructPostMethodUrl(statement, uri, stmtParamName, otherParams);
     }
 
     private HttpUriRequest constructGetMethod(URI endpoint, List<Parameter> params) {
@@ -653,9 +641,7 @@ public class TestExecutor {
             builder.addParameter(param.getName(), param.getValue());
         }
         builder.setCharset(StandardCharsets.UTF_8);
-        if (body.isPresent()) {
-            builder.setEntity(new StringEntity(body.get(), StandardCharsets.UTF_8));
-        }
+        body.ifPresent(s -> builder.setEntity(new StringEntity(s, StandardCharsets.UTF_8)));
         return builder.build();
     }
 
@@ -681,13 +667,6 @@ public class TestExecutor {
         }
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
-    }
-
-    private HttpUriRequest constructPostMethod(URI uri, OutputFormat fmt, List<Parameter> params) {
-        HttpUriRequest method = constructPostMethod(uri, params);
-        // Set accepted output response type
-        method.setHeader("Accept", fmt.mimeType());
-        return method;
     }
 
     protected HttpUriRequest constructPostMethodUrl(String statement, URI uri, String stmtParam,
@@ -749,57 +728,6 @@ public class TestExecutor {
         HttpUriRequest request = buildRequest(method, uri, fmt, params, body);
         HttpResponse response = executeAndCheckHttpRequest(request, responseCodeValidator);
         return response.getEntity().getContent();
-    }
-
-    // To execute Update statements
-    // Insert and Delete statements are executed here
-    public void executeUpdate(String str, URI uri) throws Exception {
-        // Create a method instance.
-        HttpUriRequest request =
-                RequestBuilder.post(uri).setEntity(new StringEntity(str, StandardCharsets.UTF_8)).build();
-
-        // Execute the method.
-        executeAndCheckHttpRequest(request);
-    }
-
-    // Executes AQL in either async or async-defer mode.
-    public InputStream executeAnyAQLAsync(String statement, boolean defer, OutputFormat fmt, URI uri,
-            Map<String, Object> variableCtx) throws Exception {
-        // Create a method instance.
-        HttpUriRequest request =
-                RequestBuilder.post(uri).addParameter("mode", defer ? "asynchronous-deferred" : "asynchronous")
-                        .setEntity(new StringEntity(statement, StandardCharsets.UTF_8))
-                        .setHeader("Accept", fmt.mimeType()).build();
-
-        String handleVar = getHandleVariable(statement);
-
-        HttpResponse response = executeAndCheckHttpRequest(request);
-        InputStream resultStream = response.getEntity().getContent();
-        String resultStr = IOUtils.toString(resultStream, "UTF-8");
-        ObjectNode resultJson = new ObjectMapper().readValue(resultStr, ObjectNode.class);
-        final JsonNode jsonHandle = resultJson.get("handle");
-        final String strHandle = jsonHandle.asText();
-
-        if (handleVar != null) {
-            variableCtx.put(handleVar, strHandle);
-            return resultStream;
-        }
-        return null;
-    }
-
-    // To execute DDL and Update statements
-    // create type statement
-    // create dataset statement
-    // create index statement
-    // create dataverse statement
-    // create function statement
-    public void executeDDL(String str, URI uri) throws Exception {
-        // Create a method instance.
-        HttpUriRequest request =
-                RequestBuilder.post(uri).setEntity(new StringEntity(str, StandardCharsets.UTF_8)).build();
-
-        // Execute the method.
-        executeAndCheckHttpRequest(request);
     }
 
     // Method that reads a DDL/Update/Query File
@@ -886,13 +814,15 @@ public class TestExecutor {
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
             MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
             throws Exception {
+        URI uri;
+        InputStream resultStream;
         File qbcFile;
         boolean failed = false;
         File expectedResultFile;
         switch (ctx.getType()) {
             case "ddl":
                 if (ctx.getFile().getName().endsWith("aql")) {
-                    executeDDL(statement, getEndpoint(Servlets.AQL_DDL));
+                    executeAqlUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
                 } else {
                     executeSqlppUpdateOrDdl(statement, OutputFormat.CLEAN_JSON);
                 }
@@ -903,7 +833,7 @@ public class TestExecutor {
                     statement = statement.replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
                 }
                 if (ctx.getFile().getName().endsWith("aql")) {
-                    executeUpdate(statement, getEndpoint(Servlets.AQL_UPDATE));
+                    executeAqlUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
                 } else {
                     executeSqlppUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
                 }
@@ -957,14 +887,12 @@ public class TestExecutor {
                         expectedResultFileCtxs);
                 break;
             case "txnqbc": // qbc represents query before crash
-                InputStream resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                        getEndpoint(Servlets.AQL_QUERY), cUnit.getParameter());
+                resultStream = query(cUnit, testFile.getName(), statement);
                 qbcFile = getTestCaseQueryBeforeCrashFile(actualPath, testCaseCtx, cUnit);
                 writeOutputToFile(qbcFile, resultStream);
                 break;
             case "txnqar": // qar represents query after recovery
-                resultStream = executeQuery(statement, OutputFormat.forCompilationUnit(cUnit),
-                        getEndpoint(Servlets.AQL_QUERY), cUnit.getParameter());
+                resultStream = query(cUnit, testFile.getName(), statement);
                 File qarFile = new File(actualPath + File.separator
                         + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_" + cUnit.getName()
                         + "_qar.adm");
@@ -974,7 +902,7 @@ public class TestExecutor {
                 break;
             case "txneu": // eu represents erroneous update
                 try {
-                    executeUpdate(statement, getEndpoint(Servlets.AQL_UPDATE));
+                    executeAqlUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
                 } catch (Exception e) {
                     // An exception is expected.
                     failed = true;
@@ -1001,7 +929,7 @@ public class TestExecutor {
                 break;
             case "errddl": // a ddlquery that expects error
                 try {
-                    executeDDL(statement, getEndpoint(Servlets.AQL_DDL));
+                    executeAqlUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
                 } catch (Exception e) {
                     // expected error happens
                     failed = true;
@@ -1238,38 +1166,25 @@ public class TestExecutor {
     public void executeQuery(OutputFormat fmt, String statement, Map<String, Object> variableCtx, String reqType,
             File testFile, File expectedResultFile, File actualResultFile, MutableInt queryCount, int numResultFiles,
             List<Parameter> params, ComparisonEnum compare) throws Exception {
-        InputStream resultStream = null;
-        if (testFile.getName().endsWith("aql")) {
-            if (reqType.equalsIgnoreCase("query")) {
-                resultStream = executeQuery(statement, fmt, getEndpoint(Servlets.AQL_QUERY), params);
-            } else {
-                final URI endpoint = getEndpoint(Servlets.AQL);
-                if (reqType.equalsIgnoreCase("async")) {
-                    resultStream = executeAnyAQLAsync(statement, false, fmt, endpoint, variableCtx);
-                } else if (reqType.equalsIgnoreCase("deferred")) {
-                    resultStream = executeAnyAQLAsync(statement, true, fmt, endpoint, variableCtx);
-                }
-                Assert.assertNotNull("no handle for " + reqType + " test " + testFile.toString(), resultStream);
-            }
+        String delivery = DELIVERY_IMMEDIATE;
+        if (reqType.equalsIgnoreCase("async")) {
+            delivery = DELIVERY_ASYNC;
+        } else if (reqType.equalsIgnoreCase("deferred")) {
+            delivery = DELIVERY_DEFERRED;
+        }
+        URI uri = testFile.getName().endsWith("aql") ? getEndpoint(Servlets.QUERY_AQL)
+                : getEndpoint(Servlets.QUERY_SERVICE);
+        InputStream resultStream;
+        if (DELIVERY_IMMEDIATE.equals(delivery)) {
+            resultStream = executeQueryService(statement, fmt, uri, params, true, null, isCancellable(reqType));
+            resultStream = METRICS_QUERY_TYPE.equals(reqType) ? ResultExtractor.extractMetrics(resultStream)
+                    : ResultExtractor.extract(resultStream);
         } else {
-            String delivery = DELIVERY_IMMEDIATE;
-            if (reqType.equalsIgnoreCase("async")) {
-                delivery = DELIVERY_ASYNC;
-            } else if (reqType.equalsIgnoreCase("deferred")) {
-                delivery = DELIVERY_DEFERRED;
-            }
-            final URI uri = getEndpoint(Servlets.QUERY_SERVICE);
-            if (DELIVERY_IMMEDIATE.equals(delivery)) {
-                resultStream = executeQueryService(statement, fmt, uri, params, true, null, isCancellable(reqType));
-                resultStream = METRICS_QUERY_TYPE.equals(reqType) ? ResultExtractor.extractMetrics(resultStream)
-                        : ResultExtractor.extract(resultStream);
-            } else {
-                String handleVar = getHandleVariable(statement);
-                resultStream = executeQueryService(statement, fmt, uri, upsertParam(params, "mode", delivery), true);
-                String handle = ResultExtractor.extractHandle(resultStream);
-                Assert.assertNotNull("no handle for " + reqType + " test " + testFile.toString(), handleVar);
-                variableCtx.put(handleVar, handle);
-            }
+            String handleVar = getHandleVariable(statement);
+            resultStream = executeQueryService(statement, fmt, uri, upsertParam(params, "mode", delivery), true);
+            String handle = ResultExtractor.extractHandle(resultStream);
+            Assert.assertNotNull("no handle for " + reqType + " test " + testFile.toString(), handleVar);
+            variableCtx.put(handleVar, toQueryServiceHandle(handle));
         }
         if (actualResultFile == null) {
             if (testFile.getName().startsWith(DIAGNOSE)) {
@@ -1440,7 +1355,16 @@ public class TestExecutor {
     }
 
     public InputStream executeSqlppUpdateOrDdl(String statement, OutputFormat outputFormat) throws Exception {
-        InputStream resultStream = executeQueryService(statement, getEndpoint(Servlets.QUERY_SERVICE), outputFormat);
+        return executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(SQLPP));
+    }
+
+    private InputStream executeAqlUpdateOrDdl(String statement, OutputFormat outputFormat) throws Exception {
+        return executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(AQL));
+    }
+
+    private InputStream executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)
+            throws Exception {
+        InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat);
         return ResultExtractor.extract(resultStream);
     }
 
@@ -1946,5 +1870,20 @@ public class TestExecutor {
 
     private static boolean isCancellable(String type) {
         return !NON_CANCELLABLE.contains(type);
+    }
+
+    private InputStream query(CompilationUnit cUnit, String testFile, String statement) throws Exception {
+        final URI uri = getQueryServiceUri(testFile);
+        final InputStream inputStream = executeQueryService(statement, OutputFormat.forCompilationUnit(cUnit), uri,
+                cUnit.getParameter(), true, null, false);
+        return ResultExtractor.extract(inputStream);
+    }
+
+    private URI getQueryServiceUri(String extension) throws URISyntaxException {
+        return extension.endsWith(AQL) ? getEndpoint(Servlets.QUERY_AQL) : getEndpoint(Servlets.QUERY_SERVICE);
+    }
+
+    private static String toQueryServiceHandle(String handle) {
+        return handle.replace("/aql/", "/service/");
     }
 }

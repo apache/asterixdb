@@ -339,73 +339,73 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_7">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_8">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_251_dataset_hint_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Dataset: Book error in processing hint: TUPLE_SIZE Unknown hint</expected-error>
+        <expected-error>Invalid operation - Dataset: Book error in processing hint: TUPLE_SIZE Unknown hint</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_251_dataset_hint_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: Invalid operation - Dataset: Book error in processing hint: SIZE Unknown hint</expected-error>
+        <expected-error>Invalid operation - Dataset: Book error in processing hint: SIZE Unknown hint</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_272_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>There is no dataset with this name Foo in dataverse test</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_272_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException</expected-error>
+        <expected-error>There is no dataset with this name Foo in dataverse test</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This case should be fixed to return a proper message rather than NPE -->
@@ -444,37 +444,37 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: The field "[loc]" which is of type point cannot be indexed using the BTree index.</expected-error>
+        <expected-error>The field "[loc]" which is of type point cannot be indexed using the BTree index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: The field "[age]" which is of type integer cannot be indexed using the RTree index.</expected-error>
+        <expected-error>The field "[age]" which is of type integer cannot be indexed using the RTree index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: The field "[loc]" which is of type point cannot be indexed using the Length Partitioned Keyword index.</expected-error>
+        <expected-error>The field "[loc]" which is of type point cannot be indexed using the Length Partitioned Keyword index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: The field "[loc]" which is of type point cannot be indexed using the Length Partitioned Keyword index.</expected-error>
+        <expected-error>The field "[loc]" which is of type point cannot be indexed using the Length Partitioned Keyword index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: The field "[loc]" which is of type point cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
+        <expected-error>The field "[loc]" which is of type point cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Error: The field "[loc]" which is of type point cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
+        <expected-error>The field "[loc]" which is of type point cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -482,7 +482,7 @@
     <test-case FilePath="transaction">
       <compilation-unit name="failure_previous_success">
         <output-dir compare="Text">failure_previous_success</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: A datatype with this name StreetType already exists</expected-error>
+        <expected-error>A datatype with this name StreetType already exists</expected-error>
       </compilation-unit>
       <compilation-unit name="verify_failure_previous_success">
         <output-dir compare="Text">verify_failure_previous_success</output-dir>
@@ -491,7 +491,7 @@
     <test-case FilePath="transaction">
       <compilation-unit name="failure_subsequent_no_execution">
         <output-dir compare="Text">failure_subsequent_no_execution</output-dir>
-        <expected-error>org.apache.hyracks.algebricks.common.exceptions.AlgebricksException: A nodegroup with this name group1 already exists</expected-error>
+        <expected-error>A nodegroup with this name group1 already exists</expected-error>
       </compilation-unit>
       <compilation-unit name="verify_failure_subsequent_no_execution">
         <output-dir compare="Text">verify_failure_subsequent_no_execution</output-dir>

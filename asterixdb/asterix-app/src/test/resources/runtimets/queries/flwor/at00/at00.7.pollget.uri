@@ -17,4 +17,6 @@
  * under the License.
  */
 
-/query/service/result/$handle
+//polltimeoutsecs=10
+// handlevariable=handle
+$handle

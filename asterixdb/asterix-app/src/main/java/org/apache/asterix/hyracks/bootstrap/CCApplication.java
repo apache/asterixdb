@@ -37,11 +37,8 @@ import org.apache.asterix.api.http.server.ApiServlet;
 import org.apache.asterix.api.http.server.ClusterApiServlet;
 import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
-import org.apache.asterix.api.http.server.DdlApiServlet;
 import org.apache.asterix.api.http.server.DiagnosticsApiServlet;
-import org.apache.asterix.api.http.server.FullApiServlet;
 import org.apache.asterix.api.http.server.NodeControllerDetailsApiServlet;
-import org.apache.asterix.api.http.server.QueryApiServlet;
 import org.apache.asterix.api.http.server.QueryCancellationServlet;
 import org.apache.asterix.api.http.server.QueryResultApiServlet;
 import org.apache.asterix.api.http.server.QueryServiceServlet;
@@ -50,7 +47,6 @@ import org.apache.asterix.api.http.server.QueryWebInterfaceServlet;
 import org.apache.asterix.api.http.server.RebalanceApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.ShutdownApiServlet;
-import org.apache.asterix.api.http.server.UpdateApiServlet;
 import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
@@ -234,18 +230,6 @@ public class CCApplication extends BaseCCApplication {
         jsonAPIServer.setAttribute(ServletConstants.RUNNING_QUERIES_ATTR, statementExecutorCtx);
         jsonAPIServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ccServiceCtx);
 
-        // AQL rest APIs.
-        addServlet(jsonAPIServer, Servlets.AQL_QUERY);
-        addServlet(jsonAPIServer, Servlets.AQL_UPDATE);
-        addServlet(jsonAPIServer, Servlets.AQL_DDL);
-        addServlet(jsonAPIServer, Servlets.AQL);
-
-        // SQL+x+ rest APIs.
-        addServlet(jsonAPIServer, Servlets.SQLPP_QUERY);
-        addServlet(jsonAPIServer, Servlets.SQLPP_UPDATE);
-        addServlet(jsonAPIServer, Servlets.SQLPP_DDL);
-        addServlet(jsonAPIServer, Servlets.SQLPP);
-
         // Other APIs.
         addServlet(jsonAPIServer, Servlets.QUERY_STATUS);
         addServlet(jsonAPIServer, Servlets.QUERY_RESULT);
@@ -278,30 +262,6 @@ public class CCApplication extends BaseCCApplication {
 
     protected IServlet createServlet(ConcurrentMap<String, Object> ctx, String key, String... paths) {
         switch (key) {
-            case Servlets.AQL:
-                return new FullApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(AQL),
-                        getStatementExecutorFactory(), componentProvider);
-            case Servlets.AQL_QUERY:
-                return new QueryApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(AQL),
-                        getStatementExecutorFactory(), componentProvider);
-            case Servlets.AQL_UPDATE:
-                return new UpdateApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(AQL),
-                        getStatementExecutorFactory(), componentProvider);
-            case Servlets.AQL_DDL:
-                return new DdlApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(AQL),
-                        getStatementExecutorFactory(), componentProvider);
-            case Servlets.SQLPP:
-                return new FullApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(SQLPP),
-                        getStatementExecutorFactory(), componentProvider);
-            case Servlets.SQLPP_QUERY:
-                return new QueryApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(SQLPP),
-                        getStatementExecutorFactory(), componentProvider);
-            case Servlets.SQLPP_UPDATE:
-                return new UpdateApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(SQLPP),
-                        getStatementExecutorFactory(), componentProvider);
-            case Servlets.SQLPP_DDL:
-                return new DdlApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(SQLPP),
-                        getStatementExecutorFactory(), componentProvider);
             case Servlets.RUNNING_REQUESTS:
                 return new QueryCancellationServlet(ctx, paths);
             case Servlets.QUERY_STATUS:

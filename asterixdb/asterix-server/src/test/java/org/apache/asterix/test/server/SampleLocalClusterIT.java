@@ -23,11 +23,8 @@ import static org.apache.hyracks.util.file.FileUtil.joinPath;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.utils.Servlets;
@@ -36,7 +33,6 @@ import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -45,6 +41,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.runners.MethodSorters;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SampleLocalClusterIT {
@@ -118,11 +118,13 @@ public class SampleLocalClusterIT {
     @Test
     public void test1_sanityQuery() throws Exception {
         TestExecutor testExecutor = new TestExecutor();
-        InputStream resultStream = testExecutor.executeQuery("1+1", OutputFormat.ADM,
-                new URI("http", null, "127.0.0.1", 19002, Servlets.AQL_QUERY, null, null), Collections.emptyList());
-        StringWriter sw = new StringWriter();
-        IOUtils.copy(resultStream, sw);
-        Assert.assertEquals("2", sw.toString().trim());
+        InputStream resultStream = testExecutor.executeQueryService("1+1;",
+                testExecutor.getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.ADM);
+        final ObjectMapper objectMapper = new ObjectMapper();
+        final ObjectNode response = objectMapper.readValue(resultStream, ObjectNode.class);
+        final JsonNode result = response.get("results");
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(2, result.get(0).asInt());
     }
 
     @Test

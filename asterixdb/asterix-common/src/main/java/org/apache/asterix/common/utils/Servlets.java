@@ -20,14 +20,6 @@ package org.apache.asterix.common.utils;
 
 public class Servlets {
 
-    public static final String AQL = "/aql";
-    public static final String AQL_QUERY = "/query";
-    public static final String AQL_UPDATE = "/update";
-    public static final String AQL_DDL = "/ddl";
-    public static final String SQLPP = "/sqlpp";
-    public static final String SQLPP_QUERY = "/query/sqlpp";
-    public static final String SQLPP_UPDATE = "/update/sqlpp";
-    public static final String SQLPP_DDL = "/ddl/sqlpp";
     public static final String QUERY_STATUS = "/query/service/status/*";
     public static final String QUERY_RESULT = "/query/service/result/*";
     public static final String QUERY_SERVICE = "/query/service";
