@@ -97,7 +97,6 @@ public abstract class MetadataManager implements IMetadataManager {
     private final MetadataCache cache = new MetadataCache();
     protected final Collection<IAsterixStateProxy> proxies;
     protected IMetadataNode metadataNode;
-    private final ReadWriteLock metadataLatch;
     protected boolean rebindMetadataNode = false;
 
     // TODO(mblow): replace references of this (non-constant) field with a method,
@@ -117,7 +116,6 @@ public abstract class MetadataManager implements IMetadataManager {
             throw new IllegalArgumentException("Null / empty list of proxies given to MetadataManager");
         }
         this.proxies = proxies;
-        this.metadataLatch = new ReentrantReadWriteLock(true);
     }
 
     protected abstract TxnId createTxnId();
@@ -722,26 +720,6 @@ public abstract class MetadataManager implements IMetadataManager {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         return library;
-    }
-
-    @Override
-    public void acquireWriteLatch() {
-        metadataLatch.writeLock().lock();
-    }
-
-    @Override
-    public void releaseWriteLatch() {
-        metadataLatch.writeLock().unlock();
-    }
-
-    @Override
-    public void acquireReadLatch() {
-        metadataLatch.readLock().lock();
-    }
-
-    @Override
-    public void releaseReadLatch() {
-        metadataLatch.readLock().unlock();
     }
 
     @Override

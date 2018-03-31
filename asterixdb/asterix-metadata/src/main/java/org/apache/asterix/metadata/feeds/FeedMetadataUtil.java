@@ -296,7 +296,6 @@ public class FeedMetadataUtil {
         }
 
         MetadataTransactionContext ctx = null;
-        MetadataManager.INSTANCE.acquireReadLatch();
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
             Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, dataverseName, datatypeName);
@@ -314,8 +313,6 @@ public class FeedMetadataUtil {
                 }
                 throw new MetadataException(ErrorCode.FEED_CREATE_FEED_DATATYPE_ERROR, e, datatypeName);
             }
-        } finally {
-            MetadataManager.INSTANCE.releaseReadLatch();
         }
         return outputType;
     }

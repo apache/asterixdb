@@ -519,14 +519,6 @@ public interface IMetadataManager extends IMetadataBootstrap {
 
     int getMostRecentDatasetId() throws AlgebricksException;
 
-    void acquireWriteLatch();
-
-    void releaseWriteLatch();
-
-    void acquireReadLatch();
-
-    void releaseReadLatch();
-
     /**
      * Removes a library , acquiring local locks on behalf of the given transaction
      * id.

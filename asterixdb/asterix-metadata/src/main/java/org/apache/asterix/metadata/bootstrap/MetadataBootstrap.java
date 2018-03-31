@@ -66,7 +66,6 @@ import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerFactory;
 import org.apache.asterix.transaction.management.resource.DatasetLocalResourceFactory;
-import org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LockManagerConstants.LockMode;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -375,35 +374,23 @@ public class MetadataBootstrap {
         // as traversing all records from DATAVERSE_DATASET to DATASET_DATASET, and then
         // to INDEX_DATASET.
         MetadataTransactionContext mdTxnCtx = null;
-        MetadataManager.INSTANCE.acquireWriteLatch();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Starting DDL recovery ...");
-        }
-
+        LOGGER.info("Starting DDL recovery ...");
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
             for (Dataverse dataverse : dataverses) {
                 recoverDataverse(mdTxnCtx, dataverse);
             }
-            // the commit wasn't there before. yet, everything was working
-            // correctly!!!!!!!!!!!
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Completed DDL recovery.");
-            }
+            LOGGER.info("Completed DDL recovery.");
         } catch (Exception e) {
             try {
-                if (IS_DEBUG_MODE) {
-                    LOGGER.log(Level.ERROR, "Failure during DDL recovery", e);
-                }
+                LOGGER.error("Failure during DDL recovery", e);
                 MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
             } catch (Exception e2) {
                 e.addSuppressed(e2);
             }
-            throw new MetadataException(e);
-        } finally {
-            MetadataManager.INSTANCE.releaseWriteLatch();
+            throw MetadataException.create(e);
         }
     }
 
