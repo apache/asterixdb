@@ -28,6 +28,7 @@ import org.apache.asterix.common.TestDataUtil;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.ExceptionUtils;
@@ -64,6 +65,8 @@ public class LogManagerTest {
     @Before
     public void setUp() throws Exception {
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, TEST_CONFIG_FILE_NAME);
+        // use a small page size for test purpose
+        integrationUtil.addOption(TransactionProperties.Option.TXN_LOG_BUFFER_PAGESIZE, 128 * 1024);
         integrationUtil.init(true, TEST_CONFIG_FILE_NAME);
     }
 

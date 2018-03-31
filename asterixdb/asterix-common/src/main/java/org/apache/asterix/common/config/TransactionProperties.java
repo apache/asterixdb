@@ -38,7 +38,7 @@ public class TransactionProperties extends AbstractProperties {
         TXN_LOG_BUFFER_NUMPAGES(INTEGER, 8, "The number of pages in the transaction log tail"),
         TXN_LOG_BUFFER_PAGESIZE(
                 INTEGER_BYTE_UNIT,
-                StorageUtil.getIntSizeInBytes(128, KILOBYTE),
+                StorageUtil.getIntSizeInBytes(4, MEGABYTE),
                 "The page size (in bytes) for transaction log buffer"),
         TXN_LOG_PARTITIONSIZE(
                 LONG_BYTE_UNIT,

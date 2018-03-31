@@ -368,7 +368,7 @@ The following parameters are configured under the "[common]" section.
 | common  | txn.lock.timeout.sweepthreshold           | Interval (in milliseconds) for checking lock timeout | 10000 |
 | common  | txn.lock.timeout.waitthreshold            | Time out (in milliseconds) of waiting for a lock | 60000 |
 | common  | txn.log.buffer.numpages                   | The number of pages in the transaction log tail | 8 |
-| common  | txn.log.buffer.pagesize                   | The page size (in bytes) for transaction log buffer | 131072 (128 kB) |
+| common  | txn.log.buffer.pagesize                   | The page size (in bytes) for transaction log buffer | 4194304 (4MB) |
 | common  | txn.log.checkpoint.history                | The number of checkpoints to keep in the transaction log | 0 |
 | common  | txn.log.checkpoint.lsnthreshold           | The checkpoint threshold (in terms of LSNs (log sequence numbers) that have been written to the transaction log, i.e., the length of the transaction log) for transaction logs | 67108864 (64 MB) |
 | common  | txn.log.checkpoint.pollfrequency          | The frequency (in seconds) the checkpoint thread should check to see if a checkpoint should be written | 120 |
