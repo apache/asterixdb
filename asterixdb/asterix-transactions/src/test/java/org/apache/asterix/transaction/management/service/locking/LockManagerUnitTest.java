@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ITransactionContext;
@@ -106,7 +107,7 @@ public class LockManagerUnitTest {
         reqs.add(req(Kind.LOCK, j(2), d(1), e(1), LockMode.X));
         reqs.add(req(Kind.PRINT));
         reqs.add(req(Kind.INSTANT_LOCK, j(3), d(1), e(1), LockMode.S));
-        expectError(execute(reqs), j(3), WaitInterruptedException.class);
+        expectError(execute(reqs), j(3), ACIDException.class);
     }
 
     @Test
