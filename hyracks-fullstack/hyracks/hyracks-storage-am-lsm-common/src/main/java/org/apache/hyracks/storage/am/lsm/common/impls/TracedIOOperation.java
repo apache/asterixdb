@@ -27,6 +27,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
+import org.apache.hyracks.util.trace.TraceUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,14 +49,14 @@ class TracedIOOperation implements ILSMIOOperation {
 
     public static ILSMIOOperation wrap(final ILSMIOOperation ioOp, final ITracer tracer) {
         final String ioOpName = ioOp.getIOOpertionType().name().toLowerCase();
-        final long traceCategorySchedule = tracer.getRegistry().get("schedule-" + ioOpName);
-        if (tracer.isEnabled(traceCategorySchedule)) {
-            tracer.instant(ioOp.getTarget().getRelativePath(), traceCategorySchedule, Scope.p, null);
+        final long traceCategory = tracer.getRegistry().get(TraceUtils.INDEX_IO_OPERATIONS);
+        if (tracer.isEnabled(traceCategory)) {
+            tracer.instant("schedule-" + ioOpName, traceCategory, Scope.p,
+                    "{\"path\": \"" + ioOp.getTarget().getRelativePath() + "\"}");
         }
-        final long traceCategoryExec = tracer.getRegistry().get(ioOpName);
-        if (tracer.isEnabled(traceCategoryExec)) {
-            return ioOp instanceof Comparable ? new ComparableTracedIOOperation(ioOp, tracer, traceCategoryExec)
-                    : new TracedIOOperation(ioOp, tracer, traceCategoryExec);
+        if (tracer.isEnabled(traceCategory)) {
+            return ioOp instanceof Comparable ? new ComparableTracedIOOperation(ioOp, tracer, traceCategory)
+                    : new TracedIOOperation(ioOp, tracer, traceCategory);
         }
         return ioOp;
     }
@@ -91,7 +92,8 @@ class TracedIOOperation implements ILSMIOOperation {
         try {
             return ioOp.call();
         } finally {
-            tracer.durationE(name, traceCategory, tid, "{\"size\":" + getTarget().getFile().length() + "}");
+            tracer.durationE(ioOp.getIOOpertionType().name().toLowerCase(), traceCategory, tid, "{\"size\":"
+                    + getTarget().getFile().length() + ", \"path\": \"" + ioOp.getTarget().getRelativePath() + "\"}");
         }
     }
 

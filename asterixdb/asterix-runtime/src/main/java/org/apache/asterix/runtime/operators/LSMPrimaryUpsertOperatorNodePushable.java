@@ -21,6 +21,8 @@ package org.apache.asterix.runtime.operators;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
@@ -68,6 +70,9 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.util.trace.ITracer;
+import org.apache.hyracks.util.trace.ITracer.Scope;
+import org.apache.hyracks.util.trace.TraceUtils;
 
 public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
@@ -98,7 +103,9 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     private final ISearchOperationCallbackFactory searchCallbackFactory;
     private final IFrameTupleProcessor processor;
     private LSMTreeIndexAccessor lsmAccessor;
-    private IIndexAccessParameters iap;
+    private final ITracer tracer;
+    private final long traceCategory;
+    private long lastRecordInTimeStamp = 0L;
 
     public LSMPrimaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
@@ -190,6 +197,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 lsmAccessor.getCtx().setOperation(IndexOperation.UPSERT);
             }
         };
+        tracer = ctx.getJobletContext().getServiceContext().getTracer();
+        traceCategory = tracer.getRegistry().get(TraceUtils.LATENCY);
     }
 
     // we have the permutation which has [pk locations, record location, optional:filter-location]
@@ -226,7 +235,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             abstractModCallback = (AbstractIndexModificationOperationCallback) modCallback;
             searchCallback = (LockThenSearchOperationCallback) searchCallbackFactory
                     .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, this);
-            iap = new IndexAccessParameters(abstractModCallback, searchCallback);
+            IIndexAccessParameters iap = new IndexAccessParameters(abstractModCallback, searchCallback);
             indexAccessor = index.createAccessor(iap);
             lsmAccessor = (LSMTreeIndexAccessor) indexAccessor;
             cursor = indexAccessor.createSearchCursor(false);
@@ -289,7 +298,11 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
+        int itemCount = accessor.getTupleCount();
         lsmAccessor.batchOperate(accessor, tuple, processor, frameOpCallback);
+        if (itemCount > 0) {
+            lastRecordInTimeStamp = System.currentTimeMillis();
+        }
     }
 
     private void appendFilterToOutput() throws IOException {
@@ -366,12 +379,22 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
     @Override
     public void close() throws HyracksDataException {
-        Throwable failure = CleanupUtils.close(frameOpCallback, null);
-        failure = CleanupUtils.destroy(failure, cursor);
-        failure = CleanupUtils.close(writer, failure);
-        failure = CleanupUtils.close(indexHelper, failure);
-        if (failure != null) {
-            throw HyracksDataException.create(failure);
+        try {
+            Throwable failure = CleanupUtils.close(frameOpCallback, null);
+            failure = CleanupUtils.destroy(failure, cursor);
+            failure = CleanupUtils.close(writer, failure);
+            failure = CleanupUtils.close(indexHelper, failure);
+            if (failure != null) {
+                throw HyracksDataException.create(failure);
+            }
+        } finally {
+            if (tracer.isEnabled(traceCategory) && lastRecordInTimeStamp > 0) {
+                tracer.instant("UpsertClose", traceCategory, Scope.t,
+                        "{\"last-record-in\":\""
+                                + new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+                                        .format(new Date(lastRecordInTimeStamp))
+                                + "\", \"index\":" + indexHelper.getIndexInstance().toString() + "}");
+            }
         }
     }
 

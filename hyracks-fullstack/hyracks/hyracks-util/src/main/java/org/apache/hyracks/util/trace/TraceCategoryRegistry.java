@@ -22,15 +22,15 @@ package org.apache.hyracks.util.trace;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class TraceCategoryRegistry implements ITraceCategoryRegistry {
 
-    private Map<String, Long> categories = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, Long> categories = Collections.synchronizedMap(new HashMap<>());
+    private final String[] names = new String[NO_CATEGORIES];
     private int bitPos = 0;
 
     public TraceCategoryRegistry() {
-        categories.put("*", ITraceCategoryRegistry.CATEGORIES_ALL);
+        categories.put(CATEGORIES_ALL_NAME, ITraceCategoryRegistry.CATEGORIES_ALL);
     }
 
     @Override
@@ -38,33 +38,40 @@ public class TraceCategoryRegistry implements ITraceCategoryRegistry {
         return categories.computeIfAbsent(name, this::nextCode);
     }
 
-    private long nextCode(String name) {
+    private synchronized long nextCode(String name) {
         if (bitPos > NO_CATEGORIES - 1) {
             throw new IllegalStateException("Cannot add category " + name);
         }
+        names[bitPos] = name;
         return 1L << bitPos++;
     }
 
     @Override
-    public long get(String... names) {
-        long result = 0;
-        for (String name : names) {
-            result |= get(name);
-        }
-        return result;
-    }
-
-    private Optional<Map.Entry<String, Long>> findEntry(long categoryCode) {
-        return categories.entrySet().stream().filter(e -> e.getValue() == categoryCode).findFirst();
-    }
-
-    @Override
     public String getName(long categoryCode) {
-        Optional<Map.Entry<String, Long>> entry = findEntry(categoryCode);
-        if (!entry.isPresent()) {
+        if (CATEGORIES_ALL == categoryCode) {
+            return CATEGORIES_ALL_NAME;
+        }
+        if (categoryCode == 0) {
+            throw new IllegalArgumentException("Illegal category code " + categoryCode);
+        }
+        int postition = mostSignificantBit(categoryCode);
+        if (postition >= bitPos) {
             throw new IllegalArgumentException("No category for code " + categoryCode);
         }
-        return entry.get().getKey();
+        return nameAt(postition);
+    }
+
+    public String nameAt(int n) {
+        return names[n];
+    }
+
+    public static int mostSignificantBit(long n) {
+        int pos = -1;
+        while (n != 0) {
+            pos++;
+            n = n >>> 1;
+        }
+        return pos;
     }
 
     @Override
@@ -72,11 +79,10 @@ public class TraceCategoryRegistry implements ITraceCategoryRegistry {
         StringBuilder sb = new StringBuilder();
         for (int pos = 0; pos < NO_CATEGORIES; ++pos) {
             long categoryCode = 1L << pos;
-            Optional<Map.Entry<String, Long>> entry = findEntry(categoryCode);
-            if (!entry.isPresent()) {
+            String name = nameAt(pos);
+            if (name == null) {
                 continue;
             }
-            String name = entry.get().getKey();
             String codeString = Long.toBinaryString(categoryCode);
             sb.append(name).append(" -> ").append(codeString).append(' ');
         }

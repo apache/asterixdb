@@ -96,6 +96,7 @@ import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
 import org.apache.hyracks.util.PidHelper;
 import org.apache.hyracks.util.trace.ITracer;
+import org.apache.hyracks.util.trace.TraceUtils;
 import org.apache.hyracks.util.trace.Tracer;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -713,7 +714,7 @@ public class NodeControllerService implements IControllerService {
 
         public TraceCurrentTimeTask(ITracer tracer) {
             this.tracer = tracer;
-            this.traceCategory = tracer.getRegistry().get("Timestamp");
+            this.traceCategory = tracer.getRegistry().get(TraceUtils.TIMESTAMP);
         }
 
         @Override
