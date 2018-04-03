@@ -19,7 +19,9 @@
 package org.apache.hyracks.util;
 
 import java.io.IOException;
+import java.lang.management.LockInfo;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
@@ -28,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -100,8 +104,62 @@ public class ThreadDumpUtil {
     }
 
     public static String takeDumpString() {
-        StringBuilder buf = new StringBuilder(2048);
-        Stream.of(threadMXBean.dumpAllThreads(true, true)).forEach(buf::append);
-        return buf.toString();
+        ThreadDumpHelper helper = new ThreadDumpHelper();
+        Stream.of(threadMXBean.dumpAllThreads(true, true)).forEach(helper::addThread);
+        return helper.dumpAsString();
+    }
+
+    static class ThreadDumpHelper {
+
+        private final StringBuilder buf = new StringBuilder(32 * 1024);
+
+        private ThreadDumpHelper() {
+        }
+
+        private void addThread(ThreadInfo ti) {
+            buf.append('\n');
+            quote(ti.getThreadName()).append(" [tid=").append(ti.getThreadId()).append(" state=")
+                    .append(ti.getThreadState());
+
+            if (ti.getLockName() != null) {
+                buf.append(" lock=").append(ti.getLockName());
+                if (ti.getLockOwnerName() != null) {
+                    buf.append(" lockOwner=");
+                    quote(ti.getLockOwnerName()).append(" (tid=").append(ti.getLockOwnerId());
+                }
+            }
+            if (ti.isSuspended()) {
+                buf.append(" suspended=true");
+            }
+            buf.append("]\n");
+            MutableInt depth = new MutableInt();
+            for (StackTraceElement frame : ti.getStackTrace()) {
+                int thisDepth = depth.getAndIncrement();
+                buf.append("\tat ").append(frame).append('\n');
+                Stream.of(ti.getLockedMonitors()).filter(m -> m.getLockedStackDepth() == thisDepth)
+                        .forEach(this::output);
+            }
+            LockInfo[] lockedSynchronizers = ti.getLockedSynchronizers();
+            if (lockedSynchronizers.length > 0) {
+                buf.append("\n\tLocked synchronizers:\n");
+                Stream.of(lockedSynchronizers).forEachOrdered(this::output);
+            }
+        }
+
+        private StringBuilder quote(Object quotable) {
+            return buf.append('"').append(quotable).append('"');
+        }
+
+        private StringBuilder output(MonitorInfo info) {
+            return buf.append("\t- <").append("locked ").append(info).append(">\n");
+        }
+
+        private StringBuilder output(LockInfo info) {
+            return buf.append("\t- ").append("").append(info).append("\n");
+        }
+
+        public String dumpAsString() {
+            return buf.toString();
+        }
     }
 }
