@@ -28,6 +28,7 @@ import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -68,6 +69,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
     protected ILSMComponentId[] nextComponentIds;
 
     protected final ILSMComponentIdGenerator idGenerator;
+    protected final ArrayBackedValueStorage buffer = new ArrayBackedValueStorage(Long.BYTES);
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private final Map<ILSMComponentId, Long> componentLsnMap = new HashMap<>();
 
@@ -128,7 +130,7 @@ public abstract class AbstractLSMIOOperationCallback implements ILSMIOOperationC
             }
             LongPointable markerLsn = LongPointable.FACTORY
                     .createPointable(ComponentUtils.getLong(opCtx.getComponentsToBeMerged().get(0).getMetadata(),
-                            ComponentUtils.MARKER_LSN_KEY, ComponentUtils.NOT_FOUND));
+                            ComponentUtils.MARKER_LSN_KEY, ComponentUtils.NOT_FOUND, buffer));
             opCtx.getNewComponent().getMetadata().put(ComponentUtils.MARKER_LSN_KEY, markerLsn);
         } else if (opCtx.getIoOperationType() == LSMIOOperationType.FLUSH) {
             // advance memory component indexes

@@ -31,6 +31,7 @@ import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
@@ -78,6 +79,7 @@ public class RecordNamesDescriptor extends AbstractScalarFunctionDynamicDescript
                     private final IPointable argPtr = new VoidPointable();
                     private final ARecordPointable recordPointable =
                             (ARecordPointable) ARecordPointable.FACTORY.createPointable();
+                    private final AOrderedListType listType = new AOrderedListType(BuiltinType.ASTRING, null);
                     private final OrderedListBuilder listBuilder = new OrderedListBuilder();
                     private final ArrayBackedValueStorage itemStorage = new ArrayBackedValueStorage();
                     private final DataOutput itemOut = itemStorage.getDataOutput();
@@ -100,7 +102,7 @@ public class RecordNamesDescriptor extends AbstractScalarFunctionDynamicDescript
 
                         recordPointable.set(data, offset, argPtr.getLength());
 
-                        listBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+                        listBuilder.reset(listType);
 
                         try {
                             for (int i = 0, n = recordPointable.getSchemeFieldCount(recType); i < n; i++) {

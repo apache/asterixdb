@@ -107,9 +107,11 @@ import org.apache.asterix.om.typecomputer.impl.StringToStringListTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SubsetCollectionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SubstringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.SwitchCaseComputer;
+import org.apache.asterix.om.typecomputer.impl.ToArrayTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToBigIntTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToDoubleTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToNumberTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ToObjectTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryBinaryInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryMinusTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryStringInt64TypeComputer;
@@ -997,16 +999,22 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier IF_NAN_OR_INF =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-nan-or-inf", FunctionIdentifier.VARARGS);
 
-    public static final FunctionIdentifier TO_BOOLEAN =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-boolean", 1);
-    public static final FunctionIdentifier TO_STRING =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-string", 1);
-    public static final FunctionIdentifier TO_DOUBLE =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-double", 1);
+    public static final FunctionIdentifier TO_ATOMIC =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-atomic", 1);
+    public static final FunctionIdentifier TO_ARRAY =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-array", 1);
     public static final FunctionIdentifier TO_BIGINT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-bigint", 1);
+    public static final FunctionIdentifier TO_BOOLEAN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-boolean", 1);
+    public static final FunctionIdentifier TO_DOUBLE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-double", 1);
     public static final FunctionIdentifier TO_NUMBER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-number", 1);
+    public static final FunctionIdentifier TO_OBJECT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-object", 1);
+    public static final FunctionIdentifier TO_STRING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-string", 1);
 
     public static final FunctionIdentifier EXTERNAL_LOOKUP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "external-lookup", FunctionIdentifier.VARARGS);
@@ -1193,11 +1201,14 @@ public class BuiltinFunctions {
         addFunction(RANGE, AInt64TypeComputer.INSTANCE, true);
         addFunction(RECTANGLE_CONSTRUCTOR, ARectangleTypeComputer.INSTANCE, true);
 
-        addFunction(TO_BOOLEAN, ABooleanTypeComputer.INSTANCE, true);
-        addFunction(TO_STRING, AStringTypeComputer.INSTANCE, true);
-        addFunction(TO_DOUBLE, ToDoubleTypeComputer.INSTANCE, true);
+        addFunction(TO_ATOMIC, AnyTypeComputer.INSTANCE, true);
+        addFunction(TO_ARRAY, ToArrayTypeComputer.INSTANCE, true);
         addFunction(TO_BIGINT, ToBigIntTypeComputer.INSTANCE, true);
+        addFunction(TO_BOOLEAN, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(TO_DOUBLE, ToDoubleTypeComputer.INSTANCE, true);
         addFunction(TO_NUMBER, ToNumberTypeComputer.INSTANCE, true);
+        addFunction(TO_OBJECT, ToObjectTypeComputer.INSTANCE, true);
+        addFunction(TO_STRING, AStringTypeComputer.INSTANCE, true);
 
         // Aggregate Functions
         addFunction(MAX, MinMaxAggTypeComputer.INSTANCE, true);

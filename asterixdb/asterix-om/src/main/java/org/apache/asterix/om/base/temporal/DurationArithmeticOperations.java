@@ -85,12 +85,12 @@ public class DurationArithmeticOperations {
         boolean isLeapYear = GREG_CAL.isLeapYear(year);
 
         if (isLeapYear) {
-            if (day > GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month - 1]) {
-                day = GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month - 1];
-            }
-        } else {
             if (day > GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[month - 1]) {
                 day = GregorianCalendarSystem.DAYS_OF_MONTH_LEAP[month - 1];
+            }
+        } else {
+            if (day > GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month - 1]) {
+                day = GregorianCalendarSystem.DAYS_OF_MONTH_ORDI[month - 1];
             }
         }
 

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.dataflow;
 
+import java.io.IOException;
+
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
@@ -41,6 +43,11 @@ public class NoOpFrameOperationCallbackFactory implements IFrameOperationCallbac
     private static class NoOpFrameOperationCallback implements IFrameOperationCallback {
         @Override
         public void frameCompleted() throws HyracksDataException {
+            // No Op
+        }
+
+        @Override
+        public void close() throws IOException {
             // No Op
         }
     }

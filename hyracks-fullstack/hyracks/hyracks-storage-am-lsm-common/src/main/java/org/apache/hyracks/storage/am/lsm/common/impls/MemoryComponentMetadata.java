@@ -20,10 +20,10 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
@@ -35,61 +35,94 @@ import org.apache.logging.log4j.Logger;
 
 public class MemoryComponentMetadata implements IComponentMetadata {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final byte[] empty = new byte[0];
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     private final List<org.apache.commons.lang3.tuple.Pair<IValueReference, ArrayBackedValueStorage>> store =
             new ArrayList<>();
 
     /**
      * Note: for memory metadata, it is expected that the key will be constant
+     *
+     * @throws HyracksDataException
      */
     @Override
-    public void put(IValueReference key, IValueReference value) {
-        ArrayBackedValueStorage stored = get(key);
-        if (stored == null) {
-            stored = new ArrayBackedValueStorage();
-            store.add(Pair.of(key, stored));
+    public void put(IValueReference key, IValueReference value) throws HyracksDataException {
+        lock.writeLock().lock();
+        try {
+            ArrayBackedValueStorage stored = get(key);
+            if (stored == null) {
+                stored = new ArrayBackedValueStorage();
+                store.add(Pair.of(key, stored));
+            }
+            stored.assign(value);
+        } finally {
+            lock.writeLock().unlock();
         }
-        stored.assign(value);
     }
 
     /**
      * Note: for memory metadata, it is expected that the key will be constant
+     *
+     * @throws HyracksDataException
      */
     @Override
-    public void get(IValueReference key, IPointable value) {
-        value.set(empty, 0, 0);
-        ArrayBackedValueStorage stored = get(key);
-        if (stored != null) {
-            value.set(stored);
+    public void get(IValueReference key, ArrayBackedValueStorage value) throws HyracksDataException {
+        lock.readLock().lock();
+        try {
+            value.reset();
+            ArrayBackedValueStorage stored = get(key);
+            if (stored != null) {
+                value.append(stored);
+            }
+        } finally {
+            lock.readLock().unlock();
         }
     }
 
-    @Override
-    public ArrayBackedValueStorage get(IValueReference key) {
-        for (Pair<IValueReference, ArrayBackedValueStorage> pair : store) {
-            if (pair.getKey().equals(key)) {
-                return pair.getValue();
+    private ArrayBackedValueStorage get(IValueReference key) {
+        lock.readLock().lock();
+        try {
+            for (Pair<IValueReference, ArrayBackedValueStorage> pair : store) {
+                if (pair.getKey().equals(key)) {
+                    return pair.getValue();
+                }
             }
+            return null;
+        } finally {
+            lock.readLock().unlock();
         }
-        return null;
     }
 
     public void copy(IMetadataPageManager mdpManager) throws HyracksDataException {
-        LOGGER.log(Level.INFO, "Copying Metadata into a different component");
-        ITreeIndexMetadataFrame frame = mdpManager.createMetadataFrame();
-        for (Pair<IValueReference, ArrayBackedValueStorage> pair : store) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.log(Level.INFO, "Copying " + pair.getKey() + " : " + pair.getValue().getLength() + " bytes");
+        lock.readLock().lock();
+        try {
+            LOGGER.log(Level.INFO, "Copying Metadata into a different component");
+            ITreeIndexMetadataFrame frame = mdpManager.createMetadataFrame();
+            for (Pair<IValueReference, ArrayBackedValueStorage> pair : store) {
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.log(Level.INFO, "Copying " + pair.getKey() + " : " + pair.getValue().getLength() + " bytes");
+                }
+                mdpManager.put(frame, pair.getKey(), pair.getValue());
             }
-            mdpManager.put(frame, pair.getKey(), pair.getValue());
+        } finally {
+            lock.readLock().unlock();
         }
     }
 
     public void copy(DiskComponentMetadata metadata) throws HyracksDataException {
-        metadata.put(this);
+        lock.readLock().lock();
+        try {
+            metadata.put(this);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public void reset() {
-        store.clear();
+        lock.writeLock().lock();
+        try {
+            store.clear();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 }

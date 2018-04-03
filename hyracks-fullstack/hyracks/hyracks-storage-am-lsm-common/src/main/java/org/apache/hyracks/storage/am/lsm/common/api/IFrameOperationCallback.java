@@ -18,13 +18,14 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
+import java.io.Closeable;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An interface that is used to enable frame level operation on indexes
  */
-@FunctionalInterface
-public interface IFrameOperationCallback {
+public interface IFrameOperationCallback extends Closeable {
     /**
      * Called once processing the frame is done before calling nextFrame on the next IFrameWriter in
      * the pipeline

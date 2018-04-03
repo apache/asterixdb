@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
@@ -37,6 +38,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final DiskComponentMetadata metadata;
+    private final ArrayBackedValueStorage buffer = new ArrayBackedValueStorage(Long.BYTES);
 
     // a variable cache of componentId stored in metadata.
     // since componentId is immutable, we do not want to read from metadata every time the componentId
@@ -122,7 +124,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
         }
         synchronized (this) {
             if (componentId == null) {
-                componentId = LSMComponentIdUtils.readFrom(metadata);
+                componentId = LSMComponentIdUtils.readFrom(metadata, buffer);
             }
         }
         if (componentId.missing()) {

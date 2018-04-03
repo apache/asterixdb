@@ -146,7 +146,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                 }
             }
         } catch (InterruptedException e) {
-            throw new WaitInterruptedException(txnContext, "interrupted", e);
+            Thread.currentThread().interrupt();
+            throw new ACIDException(e);
         } finally {
             group.releaseLatch();
         }
@@ -371,7 +372,8 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
                 }
             }
         } catch (InterruptedException e) {
-            throw new WaitInterruptedException(txnContext, "interrupted", e);
+            Thread.currentThread().interrupt();
+            throw new ACIDException(e);
         } finally {
             if (reqSlot != NILL) {
                 // deallocate request, if we allocated one earlier

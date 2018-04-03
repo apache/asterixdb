@@ -19,9 +19,8 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
 
@@ -39,15 +38,8 @@ public class DiskComponentMetadata implements IComponentMetadata {
     }
 
     @Override
-    public void get(IValueReference key, IPointable value) throws HyracksDataException {
+    public void get(IValueReference key, ArrayBackedValueStorage value) throws HyracksDataException {
         mdpManager.get(mdpManager.createMetadataFrame(), key, value);
-    }
-
-    @Override
-    public IValueReference get(IValueReference key) throws HyracksDataException {
-        VoidPointable value = VoidPointable.FACTORY.createPointable();
-        get(key, value);
-        return value;
     }
 
     public void put(MemoryComponentMetadata metadata) throws HyracksDataException {

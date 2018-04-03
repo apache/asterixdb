@@ -18,11 +18,13 @@
  */
 package org.apache.hyracks.storage.am.common.api;
 
+import java.io.Closeable;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.LocalResource;
 
-public interface IIndexDataflowHelper {
+public interface IIndexDataflowHelper extends Closeable {
 
     /**
      * If open throws an exception, it means that the index was not opened successfully.
@@ -36,6 +38,7 @@ public interface IIndexDataflowHelper {
      *
      * @throws HyracksDataException
      */
+    @Override
     void close() throws HyracksDataException;
 
     /**

@@ -67,6 +67,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
+import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -91,13 +92,16 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             BuiltinFunctions.GET_RECORD_FIELDS, BuiltinFunctions.GET_RECORD_FIELD_VALUE,
             BuiltinFunctions.FIELD_ACCESS_NESTED, BuiltinFunctions.GET_ITEM, BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR,
             BuiltinFunctions.FIELD_ACCESS_BY_INDEX, BuiltinFunctions.CAST_TYPE, BuiltinFunctions.META,
-            BuiltinFunctions.META_KEY, BuiltinFunctions.RECORD_CONCAT, BuiltinFunctions.RECORD_CONCAT_STRICT);
+            BuiltinFunctions.META_KEY, BuiltinFunctions.RECORD_CONCAT, BuiltinFunctions.RECORD_CONCAT_STRICT,
+            BuiltinFunctions.TO_ATOMIC, BuiltinFunctions.TO_ARRAY);
 
-    /** Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method. */
+    /**
+     * Throws exceptions in substituiteProducedVariable, setVarType, and one getVarType method.
+     */
     private static final IVariableTypeEnvironment _emptyTypeEnv = new IVariableTypeEnvironment() {
 
         @Override
-        public boolean substituteProducedVariable(LogicalVariable v1, LogicalVariable v2) throws AlgebricksException {
+        public boolean substituteProducedVariable(LogicalVariable v1, LogicalVariable v2) {
             throw new IllegalStateException();
         }
 
@@ -108,12 +112,12 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
         @Override
         public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariables,
-                List<List<LogicalVariable>> correlatedNullableVariableLists) throws AlgebricksException {
+                List<List<LogicalVariable>> correlatedNullableVariableLists) {
             throw new IllegalStateException();
         }
 
         @Override
-        public Object getVarType(LogicalVariable var) throws AlgebricksException {
+        public Object getVarType(LogicalVariable var) {
             throw new IllegalStateException();
         }
 
@@ -170,14 +174,13 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         }
 
         @Override
-        public Pair<Boolean, ILogicalExpression> visitConstantExpression(ConstantExpression expr, Void arg)
-                throws AlgebricksException {
+        public Pair<Boolean, ILogicalExpression> visitConstantExpression(ConstantExpression expr, Void arg) {
             return new Pair<>(false, expr);
         }
 
         @Override
         public Pair<Boolean, ILogicalExpression> visitVariableReferenceExpression(VariableReferenceExpression expr,
-                Void arg) throws AlgebricksException {
+                Void arg) {
             return new Pair<>(false, expr);
         }
 
@@ -194,31 +197,33 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 return new Pair<>(false, null);
             }
 
-            //Current List SerDe assumes a strongly typed list, so we do not constant fold the list constructors if they are not strongly typed
-            if (expr.getFunctionIdentifier().equals(BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
-                    || expr.getFunctionIdentifier().equals(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
-                AbstractCollectionType listType = (AbstractCollectionType) TypeCastUtils.getRequiredType(expr);
-                if (listType != null && (listType.getItemType().getTypeTag() == ATypeTag.ANY
-                        || listType.getItemType() instanceof AbstractCollectionType)) {
-                    //case1: listType == null,  could be a nested list inside a list<ANY>
-                    //case2: itemType = ANY
-                    //case3: itemType = a nested list
-                    return new Pair<>(false, null);
-                }
-            }
-            if (expr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
-                ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
-                String str = ConstantExpressionUtil.getStringConstant(expr.getArguments().get(1).getValue());
-                int k = rt.getFieldIndex(str);
-                if (k >= 0) {
-                    // wait for the ByNameToByIndex rule to apply
-                    return new Pair<>(changed, expr);
-                }
-            }
-
-            IScalarEvaluatorFactory fact = jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
-                    _emptyTypeEnv, _emptySchemas, jobGenCtx);
             try {
+                // Current List SerDe assumes a strongly typed list, so we do not constant fold the list constructors
+                // if they are not strongly typed
+                if (expr.getFunctionIdentifier().equals(BuiltinFunctions.UNORDERED_LIST_CONSTRUCTOR)
+                        || expr.getFunctionIdentifier().equals(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR)) {
+                    AbstractCollectionType listType = (AbstractCollectionType) TypeCastUtils.getRequiredType(expr);
+                    if (listType != null && (listType.getItemType().getTypeTag() == ATypeTag.ANY
+                            || listType.getItemType() instanceof AbstractCollectionType)) {
+                        //case1: listType == null,  could be a nested list inside a list<ANY>
+                        //case2: itemType = ANY
+                        //case3: itemType = a nested list
+                        return new Pair<>(false, null);
+                    }
+                }
+                if (expr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
+                    ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
+                    String str = ConstantExpressionUtil.getStringConstant(expr.getArguments().get(1).getValue());
+                    int k = rt.getFieldIndex(str);
+                    if (k >= 0) {
+                        // wait for the ByNameToByIndex rule to apply
+                        return new Pair<>(changed, expr);
+                    }
+                }
+
+                IScalarEvaluatorFactory fact = jobGenCtx.getExpressionRuntimeProvider().createEvaluatorFactory(expr,
+                        _emptyTypeEnv, _emptySchemas, jobGenCtx);
+
                 IScalarEvaluator eval = fact.createScalarEvaluator(null);
                 eval.evaluate(null, p);
                 Object t = _emptyTypeEnv.getType(expr);
@@ -229,8 +234,11 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 bbis.setByteBuffer(ByteBuffer.wrap(p.getByteArray(), p.getStartOffset(), p.getLength()), 0);
                 IAObject o = (IAObject) serde.deserialize(dis);
                 return new Pair<>(true, new ConstantExpression(new AsterixConstantValue(o)));
-            } catch (HyracksDataException e) {
-                throw new AlgebricksException(e);
+            } catch (HyracksDataException | AlgebricksException e) {
+                if (AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled()) {
+                    AlgebricksConfig.ALGEBRICKS_LOGGER.debug("Exception caught at constant folding: " + e, e);
+                }
+                return new Pair<>(false, null);
             }
         }
 
@@ -267,7 +275,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             return changed;
         }
 
-        private boolean checkArgs(AbstractFunctionCallExpression expr) throws AlgebricksException {
+        private boolean checkArgs(AbstractFunctionCallExpression expr) {
             for (Mutable<ILogicalExpression> r : expr.getArguments()) {
                 if (r.getValue().getExpressionTag() != LogicalExpressionTag.CONSTANT) {
                     return false;

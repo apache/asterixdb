@@ -74,4 +74,8 @@ public class BaseOperationTracker implements ITransactionOperationTracker {
         dsInfo.untouch();
         dsInfo.getIndexes().get(resourceId).untouch();
     }
+
+    public DatasetInfo getDatasetInfo() {
+        return dsInfo;
+    }
 }

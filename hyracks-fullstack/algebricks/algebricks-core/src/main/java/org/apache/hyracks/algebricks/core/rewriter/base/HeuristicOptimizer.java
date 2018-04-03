@@ -90,7 +90,7 @@ public class HeuristicOptimizer {
             final LogicalOperatorPrettyPrintVisitor pvisitor = context.getPrettyPrintVisitor();
             pvisitor.reset(new AlgebricksAppendable());
             PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
-            AlgebricksConfig.ALGEBRICKS_LOGGER.info(name + ":\n" + pvisitor.get().toString());
+            AlgebricksConfig.ALGEBRICKS_LOGGER.log(lvl, name + ":\n" + pvisitor.get().toString());
         }
     }
 

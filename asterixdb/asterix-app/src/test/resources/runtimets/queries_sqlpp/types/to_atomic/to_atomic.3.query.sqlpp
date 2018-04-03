@@ -16,15 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.transaction.management.service.locking;
 
-import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.transactions.ITransactionContext;
-
-public class WaitInterruptedException extends ACIDException {
-    private static final long serialVersionUID = 1L;
-
-    public WaitInterruptedException(ITransactionContext txnContext, String message, Throwable cause) {
-        super(txnContext, message, cause);
-    }
+{
+    "t1": [ toatomic(missing) is missing, toatom(null) is null ],
+    "t2": [ to_atomic(1), to_atomic(true), to_atomic("hello") ],
+    "t3": [ to_atomic([]), to_atomic([2]), to_atomic([2,3]), to_atomic([[[[4]]]]) ],
+    "t4": [ to_atomic({{}}), to_atomic({{2}}), to_atomic({{2,3}}), to_atomic({{{{{{{{4}}}}}}}}) ],
+    "t5": [ to_atomic({}), to_atomic({"a":2}), to_atomic({"a":2, "b":3}), to_atomic({"a":{"b":{"c":{"d":4}}}}) ],
+    "t6": [ to_atomic([{"a":1}]), to_atomic([{"a":1, "b":2}]), to_atomic({"a":[{"b":[{"c":[2]}]}]}) ],
+    "t7": (
+      from range(1,4) t
+      select to_atomic(t) v1, to_atomic([t]) v2, to_atomic({"a": t}) v3, to_atomic([[{"a":[t]}]]) v4
+      order by t
+    )
 }

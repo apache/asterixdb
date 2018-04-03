@@ -22,6 +22,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.exceptions.OverflowException;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -44,7 +45,7 @@ public class NumericCaretDescriptor extends AbstractNumericArithmeticEval {
     @Override
     protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
         if (rhs > Integer.MAX_VALUE) {
-            throw new ArithmeticException("Exponent cannot be larger than 2^31-1");
+            throw new OverflowException(getIdentifier());
         }
         return LongMath.checkedPow(lhs, (int) rhs);
     }

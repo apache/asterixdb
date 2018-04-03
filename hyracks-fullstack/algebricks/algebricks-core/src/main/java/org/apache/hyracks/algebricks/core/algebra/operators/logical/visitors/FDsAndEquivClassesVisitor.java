@@ -314,9 +314,11 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
             }
         }
         if (changed) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER
-                    .debug(">>>> Group-by list changed from " + GroupByOperator.veListToString(gByList) + " to "
-                            + GroupByOperator.veListToString(newGbyList) + ".\n");
+            if (AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled()) {
+                AlgebricksConfig.ALGEBRICKS_LOGGER
+                        .debug(">>>> Group-by list changed from " + GroupByOperator.veListToString(gByList) + " to "
+                                + GroupByOperator.veListToString(newGbyList) + ".\n");
+            }
         }
         gByList.clear();
         gByList.addAll(newGbyList);

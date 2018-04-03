@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
@@ -34,6 +35,7 @@ import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
     private final LongPointable pointable = LongPointable.FACTORY.createPointable();
     private final ILSMIndex index;
+    private final ArrayBackedValueStorage buffer = new ArrayBackedValueStorage(Long.BYTES);
 
     /**
      * @param index:
@@ -53,7 +55,7 @@ public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
         long lsn;
         try {
             lsn = ComponentUtils.getLong(index.getCurrentMemoryComponent().getMetadata(), ComponentUtils.MARKER_LSN_KEY,
-                    ComponentUtils.NOT_FOUND);
+                    ComponentUtils.NOT_FOUND, buffer);
         } catch (HyracksDataException e) {
             // Should never happen since this is a memory component
             throw new IllegalStateException(e);
@@ -76,7 +78,7 @@ public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
         for (ILSMDiskComponent c : diskComponents) {
             try {
                 long lsn = ComponentUtils.getLong(c.getMetadata(), ComponentUtils.MARKER_LSN_KEY,
-                        ComponentUtils.NOT_FOUND);
+                        ComponentUtils.NOT_FOUND, buffer);
                 if (lsn != ComponentUtils.NOT_FOUND) {
                     return lsn;
                 }
@@ -101,7 +103,7 @@ public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
             if (c.isReadable()) {
                 try {
                     lsn = ComponentUtils.getLong(c.getMetadata(), ComponentUtils.MARKER_LSN_KEY,
-                            ComponentUtils.NOT_FOUND);
+                            ComponentUtils.NOT_FOUND, buffer);
                 } catch (HyracksDataException e) {
                     // Should never happen since this is a memory component
                     throw new IllegalStateException(e);
@@ -117,7 +119,11 @@ public class PrimaryIndexLogMarkerCallback implements ILogMarkerCallback {
     @Override
     public void after(long lsn) {
         pointable.setLong(lsn);
-        index.getCurrentMemoryComponent().getMetadata().put(ComponentUtils.MARKER_LSN_KEY, pointable);
+        try {
+            index.getCurrentMemoryComponent().getMetadata().put(ComponentUtils.MARKER_LSN_KEY, pointable);
+        } catch (HyracksDataException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public ILSMIndex getIndex() {

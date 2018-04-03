@@ -241,10 +241,13 @@ import org.apache.asterix.runtime.evaluators.functions.SubstringAfterDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SubstringBeforeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SubstringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SwitchCaseDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ToArrayDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ToAtomicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToBigIntDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToBooleanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToDoubleDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToNumberDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ToObjectDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToStringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.UUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.BinaryConcatDescriptor;
@@ -689,17 +692,20 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(DurationFromIntervalDescriptor.FACTORY);
 
         // Type functions.
+        fc.addGenerated(IsArrayDescriptor.FACTORY);
         fc.addGenerated(IsAtomicDescriptor.FACTORY);
         fc.addGenerated(IsBooleanDescriptor.FACTORY);
         fc.addGenerated(IsNumberDescriptor.FACTORY);
-        fc.addGenerated(IsStringDescriptor.FACTORY);
-        fc.addGenerated(IsArrayDescriptor.FACTORY);
         fc.addGenerated(IsObjectDescriptor.FACTORY);
-        fc.addGenerated(ToBooleanDescriptor.FACTORY);
-        fc.addGenerated(ToStringDescriptor.FACTORY);
-        fc.addGenerated(ToDoubleDescriptor.FACTORY);
+        fc.addGenerated(IsStringDescriptor.FACTORY);
+        fc.addGenerated(ToArrayDescriptor.FACTORY);
+        fc.addGenerated(ToAtomicDescriptor.FACTORY);
         fc.addGenerated(ToBigIntDescriptor.FACTORY);
+        fc.addGenerated(ToBooleanDescriptor.FACTORY);
+        fc.addGenerated(ToDoubleDescriptor.FACTORY);
         fc.addGenerated(ToNumberDescriptor.FACTORY);
+        fc.addGenerated(ToObjectDescriptor.FACTORY);
+        fc.addGenerated(ToStringDescriptor.FACTORY);
 
         // Cast function
         fc.addGenerated(CastTypeDescriptor.FACTORY);

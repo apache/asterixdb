@@ -19,8 +19,8 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class EmptyDiskComponentMetadata extends DiskComponentMetadata {
     public static final EmptyDiskComponentMetadata INSTANCE = new EmptyDiskComponentMetadata();
@@ -35,12 +35,7 @@ public class EmptyDiskComponentMetadata extends DiskComponentMetadata {
     }
 
     @Override
-    public void get(IValueReference key, IPointable value) throws HyracksDataException {
-        throw new IllegalStateException("Attempt to read metadata of empty component");
-    }
-
-    @Override
-    public IValueReference get(IValueReference key) throws HyracksDataException {
+    public void get(IValueReference key, ArrayBackedValueStorage value) throws HyracksDataException {
         throw new IllegalStateException("Attempt to read metadata of empty component");
     }
 
