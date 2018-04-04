@@ -44,73 +44,61 @@ Two basic forms are as follows:
         ftcontains(Expression1, Expression2, {FullTextOption})
         ftcontains(Expression1, Expression2)
 
-For example, we can execute the following query to find tweet messages where the `message-text` field includes
+For example, we can execute the following query to find Chirp messages where the `messageText` field includes
 “voice” as a word. Please note that an FTS search is case-insensitive.
 Thus, "Voice" or "voice" will be evaluated as the same word.
 
-        use dataverse TinySocial;
-
-        for $msg in dataset TweetMessages
-        where ftcontains($msg.message-text, "voice", {"mode":"any"})
-        return {"id": $msg.id}
-
-The DDL and DML of TinySocial can be found in [ADM: Modeling Semistructed Data in AsterixDB](primer.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB).
-
-The same query can be also expressed in the SQL++.
-
         use TinySocial;
 
-        select element {"id":msg.id}
-        from TweetMessages as msg
-        where TinySocial.ftcontains(msg.`message-text`, "voice", {"mode":"any"})
+        select element {"chirpId": msg.chirpId}
+        from ChirpMessages msg
+        where ftcontains(msg.messageText, "voice", {"mode":"any"});
+
+The DDL and DML of TinySocial can be found in [ADM: Modeling Semistructed Data in AsterixDB](../sqlpp/primer-sqlpp.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB).
 
 The `Expression1` is an expression that should be evaluable as a string at runtime as in the above example
-where `$msg.message-text` is a string field. The `Expression2` can be a string, an (un)ordered list
+where `msg.messageText` is a string field. The `Expression2` can be a string, an (un)ordered list
 of string value(s), or an expression. In the last case, the given expression should be evaluable
 into one of the first two types, i.e., into a string value or an (un)ordered list of string value(s).
 
 The following examples are all valid expressions.
 
-       ... where ftcontains($msg.message-text, "sound")
-       ... where ftcontains($msg.message-text, "sound", {"mode":"any"})
-       ... where ftcontains($msg.message-text, ["sound", "system"], {"mode":"any"})
-       ... where ftcontains($msg.message-text, {{"speed", "stand", "customization"}}, {"mode":"all"})
-       ... where ftcontains($msg.message-text, let $keyword_list := ["voice", "system"] return $keyword_list, {"mode":"all"})
-       ... where ftcontains($msg.message-text, $keyword_list, {"mode":"any"})
-
-In the last example above, `$keyword_list` should evaluate to a string or an (un)ordered list of string value(s).
+       ... where ftcontains(msg.messageText, "sound")
+       ... where ftcontains(msg.messageText, "sound", {"mode":"any"})
+       ... where ftcontains(msg.messageText, ["sound", "system"], {"mode":"any"})
+       ... where ftcontains(msg.messageText, {{"speed", "stand", "customization"}}, {"mode":"all"})
 
 The last `FullTextOption` parameter clarifies the given FTS request. If you omit the `FullTextOption` parameter,
 then the default value will be set for each possible option. Currently, we only have one option named `mode`.
 And as we extend the FTS feature, more options will be added. Please note that the format of `FullTextOption`
 is a record, thus you need to put the option(s) in a record `{}`.
 The `mode` option indicates whether the given FTS query is a conjunctive (AND) or disjunctive (OR) search request.
-This option can be either `“any”` or `“all”`. The default value for `mode` is `“all”`. If one specifies `“any”`,
-a disjunctive search will be conducted. For example, the following query will find documents whose `message-text`
+This option can be either `“all”` (AND) or `“any”` (OR). The default value for `mode` is `“all”`. If one specifies `“any”`,
+a disjunctive search will be conducted. For example, the following query will find documents whose `messageText`
 field contains “sound” or “system”, so a document will be returned if it contains either “sound”, “system”,
 or both of the keywords.
 
-       ... where ftcontains($msg.message-text, ["sound", "system"], {"mode":"any"})
+       ... where ftcontains(msg.messageText, ["sound", "system"], {"mode":"any"})
 
 The other option parameter,`“all”`, specifies a conjunctive search. The following examples will find the documents whose
-`message-text` field contains both “sound” and “system”. If a document contains only “sound” or “system” but
+`messageText` field contains both “sound” and “system”. If a document contains only “sound” or “system” but
 not both, it will not be returned.
 
-       ... where ftcontains($msg.message-text, ["sound", "system"], {"mode":"all"})
-       ... where ftcontains($msg.message-text, ["sound", "system"])
+       ... where ftcontains(msg.messageText, ["sound", "system"], {"mode":"all"})
+       ... where ftcontains(msg.messageText, ["sound", "system"])
 
 Currently AsterixDB doesn’t (yet) support phrase searches, so the following query will not work.
 
-       ... where ftcontains($msg.message-text, "sound system", {"mode":"any"})
+       ... where ftcontains(msg.messageText, "sound system", {"mode":"any"})
 
 As a workaround solution, the following query can be used to achieve a roughly similar goal. The difference is that
-the following queries will find documents where `$msg.message-text` contains both “sound” and “system”, but the order
+the following queries will find documents where `msg.messageText` contains both “sound” and “system”, but the order
 and adjacency of “sound” and “system” are not checked, unlike in a phrase search. As a result, the query below would
 also return documents with “sound system can be installed.”, “system sound is perfect.”,
 or “sound is not clear. You may need to install a new system.”
 
-       ... where ftcontains($msg.message-text, ["sound", "system"], {"mode":"all"})
-       ... where ftcontains($msg.message-text, ["sound", "system"])
+       ... where ftcontains(msg.messageText, ["sound", "system"], {"mode":"all"})
+       ... where ftcontains(msg.messageText, ["sound", "system"])
 
 
 ## <a id="FulltextIndex">Creating and utilizing a Full-text index</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
@@ -118,6 +106,9 @@ or “sound is not clear. You may need to install a new system.”
 When there is a full-text index on the field that is being searched, rather than scanning all records,
 AsterixDB can utilize that index to expedite the execution of a FTS query. To create a full-text index,
 you need to specify the index type as `fulltext` in your DDL statement. For instance, the following DDL
-statement create a full-text index on the TweetMessages.message-text attribute.
+statement create a full-text index on the `GleambookMessages.message` attribute. Note that a full-text index
+cannot be built on a dataset with the variable-length primary key (e.g., string).
 
-    create index messageFTSIdx on TweetMessages(message-text) type fulltext;
+    use TinySocial;
+
+    create index messageFTSIdx on GleambookMessages(message) type fulltext;

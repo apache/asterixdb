@@ -45,8 +45,8 @@ supports similarity queries using efficient indexes and algorithms.
 AsterixDB supports [edit distance](http://en.wikipedia.org/wiki/Levenshtein_distance) (on strings) and
 [Jaccard](http://en.wikipedia.org/wiki/Jaccard_index) (on sets).  For
 instance, in our
-[TinySocial](primer.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB)
-example, the `friend-ids` of a Facebook user forms a set
+[TinySocial](../sqlpp/primer-sqlpp.html#ADM:_Modeling_Semistructed_Data_in_AsterixDB)
+example, the `friendIds` of a Gleambook user forms a set
 of friends, and we can define a similarity between the sets of
 friends of two users. We can also convert a string to a set of grams of a length "n"
 (called "n-grams") and define the Jaccard similarity between the two
@@ -55,50 +55,45 @@ its substrings of length "n". For instance, the 3-grams of the string
 `schwarzenegger` are `sch`, `chw`, `hwa`, ..., `ger`.
 
 AsterixDB provides
-[tokenization functions](functions.html#Tokenizing_Functions)
+[tokenization functions](../sqlpp/builtins.html#Tokenizing_Functions)
 to convert strings to sets, and the
-[similarity functions](functions.html#Similarity_Functions).
+[similarity functions](../sqlpp/builtins.html#Similarity_Functions).
 
 ## <a id="SimilaritySelectionQueries">Similarity Selection Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 The following query
-asks for all the Facebook users whose name is similar to
+asks for all the Gleambook users whose name is similar to
 `Suzanna Tilson`, i.e., their edit distance is at most 2.
 
-        use dataverse TinySocial;
+        use TinySocial;
 
-        for $user in dataset('FacebookUsers')
-        let $ed := edit-distance($user.name, "Suzanna Tilson")
-        where $ed <= 2
-        return $user
-
+        select u
+        from GleambookUsers u
+        where edit_distance(u.name, "Suzanna Tilson") <= 2;
 
 The following query
-asks for all the Facebook users whose set of friend ids is
+asks for all the Gleambook users whose set of friend ids is
 similar to `[1,5,9,10]`, i.e., their Jaccard similarity is at least 0.6.
 
-        use dataverse TinySocial;
+        use TinySocial;
 
-        for $user in dataset('FacebookUsers')
-        let $sim := similarity-jaccard($user.friend-ids, [1,5,9,10])
-        where $sim >= 0.6f
-        return $user
-
+        select u
+        from GleambookUsers u
+        where similarity_jaccard(u.friendIds, [1,5,9,10]) >= 0.6f;
 
 AsterixDB allows a user to use a similarity operator `~=` to express a
 condition by defining the similarity function and threshold
 using "set" statements earlier. For instance, the above query can be
 equivalently written as:
 
-        use dataverse TinySocial;
+        use TinySocial;
 
         set simfunction "jaccard";
         set simthreshold "0.6f";
 
-        for $user in dataset('FacebookUsers')
-        where $user.friend-ids ~= [1,5,9,10]
-        return $user
-
+        select u
+        from GleambookUsers u
+        where u.friendIds ~= [1,5,9,10];
 
 In this query, we first declare Jaccard as the similarity function
 using `simfunction` and then specify the threshold `0.6f` using
@@ -107,27 +102,19 @@ using `simfunction` and then specify the threshold `0.6f` using
 ## <a id="SimilarityJoinQueries">Similarity Join Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
 AsterixDB supports fuzzy joins between two sets. The following
-[query](primer.html#Query_5_-_Fuzzy_Join)
-finds, for each Facebook user, all Twitter users with names
+[query](../sqlpp/primer-sqlpp.html#Query_5_-_Fuzzy_Join)
+finds, for each Gleambook user, all Chirp users with names
 similar to their name based on the edit distance.
 
-        use dataverse TinySocial;
+        use TinySocial;
 
         set simfunction "edit-distance";
         set simthreshold "3";
 
-        for $fbu in dataset FacebookUsers
-        return {
-            "id": $fbu.id,
-            "name": $fbu.name,
-            "similar-users": for $t in dataset TweetMessages
-                                let $tu := $t.user
-                                where $tu.name ~= $fbu.name
-                                return {
-                                "twitter-screenname": $tu.screen-name,
-                                "twitter-name": $tu.name
-                                }
-        };
+        select gbu.id, gbu.name, (select cu.screenName, cu.name
+                                  from ChirpUsers cu
+                                  where cu.name ~= gbu.name) as similar_users
+        from GleambookUsers gbu;
 
 ## <a id="UsingIndexesToSupportSimilarityQueries">Using Indexes to Support Similarity Queries</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
 
@@ -146,101 +133,95 @@ detailed description of these techniques is available at this
 [paper](http://www.ics.uci.edu/~chenli/pub/icde2009-memreducer.pdf).
 
 For instance, the following DDL statements create an ngram index on the
-`FacebookUsers.name` attribute using an inverted index of 3-grams.
+`GleambookUsers.name` attribute using an inverted index of 3-grams.
 
-        use dataverse TinySocial;
+        use TinySocial;
 
-        create index fbUserIdx on FacebookUsers(name) type ngram(3);
+        create index gbUserIdx on GleambookUsers(name) type ngram(3);
 
 The number "3" in "ngram(3)" is the length "n" in the grams. This
 index can be used to optimize similarity queries on this attribute
 using
-[edit-distance](functions.html#edit-distance),
-[edit-distance-check](functions.html#edit-distance-check),
-[similarity-jaccard](functions.html#similarity-jaccard),
-or [similarity-jaccard-check](functions.html#similarity-jaccard-check)
+[edit_distance](../sqlpp/builtins.html#edit_distance),
+[edit_distance_check](../sqlpp/builtins.html#edit_distance_check),
+[similarity_jaccard](../sqlpp/builtins.html#similarity_jaccard),
+or [similarity_jaccard_check](../sqlpp/builtins.html#similarity_jaccard_check)
 queries on this attribute where the
 similarity is defined on sets of 3-grams.  This index can also be used
-to optimize queries with the "[contains()]((functions.html#contains))" predicate (i.e., substring
+to optimize queries with the "[contains()]((../sqlpp/builtins.html#contains))" predicate (i.e., substring
 matching) since it can be also be solved by counting on the inverted
 lists of the grams in the query string.
 
-#### NGram Index usage case - [edit-distance](functions.html#edit-distance) ####
+#### NGram Index usage case - [edit_distance](../sqlpp/builtins.html#edit-distance) ####
 
-        use dataverse TinySocial;
+        use TinySocial;
 
-        for $user in dataset('FacebookUsers')
-        let $ed := edit-distance($user.name, "Suzanna Tilson")
-        where $ed <= 2
-        return $user
+        select u
+        from GleambookUsers u
+        where edit_distance(u.name, "Suzanna Tilson") <= 2;
 
-#### NGram Index usage case - [edit-distance-check](functions.html#edit-distance-check) ####
+#### NGram Index usage case - [edit_distance_check](../sqlpp/builtins.html#edit_distance_check) ####
 
-        use dataverse TinySocial;
+        use TinySocial;
 
-        for $user in dataset('FacebookUsers')
-        let $ed := edit-distance-check($user.name, "Suzanna Tilson", 2)
-        where $ed[0]
-        return $ed[1]
+        select u
+        from GleambookUsers u
+        where edit_distance_check(u.name, "Suzanna Tilson", 2)[0];
 
-#### NGram Index usage case - [similarity-jaccard](functions.html#similarity-jaccard) ####
+#### NGram Index usage case - [contains()]((../sqlpp/builtins.html#contains)) ####
 
-        use dataverse TinySocial;
+        use TinySocial;
 
-        for $user in dataset('FacebookUsers')
-        let $sim := similarity-jaccard($user.friend-ids, [1,5,9,10])
-        where $sim >= 0.6f
-        return $user
-
-#### NGram Index usage case - [similarity-jaccard-check](functions.html#similarity-jaccard-check) ####
-
-        use dataverse TinySocial;
-
-        for $user in dataset('FacebookUsers')
-        let $sim := similarity-jaccard-check($user.friend-ids, [1,5,9,10], 0.6f)
-        where $sim[0]
-        return $user
-
-#### NGram Index usage case - [contains()]((functions.html#contains)) ####
-
-        use dataverse TinySocial;
-
-        for $i in dataset('FacebookMessages')
-        where contains($i.message, "phone")
-        return {"mid": $i.message-id, "message": $i.message}
+        select m
+        from GleambookMessages m
+        where contains(m.message, "phone");
 
 
 ### Keyword Index ###
 
-A "keyword index" is constructed on a set of strings or sets (e.g., OrderedList, UnorderedList). Instead of
+A "keyword index" is constructed on a set of strings or sets (e.g., array, multiset). Instead of
 generating grams as in an ngram index, we generate tokens (e.g., words) and for each token, construct an inverted list that includes the ids of the
 objects with this token.  The following two examples show how to create keyword index on two different types:
 
 
 #### Keyword Index on String Type ####
 
-        use dataverse TinySocial;
+        use TinySocial;
 
-        drop index FacebookMessages.fbMessageIdx if exists;
-        create index fbMessageIdx on FacebookMessages(message) type keyword;
+        drop index GleambookMessages.gbMessageIdx if exists;
+        create index gbMessageIdx on GleambookMessages(message) type keyword;
 
-        for $o in dataset('FacebookMessages')
-        let $jacc := similarity-jaccard-check(word-tokens($o.message), word-tokens("love like ccast"), 0.2f)
-        where $jacc[0]
-        return $o
+        select m
+        from GleambookMessages m
+        where similarity_jaccard_check(word_tokens(m.message), word_tokens("love like ccast"), 0.2f)[0];
 
-#### Keyword Index on UnorderedList Type ####
+#### Keyword Index on Multiset Type ####
 
-        use dataverse TinySocial;
+        use TinySocial;
 
-        create index fbUserIdx_fids on FacebookUsers(friend-ids) type keyword;
+        create index gbUserIdxFIds on GleambookUsers(friendIds) type keyword;
 
-        for $c in dataset('FacebookUsers')
-        let $jacc := similarity-jaccard-check($c.friend-ids, {{3,10}}, 0.5f)
-        where $jacc[0]
-        return $c
+        select u
+        from GleambookUsers u
+        where similarity_jaccard_check(u.friendIds, {{3,10}}, 0.5f)[0];
 
 As shown above, keyword index can be used to optimize queries with token-based similarity predicates, including
-[similarity-jaccard](functions.html#similarity-jaccard) and
-[similarity-jaccard-check](functions.html#similarity-jaccard-check).
+[similarity_jaccard](../sqlpp/builtins.html#similarity_jaccard) and
+[similarity_jaccard_check](../sqlpp/builtins.html#similarity_jaccard_check).
+
+#### Keyword Index usage case - [similarity_jaccard](../sqlpp/builtins.html#similarity_jaccard) ####
+
+        use TinySocial;
+
+        select u
+        from GleambookUsers u
+        where similarity_jaccard(u.friendIds, [1,5,9,10]) >= 0.6f;
+
+#### Keyword Index usage case - [similarity_jaccard_check](../sqlpp/builtins.html#similarity_jaccard_check) ####
+
+        use TinySocial;
+
+        select u
+        from GleambookUsers u
+        where similarity_jaccard_check(u.friendIds, [1,5,9,10], 0.6f)[0];
 
