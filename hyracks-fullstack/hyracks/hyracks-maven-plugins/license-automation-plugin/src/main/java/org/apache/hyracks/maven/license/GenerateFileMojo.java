@@ -182,8 +182,8 @@ public class GenerateFileMojo extends LicenseMojo {
                 throw new IOException("Could not load template " + generation.getTemplate());
             }
 
-            outputDir.mkdirs();
             final File file = new File(outputDir, generation.getOutputFile());
+            file.getParentFile().mkdirs();
             getLog().info("Writing " + file + "...");
             try (final FileOutputStream fos = new FileOutputStream(file);
                     final Writer writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8)) {

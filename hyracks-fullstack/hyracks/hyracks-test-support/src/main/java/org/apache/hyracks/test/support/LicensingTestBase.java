@@ -55,7 +55,7 @@ public abstract class LicensingTestBase {
     protected void verifyMissingLicenses() throws IOException {
         for (String licenseArtifactName : getLicenseArtifactNames()) {
             final File licenseFile =
-                    new File(FileUtil.joinPath(installerDir, pathToLicensingFiles(), licenseArtifactName));
+                    new File(FileUtil.joinPath(getInstallerDir(), pathToLicensingFiles(), licenseArtifactName));
             List<String> badLines = new ArrayList<>();
             for (String line : FileUtils.readLines(licenseFile, StandardCharsets.UTF_8)) {
                 if (line.matches("^\\s*MISSING:.*")) {
@@ -66,9 +66,13 @@ public abstract class LicensingTestBase {
         }
     }
 
+    protected String getInstallerDir() {
+        return installerDir;
+    }
+
     protected void verifyAllRequiredArtifactsPresent() {
         for (String name : getRequiredArtifactNames()) {
-            final String fileName = FileUtil.joinPath(installerDir, pathToLicensingFiles(), name);
+            final String fileName = FileUtil.joinPath(getInstallerDir(), pathToLicensingFiles(), name);
             Assert.assertTrue(fileName + " missing", new File(fileName).exists());
         }
     }
