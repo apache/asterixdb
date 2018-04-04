@@ -33,6 +33,7 @@ import org.apache.logging.log4j.Logger;
 
 public class CcConnection {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final long REGISTRATION_RESPONSE_POLL_PERIOD = TimeUnit.SECONDS.toMillis(1);
 
     private final IClusterController ccs;
     private boolean registrationPending;
@@ -64,7 +65,9 @@ public class CcConnection {
         registrationPending = true;
         ccs.registerNode(nodeRegistration, registrationId);
         try {
-            InvokeUtil.runWithTimeout(this::wait, () -> !registrationPending, 2, TimeUnit.MINUTES);
+            InvokeUtil.runWithTimeout(() -> {
+                this.wait(REGISTRATION_RESPONSE_POLL_PERIOD); // NOSONAR while loop in timeout call
+            }, () -> !registrationPending, 1, TimeUnit.MINUTES);
         } catch (Exception e) {
             registrationException = e;
         }
