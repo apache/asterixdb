@@ -53,7 +53,8 @@ public class ResultExtractor {
         SIGNATURE("signature"),
         STATUS("status"),
         TYPE("type"),
-        ERRORS("errors");
+        ERRORS("errors"),
+        PLANS("plans");
 
         private static final Map<String, ResultField> fields = new HashMap<>();
 
@@ -162,6 +163,7 @@ public class ResultExtractor {
                 case SIGNATURE:
                 case STATUS:
                 case TYPE:
+                case PLANS:
                     resultBuilder.append(OBJECT_MAPPER.writeValueAsString(fieldValue));
                     break;
                 default:

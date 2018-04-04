@@ -45,6 +45,8 @@ import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.translator.ExecutionPlans;
+import org.apache.asterix.translator.ExecutionPlansJsonPrintUtil;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
@@ -73,6 +75,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
@@ -141,7 +144,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         MODE("mode"),
         TIMEOUT("timeout"),
         PLAN_FORMAT("plan-format"),
-        MAX_RESULT_READS("max-result-reads");
+        MAX_RESULT_READS("max-result-reads"),
+        EXPRESSION_TREE("expression-tree"),
+        REWRITTEN_EXPRESSION_TREE("rewritten-expression-tree"),
+        LOGICAL_PLAN("logical-plan"),
+        OPTIMIZED_LOGICAL_PLAN("optimized-logical-plan"),
+        JOB("job");
 
         private final String str;
 
@@ -198,6 +206,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         String clientContextID;
         String mode;
         String maxResultReads;
+        String planFormat;
+        boolean expressionTree;
+        boolean rewrittenExpressionTree;
+        boolean logicalPlan;
+        boolean optimizedLogicalPlan;
+        boolean job;
 
         @Override
         public String toString() {
@@ -213,6 +227,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 on.put("format", format);
                 on.put("timeout", timeout);
                 on.put("maxResultReads", maxResultReads);
+                on.put("planFormat", planFormat);
+                on.put("expressionTree", expressionTree);
+                on.put("rewrittenExpressionTree", rewrittenExpressionTree);
+                on.put("logicalPlan", logicalPlan);
+                on.put("optimizedLogicalPlan", optimizedLogicalPlan);
+                on.put("job", job);
                 return om.writer(new MinimalPrettyPrinter()).writeValueAsString(on);
             } catch (JsonProcessingException e) { // NOSONAR
                 LOGGER.debug("unexpected exception marshalling {} instance to json", getClass(), e);
@@ -307,9 +327,15 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         SessionOutput.ResultAppender appendStatus = ResultUtil.createResultStatusAppender();
 
         SessionConfig.OutputFormat format = getFormat(param.format);
-        //TODO:get the parameters from UI.Currently set to clean_json.
-        SessionConfig sessionConfig = new SessionConfig(format);
+        final SessionConfig.PlanFormat planFormat =
+                SessionConfig.PlanFormat.get(param.planFormat, param.planFormat, SessionConfig.PlanFormat.JSON, LOGGER);
+        SessionConfig sessionConfig = new SessionConfig(format, planFormat);
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
+        sessionConfig.set(SessionConfig.OOB_EXPR_TREE, param.expressionTree);
+        sessionConfig.set(SessionConfig.OOB_REWRITTEN_EXPR_TREE, param.rewrittenExpressionTree);
+        sessionConfig.set(SessionConfig.OOB_LOGICAL_PLAN, param.logicalPlan);
+        sessionConfig.set(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN, param.optimizedLogicalPlan);
+        sessionConfig.set(SessionConfig.OOB_HYRACKS_JOB, param.job);
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.pretty);
         sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
                 format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON);
@@ -391,6 +417,13 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 param.clientContextID = getOptText(jsonRequest, Parameter.CLIENT_ID.str());
                 param.timeout = getOptText(jsonRequest, Parameter.TIMEOUT.str());
                 param.maxResultReads = getOptText(jsonRequest, Parameter.MAX_RESULT_READS.str());
+                param.planFormat = getOptText(jsonRequest, Parameter.PLAN_FORMAT.str());
+                param.expressionTree = getOptBoolean(jsonRequest, Parameter.EXPRESSION_TREE.str(), false);
+                param.rewrittenExpressionTree =
+                        getOptBoolean(jsonRequest, Parameter.REWRITTEN_EXPRESSION_TREE.str(), false);
+                param.logicalPlan = getOptBoolean(jsonRequest, Parameter.LOGICAL_PLAN.str(), false);
+                param.optimizedLogicalPlan = getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN.str(), false);
+                param.job = getOptBoolean(jsonRequest, Parameter.JOB.str(), false);
             } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
                 GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
@@ -406,6 +439,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             param.clientContextID = request.getParameter(Parameter.CLIENT_ID.str());
             param.timeout = request.getParameter(Parameter.TIMEOUT.str());
             param.maxResultReads = request.getParameter(Parameter.MAX_RESULT_READS.str());
+            param.planFormat = request.getParameter(Parameter.PLAN_FORMAT.str());
         }
         return param;
     }
@@ -533,6 +567,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 getHyracksDataset(), resultProperties, stats, null, param.clientContextID, optionalParameters);
         translator.compileAndExecute(getHyracksClientConnection(), queryCtx, requestParameters);
         execution.end();
+        printExecutionPlans(sessionOutput, translator.getExecutionPlans());
     }
 
     protected void handleExecuteStatementException(Throwable t, RequestExecutionState state, RequestParameters param) {
@@ -565,5 +600,22 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             LOGGER.warn("handleException: unexpected exception: {}", param, t);
             state.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    protected void printExecutionPlans(SessionOutput output, ExecutionPlans executionPlans) {
+        final PrintWriter pw = output.out();
+        pw.print("\t\"");
+        pw.print(ResultFields.PLANS.str());
+        pw.print("\":");
+        final SessionConfig.PlanFormat planFormat = output.config().getPlanFormat();
+        switch (planFormat) {
+            case JSON:
+            case STRING:
+                pw.print(ExecutionPlansJsonPrintUtil.asJson(executionPlans, planFormat));
+                break;
+            default:
+                throw new IllegalStateException("Unrecognized plan format: " + planFormat);
+        }
+        pw.print(",\n");
     }
 }

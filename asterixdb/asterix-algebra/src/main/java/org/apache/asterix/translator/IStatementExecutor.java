@@ -142,4 +142,11 @@ public interface IStatementExecutor {
      */
     String getActiveDataverseName(String dataverse);
 
+    /**
+     * Gets the execution plans that are generated during query compilation
+     *
+     * @return the executions plans
+     */
+    ExecutionPlans getExecutionPlans();
+
 }

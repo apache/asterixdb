@@ -131,6 +131,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             responseMsg.setResult(outWriter.toString());
             responseMsg.setMetadata(outMetadata);
             responseMsg.setStats(stats);
+            responseMsg.setExecutionPlans(translator.getExecutionPlans());
         } catch (AlgebricksException | HyracksException | TokenMgrError
                 | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             // we trust that "our" exceptions are serializable and have a comprehensible error message

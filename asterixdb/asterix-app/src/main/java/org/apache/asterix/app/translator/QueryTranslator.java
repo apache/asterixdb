@@ -156,6 +156,8 @@ import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledUpsertStatement;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.asterix.translator.ExecutionPlans;
+import org.apache.asterix.translator.ExecutionPlansHtmlPrintUtil;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorContext;
@@ -1773,6 +1775,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     new CompiledLoadFromFileStatement(dataverseName, loadStmt.getDatasetName().getValue(),
                             loadStmt.getAdapter(), loadStmt.getProperties(), loadStmt.dataIsAlreadySorted());
             JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls);
+            afterCompile();
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             if (spec != null) {
@@ -1864,6 +1867,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getVarCounter(),
                     stmtDelete.getQuery());
             JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs);
+            afterCompile();
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -2370,6 +2374,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             try {
                 final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null);
+                afterCompile();
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
                 return query.isExplain() || !sessionConfig.isExecuteQuery() ? null : jobSpec;
@@ -2778,6 +2783,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return (dataverse != null) ? dataverse : activeDataverse.getDataverseName();
     }
 
+    @Override
+    public ExecutionPlans getExecutionPlans() {
+        return apiFramework.getExecutionPlans();
+    }
+
     public String getActiveDataverse(Identifier dataverse) {
         return getActiveDataverseName(dataverse != null ? dataverse.getValue() : null);
     }
@@ -2811,5 +2821,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void rewriteStatement(Statement stmt) throws CompilationException {
         IStatementRewriter rewriter = rewriterFactory.createStatementRewriter();
         rewriter.rewrite(stmt);
+    }
+
+    protected void afterCompile() {
+        if (sessionOutput.config().is(SessionConfig.FORMAT_HTML)) {
+            ExecutionPlansHtmlPrintUtil.print(sessionOutput.out(), getExecutionPlans());
+        }
     }
 }

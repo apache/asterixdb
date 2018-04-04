@@ -23,6 +23,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.messaging.NCMessageBroker;
+import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -38,6 +39,8 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
     private IStatementExecutor.Stats stats;
 
     private Throwable error;
+
+    private ExecutionPlans executionPlans;
 
     public ExecuteStatementResponseMessage(long requestMessageId) {
         this.requestMessageId = requestMessageId;
@@ -82,6 +85,14 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
 
     public void setStats(IStatementExecutor.Stats stats) {
         this.stats = stats;
+    }
+
+    public ExecutionPlans getExecutionPlans() {
+        return executionPlans;
+    }
+
+    public void setExecutionPlans(ExecutionPlans executionPlans) {
+        this.executionPlans = executionPlans;
     }
 
     @Override
