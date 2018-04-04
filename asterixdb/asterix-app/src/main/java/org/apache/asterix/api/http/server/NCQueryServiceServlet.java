@@ -132,6 +132,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         } else {
             sessionOutput.out().append(responseMsg.getResult());
         }
+        printExecutionPlans(sessionOutput, responseMsg.getExecutionPlans());
     }
 
     private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String clientContextID, Exception exception,

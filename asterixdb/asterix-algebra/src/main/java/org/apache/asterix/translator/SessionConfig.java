@@ -63,7 +63,7 @@ public class SessionConfig implements Serializable {
                 if (fmtString != null) {
                     String format = ("JSON".equalsIgnoreCase(fmtString) || "CLEAN_JSON".equalsIgnoreCase(fmtString))
                             ? "JSON" : fmtString;
-                    return PlanFormat.valueOf(format);
+                    return PlanFormat.valueOf(format.toUpperCase());
                 }
             } catch (IllegalArgumentException e) {
                 logger.log(Level.INFO, fmtString + ": unsupported " + label + ", using " + defaultFmt + "instead", e);
@@ -129,7 +129,7 @@ public class SessionConfig implements Serializable {
 
     // Output format.
     private final OutputFormat fmt;
-    private final PlanFormat lpfmt;
+    private final PlanFormat planFormat;
 
     // Standard execution flags.
     private final boolean executeQuery;
@@ -143,8 +143,8 @@ public class SessionConfig implements Serializable {
         this(fmt, PlanFormat.STRING);
     }
 
-    public SessionConfig(OutputFormat fmt, PlanFormat lpfmt) {
-        this(fmt, true, true, true, lpfmt);
+    public SessionConfig(OutputFormat fmt, PlanFormat planFormat) {
+        this(fmt, true, true, true, planFormat);
     }
 
     /**
@@ -168,13 +168,13 @@ public class SessionConfig implements Serializable {
     }
 
     public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec,
-            PlanFormat lpfmt) {
+            PlanFormat planFormat) {
         this.fmt = fmt;
         this.optimize = optimize;
         this.executeQuery = executeQuery;
         this.generateJobSpec = generateJobSpec;
         this.flags = new HashMap<>();
-        this.lpfmt = lpfmt;
+        this.planFormat = planFormat;
     }
 
     /**
@@ -187,8 +187,8 @@ public class SessionConfig implements Serializable {
     /**
      * Retrieve the PlanFormat for this execution.
      */
-    public PlanFormat getLpfmt() {
-        return this.lpfmt;
+    public PlanFormat getPlanFormat() {
+        return this.planFormat;
     }
 
     /**

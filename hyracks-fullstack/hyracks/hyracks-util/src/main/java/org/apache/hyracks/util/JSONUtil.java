@@ -149,7 +149,7 @@ public class JSONUtil {
         return quoteAndEscape(new StringBuilder(), str).toString();
     }
 
-    private static StringBuilder quoteAndEscape(StringBuilder sb, String str) {
+    public static StringBuilder quoteAndEscape(StringBuilder sb, String str) {
         return escape(sb.append('"'), str).append('"');
     }
 
