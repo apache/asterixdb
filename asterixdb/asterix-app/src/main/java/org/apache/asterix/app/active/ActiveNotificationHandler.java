@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveEvent.Kind;
-import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveNotificationHandler;
@@ -33,7 +32,6 @@ import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.metadata.api.IActiveEntityController;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtil;
@@ -214,14 +212,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
         for (IActiveEntityEventsListener listener : entityEventListeners.values()) {
             synchronized (listener) {
                 LOGGER.log(level, "Entity " + listener.getEntityId() + " is " + listener.getStats());
-                if (listener.getState() == ActivityState.PERMANENTLY_FAILED
-                        && listener instanceof IActiveEntityController) {
-                    LOGGER.log(level, "Recovering");
-                    ((IActiveEntityController) listener).recover();
-                } else {
-                    LOGGER.log(level, "Only notifying");
-                    listener.notifyAll();
-                }
+                listener.notifyAll();
             }
         }
     }
