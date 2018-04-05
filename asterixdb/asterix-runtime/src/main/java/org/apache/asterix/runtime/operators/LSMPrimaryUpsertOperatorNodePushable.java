@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.operators;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -73,9 +74,14 @@ import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
 import org.apache.hyracks.util.trace.TraceUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final ThreadLocal<DateFormat> DATE_FORMAT =
+            ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"));
     private final PermutingFrameTupleReference key;
     private MultiComparator keySearchCmp;
     private ArrayTupleBuilder missingTupleBuilder;
@@ -379,21 +385,30 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
     @Override
     public void close() throws HyracksDataException {
+        traceLastRecordIn();
+        Throwable failure = CleanupUtils.close(frameOpCallback, null);
+        failure = CleanupUtils.destroy(failure, cursor);
+        failure = CleanupUtils.close(writer, failure);
+        failure = CleanupUtils.close(indexHelper, failure);
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
+        }
+    }
+
+    @SuppressWarnings({ "squid:S1181", "squid:S1166" })
+    private void traceLastRecordIn() {
         try {
-            Throwable failure = CleanupUtils.close(frameOpCallback, null);
-            failure = CleanupUtils.destroy(failure, cursor);
-            failure = CleanupUtils.close(writer, failure);
-            failure = CleanupUtils.close(indexHelper, failure);
-            if (failure != null) {
-                throw HyracksDataException.create(failure);
-            }
-        } finally {
-            if (tracer.isEnabled(traceCategory) && lastRecordInTimeStamp > 0) {
+            if (tracer.isEnabled(traceCategory) && lastRecordInTimeStamp > 0 && indexHelper != null
+                    && indexHelper.getIndexInstance() != null) {
                 tracer.instant("UpsertClose", traceCategory, Scope.t,
-                        "{\"last-record-in\":\""
-                                + new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-                                        .format(new Date(lastRecordInTimeStamp))
+                        "{\"last-record-in\":\"" + DATE_FORMAT.get().format(new Date(lastRecordInTimeStamp))
                                 + "\", \"index\":" + indexHelper.getIndexInstance().toString() + "}");
+            }
+        } catch (Throwable traceFailure) {
+            try {
+                LOGGER.warn("Tracing last record in failed", traceFailure);
+            } catch (Throwable ignore) {
+                // Ignore logging failure
             }
         }
     }
