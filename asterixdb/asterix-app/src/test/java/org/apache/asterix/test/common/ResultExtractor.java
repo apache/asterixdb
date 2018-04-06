@@ -171,14 +171,14 @@ public class ResultExtractor {
         return IOUtils.toInputStream(resultBuilder.toString(), StandardCharsets.UTF_8);
     }
 
-    private static void checkForErrors(ObjectNode result) throws AsterixException {
+    private static void checkForErrors(ObjectNode result) throws Exception {
         final JsonNode errorsField = result.get(ResultField.ERRORS.getFieldName());
         if (errorsField != null) {
             final JsonNode errors = errorsField.get(0).get("msg");
             if (!result.get(ResultField.METRICS.getFieldName()).has("errorCount")) {
-                throw new AsterixException("Request reported error but not an errorCount");
+                throw new Exception("Request reported error but not an errorCount");
             }
-            throw new AsterixException(errors.asText());
+            throw new Exception(errors.asText());
         }
     }
 }
