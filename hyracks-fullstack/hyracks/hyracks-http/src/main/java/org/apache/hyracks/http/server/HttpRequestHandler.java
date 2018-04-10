@@ -82,6 +82,10 @@ public class HttpRequestHandler implements Callable<Void> {
         response.notifyChannelWritable();
     }
 
+    public void notifyChannelInactive() {
+        response.notifyChannelInactive();
+    }
+
     public void reject() throws IOException {
         try {
             response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);

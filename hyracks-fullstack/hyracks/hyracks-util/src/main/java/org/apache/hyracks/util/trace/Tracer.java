@@ -37,7 +37,6 @@ public class Tracer implements ITracer {
     public static final Logger LOGGER = LogManager.getLogger();
 
     protected static final Level TRACE_LOG_LEVEL = Level.INFO;
-    protected static final String CAT = "Tracer";
     protected static final ThreadLocal<DateFormat> DATE_FORMAT =
             ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 
@@ -53,7 +52,7 @@ public class Tracer implements ITracer {
         this.traceLog = LogManager.getLogger(traceLoggerName);
         this.categories = categories;
         this.registry = registry;
-        final long traceCategory = getRegistry().get(CAT);
+        final long traceCategory = getRegistry().get(TraceUtils.TRACER);
         instant("Trace-Start", traceCategory, Scope.p, dateTimeStamp());
     }
 
@@ -62,9 +61,18 @@ public class Tracer implements ITracer {
         setCategories(categories);
     }
 
+    @Override
     public void setCategories(String... categories) {
         LOGGER.info("Set categories for Tracer " + this.traceLog.getName() + " to " + Arrays.toString(categories));
-        this.categories = getRegistry().get(categories);
+        this.categories = set(categories);
+    }
+
+    private long set(String... names) {
+        long result = 0;
+        for (String name : names) {
+            result |= getRegistry().get(name);
+        }
+        return result;
     }
 
     public static String dateTimeStamp() {

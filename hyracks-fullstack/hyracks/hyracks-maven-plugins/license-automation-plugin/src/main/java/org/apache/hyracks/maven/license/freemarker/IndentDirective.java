@@ -25,6 +25,9 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.maven.license.LicenseUtil;
+
 import freemarker.core.Environment;
 import freemarker.template.TemplateBooleanModel;
 import freemarker.template.TemplateDirectiveBody;
@@ -33,14 +36,13 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateModel;
 import freemarker.template.TemplateModelException;
 import freemarker.template.TemplateNumberModel;
-import org.apache.commons.io.IOUtils;
-import org.apache.hyracks.maven.license.LicenseUtil;
 
 public class IndentDirective implements TemplateDirectiveModel {
 
     private static final String PARAM_NAME_SPACES = "spaces";
     private static final String PARAM_NAME_UNPAD = "unpad";
     private static final String PARAM_NAME_WRAP = "wrap";
+    private static final String PARAM_NAME_STRICT = "strict";
 
     @Override
     public void execute(Environment env, Map params, TemplateModel[] loopVars, TemplateDirectiveBody body)
@@ -49,6 +51,7 @@ public class IndentDirective implements TemplateDirectiveModel {
         int numSpaces = -1;
         boolean unpad = false;
         boolean wrap = false;
+        boolean strict = false;
 
         for (Object o : params.entrySet()) {
             Map.Entry ent = (Map.Entry) o;
@@ -66,6 +69,9 @@ public class IndentDirective implements TemplateDirectiveModel {
                 case PARAM_NAME_WRAP:
                     wrap = getBooleanParam(paramName, paramValue);
                     break;
+                case PARAM_NAME_STRICT:
+                    strict = getBooleanParam(paramName, paramValue);
+                    break;
                 default:
                     throw new TemplateModelException("Unsupported parameter: " + paramName);
             }
@@ -81,7 +87,7 @@ public class IndentDirective implements TemplateDirectiveModel {
             // case we don't provide a special writer as the parameter:
             StringWriter sw = new StringWriter();
             body.render(sw);
-            String fixedup = LicenseUtil.process(sw.toString(), unpad, wrap);
+            String fixedup = LicenseUtil.process(sw.toString(), unpad, wrap, strict);
             IOUtils.copy(new StringReader(fixedup), new IndentingWriter(env.getOut(), numSpaces));
         }
     }

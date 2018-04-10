@@ -31,12 +31,12 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
+import org.apache.hyracks.util.trace.TraceUtils;
 
 public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOperationContext {
 
@@ -79,7 +79,7 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
             filterTuple = null;
         }
         this.tracer = tracer;
-        this.traceCategory = tracer.getRegistry().get("op-ctx");
+        this.traceCategory = tracer.getRegistry().get(TraceUtils.INDEX_OPERATIONS);
     }
 
     @Override
@@ -209,6 +209,7 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
         this.recovery = recovery;
     }
 
+    @Override
     public LSMIOOperationType getIoOperationType() {
         return ioOpType;
     }

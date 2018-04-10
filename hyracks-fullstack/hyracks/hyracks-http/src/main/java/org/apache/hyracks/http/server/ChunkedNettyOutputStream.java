@@ -43,12 +43,6 @@ public class ChunkedNettyOutputStream extends OutputStream {
         this.response = response;
         this.ctx = ctx;
         buffer = ctx.alloc().buffer(chunkSize);
-        // register listener for channel closed
-        ctx.channel().closeFuture().addListener(futureListener -> {
-            synchronized (ChunkedNettyOutputStream.this) {
-                ChunkedNettyOutputStream.this.notifyAll();
-            }
-        });
     }
 
     @Override
@@ -128,8 +122,8 @@ public class ChunkedNettyOutputStream extends OutputStream {
     private synchronized void ensureWritable() throws IOException {
         while (!ctx.channel().isWritable()) {
             try {
-                if (!ctx.channel().isOpen()) {
-                    throw new IOException("Closed channel");
+                if (!ctx.channel().isActive()) {
+                    throw new IOException("Inactive channel");
                 }
                 wait();
             } catch (InterruptedException e) {

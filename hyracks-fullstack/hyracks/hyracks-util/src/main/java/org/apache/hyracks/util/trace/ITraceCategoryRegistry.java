@@ -25,15 +25,11 @@ public interface ITraceCategoryRegistry {
 
     long CATEGORIES_ALL = -1L;
     long CATEGORIES_NONE = 0L;
+    String CATEGORIES_ALL_NAME = "*";
 
     ITraceCategoryRegistry NONE = new TraceCategoryRegistry() {
         @Override
         public long get(String name) {
-            return CATEGORIES_NONE;
-        }
-
-        @Override
-        public long get(String... names) {
             return CATEGORIES_NONE;
         }
 
@@ -43,9 +39,20 @@ public interface ITraceCategoryRegistry {
         }
     };
 
+    /**
+     * Register the tracing category if not registered and return its code
+     *
+     * @param name
+     *            the category name
+     * @return the long code of the category
+     */
     long get(String name);
 
-    long get(String... names);
-
+    /**
+     * Get the name of the category with the code categoryCode
+     *
+     * @param categoryCode
+     * @return the String name of the category
+     */
     String getName(long categoryCode);
 }

@@ -56,11 +56,11 @@ public class LicenseUtil {
         }
     }
 
-    public static String process(String input, boolean unpad, boolean wrap) throws IOException {
+    public static String process(String input, boolean unpad, boolean wrap, boolean strict) throws IOException {
         try (BufferedReader reader = new BufferedReader(new StringReader(input))) {
             reader.mark(input.length() + 1);
             StringWriter sw = new StringWriter();
-            trim(sw, reader, unpad, wrap);
+            trim(sw, reader, unpad, wrap, strict);
             sw.append('\n');
             return sw.toString();
         }
@@ -75,20 +75,22 @@ public class LicenseUtil {
     }
 
     private static void trim(Writer out, BufferedReader reader) throws IOException {
-        trim(out, reader, true, true);
+        trim(out, reader, true, true, false);
     }
 
-    private static void trim(Writer out, BufferedReader reader, boolean unpad, boolean wrap) throws IOException {
+    private static void trim(Writer out, BufferedReader reader, boolean unpad, boolean wrap, boolean strict)
+            throws IOException {
         Pair<Integer, Integer> result = null;
         if (unpad || wrap) {
             result = analyze(reader);
             reader.reset();
         }
         doTrim(out, reader, unpad ? result.getLeft() : 0,
-                wrap && (result.getRight() > wrapThreshold) ? wrapLength : Integer.MAX_VALUE);
+                wrap && (result.getRight() > wrapThreshold) ? wrapLength : Integer.MAX_VALUE, strict);
     }
 
-    private static void doTrim(Writer out, BufferedReader reader, int extraPadding, int wrapLength) throws IOException {
+    private static void doTrim(Writer out, BufferedReader reader, int extraPadding, int wrapLength, boolean strict)
+            throws IOException {
         boolean head = true;
         int empty = 0;
         for (String line = reader.readLine(); line != null; line = reader.readLine()) {
@@ -110,6 +112,8 @@ public class LicenseUtil {
                         out.append(trimmed.substring(0, cut));
                         out.append('\n');
                         trimmed = trimmed.substring(cut + 1);
+                    } else if (!strict) {
+                        break;
                     } else {
                         out.append(trimmed.substring(0, wrapLength));
                         out.append('\n');
