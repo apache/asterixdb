@@ -78,8 +78,12 @@ public interface IServletResponse extends Closeable {
     ChannelFuture lastContentFuture() throws IOException;
 
     /**
-     * Notifies the response that the channel has become writable
-     * became writable or unwritable. Used for flow control
+     * Notifies the response that the channel has become writable. Used for flow control
      */
     void notifyChannelWritable();
+
+    /**
+     * Notifies the response that the channel has become inactive.
+     */
+    void notifyChannelInactive();
 }

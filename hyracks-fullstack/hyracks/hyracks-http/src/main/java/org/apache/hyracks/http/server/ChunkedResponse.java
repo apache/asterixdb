@@ -187,4 +187,9 @@ public class ChunkedResponse implements IServletResponse {
     public void notifyChannelWritable() {
         outputStream.resume();
     }
+
+    @Override
+    public void notifyChannelInactive() {
+        outputStream.resume();
+    }
 }

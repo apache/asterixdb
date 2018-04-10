@@ -105,4 +105,10 @@ public class FullResponse implements IServletResponse {
         // Do nothing.
         // This response is sent as a single piece
     }
+
+    @Override
+    public void notifyChannelInactive() {
+        // Do nothing.
+        // This response is sent as a single piece
+    }
 }

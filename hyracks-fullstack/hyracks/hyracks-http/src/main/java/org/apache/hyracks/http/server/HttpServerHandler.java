@@ -44,6 +44,9 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     protected final T server;
     protected final int chunkSize;
     protected HttpRequestHandler handler;
+    protected IChannelClosedHandler closeHandler;
+    protected Future<Void> task;
+    protected IServlet servlet;
 
     public HttpServerHandler(T server, int chunkSize) {
         this.server = server;
@@ -64,10 +67,24 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     }
 
     @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        if (handler != null) {
+            handler.notifyChannelInactive();
+        }
+        if (closeHandler != null) {
+            closeHandler.channelClosed(server, servlet, task);
+        }
+        super.channelInactive(ctx);
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
         FullHttpRequest request = (FullHttpRequest) msg;
+        handler = null;
+        task = null;
+        closeHandler = null;
         try {
-            IServlet servlet = server.getServlet(request);
+            servlet = server.getServlet(request);
             if (servlet == null) {
                 handleServletNotFound(ctx, request);
             } else {
@@ -94,16 +111,13 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
             return;
         }
         handler = new HttpRequestHandler(ctx, servlet, servletRequest, chunkSize);
-        submit(ctx, servlet);
+        submit(servlet);
     }
 
-    private void submit(ChannelHandlerContext ctx, IServlet servlet) throws IOException {
+    private void submit(IServlet servlet) throws IOException {
         try {
-            Future<Void> task = server.getExecutor(handler).submit(handler);
-            final IChannelClosedHandler closeHandler = servlet.getChannelClosedHandler(server);
-            if (closeHandler != null) {
-                ctx.channel().closeFuture().addListener(future -> closeHandler.channelClosed(server, servlet, task));
-            }
+            task = server.getExecutor(handler).submit(handler);
+            closeHandler = servlet.getChannelClosedHandler(server);
         } catch (RejectedExecutionException e) { // NOSONAR
             LOGGER.log(Level.WARN, "Request rejected by server executor service. " + e.getMessage());
             handler.reject();
