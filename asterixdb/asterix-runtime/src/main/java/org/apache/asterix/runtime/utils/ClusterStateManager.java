@@ -462,8 +462,4 @@ public class ClusterStateManager implements IClusterStateManager {
         });
     }
 
-    public String getStoragePathPrefix() {
-        return appCtx.getNodeProperties().getStorageSubdir();
-    }
-
 }

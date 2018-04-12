@@ -34,7 +34,6 @@ import org.apache.hyracks.api.config.Section;
 public class MetadataProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        INSTANCE_NAME(STRING, "DEFAULT_INSTANCE"),
         METADATA_NODE(STRING, null),
         METADATA_REGISTRATION_TIMEOUT_SECS(INTEGER, 60),
         METADATA_LISTEN_PORT(INTEGER, 0),
@@ -56,8 +55,6 @@ public class MetadataProperties extends AbstractProperties {
         @Override
         public String description() {
             switch (this) {
-                case INSTANCE_NAME:
-                    return "The name of this cluster instance";
                 case METADATA_NODE:
                     return "the node which should serve as the metadata node";
                 case METADATA_REGISTRATION_TIMEOUT_SECS:
@@ -95,10 +92,6 @@ public class MetadataProperties extends AbstractProperties {
 
     public MetadataProperties(PropertiesAccessor accessor) {
         super(accessor);
-    }
-
-    public String getInstanceName() {
-        return accessor.getString(Option.INSTANCE_NAME);
     }
 
     public String getMetadataNodeName() {
