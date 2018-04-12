@@ -196,7 +196,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    static class RequestParameters {
+    protected static class RequestParameters {
         String host;
         String path;
         String statement;
@@ -241,7 +241,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    static final class RequestExecutionState {
+    protected static final class RequestExecutionState {
         private long execStart = -1;
         private long execEnd = -1;
         private ResultStatus resultStatus = ResultStatus.SUCCESS;
