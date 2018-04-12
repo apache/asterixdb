@@ -54,6 +54,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.util.IOOperationUtils;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.util.annotations.CriticalPath;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
 import org.apache.logging.log4j.Level;
@@ -180,6 +181,7 @@ public class LSMHarness implements ILSMHarness {
         }
     }
 
+    @CriticalPath
     protected boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType)
             throws HyracksDataException {
         validateOperationEnterComponentsState(ctx);
@@ -187,9 +189,11 @@ public class LSMHarness implements ILSMHarness {
         int numEntered = 0;
         boolean entranceSuccessful = false;
         try {
-            for (ILSMComponent c : components) {
-                boolean isMutableComponent = numEntered == 0 && c.getType() == LSMComponentType.MEMORY ? true : false;
-                if (!c.threadEnter(opType, isMutableComponent)) {
+            final int componentsCount = components.size();
+            for (int i = 0; i < componentsCount; i++) {
+                final ILSMComponent component = components.get(i);
+                boolean isMutableComponent = numEntered == 0 && component.getType() == LSMComponentType.MEMORY;
+                if (!component.threadEnter(opType, isMutableComponent)) {
                     break;
                 }
                 numEntered++;
@@ -202,14 +206,14 @@ public class LSMHarness implements ILSMHarness {
             throw e;
         } finally {
             if (!entranceSuccessful) {
-                int i = 0;
-                for (ILSMComponent c : components) {
+                final int componentsCount = components.size();
+                for (int i = 0; i < componentsCount; i++) {
+                    final ILSMComponent component = components.get(i);
                     if (numEntered == 0) {
                         break;
                     }
-                    boolean isMutableComponent = i == 0 && c.getType() == LSMComponentType.MEMORY ? true : false;
-                    c.threadExit(opType, true, isMutableComponent);
-                    i++;
+                    boolean isMutableComponent = i == 0 && component.getType() == LSMComponentType.MEMORY;
+                    component.threadExit(opType, true, isMutableComponent);
                     numEntered--;
                 }
             }
@@ -241,21 +245,22 @@ public class LSMHarness implements ILSMHarness {
         return true;
     }
 
+    @CriticalPath
     private void doExitComponents(ILSMIndexOperationContext ctx, LSMOperationType opType,
             ILSMDiskComponent newComponent, boolean failedOperation) throws HyracksDataException {
-        /**
+        /*
          * FLUSH and MERGE operations should always exit the components
          * to notify waiting threads.
          */
         if (!ctx.isAccessingComponents() && opType != LSMOperationType.FLUSH && opType != LSMOperationType.MERGE) {
             return;
         }
-        List<ILSMDiskComponent> inactiveDiskComponents = null;
+        List<ILSMDiskComponent> inactiveDiskComponents;
         List<ILSMDiskComponent> inactiveDiskComponentsToBeDeleted = null;
         try {
             synchronized (opTracker) {
                 try {
-                    /**
+                    /*
                      * [flow control]
                      * If merge operations are lagged according to the merge policy,
                      * flushing in-memory components are hold until the merge operation catches up.
@@ -368,13 +373,16 @@ public class LSMHarness implements ILSMHarness {
         }
     }
 
+    @CriticalPath
     private void exitOperationalComponents(ILSMIndexOperationContext ctx, LSMOperationType opType,
             boolean failedOperation) throws HyracksDataException {
         // First check if there is any action that is needed to be taken
         // based on the state of each component.
-        for (int i = 0; i < ctx.getComponentHolder().size(); i++) {
-            ILSMComponent c = ctx.getComponentHolder().get(i);
-            boolean isMutableComponent = i == 0 && c.getType() == LSMComponentType.MEMORY ? true : false;
+        final List<ILSMComponent> componentHolder = ctx.getComponentHolder();
+        final int componentsCount = componentHolder.size();
+        for (int i = 0; i < componentsCount; i++) {
+            final ILSMComponent c = componentHolder.get(i);
+            boolean isMutableComponent = i == 0 && c.getType() == LSMComponentType.MEMORY;
             c.threadExit(opType, failedOperation, isMutableComponent);
             if (c.getType() == LSMComponentType.MEMORY) {
                 switch (c.getState()) {

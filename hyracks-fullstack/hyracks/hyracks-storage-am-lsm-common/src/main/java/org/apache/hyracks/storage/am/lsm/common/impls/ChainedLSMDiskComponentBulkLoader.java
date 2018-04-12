@@ -18,20 +18,21 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
+import org.apache.hyracks.util.annotations.CriticalPath;
 
 /**
  * Class encapsulates a chain of operations, happening during an LSM disk component bulkload
  */
 public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkLoader {
 
-    private List<IChainedComponentBulkLoader> bulkloaderChain = new LinkedList<>();
+    private List<IChainedComponentBulkLoader> bulkloaderChain = new ArrayList<>();
     private boolean isEmptyComponent = true;
     private boolean cleanedUpArtifacts = false;
     private final ILSMDiskComponent diskComponent;
@@ -47,11 +48,13 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
     }
 
     @Override
+    @CriticalPath
     public void add(ITupleReference tuple) throws HyracksDataException {
         try {
             ITupleReference t = tuple;
-            for (IChainedComponentBulkLoader lsmBulkloader : bulkloaderChain) {
-                t = lsmBulkloader.add(t);
+            final int bulkloadersCount = bulkloaderChain.size();
+            for (int i = 0; i < bulkloadersCount; i++) {
+                t = bulkloaderChain.get(i).add(t);
             }
         } catch (Exception e) {
             cleanupArtifacts();
@@ -63,11 +66,13 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
     }
 
     @Override
+    @CriticalPath
     public void delete(ITupleReference tuple) throws HyracksDataException {
         try {
             ITupleReference t = tuple;
-            for (IChainedComponentBulkLoader lsmOperation : bulkloaderChain) {
-                t = lsmOperation.delete(t);
+            final int bulkloadersCount = bulkloaderChain.size();
+            for (int i = 0; i < bulkloadersCount; i++) {
+                t = bulkloaderChain.get(i).delete(t);
             }
         } catch (Exception e) {
             cleanupArtifacts();
