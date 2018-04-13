@@ -1,0 +1,75 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Equi joins two datasets, FacebookUsers and FacebookMessages, based on their user's id.
+ *                  We first expect FacebookUsers' primary index to be used
+ *                  to satisfy the range condition on it's primary key.
+ *                  FacebookMessages has a secondary btree index on author-id-copy, and given the 'indexnl' hint
+ *                  we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+
+create type test.EmploymentType as
+ closed {
+  `organization-name` : string,
+  `start-date` : date,
+  `end-date` : date?
+};
+
+create type test.FacebookUserType as
+ closed {
+  id : integer,
+  `id-copy` : integer,
+  alias : string,
+  name : string,
+  `user-since` : datetime,
+  `user-since-copy` : datetime,
+  `friend-ids` : {{integer}},
+  employment : [EmploymentType]
+};
+
+create type test.FacebookMessageType as
+ closed {
+  `message-id` : integer,
+  `message-id-copy` : integer,
+  `author-id` : integer,
+  `author-id-copy` : integer,
+  `in-response-to` : integer?,
+  `sender-location` : point?,
+  message : string
+};
+
+create  dataset FacebookUsers(FacebookUserType) primary key id;
+
+create  dataset FacebookMessages(FacebookMessageType) primary key `message-id`;
+
+create  index fbmIdxAutId  if not exists  on FacebookMessages (`author-id-copy`) type btree;
+
+write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm";
+select element {'fbu-ID':user.id,'fbm-auth-ID':message.`author-id`,'uname':user.name,'message':message.message}
+from  FacebookUsers as user,
+      FacebookMessages as message
+where ((user.id /*+ indexnl */  = message.`author-id-copy`) and (user.id >= 11000) and (user.id <= 12000))
+;

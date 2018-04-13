@@ -4,8 +4,8 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$17, $$22, $$24][$$19, $$23, $$20]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$17, $$24]  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$33, $$38, $$40][$$35, $$39, $$36]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$33, $$40]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ASSIGN  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|

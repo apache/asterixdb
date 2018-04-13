@@ -1,0 +1,55 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop  dataverse `pull-select-above-eq-join` if exists;
+create  dataverse `pull-select-above-eq-join`;
+
+use `pull-select-above-eq-join`;
+
+
+create type `pull-select-above-eq-join`.UserType as
+{
+  uid : integer,
+  name : string,
+  city : string,
+  lottery_numbers : {{integer}}
+};
+
+create type `pull-select-above-eq-join`.VisitorType as
+{
+  vid : integer,
+  name : string,
+  city : string,
+  lottery_numbers : {{integer}}
+};
+
+create  nodegroup group1 if not exists  on
+    asterix_nc1,
+    asterix_nc2
+;
+create  dataset Users(UserType) primary key uid on group1;
+
+create  dataset Visitors(VisitorType) primary key vid on group1;
+
+write output to asterix_nc1:"/tmp/pull-select-above-eq-join.adm";
+select element {'uid':user.uid,'vid':visitor.vid}
+from  Users as user,
+      Visitors as visitor
+where ((user.name = visitor.name) and (user.city != visitor.city))
+;

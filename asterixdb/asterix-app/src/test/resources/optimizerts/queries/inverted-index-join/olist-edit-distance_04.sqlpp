@@ -1,0 +1,63 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Fuzzy self joins a dataset, Customers, based on the edit-distance function of its interest lists.
+ *                  Customers has a keyword index on interests, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  We test the inlining of variables that enable the select to be pushed into the join for subsequent optimization with an index.
+ * Success        : Yes
+ */
+
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+
+create type test.AddressType as
+ closed {
+  number : integer,
+  street : string,
+  city : string
+};
+
+create type test.CustomerType as
+ closed {
+  cid : integer,
+  name : string,
+  age : integer?,
+  address : AddressType?,
+  interests : [string],
+  children : [{
+          name : string,
+          age : integer?
+      }
+]
+};
+
+create  dataset Customers(CustomerType) primary key cid;
+
+create  index interests_index  on Customers (interests) type keyword;
+
+write output to asterix_nc1:"rttest/inverted-index-join_olist-edit-distance_04.adm";
+select element {'arec':a,'brec':b,'ed':ed}
+from  Customers as a,
+      Customers as b
+with  ed as test.`edit-distance`(a.interests,b.interests)
+where ((ed <= 2) and (a.cid < b.cid))
+;

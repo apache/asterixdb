@@ -1,0 +1,48 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop  dataverse fuzzyjoin if exists;
+create  dataverse fuzzyjoin;
+
+use fuzzyjoin;
+
+
+create type fuzzyjoin.TOKENSRANKEDADMType as
+ closed {
+  token : integer,
+  rank : integer
+};
+
+create  nodegroup group1 if not exists  on
+    asterix_nc1,
+    asterix_nc2
+;
+create  dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank on group1;
+
+write output to asterix_nc1:"rttest/introhashpartitionmerge.adm";
+select element token2.rank
+from  TOKENSRANKEDADM as token1,
+      (
+    select element tokenRanked
+    from  TOKENSRANKEDADM as tokenRanked
+    order by tokenRanked.rank
+) as token2
+where (token1.token = token2.token)
+order by token2.rank
+;

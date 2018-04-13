@@ -1,0 +1,65 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Test that left-outer-join may use an available inverted index in index subtree.
+ * Issue        : 741
+ * Expected Res : Success
+ * Date         : 16th May 2014
+ */
+
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+
+create type test.TwitterUserType as
+{
+  screen_name : string,
+  lang : string,
+  friends_count : integer,
+  statuses_count : integer,
+  name : string,
+  followers_count : integer
+};
+
+create type test.TweetMessageType as
+{
+  tweetid : bigint,
+  user : TwitterUserType,
+  sender_location : point?,
+  send_time : datetime,
+  referred_topics : {{string}},
+  message_text : string
+};
+
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
+
+create  index topicIIx  on TweetMessages (referred_topics) type keyword;
+
+write output to asterix_nc1:"rttest/inverted-index-join_issue741.adm";
+select element {'tweet':t.tweetid,'similar-tweets':(
+        select element t2.tweetid
+        from  TweetMessages as t2
+        with  sim as test.`similarity-jaccard-check`(t.referred_topics,t2.referred_topics,0.600000f)
+        where (sim[0] and (t2.tweetid != t.tweetid))
+    )}
+from  TweetMessages as t
+where ((t.send_time >= test.datetime('2011-06-18T14:10:17')) and (t.send_time < test.datetime('2011-06-18T15:10:17')))
+;
