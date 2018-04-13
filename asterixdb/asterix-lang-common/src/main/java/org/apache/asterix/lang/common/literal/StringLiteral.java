@@ -18,8 +18,9 @@
  */
 package org.apache.asterix.lang.common.literal;
 
+import java.util.Objects;
+
 import org.apache.asterix.lang.common.base.Literal;
-import org.apache.commons.lang.ObjectUtils;
 
 public class StringLiteral extends Literal {
 
@@ -52,7 +53,7 @@ public class StringLiteral extends Literal {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCode(value);
+        return Objects.hashCode(value);
     }
 
     @Override
@@ -64,7 +65,7 @@ public class StringLiteral extends Literal {
             return false;
         }
         StringLiteral target = (StringLiteral) object;
-        return ObjectUtils.equals(value, target.value);
+        return Objects.equals(value, target.value);
     }
 
     @Override

@@ -20,7 +20,7 @@ package org.apache.asterix.test.common;
 
 import java.util.Random;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;

@@ -31,14 +31,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.asterix.common.config.NodeProperties;
 import org.apache.asterix.app.external.ExternalUDFLibrarian;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
-import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.util.ThreadDumpUtil;
