@@ -69,4 +69,8 @@ public class AStringSerializerDeserializer implements ISerializerDeserializer<AS
             throw HyracksDataException.create(e);
         }
     }
+
+    public void serialize(char[] buffer, int start, int length, DataOutput out) throws IOException {
+        UTF8StringUtil.writeUTF8(buffer, start, length, out, utf8StringWriter);
+    }
 }

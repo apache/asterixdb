@@ -23,15 +23,16 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AMutableUUID extends AUUID {
 
-    public void parseUUIDString(String tokenImage) throws HyracksDataException {
-        if (tokenImage.length() != UUID_CHARS) {
-            throw new HyracksDataException("This is not a correct UUID value: " + tokenImage);
+    private final byte[] hexBytesBuffer = new byte[UUID_CHARS];
+
+    public void parseUUIDString(char[] buffer, int begin, int len) throws HyracksDataException {
+        if (len != UUID_CHARS) {
+            throw new HyracksDataException("This is not a correct UUID value: " + new String(buffer, begin, len));
         }
-        byte[] hexBytes = new byte[UUID_CHARS];
-        for (int i = 0; i < tokenImage.length(); i++) {
-            hexBytes[i] = (byte) tokenImage.charAt(i);
+        for (int i = 0; i < len; i++) {
+            hexBytesBuffer[i] = (byte) buffer[begin + i];
         }
-        parseUUIDHexBytes(hexBytes, 0);
+        parseUUIDHexBytes(hexBytesBuffer, 0);
     }
 
     public void parseUUIDHexBytes(byte[] serString, int offset) throws HyracksDataException {

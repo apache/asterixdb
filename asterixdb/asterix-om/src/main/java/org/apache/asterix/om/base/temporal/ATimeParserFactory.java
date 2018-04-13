@@ -63,7 +63,6 @@ public class ATimeParserFactory implements IValueParserFactory {
      * @throws HyracksDataException
      */
     public static int parseTimePart(String timeString, int start, int length) throws HyracksDataException {
-
         int offset = 0;
 
         int hour = 0, min = 0, sec = 0, millis = 0;

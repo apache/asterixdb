@@ -19,7 +19,10 @@
 package org.apache.asterix.external.parser;
 
 import java.io.DataOutput;
+import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.external.api.IDataParser;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABinary;
@@ -73,11 +76,14 @@ import org.apache.asterix.om.base.temporal.ADurationParserFactory;
 import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.bytes.Base64Parser;
 import org.apache.hyracks.util.bytes.HexParser;
+import org.apache.hyracks.util.string.UTF8StringReader;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 /**
  * Base class for data parsers. Includes the common set of definitions for
@@ -143,6 +149,9 @@ public abstract class AbstractDataParser implements IDataParser {
     protected ISerializerDeserializer<ANull> nullSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
+    protected final AStringSerializerDeserializer untaggedStringSerde =
+            new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader());
+
     protected final HexParser hexParser = new HexParser();
     protected final Base64Parser base64Parser = new Base64Parser();
 
@@ -201,14 +210,14 @@ public abstract class AbstractDataParser implements IDataParser {
         this.filename = filename;
     }
 
-    protected void parseTime(String time, DataOutput out) throws HyracksDataException {
-        int chrononTimeInMs = ATimeParserFactory.parseTimePart(time, 0, time.length());
+    protected void parseTime(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
+        int chrononTimeInMs = ATimeParserFactory.parseTimePart(buffer, begin, len);
         aTime.setValue(chrononTimeInMs);
         timeSerde.serialize(aTime, out);
     }
 
-    protected void parseDate(String date, DataOutput out) throws HyracksDataException {
-        long chrononTimeInMs = ADateParserFactory.parseDatePart(date, 0, date.length());
+    protected void parseDate(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
+        long chrononTimeInMs = ADateParserFactory.parseDatePart(buffer, begin, len);
         short temp = 0;
         if (chrononTimeInMs < 0 && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
             temp = 1;
@@ -217,84 +226,93 @@ public abstract class AbstractDataParser implements IDataParser {
         dateSerde.serialize(aDate, out);
     }
 
-    protected void parseDateTime(String datetime, DataOutput out) throws HyracksDataException {
+    protected void parseDateTime(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         // +1 if it is negative (-)
-        short timeOffset = (short) ((datetime.charAt(0) == '-') ? 1 : 0);
 
-        timeOffset += 8;
+        int timeOffset = (buffer[begin] == '-') ? 1 : 0;
 
-        if (datetime.charAt(timeOffset) != 'T') {
+        timeOffset = timeOffset + 8 + begin;
+
+        if (buffer[timeOffset] != 'T') {
             timeOffset += 2;
-            if (datetime.charAt(timeOffset) != 'T') {
-                throw new HyracksDataException("This can not be an instance of datetime: missing T");
+            if (buffer[timeOffset] != 'T') {
+                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_INTERVAL_INVALID_DATETIME);
             }
         }
-        long chrononTimeInMs = ADateParserFactory.parseDatePart(datetime, 0, timeOffset);
-        chrononTimeInMs +=
-                ATimeParserFactory.parseTimePart(datetime, timeOffset + 1, datetime.length() - timeOffset - 1);
+        long chrononTimeInMs = ADateParserFactory.parseDatePart(buffer, begin, timeOffset - begin);
+        chrononTimeInMs += ATimeParserFactory.parseTimePart(buffer, timeOffset + 1, begin + len - timeOffset - 1);
         aDateTime.setValue(chrononTimeInMs);
         datetimeSerde.serialize(aDateTime, out);
     }
 
-    protected void parseDuration(String duration, DataOutput out) throws HyracksDataException {
-        ADurationParserFactory.parseDuration(duration, 0, duration.length(), aDuration, ADurationParseOption.All);
+    protected void parseDuration(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
+        ADurationParserFactory.parseDuration(buffer, begin, len, aDuration, ADurationParseOption.All);
         durationSerde.serialize(aDuration, out);
     }
 
-    protected void parseDateTimeDuration(String durationString, DataOutput out) throws HyracksDataException {
-        ADurationParserFactory.parseDuration(durationString, 0, durationString.length(), aDayTimeDuration,
-                ADurationParseOption.All);
+    protected void parseDateTimeDuration(char[] buffer, int begin, int len, DataOutput out)
+            throws HyracksDataException {
+        ADurationParserFactory.parseDuration(buffer, begin, len, aDayTimeDuration, ADurationParseOption.All);
         dayTimeDurationSerde.serialize(aDayTimeDuration, out);
     }
 
-    protected void parseYearMonthDuration(String durationString, DataOutput out) throws HyracksDataException {
-        ADurationParserFactory.parseDuration(durationString, 0, durationString.length(), aYearMonthDuration,
-                ADurationParseOption.All);
+    protected void parseYearMonthDuration(char[] buffer, int begin, int len, DataOutput out)
+            throws HyracksDataException {
+        ADurationParserFactory.parseDuration(buffer, begin, len, aYearMonthDuration, ADurationParseOption.All);
         yearMonthDurationSerde.serialize(aYearMonthDuration, out);
     }
 
-    protected void parsePoint(String point, DataOutput out) throws HyracksDataException {
+    protected void parsePoint(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         try {
-            aPoint.setValue(Double.parseDouble(point.substring(0, point.indexOf(','))),
-                    Double.parseDouble(point.substring(point.indexOf(',') + 1, point.length())));
+            int commaIndex = indexOf(buffer, begin, len, ',');
+            aPoint.setValue(parseDouble(buffer, begin, commaIndex - begin),
+                    parseDouble(buffer, commaIndex + 1, begin + len - commaIndex - 1));
             pointSerde.serialize(aPoint, out);
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(point + " can not be an instance of point");
+        } catch (Exception e) {
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, e, new String(buffer, begin, len),
+                    "point");
         }
     }
 
-    protected void parse3DPoint(String point3d, DataOutput out) throws HyracksDataException {
+    protected void parse3DPoint(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         try {
-            int firstCommaIndex = point3d.indexOf(',');
-            int secondCommaIndex = point3d.indexOf(',', firstCommaIndex + 1);
-            aPoint3D.setValue(Double.parseDouble(point3d.substring(0, firstCommaIndex)),
-                    Double.parseDouble(point3d.substring(firstCommaIndex + 1, secondCommaIndex)),
-                    Double.parseDouble(point3d.substring(secondCommaIndex + 1, point3d.length())));
+            int firstCommaIndex = indexOf(buffer, begin, len, ',');
+            int secondCommaIndex = indexOf(buffer, firstCommaIndex + 1, begin + len - firstCommaIndex - 1, ',');
+            aPoint3D.setValue(parseDouble(buffer, begin, firstCommaIndex - begin),
+                    parseDouble(buffer, firstCommaIndex + 1, secondCommaIndex - firstCommaIndex - 1),
+                    parseDouble(buffer, secondCommaIndex + 1, begin + len - secondCommaIndex - 1));
             point3DSerde.serialize(aPoint3D, out);
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(point3d + " can not be an instance of point3d");
+        } catch (Exception e) {
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, e, new String(buffer, begin, len),
+                    "point3d");
         }
     }
 
-    protected void parseCircle(String circle, DataOutput out) throws HyracksDataException {
+    protected void parseCircle(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         try {
-            String[] parts = circle.split(" ");
-            aPoint.setValue(Double.parseDouble(parts[0].split(",")[0]), Double.parseDouble(parts[0].split(",")[1]));
-            aCircle.setValue(aPoint, Double.parseDouble(parts[1].substring(0, parts[1].length())));
+            int firstCommaIndex = indexOf(buffer, begin, len, ',');
+            int spaceIndex = indexOf(buffer, firstCommaIndex + 1, begin + len - firstCommaIndex - 1, ' ');
+            aPoint.setValue(parseDouble(buffer, begin, firstCommaIndex - begin),
+                    parseDouble(buffer, firstCommaIndex + 1, spaceIndex - firstCommaIndex - 1));
+            aCircle.setValue(aPoint, parseDouble(buffer, spaceIndex + 1, begin + len - spaceIndex - 1));
             circleSerde.serialize(aCircle, out);
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(circle + " can not be an instance of circle");
+        } catch (Exception e) {
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, e, new String(buffer, begin, len),
+                    "circle");
         }
     }
 
-    protected void parseRectangle(String rectangle, DataOutput out) throws HyracksDataException {
+    protected void parseRectangle(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         try {
-            String[] points = rectangle.split(" ");
-            if (points.length != 2) {
-                throw new HyracksDataException("rectangle consists of only 2 points.");
-            }
-            aPoint.setValue(Double.parseDouble(points[0].split(",")[0]), Double.parseDouble(points[0].split(",")[1]));
-            aPoint2.setValue(Double.parseDouble(points[1].split(",")[0]), Double.parseDouble(points[1].split(",")[1]));
+            int spaceIndex = indexOf(buffer, begin, len, ' ');
+
+            int firstCommaIndex = indexOf(buffer, begin, len, ',');
+            aPoint.setValue(parseDouble(buffer, begin, firstCommaIndex - begin),
+                    parseDouble(buffer, firstCommaIndex + 1, spaceIndex - firstCommaIndex - 1));
+
+            int secondCommaIndex = indexOf(buffer, spaceIndex + 1, begin + len - spaceIndex - 1, ',');
+            aPoint2.setValue(parseDouble(buffer, spaceIndex + 1, secondCommaIndex - spaceIndex - 1),
+                    parseDouble(buffer, secondCommaIndex + 1, begin + len - secondCommaIndex - 1));
             if (aPoint.getX() > aPoint2.getX() && aPoint.getY() > aPoint2.getY()) {
                 aRectangle.setValue(aPoint2, aPoint);
             } else if (aPoint.getX() < aPoint2.getX() && aPoint.getY() < aPoint2.getY()) {
@@ -304,23 +322,26 @@ public abstract class AbstractDataParser implements IDataParser {
                         "Rectangle arugment must be either (bottom left point, top right point) or (top right point, bottom left point)");
             }
             rectangleSerde.serialize(aRectangle, out);
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(rectangle + " can not be an instance of rectangle");
+        } catch (Exception e) {
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, e, new String(buffer, begin, len),
+                    "rectangle");
         }
     }
 
-    protected void parseLine(String line, DataOutput out) throws HyracksDataException {
+    protected void parseLine(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         try {
-            String[] points = line.split(" ");
-            if (points.length != 2) {
-                throw new HyracksDataException("line consists of only 2 points.");
-            }
-            aPoint.setValue(Double.parseDouble(points[0].split(",")[0]), Double.parseDouble(points[0].split(",")[1]));
-            aPoint2.setValue(Double.parseDouble(points[1].split(",")[0]), Double.parseDouble(points[1].split(",")[1]));
+            int spaceIndex = indexOf(buffer, begin, len, ' ');
+            int firstCommaIndex = indexOf(buffer, begin, len, ',');
+            aPoint.setValue(parseDouble(buffer, begin, firstCommaIndex - begin),
+                    parseDouble(buffer, firstCommaIndex + 1, spaceIndex - firstCommaIndex - 1));
+            int secondCommaIndex = indexOf(buffer, spaceIndex + 1, begin + len - spaceIndex - 1, ',');
+            aPoint2.setValue(parseDouble(buffer, spaceIndex + 1, secondCommaIndex - spaceIndex - 1),
+                    parseDouble(buffer, secondCommaIndex + 1, begin + len - secondCommaIndex - 1));
             aLine.setValue(aPoint, aPoint2);
             lineSerde.serialize(aLine, out);
-        } catch (HyracksDataException e) {
-            throw new HyracksDataException(line + " can not be an instance of line");
+        } catch (Exception e) {
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, e, new String(buffer, begin, len),
+                    "line");
         }
     }
 
@@ -362,5 +383,35 @@ public abstract class AbstractDataParser implements IDataParser {
         }
 
         return ATimeParserFactory.parseTimePart(interval, startOffset, endOffset - startOffset + 1);
+    }
+
+    protected double parseDouble(char[] buffer, int begin, int len) {
+        // TODO: parse double directly from char[]
+        String str = new String(buffer, begin, len);
+        return Double.valueOf(str);
+    }
+
+    protected float parseFloat(char[] buffer, int begin, int len) {
+        //TODO: pares float directly from char[]
+        String str = new String(buffer, begin, len);
+        return Float.valueOf(str);
+    }
+
+    protected int indexOf(char[] buffer, int begin, int len, char target) {
+        for (int i = begin; i < begin + len; i++) {
+            if (buffer[i] == target) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("Cannot find " + target + " in " + new String(buffer, begin, len));
+    }
+
+    protected void parseString(char[] buffer, int begin, int length, DataOutput out) throws HyracksDataException {
+        try {
+            out.writeByte(ATypeTag.STRING.serialize());
+            untaggedStringSerde.serialize(buffer, begin, length, out);
+        } catch (IOException e) {
+            throw new ParseException(e);
+        }
     }
 }

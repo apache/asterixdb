@@ -124,6 +124,62 @@ public class [LEXER_NAME] {
         }
     }
 
+    public void getLastTokenImage(TokenImage image) {
+        if (bufpos >= tokenBegin) {
+            image.reset(buffer, tokenBegin, bufpos - tokenBegin);
+        } else {
+            image.reset(buffer, tokenBegin, bufsize - tokenBegin, buffer, 0, bufpos);
+        }
+    }
+
+    public static class TokenImage{
+        private char[] buffer;
+        private int begin;
+        private int length;
+
+        // used to hold circular tokens
+        private char[] tmpBuffer;
+
+        private static final double TMP_BUFFER_GROWTH = 1.5;
+
+        public void reset(char[] buffer, int begin, int length) {
+            this.buffer = buffer;
+            this.begin = begin;
+            this.length = length;
+        }
+
+        public void reset(char[] buffer, int begin, int length, char[] extraBuffer, int extraBegin, int extraLength) {
+            ensureTmpBufferSize(length + extraLength);
+            System.arraycopy(buffer, begin, tmpBuffer, 0, length);
+            System.arraycopy(extraBuffer, extraBegin, tmpBuffer, length, extraLength);
+            this.buffer = tmpBuffer;
+            this.begin = 0;
+            this.length = length + extraLength;
+        }
+
+        public char[] getBuffer() {
+            return buffer;
+        }
+
+        public int getBegin() {
+            return begin;
+        }
+
+        public int getLength() {
+            return length;
+        }
+
+
+        private void ensureTmpBufferSize(int size) {
+            int oldSize = tmpBuffer!=null?tmpBuffer.length:0;
+            if(oldSize < size) {
+                int newSize = Math.max((int)(oldSize * TMP_BUFFER_GROWTH), size);
+                tmpBuffer = new char[newSize];
+            }
+        }
+
+    }
+
     public int getColumn() {
         return column;
     }

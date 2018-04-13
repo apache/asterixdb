@@ -22,7 +22,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Serializable;
 import java.util.BitSet;
 import java.util.List;
 
@@ -39,7 +38,6 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.om.base.ABoolean;
-import org.apache.asterix.om.base.AGeometry;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -47,13 +45,13 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AUnorderedListType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.operators.file.adm.AdmLexer;
+import org.apache.asterix.runtime.operators.file.adm.AdmLexer.TokenImage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -74,63 +72,10 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
     private final IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
             new ListObjectPool<IMutableValueStorage, ATypeTag>(new AbvsBuilderFactory());
 
+    private final TokenImage tmpTokenImage = new TokenImage();
+
     private final String mismatchErrorMessage = "Mismatch Type, expecting a value of type ";
     private final String mismatchErrorMessage2 = " got a value of type ";
-
-    static class ParseException extends HyracksDataException {
-        private static final long serialVersionUID = 1L;
-        private String filename;
-        private int line = -1;
-        private int column = -1;
-
-        public ParseException(String message) {
-            super(message);
-        }
-
-        public ParseException(int errorCode, Serializable... param) {
-            super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), param);
-        }
-
-        public ParseException(int errorCode, Throwable e, Serializable... param) {
-            super(ErrorCode.ASTERIX, errorCode, e, ErrorCode.getErrorMessage(errorCode), param);
-            addSuppressed(e);
-        }
-
-        public ParseException(Throwable cause) {
-            super(cause);
-        }
-
-        public ParseException(String message, Throwable cause) {
-            super(message, cause);
-        }
-
-        public ParseException(Throwable cause, String filename, int line, int column) {
-            super(cause);
-            setLocation(filename, line, column);
-        }
-
-        public void setLocation(String filename, int line, int column) {
-            this.filename = filename;
-            this.line = line;
-            this.column = column;
-        }
-
-        @Override
-        public String getMessage() {
-            StringBuilder msg = new StringBuilder("Parse error");
-            if (filename != null) {
-                msg.append(" in file " + filename);
-            }
-            if (line >= 0) {
-                if (column >= 0) {
-                    msg.append(" at (" + line + ", " + column + ")");
-                } else {
-                    msg.append(" in line " + line);
-                }
-            }
-            return msg.append(": " + super.getMessage()).toString();
-        }
-    }
 
     public ADMDataParser(ARecordType recordType, boolean isStream) {
         this(null, recordType, isStream);
@@ -256,15 +201,18 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 break;
             case AdmLexer.TOKEN_STRING_LITERAL:
                 if (checkType(ATypeTag.STRING, objectType)) {
-                    String tokenImage =
-                            admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
-                    aString.setValue(admLexer.containsEscapes() ? replaceEscapes(tokenImage) : tokenImage);
-                    stringSerde.serialize(aString, out);
+                    admLexer.getLastTokenImage(tmpTokenImage);
+                    if (admLexer.containsEscapes()) {
+                        replaceEscapes(tmpTokenImage);
+                    }
+                    int begin = tmpTokenImage.getBegin() + 1;
+                    int len = tmpTokenImage.getLength() - 2;
+                    parseString(tmpTokenImage.getBuffer(), begin, len, out);
                 } else if (checkType(ATypeTag.UUID, objectType)) {
                     // Dealing with UUID type that is represented by a string
-                    String tokenImage =
-                            admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
-                    aUUID.parseUUIDString(tokenImage);
+                    admLexer.getLastTokenImage(tmpTokenImage);
+                    aUUID.parseUUIDString(tmpTokenImage.getBuffer(), tmpTokenImage.getBegin() + 1,
+                            tmpTokenImage.getLength() - 2);
                     uuidSerde.serialize(aUUID, out);
                 } else if (checkType(ATypeTag.GEOMETRY, objectType)) {
                     // Parse the string as a WKT-encoded geometry
@@ -373,13 +321,14 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
 
     }
 
-    private String replaceEscapes(String tokenImage) throws ParseException {
-        char[] chars = tokenImage.toCharArray();
-        int len = chars.length;
-        int readpos = 0;
-        int writepos = 0;
-        int movemarker = 0;
-        while (readpos < len) {
+    // TODO: This function should be optimized. Currently it has complexity of O(N*N)!
+    private void replaceEscapes(TokenImage tokenImage) throws ParseException {
+        char[] chars = tokenImage.getBuffer();
+        int end = tokenImage.getBegin() + tokenImage.getLength();
+        int readpos = tokenImage.getBegin();
+        int writepos = tokenImage.getBegin();
+        int movemarker = tokenImage.getBegin();
+        while (readpos < end) {
             if (chars[readpos] == '\\') {
                 moveChars(chars, movemarker, readpos, readpos - writepos);
                 switch (chars[readpos + 1]) {
@@ -416,8 +365,8 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             ++writepos;
             ++readpos;
         }
-        moveChars(chars, movemarker, len, readpos - writepos);
-        return new String(chars, 0, len - (readpos - writepos));
+        moveChars(chars, movemarker, end, readpos - writepos);
+        tokenImage.reset(chars, tokenImage.getBegin(), tokenImage.getLength() - (readpos - writepos));
     }
 
     private static void moveChars(char[] chars, int start, int end, int offset) {
@@ -517,16 +466,16 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                     expectingRecordField = false;
 
                     if (recType != null) {
-                        String fldName =
-                                admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
+                        admLexer.getLastTokenImage(tmpTokenImage);
+                        String fldName = new String(tmpTokenImage.getBuffer(), tmpTokenImage.getBegin() + 1,
+                                tmpTokenImage.getLength() - 2);
                         fieldId = recBuilder.getFieldId(fldName);
                         if ((fieldId < 0) && !recType.isOpen()) {
                             throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_EXTRA_FIELD_IN_CLOSED_RECORD,
                                     fldName);
                         } else if ((fieldId < 0) && recType.isOpen()) {
-                            aStringFieldName.setValue(admLexer.getLastTokenImage().substring(1,
-                                    admLexer.getLastTokenImage().length() - 1));
-                            stringSerde.serialize(aStringFieldName, fieldNameBuffer.getDataOutput());
+                            parseString(tmpTokenImage.getBuffer(), tmpTokenImage.getBegin() + 1,
+                                    tmpTokenImage.getLength() - 2, fieldNameBuffer.getDataOutput());
                             openRecordField = true;
                             fieldType = null;
                         } else {
@@ -536,9 +485,9 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                             openRecordField = false;
                         }
                     } else {
-                        aStringFieldName.setValue(
-                                admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1));
-                        stringSerde.serialize(aStringFieldName, fieldNameBuffer.getDataOutput());
+                        admLexer.getLastTokenImage(tmpTokenImage);
+                        parseString(tmpTokenImage.getBuffer(), tmpTokenImage.getBegin() + 1,
+                                tmpTokenImage.getLength() - 2, fieldNameBuffer.getDataOutput());
                         openRecordField = true;
                         fieldType = null;
                     }
@@ -816,7 +765,13 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
 
     private void parseToNumericTarget(ATypeTag typeTag, IAType objectType, DataOutput out) throws IOException {
         ATypeTag targetTypeTag = getTargetTypeTag(typeTag, objectType);
-        if ((targetTypeTag == null) || !parseValue(admLexer.getLastTokenImage(), targetTypeTag, out)) {
+        boolean parsed = false;
+        if (targetTypeTag != null) {
+            admLexer.getLastTokenImage(tmpTokenImage);
+            parsed = parseValue(tmpTokenImage.getBuffer(), tmpTokenImage.getBegin(), tmpTokenImage.getLength(),
+                    targetTypeTag, out);
+        }
+        if (!parsed) {
             throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
         }
     }
@@ -828,8 +783,13 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             castBuffer.reset();
             dataOutput = castBuffer.getDataOutput();
         }
-
-        if ((targetTypeTag == null) || !parseValue(admLexer.getLastTokenImage(), typeTag, dataOutput)) {
+        boolean parsed = false;
+        if (targetTypeTag != null) {
+            admLexer.getLastTokenImage(tmpTokenImage);
+            parsed = parseValue(tmpTokenImage.getBuffer(), tmpTokenImage.getBegin(), tmpTokenImage.getLength(), typeTag,
+                    dataOutput);
+        }
+        if (!parsed) {
             throw new ParseException(mismatchErrorMessage + objectType.getTypeName() + mismatchErrorMessage2 + typeTag);
         }
 
@@ -871,9 +831,11 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
             if (token == AdmLexer.TOKEN_CONSTRUCTOR_OPEN) {
                 token = admLexer.next();
                 if (token == AdmLexer.TOKEN_STRING_LITERAL) {
-                    String unquoted =
-                            admLexer.getLastTokenImage().substring(1, admLexer.getLastTokenImage().length() - 1);
-                    if (!parseValue(unquoted, typeTag, dataOutput)) {
+                    admLexer.getLastTokenImage(tmpTokenImage);
+                    int begin = tmpTokenImage.getBegin() + 1;
+                    int len = tmpTokenImage.getLength() - 2;
+                    // unquoted value
+                    if (!parseValue(tmpTokenImage.getBuffer(), begin, len, typeTag, dataOutput)) {
                         throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_CONSTRUCTOR_MISSING_DESERIALIZER,
                                 AdmLexer.tokenKindToString(token));
                     }
@@ -899,85 +861,86 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
                 objectType.getTypeName() + " got " + typeTag);
     }
 
-    private boolean parseValue(String unquoted, ATypeTag typeTag, DataOutput out) throws HyracksDataException {
+    private boolean parseValue(char[] buffer, int begin, int len, ATypeTag typeTag, DataOutput out)
+            throws HyracksDataException {
         switch (typeTag) {
             case BOOLEAN:
-                parseBoolean(unquoted, out);
+                parseBoolean(buffer, begin, len, out);
                 return true;
             case TINYINT:
-                parseInt8(unquoted, out);
+                parseInt8(buffer, begin, len, out);
                 return true;
             case SMALLINT:
-                parseInt16(unquoted, out);
+                parseInt16(buffer, begin, len, out);
                 return true;
             case INTEGER:
-                parseInt32(unquoted, out);
+                parseInt32(buffer, begin, len, out);
                 return true;
             case BIGINT:
-                parseInt64(unquoted, out);
+                parseInt64(buffer, begin, len, out);
                 return true;
             case FLOAT:
-                if ("INF".equals(unquoted)) {
+                if (matches("INF", buffer, begin, len)) {
                     aFloat.setValue(Float.POSITIVE_INFINITY);
-                } else if ("-INF".equals(unquoted)) {
+                } else if (matches("-INF", buffer, begin, len)) {
                     aFloat.setValue(Float.NEGATIVE_INFINITY);
                 } else {
-                    aFloat.setValue(Float.parseFloat(unquoted));
+                    aFloat.setValue(parseFloat(buffer, begin, len));
                 }
                 floatSerde.serialize(aFloat, out);
                 return true;
             case DOUBLE:
-                if ("INF".equals(unquoted)) {
+                if (matches("INF", buffer, begin, len)) {
                     aDouble.setValue(Double.POSITIVE_INFINITY);
-                } else if ("-INF".equals(unquoted)) {
+                } else if (matches("-INF", buffer, begin, len)) {
                     aDouble.setValue(Double.NEGATIVE_INFINITY);
                 } else {
-                    aDouble.setValue(Double.parseDouble(unquoted));
+                    aDouble.setValue(parseDouble(buffer, begin, len));
                 }
                 doubleSerde.serialize(aDouble, out);
                 return true;
             case STRING:
-                aString.setValue(unquoted);
-                stringSerde.serialize(aString, out);
+                parseString(buffer, begin, len, out);
                 return true;
             case TIME:
-                parseTime(unquoted, out);
+                parseTime(buffer, begin, len, out);
                 return true;
             case DATE:
-                parseDate(unquoted, out);
+                parseDate(buffer, begin, len, out);
                 return true;
             case DATETIME:
-                parseDateTime(unquoted, out);
+                parseDateTime(buffer, begin, len, out);
                 return true;
             case DURATION:
-                parseDuration(unquoted, out);
+                parseDuration(buffer, begin, len, out);
                 return true;
             case DAYTIMEDURATION:
-                parseDateTimeDuration(unquoted, out);
+                parseDateTimeDuration(buffer, begin, len, out);
                 return true;
             case YEARMONTHDURATION:
-                parseYearMonthDuration(unquoted, out);
+                parseYearMonthDuration(buffer, begin, len, out);
                 return true;
             case POINT:
-                parsePoint(unquoted, out);
+                parsePoint(buffer, begin, len, out);
                 return true;
             case POINT3D:
-                parse3DPoint(unquoted, out);
+                parse3DPoint(buffer, begin, len, out);
                 return true;
             case CIRCLE:
-                parseCircle(unquoted, out);
+                parseCircle(buffer, begin, len, out);
                 return true;
             case RECTANGLE:
-                parseRectangle(unquoted, out);
+                parseRectangle(buffer, begin, len, out);
                 return true;
             case LINE:
-                parseLine(unquoted, out);
+                parseLine(buffer, begin, len, out);
                 return true;
             case POLYGON:
-                APolygonSerializerDeserializer.parse(unquoted, out);
+                //TODO: optimize
+                APolygonSerializerDeserializer.parse(new String(buffer, begin, len), out);
                 return true;
             case UUID:
-                aUUID.parseUUIDString(unquoted);
+                aUUID.parseUUIDString(buffer, begin, len);
                 uuidSerde.serialize(aUUID, out);
                 return true;
             default:
@@ -985,39 +948,53 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         }
     }
 
-    private void parseBoolean(String bool, DataOutput out) throws HyracksDataException {
-        if (bool.equals("true")) {
+    private boolean matches(String value, char[] buffer, int begin, int len) {
+        if (len != value.length()) {
+            return false;
+        }
+        for (int i = 0; i < len; i++) {
+            if (value.charAt(i) != buffer[i + begin]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void parseBoolean(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
+        if (matches("true", buffer, begin, len)) {
             booleanSerde.serialize(ABoolean.TRUE, out);
-        } else if (bool.equals("false")) {
+        } else if (matches("false", buffer, begin, len)) {
             booleanSerde.serialize(ABoolean.FALSE, out);
         } else {
-            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, "boolean");
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, new String(buffer, begin, len),
+                    "boolean");
         }
     }
 
-    private void parseInt8(String int8, DataOutput out) throws HyracksDataException {
+    private void parseInt8(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         boolean positive = true;
         byte value = 0;
-        int offset = 0;
+        int offset = begin;
 
-        if (int8.charAt(offset) == '+') {
+        if (buffer[offset] == '+') {
             offset++;
-        } else if (int8.charAt(offset) == '-') {
+        } else if (buffer[offset] == '-') {
             offset++;
             positive = false;
         }
-        for (; offset < int8.length(); offset++) {
-            if ((int8.charAt(offset) >= '0') && (int8.charAt(offset) <= '9')) {
-                value = (byte) (((value * 10) + int8.charAt(offset)) - '0');
-            } else if ((int8.charAt(offset) == 'i') && (int8.charAt(offset + 1) == '8')
-                    && ((offset + 2) == int8.length())) {
+        for (; offset < begin + len; offset++) {
+            if ((buffer[offset] >= '0') && (buffer[offset] <= '9')) {
+                value = (byte) (((value * 10) + buffer[offset]) - '0');
+            } else if (buffer[offset] == 'i' && buffer[offset + 1] == '8' && offset + 2 == begin + len) {
                 break;
             } else {
-                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, "int8");
+                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE,
+                        new String(buffer, begin, len), "int8");
             }
         }
         if (value < 0) {
-            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, "int8");
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, new String(buffer, begin, len),
+                    "int8");
         }
         if ((value > 0) && !positive) {
             value *= -1;
@@ -1026,29 +1003,31 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         int8Serde.serialize(aInt8, out);
     }
 
-    private void parseInt16(String int16, DataOutput out) throws HyracksDataException {
+    private void parseInt16(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         boolean positive = true;
         short value = 0;
-        int offset = 0;
+        int offset = begin;
 
-        if (int16.charAt(offset) == '+') {
+        if (buffer[offset] == '+') {
             offset++;
-        } else if (int16.charAt(offset) == '-') {
+        } else if (buffer[offset] == '-') {
             offset++;
             positive = false;
         }
-        for (; offset < int16.length(); offset++) {
-            if ((int16.charAt(offset) >= '0') && (int16.charAt(offset) <= '9')) {
-                value = (short) (((value * 10) + int16.charAt(offset)) - '0');
-            } else if ((int16.charAt(offset) == 'i') && (int16.charAt(offset + 1) == '1')
-                    && (int16.charAt(offset + 2) == '6') && ((offset + 3) == int16.length())) {
+        for (; offset < begin + len; offset++) {
+            if (buffer[offset] >= '0' && buffer[offset] <= '9') {
+                value = (short) ((value * 10) + buffer[offset] - '0');
+            } else if (buffer[offset] == 'i' && buffer[offset + 1] == '1' && buffer[offset + 2] == '6'
+                    && offset + 3 == begin + len) {
                 break;
             } else {
-                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, "int16");
+                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE,
+                        new String(buffer, begin, len), "int16");
             }
         }
         if (value < 0) {
-            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, "int16");
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, new String(buffer, begin, len),
+                    "int16");
         }
         if ((value > 0) && !positive) {
             value *= -1;
@@ -1057,29 +1036,31 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         int16Serde.serialize(aInt16, out);
     }
 
-    private void parseInt32(String int32, DataOutput out) throws HyracksDataException {
+    private void parseInt32(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         boolean positive = true;
         int value = 0;
-        int offset = 0;
+        int offset = begin;
 
-        if (int32.charAt(offset) == '+') {
+        if (buffer[offset] == '+') {
             offset++;
-        } else if (int32.charAt(offset) == '-') {
+        } else if (buffer[offset] == '-') {
             offset++;
             positive = false;
         }
-        for (; offset < int32.length(); offset++) {
-            if ((int32.charAt(offset) >= '0') && (int32.charAt(offset) <= '9')) {
-                value = (((value * 10) + int32.charAt(offset)) - '0');
-            } else if ((int32.charAt(offset) == 'i') && (int32.charAt(offset + 1) == '3')
-                    && (int32.charAt(offset + 2) == '2') && ((offset + 3) == int32.length())) {
+        for (; offset < begin + len; offset++) {
+            if (buffer[offset] >= '0' && buffer[offset] <= '9') {
+                value = (value * 10) + buffer[offset] - '0';
+            } else if (buffer[offset] == 'i' && buffer[offset + 1] == '3' && buffer[offset + 2] == '2'
+                    && offset + 3 == begin + len) {
                 break;
             } else {
-                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, "int32");
+                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE,
+                        new String(buffer, begin, len), "int32");
             }
         }
         if (value < 0) {
-            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, "int32");
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, new String(buffer, begin, len),
+                    "int32");
         }
         if ((value > 0) && !positive) {
             value *= -1;
@@ -1089,29 +1070,31 @@ public class ADMDataParser extends AbstractDataParser implements IStreamDataPars
         int32Serde.serialize(aInt32, out);
     }
 
-    private void parseInt64(String int64, DataOutput out) throws HyracksDataException {
+    private void parseInt64(char[] buffer, int begin, int len, DataOutput out) throws HyracksDataException {
         boolean positive = true;
         long value = 0;
-        int offset = 0;
+        int offset = begin;
 
-        if (int64.charAt(offset) == '+') {
+        if (buffer[offset] == '+') {
             offset++;
-        } else if (int64.charAt(offset) == '-') {
+        } else if (buffer[offset] == '-') {
             offset++;
             positive = false;
         }
-        for (; offset < int64.length(); offset++) {
-            if ((int64.charAt(offset) >= '0') && (int64.charAt(offset) <= '9')) {
-                value = (((value * 10) + int64.charAt(offset)) - '0');
-            } else if ((int64.charAt(offset) == 'i') && (int64.charAt(offset + 1) == '6')
-                    && (int64.charAt(offset + 2) == '4') && ((offset + 3) == int64.length())) {
+        for (; offset < begin + len; offset++) {
+            if (buffer[offset] >= '0' && buffer[offset] <= '9') {
+                value = (value * 10) + buffer[offset] - '0';
+            } else if (buffer[offset] == 'i' && buffer[offset + 1] == '6' && buffer[offset + 2] == '4'
+                    && offset + 3 == begin + len) {
                 break;
             } else {
-                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, "int64");
+                throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE,
+                        new String(buffer, begin, len), "int64");
             }
         }
         if (value < 0) {
-            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, "int64");
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, new String(buffer, begin, len),
+                    "int64");
         }
         if ((value > 0) && !positive) {
             value *= -1;

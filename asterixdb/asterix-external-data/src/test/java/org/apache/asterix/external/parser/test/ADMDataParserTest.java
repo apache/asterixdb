@@ -27,8 +27,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCPoint;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AGeometry;
@@ -42,12 +40,10 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hadoop.io.DataInputByteBuffer;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.dataflow.common.comm.io.FrameDeserializer;
-import org.apache.hyracks.dataflow.common.comm.io.FrameDeserializingDataReader;
-import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.esri.core.geometry.ogc.OGCPoint;
 
 import junit.extensions.PA;
 
@@ -55,19 +51,21 @@ public class ADMDataParserTest {
 
     @Test
     public void test() throws IOException {
-        String[] dates = { "-9537-08-04", "9656-06-03", "-9537-04-04", "9656-06-04", "-9537-10-04", "9626-09-05" };
+        char[][] dates = toChars(
+                new String[] { "-9537-08-04", "9656-06-03", "-9537-04-04", "9656-06-04", "-9537-10-04", "9626-09-05" });
         AMutableDate[] parsedDates =
                 new AMutableDate[] { new AMutableDate(-4202630), new AMutableDate(2807408), new AMutableDate(-4202752),
                         new AMutableDate(2807409), new AMutableDate(-4202569), new AMutableDate(2796544), };
 
-        String[] times = { "12:04:45.689Z", "12:41:59.002Z", "12:10:45.169Z", "15:37:48.736Z", "04:16:42.321Z",
-                "12:22:56.816Z" };
+        char[][] times = toChars(new String[] { "12:04:45.689Z", "12:41:59.002Z", "12:10:45.169Z", "15:37:48.736Z",
+                "04:16:42.321Z", "12:22:56.816Z" });
         AMutableTime[] parsedTimes =
                 new AMutableTime[] { new AMutableTime(43485689), new AMutableTime(45719002), new AMutableTime(43845169),
                         new AMutableTime(56268736), new AMutableTime(15402321), new AMutableTime(44576816), };
 
-        String[] dateTimes = { "-2640-10-11T17:32:15.675Z", "4104-02-01T05:59:11.902Z", "0534-12-08T08:20:31.487Z",
-                "6778-02-16T22:40:21.653Z", "2129-12-12T13:18:35.758Z", "8647-07-01T13:10:19.691Z" };
+        char[][] dateTimes = toChars(
+                new String[] { "-2640-10-11T17:32:15.675Z", "4104-02-01T05:59:11.902Z", "0534-12-08T08:20:31.487Z",
+                        "6778-02-16T22:40:21.653Z", "2129-12-12T13:18:35.758Z", "8647-07-01T13:10:19.691Z" });
         AMutableDateTime[] parsedDateTimes =
                 new AMutableDateTime[] { new AMutableDateTime(-145452954464325L), new AMutableDateTime(67345192751902L),
                         new AMutableDateTime(-45286270768513L), new AMutableDateTime(151729886421653L),
@@ -88,24 +86,24 @@ public class ADMDataParserTest {
                         while (round++ < 10000) {
                             // Test parseDate.
                             for (int index = 0; index < dates.length; ++index) {
-                                PA.invokeMethod(parser, "parseDate(java.lang.String, java.io.DataOutput)", dates[index],
-                                        dos);
+                                PA.invokeMethod(parser, "parseDate(char[], int, int, java.io.DataOutput)", dates[index],
+                                        0, dates[index].length, dos);
                                 AMutableDate aDate = (AMutableDate) PA.getValue(parser, "aDate");
                                 Assert.assertTrue(aDate.equals(parsedDates[index]));
                             }
 
                             // Tests parseTime.
                             for (int index = 0; index < times.length; ++index) {
-                                PA.invokeMethod(parser, "parseTime(java.lang.String, java.io.DataOutput)", times[index],
-                                        dos);
+                                PA.invokeMethod(parser, "parseTime(char[], int, int, java.io.DataOutput)", times[index],
+                                        0, times[index].length, dos);
                                 AMutableTime aTime = (AMutableTime) PA.getValue(parser, "aTime");
                                 Assert.assertTrue(aTime.equals(parsedTimes[index]));
                             }
 
                             // Tests parseDateTime.
                             for (int index = 0; index < dateTimes.length; ++index) {
-                                PA.invokeMethod(parser, "parseDateTime(java.lang.String, java.io.DataOutput)",
-                                        dateTimes[index], dos);
+                                PA.invokeMethod(parser, "parseDateTime(char[], int, int, java.io.DataOutput)",
+                                        dateTimes[index], 0, dateTimes[index].length, dos);
                                 AMutableDateTime aDateTime = (AMutableDateTime) PA.getValue(parser, "aDateTime");
                                 Assert.assertTrue(aDateTime.equals(parsedDateTimes[index]));
                             }
@@ -130,6 +128,14 @@ public class ADMDataParserTest {
         }
         // Asserts no failure.
         Assert.assertTrue(errorCount.get() == 0);
+    }
+
+    private char[][] toChars(String[] strings) {
+        char[][] results = new char[strings.length][];
+        for (int i = 0; i < strings.length; i++) {
+            results[i] = strings[i].toCharArray();
+        }
+        return results;
     }
 
     @Test

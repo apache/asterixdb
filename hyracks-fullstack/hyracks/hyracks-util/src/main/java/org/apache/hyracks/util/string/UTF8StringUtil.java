@@ -595,7 +595,7 @@ public class UTF8StringUtil {
         out.write(tempBytes, 0, count);
     }
 
-    static void writeUTF8(char[] buffer, int start, int length, DataOutput out, UTF8StringWriter writer)
+    public static void writeUTF8(char[] buffer, int start, int length, DataOutput out, UTF8StringWriter writer)
             throws IOException {
         int utflen = 0;
         int count = 0;
