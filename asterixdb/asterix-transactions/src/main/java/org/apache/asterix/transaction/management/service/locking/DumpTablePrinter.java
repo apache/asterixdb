@@ -19,17 +19,17 @@
 
 package org.apache.asterix.transaction.management.service.locking;
 
-import java.util.concurrent.ConcurrentHashMap;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
 
 public class DumpTablePrinter implements TablePrinter {
     private ResourceGroupTable table;
     private ResourceArenaManager resArenaMgr;
     private RequestArenaManager reqArenaMgr;
     private JobArenaManager jobArenaMgr;
-    private ConcurrentHashMap<Long, Long> txnIdToJobSlotMap;
+    private Long2LongMap txnIdToJobSlotMap;
 
     DumpTablePrinter(ResourceGroupTable table, ResourceArenaManager resArenaMgr, RequestArenaManager reqArenaMgr,
-            JobArenaManager jobArenaMgr, ConcurrentHashMap<Long, Long> txnIdToJobSlotMap) {
+            JobArenaManager jobArenaMgr, Long2LongMap txnIdToJobSlotMap) {
         this.table = table;
         this.resArenaMgr = resArenaMgr;
         this.reqArenaMgr = reqArenaMgr;

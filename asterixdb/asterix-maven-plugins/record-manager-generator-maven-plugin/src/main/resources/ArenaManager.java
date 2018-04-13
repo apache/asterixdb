@@ -56,7 +56,7 @@ public class @E@ArenaManager {
     public long allocate() {
         final LocalManager localManager = local.get();
         final @E@RecordManager recMgr = localManager.mgr;
-        final int allocId = TRACK_ALLOC_ID ? (++recMgr.allocCounter % 0x7fff) : 0;
+        final int allocId = TRACK_ALLOC_ID ? (++recMgr.allocCounter % 0x7ffe + 1) : 1;
         final int localId = recMgr.allocate();
 
         long result = TypeUtil.Global.build(localManager.arenaId, allocId, localId);
