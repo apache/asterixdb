@@ -23,6 +23,7 @@ import static org.apache.asterix.app.message.ExecuteStatementRequestMessage.DEFA
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.api.http.server.QueryServiceServlet.Parameter;
 import org.apache.asterix.app.message.CancelQueryRequest;
 import org.apache.asterix.app.message.CancelQueryResponse;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
@@ -54,7 +55,7 @@ public class NCQueryCancellationServlet extends QueryCancellationServlet {
     @Override
     protected void delete(IServletRequest request, IServletResponse response) {
         // gets the parameter client_context_id from the request.
-        String clientContextId = request.getParameter(CLIENT_CONTEXT_ID);
+        String clientContextId = request.getParameter(Parameter.CLIENT_ID.str());
         if (clientContextId == null) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;

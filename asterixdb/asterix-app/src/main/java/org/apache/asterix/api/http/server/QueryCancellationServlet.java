@@ -21,6 +21,7 @@ package org.apache.asterix.api.http.server;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.asterix.api.http.server.QueryServiceServlet.Parameter;
 import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobId;
@@ -38,7 +39,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 public class QueryCancellationServlet extends AbstractServlet {
     private static final Logger LOGGER = LogManager.getLogger();
-    protected static final String CLIENT_CONTEXT_ID = "client_context_id";
 
     public QueryCancellationServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
@@ -46,7 +46,7 @@ public class QueryCancellationServlet extends AbstractServlet {
 
     @Override
     protected void delete(IServletRequest request, IServletResponse response) throws IOException {
-        String clientContextId = request.getParameter(CLIENT_CONTEXT_ID);
+        String clientContextId = request.getParameter(Parameter.CLIENT_ID.str());
         if (clientContextId == null) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;

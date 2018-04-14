@@ -585,6 +585,10 @@ public class TestExecutor {
             newParams = upsertParam(newParams, QueryServiceServlet.Parameter.MAX_RESULT_READS.str(),
                     maxReadsOptional.get());
         }
+        final List<Parameter> additionalParams = extractParameters(str);
+        for (Parameter param : additionalParams) {
+            newParams = upsertParam(newParams, param.getName(), param.getValue());
+        }
         HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, uri, "statement", newParams)
                 : constructPostMethodUrl(str, uri, "statement", newParams);
         // Set accepted output response type
