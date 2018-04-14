@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.maven.project.MavenProject;
 
 public class LicenseUtil {
 
@@ -144,5 +145,9 @@ public class LicenseUtil {
             maxLineLength = Math.max(maxLineLength, fullyTrimmed.length());
         }
         return new ImmutablePair<>(freeSpaces, maxLineLength);
+    }
+
+    static String toGav(MavenProject dep) {
+        return dep.getGroupId() + ":" + dep.getArtifactId() + ":" + dep.getVersion();
     }
 }

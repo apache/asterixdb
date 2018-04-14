@@ -111,4 +111,7 @@ public class LicenseSpec {
         this.displayName = displayName;
     }
 
+    public String toString() {
+        return getDisplayName() != null ? getDisplayName() : getUrl();
+    }
 }

@@ -18,10 +18,14 @@
  */
 package org.apache.hyracks.maven.license;
 
+import static org.apache.hyracks.maven.license.LicenseUtil.toGav;
+import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_LICENSE_OVERRIDE;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,6 +59,7 @@ import org.apache.maven.project.inheritance.ModelInheritanceAssembler;
 
 public abstract class LicenseMojo extends AbstractMojo {
 
+    private static final String VERIFIED_VERSIONS_PROP = "license-automation-plugin.verifiedVersions";
     @Parameter
     protected List<Override> overrides = new ArrayList<>();
 
@@ -108,6 +113,7 @@ public abstract class LicenseMojo extends AbstractMojo {
 
     Map<String, LicenseSpec> urlToLicenseMap = new HashMap<>();
     Map<String, LicensedProjects> licenseMap = new TreeMap<>();
+    private Map<Pair<String, ProjectFlag>, Object> projectFlags = new HashMap<>();
 
     protected Map<String, LicensedProjects> getLicenseMap() {
         return licenseMap;
@@ -283,6 +289,7 @@ public abstract class LicenseMojo extends AbstractMojo {
 
             Model supplement = supplementModels
                     .get(SupplementalModelHelper.generateSupplementMapKey(depObj.getGroupId(), depObj.getArtifactId()));
+            registerVerified(depProj, supplement);
             if (supplement != null) {
                 Model merged = SupplementalModelHelper.mergeModels(assembler, depProj.getModel(), supplement);
                 Set<String> origLicenses =
@@ -290,8 +297,8 @@ public abstract class LicenseMojo extends AbstractMojo {
                 Set<String> newLicenses =
                         merged.getLicenses().stream().map(License::getUrl).collect(Collectors.toSet());
                 if (!origLicenses.equals(newLicenses)) {
-                    getLog().warn("license list for " + toGav(depProj) + " changed with supplemental model; was: "
-                            + origLicenses + ", now: " + newLicenses);
+                    warnUnlessFlag(depProj, IGNORE_LICENSE_OVERRIDE, "license list for " + toGav(depProj)
+                            + " changed with supplemental model; was: " + origLicenses + ", now: " + newLicenses);
                 }
                 depProj = new MavenProject(merged);
                 depProj.setArtifact(depObj);
@@ -303,8 +310,34 @@ public abstract class LicenseMojo extends AbstractMojo {
         return depProj;
     }
 
-    private String toGav(MavenProject dep) {
-        return dep.getGroupId() + ":" + dep.getArtifactId() + ":" + dep.getVersion();
+    protected void warnUnlessFlag(MavenProject depProj, ProjectFlag flag, String message) {
+        warnUnlessFlag(toGav(depProj), flag, message);
+    }
+
+    protected void warnUnlessFlag(Project depProj, ProjectFlag flag, String message) {
+        warnUnlessFlag(depProj.gav(), flag, message);
+    }
+
+    protected void warnUnlessFlag(String gav, ProjectFlag flag, String message) {
+        if (projectFlags.containsKey(Pair.of(gav, flag))) {
+            getLog().info(message);
+        } else {
+            getLog().warn(message);
+        }
+    }
+
+    public Map<Pair<String, ProjectFlag>, Object> getProjectFlags() {
+        return projectFlags;
+    }
+
+    public Object getProjectFlag(String gav, ProjectFlag flag) {
+        return projectFlags.get(Pair.of(gav, flag));
+    }
+
+    private void registerVerified(MavenProject depObj, Model supplement) {
+        if (supplement != null) {
+            Arrays.stream(ProjectFlag.values()).forEach(flag -> flag.visit(depObj, supplement.getProperties(), this));
+        }
     }
 
     protected List<Pattern> compileExcludePatterns() {
