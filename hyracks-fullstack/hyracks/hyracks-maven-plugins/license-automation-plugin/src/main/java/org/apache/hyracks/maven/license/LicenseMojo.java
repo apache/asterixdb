@@ -22,6 +22,7 @@ import static org.apache.hyracks.maven.license.LicenseUtil.toGav;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_LICENSE_OVERRIDE;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -50,6 +52,7 @@ import org.apache.maven.model.License;
 import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -59,7 +62,6 @@ import org.apache.maven.project.inheritance.ModelInheritanceAssembler;
 
 public abstract class LicenseMojo extends AbstractMojo {
 
-    private static final String VERIFIED_VERSIONS_PROP = "license-automation-plugin.verifiedVersions";
     @Parameter
     protected List<Override> overrides = new ArrayList<>();
 
@@ -105,6 +107,12 @@ public abstract class LicenseMojo extends AbstractMojo {
     @Parameter(required = true)
     protected File licenseDirectory;
 
+    @Parameter
+    protected File warningTouchFile;
+
+    @Parameter
+    protected boolean failOnWarning;
+
     private Map<String, MavenProject> projectCache = new HashMap<>();
 
     private Map<String, Model> supplementModels;
@@ -115,15 +123,107 @@ public abstract class LicenseMojo extends AbstractMojo {
     Map<String, LicensedProjects> licenseMap = new TreeMap<>();
     private Map<Pair<String, ProjectFlag>, Object> projectFlags = new HashMap<>();
 
+    protected boolean seenWarning;
+
     protected Map<String, LicensedProjects> getLicenseMap() {
         return licenseMap;
     }
 
-    protected void init() throws MojoExecutionException, MalformedURLException, ProjectBuildingException {
+    protected void init() throws MojoExecutionException {
+        if (warningTouchFile != null) {
+            warningTouchFile.getParentFile().mkdirs();
+        }
+        interceptLogs();
         excludedScopes.add("system");
         excludePatterns = compileExcludePatterns();
         supplementModels = SupplementalModelHelper.loadSupplements(getLog(), models);
         buildUrlLicenseMap();
+    }
+
+    private void interceptLogs() {
+        final Log originalLog = getLog();
+        setLog(new Log() {
+            public boolean isDebugEnabled() {
+                return originalLog.isDebugEnabled();
+            }
+
+            public void debug(CharSequence charSequence) {
+                originalLog.debug(charSequence);
+            }
+
+            public void debug(CharSequence charSequence, Throwable throwable) {
+                originalLog.debug(charSequence, throwable);
+            }
+
+            public void debug(Throwable throwable) {
+                originalLog.debug(throwable);
+            }
+
+            public boolean isInfoEnabled() {
+                return originalLog.isInfoEnabled();
+            }
+
+            public void info(CharSequence charSequence) {
+                originalLog.info(charSequence);
+            }
+
+            public void info(CharSequence charSequence, Throwable throwable) {
+                originalLog.info(charSequence, throwable);
+            }
+
+            public void info(Throwable throwable) {
+                originalLog.info(throwable);
+            }
+
+            public boolean isWarnEnabled() {
+                return originalLog.isWarnEnabled();
+            }
+
+            public void warn(CharSequence charSequence) {
+                seenWarning();
+                originalLog.warn(charSequence);
+            }
+
+            public void warn(CharSequence charSequence, Throwable throwable) {
+                seenWarning();
+                originalLog.warn(charSequence, throwable);
+            }
+
+            public void warn(Throwable throwable) {
+                seenWarning();
+                originalLog.warn(throwable);
+            }
+
+            public boolean isErrorEnabled() {
+                return originalLog.isErrorEnabled();
+            }
+
+            public void error(CharSequence charSequence) {
+                seenWarning();
+                originalLog.error(charSequence);
+            }
+
+            public void error(CharSequence charSequence, Throwable throwable) {
+                seenWarning();
+                originalLog.error(charSequence, throwable);
+            }
+
+            public void error(Throwable throwable) {
+                seenWarning();
+                originalLog.error(throwable);
+            }
+
+            private void seenWarning() {
+                seenWarning = true;
+                if (warningTouchFile != null) {
+                    try {
+                        FileUtils.touch(warningTouchFile);
+                    } catch (IOException e) {
+                        originalLog.error("unable to touch " + warningTouchFile, e);
+                    }
+                }
+            }
+        });
     }
 
     protected void addDependenciesToLicenseMap() throws ProjectBuildingException {

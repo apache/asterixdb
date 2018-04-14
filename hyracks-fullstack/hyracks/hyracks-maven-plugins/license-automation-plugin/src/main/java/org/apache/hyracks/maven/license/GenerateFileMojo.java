@@ -121,6 +121,10 @@ public class GenerateFileMojo extends LicenseMojo {
             persistLicenseMap();
             buildNoticeProjectMap();
             generateFiles();
+            if (seenWarning && failOnWarning) {
+                throw new MojoFailureException(
+                        "'failOnWarning' enabled and warning(s) (or error(s)) occurred during execution; see output");
+            }
         } catch (IOException | TemplateException | ProjectBuildingException e) {
             throw new MojoExecutionException("Unexpected exception: " + e, e);
         }
@@ -327,8 +331,9 @@ public class GenerateFileMojo extends LicenseMojo {
                 UnaryOperator.identity());
     }
 
-    private void resolveArtifactFiles(final String name, ProjectFlag ignoreFlag, ProjectFlag alternateFilenameFlag,
-            Predicate<JarEntry> filter, BiConsumer<Project, String> consumer, UnaryOperator<String> contentTransformer)
+    private void resolveArtifactFiles(final String name, final ProjectFlag ignoreFlag,
+            final ProjectFlag alternateFilenameFlag, final Predicate<JarEntry> filter,
+            final BiConsumer<Project, String> consumer, final UnaryOperator<String> contentTransformer)
             throws MojoExecutionException, IOException {
         for (Project p : getProjects()) {
             File artifactFile = new File(p.getArtifactPath());
@@ -339,11 +344,10 @@ public class GenerateFileMojo extends LicenseMojo {
                 continue;
             }
             String alternateFilename = (String) getProjectFlag(p.gav(), alternateFilenameFlag);
-            if (alternateFilename != null) {
-                filter = entry -> entry.getName().equals(alternateFilename);
-            }
+            Predicate<JarEntry> finalFilter =
+                    alternateFilename != null ? entry -> entry.getName().equals(alternateFilename) : filter;
             try (JarFile jarFile = new JarFile(artifactFile)) {
-                SortedMap<String, JarEntry> matches = gatherMatchingEntries(jarFile, filter);
+                SortedMap<String, JarEntry> matches = gatherMatchingEntries(jarFile, finalFilter);
                 if (matches.isEmpty()) {
                     warnUnlessFlag(p, ignoreFlag, "No " + name + " file found for " + p.gav());
                 } else {
