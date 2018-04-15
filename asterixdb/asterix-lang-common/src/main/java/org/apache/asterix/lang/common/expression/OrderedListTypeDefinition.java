@@ -18,9 +18,10 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang.ObjectUtils;
 
 public class OrderedListTypeDefinition implements TypeExpression {
 
@@ -46,7 +47,7 @@ public class OrderedListTypeDefinition implements TypeExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCode(itemTypeExpression);
+        return Objects.hashCode(itemTypeExpression);
     }
 
     @Override
@@ -58,6 +59,6 @@ public class OrderedListTypeDefinition implements TypeExpression {
             return false;
         }
         OrderedListTypeDefinition target = (OrderedListTypeDefinition) object;
-        return ObjectUtils.equals(itemTypeExpression, target.itemTypeExpression);
+        return Objects.equals(itemTypeExpression, target.itemTypeExpression);
     }
 }

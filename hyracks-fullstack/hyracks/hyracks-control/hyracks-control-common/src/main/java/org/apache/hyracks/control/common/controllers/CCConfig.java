@@ -163,7 +163,8 @@ public class CCConfig extends ControllerConfig {
                     return "A flag indicating if runtime should enforce frame writer protocol and detect "
                             + "bad behaving operators";
                 case CORES_MULTIPLIER:
-                    return "Specifies the multiplier to use on the cluster available cores";
+                    return "the factor to multiply by the number of cores to determine maximum query concurrent "
+                            + "execution level";
                 case CONTROLLER_ID:
                     return "The 16-bit (0-65535) id of this Cluster Controller";
                 default:

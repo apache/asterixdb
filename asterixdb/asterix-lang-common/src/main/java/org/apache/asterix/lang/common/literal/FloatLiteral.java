@@ -18,8 +18,9 @@
  */
 package org.apache.asterix.lang.common.literal;
 
+import java.util.Objects;
+
 import org.apache.asterix.lang.common.base.Literal;
-import org.apache.commons.lang.ObjectUtils;
 
 public class FloatLiteral extends Literal {
     private static final long serialVersionUID = 3273563021227964396L;
@@ -46,7 +47,7 @@ public class FloatLiteral extends Literal {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCode(value);
+        return Objects.hashCode(value);
     }
 
     @Override
@@ -58,7 +59,7 @@ public class FloatLiteral extends Literal {
             return false;
         }
         FloatLiteral target = (FloatLiteral) object;
-        return ObjectUtils.equals(value, target.value);
+        return Objects.equals(value, target.value);
     }
 
     @Override

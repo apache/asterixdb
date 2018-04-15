@@ -18,8 +18,9 @@
  */
 package org.apache.asterix.lang.common.literal;
 
+import java.util.Objects;
+
 import org.apache.asterix.lang.common.base.Literal;
-import org.apache.commons.lang.ObjectUtils;
 
 public class IntegerLiteral extends Literal {
     private static final long serialVersionUID = -8633520244871361967L;
@@ -46,7 +47,7 @@ public class IntegerLiteral extends Literal {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCode(value);
+        return Objects.hashCode(value);
     }
 
     @Override

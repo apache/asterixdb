@@ -138,7 +138,6 @@ The second configuration file is
 
     [nc]
     app.class=org.apache.asterix.hyracks.bootstrap.NCApplicationEntryPoint
-    storage.subdir=storage
     address=127.0.0.1
     command=asterixnc
 
@@ -270,6 +269,7 @@ The following parameters are for the master process, under the "[cc]" section.
 |   cc    | cluster.topology                          | Sets the XML file that defines the cluster topology | &lt;undefined&gt; |
 |   cc    | console.listen.address                    | Sets the listen address for the Cluster Controller | same as address |
 |   cc    | console.listen.port                       | Sets the http port for the Cluster Controller) | 16001 |
+|   cc    | cores.multiplier                          | The factor to multiply by the number of cores to determine maximum query concurrent execution level | 3 |
 |   cc    | heartbeat.max.misses                      | Sets the maximum number of missed heartbeats before a node is marked as dead | 5 |
 |   cc    | heartbeat.period                          | Sets the time duration between two heartbeats from each node controller in milliseconds | 10000 |
 |   cc    | job.history.size                          | Limits the number of historical jobs remembered by the system to the specified value | 10 |
@@ -324,14 +324,12 @@ The following parameters for slave processes, under "[nc]" sections.
 |   nc    | result.ttl                                | Limits the amount of time results for asynchronous jobs should be retained by the system in milliseconds | 86400000 |
 |   nc    | storage.buffercache.maxopenfiles          | The maximum number of open files in the buffer cache | 2147483647 |
 |   nc    | storage.buffercache.pagesize              | The page size in bytes for pages in the buffer cache | 131072 (128 kB) |
-|   nc    | storage.buffercache.size                  | The size of memory allocated to the disk buffer cache.  The value should be a multiple of the buffer cache page size. | 715915264 (682.75 MB) |
+|   nc    | storage.buffercache.size                  | The size of memory allocated to the disk buffer cache.  The value should be a multiple of the buffer cache page size. | 1/4 of the JVM allocated memory |
 |   nc    | storage.lsm.bloomfilter.falsepositiverate | The maximum acceptable false positive rate for bloom filters associated with LSM indexes | 0.01 |
-|   nc    | storage.memorycomponent.globalbudget      | The size of memory allocated to the memory components.  The value should be a multiple of the memory component page size | 715915264 (682.75 MB) |
+|   nc    | storage.memorycomponent.globalbudget      | The size of memory allocated to the memory components.  The value should be a multiple of the memory component page size | 1/4 of the JVM allocated memory |
 |   nc    | storage.memorycomponent.numcomponents     | The number of memory components to be used per lsm index | 2 |
-|   nc    | storage.memorycomponent.numpages          | The number of pages to allocate for a memory component.  This budget is shared by all the memory components of the primary index and all its secondary indexes across all I/O devices on a node.  Note: in-memory components usually has fill factor of 75% since the pages are 75% full and the remaining 25% is un-utilized | 1/16th of the storage.memorycomponent.globalbudget value |
 |   nc    | storage.memorycomponent.pagesize          | The page size in bytes for pages allocated to memory components | 131072 (128 kB) |
-|   nc    | storage.metadata.memorycomponent.numpages | The number of pages to allocate for a metadata memory component | 1/64th of the storage.memorycomponent.globalbudget value or 256, whichever is larger |
-|   nc    | storage.subdir                            | The subdirectory name under each iodevice used for storage | storage |
+|   nc    | storage.metadata.memorycomponent.numpages | The number of pages to allocate for a metadata memory component | 8 |
 |   nc    | txn.log.dir                               | The directory where transaction logs should be stored | ${java.io.tmpdir}/asterixdb/txn-log |
 
 
@@ -346,7 +344,6 @@ The following parameters are configured under the "[common]" section.
 | common  | compiler.parallelism                      | The degree of parallelism for query execution. Zero means to use the storage parallelism as the query execution parallelism, while other integer values dictate the number of query execution parallel partitions. The system will fall back to use the number of all available CPU cores in the cluster as the degree of parallelism if the number set by a user is too large or too small | 0 |
 | common  | compiler.sortmemory                       | The memory budget (in bytes) for a sort operator instance in a partition | 33554432 (32 MB) |
 | common  | compiler.textsearchmemory                       | The memory budget (in bytes) for an inverted-index-search operator instance in a partition | 33554432 (32 MB) |
-| common  | instance.name                             | The name of this cluster instance | DEFAULT_INSTANCE |
 | common  | log.level                                 | The logging level for master and slave processes | WARNING |
 | common  | max.wait.active.cluster                   | The max pending time (in seconds) for cluster startup. After the threshold, if the cluster still is not up and running, it is considered unavailable | 60 |
 | common  | messaging.frame.count                     | Number of reusable frames for NC to NC messaging | 512 |
@@ -360,6 +357,7 @@ The following parameters are configured under the "[common]" section.
 | common  | replication.log.buffer.pagesize           | The size in bytes of each log buffer page | 131072 (128 kB) |
 | common  | replication.max.remote.recovery.attempts  | The maximum number of times to attempt to recover from a replica on failure before giving up | 5 |
 | common  | replication.timeout                       | The time in seconds to timeout when trying to contact a replica, before assuming it is dead | 15 |
+| common  | storage.max.active.writable.datasets      | The maximum number of datasets that can be concurrently modified | 8 |
 | common  | txn.commitprofiler.enabled                | Enable output of commit profiler logs | false |
 | common  | txn.commitprofiler.reportinterval         | Interval (in seconds) to report commit profiler logs | 5 |
 | common  | txn.job.recovery.memorysize               | The memory budget (in bytes) used for recovery | 67108864 (64 MB) |

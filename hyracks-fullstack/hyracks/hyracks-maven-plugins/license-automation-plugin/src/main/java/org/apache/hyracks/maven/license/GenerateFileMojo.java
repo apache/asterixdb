@@ -18,6 +18,11 @@
  */
 package org.apache.hyracks.maven.license;
 
+import static org.apache.hyracks.maven.license.ProjectFlag.ALTERNATE_LICENSE_FILE;
+import static org.apache.hyracks.maven.license.ProjectFlag.ALTERNATE_NOTICE_FILE;
+import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_MISSING_EMBEDDED_LICENSE;
+import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_MISSING_EMBEDDED_NOTICE;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -116,6 +121,10 @@ public class GenerateFileMojo extends LicenseMojo {
             persistLicenseMap();
             buildNoticeProjectMap();
             generateFiles();
+            if (seenWarning && failOnWarning) {
+                throw new MojoFailureException(
+                        "'failOnWarning' enabled and warning(s) (or error(s)) occurred during execution; see output");
+            }
         } catch (IOException | TemplateException | ProjectBuildingException e) {
             throw new MojoExecutionException("Unexpected exception: " + e, e);
         }
@@ -248,7 +257,9 @@ public class GenerateFileMojo extends LicenseMojo {
             for (Project p : lps.getProjects()) {
                 String licenseText = p.getLicenseText();
                 if (licenseText == null) {
-                    getLog().warn("Using license other than from within artifact: " + p.gav());
+                    warnUnlessFlag(p.gav(), IGNORE_MISSING_EMBEDDED_LICENSE,
+                            "Using license other than from within artifact: " + p.gav() + " (" + lps.getLicense()
+                                    + ")");
                     licenseText = resolveLicenseContent(lps.getLicense(), false);
                 }
                 LicenseSpec spec = lps.getLicense();
@@ -307,18 +318,22 @@ public class GenerateFileMojo extends LicenseMojo {
     }
 
     private void resolveNoticeFiles() throws MojoExecutionException, IOException {
-        resolveArtifactFiles("NOTICE", entry -> entry.getName().matches("(.*/|^)" + "NOTICE" + "(.txt)?"),
-                Project::setNoticeText,
+        // TODO(mblow): this will match *any* NOTICE[.txt] file located within the artifact- this seems way too liberal
+        resolveArtifactFiles("NOTICE", IGNORE_MISSING_EMBEDDED_NOTICE, ALTERNATE_NOTICE_FILE,
+                entry -> entry.getName().matches("(.*/|^)" + "NOTICE" + "(.txt)?"), Project::setNoticeText,
                 text -> stripFoundationAssertionFromNotices ? FOUNDATION_PATTERN.matcher(text).replaceAll("") : text);
     }
 
     private void resolveLicenseFiles() throws MojoExecutionException, IOException {
-        resolveArtifactFiles("LICENSE", entry -> entry.getName().matches("(.*/|^)" + "LICENSE" + "(.txt)?"),
-                Project::setLicenseText, UnaryOperator.identity());
+        // TODO(mblow): this will match *any* LICENSE[.txt] file located within the artifact- this seems way too liberal
+        resolveArtifactFiles("LICENSE", IGNORE_MISSING_EMBEDDED_LICENSE, ALTERNATE_LICENSE_FILE,
+                entry -> entry.getName().matches("(.*/|^)" + "LICENSE" + "(.txt)?"), Project::setLicenseText,
+                UnaryOperator.identity());
     }
 
-    private void resolveArtifactFiles(final String name, Predicate<JarEntry> filter,
-            BiConsumer<Project, String> consumer, UnaryOperator<String> contentTransformer)
+    private void resolveArtifactFiles(final String name, final ProjectFlag ignoreFlag,
+            final ProjectFlag alternateFilenameFlag, final Predicate<JarEntry> filter,
+            final BiConsumer<Project, String> consumer, final UnaryOperator<String> contentTransformer)
             throws MojoExecutionException, IOException {
         for (Project p : getProjects()) {
             File artifactFile = new File(p.getArtifactPath());
@@ -328,10 +343,13 @@ public class GenerateFileMojo extends LicenseMojo {
                 getLog().info("Skipping unknown artifact file type: " + artifactFile);
                 continue;
             }
+            String alternateFilename = (String) getProjectFlag(p.gav(), alternateFilenameFlag);
+            Predicate<JarEntry> finalFilter =
+                    alternateFilename != null ? entry -> entry.getName().equals(alternateFilename) : filter;
             try (JarFile jarFile = new JarFile(artifactFile)) {
-                SortedMap<String, JarEntry> matches = gatherMatchingEntries(jarFile, filter);
+                SortedMap<String, JarEntry> matches = gatherMatchingEntries(jarFile, finalFilter);
                 if (matches.isEmpty()) {
-                    getLog().warn("No " + name + " file found for " + p.gav());
+                    warnUnlessFlag(p, ignoreFlag, "No " + name + " file found for " + p.gav());
                 } else {
                     if (matches.size() > 1) {
                         getLog().warn("Multiple " + name + " files found for " + p.gav() + ": " + matches.keySet()
