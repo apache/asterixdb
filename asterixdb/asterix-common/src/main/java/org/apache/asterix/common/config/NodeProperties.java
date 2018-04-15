@@ -43,7 +43,6 @@ public class NodeProperties extends AbstractProperties {
                 appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "txn-log"),
                 "The directory where transaction logs should be stored",
                 "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/txn-log"),
-        STORAGE_SUBDIR(OptionTypes.STRING, "storage", "The subdirectory name under each iodevice used for storage"),
         STARTING_PARTITION_ID(
                 OptionTypes.INTEGER,
                 -1,
@@ -115,9 +114,5 @@ public class NodeProperties extends AbstractProperties {
 
     public String getTxnLogDir() {
         return accessor.getString(Option.TXN_LOG_DIR);
-    }
-
-    public String getStorageSubdir() {
-        return accessor.getString(Option.STORAGE_SUBDIR);
     }
 }

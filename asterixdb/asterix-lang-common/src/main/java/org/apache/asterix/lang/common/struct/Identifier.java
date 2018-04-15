@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.lang.common.struct;
 
-import org.apache.commons.lang.ObjectUtils;
+import java.util.Objects;
 
 public class Identifier {
     protected String value;
@@ -53,11 +53,11 @@ public class Identifier {
             return false;
         }
         Identifier target = (Identifier) o;
-        return ObjectUtils.equals(value, target.value);
+        return Objects.equals(value, target.value);
     }
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCode(value);
+        return Objects.hashCode(value);
     }
 }

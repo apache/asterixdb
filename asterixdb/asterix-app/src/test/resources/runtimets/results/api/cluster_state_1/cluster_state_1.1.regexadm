@@ -13,7 +13,6 @@
     "compiler\.sortmemory" : 327680,
     "compiler\.textsearchmemory" : 163840,
     "default\.dir" : "target/io/dir/asterixdb",
-    "instance\.name" : "DEFAULT_INSTANCE",
     "log\.level" : "INFO",
     "max\.wait\.active\.cluster" : 60,
     "messaging\.frame\.count" : 512,

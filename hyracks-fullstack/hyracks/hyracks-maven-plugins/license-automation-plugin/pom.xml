@@ -95,6 +95,11 @@
       <artifactId>maven-compat</artifactId>
       <version>3.3.9</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-util</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
 </project>

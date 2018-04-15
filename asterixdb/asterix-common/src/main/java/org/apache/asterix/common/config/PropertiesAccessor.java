@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.common.config;
 
-import static org.apache.asterix.common.config.NodeProperties.Option.STORAGE_SUBDIR;
+import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_NAME;
 import static org.apache.hyracks.control.common.controllers.NCConfig.Option.IODEVICES;
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -116,12 +116,11 @@ public class PropertiesAccessor implements IApplicationConfig {
         // Now we create an array of ClusterPartitions for all the partitions
         // on this NC.
         String[] iodevices = nodeCfg.getStringArray(IODEVICES);
-        String storageSubdir = nodeCfg.getString(STORAGE_SUBDIR);
         String[] nodeStores = new String[iodevices.length];
         ClusterPartition[] nodePartitions = new ClusterPartition[iodevices.length];
         for (int i = 0; i < nodePartitions.length; i++) {
-            // Construct final storage path from iodevice dir + storage subdirs
-            nodeStores[i] = iodevices[i] + File.separator + storageSubdir;
+            // Construct final storage path from iodevice dir
+            nodeStores[i] = joinPath(iodevices[i], STORAGE_ROOT_DIR_NAME);
             // Create ClusterPartition instances for this NC.
             ClusterPartition partition = new ClusterPartition(uniquePartitionId.getAndIncrement(), ncId, i);
             ClusterPartition orig = clusterPartitions.put(partition.getPartitionId(), partition);

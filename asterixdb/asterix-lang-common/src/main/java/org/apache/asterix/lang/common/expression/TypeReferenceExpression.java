@@ -18,10 +18,11 @@
  */
 package org.apache.asterix.lang.common.expression;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class TypeReferenceExpression implements TypeExpression {
@@ -48,7 +49,7 @@ public class TypeReferenceExpression implements TypeExpression {
 
     @Override
     public int hashCode() {
-        return ObjectUtils.hashCode(ident);
+        return Objects.hashCode(ident);
     }
 
     @Override
@@ -60,6 +61,6 @@ public class TypeReferenceExpression implements TypeExpression {
             return false;
         }
         TypeReferenceExpression target = (TypeReferenceExpression) object;
-        return ObjectUtils.equals(ident, target.ident);
+        return Objects.equals(ident, target.ident);
     }
 }
