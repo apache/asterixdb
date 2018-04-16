@@ -105,7 +105,7 @@ public class ChunkedNettyOutputStream extends OutputStream {
                 response.beforeFlush();
                 DefaultHttpContent content = new DefaultHttpContent(buffer);
                 ctx.writeAndFlush(content, ctx.channel().voidPromise());
-                // The responisbility of releasing the buffer is now with the netty pipeline since it is forwarded
+                // The responsibility of releasing the buffer is now with the netty pipeline since it is forwarded
                 // within the http content. We must nullify buffer before we allocate the next one to avoid
                 // releasing the buffer twice in case the allocation call fails.
                 buffer = null;
@@ -128,13 +128,13 @@ public class ChunkedNettyOutputStream extends OutputStream {
                 wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                LOGGER.log(Level.WARN, "Interupted while waiting for channel to be writable", e);
+                LOGGER.log(Level.WARN, "Interrupted while waiting for channel to be writable", e);
                 throw new IOException(e);
             }
         }
     }
 
-    public synchronized void resume() {
+    public synchronized void channelWritabilityChanged() {
         notifyAll();
     }
 }
