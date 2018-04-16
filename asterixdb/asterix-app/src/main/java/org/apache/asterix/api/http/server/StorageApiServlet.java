@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.api.http.server;
 
+import static org.apache.hyracks.util.NetworkUtil.toHostPort;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
@@ -131,8 +133,7 @@ public class StorageApiServlet extends AbstractServlet {
             ArrayNode replicasArray = OBJECT_MAPPER.createArrayNode();
             for (IPartitionReplica replica : replicas) {
                 final ObjectNode replicaJson = OBJECT_MAPPER.createObjectNode();
-                final InetSocketAddress location = replica.getIdentifier().getLocation();
-                replicaJson.put("location", location.getHostString() + ":" + location.getPort());
+                replicaJson.put("location", toHostPort(replica.getIdentifier().getLocation()));
                 replicaJson.put("status", replica.getStatus().toString());
                 replicasArray.add(replicaJson);
             }

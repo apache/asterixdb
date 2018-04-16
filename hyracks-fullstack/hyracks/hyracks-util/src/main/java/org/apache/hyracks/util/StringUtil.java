@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.commons.collections4.map.LRUMap;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 
 public class StringUtil {
     private static final Map<String, String> CAMEL_CACHE = Collections.synchronizedMap(new LRUMap<>(1024));
