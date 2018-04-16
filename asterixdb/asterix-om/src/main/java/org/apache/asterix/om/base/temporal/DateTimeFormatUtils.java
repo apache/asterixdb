@@ -148,20 +148,20 @@ public class DateTimeFormatUtils {
     };
 
     private static final byte[][] TIMEZONE_IDS;
-    private static final int[] TIMEZONE_OFFSETS;
+    private static final TimeZone[] TIMEZONE_VALUES;
 
     static {
         String[] tzIds = TimeZone.getAvailableIDs();
         int tzCount = tzIds.length;
         TIMEZONE_IDS = new byte[tzCount][];
-        TIMEZONE_OFFSETS = new int[tzCount];
+        TIMEZONE_VALUES = new TimeZone[tzCount];
 
         for (int i = 0; i < tzCount; i++) {
             TIMEZONE_IDS[i] = tzIds[i].getBytes(ENCODING);
         }
         Arrays.sort(TIMEZONE_IDS, byteArrayComparator);
         for (int i = 0; i < tzCount; i++) {
-            TIMEZONE_OFFSETS[i] = TimeZone.getTimeZone(new String(TIMEZONE_IDS[i], ENCODING)).getRawOffset();
+            TIMEZONE_VALUES[i] = TimeZone.getTimeZone(new String(TIMEZONE_IDS[i], ENCODING));
         }
     }
 
@@ -241,9 +241,10 @@ public class DateTimeFormatUtils {
         return -1;
     }
 
-    private int binaryTimezoneIDSearch(byte[] barray, int start, int length) {
-        return Arrays.binarySearch(TIMEZONE_IDS, 0, TIMEZONE_IDS.length,
+    public static TimeZone findTimeZone(byte[] barray, int start, int length) {
+        int idx = Arrays.binarySearch(TIMEZONE_IDS, 0, TIMEZONE_IDS.length,
                 Arrays.copyOfRange(barray, start, start + length), byteArrayComparator);
+        return idx >= 0 ? TIMEZONE_VALUES[idx] : null;
     }
 
     private int indexOf(byte[] barray, int start, int length, char c) {
@@ -683,10 +684,10 @@ public class DateTimeFormatUtils {
                                 || data[dataStart + timezoneEndField] == '_')) {
                             timezoneEndField++;
                         }
-                        int searchIdx = binaryTimezoneIDSearch(data, dataStart + dataStringPointer,
-                                timezoneEndField - dataStringPointer);
-                        if (searchIdx >= 0) {
-                            timezone = TIMEZONE_OFFSETS[searchIdx];
+                        TimeZone tz =
+                                findTimeZone(data, dataStart + dataStringPointer, timezoneEndField - dataStringPointer);
+                        if (tz != null) {
+                            timezone = tz.getRawOffset();
                         } else {
                             if (raiseParseDataError) {
                                 throw new AsterixTemporalTypeParseException("Unexpected timezone string: " + new String(
