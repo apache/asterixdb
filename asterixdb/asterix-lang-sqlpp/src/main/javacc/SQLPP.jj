@@ -2018,7 +2018,7 @@ Expression IsExpr() throws ParseException:
             <NULL> { fn = BuiltinFunctions.IS_NULL; } |
             <MISSING> { fn = BuiltinFunctions.IS_MISSING; } |
             <UNKNOWN> { fn = BuiltinFunctions.IS_UNKNOWN; } |
-            <VALUED> { not = !not; fn = BuiltinFunctions.IS_UNKNOWN; }
+            (<KNOWN> | <VALUED>) { not = !not; fn = BuiltinFunctions.IS_UNKNOWN; }
         )
       {
         FunctionSignature signature = new FunctionSignature(fn);
@@ -3252,6 +3252,7 @@ TOKEN [IGNORE_CASE]:
   | <JOIN : "join">
   | <KEYWORD : "keyword">
   | <KEY : "key">
+  | <KNOWN : "known">
   | <LEFT : "left">
   | <LETTING : "letting">
   | <LET : "let">

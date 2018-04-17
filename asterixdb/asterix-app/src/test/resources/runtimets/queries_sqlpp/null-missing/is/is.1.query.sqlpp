@@ -41,5 +41,11 @@
   "21": 1 is valued,
   "22": null is not valued,
   "23": missing is not valued,
-  "24": 1 is not valued
+  "24": 1 is not valued,
+  "25": null is known,
+  "26": missing is known,
+  "27": 1 is known,
+  "28": null is not known,
+  "29": missing is not known,
+  "30": 1 is not known
 };
