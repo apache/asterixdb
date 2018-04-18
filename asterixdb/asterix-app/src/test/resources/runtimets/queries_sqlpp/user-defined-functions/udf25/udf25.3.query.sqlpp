@@ -17,8 +17,4 @@
  * under the License.
  */
 use test;
-
-
 select element test.computeBonus(-1,-1);
-select element test.computeBonus(1,-1);
-

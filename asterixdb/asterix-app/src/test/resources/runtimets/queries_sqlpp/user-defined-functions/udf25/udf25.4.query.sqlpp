@@ -16,15 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Create a socket feed with datatype without auuid and connect
- * it to three different datasets with different datatype: one with auuid, one
- * open datatype with auuid and one without auuid using one of the attribute
- * as primary key.
- * Expected Res : Success
- * Date         : 20th Mar 2017
- */
-
-use experiments;
-
-select value count(*) from DBLP0;
+use test;
+select element test.computeBonus(1,-1);
