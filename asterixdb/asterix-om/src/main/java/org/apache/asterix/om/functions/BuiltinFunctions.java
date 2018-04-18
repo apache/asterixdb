@@ -324,6 +324,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "replace", 3);
     public static final FunctionIdentifier STRING_REPLACE_WITH_LIMIT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "replace", 4);
+    public static final FunctionIdentifier STRING_REVERSE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reverse", 1);
     public static final FunctionIdentifier STRING_LENGTH =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-length", 1);
     public static final FunctionIdentifier STRING_LIKE =
@@ -1186,6 +1188,7 @@ public class BuiltinFunctions {
         addFunction(STRING_REGEXP_REPLACE_WITH_FLAG, StringStringTypeComputer.INSTANCE, true);
         addFunction(STRING_REPLACE, StringStringTypeComputer.INSTANCE, true);
         addFunction(STRING_REPLACE_WITH_LIMIT, StringIntToStringTypeComputer.INSTANCE_TRIPLE_STRING, true);
+        addFunction(STRING_REVERSE, StringStringTypeComputer.INSTANCE, true);
         addFunction(SUBSTRING_BEFORE, StringStringTypeComputer.INSTANCE, true);
         addFunction(SUBSTRING_AFTER, StringStringTypeComputer.INSTANCE, true);
         addPrivateFunction(STRING_EQUAL, StringBooleanTypeComputer.INSTANCE, true);

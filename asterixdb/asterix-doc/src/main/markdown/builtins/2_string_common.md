@@ -414,6 +414,30 @@
           "v2": "product-a and x-phone"
         }
 
+### reverse ###
+ * Syntax:
+
+        reverse(string)
+
+ * Returns a string formed by reversing characters in the input `string`.
+ * Arguments:
+    * `string` : a `string` to be reversed
+ * Return Value:
+    * a string containing characters from the the input `string` in the reverse order,
+    * `missing` if any argument is a `missing` value,
+    * `null` if any argument is a `null` value but no argument is a `missing` value,
+    * a type error will be raised if:
+        * the first argument is any other non-string value
+
+ * Example:
+
+        reverse("hello");
+
+
+ * The expected result is:
+
+        "olleh"
+
 ### rtrim ###
  * Syntax:
 

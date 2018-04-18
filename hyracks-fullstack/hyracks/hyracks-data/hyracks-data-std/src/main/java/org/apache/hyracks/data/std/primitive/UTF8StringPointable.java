@@ -587,6 +587,31 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         builder.finish();
     }
 
+    /**
+     * Generates a reversed string from an input source string
+     *
+     * @param srcPtr
+     *            , the input source string.
+     * @param builder
+     *            , a builder for the resulting string.
+     * @param out
+     *            , the storage for a result string.
+     * @throws IOException
+     */
+    public static void reverse(UTF8StringPointable srcPtr, UTF8StringBuilder builder, GrowableArray out)
+            throws IOException {
+        builder.reset(out, srcPtr.getUTF8Length());
+        int srcStart = srcPtr.getCharStartOffset();
+        int srcEnd = srcPtr.getStartOffset() + srcPtr.getLength() - 1;
+        for (int cursorIndex = srcEnd; cursorIndex >= srcStart; cursorIndex--) {
+            if (UTF8StringUtil.isCharStart(srcPtr.bytes, cursorIndex)) {
+                int charSize = UTF8StringUtil.charSize(srcPtr.bytes, cursorIndex);
+                builder.appendUtf8StringPointable(srcPtr, cursorIndex, charSize);
+            }
+        }
+        builder.finish();
+    }
+
     public boolean findAndReplace(UTF8StringPointable searchPtr, UTF8StringPointable replacePtr, int replaceLimit,
             UTF8StringBuilder builder, GrowableArray out) throws IOException {
         return findAndReplace(this, searchPtr, replacePtr, replaceLimit, builder, out);

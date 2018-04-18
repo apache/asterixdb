@@ -6233,6 +6233,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="reverse">
+        <output-dir compare="Text">reverse</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="rtrim">
         <output-dir compare="Text">rtrim</output-dir>
       </compilation-unit>

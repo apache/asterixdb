@@ -84,6 +84,11 @@ public class UTF8StringUtil {
         throw new IllegalStateException();
     }
 
+    public static boolean isCharStart(byte[] b, int s) {
+        int c = b[s] & 0xff;
+        return (c >> 6) != 2;
+    }
+
     public static int getModifiedUTF8Len(char c) {
         if (c >= 0x0001 && c <= 0x007F) {
             return 1;
