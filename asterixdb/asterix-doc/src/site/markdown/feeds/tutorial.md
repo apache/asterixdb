@@ -23,7 +23,7 @@
 
 * [Introduction](#Introduction)
 * [Feed Adapters](#FeedAdapters)
-<!-- * [Feed Policies](#FeedPolicies) -->
+* [Feed Policies](#FeedPolicies)
 
 ## <a name="Introduction">Introduction</a>  ##
 
@@ -61,11 +61,13 @@ that cover the popular scenarios of ingesting data from (a) Twitter (b) RSS  (c)
 ####Ingesting Twitter Stream
 We shall use the built-in push-based Twitter adapter.
 As a pre-requisite, we must define a Tweet using the AsterixDB Data Model (ADM)
-and the AsterixDB Query Language (AQL). Given below are the type definitions in AQL
+and the query language SQL++. Given below are the type definitions in SQL++
 that create a Tweet datatype which is representative of a real tweet as obtained from Twitter.
 
+        drop dataverse feeds if exists;
+
         create dataverse feeds;
-        use dataverse feeds;
+        use feeds;
 
         create type TwitterUser as closed {
             screen_name: string,
@@ -77,13 +79,12 @@ that create a Tweet datatype which is representative of a real tweet as obtained
         create type Tweet as open {
             id: int64,
             user: TwitterUser
-        }
+        };
 
-        create dataset Tweets (Tweet)
-        primary key id;
+        create dataset Tweets (Tweet) primary key id;
 
 We also create a dataset that we shall use to persist the tweets in AsterixDB.
-Next we make use of the `create feed` AQL statement to define our example data feed.
+Next we make use of the `create feed` SQL++ statement to define our example data feed.
 
 #####Using the "push_twitter" feed adapter#####
 The "push_twitter" adapter requires setting up an application account with Twitter. To retrieve
@@ -91,6 +92,7 @@ tweets, Twitter requires registering an application. Registration involves provi
 a name and a brief description for the application. Each application has associated OAuth
 authentication credentials that include OAuth keys and tokens. Accessing the
 Twitter API requires providing the following.
+
 1. Consumer Key (API Key)
 2. Consumer Secret (API Secret)
 3. Access Token
@@ -101,18 +103,20 @@ parameters. End users are required to obtain the above authentication credential
 using the "push_twitter" adapter. For further information on obtaining OAuth keys and tokens and
 registering an application with Twitter, please visit http://apps.twitter.com
 
-Given below is an example AQL statement that creates a feed called "TwitterFeed" by using the
+Given below is an example SQL++ statement that creates a feed called "TwitterFeed" by using the
 "push_twitter" adapter.
 
-        use dataverse feeds;
+        use feeds;
 
-        create feed TwitterFeed if not exists using "push_twitter"
-        (("type-name"="Tweet"),
-         ("format"="twitter-status"),
-         ("consumer.key"="************"),
-         ("consumer.secret"="**************"),
-         ("access.token"="**********"),
-         ("access.token.secret"="*************"));
+        create feed TwitterFeed with {
+          "adapter-name": "push_twitter",
+          "type-name": "Tweet",
+          "format": "twitter-status",
+          "consumer.key": "************",
+          "consumer.secret": "************",
+          "access.token": "**********",
+          "access.token.secret": "*************"
+        };
 
 It is required that the above authentication parameters are provided valid.
 Note that the `create feed` statement does not initiate the flow of data from Twitter into
@@ -122,23 +126,25 @@ to a target dataset using the connect feed statement and activated using the sta
 
 The Twitter adapter also supports several Twitter streaming APIs as follow:
 
-1. Track filter ("keywords"="AsterixDB, Apache")
-2. Locations filter ("locations"="-29.7, 79.2, 36.7, 72.0; -124.848974,-66.885444, 24.396308, 49.384358")
-3. Language filter ("language"="en")
-4. Filter level ("filter-level"="low")
+1. Track filter `"keywords": "AsterixDB, Apache"`
+2. Locations filter `"locations": "-29.7, 79.2, 36.7, 72.0; -124.848974,-66.885444, 24.396308, 49.384358"`
+3. Language filter `"language": "en"`
+4. Filter level `"filter-level": "low"`
 
 An example of Twitter adapter tracking tweets with keyword "news" can be described using following ddl:
 
-        use dataverse feeds;
+        use feeds;
 
-        create feed TwitterFeed if not exists using "push_twitter"
-        (("type-name"="Tweet"),
-         ("format"="twitter-status"),
-         ("consumer.key"="************"),
-         ("consumer.secret"="**************"),
-         ("access.token"="**********"),
-         ("access.token.secret"="*************"),
-         ("keywords"="news"));
+        create feed TwitterFeed with {
+          "adapter-name": "push_twitter",
+          "type-name": "Tweet",
+          "format": "twitter-status",
+          "consumer.key": "************",
+          "consumer.secret": "************",
+          "access.token": "**********",
+          "access.token.secret": "*************",
+          "keywords": "news"
+        };
 
 For more details about these APIs, please visit https://dev.twitter.com/streaming/overview/request-parameters
 
@@ -154,7 +160,7 @@ Multiple feeds can simultaneously be connected to a dataset such that the
 contents of the dataset represent the union of the connected feeds.
 Also one feed can be simultaneously connected to multiple target datasets.
 
-        use dataverse feeds;
+        use feeds;
 
         connect feed TwitterFeed to dataset Tweets;
 
@@ -170,82 +176,27 @@ to connect TwitterFeed to a different dataset.
 Let the feed run for a minute, then run the following query to see the
 latest tweets that are stored into the data set.
 
-        use dataverse feeds;
+        use feeds;
 
-        for $i in dataset Tweets limit 10 return $i;
+        select * from Tweets limit 10;
 
 The dataflow of data from a feed can be terminated explicitly by `stop feed` statement.
 
-        use dataverse feeds;
+        use feeds;
 
         stop feed TwitterFeed;
 
 The `disconnnect statement` can be used to disconnect the feed from certain dataset.
 
-        use dataverse feeds;
+        use feeds;
 
         disconnect feed TwitterFeed from dataset Tweets;
 
 ###Ingesting with Other Adapters
 AsterixDB has several builtin feed adapters for data ingestion. User can also
 implement their own adapters and plug them into AsterixDB.
-Here we introduce `rss_feed`, `socket_adapter` and `localfs`
+Here we introduce `socket_adapter` and `localfs`
 feed adapter that cover most of the common application scenarios.
-
-#####Using the "rss_feed" feed adapter#####
-`rss_feed` adapter allows retrieving data given a collection of RSS end point URLs.
-As observed in the case of ingesting tweets, it is required to model an RSS data item using AQL.
-
-        use dataverse feeds;
-
-        create type Rss if not exists as open {
-            id: string,
-            title: string,
-            description: string,
-            link: string
-        };
-
-        create dataset RssDataset (Rss)
-        primary key id;
-
-Next, we define an RSS feed using our built-in adapter "rss_feed".
-
-        use dataverse feeds;
-
-        create feed my_feed using
-        rss_feed (
-           ("type-name"="Rss"),
-           ("format"="rss"),
-           ("url"="http://rss.cnn.com/rss/edition.rss")
-        );
-
-In the above definition, the configuration parameter "url" can be a comma-separated list that reflects a
-collection of RSS URLs, where each URL corresponds to an RSS endpoint or an RSS feed.
-The "rss_feed" retrieves data from each of the specified RSS URLs (comma separated values) in parallel.
-
-The following statements connect the feed into the `RssDataset`:
-
-        use dataverse feeds;
-
-        connect feed my_feed to dataset RssDataset;
-
-The following statements activate the feed and start the dataflow:
-
-        use dataverse feeds;
-
-        start feed my_feed;
-
-The following statements show the latest data from the data set, stop the feed, and
-disconnect the feed from the data set.
-
-        use dataverse feeds;
-
-        for $i in dataset RssDataset limit 10 return $i;
-
-        stop feed my_feed
-
-        disconnect feed my_feed from dataset RssDataset;
-
 
 #####Using the "socket_adapter" feed adapter#####
 `socket_adapter` feed opens a web socket on the given node which allows user to push data into
@@ -253,25 +204,25 @@ AsterixDB directly. Here is an example:
 
         drop dataverse feeds if exists;
         create dataverse feeds;
-        use dataverse feeds;
+        use feeds;
 
         create type TestDataType as open {
            screenName: string
-        }
+        };
 
         create dataset TestDataset(TestDataType) primary key screenName;
 
-        create feed TestSocketFeed using socket_adapter
-        (
-           ("sockets"="127.0.0.1:10001"),
-           ("address-type"="IP"),
-           ("type-name"="TestDataType"),
-           ("format"="adm")
-        );
+        create feed TestSocketFeed with {
+          "adapter-name": "socket_adapter",
+          "sockets": "127.0.0.1:10001",
+          "address-type": "IP",
+          "type-name": "TestDataType",
+          "format": "adm"
+        };
 
         connect feed TestSocketFeed to dataset TestDataset;
 
-        use dataverse feeds;
+        use feeds;
         start feed TestSocketFeed;
 
 The above statements create a socket feed which is listening to "10001" port of the host machine. This feed accepts data
@@ -297,25 +248,27 @@ by line into the socket feed using any socket client you like. Following is a so
 `localfs` adapter enables data ingestion from local file system. It allows user to feed data records on local disk
 into a dataset. A DDL example for creating a `localfs` feed is given as follow:
 
-        use dataverse feeds;
+        use feeds;
 
-        create type TweetType as closed {
-          id: string,
-          username : string,
-          location : string,
-          text : string,
-          timestamp : string
-        }
+        create type TestDataType as open {
+           screenName: string
+        };
 
-        create dataset Tweets(TweetType)
-        primary key id;
+        create dataset TestDataset(TestDataType) primary key screenName;
 
-        create feed TweetFeed
-        using localfs
-        (("type-name"="TweetType"),("path"="HOSTNAME://LOCAL_FILE_PATH"),("format"="adm"))
+        create feed TestFileFeed with {
+          "adapter-name": "localfs",
+          "type-name": "TestDataType",
+          "path": "HOSTNAME://LOCAL_FILE_PATH",
+          "format": "adm"
+        };
+
+        connect feed TestFileFeed to dataset TestDataset;
+
+        start feed TestFileFeed;
 
 Similar to previous examples, we need to define the datatype and dataset this feed uses.
-The "path" parameter refers to the local datafile that we want to ingest data from.
+The "path" parameter refers to the local data file that we want to ingest data from.
 `HOSTNAME` can either be the IP address or node name of the machine which holds the file.
 `LOCAL_FILE_PATH` indicates the absolute path to the file on that machine. Similarly to `socket_adapter`,
 this feed takes `adm` formatted data records.
@@ -334,7 +287,7 @@ define a datatype with the primary key field, and specify that field to be autog
 Use that same datatype in feed definition will cause a type discrepancy since there is no such field in the datasource.
 Thus, we will need to define two separate datatypes for feed and dataset:
 
-        use dataverse feeds;
+        use feeds;
 
         create type DBLPFeedType as closed {
           dblpid: string,
@@ -352,13 +305,13 @@ Thus, we will need to define two separate datatypes for feed and dataset:
         }
         create dataset DBLPDataset(DBLPDataSetType) primary key id autogenerated;
 
-        create feed DBLPFeed using socket_adapter
-        (
-            ("sockets"="127.0.0.1:10001"),
-            ("address-type"="IP"),
-            ("type-name"="DBLPFeedType"),
-            ("format"="adm")
-        );
+        create feed DBLPFeed with {
+          "adapter-name": "socket_adapter",
+          "sockets": "127.0.0.1:10001",
+          "address-type": "IP",
+          "type-name": "DBLPFeedType",
+          "format": "adm"
+        };
 
         connect feed DBLPFeed to dataset DBLPDataset;
 
@@ -403,7 +356,6 @@ spillage crosses a configured threshold. In all cases, the desired
 ingestion policy is specified as part of the `connect feed` statement
 or else the "Basic" policy will be chosen as the default.
 
-        use dataverse feeds;
+        use feeds;
 
-        connect feed TwitterFeed to dataset Tweets
-        using policy Basic;
+        connect feed TwitterFeed to dataset Tweets using policy Basic;
