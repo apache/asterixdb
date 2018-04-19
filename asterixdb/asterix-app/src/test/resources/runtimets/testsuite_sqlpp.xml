@@ -3715,6 +3715,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-2354">
+        <output-dir compare="Text">query-ASTERIXDB-2354</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-2355">
         <output-dir compare="Text">none</output-dir>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 22 >> %%%<< Encountered "%" at column 2.]]></expected-error>

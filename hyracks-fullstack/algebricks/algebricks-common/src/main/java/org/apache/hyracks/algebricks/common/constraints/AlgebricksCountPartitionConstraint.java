@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.algebricks.common.constraints;
 
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.ErrorCode;
+
 public class AlgebricksCountPartitionConstraint extends AlgebricksPartitionConstraint {
 
     private final int count;
@@ -35,4 +38,21 @@ public class AlgebricksCountPartitionConstraint extends AlgebricksPartitionConst
         return count;
     }
 
+    @Override
+    public String toString() {
+        return getPartitionConstraintType().toString() + ':' + count;
+    }
+
+    @Override
+    public AlgebricksPartitionConstraint compose(AlgebricksPartitionConstraint that) throws AlgebricksException {
+        switch (that.getPartitionConstraintType()) {
+            case COUNT:
+                AlgebricksCountPartitionConstraint thatCount = (AlgebricksCountPartitionConstraint) that;
+                return count <= thatCount.count ? this : that;
+            case ABSOLUTE:
+                return that.compose(this);
+        }
+
+        throw AlgebricksException.create(ErrorCode.CANNOT_COMPOSE_PART_CONSTRAINTS, toString(), that.toString());
+    }
 }
