@@ -3599,6 +3599,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="case_08">
+        <output-dir compare="Text">case_08</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="dataset_nodegroup">
         <output-dir compare="Text">dataset_nodegroup</output-dir>
       </compilation-unit>

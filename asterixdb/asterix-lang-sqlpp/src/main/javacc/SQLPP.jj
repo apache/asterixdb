@@ -1789,7 +1789,6 @@ Expression Expression():
 (
     LOOKAHEAD(2)
     expr = OperatorExpr()
-    | expr = CaseExpr()
     | expr = QuantifiedExpression()
 )
     {
@@ -2305,6 +2304,7 @@ Expression PrimaryExpr()throws ParseException:
 {
   ( LOOKAHEAD(4)
     expr = FunctionCallExpr()
+  | expr = CaseExpr()
   | expr = Literal()
   | expr = VariableRef()
   | expr = ListConstructor()

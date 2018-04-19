@@ -19,11 +19,10 @@
 
 SQL++ is a highly composable expression language. Each SQL++ expression returns zero or more data model instances.
 There are three major kinds of expressions in SQL++. At the topmost level, a SQL++ expression can be an
-OperatorExpression (similar to a mathematical expression), an ConditionalExpression (to choose between
-alternative values), or a QuantifiedExpression (which yields a boolean value). Each will be detailed as we
-explore the full SQL++ grammar.
+OperatorExpression (similar to a mathematical expression), or a QuantifiedExpression (which yields a boolean value). 
+Each will be detailed as we explore the full SQL++ grammar.
 
-    Expression ::= OperatorExpression | CaseExpression | QuantifiedExpression
+    Expression ::= OperatorExpression | QuantifiedExpression
 
 Note that in the following text, words enclosed in angle brackets denote keywords that are not case-sensitive.
 
@@ -170,20 +169,6 @@ The following table demonstrates the results of `NOT` on all possible inputs.
 | NULL | NULL |
 | MISSING | MISSING |
 
-## <a id="Case_expressions">Case Expressions</a>
-
-    CaseExpression ::= SimpleCaseExpression | SearchedCaseExpression
-    SimpleCaseExpression ::= <CASE> Expression ( <WHEN> Expression <THEN> Expression )+ ( <ELSE> Expression )? <END>
-    SearchedCaseExpression ::= <CASE> ( <WHEN> Expression <THEN> Expression )+ ( <ELSE> Expression )? <END>
-
-In a simple `CASE` expression, the query evaluator searches for the first `WHEN` ... `THEN` pair in which the `WHEN` expression is equal to the expression following `CASE` and returns the expression following `THEN`. If none of the `WHEN` ... `THEN` pairs meet this condition, and an `ELSE` branch exists, it returns the `ELSE` expression. Otherwise, `NULL` is returned.
-
-In a searched CASE expression, the query evaluator searches from left to right until it finds a `WHEN` expression that is evaluated to `TRUE`, and then returns its corresponding `THEN` expression. If no condition is found to be `TRUE`, and an `ELSE` branch exists, it returns the `ELSE` expression. Otherwise, it returns `NULL`.
-
-The following example illustrates the form of a case expression.
-##### Example
-
-    CASE (2 < 3) WHEN true THEN "yes" ELSE "no" END
 
 ## <a id="Quantified_expressions">Quantified Expressions</a>
 
@@ -241,11 +226,13 @@ composition thereof.
                   | VariableReference
                   | ParenthesizedExpression
                   | FunctionCallExpression
+                  | CaseExpression
                   | Constructor
 
 The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant)
-value, a reference to a query variable that is in scope, a parenthesized expression, a function call, or a newly
-constructed instance of the data model (such as a newly constructed object, array, or multiset of data model instances).
+value, a reference to a query variable that is in scope, a parenthesized expression, a function call, a conditional 
+(case) expression, or a newly constructed instance of the data model (such as a newly constructed object, array, 
+or multiset of data model instances).
 
 ## <a id="Literals">Literals</a>
 
@@ -360,6 +347,22 @@ The following example is a (built-in) function call expression whose value is 8.
 ##### Example
 
     length('a string')
+
+## <a id="Case_expressions">Case Expressions</a>
+
+    CaseExpression ::= SimpleCaseExpression | SearchedCaseExpression
+    SimpleCaseExpression ::= <CASE> Expression ( <WHEN> Expression <THEN> Expression )+ ( <ELSE> Expression )? <END>
+    SearchedCaseExpression ::= <CASE> ( <WHEN> Expression <THEN> Expression )+ ( <ELSE> Expression )? <END>
+
+In a simple `CASE` expression, the query evaluator searches for the first `WHEN` ... `THEN` pair in which the `WHEN` expression is equal to the expression following `CASE` and returns the expression following `THEN`. If none of the `WHEN` ... `THEN` pairs meet this condition, and an `ELSE` branch exists, it returns the `ELSE` expression. Otherwise, `NULL` is returned.
+
+In a searched CASE expression, the query evaluator searches from left to right until it finds a `WHEN` expression that is evaluated to `TRUE`, and then returns its corresponding `THEN` expression. If no condition is found to be `TRUE`, and an `ELSE` branch exists, it returns the `ELSE` expression. Otherwise, it returns `NULL`.
+
+The following example illustrates the form of a case expression.
+
+##### Example
+
+    CASE (2 < 3) WHEN true THEN "yes" ELSE "no" END
 
 
 ### <a id="Constructors">Constructors</a>
