@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
@@ -162,7 +163,16 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         searchCallback = lsmInitialState.getSearchOperationCallback();
         predicate = (RangePredicate) lsmInitialState.getSearchPredicate();
         numBTrees = operationalComponents.size();
-        if (btreeCursors == null || btreeCursors.length != numBTrees) {
+        if (btreeCursors != null && btreeCursors.length != numBTrees) {
+            Throwable failure = CleanupUtils.destroy(null, btreeCursors);
+            btreeCursors = null;
+            failure = CleanupUtils.destroy(failure, btreeAccessors);
+            btreeAccessors = null;
+            if (failure != null) {
+                throw HyracksDataException.create(failure);
+            }
+        }
+        if (btreeCursors == null) {
             // object creation: should be relatively low
             btreeCursors = new ITreeIndexCursor[numBTrees];
             btreeAccessors = new BTreeAccessor[numBTrees];
@@ -175,8 +185,13 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
             BTree btree = (BTree) component.getIndex();
             if (component.getType() == LSMComponentType.MEMORY) {
                 includeMutableComponent = true;
-                bloomFilters[i] = null;
+                if (bloomFilters[i] != null) {
+                    destroyAndNullifyCursorAtIndex(i);
+                }
             } else {
+                if (bloomFilters[i] == null) {
+                    destroyAndNullifyCursorAtIndex(i);
+                }
                 bloomFilters[i] = ((LSMBTreeWithBloomFilterDiskComponent) component).getBloomFilter();
             }
 
@@ -191,6 +206,18 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         }
         nextHasBeenCalled = false;
         foundTuple = false;
+    }
+
+    private void destroyAndNullifyCursorAtIndex(int i) throws HyracksDataException {
+        // component at location i was a disk component before, and is now a memory component, or vise versa
+        bloomFilters[i] = null;
+        Throwable failure = CleanupUtils.destroy(null, btreeCursors[i]);
+        btreeCursors[i] = null;
+        failure = CleanupUtils.destroy(failure, btreeAccessors[i]);
+        btreeAccessors[i] = null;
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
+        }
     }
 
     @Override
