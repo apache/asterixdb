@@ -57,7 +57,7 @@ public class ReplicationLogBuffer {
         }
     }
 
-    public synchronized void isFull(boolean full) {
+    public synchronized void setFull(boolean full) {
         this.full.set(full);
         this.notify();
     }
