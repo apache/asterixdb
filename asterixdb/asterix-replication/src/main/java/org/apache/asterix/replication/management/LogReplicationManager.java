@@ -167,7 +167,7 @@ public class LogReplicationManager {
 
     private synchronized void appendToLogBuffer(ILogRecord logRecord) throws InterruptedException {
         if (!currentTxnLogBuffer.hasSpace(logRecord)) {
-            currentTxnLogBuffer.isFull(true);
+            currentTxnLogBuffer.setFull(true);
             if (logRecord.getLogSize() > logPageSize) {
                 getAndInitNewLargePage(logRecord.getLogSize());
             } else {
