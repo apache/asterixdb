@@ -111,7 +111,9 @@ public class MuxDemux {
             @Override
             public void connectionClosed(TCPConnection connection) {
                 synchronized (MuxDemux.this) {
-                    connectionMap.remove(connection.getRemoteAddress());
+                    if (connection.getType() == TCPConnection.ConnectionType.OUTGOING) {
+                        connectionMap.remove(connection.getRemoteAddress());
+                    }
                 }
             }
         }, nThreads);

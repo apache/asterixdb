@@ -19,26 +19,31 @@
 package org.apache.hyracks.control.nc.partitions;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.partitions.IPartition;
 import org.apache.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.comm.channels.NetworkOutputChannel;
 import org.apache.hyracks.control.common.job.PartitionDescriptor;
 import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 public class PartitionManager {
 
@@ -52,11 +57,14 @@ public class PartitionManager {
 
     private final Map<PartitionId, NetworkOutputChannel> partitionRequests = new HashMap<>();
 
+    private final Cache<JobId, JobId> failedJobsCache;
+
     public PartitionManager(NodeControllerService ncs) {
         this.ncs = ncs;
         this.availablePartitionMap = new HashMap<>();
         this.deallocatableRegistry = new DefaultDeallocatableRegistry();
         this.fileFactory = new WorkspaceFileFactory(deallocatableRegistry, ncs.getIoManager());
+        failedJobsCache = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build();
     }
 
     public synchronized void registerPartition(PartitionId pid, CcId ccId, TaskAttemptId taId, IPartition partition,
@@ -95,37 +103,20 @@ public class PartitionManager {
         return availablePartitionMap.get(pid).get(0);
     }
 
-    public synchronized void unregisterPartitions(JobId jobId, Collection<IPartition> unregisteredPartitions) {
-        for (Iterator<Map.Entry<PartitionId, List<IPartition>>> i = availablePartitionMap.entrySet().iterator(); i
-                .hasNext();) {
-            Map.Entry<PartitionId, List<IPartition>> e = i.next();
-            PartitionId pid = e.getKey();
-            if (jobId.equals(pid.getJobId())) {
-                for (IPartition p : e.getValue()) {
-                    unregisteredPartitions.add(p);
-                }
-                i.remove();
-            }
+    public synchronized void registerPartitionRequest(PartitionId partitionId, NetworkOutputChannel writer) {
+        if (failedJobsCache.getIfPresent(partitionId.getJobId()) != null) {
+            writer.abort();
         }
-    }
-
-    public synchronized void registerPartitionRequest(PartitionId partitionId, NetworkOutputChannel writer)
-            throws HyracksException {
-        try {
-            List<IPartition> pList = availablePartitionMap.get(partitionId);
-            if (pList != null && !pList.isEmpty()) {
-                IPartition partition = pList.get(0);
-                writer.setFrameSize(partition.getTaskContext().getInitialFrameSize());
-                partition.writeTo(writer);
-                if (!partition.isReusable()) {
-                    availablePartitionMap.remove(partitionId);
-                }
-            } else {
-                //throw new HyracksException("Request for unknown partition " + partitionId);
-                partitionRequests.put(partitionId, writer);
+        List<IPartition> pList = availablePartitionMap.get(partitionId);
+        if (pList != null && !pList.isEmpty()) {
+            IPartition partition = pList.get(0);
+            writer.setFrameSize(partition.getTaskContext().getInitialFrameSize());
+            partition.writeTo(writer);
+            if (!partition.isReusable()) {
+                availablePartitionMap.remove(partitionId);
             }
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+        } else {
+            partitionRequests.put(partitionId, writer);
         }
     }
 
@@ -137,7 +128,25 @@ public class PartitionManager {
         deallocatableRegistry.close();
     }
 
-    public void updatePartitionState(CcId ccId, PartitionId pid, TaskAttemptId taId, IPartition partition,
+    public synchronized void jobCompleted(JobId jobId, JobStatus status) {
+        if (status == JobStatus.FAILURE) {
+            failedJobsCache.put(jobId, jobId);
+        }
+        final List<IPartition> jobPartitions = unregisterPartitions(jobId);
+        final List<NetworkOutputChannel> pendingRequests = removePendingRequests(jobId, status);
+        if (!jobPartitions.isEmpty() || !pendingRequests.isEmpty()) {
+            ncs.getExecutor().execute(() -> {
+                jobPartitions.forEach(IDeallocatable::deallocate);
+                pendingRequests.forEach(NetworkOutputChannel::abort);
+            });
+        }
+    }
+
+    public synchronized void jobsCompleted(CcId ccId) {
+        failedJobsCache.asMap().keySet().removeIf(jobId -> jobId.getCcId().equals(ccId));
+    }
+
+    private void updatePartitionState(CcId ccId, PartitionId pid, TaskAttemptId taId, IPartition partition,
             PartitionState state) throws HyracksDataException {
         PartitionDescriptor desc = new PartitionDescriptor(pid, ncs.getId(), taId, partition.isReusable());
         desc.setState(state);
@@ -146,5 +155,37 @@ public class PartitionManager {
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    private List<IPartition> unregisterPartitions(JobId jobId) {
+        final List<IPartition> unregisteredPartitions = new ArrayList<>();
+        for (Iterator<Map.Entry<PartitionId, List<IPartition>>> i = availablePartitionMap.entrySet().iterator(); i
+                .hasNext();) {
+            Map.Entry<PartitionId, List<IPartition>> entry = i.next();
+            PartitionId pid = entry.getKey();
+            if (jobId.equals(pid.getJobId())) {
+                unregisteredPartitions.addAll(entry.getValue());
+                i.remove();
+            }
+        }
+        return unregisteredPartitions;
+    }
+
+    private List<NetworkOutputChannel> removePendingRequests(JobId jobId, JobStatus status) {
+        if (status != JobStatus.FAILURE) {
+            return Collections.emptyList();
+        }
+        final List<NetworkOutputChannel> pendingRequests = new ArrayList<>();
+        final Iterator<Map.Entry<PartitionId, NetworkOutputChannel>> requestsIterator =
+                partitionRequests.entrySet().iterator();
+        while (requestsIterator.hasNext()) {
+            final Map.Entry<PartitionId, NetworkOutputChannel> entry = requestsIterator.next();
+            final PartitionId partitionId = entry.getKey();
+            if (partitionId.getJobId().equals(jobId)) {
+                pendingRequests.add(entry.getValue());
+                requestsIterator.remove();
+            }
+        }
+        return pendingRequests;
     }
 }
