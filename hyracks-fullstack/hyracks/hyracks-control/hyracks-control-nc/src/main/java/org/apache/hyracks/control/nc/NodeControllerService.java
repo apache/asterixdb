@@ -665,6 +665,7 @@ public class NodeControllerService implements IControllerService {
     }
 
     public void notifyTasksCompleted(CcId ccId) throws Exception {
+        partitionManager.jobsCompleted(ccId);
         application.onRegisterNode(ccId);
     }
 

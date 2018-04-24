@@ -185,7 +185,8 @@ public class JobBuilder implements IHyracksJobBuilder {
         return resultOps;
     }
 
-    private void setAllPartitionConstraints(Map<IConnectorDescriptor, TargetConstraint> tgtConstraints) {
+    private void setAllPartitionConstraints(Map<IConnectorDescriptor, TargetConstraint> tgtConstraints)
+            throws AlgebricksException {
         List<OperatorDescriptorId> roots = jobSpec.getRoots();
         setSpecifiedPartitionConstraints();
         for (OperatorDescriptorId rootId : roots) {
@@ -243,8 +244,8 @@ public class JobBuilder implements IHyracksJobBuilder {
     }
 
     private void setPartitionConstraintsBottomup(OperatorDescriptorId opId,
-            Map<IConnectorDescriptor, TargetConstraint> tgtConstraints, IOperatorDescriptor parentOp,
-            boolean finalPass) {
+            Map<IConnectorDescriptor, TargetConstraint> tgtConstraints, IOperatorDescriptor parentOp, boolean finalPass)
+            throws AlgebricksException {
         List<IConnectorDescriptor> opInputs = jobSpec.getOperatorInputMap().get(opId);
         AlgebricksPartitionConstraint opConstraint = null;
         IOperatorDescriptor opDesc = jobSpec.getOperatorMap().get(opId);
@@ -260,10 +261,10 @@ public class JobBuilder implements IHyracksJobBuilder {
                 if (constraint != null) {
                     switch (constraint) {
                         case ONE:
-                            opConstraint = countOneLocation;
+                            opConstraint = composePartitionConstraints(opConstraint, countOneLocation);
                             break;
                         case SAME_COUNT:
-                            opConstraint = partitionConstraintMap.get(src);
+                            opConstraint = composePartitionConstraints(opConstraint, partitionConstraintMap.get(src));
                             break;
                     }
                 }
@@ -438,5 +439,10 @@ public class JobBuilder implements IHyracksJobBuilder {
             }
         }
         return false;
+    }
+
+    private static AlgebricksPartitionConstraint composePartitionConstraints(AlgebricksPartitionConstraint pc1,
+            AlgebricksPartitionConstraint pc2) throws AlgebricksException {
+        return pc1 == null ? pc2 : pc2 == null ? pc1 : pc1.compose(pc2);
     }
 }

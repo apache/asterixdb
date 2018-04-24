@@ -16,18 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.common.constraints;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+use tpch;
 
-public abstract class AlgebricksPartitionConstraint {
-    public enum PartitionConstraintType {
-        ABSOLUTE,
-        COUNT
-    }
-
-    public abstract PartitionConstraintType getPartitionConstraintType();
-
-    public abstract AlgebricksPartitionConstraint compose(AlgebricksPartitionConstraint that)
-            throws AlgebricksException;
-}
+SELECT ds.DatasetName as v1
+FROM Metadata.`Dataset` ds
+WHERE ds.DatasetName LIKE "Orders%"
+UNION ALL
+SELECT ds.DatasetName v1, idx.DatasetName v2, idx.IndexName v3
+FROM Metadata.`Index` idx, Metadata.`Dataset` ds
+WHERE ds.DatasetName LIKE "Orders%" and idx.DatasetName LIKE "Orders%"
+ORDER BY v1, v2, v3

@@ -47,10 +47,9 @@ import org.apache.hyracks.storage.common.util.IndexCursorUtils;
 public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
     private final ArrayTupleReference copyTuple;
     private final RangePredicate reusablePred;
-
     private ISearchOperationCallback searchCallback;
-
     private BTreeAccessor[] btreeAccessors;
+    private boolean[] isMemoryComponent;
     private ArrayTupleBuilder tupleBuilder;
     private boolean canCallProceed = true;
     private boolean resultOfSearchCallbackProceed = false;
@@ -340,15 +339,19 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             // object creation: should be relatively low
             rangeCursors = new IIndexCursor[numBTrees];
             btreeAccessors = new BTreeAccessor[numBTrees];
+            isMemoryComponent = new boolean[numBTrees];
         } else if (rangeCursors.length != numBTrees) {
             // should destroy first
             Throwable failure = CleanupUtils.destroy(null, btreeAccessors);
+            btreeAccessors = null;
             failure = CleanupUtils.destroy(failure, rangeCursors);
+            rangeCursors = null;
             if (failure != null) {
                 throw HyracksDataException.create(failure);
             }
             rangeCursors = new IIndexCursor[numBTrees];
             btreeAccessors = new BTreeAccessor[numBTrees];
+            isMemoryComponent = new boolean[numBTrees];
         }
         for (int i = 0; i < numBTrees; i++) {
             ILSMComponent component = operationalComponents.get(i);
@@ -357,7 +360,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                 includeMutableComponent = true;
             }
             btree = (BTree) component.getIndex();
-            if (btreeAccessors[i] == null) {
+            if (btreeAccessors[i] == null || destroyIncompatible(component, i)) {
                 btreeAccessors[i] = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
                 rangeCursors[i] = btreeAccessors[i].createSearchCursor(false);
             } else {
@@ -365,6 +368,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                 btreeAccessors[i].reset(btree, NoOpOperationCallback.INSTANCE, NoOpOperationCallback.INSTANCE);
                 rangeCursors[i].close();
             }
+            isMemoryComponent[i] = component.getType() == LSMComponentType.MEMORY;
         }
         IndexCursorUtils.open(btreeAccessors, rangeCursors, searchPred);
         try {
@@ -375,6 +379,22 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             IndexCursorUtils.close(rangeCursors, th);
             throw HyracksDataException.create(th);
         }
+    }
+
+    private boolean destroyIncompatible(ILSMComponent component, int index) throws HyracksDataException {
+        // exclusive or. if the component is memory and the previous one at that index was a disk component
+        // or vice versa, then we should destroy the cursor and accessor since they need to be recreated
+        if (component.getType() == LSMComponentType.MEMORY ^ isMemoryComponent[index]) {
+            Throwable failure = CleanupUtils.destroy(null, btreeAccessors[index]);
+            btreeAccessors[index] = null;
+            failure = CleanupUtils.destroy(failure, rangeCursors[index]);
+            rangeCursors[index] = null;
+            if (failure != null) {
+                throw HyracksDataException.create(failure);
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override

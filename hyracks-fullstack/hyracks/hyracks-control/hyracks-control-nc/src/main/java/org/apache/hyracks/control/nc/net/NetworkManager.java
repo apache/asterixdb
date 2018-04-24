@@ -27,7 +27,6 @@ import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
-import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.PartitionId;
@@ -129,12 +128,7 @@ public class NetworkManager implements IChannelConnectionFactory {
                 LOGGER.debug("Received initial partition request: " + pid + " on channel: " + ccb);
             }
             noc = new NetworkOutputChannel(ccb, nBuffers);
-            try {
-                partitionManager.registerPartitionRequest(pid, noc);
-            } catch (HyracksException e) {
-                e.printStackTrace();
-                noc.abort();
-            }
+            partitionManager.registerPartitionRequest(pid, noc);
         }
 
         @Override

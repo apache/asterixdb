@@ -25,6 +25,7 @@ import java.util.Deque;
 import org.apache.hyracks.api.comm.IBufferAcceptor;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.net.protocols.muxdemux.AbstractChannelWriteInterface;
 import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 
 public class NetworkOutputChannel implements IFrameWriter {
@@ -43,7 +44,7 @@ public class NetworkOutputChannel implements IFrameWriter {
     public NetworkOutputChannel(ChannelControlBlock ccb, int nBuffers) {
         this.ccb = ccb;
         this.nBuffers = nBuffers;
-        emptyStack = new ArrayDeque<ByteBuffer>(nBuffers);
+        emptyStack = new ArrayDeque<>(nBuffers);
         ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
     }
 
@@ -58,7 +59,7 @@ public class NetworkOutputChannel implements IFrameWriter {
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        ByteBuffer destBuffer = null;
+        ByteBuffer destBuffer;
         while (buffer.hasRemaining()) {
             synchronized (this) {
                 while (true) {
@@ -76,6 +77,7 @@ public class NetworkOutputChannel implements IFrameWriter {
                     try {
                         wait();
                     } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                         throw HyracksDataException.create(e);
                     }
                 }
@@ -94,7 +96,7 @@ public class NetworkOutputChannel implements IFrameWriter {
 
     @Override
     public void fail() throws HyracksDataException {
-        ccb.getWriteInterface().getFullBufferAcceptor().error(1);
+        ccb.getWriteInterface().getFullBufferAcceptor().error(AbstractChannelWriteInterface.REMOTE_WRITE_ERROR_CODE);
     }
 
     @Override
@@ -103,7 +105,7 @@ public class NetworkOutputChannel implements IFrameWriter {
     }
 
     public void abort() {
-        ccb.getWriteInterface().getFullBufferAcceptor().error(1);
+        ccb.getWriteInterface().getFullBufferAcceptor().error(AbstractChannelWriteInterface.REMOTE_WRITE_ERROR_CODE);
         synchronized (NetworkOutputChannel.this) {
             aborted = true;
             NetworkOutputChannel.this.notifyAll();

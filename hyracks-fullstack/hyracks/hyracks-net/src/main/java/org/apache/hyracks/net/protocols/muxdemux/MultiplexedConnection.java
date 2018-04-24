@@ -31,6 +31,7 @@ import org.apache.hyracks.api.comm.MuxDemuxCommand;
 import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.net.protocols.tcp.ITCPConnectionEventListener;
 import org.apache.hyracks.net.protocols.tcp.TCPConnection;
+import org.apache.hyracks.util.annotations.ThreadSafetyGuaranteedBy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -67,28 +68,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
     MultiplexedConnection(MuxDemux muxDemux) {
         this.muxDemux = muxDemux;
-        pendingWriteEventsCounter = new IEventCounter() {
-            private int counter;
-
-            @Override
-            public synchronized void increment() {
-                ++counter;
-                if (counter == 1) {
-                    tcpConnection.enable(SelectionKey.OP_WRITE);
-                }
-            }
-
-            @Override
-            public synchronized void decrement() {
-                --counter;
-                if (counter == 0) {
-                    tcpConnection.disable(SelectionKey.OP_WRITE);
-                }
-                if (counter < 0) {
-                    throw new IllegalStateException();
-                }
-            }
-        };
+        pendingWriteEventsCounter = new EventCounter();
         cSet = new ChannelSet(this, pendingWriteEventsCounter);
         readerState = new ReaderState();
         writerState = new WriterState();
@@ -428,5 +408,33 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
     public IChannelInterfaceFactory getChannelInterfaceFactory() {
         return muxDemux.getChannelInterfaceFactory();
+    }
+
+    @ThreadSafetyGuaranteedBy("MultiplexedConnection.this")
+    private class EventCounter implements IEventCounter {
+        private int counter;
+
+        @Override
+        public synchronized void increment() {
+            if (!connectionFailure) {
+                ++counter;
+                if (counter == 1) {
+                    tcpConnection.enable(SelectionKey.OP_WRITE);
+                }
+            }
+        }
+
+        @Override
+        public synchronized void decrement() {
+            if (!connectionFailure) {
+                --counter;
+                if (counter == 0) {
+                    tcpConnection.disable(SelectionKey.OP_WRITE);
+                }
+                if (counter < 0) {
+                    throw new IllegalStateException();
+                }
+            }
+        }
     }
 }

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.net.protocols.tcp;
 
+import static org.apache.hyracks.net.protocols.tcp.TCPConnection.ConnectionType;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -160,7 +162,8 @@ public class TCPEndpoint {
                         for (SocketChannel channel : workingIncomingConnections) {
                             register(channel);
                             SelectionKey sKey = channel.register(selector, 0);
-                            TCPConnection connection = new TCPConnection(TCPEndpoint.this, channel, sKey, selector);
+                            TCPConnection connection = new TCPConnection(TCPEndpoint.this, channel, sKey, selector,
+                                    ConnectionType.INCOMING);
                             sKey.attach(connection);
                             synchronized (connectionListener) {
                                 connectionListener.acceptedConnection(connection);
@@ -220,7 +223,8 @@ public class TCPEndpoint {
         }
 
         private void createConnection(SelectionKey key, SocketChannel channel) {
-            TCPConnection connection = new TCPConnection(TCPEndpoint.this, channel, key, selector);
+            TCPConnection connection =
+                    new TCPConnection(TCPEndpoint.this, channel, key, selector, ConnectionType.OUTGOING);
             key.attach(connection);
             key.interestOps(0);
             synchronized (connectionListener) {

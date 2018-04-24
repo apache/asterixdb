@@ -29,6 +29,11 @@ import org.apache.logging.log4j.Logger;
 
 public class TCPConnection {
 
+    public enum ConnectionType {
+        INCOMING,
+        OUTGOING
+    }
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final TCPEndpoint endpoint;
@@ -43,11 +48,15 @@ public class TCPConnection {
 
     private Object attachment;
 
-    public TCPConnection(TCPEndpoint endpoint, SocketChannel channel, SelectionKey key, Selector selector) {
+    private ConnectionType type;
+
+    public TCPConnection(TCPEndpoint endpoint, SocketChannel channel, SelectionKey key, Selector selector,
+            ConnectionType type) {
         this.endpoint = endpoint;
         this.channel = channel;
         this.key = key;
         this.selector = selector;
+        this.type = type;
         remoteAddress = (InetSocketAddress) channel.socket().getRemoteSocketAddress();
     }
 
@@ -100,6 +109,10 @@ public class TCPConnection {
         } catch (IOException e) {
             LOGGER.error(() -> "Error closing channel at: " + remoteAddress, e);
         }
+    }
+
+    public ConnectionType getType() {
+        return type;
     }
 
     @Override

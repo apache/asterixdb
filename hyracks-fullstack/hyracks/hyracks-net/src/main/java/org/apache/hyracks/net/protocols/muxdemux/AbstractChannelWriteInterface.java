@@ -31,6 +31,7 @@ import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractChannelWriteInterface implements IChannelWriteInterface {
 
+    public static final int REMOTE_WRITE_ERROR_CODE = 1;
     private static final Logger LOGGER = LogManager.getLogger();
     protected final IChannelControlBlock ccb;
     protected final Queue<ByteBuffer> wiFullQueue;
@@ -135,7 +136,9 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
                     return;
                 }
                 eos = true;
-                adjustChannelWritability();
+                if (ecode != REMOTE_WRITE_ERROR_CODE) {
+                    adjustChannelWritability();
+                }
             }
         }
 

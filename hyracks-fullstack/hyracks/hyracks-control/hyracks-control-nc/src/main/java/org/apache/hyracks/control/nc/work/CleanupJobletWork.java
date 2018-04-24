@@ -18,17 +18,13 @@
  */
 package org.apache.hyracks.control.nc.work;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
-import org.apache.hyracks.api.partitions.IPartition;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.control.nc.NodeControllerService;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -53,23 +49,7 @@ public class CleanupJobletWork extends AbstractWork {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
         ncs.removeJobParameterByteStore(jobId);
-        final List<IPartition> unregisteredPartitions = new ArrayList<IPartition>();
-        ncs.getPartitionManager().unregisterPartitions(jobId, unregisteredPartitions);
-        ncs.getExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                for (IPartition p : unregisteredPartitions) {
-                    try {
-                        // Put deallocate in a try block to make sure that every IPartition is de-allocated.
-                        p.deallocate();
-                    } catch (Exception e) {
-                        if (LOGGER.isWarnEnabled()) {
-                            LOGGER.log(Level.WARN, e.getMessage(), e);
-                        }
-                    }
-                }
-            }
-        });
+        ncs.getPartitionManager().jobCompleted(jobId, status);;
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet joblet = jobletMap.remove(jobId);
         if (joblet != null) {
