@@ -29,11 +29,11 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
-import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.replication.api.IReplicaTask;
+import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 
@@ -71,13 +71,13 @@ public class MarkComponentValidTask implements IReplicaTask {
         final IIndexCheckpointManagerProvider checkpointManagerProvider = appCtx.getIndexCheckpointManagerProvider();
         final IIndexCheckpointManager indexCheckpointManager = checkpointManagerProvider.get(indexRef);
         long replicationTimeOut = TimeUnit.SECONDS.toMillis(appCtx.getReplicationProperties().getReplicationTimeOut());
-        final long startTime = System.nanoTime();
         synchronized (indexCheckpointManager) {
             // wait until the lsn mapping is flushed to disk
             while (!indexCheckpointManager.isFlushed(masterLsn)) {
                 if (replicationTimeOut <= 0) {
                     throw new ReplicationException(new TimeoutException("Couldn't receive flush lsn from master"));
                 }
+                final long startTime = System.nanoTime();
                 indexCheckpointManager.wait(replicationTimeOut);
                 replicationTimeOut -= TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
             }
