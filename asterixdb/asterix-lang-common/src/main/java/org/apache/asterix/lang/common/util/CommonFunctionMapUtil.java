@@ -69,6 +69,11 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("ifinf", "if-inf"); // ifinf, internal: if-inf
         addFunctionMapping("ifnan", "if-nan"); // ifnan, internal: if-nan
         addFunctionMapping("ifnanorinf", "if-nan-or-inf"); // ifnanorinf, internal: if-nan-or-inf
+        addFunctionMapping("missingif", "missing-if"); // missingif, internal: missing-if
+        addFunctionMapping("nanif", "nan-if"); // nanif, internal: nan-if
+        addFunctionMapping("neginfif", "neginf-if"); // neginfif, internal: neginf-if
+        addFunctionMapping("nullif", "null-if"); // nullif, internal: null-if
+        addFunctionMapping("posinfif", "posinf-if"); // posinfif, internal: posinf-if
         addFunctionMapping("toarray", "to-array"); // toarray, internal: to-array
         addFunctionMapping("toatomic", "to-atomic"); // toatomic, internal: to-atomic
         addFunctionMapping("toatom", "to-atomic"); // toatom, internal: to-atomic

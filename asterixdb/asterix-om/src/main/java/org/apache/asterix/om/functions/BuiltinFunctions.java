@@ -62,6 +62,7 @@ import org.apache.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType
 import org.apache.asterix.om.typecomputer.impl.CollectionMemberResultType;
 import org.apache.asterix.om.typecomputer.impl.CollectionToSequenceTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ConcatNonNullTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.DoubleIfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessByNameResultType;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessNestedResultType;
@@ -74,8 +75,10 @@ import org.apache.asterix.om.typecomputer.impl.IfNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalAvgTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.MinMaxAggTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.MissingIfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NonTaggedGetItemResultType;
 import org.apache.asterix.om.typecomputer.impl.NotUnknownTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.NullIfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NullableDoubleTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericAddSubMulDivTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericAggTypeComputer;
@@ -1001,6 +1004,15 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier IF_NAN_OR_INF =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "if-nan-or-inf", FunctionIdentifier.VARARGS);
 
+    public static final FunctionIdentifier MISSING_IF =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "missing-if", 2);
+    public static final FunctionIdentifier NULL_IF = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "null-if", 2);
+    public static final FunctionIdentifier NAN_IF = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "nan-if", 2);
+    public static final FunctionIdentifier POSINF_IF =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "posinf-if", 2);
+    public static final FunctionIdentifier NEGINF_IF =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "neginf-if", 2);
+
     public static final FunctionIdentifier TO_ATOMIC =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-atomic", 1);
     public static final FunctionIdentifier TO_ARRAY =
@@ -1106,9 +1118,6 @@ public class BuiltinFunctions {
         addPrivateFunction(GRAM_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
         addPrivateFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
-        addFunction(IF_MISSING_OR_NULL, IfMissingOrNullTypeComputer.INSTANCE, true);
-        addFunction(IF_MISSING, IfMissingTypeComputer.INSTANCE, true);
-        addFunction(IF_NULL, IfNullTypeComputer.INSTANCE, true);
         addPrivateFunction(INDEX_SEARCH, AnyTypeComputer.INSTANCE, true);
         addFunction(INT8_CONSTRUCTOR, AInt8TypeComputer.INSTANCE, true);
         addFunction(INT16_CONSTRUCTOR, AInt16TypeComputer.INSTANCE, true);
@@ -1145,9 +1154,6 @@ public class BuiltinFunctions {
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN, NumericUnaryFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NumericRound2TypeComputer.INSTANCE, true);
         addFunction(NUMERIC_TRUNC, NumericRound2TypeComputer.INSTANCE, true);
-        addFunction(IF_INF, IfNanOrInfTypeComputer.INSTANCE, true);
-        addFunction(IF_NAN, IfNanOrInfTypeComputer.INSTANCE, true);
-        addFunction(IF_NAN_OR_INF, IfNanOrInfTypeComputer.INSTANCE, true);
 
         addFunction(BINARY_LENGTH, UnaryBinaryInt64TypeComputer.INSTANCE, true);
         addFunction(PARSE_BINARY, ABinaryTypeComputer.INSTANCE, true);
@@ -1212,6 +1218,19 @@ public class BuiltinFunctions {
         addFunction(TO_NUMBER, ToNumberTypeComputer.INSTANCE, true);
         addFunction(TO_OBJECT, ToObjectTypeComputer.INSTANCE, true);
         addFunction(TO_STRING, AStringTypeComputer.INSTANCE, true);
+
+        addFunction(IF_INF, IfNanOrInfTypeComputer.INSTANCE, true);
+        addFunction(IF_MISSING, IfMissingTypeComputer.INSTANCE, true);
+        addFunction(IF_MISSING_OR_NULL, IfMissingOrNullTypeComputer.INSTANCE, true);
+        addFunction(IF_NULL, IfNullTypeComputer.INSTANCE, true);
+        addFunction(IF_NAN, IfNanOrInfTypeComputer.INSTANCE, true);
+        addFunction(IF_NAN_OR_INF, IfNanOrInfTypeComputer.INSTANCE, true);
+
+        addFunction(MISSING_IF, MissingIfTypeComputer.INSTANCE, true);
+        addFunction(NULL_IF, NullIfTypeComputer.INSTANCE, true);
+        addFunction(NAN_IF, DoubleIfTypeComputer.INSTANCE, true);
+        addFunction(POSINF_IF, DoubleIfTypeComputer.INSTANCE, true);
+        addFunction(NEGINF_IF, DoubleIfTypeComputer.INSTANCE, true);
 
         // Aggregate Functions
         addFunction(MAX, MinMaxAggTypeComputer.INSTANCE, true);

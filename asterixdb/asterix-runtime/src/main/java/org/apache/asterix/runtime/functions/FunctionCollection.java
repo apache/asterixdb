@@ -104,7 +104,12 @@ import org.apache.asterix.runtime.evaluators.comparisons.GreaterThanDescriptor;
 import org.apache.asterix.runtime.evaluators.comparisons.GreaterThanOrEqualsDescriptor;
 import org.apache.asterix.runtime.evaluators.comparisons.LessThanDescriptor;
 import org.apache.asterix.runtime.evaluators.comparisons.LessThanOrEqualsDescriptor;
+import org.apache.asterix.runtime.evaluators.comparisons.MissingIfEqualsDescriptor;
+import org.apache.asterix.runtime.evaluators.comparisons.NanIfEqualsDescriptor;
+import org.apache.asterix.runtime.evaluators.comparisons.NegInfIfEqualsDescriptor;
 import org.apache.asterix.runtime.evaluators.comparisons.NotEqualsDescriptor;
+import org.apache.asterix.runtime.evaluators.comparisons.NullIfEqualsDescriptor;
+import org.apache.asterix.runtime.evaluators.comparisons.PosInfIfEqualsDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ABinaryBase64StringConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ABinaryHexStringConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ABooleanConstructorDescriptor;
@@ -515,6 +520,13 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(LessThanDescriptor.FACTORY);
         fc.addGenerated(LessThanOrEqualsDescriptor.FACTORY);
         fc.addGenerated(NotEqualsDescriptor.FACTORY);
+
+        // If-Equals functions
+        fc.addGenerated(MissingIfEqualsDescriptor.FACTORY);
+        fc.addGenerated(NullIfEqualsDescriptor.FACTORY);
+        fc.addGenerated(NanIfEqualsDescriptor.FACTORY);
+        fc.addGenerated(PosInfIfEqualsDescriptor.FACTORY);
+        fc.addGenerated(NegInfIfEqualsDescriptor.FACTORY);
 
         // Binary functions
         fc.addGenerated(BinaryLengthDescriptor.FACTORY);

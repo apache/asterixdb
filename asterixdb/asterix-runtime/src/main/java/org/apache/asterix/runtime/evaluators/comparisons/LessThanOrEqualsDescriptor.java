@@ -50,7 +50,8 @@ public class LessThanOrEqualsDescriptor extends AbstractScalarFunctionDynamicDes
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractComparisonEvaluator(args[0], args[1], ctx) {
+                return new AbstractValueComparisonEvaluator(args[0].createScalarEvaluator(ctx),
+                        args[1].createScalarEvaluator(ctx)) {
 
                     @Override
                     protected boolean getComparisonResult(int r) {

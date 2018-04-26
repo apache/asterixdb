@@ -199,3 +199,150 @@
         { "a": true, "b": true, "c": true, "d": 1, "e": true, "f": true, "g": 1 }
 
  The function has an alias `ifnanorinf`.
+
+
+### null_if (nullif) ###
+
+ * Syntax:
+
+        null_if(expression1, expression2)
+
+ * Compares two arguments and returns `null` if they are equal, otherwise returns the first argument.
+ * Arguments:
+    * `expressionI` : an expression (any type is allowed).
+ * Return Value:
+    * `missing` if any argument is a `missing` value,
+    * `null` if
+        * any argument is a `null` value but no argument is a `missing` value, or
+        * `argument1` = `argument2`
+    * a value of the first argument otherwise
+
+ * Example:
+
+        {
+            "a": null_if("asterixdb", "asterixdb"),
+            "b": null_if(1, 2)
+        };
+
+ * The expected result is:
+
+        { "a": null, "b": 1 }
+
+ The function has an alias `nullif`.
+
+
+### missing_if (missingif) ###
+
+ * Syntax:
+
+        missing_if(expression1, expression2)
+
+ * Compares two arguments and returns `missing` if they are equal, otherwise returns the first argument.
+ * Arguments:
+    * `expressionI` : an expression (any type is allowed).
+ * Return Value:
+    * `missing` if
+        * any argument is a `missing` value, or
+        * no argument is a `null` value and `argument1` = `argument2`
+    * `null` if any argument is a `null` value but no argument is a `missing` value
+    * a value of the first argument otherwise
+
+ * Example:
+
+        {
+            "a": missing_if("asterixdb", "asterixdb")
+            "b": missing_if(1, 2),
+        };
+
+ * The expected result is:
+
+        { "b": 1 }
+
+ The function has an alias `missingif`.
+
+
+### nan_if (nanif) ###
+
+ * Syntax:
+
+        nan_if(expression1, expression2)
+
+ * Compares two arguments and returns `NaN` value if they are equal, otherwise returns the first argument.
+ * Arguments:
+    * `expressionI` : an expression (any type is allowed).
+ * Return Value:
+    * `missing` if any argument is a `missing` value,
+    * `null` if any argument is a `null` value but no argument is a `missing` value
+    * `NaN` value of type `double` if `argument1` = `argument2`
+    * a value of the first argument otherwise
+
+ * Example:
+
+        {
+            "a": to_string(nan_if("asterixdb", "asterixdb")),
+            "b": nan_if(1, 2)
+        };
+
+ * The expected result is:
+
+        { "a": "NaN", "b": 1 }
+
+ The function has an alias `nanif`.
+
+
+### posinf_if (posinfif) ###
+
+ * Syntax:
+
+        posinf_if(expression1, expression2)
+
+ * Compares two arguments and returns `+INF` value if they are equal, otherwise returns the first argument.
+ * Arguments:
+    * `expressionI` : an expression (any type is allowed).
+ * Return Value:
+    * `missing` if any argument is a `missing` value,
+    * `null` if any argument is a `null` value but no argument is a `missing` value
+    * `+INF` value of type `double` if `argument1` = `argument2`
+    * a value of the first argument otherwise
+
+ * Example:
+
+        {
+            "a": to_string(posinf_if("asterixdb", "asterixdb")),
+            "b": posinf_if(1, 2)
+        };
+
+ * The expected result is:
+
+        { "a": "+INF", "b": 1 }
+
+ The function has an alias `posinfif`.
+
+
+### neginf_if (neginfif) ###
+
+ * Syntax:
+
+        neginf_if(expression1, expression2)
+
+ * Compares two arguments and returns `-INF` value if they are equal, otherwise returns the first argument.
+ * Arguments:
+    * `expressionI` : an expression (any type is allowed).
+ * Return Value:
+    * `missing` if any argument is a `missing` value,
+    * `null` if any argument is a `null` value but no argument is a `missing` value
+    * `-INF` value of type `double` if `argument1` = `argument2`
+    * a value of the first argument otherwise
+
+ * Example:
+
+        {
+            "a": to_string(neginf_if("asterixdb", "asterixdb")),
+            "b": neginf_if(1, 2)
+        };
+
+ * The expected result is:
+
+        { "a": "-INF", "b": 1 }
+
+ The function has an alias `neginfif`.

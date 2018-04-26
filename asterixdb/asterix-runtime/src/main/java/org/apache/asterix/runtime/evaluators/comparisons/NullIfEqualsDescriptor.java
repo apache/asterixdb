@@ -19,28 +19,32 @@
 
 package org.apache.asterix.runtime.evaluators.comparisons;
 
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class NotEqualsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class NullIfEqualsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new NotEqualsDescriptor();
+            return new NullIfEqualsDescriptor();
         }
     };
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.NEQ;
+        return BuiltinFunctions.NULL_IF;
     }
 
     @Override
@@ -50,22 +54,19 @@ public class NotEqualsDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractValueComparisonEvaluator(args[0].createScalarEvaluator(ctx),
+                return new AbstractIfEqualsEvaluator(args[0].createScalarEvaluator(ctx),
                         args[1].createScalarEvaluator(ctx)) {
 
-                    @Override
-                    protected boolean getComparisonResult(int r) {
-                        return r != 0;
-                    }
+                    @SuppressWarnings("unchecked")
+                    final ISerializerDeserializer<ANull> nullSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
-                    protected boolean isTotallyOrderable() {
-                        return false;
+                    protected void writeEqualsResult() throws HyracksDataException {
+                        nullSerde.serialize(ANull.NULL, out);
                     }
                 };
             }
-
         };
     }
-
 }
