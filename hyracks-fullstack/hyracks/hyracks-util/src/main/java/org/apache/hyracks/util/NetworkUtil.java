@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.util;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
@@ -45,12 +46,12 @@ public class NetworkUtil {
         sc.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
     }
 
-    public static void closeQuietly(SocketChannel sc) {
-        if (sc.isOpen()) {
+    public static void closeQuietly(Closeable closeable) {
+        if (closeable != null) {
             try {
-                sc.close();
+                closeable.close();
             } catch (IOException e) {
-                LOGGER.warn("Failed to close socket", e);
+                LOGGER.warn("Failed to close", e);
             }
         }
     }

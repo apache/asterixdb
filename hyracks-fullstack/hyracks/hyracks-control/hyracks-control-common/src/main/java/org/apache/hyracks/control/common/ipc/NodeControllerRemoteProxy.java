@@ -36,6 +36,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.base.INodeController;
+import org.apache.hyracks.control.common.controllers.NodeParameters;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.AbortTasksFunction;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.CleanupJobletFunction;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.DeployBinaryFunction;
@@ -50,6 +51,7 @@ import org.apache.hyracks.control.common.ipc.CCNCFunctions.UnDeployBinaryFunctio
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.UndeployJobSpecFunction;
 import org.apache.hyracks.control.common.job.TaskAttemptDescriptor;
 import org.apache.hyracks.ipc.api.IIPCHandle;
+import org.apache.hyracks.ipc.exceptions.IPCException;
 
 public class NodeControllerRemoteProxy implements INodeController {
     private final CcId ccId;
@@ -134,6 +136,16 @@ public class NodeControllerRemoteProxy implements INodeController {
     public void takeThreadDump(String requestId) throws Exception {
         ThreadDumpRequestFunction fn = new ThreadDumpRequestFunction(requestId, ccId);
         ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
+    public void abortJobs(CcId ccId) throws IPCException {
+        ipcHandle.send(-1, new CCNCFunctions.AbortCCJobsFunction(ccId), null);
+    }
+
+    @Override
+    public void sendRegistrationResult(NodeParameters parameters, Exception regFailure) throws IPCException {
+        ipcHandle.send(-1, new CCNCFunctions.NodeRegistrationResult(parameters, regFailure), null);
     }
 
     public InetSocketAddress getAddress() {

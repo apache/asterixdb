@@ -62,10 +62,6 @@ final class IPCHandle implements IIPCHandle {
         return system;
     }
 
-    void setRemoteAddress(InetSocketAddress remoteAddress) {
-        this.remoteAddress = remoteAddress;
-    }
-
     @Override
     public long send(long requestId, Object req, Exception exception) throws IPCException {
         if (!isConnected()) {
@@ -127,7 +123,6 @@ final class IPCHandle implements IIPCHandle {
                     wait();
                     break;
                 case CONNECTED:
-                case CONNECT_FAILED:
                 case CLOSED:
                     return state == HandleState.CONNECTED;
                 default:

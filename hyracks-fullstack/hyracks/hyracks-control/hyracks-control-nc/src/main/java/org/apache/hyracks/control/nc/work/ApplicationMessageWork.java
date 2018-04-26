@@ -46,7 +46,7 @@ public class ApplicationMessageWork extends AbstractWork {
     public void run() {
         NCServiceContext ctx = ncs.getContext();
         try {
-            IMessage data = (IMessage) DeploymentUtils.deserialize(message, deploymentId, ctx);;
+            IMessage data = (IMessage) DeploymentUtils.deserialize(message, deploymentId, ctx);
             if (ctx.getMessageBroker() != null) {
                 ctx.getMessageBroker().receivedMessage(data, nodeId);
             } else {

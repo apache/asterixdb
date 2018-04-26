@@ -134,7 +134,6 @@ public class NodeManagerTest {
         IPCSystem ipcSystem = Mockito.mock(IPCSystem.class);
         IIPCHandle ipcHandle = Mockito.mock(IIPCHandle.class);
         Mockito.when(ccs.getClusterIPC()).thenReturn(ipcSystem);
-        Mockito.when(ipcSystem.getHandle(Mockito.any())).thenReturn(ipcHandle);
         Mockito.when(ipcSystem.getHandle(Mockito.any(), Mockito.anyInt())).thenReturn(ipcHandle);
         Mockito.when(ccs.getExecutor()).thenReturn(Executors.newCachedThreadPool());
         return ccs;

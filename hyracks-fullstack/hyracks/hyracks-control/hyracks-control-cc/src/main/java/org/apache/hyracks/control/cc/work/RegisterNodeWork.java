@@ -28,11 +28,8 @@ import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.controllers.NodeParameters;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
-import org.apache.hyracks.control.common.ipc.CCNCFunctions;
 import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
-import org.apache.hyracks.ipc.api.IIPCHandle;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,36 +49,33 @@ public class RegisterNodeWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         String id = reg.getNodeId();
-        // TODO(mblow): it seems we should close IPC handles when we're done with them (like here)
-        IIPCHandle ncIPCHandle = ccs.getClusterIPC().getHandle(reg.getNodeControllerAddress());
-        CCNCFunctions.NodeRegistrationResult result;
-        Map<IOption, Object> ncConfiguration = new HashMap<>();
+        LOGGER.warn("Registering node: {}", id);
+        NodeControllerRemoteProxy nc = new NodeControllerRemoteProxy(ccs.getCcId(),
+                ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerAddress()));
+        INodeManager nodeManager = ccs.getNodeManager();
         try {
-            LOGGER.log(Level.WARN, "Registering INodeController: id = " + id);
-            NodeControllerRemoteProxy nc = new NodeControllerRemoteProxy(ccs.getCcId(),
-                    ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerAddress()));
             NodeControllerState state = new NodeControllerState(nc, reg);
-            INodeManager nodeManager = ccs.getNodeManager();
             nodeManager.addNode(id, state);
             IApplicationConfig cfg = state.getNCConfig().getConfigManager().getNodeEffectiveConfig(id);
+            final Map<IOption, Object> ncConfiguration = new HashMap<>();
             for (IOption option : cfg.getOptions()) {
                 ncConfiguration.put(option, cfg.get(option));
             }
-            LOGGER.log(Level.INFO, "Registered INodeController: id = " + id);
+            LOGGER.warn("Registered node: {}", id);
             NodeParameters params = new NodeParameters();
             params.setClusterControllerInfo(ccs.getClusterControllerInfo());
             params.setDistributedState(ccs.getContext().getDistributedState());
             params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriodMillis());
             params.setProfileDumpPeriod(ccs.getCCConfig().getProfileDumpPeriod());
             params.setRegistrationId(registrationId);
-            result = new CCNCFunctions.NodeRegistrationResult(params, null);
+            LOGGER.warn("sending registration response to node {}", id);
+            nc.sendRegistrationResult(params, null);
+            LOGGER.warn("notifying node {} joined", id);
+            ccs.getContext().notifyNodeJoin(id, ncConfiguration);
         } catch (Exception e) {
-            LOGGER.log(Level.WARN, "Node registration failed", e);
-            result = new CCNCFunctions.NodeRegistrationResult(null, e);
+            LOGGER.error("Node {} registration failed", id, e);
+            nodeManager.removeNode(id);
+            nc.sendRegistrationResult(null, e);
         }
-        LOGGER.warn("sending registration response to node");
-        ncIPCHandle.send(-1, result, null);
-        LOGGER.warn("notifying node join");
-        ccs.getContext().notifyNodeJoin(id, ncConfiguration);
     }
 }

@@ -66,26 +66,12 @@ public class IPCSystem {
         cMgr.stop();
     }
 
-    public IIPCHandle getHandle(InetSocketAddress remoteAddress) throws IPCException {
-        return getHandle(remoteAddress, 0);
-    }
-
     public IIPCHandle getHandle(InetSocketAddress remoteAddress, int maxRetries) throws IPCException {
         return getHandle(remoteAddress, maxRetries, 0);
     }
 
     public IIPCHandle getReconnectingHandle(InetSocketAddress remoteAddress) throws IPCException {
         return getReconnectingHandle(remoteAddress, 1);
-    }
-
-    public IIPCHandle getReconnectingHandle(InetSocketAddress remoteAddress, int reconnectAttempts)
-            throws IPCException {
-        return getHandle(remoteAddress, 0, reconnectAttempts, NoOpIPCEventListener.INSTANCE);
-    }
-
-    public IIPCHandle getHandle(InetSocketAddress remoteAddress, int maxRetries, int reconnectAttempts)
-            throws IPCException {
-        return getHandle(remoteAddress, maxRetries, reconnectAttempts, NoOpIPCEventListener.INSTANCE);
     }
 
     public IIPCHandle getHandle(InetSocketAddress remoteAddress, int maxRetries, int reconnectAttempts,
@@ -131,5 +117,15 @@ public class IPCSystem {
 
     public IPCPerformanceCounters getPerformanceCounters() {
         return perfCounters;
+    }
+
+    private IIPCHandle getReconnectingHandle(InetSocketAddress remoteAddress, int reconnectAttempts)
+            throws IPCException {
+        return getHandle(remoteAddress, 0, reconnectAttempts, NoOpIPCEventListener.INSTANCE);
+    }
+
+    private IIPCHandle getHandle(InetSocketAddress remoteAddress, int maxRetries, int reconnectAttempts)
+            throws IPCException {
+        return getHandle(remoteAddress, maxRetries, reconnectAttempts, NoOpIPCEventListener.INSTANCE);
     }
 }

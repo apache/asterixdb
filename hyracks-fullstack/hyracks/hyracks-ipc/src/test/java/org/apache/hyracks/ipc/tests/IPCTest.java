@@ -43,7 +43,7 @@ public class IPCTest {
         IPCSystem client = createClientIPCSystem(rpci);
         client.start();
 
-        IIPCHandle handle = client.getHandle(serverAddr);
+        IIPCHandle handle = client.getHandle(serverAddr, 0);
 
         for (int i = 0; i < 100; ++i) {
             Assert.assertEquals(rpci.call(handle, Integer.valueOf(i)), Integer.valueOf(2 * i));

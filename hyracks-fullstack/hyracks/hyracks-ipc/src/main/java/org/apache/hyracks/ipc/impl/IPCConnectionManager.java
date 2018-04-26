@@ -18,12 +18,13 @@
  */
 package org.apache.hyracks.ipc.impl;
 
+import static org.apache.hyracks.util.ExitUtil.EC_IMMEDIATE_HALT;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -39,7 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.NetworkUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -100,7 +101,7 @@ public class IPCConnectionManager {
 
     void stop() {
         stopped = true;
-        IOUtils.closeQuietly(serverSocketChannel);
+        NetworkUtil.closeQuietly(serverSocketChannel);
         networkThread.selector.wakeup();
     }
 
@@ -121,8 +122,10 @@ public class IPCConnectionManager {
                 return handle;
             }
             if (maxRetries < 0 || retries++ < maxRetries) {
-                LOGGER.warn("Connection to " + remoteAddress + " failed; retrying" + (maxRetries <= 0 ? ""
-                        : " (retry attempt " + retries + " of " + maxRetries + ") after " + delay + "ms"));
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.warn("Connection to " + remoteAddress + " failed; retrying" + (maxRetries <= 0 ? ""
+                            : " (retry attempt " + retries + " of " + maxRetries + ") after " + delay + "ms"));
+                }
                 Thread.sleep(delay);
                 delay = Math.min(MAX_RETRY_DELAY_MILLIS, (int) (delay * 1.5));
             } else {
@@ -144,24 +147,6 @@ public class IPCConnectionManager {
         networkThread.selector.wakeup();
     }
 
-    private synchronized void collectOutstandingWork() {
-        if (!pendingConnections.isEmpty()) {
-            moveAll(pendingConnections, workingPendingConnections);
-        }
-        if (!sendList.isEmpty()) {
-            moveAll(sendList, workingSendList);
-        }
-    }
-
-    private Message createInitialReqMessage(IPCHandle handle) {
-        Message msg = new Message(handle);
-        msg.setMessageId(system.createMessageId());
-        msg.setRequestMessageId(-1);
-        msg.setFlag(Message.INITIAL_REQ);
-        msg.setPayload(address);
-        return msg;
-    }
-
     private Message createInitialAckMessage(IPCHandle handle, Message req) {
         Message msg = new Message(handle);
         msg.setMessageId(system.createMessageId());
@@ -177,16 +162,18 @@ public class IPCConnectionManager {
 
     private class NetworkThread extends Thread {
         private final Selector selector;
-
         private final Set<SocketChannel> openChannels = new HashSet<>();
+        private final BitSet unsentMessagesBitmap = new BitSet();
+        private final List<Message> tempUnsentMessages = new ArrayList<>();
 
-        public NetworkThread() {
+        NetworkThread() {
             super("IPC Network Listener Thread [" + address + "]");
             setDaemon(true);
             try {
                 selector = Selector.open();
+                serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new IllegalStateException(e);
             }
         }
 
@@ -200,105 +187,19 @@ public class IPCConnectionManager {
         }
 
         private void doRun() {
-            try {
-                serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-            } catch (ClosedChannelException e) {
-                throw new RuntimeException(e);
-            }
-            BitSet unsentMessagesBitmap = new BitSet();
-            List<Message> tempUnsentMessages = new ArrayList<>();
             int failingLoops = 0;
             while (!stopped) {
                 try {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Starting Select");
-                    }
                     int n = selector.select();
                     collectOutstandingWork();
                     if (!workingPendingConnections.isEmpty()) {
-                        for (IPCHandle handle : workingPendingConnections) {
-                            SocketChannel channel = SocketChannel.open();
-                            register(channel);
-                            SelectionKey cKey;
-                            if (channel.connect(handle.getRemoteAddress())) {
-                                cKey = channel.register(selector, SelectionKey.OP_READ);
-                                handle.setState(HandleState.CONNECT_SENT);
-                                IPCConnectionManager.this.write(createInitialReqMessage(handle));
-                            } else {
-                                cKey = channel.register(selector, SelectionKey.OP_CONNECT);
-                            }
-                            handle.setKey(cKey);
-                            cKey.attach(handle);
-                        }
-                        workingPendingConnections.clear();
+                        establishPendingConnections();
                     }
                     if (!workingSendList.isEmpty()) {
-                        unsentMessagesBitmap.clear();
-                        int len = workingSendList.size();
-                        for (int i = 0; i < len; ++i) {
-                            Message msg = workingSendList.get(i);
-                            LOGGER.debug(() -> "Processing send of message: " + msg);
-                            IPCHandle handle = msg.getIPCHandle();
-                            if (handle.getState() != HandleState.CLOSED) {
-                                if (!handle.full()) {
-                                    while (true) {
-                                        ByteBuffer buffer = handle.getOutBuffer();
-                                        buffer.compact();
-                                        boolean success = msg.write(buffer);
-                                        buffer.flip();
-                                        if (success) {
-                                            system.getPerformanceCounters().addMessageSentCount(1);
-                                            SelectionKey key = handle.getKey();
-                                            key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
-                                        } else {
-                                            if (!buffer.hasRemaining()) {
-                                                handle.resizeOutBuffer();
-                                                continue;
-                                            }
-                                            handle.markFull();
-                                            unsentMessagesBitmap.set(i);
-                                        }
-                                        break;
-                                    }
-                                } else {
-                                    unsentMessagesBitmap.set(i);
-                                }
-                            }
-                        }
-                        copyUnsentMessages(unsentMessagesBitmap, tempUnsentMessages);
+                        sendPendingMessages();
                     }
                     if (n > 0) {
-                        for (Iterator<SelectionKey> i = selector.selectedKeys().iterator(); i.hasNext();) {
-                            SelectionKey key = i.next();
-                            i.remove();
-                            final SelectableChannel sc = key.channel();
-                            if (key.isReadable()) {
-                                read(key);
-                            } else if (key.isWritable()) {
-                                write(key);
-                            } else if (key.isAcceptable()) {
-                                assert sc == serverSocketChannel;
-                                SocketChannel channel = serverSocketChannel.accept();
-                                register(channel);
-                                IPCHandle handle = new IPCHandle(system, null);
-                                SelectionKey cKey = channel.register(selector, SelectionKey.OP_READ);
-                                handle.setKey(cKey);
-                                cKey.attach(handle);
-                                handle.setState(HandleState.CONNECT_RECEIVED);
-                            } else if (key.isConnectable()) {
-                                SocketChannel channel = (SocketChannel) sc;
-                                IPCHandle handle = (IPCHandle) key.attachment();
-                                if (!finishConnect(channel)) {
-                                    handle.setState(HandleState.CONNECT_FAILED);
-                                    continue;
-                                }
-
-                                handle.setState(HandleState.CONNECT_SENT);
-                                registerHandle(handle);
-                                key.interestOps(SelectionKey.OP_READ);
-                                IPCConnectionManager.this.write(createInitialReqMessage(handle));
-                            }
-                        }
+                        processSelectedKeys();
                     }
                     // reset failingLoops on a good loop
                     failingLoops = 0;
@@ -314,25 +215,146 @@ public class IPCConnectionManager {
             }
         }
 
-        private void cleanup() {
-            for (Channel channel : openChannels) {
-                IOUtils.closeQuietly(channel);
+        private void processSelectedKeys() {
+            for (Iterator<SelectionKey> i = selector.selectedKeys().iterator(); i.hasNext();) {
+                SelectionKey key = i.next();
+                i.remove();
+                final SelectableChannel sc = key.channel();
+                if (key.isReadable()) {
+                    read(key);
+                } else if (key.isWritable()) {
+                    write(key);
+                } else if (key.isAcceptable()) {
+                    assert sc == serverSocketChannel;
+                    accept();
+                } else if (key.isConnectable()) {
+                    finishConnect(key);
+                }
             }
-            openChannels.clear();
-            IOUtils.closeQuietly(selector);
         }
 
-        private boolean finishConnect(SocketChannel channel) {
-            boolean connectFinished = false;
+        private void finishConnect(SelectionKey connectableKey) {
+            SocketChannel channel = (SocketChannel) connectableKey.channel();
+            IPCHandle handle = (IPCHandle) connectableKey.attachment();
+            boolean connected = false;
             try {
-                connectFinished = channel.finishConnect();
-                if (!connectFinished) {
-                    LOGGER.log(Level.WARN, "Channel connect did not finish");
+                connected = channel.finishConnect();
+                if (connected) {
+                    connectableKey.interestOps(SelectionKey.OP_READ);
+                    connectionEstablished(handle);
                 }
             } catch (IOException e) {
-                LOGGER.log(Level.WARN, "Exception finishing channel connect", e);
+                LOGGER.warn("Exception finishing connect", e);
+            } finally {
+                if (!connected) {
+                    LOGGER.warn("Failed to finish connect to {}", handle.getRemoteAddress());
+                    close(connectableKey, channel);
+                }
             }
-            return connectFinished;
+        }
+
+        private void accept() {
+            SocketChannel channel = null;
+            SelectionKey channelKey = null;
+            try {
+                channel = serverSocketChannel.accept();
+                register(channel);
+                channelKey = channel.register(selector, SelectionKey.OP_READ);
+                IPCHandle handle = new IPCHandle(system, null);
+                handle.setKey(channelKey);
+                channelKey.attach(handle);
+                handle.setState(HandleState.CONNECT_RECEIVED);
+            } catch (IOException e) {
+                LOGGER.error("Failed to accept channel ", e);
+                close(channelKey, channel);
+            }
+        }
+
+        private void establishPendingConnections() {
+            for (IPCHandle handle : workingPendingConnections) {
+                SocketChannel channel = null;
+                SelectionKey channelKey = null;
+                try {
+                    channel = SocketChannel.open();
+                    register(channel);
+                    if (channel.connect(handle.getRemoteAddress())) {
+                        channelKey = channel.register(selector, SelectionKey.OP_READ);
+                        connectionEstablished(handle);
+                    } else {
+                        channelKey = channel.register(selector, SelectionKey.OP_CONNECT);
+                    }
+                    handle.setKey(channelKey);
+                    channelKey.attach(handle);
+                } catch (IOException e) {
+                    LOGGER.error("Failed to accept channel ", e);
+                    close(channelKey, channel);
+                }
+            }
+            workingPendingConnections.clear();
+        }
+
+        private void connectionEstablished(IPCHandle handle) {
+            handle.setState(HandleState.CONNECT_SENT);
+            registerHandle(handle);
+            IPCConnectionManager.this.write(createInitialReqMessage(handle));
+        }
+
+        private void sendPendingMessages() {
+            unsentMessagesBitmap.clear();
+            int len = workingSendList.size();
+            for (int i = 0; i < len; ++i) {
+                Message msg = workingSendList.get(i);
+                final boolean sent = sendMessage(msg);
+                if (!sent) {
+                    unsentMessagesBitmap.set(i);
+                }
+            }
+            copyUnsentMessages(unsentMessagesBitmap, tempUnsentMessages);
+        }
+
+        private boolean sendMessage(Message msg) {
+            LOGGER.debug("Processing send of message: {}", msg);
+            IPCHandle handle = msg.getIPCHandle();
+            if (handle.getState() == HandleState.CLOSED) {
+                // message will never be sent
+                return true;
+            }
+            if (handle.full()) {
+                return false;
+            }
+            try {
+                while (true) {
+                    ByteBuffer buffer = handle.getOutBuffer();
+                    buffer.compact();
+                    boolean success = msg.write(buffer);
+                    buffer.flip();
+                    if (success) {
+                        system.getPerformanceCounters().addMessageSentCount(1);
+                        SelectionKey key = handle.getKey();
+                        key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
+                        return true;
+                    } else {
+                        if (!buffer.hasRemaining()) {
+                            handle.resizeOutBuffer();
+                            continue;
+                        }
+                        handle.markFull();
+                        return false;
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.fatal("Unrecoverable networking failure; Halting...", e);
+                ExitUtil.halt(EC_IMMEDIATE_HALT);
+            }
+            return false;
+        }
+
+        private void cleanup() {
+            for (Channel channel : openChannels) {
+                NetworkUtil.closeQuietly(channel);
+            }
+            openChannels.clear();
+            NetworkUtil.closeQuietly(selector);
         }
 
         private void copyUnsentMessages(BitSet unsentMessagesBitmap, List<Message> tempUnsentMessages) {
@@ -396,19 +418,42 @@ public class IPCConnectionManager {
         }
 
         private void close(SelectionKey key, SocketChannel sc) {
-            key.cancel();
-            NetworkUtil.closeQuietly(sc);
-            openChannels.remove(sc);
-            final IPCHandle handle = (IPCHandle) key.attachment();
-            handle.close();
+            if (key != null) {
+                final Object attachment = key.attachment();
+                if (attachment != null) {
+                    ((IPCHandle) attachment).close();
+                }
+                key.cancel();
+            }
+            if (sc != null) {
+                NetworkUtil.closeQuietly(sc);
+                openChannels.remove(sc);
+            }
         }
-    }
 
-    private <T> void moveAll(List<T> source, List<T> target) {
-        int len = source.size();
-        for (int i = 0; i < len; ++i) {
-            target.add(source.get(i));
+        private void collectOutstandingWork() {
+            synchronized (IPCConnectionManager.this) {
+                if (!pendingConnections.isEmpty()) {
+                    moveAll(pendingConnections, workingPendingConnections);
+                }
+                if (!sendList.isEmpty()) {
+                    moveAll(sendList, workingSendList);
+                }
+            }
         }
-        source.clear();
+
+        private Message createInitialReqMessage(IPCHandle handle) {
+            Message msg = new Message(handle);
+            msg.setMessageId(system.createMessageId());
+            msg.setRequestMessageId(-1);
+            msg.setFlag(Message.INITIAL_REQ);
+            msg.setPayload(address);
+            return msg;
+        }
+
+        private <T> void moveAll(List<T> source, List<T> target) {
+            target.addAll(source);
+            source.clear();
+        }
     }
 }
