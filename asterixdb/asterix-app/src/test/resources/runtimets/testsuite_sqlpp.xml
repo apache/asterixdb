@@ -3683,6 +3683,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="random">
+        <output-dir compare="Text">random</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="stable_sort">
         <output-dir compare="Text">stable_sort</output-dir>
       </compilation-unit>
@@ -4839,6 +4844,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="const">
+        <output-dir compare="Text">const</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="degrees">
+        <output-dir compare="Text">degrees</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="divide_double">
         <output-dir compare="Text">divide_double</output-dir>
       </compilation-unit>
@@ -4946,6 +4961,11 @@
     <test-case FilePath="numeric">
       <compilation-unit name="power">
         <output-dir compare="Text">power</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="radians">
+        <output-dir compare="Text">radians</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">

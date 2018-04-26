@@ -198,6 +198,47 @@
         { "v1": 0.5403023058681398, "v2": -0.4161468365471424, "v3": 1.0, "v4": 0.8775825618903728, "v5": 0.562379076290703 }
 
 
+### degrees ###
+ * Syntax:
+
+        degrees(numeric_value)
+
+ * Converts radians to degrees
+ * Arguments:
+    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value.
+ * Return Value:
+    * The degrees value for the given radians value. The returned value has type `double`,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-numeric input value will cause a type error.
+
+ * Example:
+
+        { "v1": degrees(pi()) };
+
+
+ * The expected result is:
+
+        { "v1": 180.0 }
+
+
+### e ###
+ * Syntax:
+
+        e()
+
+ * Return Value:
+    * e (base of the natural logarithm)
+
+ * Example:
+
+        { "v1": e() };
+
+ * The expected result is:
+
+        { "v1": 2.718281828459045 }
+
+
 ### exp ###
  * Syntax:
 
@@ -301,6 +342,22 @@
         { "v1": 0.0, "v2": 0.3010299956639812, "v3": "-Infinity", "v4": -0.3010299956639812, "v5": 3.0 }
 
 
+### pi ###
+ * Syntax:
+
+        pi()
+
+ * Return Value:
+    * Pi
+
+ * Example:
+
+        { "v1": pi() };
+
+ * The expected result is:
+
+        { "v1": 3.141592653589793 }
+
 
 ### power ###
  * Syntax:
@@ -325,6 +382,30 @@
  * The expected result is:
 
         { "v1": 1, "v3": 0, "v4": 1.4142135623730951 }
+
+
+### radians ###
+ * Syntax:
+
+        radians(numeric_value)
+
+ * Converts degrees to radians
+ * Arguments:
+    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value.
+ * Return Value:
+    * The radians value for the given degrees value. The returned value has type `double`,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-numeric input value will cause a type error.
+
+ * Example:
+
+        { "v1": radians(180) };
+
+
+ * The expected result is:
+
+        { "v1": 3.141592653589793 }
 
 
 ### round ###

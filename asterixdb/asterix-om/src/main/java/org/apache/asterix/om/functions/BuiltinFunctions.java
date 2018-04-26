@@ -243,6 +243,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "atan", 1);
     public static final FunctionIdentifier NUMERIC_ATAN2 =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "atan2", 2);
+    public static final FunctionIdentifier NUMERIC_DEGREES =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "degrees", 1);
+    public static final FunctionIdentifier NUMERIC_RADIANS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "radians", 1);
     public static final FunctionIdentifier NUMERIC_COS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cos", 1);
     public static final FunctionIdentifier NUMERIC_SIN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sin", 1);
     public static final FunctionIdentifier NUMERIC_TAN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "tan", 1);
@@ -253,6 +257,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sqrt", 1);
     public static final FunctionIdentifier NUMERIC_SIGN =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sign", 1);
+    public static final FunctionIdentifier NUMERIC_E = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "e", 0);
+    public static final FunctionIdentifier NUMERIC_PI = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "pi", 0);
 
     public static final FunctionIdentifier NUMERIC_CEILING =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ceiling", 1);
@@ -741,6 +747,9 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier UUID = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "uuid", 0);
     public static final FunctionIdentifier CREATE_QUERY_UID =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-query-uid", 0);
+    public static final FunctionIdentifier RANDOM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "random", 0);
+    public static final FunctionIdentifier RANDOM_WITH_SEED =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "random", 1);
 
     //Geo
     public static final FunctionIdentifier ST_AREA = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-area", 1);
@@ -1097,6 +1106,8 @@ public class BuiltinFunctions {
         addFunction(UUID, AUUIDTypeComputer.INSTANCE, false);
         addFunction(CREATE_QUERY_UID, ABinaryTypeComputer.INSTANCE, false);
         addFunction(UUID_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE, true);
+        addFunction(RANDOM, ADoubleTypeComputer.INSTANCE, false);
+        addFunction(RANDOM_WITH_SEED, ADoubleTypeComputer.INSTANCE, false);
 
         addFunction(DATE_CONSTRUCTOR, ADateTypeComputer.INSTANCE, true);
         addFunction(DATETIME_CONSTRUCTOR, ADateTimeTypeComputer.INSTANCE, true);
@@ -1140,12 +1151,16 @@ public class BuiltinFunctions {
         addFunction(NUMERIC_ASIN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ATAN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ATAN2, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_DEGREES, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_RADIANS, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_COS, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_SIN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_TAN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_E, ADoubleTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_EXP, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_LN, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_LOG, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
+        addFunction(NUMERIC_PI, ADoubleTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_SQRT, NumericDoubleOutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_SIGN, NumericInt8OutputFunctionTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_CEILING, NumericUnaryFunctionTypeComputer.INSTANCE, true);

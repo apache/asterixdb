@@ -76,6 +76,28 @@
         { "v1": false, "v2": true, "v3": null }
 
 
+### random ###
+ * Syntax:
+
+        random( [seed_value] )
+
+ * Returns a random number, accepting an optional seed value
+ * Arguments:
+    * `seed_value`: an optional `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value representing the seed number.
+ * Return Value:
+    * A random number of type `double` between 0 and 1,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-numeric input value will cause a type error.
+
+ * Example:
+
+        {
+          "v1": random(),
+          "v2": random(unix_time_from_datetime_in_ms(current_datetime()))
+        };
+
+
 ### range ###
  * Syntax:
 

@@ -188,6 +188,7 @@ import org.apache.asterix.runtime.evaluators.functions.NumericAddDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericCaretDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericCeilingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericCosDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.NumericDegreesDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericDivideDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericExpDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericFloorDescriptor;
@@ -195,6 +196,7 @@ import org.apache.asterix.runtime.evaluators.functions.NumericLnDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericLogDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericModuloDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericMultiplyDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.NumericRadiansDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRoundDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2Descriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRoundHalfToEvenDescriptor;
@@ -206,6 +208,8 @@ import org.apache.asterix.runtime.evaluators.functions.NumericTanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericTruncDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericUnaryMinusDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.OrDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.RandomDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.RandomWithSeedDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SleepDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
@@ -466,6 +470,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(CreateUUIDDescriptor.FACTORY);
         fc.add(UUIDDescriptor.FACTORY);
         fc.add(CreateQueryUIDDescriptor.FACTORY);
+        fc.add(RandomDescriptor.FACTORY);
         fc.add(CurrentDateDescriptor.FACTORY);
         fc.add(CurrentTimeDescriptor.FACTORY);
         fc.add(CurrentDateTimeDescriptor.FACTORY);
@@ -502,6 +507,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(NumericACosDescriptor.FACTORY);
         fc.addGenerated(NumericASinDescriptor.FACTORY);
         fc.addGenerated(NumericATanDescriptor.FACTORY);
+        fc.addGenerated(NumericDegreesDescriptor.FACTORY);
+        fc.addGenerated(NumericRadiansDescriptor.FACTORY);
         fc.addGenerated(NumericCosDescriptor.FACTORY);
         fc.addGenerated(NumericSinDescriptor.FACTORY);
         fc.addGenerated(NumericTanDescriptor.FACTORY);
@@ -727,6 +734,9 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // Record function
         fc.addGenerated(RecordPairsDescriptor.FACTORY);
+
+        // Other functions
+        fc.addGenerated(RandomWithSeedDescriptor.FACTORY);
 
         ServiceLoader.load(IFunctionRegistrant.class).iterator().forEachRemaining(c -> c.register(fc));
         return fc;
