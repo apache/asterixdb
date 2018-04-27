@@ -35,5 +35,10 @@
         <output-dir compare="Text">secondary-index</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="metrics">
+      <compilation-unit name="secondary-index-index-only">
+        <output-dir compare="Text">secondary-index-index-only</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

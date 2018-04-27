@@ -16,15 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 /*
- * Description  : Processed objects metrics on secondary index scan
+ * Description  : Processed objects metrics on secondary index scan when it's an index-only plan
  * Expected Res : Success
- * Date         : 28 Sep 2017
+ * Date         : 27 Apr 2018
  */
+
+drop dataverse test if exists;
+create dataverse test;
 
 use test;
 
-set noindexonly 'true';
+create type test.AddressType as
+{
+  number : bigint,
+  street : string,
+  city : string
+};
 
-select count(*) from Customers
-where name = "Marvella Loud";
+create type test.CustomerType as
+ closed {
+  cid : bigint,
+  name : string,
+  age : bigint?,
+  address : AddressType?,
+  lastorder : {
+      oid : bigint,
+      total : float
+  }
+};
+
+create dataset Customers(CustomerType) primary key cid;
+create index customer_name_idx on Customers(name);

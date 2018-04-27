@@ -107,6 +107,6 @@ public class LSMBTreeSearchCursor extends EnforcedIndexCursor implements ILSMInd
 
     @Override
     public boolean getSearchOperationCallbackProceedResult() {
-        return false;
+        return currentCursor.getSearchOperationCallbackProceedResult();
     }
 }
