@@ -532,7 +532,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         } catch (Exception | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError e) {
             handleExecuteStatementException(e, execution, param);
             response.setStatus(execution.getHttpStatus());
-            ResultUtil.printError(sessionOutput.out(), e);
+            printError(sessionOutput.out(), e);
             ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
         } finally {
             // make sure that we stop buffering and return the result to the http response
@@ -600,6 +600,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             LOGGER.warn("handleException: unexpected exception: {}", param, t);
             state.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    protected void printError(PrintWriter sessionOut, Throwable throwable) {
+        ResultUtil.printError(sessionOut, throwable);
     }
 
     protected void printExecutionPlans(SessionOutput output, ExecutionPlans executionPlans) {

@@ -21,9 +21,10 @@ package org.apache.hyracks.algebricks.common.exceptions;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
-public class AlgebricksException extends Exception {
+public class AlgebricksException extends Exception implements IFormattedException {
     private static final long serialVersionUID = 1L;
 
     public static final int UNKNOWN = 0;
@@ -93,10 +94,12 @@ public class AlgebricksException extends Exception {
         return new AlgebricksException(ErrorCode.HYRACKS, errorCode, ErrorCode.getErrorMessage(errorCode), params);
     }
 
+    @Override
     public String getComponent() {
         return component;
     }
 
+    @Override
     public int getErrorCode() {
         return errorCode;
     }

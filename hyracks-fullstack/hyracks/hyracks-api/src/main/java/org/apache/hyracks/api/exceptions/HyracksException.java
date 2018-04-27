@@ -23,7 +23,7 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
-public class HyracksException extends IOException {
+public class HyracksException extends IOException implements IFormattedException {
     private static final long serialVersionUID = 1L;
 
     public static final int UNKNOWN = 0;
@@ -101,10 +101,12 @@ public class HyracksException extends IOException {
         this(component, errorCode, message, cause, null, params);
     }
 
+    @Override
     public String getComponent() {
         return component;
     }
 
+    @Override
     public int getErrorCode() {
         return errorCode;
     }
