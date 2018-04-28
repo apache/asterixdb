@@ -199,7 +199,7 @@ public class TransactionAbortTest {
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(Semaphore t) throws HyracksDataException {
                 // manually set the current memory component as modified
                 index.getCurrentMemoryComponent().setModified();
                 throw new HyracksDataException("Fail the job");

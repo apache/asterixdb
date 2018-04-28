@@ -121,7 +121,7 @@ public class ErrorCode {
     public static final int FOUND_MULTIPLE_TRANSACTIONS = 85;
     public static final int UNRECOGNIZED_INDEX_COMPONENT_FILE = 86;
     public static final int UNEQUAL_NUM_FILTERS_TREES = 87;
-    public static final int CANNOT_MODIFY_INDEX_DISK_IS_FULL = 88;
+    public static final int INDEX_NOT_MODIFIABLE = 88;
     public static final int GROUP_BY_MEMORY_BUDGET_EXCEEDS = 89;
     public static final int ILLEGAL_MEMORY_BUDGET = 90;
     public static final int TIMEOUT = 91;

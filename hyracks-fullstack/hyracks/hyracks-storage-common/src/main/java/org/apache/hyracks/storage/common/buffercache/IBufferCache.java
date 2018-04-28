@@ -269,4 +269,13 @@ public interface IBufferCache {
      */
     void resizePage(ICachedPage page, int multiplier, IExtraPageBlockHelper extraPageBlockHelper)
             throws HyracksDataException;
+
+    /**
+     * Close the file if open.
+     *
+     * @param fileRef
+     * @throws HyracksDataException
+     */
+    void closeFileIfOpen(FileReference fileRef);
+
 }

@@ -16,16 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.lsm.common.api;
+package org.apache.asterix.common.api;
 
 import java.io.Serializable;
 
+import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.hyracks.api.application.INCServiceContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.common.IResource;
 
 @FunctionalInterface
-public interface ILSMComponentIdGeneratorFactory extends Serializable {
-    ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx, IResource resource)
-            throws HyracksDataException;
+public interface IDatasetInfoProvider extends Serializable {
+    /**
+     * Get the dataset info
+     *
+     * @param serviceCtx
+     *            the nc service context
+     * @return the dataset info object
+     */
+    DatasetInfo getDatasetInfo(INCServiceContext serviceCtx);
 }

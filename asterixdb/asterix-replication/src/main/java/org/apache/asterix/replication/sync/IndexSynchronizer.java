@@ -24,7 +24,7 @@ import static org.apache.hyracks.api.replication.IReplicationJob.ReplicationOper
 import java.io.IOException;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.replication.messaging.ComponentMaskTask;
@@ -119,11 +119,11 @@ public class IndexSynchronizer {
     private long getReplicatedComponentLsn() throws HyracksDataException {
         final ILSMIndexReplicationJob indexReplJob = (ILSMIndexReplicationJob) job;
         if (indexReplJob.getLSMOpType() != LSMOperationType.FLUSH) {
-            return AbstractLSMIOOperationCallback.INVALID;
+            return LSMIOOperationCallback.INVALID_LSN;
         }
         final ILSMIndex lsmIndex = indexReplJob.getLSMIndex();
         final ILSMIndexOperationContext ctx = indexReplJob.getLSMIndexOperationContext();
-        return ((AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback())
+        return ((LSMIOOperationCallback) lsmIndex.getIOOperationCallback())
                 .getComponentLSN(ctx.getComponentsToBeReplicated());
     }
 }

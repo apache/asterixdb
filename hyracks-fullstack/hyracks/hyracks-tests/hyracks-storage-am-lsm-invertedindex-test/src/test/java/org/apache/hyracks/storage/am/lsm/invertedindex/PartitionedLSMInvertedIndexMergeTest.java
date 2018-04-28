@@ -58,8 +58,7 @@ public class PartitionedLSMInvertedIndexMergeTest extends AbstractInvertedIndexL
                 invIndex.activate();
             }
             // Perform merge.
-            invIndexAccessor.scheduleMerge(((LSMInvertedIndex) invIndex).getIOOperationCallback(),
-                    ((LSMInvertedIndex) invIndex).getDiskComponents());
+            invIndexAccessor.scheduleMerge(((LSMInvertedIndex) invIndex).getDiskComponents());
             validateAndCheckIndex(testCtx);
             runTinySearchWorkload(testCtx, tupleGen);
         }

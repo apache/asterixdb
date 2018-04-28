@@ -35,7 +35,7 @@ public interface IIndexBulkLoader {
     public void add(ITupleReference tuple) throws HyracksDataException;
 
     /**
-     * Finalize the bulk loading operation in the given context.
+     * Finalize the bulk loading operation in the given context and release all resources.
      *
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.

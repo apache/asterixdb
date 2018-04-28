@@ -20,12 +20,12 @@
 package org.apache.asterix.common.context;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.hyracks.storage.common.IResource;
 
 /**
@@ -51,5 +51,4 @@ public class DatasetLSMComponentIdGeneratorFactory implements ILSMComponentIdGen
         int partition = StoragePathUtil.getPartitionNumFromRelativePath(resource.getPath());
         return dslcManager.getComponentIdGenerator(datasetId, partition);
     }
-
 }

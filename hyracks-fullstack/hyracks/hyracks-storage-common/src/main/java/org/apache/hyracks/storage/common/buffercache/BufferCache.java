@@ -1451,4 +1451,23 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             return multiplier;
         }
     }
+
+    @Override
+    public void closeFileIfOpen(FileReference fileRef) {
+        synchronized (fileInfoMap) {
+            if (fileMapManager.isMapped(fileRef)) {
+                int fileId;
+                try {
+                    fileId = fileMapManager.lookupFileId(fileRef);
+                } catch (HyracksDataException e) {
+                    throw new IllegalStateException(e);
+                }
+                BufferedFileHandle fInfo = fileInfoMap.get(fileId);
+                if (fInfo != null && fInfo.getReferenceCount() > 0) {
+                    fInfo.decReferenceCount();
+                }
+            }
+        }
+    }
+
 }

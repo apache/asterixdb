@@ -30,7 +30,6 @@ import java.util.Set;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -197,7 +196,7 @@ public class PrefixMergePolicyTest extends TestCase {
         Mockito.doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-                List<ILSMDiskComponent> mergedComponents = invocation.getArgumentAt(1, List.class);
+                List<ILSMDiskComponent> mergedComponents = invocation.getArgumentAt(0, List.class);
                 if (mergedSizes != null) {
                     mergedComponents.forEach(component -> {
                         mergedSizes.add(component.getComponentSize());
@@ -219,8 +218,7 @@ public class PrefixMergePolicyTest extends TestCase {
                 }
                 return null;
             }
-        }).when(accessor).scheduleMerge(Mockito.any(ILSMIOOperationCallback.class),
-                Mockito.anyListOf(ILSMDiskComponent.class));
+        }).when(accessor).scheduleMerge(Mockito.anyListOf(ILSMDiskComponent.class));
 
         Mockito.when(index.createAccessor(Mockito.any(IIndexAccessParameters.class))).thenReturn(accessor);
 

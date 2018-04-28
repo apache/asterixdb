@@ -116,7 +116,7 @@ public class LSMBTreeTestWorker extends AbstractIndexTestWorker {
                 consumeCursorTuples(searchCursor);
                 break;
             case MERGE:
-                accessor.scheduleMerge(lsmBTree.getIOOperationCallback(), lsmBTree.getDiskComponents());
+                accessor.scheduleMerge(lsmBTree.getDiskComponents());
                 break;
 
             default:

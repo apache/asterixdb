@@ -26,6 +26,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.util.annotations.CriticalPath;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 
 /**
  * Class encapsulates a chain of operations, happening during an LSM disk component bulkload
@@ -33,12 +34,15 @@ import org.apache.hyracks.util.annotations.CriticalPath;
 public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkLoader {
 
     private List<IChainedComponentBulkLoader> bulkloaderChain = new ArrayList<>();
-    private boolean isEmptyComponent = true;
-    private boolean cleanedUpArtifacts = false;
+    private final ILSMIOOperation operation;
     private final ILSMDiskComponent diskComponent;
     private final boolean cleanupEmptyComponent;
+    private boolean isEmptyComponent = true;
+    private boolean cleanedUpArtifacts = false;
 
-    public ChainedLSMDiskComponentBulkLoader(ILSMDiskComponent diskComponent, boolean cleanupEmptyComponent) {
+    public ChainedLSMDiskComponentBulkLoader(ILSMIOOperation operation, ILSMDiskComponent diskComponent,
+            boolean cleanupEmptyComponent) {
+        this.operation = operation;
         this.diskComponent = diskComponent;
         this.cleanupEmptyComponent = cleanupEmptyComponent;
     }
@@ -111,5 +115,10 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
         for (IChainedComponentBulkLoader lsmOperation : bulkloaderChain) {
             lsmOperation.abort();
         }
+    }
+
+    @Override
+    public ILSMIOOperation getOperation() {
+        return operation;
     }
 }

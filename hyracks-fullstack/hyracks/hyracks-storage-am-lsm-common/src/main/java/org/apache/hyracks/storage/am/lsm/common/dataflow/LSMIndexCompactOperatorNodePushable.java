@@ -57,7 +57,7 @@ public class LSMIndexCompactOperatorNodePushable extends AbstractOperatorNodePus
         indexHelper.open();
         ILSMIndex index = (ILSMIndex) indexHelper.getIndexInstance();
         ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        accessor.scheduleFullMerge(index.getIOOperationCallback());
+        accessor.scheduleFullMerge();
     }
 
     @Override

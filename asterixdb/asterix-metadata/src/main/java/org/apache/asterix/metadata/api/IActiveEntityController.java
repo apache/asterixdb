@@ -82,7 +82,7 @@ public interface IActiveEntityController extends IActiveEntityEventsListener {
     void add(Dataset dataset) throws HyracksDataException;
 
     /**
-     * Remove dataset to the list of associated datasets
+     * Remove dataset from the list of associated datasets
      *
      * @param dataset
      *            the dataset to add

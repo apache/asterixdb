@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.btree;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.utils.SerdeUtils;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.btree.AbstractModificationOperationCallbackTest;
@@ -26,9 +27,9 @@ import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFactory;
 import org.apache.hyracks.util.trace.ITracer;
 import org.junit.Test;
@@ -72,8 +73,6 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
         IndexAccessParameters actx = new IndexAccessParameters(cb, NoOpOperationCallback.INSTANCE);
         ILSMIndexAccessor accessor = (ILSMIndexAccessor) index.createAccessor(actx);
 
-        BlockingIOOperationCallbackWrapper ioOpCallback =
-                new BlockingIOOperationCallbackWrapper(((ILSMIndex) index).getIOOperationCallback());
         for (int j = 0; j < 2; j++) {
             isFoundNull = true;
             for (int i = 0; i < NUM_TUPLES; i++) {
@@ -82,8 +81,11 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
             }
 
             if (j == 1) {
-                accessor.scheduleFlush(ioOpCallback);
-                ioOpCallback.waitForIO();
+                ILSMIOOperation flush = accessor.scheduleFlush();
+                flush.sync();
+                if (flush.getStatus() == LSMIOOperationStatus.FAILURE) {
+                    throw HyracksDataException.create(flush.getFailure());
+                }
                 isFoundNull = true;
             } else {
                 isFoundNull = false;
@@ -95,8 +97,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
             }
 
             if (j == 1) {
-                accessor.scheduleFlush(ioOpCallback);
-                ioOpCallback.waitForIO();
+                accessor.scheduleFlush().sync();
                 isFoundNull = true;
             } else {
                 isFoundNull = false;
@@ -106,9 +107,7 @@ public class LSMBTreeModificationOperationCallbackTest extends AbstractModificat
                 TupleUtils.createIntegerTuple(builder, tuple, i);
                 accessor.delete(tuple);
             }
-
-            accessor.scheduleFlush(ioOpCallback);
-            ioOpCallback.waitForIO();
+            accessor.scheduleFlush().sync();
         }
     }
 }

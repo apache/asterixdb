@@ -27,17 +27,17 @@ import java.util.stream.IntStream;
 
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveNotificationHandler;
+import org.apache.asterix.common.api.IDatasetInfoProvider;
+import org.apache.asterix.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
+import org.apache.asterix.common.context.DatasetInfoProvider;
 import org.apache.asterix.common.context.DatasetLSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.NoOpFrameOperationCallbackFactory;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
-import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallbackFactory;
-import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallbackFactory;
-import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallbackFactory;
+import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.utils.JobUtils;
@@ -105,7 +105,6 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
@@ -502,24 +501,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      * @throws AlgebricksException
      *             if the factory could not be created for the index/dataset combination
      */
+    @SuppressWarnings("squid:S1172")
     public ILSMIOOperationCallbackFactory getIoOperationCallbackFactory(Index index) throws AlgebricksException {
-        switch (index.getIndexType()) {
-            case BTREE:
-                return getDatasetType() == DatasetType.EXTERNAL
-                        && !index.getIndexName().equals(IndexingConstants.getFilesIndexName(getDatasetName()))
-                                ? new LSMBTreeWithBuddyIOOperationCallbackFactory(getComponentIdGeneratorFactory())
-                                : new LSMBTreeIOOperationCallbackFactory(getComponentIdGeneratorFactory());
-            case RTREE:
-                return new LSMRTreeIOOperationCallbackFactory(getComponentIdGeneratorFactory());
-            case LENGTH_PARTITIONED_NGRAM_INVIX:
-            case LENGTH_PARTITIONED_WORD_INVIX:
-            case SINGLE_PARTITION_NGRAM_INVIX:
-            case SINGLE_PARTITION_WORD_INVIX:
-                return new LSMInvertedIndexIOOperationCallbackFactory(getComponentIdGeneratorFactory());
-            default:
-                throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
-                        index.getIndexType().toString());
-        }
+        return new LSMIndexIOOperationCallbackFactory(getComponentIdGeneratorFactory(), getDatasetInfoProvider());
     }
 
     /**
@@ -536,6 +520,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
     public ILSMComponentIdGeneratorFactory getComponentIdGeneratorFactory() {
         return new DatasetLSMComponentIdGeneratorFactory(getDatasetId());
+    }
+
+    public IDatasetInfoProvider getDatasetInfoProvider() {
+        return new DatasetInfoProvider(getDatasetId());
     }
 
     /**
@@ -563,7 +551,6 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             boolean proceedIndexOnlyPlan) throws AlgebricksException {
         if (index.isPrimaryIndex()) {
             /**
-            /*
              * Due to the read-committed isolation level,
              * we may acquire very short duration lock(i.e., instant lock) for readers.
              */

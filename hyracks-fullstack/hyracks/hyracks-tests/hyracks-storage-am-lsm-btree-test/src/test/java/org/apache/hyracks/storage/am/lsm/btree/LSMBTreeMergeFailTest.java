@@ -35,6 +35,7 @@ import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
@@ -76,32 +77,24 @@ public class LSMBTreeMergeFailTest {
         ITupleReference tuple1 = TupleUtils.createIntegerTuple(1, 1, 1);
         accessor.insert(tuple1);
         // flush component
-        accessor.scheduleFlush(btree.getIOOperationCallback());
+        accessor.scheduleFlush();
 
         ITupleReference tuple2 = TupleUtils.createIntegerTuple(2, 2, 2);
         accessor.insert(tuple2);
         // flush component
-        accessor.scheduleFlush(btree.getIOOperationCallback());
+        accessor.scheduleFlush();
 
         ITupleReference tuple3 = TupleUtils.createIntegerTuple(3, 3, 3);
         accessor.insert(tuple3);
         // flush component
-        accessor.scheduleFlush(btree.getIOOperationCallback());
-
+        accessor.scheduleFlush();
         scheduler.modify = true;
-
-        boolean exceptionThrown = false;
-        try {
-            accessor.scheduleMerge(btree.getIOOperationCallback(), btree.getDiskComponents());
-        } catch (HyracksDataException e) {
-            exceptionThrown = true;
-        }
-        Assert.assertTrue(exceptionThrown);
-
+        ILSMIOOperation merge = accessor.scheduleMerge(btree.getDiskComponents());
+        merge.sync();
+        Assert.assertEquals(LSMIOOperationStatus.FAILURE, merge.getStatus());
         scheduler.modify = false;
-        accessor.scheduleMerge(btree.getIOOperationCallback(), btree.getDiskComponents());
+        accessor.scheduleMerge(btree.getDiskComponents());
         Assert.assertEquals(1, btree.getDiskComponents().size());
-
         btree.deactivate();
         btree.destroy();
     }
@@ -120,14 +113,18 @@ public class LSMBTreeMergeFailTest {
 
         @Override
         public void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException {
-            if (modify) {
-                try {
-                    modifyOperation(operation);
-                } catch (Exception e) {
-                    throw HyracksDataException.create(e);
+            try {
+                if (modify) {
+                    try {
+                        modifyOperation(operation);
+                    } catch (Exception e) {
+                        throw HyracksDataException.create(e);
+                    }
                 }
+                operation.call();
+            } finally {
+                operation.complete();
             }
-            operation.call();
         }
 
         private void modifyOperation(ILSMIOOperation operation) throws Exception {

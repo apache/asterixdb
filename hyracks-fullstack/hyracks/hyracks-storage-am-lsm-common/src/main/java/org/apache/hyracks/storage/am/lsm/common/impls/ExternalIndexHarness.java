@@ -28,8 +28,7 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
@@ -39,15 +38,11 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.util.trace.ITracer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class ExternalIndexHarness extends LSMHarness {
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    public ExternalIndexHarness(ILSMIndex lsmIndex, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            boolean replicationEnabled) {
-        super(lsmIndex, mergePolicy, opTracker, replicationEnabled, ITracer.NONE);
+    public ExternalIndexHarness(ILSMIndex lsmIndex, ILSMIOOperationScheduler ioScheduler, ILSMMergePolicy mergePolicy,
+            ILSMOperationTracker opTracker, boolean replicationEnabled) {
+        super(lsmIndex, ioScheduler, mergePolicy, opTracker, replicationEnabled, ITracer.NONE);
     }
 
     @Override
@@ -103,14 +98,6 @@ public class ExternalIndexHarness extends LSMHarness {
                 return false;
             }
             ctx.setAccessingComponents(true);
-        }
-        // Check if there is any action that is needed to be taken based on the operation type
-        switch (opType) {
-            case MERGE:
-                ctx.setIoOperationType(LSMIOOperationType.MERGE);
-                lsmIndex.getIOOperationCallback().beforeOperation(ctx);
-            default:
-                break;
         }
         opTracker.beforeOperation(lsmIndex, opType, ctx.getSearchOperationCallback(), ctx.getModificationCallback());
         return true;
@@ -206,54 +193,6 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
-        if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
-            ctx.setIoOperationType(LSMIOOperationType.MERGE);
-            callback.afterFinalize(ctx);
-            return;
-        }
-        lsmIndex.scheduleMerge(ctx, callback);
-    }
-
-    @Override
-    public void scheduleFullMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
-        fullMergeIsRequested.set(true);
-        if (!getAndEnterComponents(ctx, LSMOperationType.MERGE, true)) {
-            // If the merge cannot be scheduled because there is already an ongoing merge on subset/all of the components, then
-            // whenever the current merge has finished, it will schedule the full merge again.
-            ctx.setIoOperationType(LSMIOOperationType.MERGE);
-            callback.afterFinalize(ctx);
-            return;
-        }
-        fullMergeIsRequested.set(false);
-        lsmIndex.scheduleMerge(ctx, callback);
-    }
-
-    @Override
-    public void merge(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Started a merge operation for index: " + lsmIndex + " ...");
-        }
-
-        ILSMDiskComponent newComponent = null;
-        try {
-            newComponent = lsmIndex.merge(operation);
-            ctx.setNewComponent(newComponent);
-            ctx.setIoOperationType(LSMIOOperationType.MERGE);
-            operation.getCallback().afterOperation(ctx);
-            newComponent.markAsValid(lsmIndex.isDurable());
-        } finally {
-            exitComponents(ctx, LSMOperationType.MERGE, newComponent, false);
-            operation.getCallback().afterFinalize(ctx);
-        }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Finished the merge operation for index: " + lsmIndex);
-        }
-    }
-
-    @Override
     public void addBulkLoadedComponent(ILSMDiskComponent c) throws HyracksDataException {
         c.markAsValid(lsmIndex.isDurable());
         synchronized (opTracker) {
@@ -304,14 +243,13 @@ public class ExternalIndexHarness extends LSMHarness {
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
-        ctx.setIoOperationType(LSMIOOperationType.FLUSH);
-        callback.afterFinalize(ctx);
+    public ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx) throws HyracksDataException {
+        return NoOpIoOperation.INSTANCE;
     }
 
     @Override
-    public void flush(ILSMIndexOperationContext ctx, ILSMIOOperation operation) throws HyracksDataException {
+    public void flush(ILSMIOOperation operation) throws HyracksDataException {
+        throw new UnsupportedOperationException();
     }
 
     @Override

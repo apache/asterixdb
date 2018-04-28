@@ -36,7 +36,9 @@ import org.apache.hyracks.storage.am.common.datagen.TupleBatch;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
+import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
@@ -48,10 +50,14 @@ import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.trace.ITracer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LSMTreeRunner implements IExperimentRunner {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int MAX_OPEN_FILES = Integer.MAX_VALUE;
     private static final int HYRACKS_FRAME_SIZE = 131072;
 
@@ -103,8 +109,17 @@ public class LSMTreeRunner implements IExperimentRunner {
             virtualBufferCaches.add(virtualBufferCache);
         }
 
-        this.ioScheduler = AsynchronousScheduler.INSTANCE;
-        AsynchronousScheduler.INSTANCE.init(threadFactory);
+        this.ioScheduler = new AsynchronousScheduler(threadFactory, new IIoOperationFailedCallback() {
+            @Override
+            public void operationFailed(ILSMIOOperation operation, Throwable t) {
+                LOGGER.error("Operation {} failed", operation, t);
+            }
+
+            @Override
+            public void schedulerFailed(ILSMIOOperationScheduler scheduler, Throwable failure) {
+                ExitUtil.exit(ExitUtil.EC_IO_SCHEDULER_FAILED);
+            }
+        });
 
         lsmtree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, typeTraits,
                 cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(),

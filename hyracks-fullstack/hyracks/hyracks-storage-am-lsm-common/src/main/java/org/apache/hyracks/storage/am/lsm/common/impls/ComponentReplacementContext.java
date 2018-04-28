@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
@@ -30,10 +31,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -242,22 +242,22 @@ public class ComponentReplacementContext implements ILSMIndexOperationContext {
     }
 
     @Override
-    public LSMIOOperationType getIoOperationType() {
+    public ILSMIOOperation getIoOperation() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setIoOperationType(LSMIOOperationType ioOpType) {
+    public void setIoOperation(ILSMIOOperation ioOperation) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public ILSMDiskComponent getNewComponent() {
+    public void setParameters(Map<String, Object> map) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void setNewComponent(ILSMDiskComponent component) {
+    public Map<String, Object> getParameters() {
         throw new UnsupportedOperationException();
     }
 }

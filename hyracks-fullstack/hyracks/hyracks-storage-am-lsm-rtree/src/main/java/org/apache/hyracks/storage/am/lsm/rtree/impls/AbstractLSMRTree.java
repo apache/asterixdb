@@ -97,9 +97,8 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             BTree memBTree = new BTree(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache),
                     btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, btreeCmpFactories.length,
                     ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_b_" + i));
-            LSMRTreeMemoryComponent mutableComponent =
-                    new LSMRTreeMemoryComponent(this, memRTree, memBTree, virtualBufferCache, i == 0 ? true : false,
-                            filterHelper == null ? null : filterHelper.createFilter());
+            LSMRTreeMemoryComponent mutableComponent = new LSMRTreeMemoryComponent(this, memRTree, memBTree,
+                    virtualBufferCache, filterHelper == null ? null : filterHelper.createFilter());
             memoryComponents.add(mutableComponent);
             ++i;
         }

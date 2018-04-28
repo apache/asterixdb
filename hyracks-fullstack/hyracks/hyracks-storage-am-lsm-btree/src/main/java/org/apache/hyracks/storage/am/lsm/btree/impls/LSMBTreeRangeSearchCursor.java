@@ -214,7 +214,10 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
         }
         opCtx.getIndex().getHarness().replaceMemoryComponentsWithDiskComponents(getOpCtx(), replaceFrom);
         // redo the search on the new component
-        for (int i = replaceFrom; i < switchRequest.length; i++) {
+        // switchRequest array has the size = number of memory components. which can be greater
+        // than operationalComponents size in certain cases (0 disk component, 1 memory component for example)
+        // To avoid index out of bound, we end the loop at the first of the two conditions
+        for (int i = replaceFrom; i < switchRequest.length && i < operationalComponents.size(); i++) {
             if (switchRequest[i]) {
                 ILSMComponent component = operationalComponents.get(i);
                 BTree btree = (BTree) component.getIndex();

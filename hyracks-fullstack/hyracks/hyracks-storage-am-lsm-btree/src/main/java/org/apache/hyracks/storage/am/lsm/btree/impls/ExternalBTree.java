@@ -40,8 +40,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -54,6 +52,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ExternalIndexHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor.ICursorFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.LoadOperation;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -170,8 +169,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
     // The only reason to override the following method is that it uses a different context object
     // in addition, determining whether or not to keep deleted tuples is different here
     @Override
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
+    public LSMBTreeMergeOperation createMergeOperation(ILSMIndexOperationContext ctx) throws HyracksDataException {
         ExternalBTreeOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE, -1);
         opCtx.setOperation(IndexOperation.MERGE);
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
@@ -195,9 +193,11 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         LSMComponentFileReferences relMergeFileRefs =
                 fileManager.getRelMergeFileReference(firstFile.getFile().getName(), lastFile.getFile().getName());
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
-        ioScheduler.scheduleOperation(new LSMBTreeMergeOperation(accessor, cursor,
+        LSMBTreeMergeOperation mergeOp = new LSMBTreeMergeOperation(accessor, cursor,
                 relMergeFileRefs.getInsertIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
-                callback, fileManager.getBaseDir().getAbsolutePath()));
+                ioOpCallback, fileManager.getBaseDir().getAbsolutePath());
+        ioOpCallback.scheduled(mergeOp);
+        return mergeOp;
     }
 
     // This function should only be used when a transaction fail. it doesn't
@@ -286,11 +286,6 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
         if (!isActive) {
             throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
-        if (flushOnExit) {
-            ExternalBTreeOpContext opCtx = createOpContext(NoOpOperationCallback.INSTANCE, version);
-            opCtx.setIoOperationType(LSMIOOperationType.FLUSH);
-            ioOpCallback.afterFinalize(opCtx);
-        }
         for (ILSMDiskComponent c : diskComponents) {
             c.deactivateAndPurge();
         }
@@ -353,8 +348,7 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
 
     // Not supported
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
+    public ILSMIOOperation createFlushOperation(ILSMIndexOperationContext ctx) throws HyracksDataException {
         throw new UnsupportedOperationException("flush not supported in LSM-Disk-Only-BTree");
     }
 
@@ -430,9 +424,9 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             } else {
                 component = createBulkLoadTarget();
             }
-
-            componentBulkLoader = component.createBulkLoader(LSMIOOperationType.LOAD, fillFactor, verifyInput,
-                    numElementsHint, false, true, true);
+            LoadOperation loadOp = new LoadOperation(ioOpCallback, getIndexIdentifier());
+            componentBulkLoader =
+                    component.createBulkLoader(loadOp, fillFactor, verifyInput, numElementsHint, false, true, true);
         }
 
         // It is expected that the mode was set to insert operation before

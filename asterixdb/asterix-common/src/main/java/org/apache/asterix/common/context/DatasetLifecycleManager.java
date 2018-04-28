@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,7 +35,7 @@ import org.apache.asterix.common.api.IDatasetMemoryManager;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.storage.DatasetResourceReference;
@@ -47,6 +48,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -348,7 +350,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     private void populateOpTrackerAndIdGenerator(DatasetResource dataset, int partition) {
-        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator();
+        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(storageProperties.getMemoryComponentsNum());
         PrimaryIndexOperationTracker opTracker = new PrimaryIndexOperationTracker(dataset.getDatasetID(), partition,
                 logManager, dataset.getDatasetInfo(), idGenerator);
         dataset.setPrimaryIndexOperationTracker(partition, opTracker);
@@ -398,11 +400,10 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             PrimaryIndexOperationTracker opTracker, long targetLSN) throws HyracksDataException {
         int partition = opTracker.getPartition();
         for (ILSMIndex lsmIndex : dsr.getDatasetInfo().getDatasetPartitionOpenIndexes(partition)) {
-            AbstractLSMIOOperationCallback ioCallback =
-                    (AbstractLSMIOOperationCallback) lsmIndex.getIOOperationCallback();
+            LSMIOOperationCallback ioCallback = (LSMIOOperationCallback) lsmIndex.getIOOperationCallback();
             if (!(lsmIndex.isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()
                     || opTracker.isFlushLogCreated() || opTracker.isFlushOnExit())) {
-                long firstLSN = ioCallback.getFirstLSN();
+                long firstLSN = ioCallback.getPersistenceLsn();
                 if (firstLSN < targetLSN) {
                     LOGGER.info("Checkpoint flush dataset {} partition {}", dsr.getDatasetID(), partition);
                     opTracker.setFlushOnExit(true);
@@ -448,9 +449,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             LSMComponentId componentId = (LSMComponentId) flushIndex.getCurrentMemoryComponent().getId();
             ILSMComponentIdGenerator idGenerator = getComponentIdGenerator(dsInfo.getDatasetID(), partition);
             idGenerator.refresh();
-
             if (dsInfo.isDurable()) {
-
                 synchronized (logRecord) {
                     TransactionUtil.formFlushLogRecord(logRecord, dsInfo.getDatasetID(), partition,
                             componentId.getMinId(), componentId.getMaxId(), null);
@@ -469,32 +468,21 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                     }
                 }
             }
+            long flushLsn = logRecord.getLSN();
+            ILSMComponentId nextComponentId = idGenerator.getId();
+            Map<String, Object> flushMap = new HashMap<>();
+            flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
+            flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
             for (ILSMIndex index : indexes) {
-                //update resource lsn
-                AbstractLSMIOOperationCallback ioOpCallback =
-                        (AbstractLSMIOOperationCallback) index.getIOOperationCallback();
-                ioOpCallback.updateLastLSN(logRecord.getLSN());
+                ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                accessor.getOpContext().setParameters(flushMap);
+                accessor.scheduleFlush();
             }
-
-            if (asyncFlush) {
-                for (ILSMIndex index : indexes) {
-                    ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-                    accessor.scheduleFlush(index.getIOOperationCallback());
-                }
-            } else {
-                for (ILSMIndex index : indexes) {
-                    // TODO: This is not efficient since we flush the indexes sequentially.
-                    // Think of a way to allow submitting the flush requests concurrently.
-                    // We don't do them concurrently because this may lead to a deadlock scenario
-                    // between the DatasetLifeCycleManager and the PrimaryIndexOperationTracker.
-                    ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-                    accessor.scheduleFlush(index.getIOOperationCallback());
-                    // Wait for the above flush op.
-                    dsInfo.waitForIO();
-                }
+            if (!asyncFlush) {
+                // Wait for the above flush op.
+                dsInfo.waitForIO();
             }
         }
-
     }
 
     private void closeDataset(DatasetResource dsr) throws HyracksDataException {

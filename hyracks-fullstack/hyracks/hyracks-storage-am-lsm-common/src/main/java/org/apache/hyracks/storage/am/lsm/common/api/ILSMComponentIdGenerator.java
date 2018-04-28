@@ -26,12 +26,17 @@ public interface ILSMComponentIdGenerator {
     /**
      * @return An Id for LSM component
      */
-    public ILSMComponentId getId();
+    ILSMComponentId getId();
 
     /**
      * Refresh the component Id generator to generate the next Id.
      * {@link #getId()} would always return the same Id before this method is called.
      */
-    public void refresh();
+    void refresh();
+
+    /**
+     * @return the index of the current memory component
+     */
+    int getCurrentComponentIndex();
 
 }

@@ -220,4 +220,8 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
         vbc.deleteFile(file);
     }
 
+    @Override
+    public void closeFileIfOpen(FileReference fileRef) {
+        throw new UnsupportedOperationException();
+    }
 }

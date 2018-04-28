@@ -119,4 +119,15 @@ public class ExceptionUtils {
         stackThrowable.setStackTrace(thread.getStackTrace());
         return stackThrowable;
     }
+
+    public static Throwable getRootCause(Throwable e) {
+        Throwable current = e;
+        Throwable cause = e.getCause();
+        while (cause != null && cause != current) {
+            current = cause;
+            cause = current.getCause();
+        }
+        return current;
+    }
+
 }

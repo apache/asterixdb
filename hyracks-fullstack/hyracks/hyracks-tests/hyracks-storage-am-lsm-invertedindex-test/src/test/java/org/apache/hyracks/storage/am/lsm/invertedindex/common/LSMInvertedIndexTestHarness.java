@@ -43,7 +43,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.MultitenantVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
-import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousScheduler;
+import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
@@ -92,7 +92,7 @@ public class LSMInvertedIndexTestHarness {
         this.memNumPages = AccessMethodTestsConfig.LSM_INVINDEX_MEM_NUM_PAGES;
         this.hyracksFrameSize = AccessMethodTestsConfig.LSM_INVINDEX_HYRACKS_FRAME_SIZE;
         this.bloomFilterFalsePositiveRate = AccessMethodTestsConfig.LSM_INVINDEX_BLOOMFILTER_FALSE_POSITIVE_RATE;
-        this.ioScheduler = SynchronousScheduler.INSTANCE;
+        this.ioScheduler = SynchronousSchedulerProvider.INSTANCE.getIoScheduler(null);
         this.mergePolicy = new NoMergePolicy();
         this.opTracker = new ThreadCountingTracker();
         this.ioOpCallbackFactory = NoOpIOOperationCallbackFactory.INSTANCE;

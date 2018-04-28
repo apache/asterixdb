@@ -41,4 +41,9 @@ public interface ILSMDiskComponentBulkLoader extends IIndexBulkLoader {
      */
     void cleanupArtifacts() throws HyracksDataException;
 
+    /**
+     * @return The operation this bulkLoader is operating under
+     */
+    ILSMIOOperation getOperation();
+
 }

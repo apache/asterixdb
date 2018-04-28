@@ -62,6 +62,6 @@ public class TestDataset extends Dataset {
 
     @Override
     public ILSMIOOperationCallbackFactory getIoOperationCallbackFactory(Index index) throws AlgebricksException {
-        return new TestLsmBtreeIoOpCallbackFactory(getComponentIdGeneratorFactory());
+        return new TestLsmIoOpCallbackFactory(getComponentIdGeneratorFactory(), getDatasetInfoProvider());
     }
 }

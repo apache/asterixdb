@@ -30,7 +30,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
@@ -86,23 +85,22 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
 
     @Override
-    public void scheduleFlush(ILSMIOOperationCallback callback) throws HyracksDataException {
+    public ILSMIOOperation scheduleFlush() throws HyracksDataException {
         ctx.setOperation(IndexOperation.FLUSH);
-        lsmHarness.scheduleFlush(ctx, callback);
+        return lsmHarness.scheduleFlush(ctx);
     }
 
     @Override
     public void flush(ILSMIOOperation operation) throws HyracksDataException {
-        lsmHarness.flush(ctx, operation);
+        lsmHarness.flush(operation);
     }
 
     @Override
-    public void scheduleMerge(ILSMIOOperationCallback callback, List<ILSMDiskComponent> components)
-            throws HyracksDataException {
+    public ILSMIOOperation scheduleMerge(List<ILSMDiskComponent> components) throws HyracksDataException {
         ctx.setOperation(IndexOperation.MERGE);
         ctx.getComponentsToBeMerged().clear();
         ctx.getComponentsToBeMerged().addAll(components);
-        lsmHarness.scheduleMerge(ctx, callback);
+        return lsmHarness.scheduleMerge(ctx);
     }
 
     @Override
@@ -115,14 +113,14 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessor, IInvertedInd
     }
 
     @Override
-    public void scheduleFullMerge(ILSMIOOperationCallback callback) throws HyracksDataException {
+    public ILSMIOOperation scheduleFullMerge() throws HyracksDataException {
         ctx.setOperation(IndexOperation.FULL_MERGE);
-        lsmHarness.scheduleFullMerge(ctx, callback);
+        return lsmHarness.scheduleFullMerge(ctx);
     }
 
     @Override
     public void merge(ILSMIOOperation operation) throws HyracksDataException {
-        lsmHarness.merge(ctx, operation);
+        lsmHarness.merge(operation);
     }
 
     @Override

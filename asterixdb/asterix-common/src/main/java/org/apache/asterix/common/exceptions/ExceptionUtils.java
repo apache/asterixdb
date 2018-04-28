@@ -20,6 +20,8 @@ package org.apache.asterix.common.exceptions;
 
 import java.util.function.Predicate;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public class ExceptionUtils {
     public static final String INCORRECT_PARAMETER = "Incorrect parameter.\n";
     public static final String PARAMETER_NAME = "Parameter name: ";
@@ -45,11 +47,26 @@ public class ExceptionUtils {
         Throwable current = e;
         Throwable cause = e.getCause();
         while (cause != null && cause != current) {
-            Throwable nextCause = current.getCause();
             current = cause;
-            cause = nextCause;
+            cause = current.getCause();
         }
         return current;
+    }
+
+    public static Throwable getCause(Throwable e, String component, int code) {
+        Throwable current = e;
+        Throwable expected =
+                (current instanceof HyracksDataException && ((HyracksDataException) current).getErrorCode() == code
+                        && ((HyracksDataException) current).getComponent().equals(component)) ? current : null;
+        Throwable cause = e.getCause();
+        while (cause != null && cause != current) {
+            current = cause;
+            expected =
+                    (current instanceof HyracksDataException && ((HyracksDataException) current).getErrorCode() == code
+                            && ((HyracksDataException) current).getComponent().equals(component)) ? current : expected;
+            cause = current.getCause();
+        }
+        return expected == null ? current : expected;
     }
 
     /**

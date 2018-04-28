@@ -35,9 +35,9 @@ public abstract class FlushOperation extends AbstractIoOperation implements Comp
     }
 
     @Override
-    public Boolean call() throws HyracksDataException {
+    public LSMIOOperationStatus call() throws HyracksDataException {
         accessor.flush(this);
-        return true;
+        return getStatus();
     }
 
     @Override

@@ -34,7 +34,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFact
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -65,9 +64,11 @@ public class TestLsmBtree extends LSMBTree {
 
     private final List<ITestOpCallback<ILSMMemoryComponent>> ioAllocateCallbacks = new ArrayList<>();
     private final List<ITestOpCallback<ILSMMemoryComponent>> ioRecycleCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Void>> ioOpScheduledCallbacks = new ArrayList<>();
     private final List<ITestOpCallback<Void>> ioBeforeCallbacks = new ArrayList<>();
     private final List<ITestOpCallback<Void>> ioAfterOpCallbacks = new ArrayList<>();
     private final List<ITestOpCallback<Void>> ioAfterFinalizeCallbacks = new ArrayList<>();
+    private final List<ITestOpCallback<Void>> ioOpCompletedCallbacks = new ArrayList<>();
     private final List<ITestOpCallback<Void>> allocateComponentCallbacks = new ArrayList<>();
 
     private volatile int numScheduledFlushes;
@@ -110,7 +111,7 @@ public class TestLsmBtree extends LSMBTree {
         super.modify(ictx, tuple);
         synchronized (modifyCallbacks) {
             for (ITestOpCallback<Semaphore> callback : modifyCallbacks) {
-                callback.after();
+                callback.after(modifySemaphore);
             }
         }
     }
@@ -122,17 +123,15 @@ public class TestLsmBtree extends LSMBTree {
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
-        super.scheduleFlush(ctx, callback);
+    public ILSMIOOperation createFlushOperation(ILSMIndexOperationContext ctx) throws HyracksDataException {
         numScheduledFlushes++;
+        return super.createFlushOperation(ctx);
     }
 
     @Override
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
-        super.scheduleMerge(ctx, callback);
+    public ILSMIOOperation createMergeOperation(ILSMIndexOperationContext ctx) throws HyracksDataException {
         numScheduledMerges++;
+        return super.createMergeOperation(ctx);
     }
 
     @Override
@@ -148,7 +147,7 @@ public class TestLsmBtree extends LSMBTree {
         numFinishedFlushes++;
         synchronized (flushCallbacks) {
             for (ITestOpCallback<Semaphore> callback : flushCallbacks) {
-                callback.after();
+                callback.after(flushSemaphore);
             }
         }
         return c;
@@ -167,7 +166,7 @@ public class TestLsmBtree extends LSMBTree {
         numFinishedMerges++;
         synchronized (mergeCallbacks) {
             for (ITestOpCallback<Semaphore> callback : mergeCallbacks) {
-                callback.after();
+                callback.after(mergeSemaphore);
             }
         }
         return c;
@@ -347,6 +346,30 @@ public class TestLsmBtree extends LSMBTree {
         }
     }
 
+    public void addIoScheduledCallback(ITestOpCallback<Void> callback) {
+        synchronized (ioOpScheduledCallbacks) {
+            ioOpScheduledCallbacks.add(callback);
+        }
+    }
+
+    public void clearIoScheduledCallbacks() {
+        synchronized (ioOpScheduledCallbacks) {
+            ioOpScheduledCallbacks.clear();
+        }
+    }
+
+    public void addIoCompletedCallback(ITestOpCallback<Void> callback) {
+        synchronized (ioOpCompletedCallbacks) {
+            ioOpCompletedCallbacks.add(callback);
+        }
+    }
+
+    public void clearIoCompletedCallbacks() {
+        synchronized (ioOpCompletedCallbacks) {
+            ioOpCompletedCallbacks.clear();
+        }
+    }
+
     @Override
     public void allocateMemoryComponents() throws HyracksDataException {
         synchronized (allocateComponentCallbacks) {
@@ -357,7 +380,7 @@ public class TestLsmBtree extends LSMBTree {
         super.allocateMemoryComponents();
         synchronized (allocateComponentCallbacks) {
             for (ITestOpCallback<Void> callback : allocateComponentCallbacks) {
-                callback.after();
+                callback.after(null);
             }
         }
     }
@@ -373,7 +396,7 @@ public class TestLsmBtree extends LSMBTree {
     public void beforeIoOperationReturned() throws HyracksDataException {
         synchronized (ioBeforeCallbacks) {
             for (ITestOpCallback<Void> callback : ioBeforeCallbacks) {
-                callback.after();
+                callback.after(null);
             }
         }
     }
@@ -389,7 +412,7 @@ public class TestLsmBtree extends LSMBTree {
     public void afterIoOperationReturned() throws HyracksDataException {
         synchronized (ioAfterOpCallbacks) {
             for (ITestOpCallback<Void> callback : ioAfterOpCallbacks) {
-                callback.after();
+                callback.after(null);
             }
         }
     }
@@ -405,7 +428,39 @@ public class TestLsmBtree extends LSMBTree {
     public void afterIoFinalizeReturned() throws HyracksDataException {
         synchronized (ioAfterFinalizeCallbacks) {
             for (ITestOpCallback<Void> callback : ioAfterFinalizeCallbacks) {
-                callback.after();
+                callback.after(null);
+            }
+        }
+    }
+
+    public void ioScheduledCalled() throws HyracksDataException {
+        synchronized (ioOpScheduledCallbacks) {
+            for (ITestOpCallback<Void> callback : ioOpScheduledCallbacks) {
+                callback.before(null);
+            }
+        }
+    }
+
+    public void ioScheduledReturned() throws HyracksDataException {
+        synchronized (ioOpScheduledCallbacks) {
+            for (ITestOpCallback<Void> callback : ioOpScheduledCallbacks) {
+                callback.after(null);
+            }
+        }
+    }
+
+    public void ioCompletedCalled() throws HyracksDataException {
+        synchronized (ioOpCompletedCallbacks) {
+            for (ITestOpCallback<Void> callback : ioOpCompletedCallbacks) {
+                callback.before(null);
+            }
+        }
+    }
+
+    public void ioCompletedReturned() throws HyracksDataException {
+        synchronized (ioOpCompletedCallbacks) {
+            for (ITestOpCallback<Void> callback : ioOpCompletedCallbacks) {
+                callback.after(null);
             }
         }
     }
@@ -421,7 +476,7 @@ public class TestLsmBtree extends LSMBTree {
     public void recycledReturned(ILSMMemoryComponent component) throws HyracksDataException {
         synchronized (ioRecycleCallbacks) {
             for (ITestOpCallback<ILSMMemoryComponent> callback : ioRecycleCallbacks) {
-                callback.after();
+                callback.after(component);
             }
         }
     }
@@ -437,7 +492,7 @@ public class TestLsmBtree extends LSMBTree {
     public void allocatedReturned(ILSMMemoryComponent component) throws HyracksDataException {
         synchronized (ioAllocateCallbacks) {
             for (ITestOpCallback<ILSMMemoryComponent> callback : ioAllocateCallbacks) {
-                callback.after();
+                callback.after(component);
             }
         }
     }

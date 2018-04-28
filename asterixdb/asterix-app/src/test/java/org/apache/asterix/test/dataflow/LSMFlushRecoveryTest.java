@@ -19,6 +19,7 @@
 package org.apache.asterix.test.dataflow;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,8 +61,14 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.btree.impl.AllowTestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.ITestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
+import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -69,6 +76,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class LSMFlushRecoveryTest {
+    public static final Logger LOGGER = LogManager.getLogger();
     private static TestNodeController nc;
     private static Dataset dataset;
     private static PrimaryIndexInfo[] primaryIndexInfos;
@@ -153,6 +161,22 @@ public class LSMFlushRecoveryTest {
     private void initializeNc(boolean cleanUpOnStart) throws Exception {
         nc.init(cleanUpOnStart);
         ncAppCtx = nc.getAppRuntimeContext();
+        // Override the LSMIOScheduler to avoid halting on failure and enable
+        // testing failure scenario in a unit test setting
+        Field ioScheduler = ncAppCtx.getClass().getDeclaredField("lsmIOScheduler");
+        ioScheduler.setAccessible(true);
+        ioScheduler.set(ncAppCtx, new AsynchronousScheduler(ncAppCtx.getServiceContext().getThreadFactory(),
+                new IIoOperationFailedCallback() {
+                    @Override
+                    public void schedulerFailed(ILSMIOOperationScheduler scheduler, Throwable failure) {
+                        LOGGER.error("Scheduler Failed", failure);
+                    }
+
+                    @Override
+                    public void operationFailed(ILSMIOOperation operation, Throwable t) {
+                        LOGGER.warn("IO Operation failed", t);
+                    }
+                }));
         dsLifecycleMgr = ncAppCtx.getDatasetLifecycleManager();
     }
 
@@ -241,21 +265,21 @@ public class LSMFlushRecoveryTest {
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(Semaphore t) throws HyracksDataException {
 
             }
         });
 
         Semaphore primaryFlushSemaphore = new Semaphore(0);
         primaryIndexes[PARTITION_0].addFlushCallback(AllowTestOpCallback.INSTANCE);
-        primaryIndexes[PARTITION_0].addIoAfterFinalizeCallback(new ITestOpCallback<Void>() {
+        primaryIndexes[PARTITION_0].addIoCompletedCallback(new ITestOpCallback<Void>() {
             @Override
             public void before(Void t) throws HyracksDataException {
 
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(Void t) throws HyracksDataException {
                 primaryFlushSemaphore.release();
             }
         });
@@ -283,21 +307,21 @@ public class LSMFlushRecoveryTest {
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(Semaphore t) throws HyracksDataException {
 
             }
         });
 
         Semaphore secondaryFlushSemaphore = new Semaphore(0);
         secondaryIndexes[PARTITION_0].addFlushCallback(AllowTestOpCallback.INSTANCE);
-        secondaryIndexes[PARTITION_0].addIoAfterFinalizeCallback(new ITestOpCallback<Void>() {
+        secondaryIndexes[PARTITION_0].addIoCompletedCallback(new ITestOpCallback<Void>() {
             @Override
             public void before(Void t) throws HyracksDataException {
 
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(Void t) throws HyracksDataException {
                 secondaryFlushSemaphore.release();
             }
         });
@@ -335,21 +359,21 @@ public class LSMFlushRecoveryTest {
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(Semaphore t) throws HyracksDataException {
 
             }
         });
 
         Semaphore flushSemaphore = new Semaphore(0);
         secondaryIndexes[PARTITION_0].addFlushCallback(AllowTestOpCallback.INSTANCE);
-        secondaryIndexes[PARTITION_0].addIoAfterFinalizeCallback(new ITestOpCallback<Void>() {
+        secondaryIndexes[PARTITION_0].addIoCompletedCallback(new ITestOpCallback<Void>() {
             @Override
             public void before(Void t) throws HyracksDataException {
 
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(Void t) throws HyracksDataException {
                 flushSemaphore.release();
             }
         });
@@ -387,7 +411,7 @@ public class LSMFlushRecoveryTest {
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(Semaphore t) throws HyracksDataException {
 
             }
         });
@@ -400,7 +424,7 @@ public class LSMFlushRecoveryTest {
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(Semaphore t) throws HyracksDataException {
 
             }
         });

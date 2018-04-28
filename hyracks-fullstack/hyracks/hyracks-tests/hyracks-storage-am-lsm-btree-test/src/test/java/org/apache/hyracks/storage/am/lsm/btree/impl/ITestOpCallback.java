@@ -23,5 +23,5 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface ITestOpCallback<T> {
     void before(T t) throws HyracksDataException;
 
-    void after() throws HyracksDataException;
+    void after(T t) throws HyracksDataException;
 }

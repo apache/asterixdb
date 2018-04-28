@@ -28,23 +28,32 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
  */
 public class LSMComponentIdGenerator implements ILSMComponentIdGenerator {
 
+    private final int numComponents;
+    private int currentComponentIndex;
     protected long previousTimestamp = -1L;
-
     private ILSMComponentId componentId;
 
-    public LSMComponentIdGenerator() {
+    public LSMComponentIdGenerator(int numComponents) {
+        this.numComponents = numComponents;
         refresh();
+        currentComponentIndex = 0;
     }
 
     @Override
     public void refresh() {
         long ts = getCurrentTimestamp();
         componentId = new LSMComponentId(ts, ts);
+        currentComponentIndex = (currentComponentIndex + 1) % numComponents;
     }
 
     @Override
     public ILSMComponentId getId() {
         return componentId;
+    }
+
+    @Override
+    public int getCurrentComponentIndex() {
+        return currentComponentIndex;
     }
 
     protected long getCurrentTimestamp() {

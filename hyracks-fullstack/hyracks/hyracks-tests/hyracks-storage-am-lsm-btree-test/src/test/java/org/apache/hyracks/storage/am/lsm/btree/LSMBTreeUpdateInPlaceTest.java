@@ -35,9 +35,9 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpOperationTrackerFactory;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
@@ -99,8 +99,6 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
 
     private void test(IndexModification op1, IndexModification op2) throws Exception {
         ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) accessor;
-        BlockingIOOperationCallbackWrapper ioOpCallback =
-                new BlockingIOOperationCallbackWrapper(((ILSMIndex) index).getIOOperationCallback());
         for (int j = 0; j < 2; j++) {
             index.clear();
             isFoundNull = true;
@@ -111,8 +109,11 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
             }
 
             if (j == 1) {
-                lsmAccessor.scheduleFlush(ioOpCallback);
-                ioOpCallback.waitForIO();
+                ILSMIOOperation flush = lsmAccessor.scheduleFlush();
+                flush.sync();
+                if (flush.getStatus() == LSMIOOperationStatus.FAILURE) {
+                    throw HyracksDataException.create(flush.getFailure());
+                }
                 isFoundNull = true;
                 isUpdated = false;
             } else {
@@ -126,8 +127,7 @@ public class LSMBTreeUpdateInPlaceTest extends AbstractOperationCallbackTest {
             }
 
             if (j == 1) {
-                lsmAccessor.scheduleFlush(ioOpCallback);
-                ioOpCallback.waitForIO();
+                lsmAccessor.scheduleFlush().sync();
             } else {
                 isFoundNull = false;
             }

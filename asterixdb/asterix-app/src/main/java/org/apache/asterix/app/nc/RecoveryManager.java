@@ -48,7 +48,7 @@ import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.IndexInfo;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
@@ -401,13 +401,12 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                 if (iInfo.isOpen() && iInfo.getPartition() == partition) {
                                     maxDiskLastLsn = resourceId2MaxLSNMap.get(iInfo.getResourceId());
                                     index = iInfo.getIndex();
-                                    AbstractLSMIOOperationCallback ioCallback =
-                                            (AbstractLSMIOOperationCallback) index.getIOOperationCallback();
+                                    LSMIOOperationCallback ioCallback =
+                                            (LSMIOOperationCallback) index.getIOOperationCallback();
                                     if (logRecord.getLSN() > maxDiskLastLsn
                                             && !index.isCurrentMutableComponentEmpty()) {
                                         // schedule flush
-                                        ioCallback.updateLastLSN(logRecord.getLSN());
-                                        redoFlush(index, logRecord);
+                                        redoFlush(index, logRecord, idGenerator.getId());
                                         redoCount++;
                                     } else {
                                         if (index.isMemoryComponentsAllocated()) {
@@ -417,7 +416,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                         } else {
                                             // otherwise, we refresh the id stored in ioCallback
                                             // to ensure the memory component receives correct Id upon activation
-                                            ioCallback.forceRefreshNextId();
+                                            ioCallback.forceRefreshNextId(idGenerator.getId());
                                         }
                                     }
                                 }
@@ -473,10 +472,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         long minFirstLSN = logMgr.getAppendLSN();
         if (!openIndexList.isEmpty()) {
             for (IIndex index : openIndexList) {
-                AbstractLSMIOOperationCallback ioCallback =
-                        (AbstractLSMIOOperationCallback) ((ILSMIndex) index).getIOOperationCallback();
+                LSMIOOperationCallback ioCallback =
+                        (LSMIOOperationCallback) ((ILSMIndex) index).getIOOperationCallback();
                 if (!((AbstractLSMIndex) index).isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()) {
-                    firstLSN = ioCallback.getFirstLSN();
+                    firstLSN = ioCallback.getPersistenceLsn();
                     minFirstLSN = Math.min(minFirstLSN, firstLSN);
                 }
             }
@@ -823,11 +822,17 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         }
     }
 
-    private static void redoFlush(ILSMIndex index, ILogRecord logRecord) throws HyracksDataException {
+    private static void redoFlush(ILSMIndex index, ILogRecord logRecord, ILSMComponentId nextId)
+            throws HyracksDataException {
+        long flushLsn = logRecord.getLSN();
+        Map<String, Object> flushMap = new HashMap<>();
+        flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
         ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+        accessor.getOpContext().setParameters(flushMap);
         long minId = logRecord.getFlushingComponentMinId();
         long maxId = logRecord.getFlushingComponentMaxId();
         ILSMComponentId id = new LSMComponentId(minId, maxId);
+        flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextId);
         if (!index.getDiskComponents().isEmpty()) {
             ILSMDiskComponent diskComponent = index.getDiskComponents().get(0);
             ILSMComponentId maxDiskComponentId = diskComponent.getId();
@@ -837,7 +842,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             }
         }
         index.getCurrentMemoryComponent().resetId(id, true);
-        accessor.scheduleFlush(index.getIOOperationCallback());
+        accessor.scheduleFlush();
     }
 
     private class JobEntityCommits {

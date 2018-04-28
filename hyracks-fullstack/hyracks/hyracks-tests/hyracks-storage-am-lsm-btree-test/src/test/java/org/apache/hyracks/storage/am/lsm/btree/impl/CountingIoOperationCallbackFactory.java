@@ -16,24 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.storage.am.lsm.btree.impl;
 
-package org.apache.asterix.test.ioopcallbacks;
-
-import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
-import org.apache.asterix.common.ioopcallbacks.LSMBTreeWithBuddyIOOperationCallback;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentIdGenerator;
-import org.mockito.Mockito;
+import org.apache.hyracks.storage.common.IResource;
 
-public class LSMBTreeWithBuddyIOOperationCallbackTest extends AbstractLSMIOOperationCallbackTest {
+public class CountingIoOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
+
+    private static final long serialVersionUID = 1L;
+    public static int STARTING_INDEX = 0;
 
     @Override
-    protected AbstractLSMIOOperationCallback getIoCallback() throws HyracksDataException {
-        ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
-        Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
-        return new LSMBTreeWithBuddyIOOperationCallback(mockIndex, new LSMComponentIdGenerator(),
-                mockIndexCheckpointManagerProvider());
+    public void initialize(INCServiceContext ncCtx, IResource resource) {
+        // No op
+    }
+
+    @Override
+    public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) throws HyracksDataException {
+        return new CountingIoOperationCallback();
+    }
+
+    @Override
+    public int getCurrentMemoryComponentIndex() throws HyracksDataException {
+        return STARTING_INDEX;
     }
 
 }

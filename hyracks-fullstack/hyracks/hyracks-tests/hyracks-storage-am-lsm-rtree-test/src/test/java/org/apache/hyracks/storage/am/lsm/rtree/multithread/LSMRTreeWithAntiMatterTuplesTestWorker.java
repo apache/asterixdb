@@ -66,8 +66,7 @@ public class LSMRTreeWithAntiMatterTuplesTestWorker extends AbstractLSMRTreeTest
                 break;
 
             case MERGE:
-                accessor.scheduleMerge(((AbstractLSMRTree) lsmRTree).getIOOperationCallback(),
-                        ((AbstractLSMRTree) lsmRTree).getDiskComponents());
+                accessor.scheduleMerge(((AbstractLSMRTree) lsmRTree).getDiskComponents());
                 break;
 
             default:

@@ -125,7 +125,7 @@ public class CorrelatedPrefixMergePolicy extends PrefixMergePolicy {
                 }
             }
             ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            accessor.scheduleMerge(lsmIndex.getIOOperationCallback(), mergableComponents);
+            accessor.scheduleMerge(mergableComponents);
         }
     }
 }

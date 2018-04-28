@@ -16,25 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.hyracks.storage.am.lsm.common.impls;
-
-import org.apache.hyracks.api.application.INCServiceContext;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
-import org.apache.hyracks.storage.common.IResource;
+package org.apache.hyracks.storage.am.lsm.common.api;
 
 /**
- * A default implementation of {@link ILSMComponentIdGeneratorFactory}.
- *
+ * A callback that will be called on failures of IO operations
  */
-public class LSMComponentIdGeneratorFactory implements ILSMComponentIdGeneratorFactory {
+public interface IIoOperationFailedCallback {
+    /**
+     * Called on a failed IO operation
+     *
+     * @param operation
+     *            the failed operation
+     * @param failure
+     *            the failure
+     */
+    void operationFailed(ILSMIOOperation operation, Throwable failure);
 
-    private static final long serialVersionUID = 1L;
-
-    @Override
-    public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx, IResource resource) {
-        return new LSMComponentIdGenerator();
-    }
-
+    /**
+     * Called on a scheduler failure.
+     *
+     * @param scheduler
+     *            the failed scheduler
+     * @param failure
+     *            the failure
+     */
+    void schedulerFailed(ILSMIOOperationScheduler scheduler, Throwable failure);
 }

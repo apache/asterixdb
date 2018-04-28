@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -28,7 +29,7 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
@@ -57,8 +58,8 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
     private long enterExitTime = 0L;
     protected boolean skipFilter = false;
     protected boolean recovery = false;
-    private LSMIOOperationType ioOpType = LSMIOOperationType.NOOP;
-    private ILSMDiskComponent newDiskComponent;
+    private ILSMIOOperation ioOperation;
+    private Map<String, Object> parametersMap;
 
     public AbstractLSMIndexOperationContext(ILSMIndex index, int[] treeFields, int[] filterFields,
             IBinaryComparatorFactory[] filterCmpFactories, ISearchOperationCallback searchCallback,
@@ -210,22 +211,23 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
     }
 
     @Override
-    public LSMIOOperationType getIoOperationType() {
-        return ioOpType;
+    public ILSMIOOperation getIoOperation() {
+        return ioOperation;
     }
 
     @Override
-    public void setIoOperationType(LSMIOOperationType ioOpType) {
-        this.ioOpType = ioOpType;
+    public void setIoOperation(ILSMIOOperation ioOperation) {
+        this.ioOperation = ioOperation;
     }
 
     @Override
-    public ILSMDiskComponent getNewComponent() {
-        return newDiskComponent;
+    public void setParameters(Map<String, Object> map) {
+        this.parametersMap = map;
     }
 
     @Override
-    public void setNewComponent(ILSMDiskComponent component) {
-        this.newDiskComponent = component;
+    public Map<String, Object> getParameters() {
+        return parametersMap;
     }
+
 }

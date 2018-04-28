@@ -40,7 +40,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -110,8 +109,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 try {
                     memRTreeAccessor.search(rtreeScanCursor, rtreeNullPredicate);
                     component = createDiskComponent(componentFactory, flushOp.getTarget(), null, null, true);
-                    componentBulkLoader =
-                            component.createBulkLoader(LSMIOOperationType.FLUSH, 1.0f, false, 0L, false, false, false);
+                    componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, 0L, false, false, false);
                     // Since the LSM-RTree is used as a secondary assumption, the
                     // primary key will be the last comparator in the BTree comparators
                     rTreeTupleSorter = new TreeTupleSorter(flushingComponent.getIndex().getFileId(), linearizerArray,
@@ -237,7 +235,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
         ILSMDiskComponent component = createDiskComponent(componentFactory, mergeOp.getTarget(), null, null, true);
 
         ILSMDiskComponentBulkLoader componentBulkLoader =
-                component.createBulkLoader(LSMIOOperationType.MERGE, 1.0f, false, 0L, false, false, false);
+                component.createBulkLoader(operation, 1.0f, false, 0L, false, false, false);
         try {
             while (cursor.hasNext()) {
                 cursor.next();
@@ -275,7 +273,7 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             throws HyracksDataException {
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
         return new LSMRTreeFlushOperation(accessor, componentFileRefs.getInsertIndexFileReference(), null, null,
-                callback, fileManager.getBaseDir().getAbsolutePath());
+                callback, getIndexIdentifier());
     }
 
     @Override
@@ -290,6 +288,6 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 new LSMRTreeWithAntiMatterTuplesSearchCursor(opCtx, returnDeletedTuples);
         ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
         return new LSMRTreeMergeOperation(accessor, cursor, mergeFileRefs.getInsertIndexFileReference(), null, null,
-                callback, fileManager.getBaseDir().getAbsolutePath());
+                callback, getIndexIdentifier());
     }
 }

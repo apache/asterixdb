@@ -22,7 +22,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
@@ -35,15 +35,14 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
             boolean verifyInput, long numElementsHint) throws HyracksDataException {
         this.lsmIndex = lsmIndex;
         this.opCtx = opCtx;
-        // Note that by using a flush target file name, we state that the
-        // new bulk loaded component is "newer" than any other merged component.
-        opCtx.setNewComponent(lsmIndex.createBulkLoadTarget());
-        this.componentBulkLoader = opCtx.getNewComponent().createBulkLoader(LSMIOOperationType.LOAD, fillFactor,
-                verifyInput, numElementsHint, false, true, true);
+        opCtx.getIoOperation().setNewComponent(lsmIndex.createBulkLoadTarget());
+        this.componentBulkLoader = opCtx.getIoOperation().getNewComponent().createBulkLoader(opCtx.getIoOperation(),
+                fillFactor, verifyInput, numElementsHint, false, true, true);
+        lsmIndex.getIOOperationCallback().beforeOperation(opCtx.getIoOperation());
     }
 
     public ILSMDiskComponent getComponent() {
-        return opCtx.getNewComponent();
+        return opCtx.getIoOperation().getNewComponent();
     }
 
     @Override
@@ -58,27 +57,38 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
     @Override
     public void end() throws HyracksDataException {
         try {
-            componentBulkLoader.end();
-            if (opCtx.getNewComponent().getComponentSize() > 0) {
-                //TODO(amoudi): Ensure Bulk load follow the same lifecycle Other Operations (Flush, Merge, etc).
-                //then after operation should be called from harness as well
-                //https://issues.apache.org/jira/browse/ASTERIXDB-1764
-                lsmIndex.getIOOperationCallback().afterOperation(opCtx);
-                lsmIndex.getHarness().addBulkLoadedComponent(opCtx.getNewComponent());
+            try {
+                componentBulkLoader.end();
+                if (opCtx.getIoOperation().getNewComponent().getComponentSize() > 0) {
+                    lsmIndex.getIOOperationCallback().afterOperation(opCtx.getIoOperation());
+                }
+            } catch (Throwable th) { // NOSONAR Must not call afterFinalize without setting failure
+                opCtx.getIoOperation().setStatus(LSMIOOperationStatus.FAILURE);
+                opCtx.getIoOperation().setFailure(th);
+                throw th;
+            } finally {
+                lsmIndex.getIOOperationCallback().afterFinalize(opCtx.getIoOperation());
+            }
+            if (opCtx.getIoOperation().getNewComponent().getComponentSize() > 0) {
+                lsmIndex.getHarness().addBulkLoadedComponent(opCtx.getIoOperation().getNewComponent());
             }
         } finally {
-            lsmIndex.getIOOperationCallback().afterFinalize(opCtx);
+            lsmIndex.getIOOperationCallback().completed(opCtx.getIoOperation());
         }
     }
 
     @Override
     public void abort() throws HyracksDataException {
+        opCtx.getIoOperation().setStatus(LSMIOOperationStatus.FAILURE);
+        opCtx.getIoOperation().setNewComponent(null);
         try {
-            componentBulkLoader.abort();
-            opCtx.setNewComponent(null);
-            lsmIndex.getIOOperationCallback().afterOperation(opCtx);
+            try {
+                componentBulkLoader.abort();
+            } finally {
+                lsmIndex.getIOOperationCallback().afterFinalize(opCtx.getIoOperation());
+            }
         } finally {
-            lsmIndex.getIOOperationCallback().afterFinalize(opCtx);
+            lsmIndex.getIOOperationCallback().completed(opCtx.getIoOperation());
         }
     }
 

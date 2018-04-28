@@ -51,7 +51,6 @@ import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
-import org.apache.hyracks.test.support.TestUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -261,8 +260,9 @@ public class MetadataTxnTest {
         final MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxn);
         final String nodeGroupName = "ng";
+        final String committedNodeGroup = "committed_ng";
+        final List<String> ngNodes = Collections.singletonList("asterix_nc1");
         try {
-            final List<String> ngNodes = Collections.singletonList("asterix_nc1");
             MetadataManager.INSTANCE.addNodegroup(mdTxn, new NodeGroup(nodeGroupName, ngNodes));
             MetadataManager.INSTANCE.commitTransaction(mdTxn);
         } finally {
@@ -281,6 +281,9 @@ public class MetadataTxnTest {
         int diskComponentsBeforeFlush = index.getDiskComponents().size();
         // lock opTracker to prevent log flusher from triggering flush
         synchronized (opTracker) {
+            final MetadataTransactionContext committedMdTxn = MetadataManager.INSTANCE.beginTransaction();
+            MetadataManager.INSTANCE.addNodegroup(committedMdTxn, new NodeGroup(committedNodeGroup, ngNodes));
+            MetadataManager.INSTANCE.commitTransaction(committedMdTxn);
             opTracker.setFlushOnExit(true);
             opTracker.flushIfNeeded();
             Assert.assertTrue(opTracker.isFlushLogCreated());
@@ -288,7 +291,6 @@ public class MetadataTxnTest {
             // make sure force operation will processed
             MetadataManager.INSTANCE.dropNodegroup(mdTxn2, nodeGroupName, false);
             Assert.assertEquals(1, opTracker.getNumActiveOperations());
-            Assert.assertFalse(index.hasFlushRequestForCurrentMutableComponent());
             // release opTracker lock now to allow log flusher to schedule the flush
             InvokeUtil.runWithTimeout(() -> {
                 synchronized (opTracker) {

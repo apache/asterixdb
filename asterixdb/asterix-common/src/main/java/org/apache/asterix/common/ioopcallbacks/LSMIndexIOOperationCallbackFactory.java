@@ -19,31 +19,34 @@
 
 package org.apache.asterix.common.ioopcallbacks;
 
-import java.io.ObjectStreamException;
-
+import org.apache.asterix.common.api.IDatasetInfoProvider;
+import org.apache.asterix.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.IResource;
 
-public abstract class AbstractLSMIndexIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
+public class LSMIndexIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
 
-    protected ILSMComponentIdGeneratorFactory idGeneratorFactory;
+    private final ILSMComponentIdGeneratorFactory idGeneratorFactory;
+
+    protected final IDatasetInfoProvider datasetInfoProvider;
 
     protected transient INCServiceContext ncCtx;
 
     protected transient IResource resource;
 
-    public AbstractLSMIndexIOOperationCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory) {
+    public LSMIndexIOOperationCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory,
+            IDatasetInfoProvider datasetInfoProvider) {
         this.idGeneratorFactory = idGeneratorFactory;
+        this.datasetInfoProvider = datasetInfoProvider;
     }
 
     @Override
@@ -60,27 +63,14 @@ public abstract class AbstractLSMIndexIOOperationCallbackFactory implements ILSM
         return ((INcApplicationContext) ncCtx.getApplicationContext()).getIndexCheckpointManagerProvider();
     }
 
-    private void readObjectNoData() throws ObjectStreamException {
-        idGeneratorFactory = new ILSMComponentIdGeneratorFactory() {
-            private static final long serialVersionUID = 1L;
+    @Override
+    public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) throws HyracksDataException {
+        return new LSMIOOperationCallback(datasetInfoProvider.getDatasetInfo(ncCtx), index,
+                getComponentIdGenerator().getId(), getIndexCheckpointManagerProvider());
+    }
 
-            @Override
-            public ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx, IResource resource) {
-                // used for backward compatibility
-                // if idGeneratorFactory is not set for legacy lsm indexes, we return a default
-                // component id generator which always generates the missing component id.
-                return new ILSMComponentIdGenerator() {
-                    @Override
-                    public void refresh() {
-                        // No op
-                    }
-
-                    @Override
-                    public ILSMComponentId getId() {
-                        return LSMComponentId.MISSING_COMPONENT_ID;
-                    }
-                };
-            }
-        };
+    @Override
+    public int getCurrentMemoryComponentIndex() throws HyracksDataException {
+        return idGeneratorFactory.getComponentIdGenerator(ncCtx, resource).getCurrentComponentIndex();
     }
 }

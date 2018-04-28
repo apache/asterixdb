@@ -24,6 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId.IdCompareResult;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
@@ -39,31 +40,56 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
     private final IVirtualBufferCache vbc;
     private final AtomicBoolean isModified;
     private int writerCount;
-    private boolean requestedToBeActive;
+    private int pendingFlushes = 0;
     private final MemoryComponentMetadata metadata;
     private ILSMComponentId componentId;
 
-    public AbstractLSMMemoryComponent(AbstractLSMIndex lsmIndex, IVirtualBufferCache vbc, boolean isActive,
-            ILSMComponentFilter filter) {
+    public AbstractLSMMemoryComponent(AbstractLSMIndex lsmIndex, IVirtualBufferCache vbc, ILSMComponentFilter filter) {
         super(lsmIndex, filter);
         this.vbc = vbc;
         writerCount = 0;
-        if (isActive) {
-            state = ComponentState.READABLE_WRITABLE;
-        } else {
-            state = ComponentState.INACTIVE;
-        }
+        state = ComponentState.INACTIVE;
         isModified = new AtomicBoolean();
         metadata = new MemoryComponentMetadata();
     }
 
+    /**
+     * Prepare the component to be scheduled for an IO operation
+     *
+     * @param ioOperationType
+     * @throws HyracksDataException
+     */
+    @Override
+    public void schedule(LSMIOOperationType ioOperationType) throws HyracksDataException {
+        activeate();
+        if (ioOperationType == LSMIOOperationType.FLUSH) {
+            if (state == ComponentState.READABLE_WRITABLE || state == ComponentState.READABLE_UNWRITABLE) {
+                if (writerCount != 0) {
+                    throw new IllegalStateException("Trying to schedule a flush when writerCount != 0");
+                }
+                state = ComponentState.READABLE_UNWRITABLE_FLUSHING;
+            } else if (state == ComponentState.READABLE_UNWRITABLE_FLUSHING
+                    || state == ComponentState.UNREADABLE_UNWRITABLE) {
+                // There is an ongoing flush. Increase pending flush count
+                pendingFlushes++;
+            } else {
+                throw new IllegalStateException("Trying to schedule a flush when the component state = " + state);
+            }
+        } else {
+            throw new UnsupportedOperationException("Unsupported operation " + ioOperationType);
+        }
+    }
+
+    private void activeate() throws HyracksDataException {
+        if (state == ComponentState.INACTIVE) {
+            state = ComponentState.READABLE_WRITABLE;
+            lsmIndex.getIOOperationCallback().recycled(this);
+        }
+    }
+
     @Override
     public boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) throws HyracksDataException {
-        if (state == ComponentState.INACTIVE && requestedToBeActive) {
-            state = ComponentState.READABLE_WRITABLE;
-            requestedToBeActive = false;
-            lsmIndex.getIOOperationCallback().recycled(this, true);
-        }
+        activeate();
         switch (opType) {
             case FORCE_MODIFICATION:
                 if (isMutableComponent) {
@@ -97,7 +123,6 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                     }
                 }
                 break;
-            case REPLICATE:
             case SEARCH:
                 if (state == ComponentState.READABLE_WRITABLE || state == ComponentState.READABLE_UNWRITABLE
                         || state == ComponentState.READABLE_UNWRITABLE_FLUSHING) {
@@ -107,16 +132,18 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                 }
                 break;
             case FLUSH:
-                if (state == ComponentState.READABLE_WRITABLE || state == ComponentState.READABLE_UNWRITABLE) {
-                    if (writerCount != 0) {
-                        throw new IllegalStateException("Trying to flush when writerCount != 0");
-                    }
-                    state = ComponentState.READABLE_UNWRITABLE_FLUSHING;
-                    readerCount++;
-                } else {
+                if (state == ComponentState.UNREADABLE_UNWRITABLE) {
                     return false;
                 }
-                break;
+                if (state != ComponentState.READABLE_UNWRITABLE_FLUSHING) {
+                    throw new IllegalStateException("Trying to flush when component state = " + state);
+                }
+                if (writerCount != 0) {
+                    throw new IllegalStateException("Trying to flush when writerCount = " + writerCount);
+                }
+                readerCount++;
+                return true;
+
             default:
                 throw new UnsupportedOperationException("Unsupported operation " + opType);
         }
@@ -139,15 +166,14 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                 } else {
                     readerCount--;
                     if (state == ComponentState.UNREADABLE_UNWRITABLE && readerCount == 0) {
-                        state = ComponentState.INACTIVE;
+                        reset();
                     }
                 }
                 break;
-            case REPLICATE:
             case SEARCH:
                 readerCount--;
                 if (state == ComponentState.UNREADABLE_UNWRITABLE && readerCount == 0) {
-                    state = ComponentState.INACTIVE;
+                    reset();
                 }
                 break;
             case FLUSH:
@@ -156,12 +182,12 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                 }
                 readerCount--;
                 if (failedOperation) {
-                    // if flush failed, return the component state to READABLE_UNWRITABLE
-                    state = ComponentState.READABLE_UNWRITABLE;
+                    // If flush failed, keep the component state to READABLE_UNWRITABLE_FLUSHING
                     return;
                 }
+                // operation succeeded
                 if (readerCount == 0) {
-                    state = ComponentState.INACTIVE;
+                    reset();
                 } else {
                     state = ComponentState.UNREADABLE_UNWRITABLE;
                 }
@@ -177,20 +203,15 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
 
     @Override
     public boolean isReadable() {
-        if (state == ComponentState.INACTIVE || state == ComponentState.UNREADABLE_UNWRITABLE) {
-            return false;
+        return state != ComponentState.INACTIVE && state != ComponentState.UNREADABLE_UNWRITABLE;
+    }
+
+    @Override
+    public void setUnwritable() {
+        if (state != ComponentState.READABLE_WRITABLE) {
+            throw new IllegalStateException("Attempt to set unwritable a component that is " + state);
         }
-        return true;
-    }
-
-    @Override
-    public void setState(ComponentState state) {
-        this.state = state;
-    }
-
-    @Override
-    public void requestActivation() {
-        requestedToBeActive = true;
+        this.state = ComponentState.READABLE_UNWRITABLE;
     }
 
     @Override
@@ -210,12 +231,23 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
 
     @Override
     public final void reset() throws HyracksDataException {
+        state = ComponentState.INACTIVE;
         isModified.set(false);
         metadata.reset();
         if (filter != null) {
             filter.reset();
         }
         doReset();
+        lsmIndex.memoryComponentsReset();
+        // a flush can be pending on a component that just completed its flush... here is when this can happen:
+        // primary index has 2 components, secondary index has 2 components.
+        // 2 flushes are scheduled on each p1, p2, s1, and s2.
+        // p1 and p2 both finish. primary component 1 gets full and secondary doesn't have any entries (optional field).
+        // then flush is scheduled on p1, s1 will have a pending flush in that case.
+        if (pendingFlushes > 0) {
+            schedule(LSMIOOperationType.FLUSH);
+            pendingFlushes--;
+        }
     }
 
     protected void doReset() throws HyracksDataException {
@@ -267,6 +299,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
     @Override
     public final void deallocate() throws HyracksDataException {
         try {
+            state = ComponentState.INACTIVE;
             doDeallocate();
         } finally {
             getIndex().getBufferCache().close();
@@ -297,7 +330,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
 
     @Override
     public void resetId(ILSMComponentId componentId, boolean force) throws HyracksDataException {
-        if (!force && this.componentId != null && !componentId.missing() // for backward compatibility
+        if (!force && this.componentId != null
                 && this.componentId.compareTo(componentId) != IdCompareResult.LESS_THAN) {
             throw new IllegalStateException(
                     this + " receives illegal id. Old id " + this.componentId + ", new id " + componentId);
@@ -307,5 +340,12 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
         }
         this.componentId = componentId;
         LSMComponentIdUtils.persist(this.componentId, metadata);
+    }
+
+    @Override
+    public String toString() {
+        return "{\"class\":\"" + getClass().getSimpleName() + "\", \"state\":\"" + state + "\", \"writers\":"
+                + writerCount + ", \"readers\":" + readerCount + ", \"pendingFlushes\":" + pendingFlushes
+                + ", \"id\":\"" + componentId + "\"}";
     }
 }

@@ -22,12 +22,16 @@ import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 
-public enum SynchronousSchedulerProvider implements ILSMIOOperationSchedulerProvider {
-    INSTANCE;
+public class SynchronousSchedulerProvider implements ILSMIOOperationSchedulerProvider {
+    private static final long serialVersionUID = 1L;
+    public static final SynchronousSchedulerProvider INSTANCE = new SynchronousSchedulerProvider();
+
+    private SynchronousSchedulerProvider() {
+    }
 
     @Override
     public ILSMIOOperationScheduler getIoScheduler(INCServiceContext ctx) {
-        return SynchronousScheduler.INSTANCE;
+        return new SynchronousScheduler(NoOpIoOperationFailedCallback.INSTANCE);
     }
 
 }

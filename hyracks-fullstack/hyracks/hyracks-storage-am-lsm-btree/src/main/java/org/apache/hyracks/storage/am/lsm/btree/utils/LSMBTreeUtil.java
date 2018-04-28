@@ -153,29 +153,24 @@ public class LSMBTreeUtil {
         // can be used for both inserts and deletes
         ITreeIndexFrameFactory transactionLeafFrameFactory =
                 new BTreeNSMLeafFrameFactory(transactionTupleWriterFactory);
-
         TreeIndexFactory<DiskBTree> diskBTreeFactory =
                 new DiskBTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, interiorFrameFactory,
                         copyTupleLeafFrameFactory, cmpFactories, typeTraits.length);
         TreeIndexFactory<DiskBTree> bulkLoadBTreeFactory = new DiskBTreeFactory(ioManager, diskBufferCache,
                 freePageManagerFactory, interiorFrameFactory, insertLeafFrameFactory, cmpFactories, typeTraits.length);
-
         BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, bloomFilterKeyFields);
-
         // This is the component factory for transactions
         TreeIndexFactory<DiskBTree> transactionBTreeFactory =
                 new DiskBTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, interiorFrameFactory,
                         transactionLeafFrameFactory, cmpFactories, typeTraits.length);
         //TODO remove BloomFilter from external dataset's secondary LSMBTree index
         ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(ioManager, file, diskBTreeFactory, true);
-
         ILSMDiskComponentFactory componentFactory =
                 new LSMBTreeWithBloomFilterDiskComponentFactory(diskBTreeFactory, bloomFilterFactory, null);
         ILSMDiskComponentFactory bulkLoadComponentFactory =
                 new LSMBTreeWithBloomFilterDiskComponentFactory(bulkLoadBTreeFactory, bloomFilterFactory, null);
         ILSMDiskComponentFactory transactionComponentFactory =
                 new LSMBTreeWithBloomFilterDiskComponentFactory(transactionBTreeFactory, bloomFilterFactory, null);
-
         // the disk only index uses an empty ArrayList for virtual buffer caches
         return new ExternalBTree(ioManager, interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
                 diskBufferCache, fileNameManager, componentFactory, bulkLoadComponentFactory,

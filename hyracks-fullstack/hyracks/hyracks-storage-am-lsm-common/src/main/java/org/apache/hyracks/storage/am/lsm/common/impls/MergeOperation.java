@@ -41,9 +41,9 @@ public abstract class MergeOperation extends AbstractIoOperation {
     }
 
     @Override
-    public Boolean call() throws HyracksDataException {
+    public LSMIOOperationStatus call() throws HyracksDataException {
         accessor.merge(this);
-        return true;
+        return getStatus();
     }
 
     @Override

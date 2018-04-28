@@ -60,8 +60,9 @@ import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.btree.impl.AllowTestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
-import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -235,10 +236,11 @@ public class SearchCursorComponentSwitchTest {
             // merge all components
             ILSMIndexAccessor mergeAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             List<ILSMDiskComponent> mergedComponents = new ArrayList<>(lsmBtree.getDiskComponents());
-            BlockingIOOperationCallbackWrapper ioCallback =
-                    new BlockingIOOperationCallbackWrapper(lsmBtree.getIOOperationCallback());
-            mergeAccessor.scheduleMerge(ioCallback, mergedComponents);
-            ioCallback.waitForIO();
+            ILSMIOOperation merge = mergeAccessor.scheduleMerge(mergedComponents);
+            merge.sync();
+            if (merge.getStatus() == LSMIOOperationStatus.FAILURE) {
+                throw HyracksDataException.create(merge.getFailure());
+            }
             // unblock the search
             unblockSearch(lsmBtree);
             // ensure the search got the correct number

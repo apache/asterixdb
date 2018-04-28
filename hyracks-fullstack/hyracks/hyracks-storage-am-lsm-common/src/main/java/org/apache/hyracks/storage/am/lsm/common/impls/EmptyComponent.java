@@ -27,6 +27,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IIndex;
@@ -145,9 +146,14 @@ public class EmptyComponent implements ILSMDiskComponent {
     }
 
     @Override
-    public ChainedLSMDiskComponentBulkLoader createBulkLoader(LSMIOOperationType opType, float fillFactor,
+    public ChainedLSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor,
             boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
             boolean cleanupEmptyComponent) throws HyracksDataException {
         return null;
+    }
+
+    @Override
+    public void schedule(LSMIOOperationType ioOperationType) throws HyracksDataException {
+        // Do nothing
     }
 }

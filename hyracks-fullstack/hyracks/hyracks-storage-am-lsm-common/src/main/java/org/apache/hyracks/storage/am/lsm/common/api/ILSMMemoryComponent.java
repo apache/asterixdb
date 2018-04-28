@@ -63,19 +63,6 @@ public interface ILSMMemoryComponent extends ILSMComponent {
     void setModified();
 
     /**
-     * request the component to be active
-     */
-    void requestActivation();
-
-    /**
-     * Set the component state
-     *
-     * @param state
-     *            the new state
-     */
-    void setState(ComponentState state);
-
-    /**
      * Allocates memory to this component, create and activate it.
      * This method is atomic. If an exception is thrown, then the call had no effect.
      *
@@ -108,8 +95,14 @@ public interface ILSMMemoryComponent extends ILSMComponent {
      *
      * @param newId
      * @param force
-     *      Whether to force reset the Id to skip sanity checks
+     *            Whether to force reset the Id to skip sanity checks
      * @throws HyracksDataException
      */
     void resetId(ILSMComponentId newId, boolean force) throws HyracksDataException;
+
+    /**
+     * Set the component state to be unwritable to prevent future writers from non-force
+     * entry to the component
+     */
+    void setUnwritable();
 }

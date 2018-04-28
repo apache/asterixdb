@@ -462,4 +462,10 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         map.put("open", open);
         return map;
     }
+
+    @Override
+    public void closeFileIfOpen(FileReference fileRef) {
+        throw new UnsupportedOperationException();
+    }
+
 }

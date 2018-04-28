@@ -35,7 +35,6 @@ import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
-import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBloomFilterDiskComponent;
@@ -44,7 +43,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -59,6 +57,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexOperationC
 import org.apache.hyracks.storage.am.lsm.common.impls.ExternalIndexHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.impls.LoadOperation;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -244,8 +243,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
+    public ILSMIOOperation createFlushOperation(ILSMIndexOperationContext ctx) throws HyracksDataException {
         throw HyracksDataException.create(ErrorCode.FLUSH_NOT_SUPPORTED_IN_EXTERNAL_INDEX);
     }
 
@@ -267,7 +265,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     }
 
     @Override
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
+    public LSMBTreeWithBuddyMergeOperation createMergeOperation(ILSMIndexOperationContext ctx)
             throws HyracksDataException {
         ILSMIndexOperationContext bctx = createOpContext(NoOpOperationCallback.INSTANCE, 0);
         bctx.setOperation(IndexOperation.MERGE);
@@ -289,10 +287,13 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                     .get(secondDiskComponents.size() - 1);
         }
 
-        ioScheduler.scheduleOperation(
+        LSMBTreeWithBuddyMergeOperation mergeOp =
                 new LSMBTreeWithBuddyMergeOperation(accessor, cursor, relMergeFileRefs.getInsertIndexFileReference(),
                         relMergeFileRefs.getDeleteIndexFileReference(), relMergeFileRefs.getBloomFilterFileReference(),
-                        callback, fileManager.getBaseDir().getAbsolutePath(), keepDeleteTuples));
+                        ioOpCallback, fileManager.getBaseDir().getAbsolutePath(), keepDeleteTuples);
+        ioOpCallback.scheduled(mergeOp);
+        return mergeOp;
+
     }
 
     // This method creates the appropriate opContext for the targeted version
@@ -331,8 +332,8 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 numElements += ((AbstractLSMWithBloomFilterDiskComponent) mergeOp.getMergingComponents().get(i))
                         .getBloomFilter().getNumElements();
             }
-            componentBulkLoader = mergedComponent.createBulkLoader(LSMIOOperationType.MERGE, 1.0f, false, numElements,
-                    false, false, false);
+            componentBulkLoader =
+                    mergedComponent.createBulkLoader(operation, 1.0f, false, numElements, false, false, false);
             try {
                 while (buddyBtreeCursor.hasNext()) {
                     buddyBtreeCursor.next();
@@ -343,8 +344,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 buddyBtreeCursor.close();
             }
         } else {
-            componentBulkLoader =
-                    mergedComponent.createBulkLoader(LSMIOOperationType.MERGE, 1.0f, false, 0L, false, false, false);
+            componentBulkLoader = mergedComponent.createBulkLoader(operation, 1.0f, false, 0L, false, false, false);
         }
 
         try {
@@ -432,11 +432,6 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         if (!isActive) {
             throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
-        if (flushOnExit) {
-            AbstractLSMIndexOperationContext opCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
-            opCtx.setIoOperationType(LSMIOOperationType.FLUSH);
-            ioOpCallback.afterFinalize(opCtx);
-        }
         // Even though, we deactivate the index, we don't exit components or
         // modify any of the lists to make sure they
         // are there if the index was opened again
@@ -512,8 +507,9 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
                 component = createBulkLoadTarget();
             }
 
-            componentBulkLoader = component.createBulkLoader(LSMIOOperationType.LOAD, fillFactor, verifyInput,
-                    numElementsHint, false, true, false);
+            LoadOperation loadOp = new LoadOperation(ioOpCallback, getIndexIdentifier());
+            componentBulkLoader =
+                    component.createBulkLoader(loadOp, fillFactor, verifyInput, numElementsHint, false, true, false);
         }
 
         @Override

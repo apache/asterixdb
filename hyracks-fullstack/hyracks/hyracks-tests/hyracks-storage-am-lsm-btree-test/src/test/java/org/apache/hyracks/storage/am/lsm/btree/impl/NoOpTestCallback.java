@@ -16,24 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.storage.am.lsm.btree.impl;
 
-package org.apache.asterix.test.ioopcallbacks;
-
-import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
-import org.apache.asterix.common.ioopcallbacks.LSMRTreeIOOperationCallback;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentIdGenerator;
-import org.mockito.Mockito;
 
-public class LSMRTreeIOOperationCallbackTest extends AbstractLSMIOOperationCallbackTest {
+@SuppressWarnings("rawtypes")
+public class NoOpTestCallback implements ITestOpCallback {
+    public static final NoOpTestCallback INSTANCE = new NoOpTestCallback();
+
+    private NoOpTestCallback() {
+    }
+
+    @SuppressWarnings("unchecked")
+    public static final <T> ITestOpCallback<T> get() {
+        return INSTANCE;
+    }
 
     @Override
-    protected AbstractLSMIOOperationCallback getIoCallback() throws HyracksDataException {
-        ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
-        Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
-        return new LSMRTreeIOOperationCallback(mockIndex, new LSMComponentIdGenerator(),
-                mockIndexCheckpointManagerProvider());
+    public void before(Object t) throws HyracksDataException {
+        // NoOp
+    }
+
+    @Override
+    public void after(Object t) throws HyracksDataException {
+        // NoOp
     }
 
 }

@@ -18,21 +18,23 @@
  */
 package org.apache.asterix.test.dataflow;
 
-import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallback;
-import org.apache.asterix.common.ioopcallbacks.LSMBTreeIOOperationCallbackFactory;
+import org.apache.asterix.common.api.IDatasetInfoProvider;
+import org.apache.asterix.common.api.ILSMComponentIdGeneratorFactory;
+import org.apache.asterix.common.context.DatasetInfo;
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
+import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.EmptyComponent;
 
-public class TestLsmBtreeIoOpCallbackFactory extends LSMBTreeIOOperationCallbackFactory {
+public class TestLsmIoOpCallbackFactory extends LSMIndexIOOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,8 +45,9 @@ public class TestLsmBtreeIoOpCallbackFactory extends LSMBTreeIOOperationCallback
     private static volatile int failedFlushes = 0;
     private static volatile int failedMerges = 0;
 
-    public TestLsmBtreeIoOpCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory) {
-        super(idGeneratorFactory);
+    public TestLsmIoOpCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory,
+            IDatasetInfoProvider datasetInfoProvider) {
+        super(idGeneratorFactory, datasetInfoProvider);
     }
 
     @Override
@@ -56,7 +59,8 @@ public class TestLsmBtreeIoOpCallbackFactory extends LSMBTreeIOOperationCallback
         // Whenever this is called, it resets the counter
         // However, the counters for the failed operations are never reset since we expect them
         // To be always 0
-        return new TestLsmBtreeIoOpCallback(index, getComponentIdGenerator(), getIndexCheckpointManagerProvider());
+        return new TestLsmIoOpCallback(datasetInfoProvider.getDatasetInfo(ncCtx), index,
+                getComponentIdGenerator().getId(), getIndexCheckpointManagerProvider());
     }
 
     public int getTotalFlushes() {
@@ -95,60 +99,78 @@ public class TestLsmBtreeIoOpCallbackFactory extends LSMBTreeIOOperationCallback
         return failedMerges;
     }
 
-    public class TestLsmBtreeIoOpCallback extends LSMBTreeIOOperationCallback {
+    public class TestLsmIoOpCallback extends LSMIOOperationCallback {
         private final TestLsmBtree lsmBtree;
 
-        public TestLsmBtreeIoOpCallback(ILSMIndex index, ILSMComponentIdGenerator idGenerator,
+        public TestLsmIoOpCallback(DatasetInfo dsInfo, ILSMIndex index, ILSMComponentId id,
                 IIndexCheckpointManagerProvider checkpointManagerProvider) {
-            super(index, idGenerator, checkpointManagerProvider);
+            super(dsInfo, index, id, checkpointManagerProvider);
             lsmBtree = (TestLsmBtree) index;
         }
 
         @Override
-        public void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+        public void scheduled(ILSMIOOperation op) throws HyracksDataException {
+            lsmBtree.ioScheduledCalled();
+            super.scheduled(op);
+            lsmBtree.ioScheduledReturned();
+        }
+
+        @Override
+        public void beforeOperation(ILSMIOOperation op) throws HyracksDataException {
             lsmBtree.beforeIoOperationCalled();
-            super.beforeOperation(opCtx);
+            super.beforeOperation(op);
             lsmBtree.beforeIoOperationReturned();
         }
 
         @Override
-        public void afterOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+        public void afterOperation(ILSMIOOperation op) throws HyracksDataException {
             lsmBtree.afterIoOperationCalled();
-            super.afterOperation(opCtx);
+            super.afterOperation(op);
             lsmBtree.afterIoOperationReturned();
         }
 
         @Override
-        public void afterFinalize(ILSMIndexOperationContext opCtx) throws HyracksDataException {
+        public void afterFinalize(ILSMIOOperation op) throws HyracksDataException {
             lsmBtree.afterIoFinalizeCalled();
-            super.afterFinalize(opCtx);
-            synchronized (TestLsmBtreeIoOpCallbackFactory.this) {
-                if (opCtx.getNewComponent() != null) {
-                    if (opCtx.getNewComponent() == EmptyComponent.INSTANCE) {
-                        if (opCtx.getIoOperationType() == LSMIOOperationType.FLUSH) {
+            super.afterFinalize(op);
+            synchronized (TestLsmIoOpCallbackFactory.this) {
+                if (op.getNewComponent() != null) {
+                    if (op.getNewComponent() == EmptyComponent.INSTANCE) {
+                        if (op.getIOOpertionType() == LSMIOOperationType.FLUSH) {
                             rollbackFlushes++;
                         } else {
                             rollbackMerges++;
                         }
                     } else {
-                        if (opCtx.getIoOperationType() == LSMIOOperationType.FLUSH) {
+                        if (op.getIOOpertionType() == LSMIOOperationType.FLUSH) {
                             completedFlushes++;
                         } else {
                             completedMerges++;
                         }
                     }
                 } else {
-                    recordFailure(opCtx.getIoOperationType());
+                    recordFailure(op.getIOOpertionType());
                 }
-                TestLsmBtreeIoOpCallbackFactory.this.notifyAll();
+                TestLsmIoOpCallbackFactory.this.notifyAll();
             }
             lsmBtree.afterIoFinalizeReturned();
         }
 
         @Override
-        public void recycled(ILSMMemoryComponent component, boolean advance) throws HyracksDataException {
+        public void completed(ILSMIOOperation operation) {
+            try {
+                lsmBtree.ioCompletedCalled();
+                super.completed(operation);
+                lsmBtree.ioCompletedReturned();
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        @Override
+        public void recycled(ILSMMemoryComponent component) throws HyracksDataException {
             lsmBtree.recycledCalled(component);
-            super.recycled(component, advance);
+            super.recycled(component);
             lsmBtree.recycledReturned(component);
         }
 

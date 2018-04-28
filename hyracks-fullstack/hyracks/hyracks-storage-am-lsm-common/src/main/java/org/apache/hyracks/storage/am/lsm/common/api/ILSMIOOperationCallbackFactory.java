@@ -32,5 +32,18 @@ public interface ILSMIOOperationCallbackFactory extends Serializable {
      */
     void initialize(INCServiceContext ncCtx, IResource resource);
 
+    /**
+     * Create the IO Operation Callback
+     *
+     * @param index
+     * @return
+     * @throws HyracksDataException
+     */
     ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) throws HyracksDataException;
+
+    /**
+     * @return the current memory component index
+     * @throws HyracksDataException
+     */
+    int getCurrentMemoryComponentIndex() throws HyracksDataException;
 }

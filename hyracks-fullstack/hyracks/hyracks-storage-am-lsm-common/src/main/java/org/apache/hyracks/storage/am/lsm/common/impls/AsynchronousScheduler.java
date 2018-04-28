@@ -18,94 +18,80 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RunnableFuture;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 
-public class AsynchronousScheduler implements ILSMIOOperationScheduler {
+public class AsynchronousScheduler implements ILSMIOOperationScheduler, Closeable {
     // Since this is a asynchronous scheduler, we make sure that flush operations coming from the same lsm index
     // will be executed serially in same order of scheduling the operations. Look at asterix issue 630.
 
-    public final static AsynchronousScheduler INSTANCE = new AsynchronousScheduler();
-    private ExecutorService executor;
-    private final Map<String, ILSMIOOperation> runningFlushOperations = new HashMap<String, ILSMIOOperation>();
-    private final Map<String, PriorityQueue<ILSMIOOperation>> waitingFlushOperations =
-            new HashMap<String, PriorityQueue<ILSMIOOperation>>();
+    private final ExecutorService executor;
+    private final Map<String, ILSMIOOperation> runningFlushOperations = new HashMap<>();
+    private final Map<String, Deque<ILSMIOOperation>> waitingFlushOperations = new HashMap<>();
+    private final Map<String, Throwable> failedGroups = new HashMap<>();
 
-    public void init(ThreadFactory threadFactory) {
-        // Creating an executor with the same configuration of Executors.newCachedThreadPool.
-        executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
-                threadFactory) {
-
-            @Override
-            protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
-                return new LSMIOOperationTask<T>(callable);
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            protected void afterExecute(Runnable r, Throwable t) {
-                super.afterExecute(r, t);
-                LSMIOOperationTask<Boolean> task = (LSMIOOperationTask<Boolean>) r;
-                ILSMIOOperation executedOp = task.getOperation();
-                if (executedOp.getIOOpertionType() == LSMIOOperationType.FLUSH) {
-                    String id = executedOp.getIndexIdentifier();
-                    synchronized (this) {
-                        runningFlushOperations.remove(id);
-                        if (waitingFlushOperations.containsKey(id)) {
-                            try {
-                                ILSMIOOperation op = waitingFlushOperations.get(id).poll();
-                                if (op != null) {
-                                    scheduleOperation(op);
-                                } else {
-                                    waitingFlushOperations.remove(id);
-                                }
-                            } catch (HyracksDataException e) {
-                                t = e.getCause();
-                            }
-                        }
-                    }
-                }
-            }
-        };
+    public AsynchronousScheduler(ThreadFactory threadFactory, final IIoOperationFailedCallback callback) {
+        executor = new IoOperationExecutor(threadFactory, this, callback, runningFlushOperations,
+                waitingFlushOperations, failedGroups);
     }
 
     @Override
-    public void scheduleOperation(ILSMIOOperation operation) throws HyracksDataException {
-        if (operation.getIOOpertionType() == LSMIOOperationType.MERGE) {
-            executor.submit(operation);
-        } else if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
-            String id = operation.getIndexIdentifier();
-            synchronized (executor) {
-                if (runningFlushOperations.containsKey(id)) {
-                    if (waitingFlushOperations.containsKey(id)) {
-                        waitingFlushOperations.get(id).offer(operation);
-                    } else {
-                        PriorityQueue<ILSMIOOperation> q = new PriorityQueue<ILSMIOOperation>();
-                        q.offer(operation);
-                        waitingFlushOperations.put(id, q);
-                    }
-                } else {
-                    runningFlushOperations.put(id, operation);
-                    executor.submit(operation);
-                }
-            }
-        } else {
-            // this should never happen
-            // just guard here to avoid silient failures in case of future extensions
-            throw new IllegalArgumentException("Unknown operation type " + operation.getIOOpertionType());
+    public void scheduleOperation(ILSMIOOperation operation) {
+        switch (operation.getIOOpertionType()) {
+            case FLUSH:
+                scheduleFlush(operation);
+                break;
+            case MERGE:
+                executor.submit(operation);
+                break;
+            case NOOP:
+                return;
+            default:
+                // this should never happen
+                // just guard here to avoid silent failures in case of future extensions
+                throw new IllegalArgumentException("Unknown operation type " + operation.getIOOpertionType());
         }
+    }
+
+    private void scheduleFlush(ILSMIOOperation operation) {
+        String id = operation.getIndexIdentifier();
+        synchronized (executor) {
+            if (failedGroups.containsKey(id)) {
+                // Group failure. Fail the operation right away
+                operation.setStatus(LSMIOOperationStatus.FAILURE);
+                operation.setFailure(new RuntimeException("Operation group " + id + " has permanently failed",
+                        failedGroups.get(id)));
+                operation.complete();
+                return;
+            }
+            if (runningFlushOperations.containsKey(id)) {
+                if (waitingFlushOperations.containsKey(id)) {
+                    waitingFlushOperations.get(id).offer(operation);
+                } else {
+                    Deque<ILSMIOOperation> q = new ArrayDeque<>();
+                    q.offer(operation);
+                    waitingFlushOperations.put(id, q);
+                }
+            } else {
+                runningFlushOperations.put(id, operation);
+                executor.submit(operation);
+            }
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        executor.shutdown();
     }
 }

@@ -48,8 +48,6 @@ public interface ILSMIndex extends IIndex {
 
     ILSMOperationTracker getOperationTracker();
 
-    ILSMIOOperationScheduler getIOScheduler();
-
     ILSMIOOperationCallback getIOOperationCallback();
 
     /**
@@ -74,11 +72,33 @@ public interface ILSMIndex extends IIndex {
 
     public void scanDiskComponents(ILSMIndexOperationContext ctx, IIndexCursor cursor) throws HyracksDataException;
 
-    void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
+    /**
+     * Create a flush operation.
+     * This is an atomic operation. If an exception is thrown, no partial effect is left
+     *
+     * @return the flush operation
+     *
+     * @param ctx
+     *            the operation context
+     * @param callback
+     *            the IO callback
+     * @throws HyracksDataException
+     */
+    ILSMIOOperation createFlushOperation(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
     ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException;
 
-    void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback) throws HyracksDataException;
+    /**
+     * Create a merge operation.
+     * This is an atomic operation. If an exception is thrown, no partial effect is left
+     *
+     * @param ctx
+     *            the operation context
+     * @param callback
+     *            the IO callback
+     * @throws HyracksDataException
+     */
+    ILSMIOOperation createMergeOperation(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
     ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException;
 
@@ -157,4 +177,12 @@ public interface ILSMIndex extends IIndex {
      * @return the {@link ILSMHarness} of the index
      */
     ILSMHarness getHarness();
+
+    /**
+     * Cleanup the files of the failed operation
+     *
+     * @param operation
+     */
+    void cleanUpFilesForFailedOperation(ILSMIOOperation operation);
+
 }

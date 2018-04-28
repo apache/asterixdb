@@ -28,9 +28,9 @@ public class LSMBTreeMemoryComponent extends AbstractLSMMemoryComponent {
 
     private final BTree btree;
 
-    public LSMBTreeMemoryComponent(LSMBTree lsmIndex, BTree btree, IVirtualBufferCache vbc, boolean isActive,
+    public LSMBTreeMemoryComponent(LSMBTree lsmIndex, BTree btree, IVirtualBufferCache vbc,
             ILSMComponentFilter filter) {
-        super(lsmIndex, vbc, isActive, filter);
+        super(lsmIndex, vbc, filter);
         this.btree = btree;
     }
 

@@ -16,24 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.storage.am.lsm.common.impls;
 
-package org.apache.asterix.test.ioopcallbacks;
-
-import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
-import org.apache.asterix.common.ioopcallbacks.LSMInvertedIndexIOOperationCallback;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentIdGenerator;
-import org.mockito.Mockito;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 
-public class LSMInvertedIndexIOOperationCallbackTest extends AbstractLSMIOOperationCallbackTest {
+public class LoadOperation extends AbstractIoOperation {
 
-    @Override
-    protected AbstractLSMIOOperationCallback getIoCallback() throws HyracksDataException {
-        ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
-        Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(2);
-        return new LSMInvertedIndexIOOperationCallback(mockIndex, new LSMComponentIdGenerator(),
-                mockIndexCheckpointManagerProvider());
+    public LoadOperation(ILSMIOOperationCallback callback, String indexIdentifier) {
+        super(null, null, callback, indexIdentifier);
     }
 
+    @Override
+    public final LSMIOOperationType getIOOpertionType() {
+        return LSMIOOperationType.LOAD;
+    }
+
+    @Override
+    public LSMIOOperationStatus call() throws HyracksDataException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public LSMComponentFileReferences getComponentFiles() {
+        return null;
+    }
+
+    @Override
+    public void sync() {
+        throw new UnsupportedOperationException();
+    }
 }

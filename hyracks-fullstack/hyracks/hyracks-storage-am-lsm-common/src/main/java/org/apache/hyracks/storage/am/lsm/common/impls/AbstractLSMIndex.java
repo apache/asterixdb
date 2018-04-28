@@ -21,9 +21,11 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,6 +43,7 @@ import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterFrameFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId.IdCompareResult;
@@ -74,7 +77,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     private static final Logger LOGGER = LogManager.getLogger();
     protected final ILSMHarness lsmHarness;
     protected final IIOManager ioManager;
-    protected final ILSMIOOperationScheduler ioScheduler;
     protected final ILSMIOOperationCallback ioOpCallback;
 
     // In-memory components.
@@ -95,6 +97,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     protected final int[] filterFields;
     protected final boolean durable;
     protected boolean isActive;
+    protected volatile boolean isDeactivating = false;
     protected final AtomicBoolean[] flushRequests;
     protected volatile boolean memoryComponentsAllocated = false;
     protected ITracer tracer;
@@ -102,6 +105,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     protected final ILSMDiskComponentFactory componentFactory;
     // Factory for creating on-disk index components during bulkload.
     protected final ILSMDiskComponentFactory bulkLoadComponentFactory;
+    private int numScheduledFlushes = 0;
 
     public AbstractLSMIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             IBufferCache diskBufferCache, ILSMIndexFileManager fileManager, double bloomFilterFalsePositiveRate,
@@ -115,7 +119,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         this.diskBufferCache = diskBufferCache;
         this.fileManager = fileManager;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
-        this.ioScheduler = ioScheduler;
         this.ioOpCallback = ioOpCallbackFactory.createIoOpCallback(this);
         this.componentFactory = componentFactory;
         this.bulkLoadComponentFactory = bulkLoadComponentFactory;
@@ -127,11 +130,12 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         this.inactiveDiskComponents = new LinkedList<>();
         this.durable = durable;
         this.tracer = tracer;
-        lsmHarness = new LSMHarness(this, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled(), tracer);
+        lsmHarness = new LSMHarness(this, ioScheduler, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled(),
+                tracer);
         isActive = false;
         diskComponents = new ArrayList<>();
         memoryComponents = new ArrayList<>();
-        currentMutableComponentId = new AtomicInteger();
+        currentMutableComponentId = new AtomicInteger(ioOpCallbackFactory.getCurrentMemoryComponentIndex());
         flushRequests = new AtomicBoolean[virtualBufferCaches.size()];
         for (int i = 0; i < virtualBufferCaches.size(); i++) {
             flushRequests[i] = new AtomicBoolean();
@@ -148,13 +152,13 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         this.diskBufferCache = diskBufferCache;
         this.fileManager = fileManager;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
-        this.ioScheduler = ioScheduler;
         this.ioOpCallback = ioOpCallbackFactory.createIoOpCallback(this);
         this.componentFactory = componentFactory;
         this.bulkLoadComponentFactory = bulkLoadComponentFactory;
         this.durable = durable;
         this.tracer = tracer;
-        lsmHarness = new ExternalIndexHarness(this, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled());
+        lsmHarness = new ExternalIndexHarness(this, ioScheduler, mergePolicy, opTracker,
+                diskBufferCache.isReplicationEnabled());
         isActive = false;
         diskComponents = new LinkedList<>();
         this.inactiveDiskComponents = new LinkedList<>();
@@ -205,28 +209,35 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         deactivate(true);
     }
 
+    @SuppressWarnings({ "squid:S1181", "squid:S2142" })
     @Override
     public synchronized void deactivate(boolean flush) throws HyracksDataException {
         if (!isActive) {
             throw HyracksDataException.create(ErrorCode.CANNOT_DEACTIVATE_INACTIVE_INDEX);
         }
-        if (flush) {
-            flushMemoryComponent();
-        }
-        deactivateDiskComponents();
-        deallocateMemoryComponents();
-        isActive = false;
-    }
-
-    private void flushMemoryComponent() throws HyracksDataException {
-        BlockingIOOperationCallbackWrapper cb = new BlockingIOOperationCallbackWrapper(ioOpCallback);
-        ILSMIndexAccessor accessor = createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        accessor.scheduleFlush(cb);
+        // The following member is used to prevent scheduling of new merges as memory components
+        // get flushed. This now works only if the caller of deactivate waited for all IO
+        // operations to complete. Otherwise, disk components can be evicted while background
+        // merges are ongoing.
+        isDeactivating = true;
         try {
-            cb.waitForIO();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw HyracksDataException.create(e);
+            LOGGER.log(Level.INFO, "Deactivating the index: {}. STARTED", this);
+            if (flush && memoryComponentsAllocated) {
+                try {
+                    createAccessor(NoOpIndexAccessParameters.INSTANCE).scheduleFlush().sync();
+                } catch (InterruptedException e) {
+                    throw HyracksDataException.create(e);
+                }
+                LOGGER.log(Level.INFO, "Deactivating the index: {}. Flushed", this);
+            }
+            LOGGER.log(Level.INFO, "Deactivating the disk components of: {}", this);
+            deactivateDiskComponents();
+            LOGGER.log(Level.INFO, "Deallocating memory components of: {}", this);
+            deallocateMemoryComponents();
+            isActive = false;
+            LOGGER.log(Level.INFO, "Deactivating the index: {}. COMPLETED", this);
+        } finally {
+            isDeactivating = false;
         }
     }
 
@@ -282,6 +293,8 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
                 c.reset();
             }
         }
+        numScheduledFlushes = 0;
+        currentMutableComponentId.set(0);
     }
 
     @Override
@@ -297,19 +310,18 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         switch (ctx.getOperation()) {
             case UPDATE:
             case PHYSICALDELETE:
-            case FLUSH:
-            case DELETE_MEMORY_COMPONENT:
+            case DELETE_COMPONENTS:
             case DELETE:
             case UPSERT:
                 operationalComponents.add(memoryComponents.get(cmc));
                 break;
             case INSERT:
-                addOperationalMutableComponents(operationalComponents, true);
+                addOperationalMemoryComponents(operationalComponents, true);
                 operationalComponents.addAll(diskComponents);
                 break;
             case SEARCH:
                 if (memoryComponentsAllocated) {
-                    addOperationalMutableComponents(operationalComponents, false);
+                    addOperationalMemoryComponents(operationalComponents, false);
                 }
                 if (filterManager != null) {
                     for (int i = 0; i < diskComponents.size(); i++) {
@@ -325,13 +337,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
                     operationalComponents.addAll(diskComponents);
                 }
 
-                break;
-            case MERGE:
-            case DELETE_DISK_COMPONENTS:
-                operationalComponents.addAll(ctx.getComponentsToBeMerged());
-                break;
-            case FULL_MERGE:
-                operationalComponents.addAll(diskComponents);
                 break;
             case REPLICATE:
                 operationalComponents.addAll(ctx.getComponentsToBeReplicated());
@@ -350,49 +355,140 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     }
 
     @Override
-    public void scheduleFlush(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
-        LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
-        AbstractLSMIndexOperationContext opCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
-        opCtx.setOperation(ctx.getOperation());
-        opCtx.getComponentHolder().addAll(ctx.getComponentHolder());
-        ILSMIOOperation flushOp = createFlushOperation(opCtx, componentFileRefs, callback);
-        ioScheduler.scheduleOperation(TracedIOOperation.wrap(flushOp, tracer));
+    public ILSMIOOperation createFlushOperation(ILSMIndexOperationContext ctx) throws HyracksDataException {
+        ILSMMemoryComponent flushingComponent = getCurrentMemoryComponent();
+        if (flushingComponent.getWriterCount() > 0) {
+            throw new IllegalStateException(
+                    "createFlushOperation is called on a component with writers: " + flushingComponent);
+        }
+        // take care of the flush cycling
+        ILSMIOOperation flushOp =
+                TracedIOOperation.wrap(createFlushOperation(createOpContext(NoOpIndexAccessParameters.INSTANCE),
+                        fileManager.getRelFlushFileReference(), ioOpCallback), tracer);
+        // Changing the flush status should *always* precede changing the mutable component.
+        flushingComponent.schedule(LSMIOOperationType.FLUSH);
+        numScheduledFlushes++;
+        changeFlushStatusForCurrentMutableCompoent(false);
+        changeMutableComponent();
+        ILSMIndexAccessor accessor = flushOp.getAccessor();
+        ILSMIndexOperationContext flushCtx = accessor.getOpContext();
+        flushCtx.setOperation(ctx.getOperation()); // Could be component delete
+        flushCtx.getComponentHolder().add(flushingComponent);
+        flushCtx.setIoOperation(flushOp);
+        propagateMap(ctx, flushCtx);
+        ioOpCallback.scheduled(flushOp);
+        return flushOp;
     }
 
     @Override
-    public void scheduleMerge(ILSMIndexOperationContext ctx, ILSMIOOperationCallback callback)
-            throws HyracksDataException {
-        List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
-        // merge must create a different op ctx
-        AbstractLSMIndexOperationContext opCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
-        opCtx.setOperation(ctx.getOperation());
-        opCtx.getComponentHolder().addAll(mergingComponents);
-        mergingComponents.stream().map(ILSMDiskComponent.class::cast).forEach(opCtx.getComponentsToBeMerged()::add);
-        ILSMDiskComponent firstComponent = (ILSMDiskComponent) mergingComponents.get(0);
-        ILSMDiskComponent lastComponent = (ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1);
-        LSMComponentFileReferences mergeFileRefs = getMergeFileReferences(firstComponent, lastComponent);
-        ILSMIOOperation mergeOp = createMergeOperation(opCtx, mergeFileRefs, callback);
-        ioScheduler.scheduleOperation(TracedIOOperation.wrap(mergeOp, tracer));
-    }
-
-    private void addOperationalMutableComponents(List<ILSMComponent> operationalComponents, boolean modification) {
-        int cmc = currentMutableComponentId.get();
-        int numMutableComponents = memoryComponents.size();
-        for (int i = 0; i < numMutableComponents - 1; i++) {
-            ILSMMemoryComponent c = memoryComponents.get((cmc + i + 1) % numMutableComponents);
-            if (c.isReadable()) {
-                // Make sure newest components are added first if readable
-                operationalComponents.add(0, c);
+    public ILSMIOOperation createMergeOperation(ILSMIndexOperationContext ctx) throws HyracksDataException {
+        List<ILSMDiskComponent> mergingComponents = ctx.getComponentsToBeMerged();
+        // Merge operation can fail if another merge is already scheduled on those components
+        // This should be guarded against by the merge policy but we still protect against here
+        if (isDeactivating || mergingComponents.size() < 2 && ctx.getOperation() != IndexOperation.DELETE_COMPONENTS) {
+            return NoOpIoOperation.INSTANCE;
+        }
+        for (int i = 0; i < mergingComponents.size(); i++) {
+            if (mergingComponents.get(i).getState() == ComponentState.READABLE_MERGING) {
+                return NoOpIoOperation.INSTANCE;
             }
         }
-        // The current mutable component is added if modification operation or if readable
-        // This ensures that activation of new component only happens in case of modifications
-        // and allow for controlling that without stopping search operations
-        ILSMMemoryComponent c = memoryComponents.get(cmc);
-        if (modification || c.isReadable()) {
-            operationalComponents.add(0, c);
+        // merge must create a different op ctx
+        AbstractLSMIndexOperationContext mergeCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
+        mergeCtx.setOperation(ctx.getOperation());
+        mergeCtx.getComponentHolder().addAll(mergingComponents);
+        propagateMap(ctx, mergeCtx);
+        mergingComponents.stream().map(ILSMDiskComponent.class::cast).forEach(mergeCtx.getComponentsToBeMerged()::add);
+        ILSMDiskComponent firstComponent = mergingComponents.get(0);
+        ILSMDiskComponent lastComponent = mergingComponents.get(mergingComponents.size() - 1);
+        LSMComponentFileReferences mergeFileRefs = getMergeFileReferences(firstComponent, lastComponent);
+        ILSMIOOperation mergeOp =
+                TracedIOOperation.wrap(createMergeOperation(mergeCtx, mergeFileRefs, ioOpCallback), tracer);
+        mergeCtx.setIoOperation(mergeOp);
+        for (int i = 0; i < mergingComponents.size(); i++) {
+            mergingComponents.get(i).schedule(LSMIOOperationType.MERGE);
         }
+        ioOpCallback.scheduled(mergeOp);
+        return mergeOp;
+    }
+
+    private static void propagateMap(ILSMIndexOperationContext src, ILSMIndexOperationContext destination) {
+        Map<String, Object> map = src.getParameters();
+        if (map != null && !map.isEmpty()) {
+            destination.setParameters(new HashMap<>(map));
+        }
+    }
+
+    private void addOperationalMemoryComponents(List<ILSMComponent> operationalComponents, boolean modification) {
+        // add current memory component first if needed
+        if (numScheduledFlushes < memoryComponents.size()) {
+            ILSMMemoryComponent c = memoryComponents.get(currentMutableComponentId.get());
+            // The current mutable component is added if modification or readable
+            // This ensures that activation of new component only happens in case of modifications
+            // and allow for controlling that without stopping search operations
+            if (modification || c.isReadable()) {
+                operationalComponents.add(c);
+            }
+        }
+        if (modification && numScheduledFlushes >= memoryComponents.size()) {
+            // will fail the enterComponent call and retry
+            operationalComponents.add(memoryComponents.get(0));
+            return;
+        }
+        addImmutableMemoryComponents(operationalComponents);
+    }
+
+    private void addImmutableMemoryComponents(List<ILSMComponent> operationalComponents) {
+        int cmc = currentMutableComponentId.get();
+        int numImmutableMemoryComponents = Integer.min(numScheduledFlushes, memoryComponents.size());
+        int next = numScheduledFlushes < memoryComponents.size() ? cmc : getNextToBeFlushed();
+        for (int i = 0; i < numImmutableMemoryComponents; i++) {
+            next--;
+            if (next < 0) {
+                next = memoryComponents.size() - 1;
+            }
+            //newer components first
+            ILSMMemoryComponent c = memoryComponents.get(next);
+            if (c.isReadable()) {
+                operationalComponents.add(c);
+            }
+        }
+    }
+
+    private ILSMMemoryComponent getOldestReadableMemoryComponent() {
+        synchronized (getOperationTracker()) {
+            int cmc = currentMutableComponentId.get();
+            int numImmutableMemoryComponents = Integer.min(numScheduledFlushes, memoryComponents.size());
+            int next = numScheduledFlushes < memoryComponents.size() ? cmc : getNextToBeFlushed();
+            for (int i = 0; i < numImmutableMemoryComponents; i++) {
+                next--;
+                if (next < 0) {
+                    next = memoryComponents.size() - 1;
+                }
+            }
+
+            // start going forward
+            for (int i = 0; i < numImmutableMemoryComponents; i++) {
+                if (memoryComponents.get(next).isReadable()) {
+                    return memoryComponents.get(next);
+                }
+                next++;
+                if (next == memoryComponents.size()) {
+                    next = 0;
+                }
+            }
+            throw new IllegalStateException("Couldn't find any readable component");
+        }
+    }
+
+    private int getNextToBeFlushed() {
+        // we have:
+        // 1. currentMemeoryComponent
+        // 2. numMemoryComponents
+        // 3. numScheduledFlushes
+        int diff = numScheduledFlushes % memoryComponents.size();
+        int cmc = currentMutableComponentId.get() - diff;
+        return cmc < 0 ? memoryComponents.size() + cmc : cmc;
     }
 
     @Override
@@ -407,8 +503,9 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
             throws HyracksDataException {
         AbstractLSMIndexOperationContext opCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
-        opCtx.setIoOperationType(LSMIOOperationType.LOAD);
-        ioOpCallback.beforeOperation(opCtx);
+        LoadOperation loadOp = new LoadOperation(ioOpCallback, getIndexIdentifier());
+        ioOpCallback.scheduled(loadOp);
+        opCtx.setIoOperation(loadOp);
         return new LSMIndexDiskComponentBulkLoader(this, opCtx, fillLevel, verifyInput, numElementsHint);
     }
 
@@ -503,7 +600,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public void changeMutableComponent() {
         currentMutableComponentId.set((currentMutableComponentId.get() + 1) % memoryComponents.size());
-        memoryComponents.get(currentMutableComponentId.get()).requestActivation();
     }
 
     @Override
@@ -524,11 +620,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public ILSMOperationTracker getOperationTracker() {
         return lsmHarness.getOperationTracker();
-    }
-
-    @Override
-    public ILSMIOOperationScheduler getIOScheduler() {
-        return ioScheduler;
     }
 
     @Override
@@ -556,8 +647,9 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public final String toString() {
         return "{\"class\" : \"" + getClass().getSimpleName() + "\", \"dir\" : \"" + fileManager.getBaseDir()
-                + "\", \"memory\" : " + (memoryComponents == null ? 0 : memoryComponents.size()) + ", \"disk\" : "
-                + diskComponents.size() + "}";
+                + "\", \"memory\" : " + (memoryComponents == null ? 0 : memoryComponents) + ", \"disk\" : "
+                + diskComponents.size() + ", \"num-scheduled-flushes\":" + numScheduledFlushes
+                + ", \"current-memory-component\":" + currentMutableComponentId.get() + "}";
     }
 
     @Override
@@ -567,8 +659,12 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
 
     @Override
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException {
-        //check if the current memory component has been modified
-        return !memoryComponents.get(currentMutableComponentId.get()).isModified();
+        synchronized (getOperationTracker()) {
+            ILSMMemoryComponent cmc = getCurrentMemoryComponent();
+            ComponentState state = cmc.getState();
+            return state == ComponentState.READABLE_UNWRITABLE_FLUSHING || state == ComponentState.INACTIVE
+                    || !cmc.isModified();
+        }
     }
 
     @Override
@@ -703,37 +799,30 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     public final ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
         ILSMIndexAccessor accessor = operation.getAccessor();
         ILSMIndexOperationContext opCtx = accessor.getOpContext();
-        if (opCtx.getOperation() == IndexOperation.DELETE_MEMORY_COMPONENT) {
+        ILSMMemoryComponent memoryComponent = (ILSMMemoryComponent) opCtx.getComponentHolder().get(0);
+        if (memoryComponent != getOldestReadableMemoryComponent()) {
+            throw new IllegalStateException("An attempt to flush a memory component that is not the oldest");
+        }
+        if (!memoryComponent.isModified() || opCtx.getOperation() == IndexOperation.DELETE_COMPONENTS) {
             return EmptyComponent.INSTANCE;
         }
         if (LOGGER.isInfoEnabled()) {
             FlushOperation flushOp = (FlushOperation) operation;
-            LOGGER.log(Level.INFO, "Flushing component with id: " + flushOp.getFlushingComponent().getId());
+            LOGGER.log(Level.INFO,
+                    "Flushing component with id: " + flushOp.getFlushingComponent().getId() + " in the index " + this);
         }
-        try {
-            return doFlush(operation);
-        } catch (Exception e) {
-            LOGGER.error("Fail to execute flush " + this, e);
-            cleanUpFiles(operation, e);
-            throw HyracksDataException.create(e);
-        }
+        return doFlush(operation);
     }
 
     @Override
     public final ILSMDiskComponent merge(ILSMIOOperation operation) throws HyracksDataException {
         ILSMIndexAccessor accessor = operation.getAccessor();
         ILSMIndexOperationContext opCtx = accessor.getOpContext();
-        try {
-            return opCtx.getOperation() == IndexOperation.DELETE_DISK_COMPONENTS ? EmptyComponent.INSTANCE
-                    : doMerge(operation);
-        } catch (Exception e) {
-            LOGGER.error("Fail to execute merge " + this, e);
-            cleanUpFiles(operation, e);
-            throw HyracksDataException.create(e);
-        }
+        return opCtx.getOperation() == IndexOperation.DELETE_COMPONENTS ? EmptyComponent.INSTANCE : doMerge(operation);
     }
 
-    protected void cleanUpFiles(ILSMIOOperation operation, Exception e) {
+    @Override
+    public void cleanUpFilesForFailedOperation(ILSMIOOperation operation) {
         LSMComponentFileReferences componentFiles = operation.getComponentFiles();
         if (componentFiles == null) {
             return;
@@ -742,12 +831,22 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         for (FileReference file : files) {
             try {
                 if (file != null) {
+                    diskBufferCache.closeFileIfOpen(file);
                     diskBufferCache.deleteFile(file);
                 }
-            } catch (HyracksDataException hde) {
-                e.addSuppressed(hde);
+            } catch (Throwable th) { // NOSONAR Must catch all failures
+                operation.getFailure().addSuppressed(th);
             }
         }
+    }
+
+    protected String getIndexIdentifier() {
+        return fileManager.getBaseDir().getAbsolutePath();
+    }
+
+    //Called when a memory component is reset
+    public void memoryComponentsReset() {
+        numScheduledFlushes = Integer.max(0, numScheduledFlushes - 1);
     }
 
     protected abstract LSMComponentFileReferences getMergeFileReferences(ILSMDiskComponent firstComponent,

@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -86,7 +87,7 @@ class TracedIOOperation implements ILSMIOOperation {
     }
 
     @Override
-    public Boolean call() throws HyracksDataException {
+    public LSMIOOperationStatus call() throws HyracksDataException {
         final String name = getTarget().getRelativePath();
         final long tid = tracer.durationB(name, traceCategory, null);
         try {
@@ -110,6 +111,46 @@ class TracedIOOperation implements ILSMIOOperation {
     @Override
     public LSMComponentFileReferences getComponentFiles() {
         return ioOp.getComponentFiles();
+    }
+
+    @Override
+    public Throwable getFailure() {
+        return ioOp.getFailure();
+    }
+
+    @Override
+    public void setFailure(Throwable failure) {
+        ioOp.setFailure(failure);
+    }
+
+    @Override
+    public LSMIOOperationStatus getStatus() {
+        return ioOp.getStatus();
+    }
+
+    @Override
+    public void setStatus(LSMIOOperationStatus status) {
+        ioOp.setStatus(status);
+    }
+
+    @Override
+    public ILSMDiskComponent getNewComponent() {
+        return ioOp.getNewComponent();
+    }
+
+    @Override
+    public void setNewComponent(ILSMDiskComponent component) {
+        ioOp.setNewComponent(component);
+    }
+
+    @Override
+    public void complete() {
+        ioOp.complete();
+    }
+
+    @Override
+    public void sync() throws InterruptedException {
+        ioOp.sync();
     }
 }
 

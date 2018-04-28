@@ -20,15 +20,20 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.common.IResource;
 
-public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
-    INSTANCE;
+public class NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
+
+    private static final long serialVersionUID = 1L;
+    public static final NoOpIOOperationCallbackFactory INSTANCE = new NoOpIOOperationCallbackFactory();
+
+    private NoOpIOOperationCallbackFactory() {
+    }
 
     @Override
     public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) {
@@ -47,22 +52,7 @@ public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFac
         }
 
         @Override
-        public void beforeOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
-            // Do nothing.
-        }
-
-        @Override
-        public void afterOperation(ILSMIndexOperationContext opCtx) throws HyracksDataException {
-            // Do nothing.
-        }
-
-        @Override
-        public void afterFinalize(ILSMIndexOperationContext opCtx) throws HyracksDataException {
-            // Do nothing.
-        }
-
-        @Override
-        public void recycled(ILSMMemoryComponent component, boolean componentSwitched) {
+        public void recycled(ILSMMemoryComponent component) {
             // Do nothing.
         }
 
@@ -70,5 +60,35 @@ public enum NoOpIOOperationCallbackFactory implements ILSMIOOperationCallbackFac
         public void allocated(ILSMMemoryComponent component) {
             // Do nothing.
         }
+
+        @Override
+        public void scheduled(ILSMIOOperation operation) throws HyracksDataException {
+            // Do nothing.
+        }
+
+        @Override
+        public void beforeOperation(ILSMIOOperation operation) throws HyracksDataException {
+            // Do nothing.
+        }
+
+        @Override
+        public void afterOperation(ILSMIOOperation operation) throws HyracksDataException {
+            // Do nothing.
+        }
+
+        @Override
+        public void afterFinalize(ILSMIOOperation operation) throws HyracksDataException {
+            // Do nothing.
+        }
+
+        @Override
+        public void completed(ILSMIOOperation operation) {
+            // Do nothing.
+        }
+    }
+
+    @Override
+    public int getCurrentMemoryComponentIndex() throws HyracksDataException {
+        return 0;
     }
 }

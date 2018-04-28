@@ -65,20 +65,20 @@ public abstract class SingleThreadEventProcessor<T> implements Runnable {
         }
     }
 
-    public void stop() throws HyracksDataException, InterruptedException {
+    public void stop() throws HyracksDataException {
         stopped = true;
         executorThread.interrupt();
-        executorThread.join(1000);
+        InvokeUtil.doUninterruptibly(() -> executorThread.join(1000));
         int attempt = 0;
         while (executorThread.isAlive()) {
             attempt++;
-            LOGGER.log(Level.WARN,
-                    "Failed to stop event processor after " + attempt + " attempts. Interrupted exception swallowed?");
+            LOGGER.log(Level.WARN, "Failed to stop event processor after {} attempts. Interrupted exception swallowed?",
+                    attempt, ExceptionUtils.fromThreadStack(executorThread));
             if (attempt == 10) {
                 throw HyracksDataException.create(ErrorCode.FAILED_TO_SHUTDOWN_EVENT_PROCESSOR, name);
             }
             executorThread.interrupt();
-            executorThread.join(1000);
+            InvokeUtil.doUninterruptibly(() -> executorThread.join(1000));
         }
     }
 }

@@ -16,24 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.common.context;
 
-package org.apache.asterix.common.ioopcallbacks;
+import org.apache.asterix.common.api.IDatasetInfoProvider;
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.hyracks.api.application.INCServiceContext;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGeneratorFactory;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
-
-public class LSMRTreeIOOperationCallbackFactory extends AbstractLSMIndexIOOperationCallbackFactory {
+public class DatasetInfoProvider implements IDatasetInfoProvider {
 
     private static final long serialVersionUID = 1L;
+    private final int datasetId;
 
-    public LSMRTreeIOOperationCallbackFactory(ILSMComponentIdGeneratorFactory idGeneratorFactory) {
-        super(idGeneratorFactory);
+    public DatasetInfoProvider(int datasetId) {
+        this.datasetId = datasetId;
     }
 
     @Override
-    public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) throws HyracksDataException {
-        return new LSMRTreeIOOperationCallback(index, getComponentIdGenerator(), getIndexCheckpointManagerProvider());
+    public DatasetInfo getDatasetInfo(INCServiceContext serviceCtx) {
+        IDatasetLifecycleManager dslcManager =
+                ((INcApplicationContext) serviceCtx.getApplicationContext()).getDatasetLifecycleManager();
+        return dslcManager.getDatasetInfo(datasetId);
     }
+
 }

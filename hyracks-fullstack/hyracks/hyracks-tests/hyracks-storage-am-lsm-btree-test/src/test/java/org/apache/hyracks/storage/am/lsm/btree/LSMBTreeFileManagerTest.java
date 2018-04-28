@@ -29,7 +29,6 @@ import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBloomFilterDiskComponent;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.junit.After;
 import org.junit.Assert;
@@ -71,8 +70,8 @@ public class LSMBTreeFileManagerTest {
         ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
         accessor.insert(tuple);
 
-        // Flush to generate a disk component
-        accessor.scheduleFlush(((ILSMIndex) ctx.getIndex()).getIOOperationCallback());
+        // Flush to generate a disk component. This uses synchronous scheduler
+        accessor.scheduleFlush();
 
         // Make sure the disk component was generated
         LSMBTree btree = (LSMBTree) ctx.getIndex();

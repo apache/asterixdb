@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.common.IIndex;
 
 /**
@@ -139,4 +140,12 @@ public interface ILSMComponent {
      * @throws HyracksDataException
      */
     ILSMComponentId getId() throws HyracksDataException;
+
+    /**
+     * Prepare the component to be scheduled for an IO operation
+     *
+     * @param ioOperationType
+     * @throws HyracksDataException
+     */
+    void schedule(LSMIOOperationType ioOperationType) throws HyracksDataException;
 }

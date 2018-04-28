@@ -16,17 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.common.api;
 
-package org.apache.asterix.common.ioopcallbacks;
+import java.io.Serializable;
 
-import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
+import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.common.IResource;
 
-public class LSMInvertedIndexIOOperationCallback extends AbstractLSMIOOperationCallback {
-
-    public LSMInvertedIndexIOOperationCallback(ILSMIndex index, ILSMComponentIdGenerator idGenerator,
-            IIndexCheckpointManagerProvider checkpointManagerProvider) {
-        super(index, idGenerator, checkpointManagerProvider);
-    }
+@FunctionalInterface
+public interface ILSMComponentIdGeneratorFactory extends Serializable {
+    /**
+     * Get the Id generator for the resource
+     *
+     * @param serviceCtx
+     * @param resource
+     * @return
+     * @throws HyracksDataException
+     */
+    ILSMComponentIdGenerator getComponentIdGenerator(INCServiceContext serviceCtx, IResource resource)
+            throws HyracksDataException;
 }

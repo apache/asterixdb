@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
@@ -53,27 +54,34 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
     }
 
     @Override
+    public void schedule(LSMIOOperationType ioOperationType) throws HyracksDataException {
+        if (ioOperationType != LSMIOOperationType.MERGE) {
+            throw new IllegalStateException("Unsupported operation type: " + ioOperationType);
+        }
+        if (state == ComponentState.INACTIVE) {
+            throw new IllegalStateException("Trying to schedule a merge of an inactive disk component");
+        }
+        if (state == ComponentState.READABLE_MERGING) {
+            // This should never happen unless there are two concurrent merges that were scheduled
+            // concurrently and they have interleaving components to be merged.
+            // This should be handled properly by the merge policy, but we guard against that here anyway.
+            throw new IllegalStateException("The disk component has already been scheduled for a merge");
+        }
+        state = ComponentState.READABLE_MERGING;
+    }
+
+    @Override
     public boolean threadEnter(LSMOperationType opType, boolean isMutableComponent) {
         if (state == ComponentState.INACTIVE) {
             throw new IllegalStateException("Trying to enter an inactive disk component");
         }
-
         switch (opType) {
             case FORCE_MODIFICATION:
             case MODIFICATION:
             case REPLICATE:
             case SEARCH:
             case DISK_COMPONENT_SCAN:
-                readerCount++;
-                break;
             case MERGE:
-                if (state == ComponentState.READABLE_MERGING) {
-                    // This should never happen unless there are two concurrent merges that were scheduled
-                    // concurrently and they have interleaving components to be merged.
-                    // This should be handled properly by the merge policy, but we guard against that here anyway.
-                    return false;
-                }
-                state = ComponentState.READABLE_MERGING;
                 readerCount++;
                 break;
             default:
@@ -87,19 +95,22 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
             throws HyracksDataException {
         switch (opType) {
             case MERGE:
+                readerCount--;
                 // In case two merge operations were scheduled to merge an overlapping set of components,
                 // the second merge will fail and it must reset those components back to their previous state.
                 if (failedOperation) {
                     state = ComponentState.READABLE_UNWRITABLE;
+                } else {
+                    state = (readerCount == 0) ? ComponentState.INACTIVE : ComponentState.UNREADABLE_UNWRITABLE;
                 }
-                // Fallthrough
+                break;
             case FORCE_MODIFICATION:
             case MODIFICATION:
             case REPLICATE:
             case SEARCH:
             case DISK_COMPONENT_SCAN:
                 readerCount--;
-                if (readerCount == 0 && state == ComponentState.READABLE_MERGING) {
+                if (readerCount == 0 && state == ComponentState.UNREADABLE_UNWRITABLE) {
                     state = ComponentState.INACTIVE;
                 }
                 break;
@@ -213,15 +224,15 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
     }
 
     @Override
-    public ChainedLSMDiskComponentBulkLoader createBulkLoader(LSMIOOperationType opType, float fillFactor,
+    public ChainedLSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor,
             boolean verifyInput, long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter,
             boolean cleanupEmptyComponent) throws HyracksDataException {
         ChainedLSMDiskComponentBulkLoader chainedBulkLoader =
-                new ChainedLSMDiskComponentBulkLoader(this, cleanupEmptyComponent);
+                new ChainedLSMDiskComponentBulkLoader(operation, this, cleanupEmptyComponent);
         if (withFilter && getLsmIndex().getFilterFields() != null) {
             chainedBulkLoader.addBulkLoader(createFilterBulkLoader());
         }
-        IChainedComponentBulkLoader indexBulkloader = opType == LSMIOOperationType.MERGE
+        IChainedComponentBulkLoader indexBulkloader = operation.getIOOpertionType() == LSMIOOperationType.MERGE
                 ? createMergeIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex)
                 : createIndexBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
         chainedBulkLoader.addBulkLoader(indexBulkloader);

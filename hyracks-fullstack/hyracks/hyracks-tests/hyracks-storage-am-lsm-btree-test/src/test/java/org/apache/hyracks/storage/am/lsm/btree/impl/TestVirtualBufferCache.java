@@ -212,4 +212,10 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
     public IFileMapManager getFileMapProvider() {
         return vbc.getFileMapProvider();
     }
+
+    @Override
+    public void closeFileIfOpen(FileReference fileRef) {
+        throw new UnsupportedOperationException();
+    }
+
 }

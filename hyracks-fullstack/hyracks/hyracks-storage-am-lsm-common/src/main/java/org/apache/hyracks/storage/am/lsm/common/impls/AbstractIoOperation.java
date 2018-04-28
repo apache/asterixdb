@@ -20,6 +20,8 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -30,6 +32,10 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     protected final FileReference target;
     protected final ILSMIOOperationCallback callback;
     protected final String indexIdentifier;
+    private Throwable failure;
+    private LSMIOOperationStatus status = LSMIOOperationStatus.SUCCESS;
+    private ILSMDiskComponent newComponent;
+    private boolean completed = false;
 
     public AbstractIoOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
             String indexIdentifier) {
@@ -62,5 +68,52 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     @Override
     public String getIndexIdentifier() {
         return indexIdentifier;
+    }
+
+    @Override
+    public Throwable getFailure() {
+        return failure;
+    }
+
+    @Override
+    public void setFailure(Throwable failure) {
+        this.failure = ExceptionUtils.suppress(this.failure, failure);
+    }
+
+    @Override
+    public LSMIOOperationStatus getStatus() {
+        return status;
+    }
+
+    @Override
+    public void setStatus(LSMIOOperationStatus status) {
+        this.status = status;
+    }
+
+    @Override
+    public ILSMDiskComponent getNewComponent() {
+        return newComponent;
+    }
+
+    @Override
+    public void setNewComponent(ILSMDiskComponent component) {
+        this.newComponent = component;
+    }
+
+    @Override
+    public synchronized void complete() {
+        if (completed) {
+            throw new IllegalStateException("Multiple destroy calls");
+        }
+        callback.completed(this);
+        completed = true;
+        notifyAll();
+    }
+
+    @Override
+    public synchronized void sync() throws InterruptedException {
+        while (!completed) {
+            wait();
+        }
     }
 }

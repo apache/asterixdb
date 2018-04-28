@@ -60,7 +60,7 @@ public class TestPrimaryIndexOperationTracker extends PrimaryIndexOperationTrack
         super.triggerScheduleFlush(logRecord);
         synchronized (callbacks) {
             for (ITestOpCallback<Void> callback : callbacks) {
-                callback.after();
+                callback.after(null);
             }
         }
     }

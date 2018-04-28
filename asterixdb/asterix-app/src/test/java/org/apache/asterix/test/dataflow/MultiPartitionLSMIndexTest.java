@@ -302,7 +302,7 @@ public class MultiPartitionLSMIndexTest {
                 }
 
                 @Override
-                public void after() {
+                public void after(Void t) {
                     synchronized (allocated) {
                         allocated.setValue(true);
                         allocated.notifyAll();
@@ -339,7 +339,7 @@ public class MultiPartitionLSMIndexTest {
                 }
 
                 @Override
-                public void after() {
+                public void after(Semaphore t) {
                 }
             });
             synchronized (proceedToScheduleFlush) {
@@ -421,7 +421,7 @@ public class MultiPartitionLSMIndexTest {
                 }
 
                 @Override
-                public void after() {
+                public void after(Void t) {
                     synchronized (finishedSchduleFlush) {
                         finishedSchduleFlush.set(true);
                         finishedSchduleFlush.notifyAll();
@@ -478,7 +478,7 @@ public class MultiPartitionLSMIndexTest {
                 }
 
                 @Override
-                public void after() {
+                public void after(ILSMMemoryComponent t) {
                     synchronized (recycledPrimary) {
                         recycledPrimary.setValue(true);
                         recycledPrimary.notifyAll();
@@ -519,7 +519,7 @@ public class MultiPartitionLSMIndexTest {
                 }
 
                 @Override
-                public void after() {
+                public void after(ILSMMemoryComponent t) {
                 }
             };
             secondaryLsmBtrees[0].addIoRecycleCallback(secondaryRecycleCallback);

@@ -16,28 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.am.lsm.common.util;
+package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.lsm.common.impls.BlockingIOOperationCallbackWrapper;
-import org.apache.logging.log4j.Level;
+import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class IOOperationUtils {
+public class NoOpIoOperationFailedCallback implements IIoOperationFailedCallback {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private IOOperationUtils() {
+    public static final NoOpIoOperationFailedCallback INSTANCE = new NoOpIoOperationFailedCallback();
+
+    private NoOpIoOperationFailedCallback() {
     }
 
-    public static void waitForIoOperation(BlockingIOOperationCallbackWrapper ioCallback) throws HyracksDataException {
-        // Note that the following call assumes that the io operation has succeeded.
-        try {
-            ioCallback.waitForIO();
-        } catch (InterruptedException e) {
-            LOGGER.log(Level.WARN, "Operation has been interrupted. returning");
-            Thread.currentThread().interrupt();
-            throw HyracksDataException.create(e);
-        }
+    @Override
+    public void operationFailed(ILSMIOOperation operation, Throwable t) {
+        LOGGER.error("Operation {} failed", operation, t);
+    }
+
+    @Override
+    public void schedulerFailed(ILSMIOOperationScheduler scheduler, Throwable failure) {
+        LOGGER.error("IO Scheduler failed", failure);
     }
 }

@@ -91,7 +91,7 @@ public class IoCallbackFailureTest {
             }
 
             @Override
-            public void after() throws HyracksDataException {
+            public void after(ILSMMemoryComponent c) throws HyracksDataException {
                 // No Op
             }
         };

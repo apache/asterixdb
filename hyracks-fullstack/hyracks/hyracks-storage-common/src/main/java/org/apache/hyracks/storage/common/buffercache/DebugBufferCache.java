@@ -246,4 +246,10 @@ public class DebugBufferCache implements IBufferCache {
         deleteFileCount.incrementAndGet();
         bufferCache.deleteFile(file);
     }
+
+    @Override
+    public void closeFileIfOpen(FileReference fileRef) {
+        bufferCache.closeFileIfOpen(fileRef);
+    }
+
 }

@@ -253,7 +253,7 @@ public class StorageTestUtils {
                 }
 
                 @Override
-                public void after() {
+                public void after(Semaphore t) {
                 }
             });
             Callable<Boolean> callable = new Callable<Boolean>() {
@@ -292,7 +292,7 @@ public class StorageTestUtils {
                 }
 
                 @Override
-                public void after() {
+                public void after(Semaphore t) {
                 }
             });
         }
@@ -319,7 +319,7 @@ public class StorageTestUtils {
                 }
 
                 @Override
-                public void after() {
+                public void after(Semaphore t) {
                 }
             });
         }

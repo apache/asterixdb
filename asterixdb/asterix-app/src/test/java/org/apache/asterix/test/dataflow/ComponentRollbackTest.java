@@ -20,7 +20,9 @@ package org.apache.asterix.test.dataflow;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import org.apache.asterix.app.bootstrap.TestNodeController;
@@ -29,7 +31,7 @@ import org.apache.asterix.app.data.gen.TupleGenerator;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
-import org.apache.asterix.common.ioopcallbacks.AbstractLSMIOOperationCallback;
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TransactionOptions;
@@ -50,6 +52,7 @@ import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.btree.impl.AllowTestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
@@ -146,16 +149,27 @@ public class ComponentRollbackTest {
             StorageTestUtils.searchAndAssertCount(nc, PARTITION, StorageTestUtils.TOTAL_NUM_OF_RECORDS);
             ILSMIndexAccessor lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).refresh();
-            ((AbstractLSMIOOperationCallback) lsmBtree.getIOOperationCallback()).updateLastLSN(0);
+            ILSMComponentId next =
+                    dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).getId();
+            long flushLsn = nc.getTransactionSubsystem().getLogManager().getAppendLSN();
+            Map<String, Object> flushMap = new HashMap<>();
+            flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
+            flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, next);
+            lsmAccessor.getOpContext().setParameters(flushMap);
             // rollback a memory component
             lsmAccessor.deleteComponents(memoryComponentsPredicate);
             StorageTestUtils.searchAndAssertCount(nc, PARTITION,
                     StorageTestUtils.TOTAL_NUM_OF_RECORDS - StorageTestUtils.RECORDS_PER_COMPONENT);
             // rollback the last disk component
             lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            long lsn = AbstractLSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
+            long lsn = LSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
             dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).refresh();
-            ((AbstractLSMIOOperationCallback) lsmBtree.getIOOperationCallback()).updateLastLSN(0);
+            next = dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).getId();
+            flushLsn = nc.getTransactionSubsystem().getLogManager().getAppendLSN();
+            flushMap = new HashMap<>();
+            flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
+            flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, next);
+            lsmAccessor.getOpContext().setParameters(flushMap);
             DiskComponentLsnPredicate pred = new DiskComponentLsnPredicate(lsn);
             lsmAccessor.deleteComponents(pred);
             StorageTestUtils.searchAndAssertCount(nc, PARTITION,
@@ -203,7 +217,13 @@ public class ComponentRollbackTest {
             StorageTestUtils.searchAndAssertCount(nc, PARTITION, StorageTestUtils.TOTAL_NUM_OF_RECORDS);
             ILSMIndexAccessor lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).refresh();
-            ((AbstractLSMIOOperationCallback) lsmBtree.getIOOperationCallback()).updateLastLSN(0);
+            ILSMComponentId next =
+                    dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).getId();
+            long flushLsn = nc.getTransactionSubsystem().getLogManager().getAppendLSN();
+            Map<String, Object> flushMap = new HashMap<>();
+            flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
+            flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, next);
+            lsmAccessor.getOpContext().setParameters(flushMap);
             // rollback a memory component
             lsmAccessor.deleteComponents(memoryComponentsPredicate);
             StorageTestUtils.searchAndAssertCount(nc, PARTITION,
@@ -227,9 +247,14 @@ public class ComponentRollbackTest {
             StorageTestUtils.searchAndAssertCount(nc, PARTITION, StorageTestUtils.TOTAL_NUM_OF_RECORDS);
             // rollback the last disk component
             lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            long lsn = AbstractLSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
+            long lsn = LSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
             dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).refresh();
-            ((AbstractLSMIOOperationCallback) lsmBtree.getIOOperationCallback()).updateLastLSN(0);
+            next = dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).getId();
+            flushLsn = nc.getTransactionSubsystem().getLogManager().getAppendLSN();
+            flushMap = new HashMap<>();
+            flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
+            flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, next);
+            lsmAccessor.getOpContext().setParameters(flushMap);
             DiskComponentLsnPredicate pred = new DiskComponentLsnPredicate(lsn);
             lsmAccessor.deleteComponents(pred);
             StorageTestUtils.searchAndAssertCount(nc, PARTITION,
@@ -278,7 +303,13 @@ public class ComponentRollbackTest {
             // now that we enetered, we will rollback
             ILSMIndexAccessor lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).refresh();
-            ((AbstractLSMIOOperationCallback) lsmBtree.getIOOperationCallback()).updateLastLSN(0);
+            ILSMComponentId next =
+                    dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).getId();
+            long flushLsn = nc.getTransactionSubsystem().getLogManager().getAppendLSN();
+            Map<String, Object> flushMap = new HashMap<>();
+            flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
+            flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, next);
+            lsmAccessor.getOpContext().setParameters(flushMap);
             // rollback a memory component
             lsmAccessor.deleteComponents(
                     c -> (c instanceof ILSMMemoryComponent && ((ILSMMemoryComponent) c).isModified()));
@@ -297,10 +328,14 @@ public class ComponentRollbackTest {
             // wait till firstSearcher enter the components
             secondSearcher.waitUntilEntered();
             lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-            long lsn = AbstractLSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
-
+            long lsn = LSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
             dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).refresh();
-            ((AbstractLSMIOOperationCallback) lsmBtree.getIOOperationCallback()).updateLastLSN(0);
+            next = dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).getId();
+            flushLsn = nc.getTransactionSubsystem().getLogManager().getAppendLSN();
+            flushMap = new HashMap<>();
+            flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
+            flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, next);
+            lsmAccessor.getOpContext().setParameters(flushMap);
             DiskComponentLsnPredicate pred = new DiskComponentLsnPredicate(lsn);
             lsmAccessor.deleteComponents(pred);
             // now that the rollback has completed, we will unblock the search
@@ -407,11 +442,11 @@ public class ComponentRollbackTest {
             // select the components to merge... the last three
             int numMergedComponents = 3;
             List<ILSMDiskComponent> mergedComponents = new ArrayList<>();
-            long lsn = AbstractLSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
+            long lsn = LSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
             for (int i = 0; i < numMergedComponents; i++) {
                 mergedComponents.add(diskComponents.get(i));
             }
-            mergeAccessor.scheduleMerge(lsmBtree.getIOOperationCallback(), mergedComponents);
+            mergeAccessor.scheduleMerge(mergedComponents);
             merger.waitUntilCount(1);
             // now that we enetered, we will rollback
             Rollerback rollerback = new Rollerback(lsmBtree, new DiskComponentLsnPredicate(lsn));
@@ -590,11 +625,11 @@ public class ComponentRollbackTest {
             // select the components to merge... the last three
             int numMergedComponents = 3;
             List<ILSMDiskComponent> mergedComponents = new ArrayList<>();
-            long lsn = AbstractLSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
+            long lsn = LSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
             for (int i = 0; i < numMergedComponents; i++) {
                 mergedComponents.add(diskComponents.get(i));
             }
-            mergeAccessor.scheduleMerge(lsmBtree.getIOOperationCallback(), mergedComponents);
+            mergeAccessor.scheduleMerge(mergedComponents);
             merger.waitUntilCount(1);
             // we will block search
             lsmBtree.clearSearchCallbacks();
@@ -659,12 +694,12 @@ public class ComponentRollbackTest {
             ILSMIndexAccessor mergeAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
             // select the components to merge... the last three
             List<ILSMDiskComponent> mergedComponents = new ArrayList<>();
-            long lsn = AbstractLSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
+            long lsn = LSMIOOperationCallback.getTreeIndexLSN(diskComponents.get(0).getMetadata());
             int numMergedComponents = 3;
             for (int i = 0; i < numMergedComponents; i++) {
                 mergedComponents.add(diskComponents.get(i));
             }
-            mergeAccessor.scheduleMerge(lsmBtree.getIOOperationCallback(), mergedComponents);
+            mergeAccessor.scheduleMerge(mergedComponents);
             merger.waitUntilCount(1);
             // we will block search
             lsmBtree.clearSearchCallbacks();
@@ -704,7 +739,13 @@ public class ComponentRollbackTest {
                     ILSMIndexAccessor lsmAccessor = lsmBtree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
                     try {
                         dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).refresh();
-                        ((AbstractLSMIOOperationCallback) lsmBtree.getIOOperationCallback()).updateLastLSN(0);
+                        ILSMComponentId next =
+                                dsLifecycleMgr.getComponentIdGenerator(StorageTestUtils.DATASET_ID, PARTITION).getId();
+                        long flushLsn = nc.getTransactionSubsystem().getLogManager().getAppendLSN();
+                        Map<String, Object> flushMap = new HashMap<>();
+                        flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
+                        flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, next);
+                        lsmAccessor.getOpContext().setParameters(flushMap);
                         lsmAccessor.deleteComponents(predicate);
                     } catch (HyracksDataException e) {
                         failure = e;
@@ -733,9 +774,8 @@ public class ComponentRollbackTest {
         @Override
         public boolean test(ILSMComponent c) {
             try {
-                return c instanceof ILSMMemoryComponent
-                        || (c instanceof ILSMDiskComponent && AbstractLSMIOOperationCallback
-                                .getTreeIndexLSN(((ILSMDiskComponent) c).getMetadata()) >= lsn);
+                return c instanceof ILSMMemoryComponent || (c instanceof ILSMDiskComponent
+                        && LSMIOOperationCallback.getTreeIndexLSN(((ILSMDiskComponent) c).getMetadata()) >= lsn);
             } catch (HyracksDataException e) {
                 e.printStackTrace();
                 return false;

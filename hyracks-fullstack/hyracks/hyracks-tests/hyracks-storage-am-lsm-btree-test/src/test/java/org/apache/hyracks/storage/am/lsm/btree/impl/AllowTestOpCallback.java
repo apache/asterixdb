@@ -35,7 +35,7 @@ public class AllowTestOpCallback implements ITestOpCallback<Semaphore> {
     }
 
     @Override
-    public void after() throws HyracksDataException {
+    public void after(Semaphore t) throws HyracksDataException {
 
     }
 }

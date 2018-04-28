@@ -25,7 +25,6 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.config.AccessMethodTestsConfig;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.rtree.util.LSMRTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.rtree.util.LSMRTreeWithAntiMatterTuplesTestContext;
@@ -75,9 +74,8 @@ public class LSMRTreeWithAntiMatterTuplesDeleteTest extends AbstractRTreeDeleteT
     }
 
     protected void flush(AbstractRTreeTestContext ctx) throws HyracksDataException {
-        ILSMIndex lsmIndex = (ILSMIndex) ctx.getIndex();
         ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
-        accessor.scheduleFlush(lsmIndex.getIOOperationCallback());
+        accessor.scheduleFlush();
     }
 
     @Override
