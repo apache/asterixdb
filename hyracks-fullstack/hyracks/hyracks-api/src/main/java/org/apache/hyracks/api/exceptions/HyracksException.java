@@ -40,6 +40,17 @@ public class HyracksException extends IOException implements IFormattedException
         return new HyracksException(cause);
     }
 
+    public static HyracksException wrapOrThrowUnchecked(Throwable cause) {
+        if (cause instanceof Error) {
+            throw (Error) cause;
+        } else if (cause instanceof RuntimeException) {
+            throw (RuntimeException) cause;
+        } else if (cause instanceof HyracksException) {
+            return (HyracksException) cause;
+        }
+        return new HyracksException(cause);
+    }
+
     public static HyracksException create(int code, Serializable... params) {
         return new HyracksException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), params);
     }

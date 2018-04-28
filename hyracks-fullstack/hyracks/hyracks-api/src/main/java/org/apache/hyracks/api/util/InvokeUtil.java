@@ -242,14 +242,13 @@ public class InvokeUtil {
      */
     public static void runWithTimeout(ThrowingAction action, BooleanSupplier stopCondition, long timeout, TimeUnit unit)
             throws Exception {
-        long remainingTime = unit.toNanos(timeout);
+        final long waitTime = unit.toNanos(timeout);
         final long startTime = System.nanoTime();
         while (!stopCondition.getAsBoolean()) {
-            if (remainingTime <= 0) {
+            action.run();
+            if (System.nanoTime() - startTime >= waitTime) {
                 throw new TimeoutException("Stop condition was not met after " + unit.toSeconds(timeout) + " seconds.");
             }
-            action.run();
-            remainingTime -= System.nanoTime() - startTime;
         }
     }
 }

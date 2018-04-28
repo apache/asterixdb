@@ -209,17 +209,12 @@ public class JobRun implements IJobStatusConditionVariable {
     }
 
     public void registerOperatorLocation(OperatorDescriptorId op, int partition, String location) {
-        Map<Integer, String> locations = operatorLocations.get(op);
-        if (locations == null) {
-            locations = new HashMap<Integer, String>();
-            operatorLocations.put(op, locations);
-        }
-        locations.put(partition, location);
+        operatorLocations.computeIfAbsent(op, k -> new HashMap<>()).put(partition, location);
     }
 
     @Override
     public synchronized void waitForCompletion() throws Exception {
-        while (status != JobStatus.TERMINATED && status != JobStatus.FAILURE) {
+        while (status == JobStatus.PENDING || status == JobStatus.RUNNING) {
             wait();
         }
         if (exceptions != null && !exceptions.isEmpty()) {
