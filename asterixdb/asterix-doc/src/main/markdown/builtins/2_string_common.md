@@ -528,7 +528,7 @@
  * Arguments:
     * `string` : a `string` to be extracted,
     * `offset` : an `tinyint`/`smallint`/`integer`/`bigint` value as the starting offset of the substring in `string`
-                 (starting at 0),
+                 (starting at 0). If negative then counted from the end of the string,
     * `length` : (Optional) an an `tinyint`/`smallint`/`integer`/`bigint` value as the length of the substring.
  * Return Value:
     * a `string` that represents the substring,
@@ -548,6 +548,7 @@
 
         "str"
 
+The function has an alias `substring`.
 
 ### trim ###
  * Syntax:

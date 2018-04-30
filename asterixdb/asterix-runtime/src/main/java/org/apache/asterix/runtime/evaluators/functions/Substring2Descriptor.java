@@ -86,8 +86,7 @@ public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescri
 
                         byte[] bytes = argStart.getByteArray();
                         int offset = argStart.getStartOffset();
-                        int start = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset)
-                                - baseOffset;
+                        int start = ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset);
                         bytes = argString.getByteArray();
                         offset = argString.getStartOffset();
                         int len = argString.getLength();
@@ -98,7 +97,8 @@ public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescri
                         string.set(bytes, offset + 1, len - 1);
                         array.reset();
                         try {
-                            UTF8StringPointable.substr(string, start, Integer.MAX_VALUE, builder, array);
+                            int actualStart = start >= 0 ? start - baseOffset : string.getStringLength() + start;
+                            UTF8StringPointable.substr(string, actualStart, Integer.MAX_VALUE, builder, array);
                         } catch (StringIndexOutOfBoundsException e) {
                             throw new RuntimeDataException(ErrorCode.OUT_OF_BOUND, getIdentifier(), 1, start);
                         } catch (IOException e) {

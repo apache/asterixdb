@@ -18,5 +18,5 @@
  */
 use dataverse test;
 
-let $c1 := substring("HEllow",-1)
+let $c1 := substring("HEllow",-3)
 return {"result1": $c1}

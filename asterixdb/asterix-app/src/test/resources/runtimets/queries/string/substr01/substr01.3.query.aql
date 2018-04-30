@@ -36,7 +36,7 @@ let $str7:="This is a test string"
 let $str8:=substring($str7,0)
 
 let $str9:="This is a test string"
-let $str10:=substring($str9,-1)
+let $str10:=substring($str9,-6)
 
 let $str11:="This is a test string"
 let $str12:="This is a another test string"
