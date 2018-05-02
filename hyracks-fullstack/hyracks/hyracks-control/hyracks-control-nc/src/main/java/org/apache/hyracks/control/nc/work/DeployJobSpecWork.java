@@ -28,7 +28,7 @@ import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
 
 /**
- * pre-distribute a job that can be executed later
+ * Deploy a job that can be executed later
  *
  */
 public class DeployJobSpecWork extends AbstractWork {
@@ -37,19 +37,23 @@ public class DeployJobSpecWork extends AbstractWork {
     private final byte[] acgBytes;
     private final CcId ccId;
     private final DeployedJobSpecId deployedJobSpecId;
+    private final boolean upsert;
 
     public DeployJobSpecWork(NodeControllerService ncs, DeployedJobSpecId deployedJobSpecId, byte[] acgBytes,
-            CcId ccId) {
+            boolean upsert, CcId ccId) {
         this.ncs = ncs;
         this.deployedJobSpecId = deployedJobSpecId;
         this.acgBytes = acgBytes;
         this.ccId = ccId;
+        this.upsert = upsert;
     }
 
     @Override
     public void run() {
         try {
-            ncs.checkForDuplicateDeployedJobSpec(deployedJobSpecId);
+            if (!upsert) {
+                ncs.checkForDuplicateDeployedJobSpec(deployedJobSpecId);
+            }
             ActivityClusterGraph acg =
                     (ActivityClusterGraph) DeploymentUtils.deserialize(acgBytes, null, ncs.getContext());
             ncs.storeActivityClusterGraph(deployedJobSpecId, acg);

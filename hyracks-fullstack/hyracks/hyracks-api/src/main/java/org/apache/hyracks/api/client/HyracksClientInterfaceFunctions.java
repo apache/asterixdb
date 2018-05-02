@@ -39,8 +39,9 @@ public class HyracksClientInterfaceFunctions {
         GET_JOB_STATUS,
         GET_JOB_INFO,
         START_JOB,
-        DISTRIBUTE_JOB,
-        DESTROY_JOB,
+        DEPLOY_JOB,
+        UNDEPLOY_JOB,
+        UPSERT_DEPLOYED_JOB,
         CANCEL_JOB,
         GET_DATASET_DIRECTORY_SERIVICE_INFO,
         GET_DATASET_RESULT_STATUS,
@@ -107,6 +108,32 @@ public class HyracksClientInterfaceFunctions {
         }
     }
 
+    public static class UpsertDeployedJobSpecFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final byte[] acggfBytes;
+
+        private final DeployedJobSpecId deployedJobSpecId;
+
+        public UpsertDeployedJobSpecFunction(DeployedJobSpecId deployedJobSpecId, byte[] acggfBytes) {
+            this.deployedJobSpecId = deployedJobSpecId;
+            this.acggfBytes = acggfBytes;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.UPSERT_DEPLOYED_JOB;
+        }
+
+        public byte[] getACGGFBytes() {
+            return acggfBytes;
+        }
+
+        public DeployedJobSpecId getDeployedJobSpecId() {
+            return deployedJobSpecId;
+        }
+    }
+
     public static class DeployJobSpecFunction extends Function {
         private static final long serialVersionUID = 1L;
 
@@ -118,7 +145,7 @@ public class HyracksClientInterfaceFunctions {
 
         @Override
         public FunctionId getFunctionId() {
-            return FunctionId.DISTRIBUTE_JOB;
+            return FunctionId.DEPLOY_JOB;
         }
 
         public byte[] getACGGFBytes() {
@@ -159,7 +186,7 @@ public class HyracksClientInterfaceFunctions {
 
         @Override
         public FunctionId getFunctionId() {
-            return FunctionId.DESTROY_JOB;
+            return FunctionId.UNDEPLOY_JOB;
         }
 
         public DeployedJobSpecId getDeployedJobSpecId() {

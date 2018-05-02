@@ -40,9 +40,6 @@ public class DeployedJobSpecStore {
     public void addDeployedJobSpecDescriptor(DeployedJobSpecId deployedJobSpecId,
             ActivityClusterGraph activityClusterGraph, JobSpecification jobSpecification,
             Set<Constraint> activityClusterGraphConstraints) throws HyracksException {
-        if (deployedJobSpecDescriptorMap.get(deployedJobSpecId) != null) {
-            throw HyracksException.create(ErrorCode.DUPLICATE_DEPLOYED_JOB, deployedJobSpecId);
-        }
         DeployedJobSpecDescriptor descriptor =
                 new DeployedJobSpecDescriptor(activityClusterGraph, jobSpecification, activityClusterGraphConstraints);
         deployedJobSpecDescriptorMap.put(deployedJobSpecId, descriptor);

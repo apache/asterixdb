@@ -111,6 +111,14 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
+    public DeployedJobSpecId upsertDeployedJobSpec(DeployedJobSpecId deployedJobSpecId, JobSpecification jobSpec)
+            throws Exception {
+        JobSpecificationActivityClusterGraphGeneratorFactory jsacggf =
+                new JobSpecificationActivityClusterGraphGeneratorFactory(jobSpec);
+        return hci.upsertDeployedJobSpec(deployedJobSpecId, JavaSerializationUtils.serialize(jsacggf));
+    }
+
+    @Override
     public DeployedJobSpecId deployJobSpec(JobSpecification jobSpec) throws Exception {
         JobSpecificationActivityClusterGraphGeneratorFactory jsacggf =
                 new JobSpecificationActivityClusterGraphGeneratorFactory(jobSpec);

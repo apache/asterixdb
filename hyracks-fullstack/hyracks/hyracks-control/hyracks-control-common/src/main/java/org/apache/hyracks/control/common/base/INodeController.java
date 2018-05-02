@@ -54,7 +54,8 @@ public interface INodeController {
 
     void undeployBinary(DeploymentId deploymentId) throws Exception;
 
-    void deployJobSpec(DeployedJobSpecId deployedJobSpecId, byte[] planBytes) throws Exception;
+    void deployJobSpec(DeployedJobSpecId deployedJobSpecId, byte[] planBytes, boolean checkForDuplicate)
+            throws Exception;
 
     void undeployJobSpec(DeployedJobSpecId deployedJobSpecId) throws Exception;
 

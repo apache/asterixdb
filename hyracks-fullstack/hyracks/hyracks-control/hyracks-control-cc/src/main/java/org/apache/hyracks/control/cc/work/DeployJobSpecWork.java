@@ -39,20 +39,24 @@ public class DeployJobSpecWork extends SynchronizableWork {
     private final byte[] acggfBytes;
     private final DeployedJobSpecId deployedJobSpecId;
     private final IResultCallback<DeployedJobSpecId> callback;
+    private final boolean upsert;
 
     public DeployJobSpecWork(ClusterControllerService ccs, byte[] acggfBytes, DeployedJobSpecId deployedJobSpecId,
-            IResultCallback<DeployedJobSpecId> callback) {
+            boolean upsert, IResultCallback<DeployedJobSpecId> callback) {
         this.deployedJobSpecId = deployedJobSpecId;
         this.ccs = ccs;
         this.acggfBytes = acggfBytes;
         this.callback = callback;
+        this.upsert = upsert;
     }
 
     @Override
     protected void doRun() throws Exception {
         try {
             final CCServiceContext ccServiceCtx = ccs.getContext();
-            ccs.getDeployedJobSpecStore().checkForExistingDeployedJobSpecDescriptor(deployedJobSpecId);
+            if (!upsert) {
+                ccs.getDeployedJobSpecStore().checkForExistingDeployedJobSpecDescriptor(deployedJobSpecId);
+            }
             IActivityClusterGraphGeneratorFactory acggf =
                     (IActivityClusterGraphGeneratorFactory) DeploymentUtils.deserialize(acggfBytes, null, ccServiceCtx);
             IActivityClusterGraphGenerator acgg =
@@ -65,7 +69,7 @@ public class DeployJobSpecWork extends SynchronizableWork {
 
             INodeManager nodeManager = ccs.getNodeManager();
             for (NodeControllerState node : nodeManager.getAllNodeControllerStates()) {
-                node.getNodeController().deployJobSpec(deployedJobSpecId, acgBytes);
+                node.getNodeController().deployJobSpec(deployedJobSpecId, acgBytes, upsert);
             }
             callback.setValue(deployedJobSpecId);
         } catch (Exception e) {

@@ -199,6 +199,16 @@ public class DeployedJobSpecsTest {
         for (int i = 0; i < 100; i++) {
             hcc.startJob(distributedId2, new HashMap<>());
         }
+
+        //Change the second job into the first job and see whether it runs
+        hcc.upsertDeployedJobSpec(distributedId2, spec1);
+        JobId jobRunId4 = hcc.startJob(distributedId2, new HashMap<>());
+        hcc.waitForCompletion(jobRunId4);
+
+        //Run it one more time
+        JobId jobRunId5 = hcc.startJob(distributedId2, new HashMap<>());
+        hcc.waitForCompletion(jobRunId5);
+
     }
 
     @AfterClass

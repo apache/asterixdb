@@ -470,7 +470,6 @@ public class NodeControllerService implements IControllerService {
     }
 
     private ConcurrentHashMap<CcId, Serializable> getDistributedState() {
-        //noinspection unchecked
         return (ConcurrentHashMap<CcId, Serializable>) serviceCtx.getDistributedState();
     }
 
@@ -566,9 +565,6 @@ public class NodeControllerService implements IControllerService {
 
     public void storeActivityClusterGraph(DeployedJobSpecId deployedJobSpecId, ActivityClusterGraph acg)
             throws HyracksException {
-        if (deployedJobSpecActivityClusterGraphMap.get(deployedJobSpecId.getId()) != null) {
-            throw HyracksException.create(ErrorCode.DUPLICATE_DEPLOYED_JOB, deployedJobSpecId);
-        }
         deployedJobSpecActivityClusterGraphMap.put(deployedJobSpecId.getId(), acg);
     }
 
