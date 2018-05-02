@@ -63,7 +63,7 @@ RecordConstructor [
           FunctionCall null.string-length@1[
             LiteralExpr [STRING] [UC Irvine]
           ]
-          /
+          div
           LiteralExpr [LONG] [2]
         ]
         -

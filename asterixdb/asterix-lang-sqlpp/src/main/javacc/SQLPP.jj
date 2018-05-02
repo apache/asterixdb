@@ -2143,23 +2143,25 @@ Expression AddExpr()throws ParseException:
 Expression MultExpr()throws ParseException:
 {
   OperatorExpr op = null;
+  OperatorType opType = null;
   Expression operand = null;
 }
 {
     operand = ExponentExpr()
 
-    (( <MUL> | <DIV> | <MOD> | <IDIV>)
+    ( (
+        <MUL> { opType = OperatorType.MUL; } |
+        <DIVIDE> { opType = OperatorType.DIVIDE; } |
+        <DIV> { opType = OperatorType.DIV; } |
+        ( <MOD> | <PERCENT> ) { opType = OperatorType.MOD; }
+      )
       {
         if (op == null) {
           op = new OperatorExpr();
           op.addOperand(operand);
           op.setCurrentop(true);
         }
-        try{
-            op.addOperator(token.image);
-        } catch (Exception e){
-            throw new ParseException(e.getMessage());
-        }
+        op.addOperator(opType);
     }
     operand = ExponentExpr()
     {
@@ -3311,10 +3313,10 @@ TOKEN :
 {
     <CARET : "^">
   | <CONCAT : "||">
-  | <DIV : "/">
-  | <IDIV : "idiv">
+  | <DIVIDE : "/">
+  | <DIV : "div">
   | <MINUS : "-">
-  | <MOD : "%">
+  | <MOD : "mod">
   | <MUL : "*">
   | <PLUS : "+">
 
@@ -3327,6 +3329,7 @@ TOKEN :
   | <COLON : ":">
   | <COMMA : ",">
   | <DOT : ".">
+  | <PERCENT: "%">
   | <QUES : "?">
   | <SEMICOLON : ";">
   | <SHARP : "#">

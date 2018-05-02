@@ -31,11 +31,10 @@ public enum OperatorType {
     MINUS("-"),
     CONCAT("||"),
     MUL("*"),
-    DIV("/"), // float/double
-    // divide
-    MOD("%"),
+    DIVIDE("/"),
+    DIV("div"),
+    MOD("mod"),
     CARET("^"),
-    IDIV("idiv"), // integer divide
     FUZZY_EQ("~="),
     LIKE("like"),
     NOT_LIKE("not_like"),

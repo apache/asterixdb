@@ -22,47 +22,59 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.exceptions.OverflowException;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class NumericDivideDescriptor extends AbstractNumericArithmeticEval {
+import com.google.common.math.LongMath;
+
+public class NumericPowerDescriptor extends AbstractNumericArithmeticEval {
+
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new NumericDivideDescriptor();
+            return new NumericPowerDescriptor();
         }
     };
 
+    /* (non-Javadoc)
+     * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateInteger(long, long)
+     */
+    @Override
+    protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
+        if (rhs > Integer.MAX_VALUE) {
+            throw new OverflowException(getIdentifier());
+        }
+        return LongMath.checkedPow(lhs, (int) rhs);
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateDouble(double, double)
+     */
+    @Override
+    protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException {
+        return Math.pow(lhs, rhs);
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.asterix.om.functions.AbstractFunctionDescriptor#getIdentifier()
+     */
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.NUMERIC_DIVIDE;
+        return BuiltinFunctions.NUMERIC_POWER;
     }
 
     @Override
-    protected ATypeTag getNumericResultType(ATypeTag argTypeMax) {
-        return argTypeMax.ordinal() < ATypeTag.FLOAT.ordinal() ? ATypeTag.DOUBLE : argTypeMax;
-    }
-
-    @Override
-    protected double evaluateDouble(double lhs, double rhs) {
-        return lhs / rhs;
-    }
-
-    @Override
-    protected long evaluateInteger(long lhs, long rhs) {
-        throw new IllegalStateException();
-    }
-
-    @Override
-    protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly) {
-        throw new NotImplementedException("Divide operation is not defined for temporal types");
+    protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
+            throws HyracksDataException {
+        throw new UnsupportedTypeException(getIdentifier().getName(), ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
     }
 
     @Override
     protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
-        throw new UnsupportedTypeException(getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
+        throw new UnsupportedTypeException(getIdentifier().getName(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
     }
+
 }

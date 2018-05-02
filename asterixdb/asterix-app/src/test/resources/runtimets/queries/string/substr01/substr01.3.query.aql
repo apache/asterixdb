@@ -42,5 +42,5 @@ let $str11:="This is a test string"
 let $str12:="This is a another test string"
 let $str13:=substring(string-concat([$str11,$str12]),20)
 
-let $str14:=substring("UC Irvine",string-length("UC Irvine")/2 - 1)
+let $str14:=substring("UC Irvine",string-length("UC Irvine") div 2 - 1)
 return { "str2":$str2,"str4":$str4,"str6":$str6,"str8":$str8,"str10":$str10,"str13":$str13,"str14":$str14}

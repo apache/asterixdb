@@ -283,7 +283,7 @@ An example comparison expression (which yields the boolean value true) is shown 
 ### Arithmetic Expressions
 
     AddExpr  ::= MultExpr ( ( "+" | "-" ) MultExpr )*
-    MultExpr ::= UnaryExpr ( ( "*" | "/" | "%" | "^"| "idiv" ) UnaryExpr )*
+    MultExpr ::= UnaryExpr ( ( "*" | "/" | "div" | "%" | "mod" | "^" ) UnaryExpr )*
     UnaryExpr ::= ( ( "+" | "-" ) )? ValueExpr
 
 AQL also supports the usual cast of characters for arithmetic expressions.

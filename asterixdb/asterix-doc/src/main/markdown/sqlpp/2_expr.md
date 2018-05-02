@@ -49,9 +49,9 @@ The following table summarizes the precedence order (from higher to lower) of th
 |-----------------------------------------------------------------------------|-----------|
 | EXISTS, NOT EXISTS                                                          |  Collection emptiness testing |
 | ^                                                                           |  Exponentiation  |
-| *, /, %                                                                     |  Multiplication, division, modulo |
+| *, /, DIV, MOD (%)                                                          |  Multiplication, division, modulo |
 | +, -                                                                        |  Addition, subtraction  |
-| &#124;&#124;                                                                          |  String concatenation |
+| &#124;&#124;                                                                |  String concatenation |
 | IS NULL, IS NOT NULL, IS MISSING, IS NOT MISSING, <br/>IS UNKNOWN, IS NOT UNKNOWN, IS VALUED, IS NOT VALUED | Unknown value comparison |
 | BETWEEN, NOT BETWEEN                                                        | Range comparison (inclusive on both sides) |
 | =, !=, <>, <, >, <=, >=, LIKE, NOT LIKE, IN, NOT IN                             | Comparison  |
@@ -71,7 +71,10 @@ Arithmetic operators are used to exponentiate, add, subtract, multiply, and divi
 |--------------|-------------------------------------------------------------------------|------------|
 | +, -         |  As unary operators, they denote a <br/>positive or negative expression | SELECT VALUE -1; |
 | +, -         |  As binary operators, they add or subtract                              | SELECT VALUE 1 + 2; |
-| *, /, %      |  Multiply, divide, modulo                                               | SELECT VALUE 4 / 2.0; |
+| *            |  Multiply                                                               | SELECT VALUE 4 * 2; |
+| /            |  Divide (returns a value of type `double` if both operands are integers)| SELECT VALUE 5 / 2; |
+| DIV          |  Divide (returns an integer value if both operands are integers)        | SELECT VALUE 5 DIV 2; |
+| MOD (%)      |  Modulo                                                                 | SELECT VALUE 5 % 2; |
 | ^            |  Exponentiation                                                         | SELECT VALUE 2^3;       |
 | &#124;&#124; |  String concatenation                                                   | SELECT VALUE "ab"&#124;&#124;"c"&#124;&#124;"d";       |
 

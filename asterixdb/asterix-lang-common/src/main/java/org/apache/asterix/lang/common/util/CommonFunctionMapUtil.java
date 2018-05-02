@@ -39,7 +39,6 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("upper", "uppercase"); // upper, internal: uppercase
         addFunctionMapping("title", "initcap"); // title, internal: initcap
         addFunctionMapping("regexp_contains", "matches"); // regexp_contains, internal: matches
-        addFunctionMapping("power", "caret"); //pow, internal: caret
         addFunctionMapping("int", "integer"); // int, internal: integer
 
         // The "mapped-to" names are to be deprecated.

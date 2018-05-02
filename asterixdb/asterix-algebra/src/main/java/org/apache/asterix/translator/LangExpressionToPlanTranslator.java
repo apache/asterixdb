@@ -42,7 +42,6 @@ import org.apache.asterix.lang.aql.util.RangeMapBuilder;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
-import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -1261,17 +1260,17 @@ class LangExpressionToPlanTranslator
             case MUL:
                 fid = BuiltinFunctions.NUMERIC_MULTIPLY;
                 break;
-            case DIV:
+            case DIVIDE:
                 fid = BuiltinFunctions.NUMERIC_DIVIDE;
+                break;
+            case DIV:
+                fid = BuiltinFunctions.NUMERIC_DIV;
                 break;
             case MOD:
                 fid = BuiltinFunctions.NUMERIC_MOD;
                 break;
-            case IDIV:
-                fid = BuiltinFunctions.NUMERIC_IDIV;
-                break;
             case CARET:
-                fid = BuiltinFunctions.CARET;
+                fid = BuiltinFunctions.NUMERIC_POWER;
                 break;
             case AND:
                 fid = AlgebricksBuiltinFunctions.AND;

@@ -84,10 +84,18 @@ public class OperatorExpr extends AbstractExpression {
         exprList.add(operand);
     }
 
-    public static final boolean opIsComparison(OperatorType t) {
-        boolean cmp = t == OperatorType.EQ || t == OperatorType.NEQ || t == OperatorType.GT;
-        cmp = cmp || t == OperatorType.GE || t == OperatorType.LT || t == OperatorType.LE;
-        return cmp;
+    public static boolean opIsComparison(OperatorType t) {
+        switch (t) {
+            case EQ:
+            case NEQ:
+            case GT:
+            case GE:
+            case LT:
+            case LE:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public void addOperator(String strOp) throws CompilationException {
