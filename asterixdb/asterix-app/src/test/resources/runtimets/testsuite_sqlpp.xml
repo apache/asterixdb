@@ -9863,5 +9863,27 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="limit">
+    <test-case FilePath="limit">
+      <compilation-unit name="push-limit-to-primary-scan">
+        <output-dir compare="Text">push-limit-to-primary-scan</output-dir>
+      </compilation-unit>
+    </test-case>
+     <test-case FilePath="limit">
+       <compilation-unit name="push-limit-to-primary-scan-select">
+         <output-dir compare="Text">push-limit-to-primary-scan-select</output-dir>
+       </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
+       <compilation-unit name="push-limit-to-primary-lookup">
+         <output-dir compare="Text">push-limit-to-primary-lookup</output-dir>
+       </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
+       <compilation-unit name="push-limit-to-primary-lookup-select">
+         <output-dir compare="Text">push-limit-to-primary-lookup-select</output-dir>
+       </compilation-unit>
+    </test-case>
+  </test-group>
   &GeoQueries;
 </test-suite>

@@ -35,11 +35,11 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExp
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -225,8 +225,10 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     public ILogicalOperator visitUnnestMapOperator(UnnestMapOperator op, Void arg) throws AlgebricksException {
         ArrayList<LogicalVariable> newInputList = new ArrayList<>();
         newInputList.addAll(op.getVariables());
+        Mutable<ILogicalExpression> newSelectCondition =
+                op.getSelectCondition() != null ? deepCopyExpressionRef(op.getSelectCondition()) : null;
         return new UnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
-                new ArrayList<>(op.getVariableTypes()), op.propagatesInput());
+                new ArrayList<>(op.getVariableTypes()), op.propagatesInput(), newSelectCondition, op.getOutputLimit());
     }
 
     @Override
@@ -242,7 +244,11 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     public ILogicalOperator visitDataScanOperator(DataSourceScanOperator op, Void arg) throws AlgebricksException {
         ArrayList<LogicalVariable> newInputList = new ArrayList<>();
         newInputList.addAll(op.getVariables());
-        return new DataSourceScanOperator(newInputList, op.getDataSource());
+        Mutable<ILogicalExpression> newSelectCondition =
+                op.getSelectCondition() != null ? deepCopyExpressionRef(op.getSelectCondition()) : null;
+        DataSourceScanOperator newOp =
+                new DataSourceScanOperator(newInputList, op.getDataSource(), newSelectCondition, op.getOutputLimit());
+        return newOp;
     }
 
     @Override

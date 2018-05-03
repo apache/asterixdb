@@ -34,11 +34,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnne
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -134,6 +134,9 @@ public class SubstituteVariableVisitor
             }
         }
         substVarTypes(op, pair);
+        if (op.getSelectCondition() != null) {
+            op.getSelectCondition().getValue().substituteVar(pair.first, pair.second);
+        }
         return null;
     }
 
@@ -316,6 +319,9 @@ public class SubstituteVariableVisitor
     public Void visitUnnestMapOperator(UnnestMapOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
         substituteVarsForAbstractUnnestMapOp(op, pair);
+        if (op.getSelectCondition() != null) {
+            op.getSelectCondition().getValue().substituteVar(pair.first, pair.second);
+        }
         return null;
     }
 

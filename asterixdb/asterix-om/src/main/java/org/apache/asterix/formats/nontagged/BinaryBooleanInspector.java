@@ -18,11 +18,14 @@
  */
 package org.apache.asterix.formats.nontagged;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class BinaryBooleanInspector implements IBinaryBooleanInspector {
     private static final BinaryBooleanInspector INSTANCE = new BinaryBooleanInspector();
@@ -36,11 +39,13 @@ public class BinaryBooleanInspector implements IBinaryBooleanInspector {
         }
     };
 
+    private static final String NAME = "boolean-inspector";
+
     private BinaryBooleanInspector() {
     }
 
     @Override
-    public boolean getBooleanValue(byte[] bytes, int offset, int length) {
+    public boolean getBooleanValue(byte[] bytes, int offset, int length) throws HyracksDataException {
         byte serializedTypeTag = bytes[offset];
         if (serializedTypeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
                 || serializedTypeTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
@@ -49,8 +54,9 @@ public class BinaryBooleanInspector implements IBinaryBooleanInspector {
         /** check if the runtime type is boolean */
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serializedTypeTag);
         if (typeTag != ATypeTag.BOOLEAN) {
-            throw new IllegalStateException("Runtime error: the select condition should be of the boolean type!");
+            throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, NAME, 0, ATypeTag.BOOLEAN, typeTag);
         }
+
         return bytes[offset + 1] == 1;
     }
 

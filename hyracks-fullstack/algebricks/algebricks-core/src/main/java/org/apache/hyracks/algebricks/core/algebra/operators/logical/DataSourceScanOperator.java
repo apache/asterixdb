@@ -35,7 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class DataSourceScanOperator extends AbstractDataSourceOperator {
-    private List<LogicalVariable> projectVars;
+    private final List<LogicalVariable> projectVars;
 
     private boolean projectPushed = false;
 
@@ -43,9 +43,22 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
     private List<LogicalVariable> minFilterVars;
     private List<LogicalVariable> maxFilterVars;
 
+    // the select condition in the SELECT operator. Only results satisfying this selectCondition
+    // would be returned by this operator
+    private Mutable<ILogicalExpression> selectCondition;
+    // the maximum of number of results output by this operator
+    private long outputLimit = -1;
+
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource) {
+        this(variables, dataSource, null, -1);
+    }
+
+    public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource,
+            Mutable<ILogicalExpression> selectCondition, long outputLimit) {
         super(variables, dataSource);
         projectVars = new ArrayList<LogicalVariable>();
+        this.selectCondition = selectCondition;
+        this.outputLimit = outputLimit;
     }
 
     @Override
@@ -132,5 +145,21 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
 
     public List<Mutable<ILogicalExpression>> getAdditionalFilteringExpressions() {
         return additionalFilteringExpressions;
+    }
+
+    public Mutable<ILogicalExpression> getSelectCondition() {
+        return selectCondition;
+    }
+
+    public void setSelectCondition(Mutable<ILogicalExpression> selectCondition) {
+        this.selectCondition = selectCondition;
+    }
+
+    public long getOutputLimit() {
+        return outputLimit;
+    }
+
+    public void setOutputLimit(long outputLimit) {
+        this.outputLimit = outputLimit;
     }
 }

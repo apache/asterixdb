@@ -41,7 +41,7 @@ public class AsterixTupleFilter implements ITupleFilter {
     }
 
     @Override
-    public boolean accept(IFrameTupleReference tuple) throws Exception {
+    public boolean accept(IFrameTupleReference tuple) throws HyracksDataException {
         eval.evaluate(tuple, p);
         return boolInspector.getBooleanValue(p.getByteArray(), p.getStartOffset(), p.getLength());
     }

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.data;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 public interface IBinaryBooleanInspector {
-    public boolean getBooleanValue(byte[] bytes, int offset, int length);
+    public boolean getBooleanValue(byte[] bytes, int offset, int length) throws HyracksDataException;
 }

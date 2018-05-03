@@ -317,8 +317,10 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     @Override
     public ILogicalOperator visitDataScanOperator(DataSourceScanOperator op, ILogicalOperator arg)
             throws AlgebricksException {
-        DataSourceScanOperator opCopy =
-                new DataSourceScanOperator(deepCopyVariableList(op.getVariables()), op.getDataSource());
+        Mutable<ILogicalExpression> newSelectCondition = op.getSelectCondition() != null
+                ? exprDeepCopyVisitor.deepCopyExpressionReference(op.getSelectCondition()) : null;
+        DataSourceScanOperator opCopy = new DataSourceScanOperator(deepCopyVariableList(op.getVariables()),
+                op.getDataSource(), newSelectCondition, op.getOutputLimit());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -535,9 +537,11 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     @Override
     public ILogicalOperator visitUnnestMapOperator(UnnestMapOperator op, ILogicalOperator arg)
             throws AlgebricksException {
+        Mutable<ILogicalExpression> newSelectCondition = op.getSelectCondition() != null
+                ? exprDeepCopyVisitor.deepCopyExpressionReference(op.getSelectCondition()) : null;
         UnnestMapOperator opCopy = new UnnestMapOperator(deepCopyVariableList(op.getVariables()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()), op.getVariableTypes(),
-                op.propagatesInput());
+                op.propagatesInput(), newSelectCondition, op.getOutputLimit());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

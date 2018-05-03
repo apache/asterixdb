@@ -299,21 +299,25 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Integer indent) throws AlgebricksException {
-        return printAbstractUnnestMapOperator(op, indent, "unnest-map");
+        AlgebricksAppendable plan = printAbstractUnnestMapOperator(op, indent, "unnest-map");
+        appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
+        appendLimitInformation(plan, op.getOutputLimit());
+        return null;
     }
 
     @Override
     public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Integer indent)
             throws AlgebricksException {
-        return printAbstractUnnestMapOperator(op, indent, "left-outer-unnest-map");
+        printAbstractUnnestMapOperator(op, indent, "left-outer-unnest-map");
+        return null;
     }
 
-    private Void printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, Integer indent, String opSignature)
-            throws AlgebricksException {
+    private AlgebricksAppendable printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, Integer indent,
+            String opSignature) throws AlgebricksException {
         AlgebricksAppendable plan = addIndent(indent).append(opSignature + " " + op.getVariables() + " <- "
                 + op.getExpressionRef().getValue().accept(exprVisitor, indent));
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
-        return null;
+        return plan;
     }
 
     @Override
@@ -321,6 +325,24 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         AlgebricksAppendable plan = addIndent(indent).append(
                 "data-scan " + op.getProjectVariables() + "<-" + op.getVariables() + " <- " + op.getDataSource());
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
+        appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
+        appendLimitInformation(plan, op.getOutputLimit());
+        return null;
+    }
+
+    private Void appendSelectConditionInformation(AlgebricksAppendable plan,
+            Mutable<ILogicalExpression> selectCondition, Integer indent) throws AlgebricksException {
+        if (selectCondition != null) {
+            plan.append(" condition (").append(selectCondition.getValue().accept(exprVisitor, indent)).append(")");
+        }
+
+        return null;
+    }
+
+    private Void appendLimitInformation(AlgebricksAppendable plan, long outputLimit) throws AlgebricksException {
+        if (outputLimit >= 0) {
+            plan.append(" limit ").append(String.valueOf(outputLimit));
+        }
         return null;
     }
 

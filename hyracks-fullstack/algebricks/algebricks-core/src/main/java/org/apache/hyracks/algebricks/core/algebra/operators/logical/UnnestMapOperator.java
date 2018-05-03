@@ -32,9 +32,23 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class UnnestMapOperator extends AbstractUnnestMapOperator {
 
+    // the select condition in the SELECT operator. Only results satisfying this selectCondition
+    // would be returned by this operator
+    private Mutable<ILogicalExpression> selectCondition;
+    // the maximum of number of results output by this operator
+    private long outputLimit = -1;
+
     public UnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
             List<Object> variableTypes, boolean propagateInput) {
+        this(variables, expression, variableTypes, propagateInput, null, -1);
+    }
+
+    public UnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
+            List<Object> variableTypes, boolean propagateInput, Mutable<ILogicalExpression> selectCondition,
+            long outputLimit) {
         super(variables, expression, variableTypes, propagateInput);
+        this.selectCondition = selectCondition;
+        this.outputLimit = outputLimit;
     }
 
     @Override
@@ -62,6 +76,22 @@ public class UnnestMapOperator extends AbstractUnnestMapOperator {
             env.setVarType(variables.get(i), variableTypes.get(i));
         }
         return env;
+    }
+
+    public Mutable<ILogicalExpression> getSelectCondition() {
+        return selectCondition;
+    }
+
+    public void setSelectCondition(Mutable<ILogicalExpression> selectCondition) {
+        this.selectCondition = selectCondition;
+    }
+
+    public long getOutputLimit() {
+        return outputLimit;
+    }
+
+    public void setOutputLimit(long outputLimit) {
+        this.outputLimit = outputLimit;
     }
 
 }

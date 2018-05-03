@@ -83,7 +83,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     public class IdCounter {
         private int id;
-        private Deque<Integer> prefix;
+        private final Deque<Integer> prefix;
 
         public IdCounter() {
             prefix = new LinkedList<Integer>();
@@ -400,24 +400,28 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Integer indent) throws AlgebricksException {
-        return printAbstractUnnestMapOperator(op, indent, "unnest-map");
+        AlgebricksAppendable plan = printAbstractUnnestMapOperator(op, indent, "unnest-map");
+        appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
+        appendLimitInformation(plan, op.getOutputLimit(), indent);
+        return null;
     }
 
     @Override
     public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Integer indent)
             throws AlgebricksException {
-        return printAbstractUnnestMapOperator(op, indent, "left-outer-unnest-map");
+        printAbstractUnnestMapOperator(op, indent, "left-outer-unnest-map");
+        return null;
     }
 
-    private Void printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, Integer indent, String opSignature)
-            throws AlgebricksException {
+    private AlgebricksAppendable printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, Integer indent,
+            String opSignature) throws AlgebricksException {
         AlgebricksAppendable plan = addIndent(indent).append("\"operator\": \"" + opSignature + "\"");
         variablePrintHelper(op.getVariables(), indent);
         buffer.append(",\n");
         addIndent(indent).append("\"expressions\": \""
                 + op.getExpressionRef().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars(), indent);
-        return null;
+        return plan;
     }
 
     @Override
@@ -435,6 +439,8 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             addIndent(indent).append("\"data-source\": \"" + op.getDataSource() + "\"");
         }
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars(), indent);
+        appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
+        appendLimitInformation(plan, op.getOutputLimit(), indent);
         return null;
     }
 
@@ -463,6 +469,25 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         if (minFilterVars != null || maxFilterVars != null) {
             plan.append("\n");
             addIndent(indent).append("}");
+        }
+        return null;
+    }
+
+    private Void appendSelectConditionInformation(AlgebricksAppendable plan, Mutable<ILogicalExpression> condition,
+            Integer indent) throws AlgebricksException {
+        if (condition != null) {
+            plan.append(",\n");
+            addIndent(indent).append(
+                    "\"condition\": \"" + condition.getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
+        }
+        return null;
+    }
+
+    private Void appendLimitInformation(AlgebricksAppendable plan, long outputLimit, Integer indent)
+            throws AlgebricksException {
+        if (outputLimit >= 0) {
+            plan.append(",\n");
+            addIndent(indent).append("\"limit\": \"" + outputLimit + "\"");
         }
         return null;
     }

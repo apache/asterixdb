@@ -289,21 +289,24 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     @Override
     public String visitUnnestMapOperator(UnnestMapOperator op, Void noArgs) throws AlgebricksException {
         stringBuilder.setLength(0);
-        return printAbstractUnnestMapOperator(op, "unnest-map");
+        printAbstractUnnestMapOperator(op, "unnest-map");
+        appendSelectConditionInformation(stringBuilder, op.getSelectCondition());
+        appendLimitInformation(stringBuilder, op.getOutputLimit());
+        return stringBuilder.toString();
     }
 
     @Override
     public String visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void noArgs)
             throws AlgebricksException {
         stringBuilder.setLength(0);
-        return printAbstractUnnestMapOperator(op, "left-outer-unnest-map");
+        printAbstractUnnestMapOperator(op, "left-outer-unnest-map");
+        return stringBuilder.toString();
     }
 
-    private String printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, String opSignature) {
+    private void printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, String opSignature) {
         stringBuilder.append(opSignature).append(" ").append(op.getVariables()).append(" <- ")
                 .append(op.getExpressionRef().getValue().toString());
         appendFilterInformation(stringBuilder, op.getMinFilterVars(), op.getMaxFilterVars());
-        return stringBuilder.toString();
     }
 
     @Override
@@ -312,10 +315,12 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         stringBuilder.append("data-scan ").append(op.getProjectVariables()).append("<-").append(op.getVariables())
                 .append(" <- ").append(op.getDataSource());
         appendFilterInformation(stringBuilder, op.getMinFilterVars(), op.getMaxFilterVars());
+        appendSelectConditionInformation(stringBuilder, op.getSelectCondition());
+        appendLimitInformation(stringBuilder, op.getOutputLimit());
         return stringBuilder.toString();
     }
 
-    private String appendFilterInformation(StringBuilder plan, List<LogicalVariable> minFilterVars,
+    private void appendFilterInformation(StringBuilder plan, List<LogicalVariable> minFilterVars,
             List<LogicalVariable> maxFilterVars) {
         if (minFilterVars != null || maxFilterVars != null) {
             plan.append(" with filter on");
@@ -326,7 +331,21 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         if (maxFilterVars != null) {
             plan.append(" max:").append(maxFilterVars);
         }
-        return stringBuilder.toString();
+    }
+
+    private Void appendSelectConditionInformation(StringBuilder plan, Mutable<ILogicalExpression> condition)
+            throws AlgebricksException {
+        if (condition != null) {
+            plan.append(" condition:").append(condition.getValue().toString());
+        }
+        return null;
+    }
+
+    private Void appendLimitInformation(StringBuilder plan, long outputLimit) throws AlgebricksException {
+        if (outputLimit >= 0) {
+            plan.append(" limit:").append(String.valueOf(outputLimit));
+        }
+        return null;
     }
 
     @Override
