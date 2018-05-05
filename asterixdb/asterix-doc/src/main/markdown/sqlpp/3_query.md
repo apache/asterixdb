@@ -46,7 +46,7 @@ The following shows the (rich) grammar for the `SELECT` statement in SQL++.
                            ( ( JoinType )? ( JoinClause | UnnestClause ) )*
 
     JoinClause         ::= <JOIN> Expression (( <AS> )? Variable)? <ON> Expression
-    UnnestClause       ::= ( <UNNEST> | <CORRELATE> | <FLATTEN> ) Expression
+    UnnestClause       ::= ( <UNNEST> ) Expression
                            ( <AS> )? Variable ( <AT> Variable )?
     JoinType           ::= ( <INNER> | <LEFT> ( <OUTER> )? )
 
@@ -60,8 +60,8 @@ The following shows the (rich) grammar for the `SELECT` statement in SQL++.
     GroupbyClause      ::= <GROUP> <BY> Expression ( ( (<AS>)? Variable )?
                            ( "," Expression ( (<AS>)? Variable )? )* )
                            ( <GROUP> <AS> Variable
-                             ("(" Variable <AS> VariableReference
-                             ("," Variable <AS> VariableReference )* ")")?
+                             ("(" VariableReference <AS> Identifier
+                             ("," VariableReference <AS> Identifier )* ")")?
                            )?
     HavingClause       ::= <HAVING> Expression
 
@@ -446,7 +446,7 @@ This query outputs:
 In the result, `$1` is the generated name for `substr(user.name, 1)`, while `alias` is the generated name for `user.alias`.
 
 ### <a id="Abbreviated_field_access_expressions">Abbreviated Field Access Expressions</a>
-As in standard SQL, SQL++ field access expressions can be abbreviated (not recommended) when there is no ambiguity. In the next example, the variable `user` is the only possible variable reference for fields `id`, `name` and `alias` and thus could be omitted in the query.
+As in standard SQL, SQL++ field access expressions can be abbreviated (not recommended!) when there is no ambiguity. In the next example, the variable `user` is the only possible variable reference for fields `id`, `name` and `alias` and thus could be omitted in the query. More information on abbbreviated field access can be found in the appendix section on Variable Resolution.
 
 ##### Example
 
@@ -659,6 +659,8 @@ Returns:
     Error: "Syntax error: Need an alias for the enclosed expression:\n(select element GleambookMessages\n    from GleambookMessages as GleambookMessages\n    where (GleambookMessages.authorId = GleambookUsers.id)\n )",
         "query_from_user": "use TinySocial;\n\nSELECT GleambookUsers.name, GleambookMessages.message\n    FROM GleambookUsers,\n      (\n        SELECT VALUE GleambookMessages\n        FROM GleambookMessages\n        WHERE GleambookMessages.authorId = GleambookUsers.id\n      );"
 
+More information on implicit binding variables can be found in the appendix section on Variable Resolution.
+
 ## <a id="Join_clauses">JOIN Clauses</a>
 The join clause in SQL++ supports both inner joins and left outer joins from standard SQL.
 
@@ -724,7 +726,7 @@ The SQL++ `GROUP BY` clause generalizes standard SQL's grouping and aggregation 
 In a `GROUP BY` clause, in addition to the binding variable(s) defined for the grouping key(s), SQL++ allows a user to define a *group variable* by using the clause's `GROUP AS` extension to denote the resulting group.
 After grouping, then, the query's in-scope variables include the grouping key's binding variables as well as this group variable which will be bound to one collection value for each group. This per-group collection (i.e., multiset) value will be a set of nested objects in which each field of the object is the result of a renamed variable defined in parentheses following the group variable's name. The `GROUP AS` syntax is as follows:
 
-    <GROUP> <AS> Variable ("(" Variable <AS> VariableReference ("," Variable <AS> VariableReference )* ")")?
+    <GROUP> <AS> Variable ("(" VariableReference <AS> Identifier ("," VariableReference <AS> Identifier )* ")")?
 
 ##### Example
 
@@ -1228,6 +1230,7 @@ Note that if the condition expression evaluates to `NULL` or `MISSING` the input
 The `ORDER BY` clause is used to globally sort data in either ascending order (i.e., `ASC`) or descending order (i.e., `DESC`).
 During ordering, `MISSING` and `NULL` are treated as being smaller than any other value if they are encountered
 in the ordering key(s). `MISSING` is treated as smaller than `NULL` if both occur in the data being sorted.
+The ordering of values of a given type is consistent with its type's <= ordering; the ordering of values across types is implementation-defined but stable.
 The following example returns all `GleambookUsers` in descending order by their number of friends.
 
 ##### Example
@@ -1613,27 +1616,25 @@ The following matrix is a quick "SQL-92 compatibility cheat sheet" for SQL++.
 | Feature |  SQL++ | SQL-92 |  Why different?  |
 |----------|--------|-------|------------------|
 | SELECT * | Returns nested objects | Returns flattened concatenated objects | Nested collections are 1st class citizens |
-| SELECT list | order not preserved | order preserved | Fields in a JSON object is not ordered |
+| SELECT list | order not preserved | order preserved | Fields in a JSON object are not ordered |
 | Subquery | Returns a collection  | The returned collection is cast into a scalar value if the subquery appears in a SELECT list or on one side of a comparison or as input to a function | Nested collections are 1st class citizens |
-| LEFT OUTER JOIN |  Fills in `MISSING`(s) for non-matches  |   Fills in `NULL`(s) for non-matches    | "Absence" is more appropriate than "unknown" here.  |
+| LEFT OUTER JOIN |  Fills in `MISSING`(s) for non-matches  |   Fills in `NULL`(s) for non-matches    | "Absence" is more appropriate than "unknown" here  |
 | UNION ALL       | Allows heterogeneous inputs and output | Input streams must be UNION-compatible and output field names are drawn from the first input stream | Heterogenity and nested collections are common |
 | IN constant_expr | The constant expression has to be an array or multiset, i.e., [..,..,...] | The constant collection can be represented as comma-separated items in a paren pair | Nested collections are 1st class citizens |
 | String literal | Double quotes or single quotes | Single quotes only | Double quoted strings are pervasive |
 | Delimited identifiers | Backticks | Double quotes | Double quoted strings are pervasive |
 
-The following SQL-92 features are not implemented yet. However, SQL++ does not conflict those features:
+The following SQL-92 features are not implemented yet. However, SQL++ does not conflict with these features:
 
   * CROSS JOIN, NATURAL JOIN, UNION JOIN
   * RIGHT and FULL OUTER JOIN
   * INTERSECT, EXCEPT, UNION with set semantics
   * CAST expression
-  * NULLIF expression
   * COALESCE expression
   * ALL and SOME predicates for linking to subqueries
   * UNIQUE predicate (tests a collection for duplicates)
   * MATCH predicate (tests for referential integrity)
   * Row and Table constructors
-  * DISTINCT aggregates
   * Preserved order for expressions in a SELECT list
 
 

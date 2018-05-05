@@ -312,7 +312,7 @@ Different from standard SQL, double quotes play the same role as single quotes a
 ### <a id="Variable_references">Variable References</a>
 
     VariableReference     ::= <IDENTIFIER>|<DelimitedIdentifier>
-    <IDENTIFIER>          ::= <LETTER> (<LETTER> | <DIGIT> | "_" | "$")*
+    <IDENTIFIER>          ::= (<LETTER> | "_") (<LETTER> | <DIGIT> | "_" | "$")*
     <LETTER>              ::= ["A" - "Z", "a" - "z"]
     DelimitedIdentifier   ::= "`" (<EscapeQuot>
                                     | <EscapeBslash>
@@ -328,7 +328,7 @@ Different from standard SQL, double quotes play the same role as single quotes a
 A variable in SQL++ can be bound to any legal data model value. A variable reference refers to the value to which an in-scope variable is
 bound. (E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from an
 input parameter in the context of a function body.) Backticks, for example, \`id\`, are used for delimited identifiers. Delimiting is needed when
-a variable's desired name clashes with a SQL++ keyword or includes characters not allowed in regular identifiers.
+a variable's desired name clashes with a SQL++ keyword or includes characters not allowed in regular identifiers. More information on exactly how variable references are resolved can be found in the appendix section on Variable Resolution.
 
 ##### Examples
 
