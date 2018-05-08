@@ -29,6 +29,7 @@ import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.cc.CCExtensionManager;
 import org.apache.asterix.app.translator.RequestParameters;
+import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -64,7 +65,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2062
-    public static final long DEFAULT_NC_TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(5);
+    public static final long DEFAULT_NC_TIMEOUT_MILLIS = TimeUnit.MILLISECONDS.toMillis(Long.MAX_VALUE);
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2063
     public static final long DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS = TimeUnit.MINUTES.toMillis(1);
     private final String requestNodeId;

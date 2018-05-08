@@ -63,6 +63,7 @@ public class HttpUtil {
     public static class ContentType {
         public static final String APPLICATION_ADM = "application/x-adm";
         public static final String APPLICATION_JSON = "application/json";
+        public static final String JSON = "json";
         public static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
         public static final String CSV = "text/csv";
         public static final String IMG_PNG = "image/png";

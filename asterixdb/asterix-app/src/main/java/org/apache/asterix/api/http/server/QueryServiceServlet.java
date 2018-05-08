@@ -149,7 +149,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         REWRITTEN_EXPRESSION_TREE("rewritten-expression-tree"),
         LOGICAL_PLAN("logical-plan"),
         OPTIMIZED_LOGICAL_PLAN("optimized-logical-plan"),
-        JOB("job");
+        JOB("job"),
+        SIGNATURE("signature");
 
         private final String str;
 
@@ -212,6 +213,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         boolean logicalPlan;
         boolean optimizedLogicalPlan;
         boolean job;
+        boolean signature;
 
         @Override
         public String toString() {
@@ -233,6 +235,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 on.put("logicalPlan", logicalPlan);
                 on.put("optimizedLogicalPlan", optimizedLogicalPlan);
                 on.put("job", job);
+                on.put("signature", signature);
                 return om.writer(new MinimalPrettyPrinter()).writeValueAsString(on);
             } catch (JsonProcessingException e) { // NOSONAR
                 LOGGER.debug("unexpected exception marshalling {} instance to json", getClass(), e);
@@ -311,7 +314,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (format.equals(HttpUtil.ContentType.APPLICATION_ADM)) {
                 return SessionConfig.OutputFormat.ADM;
             }
-            if (format.startsWith(HttpUtil.ContentType.APPLICATION_JSON)) {
+            if (isJsonFormat(format)) {
                 return Boolean.parseBoolean(getParameterValue(format, Attribute.LOSSLESS.str()))
                         ? SessionConfig.OutputFormat.LOSSLESS_JSON : SessionConfig.OutputFormat.CLEAN_JSON;
             }
@@ -350,8 +353,15 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
-    private static void printSignature(PrintWriter pw) {
-        ResultUtil.printField(pw, ResultFields.SIGNATURE.str(), "*");
+    private static void printSignature(PrintWriter pw, RequestParameters param) {
+        if (param.signature) {
+            pw.print("\t\"");
+            pw.print(ResultFields.SIGNATURE.str());
+            pw.print("\": {\n");
+            pw.print("\t");
+            ResultUtil.printField(pw, "*", "*", false);
+            pw.print("\t},\n");
+        }
     }
 
     private static void printType(PrintWriter pw, SessionConfig sessionConfig) {
@@ -424,6 +434,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 param.logicalPlan = getOptBoolean(jsonRequest, Parameter.LOGICAL_PLAN.str(), false);
                 param.optimizedLogicalPlan = getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN.str(), false);
                 param.job = getOptBoolean(jsonRequest, Parameter.JOB.str(), false);
+                param.signature = getOptBoolean(jsonRequest, Parameter.SIGNATURE.str(), true);
             } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
                 GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
@@ -507,7 +518,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         sessionOutput.out().print("{\n");
         printRequestId(sessionOutput.out());
         printClientContextID(sessionOutput.out(), param);
-        printSignature(sessionOutput.out());
+        printSignature(sessionOutput.out(), param);
         printType(sessionOutput.out(), sessionConfig);
         long errorCount = 1; // so far we just return 1 error
         try {
@@ -621,5 +632,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 throw new IllegalStateException("Unrecognized plan format: " + planFormat);
         }
         pw.print(",\n");
+    }
+
+    private static boolean isJsonFormat(String format) {
+        return format.startsWith(HttpUtil.ContentType.APPLICATION_JSON)
+                || format.equalsIgnoreCase(HttpUtil.ContentType.JSON);
     }
 }
