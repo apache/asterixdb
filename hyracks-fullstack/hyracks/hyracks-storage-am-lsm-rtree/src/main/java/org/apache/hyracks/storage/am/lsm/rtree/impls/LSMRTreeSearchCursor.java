@@ -98,7 +98,8 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                 rtreeCursors[currentCursor].next();
                 ITupleReference currentTuple = rtreeCursors[currentCursor].getTuple();
                 // Call proceed() to do necessary operations before returning this tuple.
-                resultOfsearchCallbackProceed = searchCallback.proceed(currentTuple);
+                resultOfsearchCallbackProceed =
+                        currentCursor == 0 && includeMutableComponent ? searchCallback.proceed(currentTuple) : true;
                 btreeTuple.reset(rtreeCursors[currentCursor].getTuple());
                 boolean killerTupleFound = false;
                 for (int i = 0; i < currentCursor && !killerTupleFound; i++) {

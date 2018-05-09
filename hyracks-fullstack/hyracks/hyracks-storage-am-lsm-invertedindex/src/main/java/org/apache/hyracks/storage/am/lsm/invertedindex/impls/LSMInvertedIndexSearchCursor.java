@@ -59,6 +59,7 @@ public class LSMInvertedIndexSearchCursor extends EnforcedIndexCursor implements
     private List<IIndexAccessor> deletedKeysBTreeAccessors;
     private RangePredicate keySearchPred;
     private ILSMIndexOperationContext opCtx;
+    private boolean includeMemoryComponents;
 
     private List<ILSMComponent> operationalComponents;
     private ITupleReference currentTuple = null;
@@ -76,7 +77,7 @@ public class LSMInvertedIndexSearchCursor extends EnforcedIndexCursor implements
         accessorIndex = 0;
         this.searchPred = searchPred;
         this.searchCallback = lsmInitState.getSearchOperationCallback();
-
+        includeMemoryComponents = false;
         // For searching the deleted-keys BTrees.
         deletedKeysBTreeAccessors = lsmInitState.getDeletedKeysBTreeAccessors();
         deletedKeysBTreeCursors = new IIndexCursor[deletedKeysBTreeAccessors.size()];
@@ -87,6 +88,7 @@ public class LSMInvertedIndexSearchCursor extends EnforcedIndexCursor implements
             if (component.getType() == LSMComponentType.MEMORY) {
                 // No need for a bloom filter for the in-memory BTree.
                 deletedKeysBTreeBloomFilters[i] = null;
+                includeMemoryComponents = true;
             } else {
                 deletedKeysBTreeBloomFilters[i] = ((LSMInvertedIndexDiskComponent) component).getBloomFilter();
             }
@@ -121,7 +123,8 @@ public class LSMInvertedIndexSearchCursor extends EnforcedIndexCursor implements
         while (currentCursor.hasNext()) {
             currentCursor.next();
             currentTuple = currentCursor.getTuple();
-            resultOfSearchCallBackProceed = searchCallback.proceed(currentTuple);
+            resultOfSearchCallBackProceed =
+                    includeMemoryComponents && accessorIndex == 0 ? searchCallback.proceed(currentTuple) : true;
 
             if (!resultOfSearchCallBackProceed) {
                 // We assume that the underlying cursors materialize their results such that

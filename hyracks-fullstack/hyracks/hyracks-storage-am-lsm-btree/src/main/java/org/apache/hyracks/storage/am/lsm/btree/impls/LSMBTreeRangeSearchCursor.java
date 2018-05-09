@@ -106,8 +106,8 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             if (!outputPriorityQueue.isEmpty()) {
                 PriorityQueueElement queueHead = outputPriorityQueue.peek();
                 if (canCallProceed) {
-                    resultOfSearchCallbackProceed = searchCallback.proceed(queueHead.getTuple());
                     if (includeMutableComponent) {
+                        resultOfSearchCallbackProceed = searchCallback.proceed(queueHead.getTuple());
                         if (!resultOfSearchCallbackProceed) {
                             // In case proceed() fails and there is an in-memory component,
                             // we can't simply use this element since there might be a change.
@@ -150,6 +150,10 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                                 includeMutableComponent = false;
                             }
                         }
+                    } else {
+                        // only perform locking for tuples from memory components.
+                        // all tuples from disk components have already been committed, and we're safe to proceed
+                        resultOfSearchCallbackProceed = true;
                     }
                 }
 
