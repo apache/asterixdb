@@ -71,7 +71,7 @@ public class IOManager implements IIOManager {
      * Mutables
      */
     private int workspaceIndex;
-    private IFileDeviceResolver deviceComputer;
+    private final IFileDeviceResolver deviceComputer;
 
     public IOManager(List<IODeviceHandle> devices, IFileDeviceResolver deviceComputer) throws HyracksDataException {
         this.ioDevices = Collections.unmodifiableList(devices);

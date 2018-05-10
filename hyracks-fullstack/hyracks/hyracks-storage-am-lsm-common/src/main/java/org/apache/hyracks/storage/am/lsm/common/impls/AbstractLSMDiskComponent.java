@@ -175,9 +175,15 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
     }
 
     @Override
-    public void deactivateAndDestroy() throws HyracksDataException {
-        getIndex().deactivate();
-        getIndex().destroy();
+    public final void deactivateAndDestroy() throws HyracksDataException {
+        deactivateAndPurge();
+        destroy();
+    }
+
+    @Override
+    public final void deactivateAndPurge() throws HyracksDataException {
+        deactivate();
+        purge();
     }
 
     @Override
@@ -190,9 +196,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
         getIndex().deactivate();
     }
 
-    @Override
-    public void deactivateAndPurge() throws HyracksDataException {
-        getIndex().deactivate();
+    protected void purge() throws HyracksDataException {
         getIndex().purge();
     }
 

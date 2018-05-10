@@ -37,16 +37,12 @@ public class BufferedFileHandle {
         return fileId;
     }
 
+    public void setFileHandle(IFileHandle fileHandle) {
+        this.handle = fileHandle;
+    }
+
     public IFileHandle getFileHandle() {
         return handle;
-    }
-
-    public void markAsDeleted() {
-        handle = null;
-    }
-
-    public boolean fileHasBeenDeleted() {
-        return handle == null;
     }
 
     public int incReferenceCount() {

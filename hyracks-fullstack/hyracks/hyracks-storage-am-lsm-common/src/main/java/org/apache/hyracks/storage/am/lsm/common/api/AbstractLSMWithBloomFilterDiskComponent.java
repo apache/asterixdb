@@ -59,13 +59,6 @@ public abstract class AbstractLSMWithBloomFilterDiskComponent extends AbstractLS
     }
 
     @Override
-    public void deactivateAndDestroy() throws HyracksDataException {
-        super.deactivateAndDestroy();
-        getBloomFilter().deactivate();
-        getBloomFilter().destroy();
-    }
-
-    @Override
     public void destroy() throws HyracksDataException {
         super.destroy();
         getBloomFilter().destroy();
@@ -78,9 +71,8 @@ public abstract class AbstractLSMWithBloomFilterDiskComponent extends AbstractLS
     }
 
     @Override
-    public void deactivateAndPurge() throws HyracksDataException {
-        super.deactivateAndPurge();
-        getBloomFilter().deactivate();
+    protected void purge() throws HyracksDataException {
+        super.purge();
         getBloomFilter().purge();
     }
 

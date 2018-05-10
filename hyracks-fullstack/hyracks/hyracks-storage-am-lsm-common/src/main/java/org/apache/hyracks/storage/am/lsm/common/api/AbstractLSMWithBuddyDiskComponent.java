@@ -52,13 +52,6 @@ public abstract class AbstractLSMWithBuddyDiskComponent extends AbstractLSMWithB
     }
 
     @Override
-    public void deactivateAndDestroy() throws HyracksDataException {
-        super.deactivateAndDestroy();
-        getBuddyIndex().deactivate();
-        getBuddyIndex().destroy();
-    }
-
-    @Override
     public void destroy() throws HyracksDataException {
         super.destroy();
         getBuddyIndex().destroy();
@@ -71,9 +64,8 @@ public abstract class AbstractLSMWithBuddyDiskComponent extends AbstractLSMWithB
     }
 
     @Override
-    public void deactivateAndPurge() throws HyracksDataException {
-        super.deactivateAndPurge();
-        getBuddyIndex().deactivate();
+    protected void purge() throws HyracksDataException {
+        super.purge();
         getBuddyIndex().purge();
     }
 
