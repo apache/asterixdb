@@ -1654,6 +1654,12 @@
         <expected-error>Syntax error: In line 53 >>create  primary index if exists sec_primary_idx1  on LineItem;&lt;&lt; Encountered "exists" at column 26.</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="drop-primary-index">
+        <output-dir compare="Text">drop-primary-index</output-dir>
+        <expected-error>Cannot drop index "ds". Drop dataset "ds" to remove this index</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="dml">
     <test-case FilePath="dml">
