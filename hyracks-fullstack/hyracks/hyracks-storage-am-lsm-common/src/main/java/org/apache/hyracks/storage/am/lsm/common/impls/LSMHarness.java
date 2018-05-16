@@ -566,7 +566,9 @@ public class LSMHarness implements ILSMHarness {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Started a merge operation for index: {}", lsmIndex);
         }
-        enterComponents(operation.getAccessor().getOpContext(), LSMOperationType.MERGE);
+        synchronized (opTracker) {
+            enterComponents(operation.getAccessor().getOpContext(), LSMOperationType.MERGE);
+        }
         try {
             doIo(operation);
         } finally {
@@ -577,7 +579,7 @@ public class LSMHarness implements ILSMHarness {
                     operation.getAccessor().getOpContext().getModificationCallback());
         }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Finished the merge operation for index: {}. Result: ", lsmIndex, operation.getStatus());
+            LOGGER.info("Finished the merge operation for index: {}. Result: {}", lsmIndex, operation.getStatus());
         }
     }
 
