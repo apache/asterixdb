@@ -40,7 +40,11 @@ public interface IExtension {
         /**
          * Extends Language Syntax and Algebric Operations
          */
-        LANG
+        LANG,
+        /**
+         * Extends Recovery Capabilities
+         */
+        RECOVERY
     }
 
     /**

@@ -28,12 +28,15 @@ import org.apache.asterix.algebra.base.ILangExtension.Language;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.api.ExtensionId;
 import org.apache.asterix.common.api.IExtension;
+import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.AsterixExtension;
+import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
+import org.apache.asterix.hyracks.bootstrap.GlobalRecoveryManager;
 import org.apache.asterix.om.functions.IFunctionExtensionManager;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.runtime.functions.FunctionCollection;
@@ -41,6 +44,8 @@ import org.apache.asterix.runtime.functions.FunctionManager;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.utils.ExtensionUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.application.ICCServiceContext;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -53,6 +58,7 @@ public class CCExtensionManager implements IFunctionExtensionManager {
     private final ILangCompilationProvider aqlCompilationProvider;
     private final ILangCompilationProvider sqlppCompilationProvider;
     private final IFunctionManager functionManager;
+    private final IGlobalRecoveryExtension globalRecoveryExtension;
     private transient IStatementExecutorFactory statementExecutorFactory;
 
     /**
@@ -71,6 +77,7 @@ public class CCExtensionManager implements IFunctionExtensionManager {
         Pair<ExtensionId, ILangCompilationProvider> sqlppcp = null;
         Pair<ExtensionId, IFunctionManager> fm = null;
         IStatementExecutorExtension see = null;
+        IGlobalRecoveryExtension gre = null;
         if (list != null) {
             Set<ExtensionId> extensionIds = new HashSet<>();
             for (AsterixExtension extensionConf : list) {
@@ -89,6 +96,9 @@ public class CCExtensionManager implements IFunctionExtensionManager {
                         sqlppcp = ExtensionUtil.extendLangCompilationProvider(Language.SQLPP, sqlppcp, le);
                         fm = ExtensionUtil.extendFunctionManager(fm, le);
                         break;
+                    case RECOVERY:
+                        gre = (IGlobalRecoveryExtension) extension;
+                        break;
                     default:
                         break;
                 }
@@ -99,6 +109,7 @@ public class CCExtensionManager implements IFunctionExtensionManager {
         this.sqlppCompilationProvider = sqlppcp == null ? new SqlppCompilationProvider() : sqlppcp.second;
         this.functionManager =
                 fm == null ? new FunctionManager(FunctionCollection.createDefaultFunctionCollection()) : fm.second;
+        this.globalRecoveryExtension = gre;
     }
 
     /** @deprecated use getStatementExecutorFactory instead */
@@ -125,6 +136,14 @@ public class CCExtensionManager implements IFunctionExtensionManager {
             default:
                 throw new IllegalArgumentException(String.valueOf(lang));
         }
+    }
+
+    public IGlobalRecoveryManager getGlobalRecoveryManager(ICCServiceContext serviceCtx, IHyracksClientConnection hcc,
+            IStorageComponentProvider componentProvider) {
+        if (globalRecoveryExtension == null) {
+            return new GlobalRecoveryManager(serviceCtx, hcc, componentProvider);
+        }
+        return globalRecoveryExtension.getGlobalRecoveryManager(serviceCtx, hcc, componentProvider);
     }
 
     @Override

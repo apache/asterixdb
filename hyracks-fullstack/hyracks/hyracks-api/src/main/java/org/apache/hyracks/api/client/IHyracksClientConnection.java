@@ -107,8 +107,7 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
      *            Job Specification
      * @throws Exception
      */
-    DeployedJobSpecId upsertDeployedJobSpec(DeployedJobSpecId deployedJobSpecId, JobSpecification jobSpec)
-            throws Exception;
+    void redeployJobSpec(DeployedJobSpecId deployedJobSpecId, JobSpecification jobSpec) throws Exception;
 
     /**
      * Remove the deployed Job Spec
@@ -117,7 +116,7 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
      *            The id of the deployed job spec
      * @throws Exception
      */
-    DeployedJobSpecId undeployJobSpec(DeployedJobSpecId deployedJobSpecId) throws Exception;
+    void undeployJobSpec(DeployedJobSpecId deployedJobSpecId) throws Exception;
 
     /**
      * Used to run a deployed Job Spec by id

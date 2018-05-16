@@ -41,7 +41,7 @@ public class HyracksClientInterfaceFunctions {
         START_JOB,
         DEPLOY_JOB,
         UNDEPLOY_JOB,
-        UPSERT_DEPLOYED_JOB,
+        REDEPLOY_JOB,
         CANCEL_JOB,
         GET_DATASET_DIRECTORY_SERIVICE_INFO,
         GET_DATASET_RESULT_STATUS,
@@ -108,21 +108,21 @@ public class HyracksClientInterfaceFunctions {
         }
     }
 
-    public static class UpsertDeployedJobSpecFunction extends Function {
+    public static class redeployJobSpecFunction extends Function {
         private static final long serialVersionUID = 1L;
 
         private final byte[] acggfBytes;
 
         private final DeployedJobSpecId deployedJobSpecId;
 
-        public UpsertDeployedJobSpecFunction(DeployedJobSpecId deployedJobSpecId, byte[] acggfBytes) {
+        public redeployJobSpecFunction(DeployedJobSpecId deployedJobSpecId, byte[] acggfBytes) {
             this.deployedJobSpecId = deployedJobSpecId;
             this.acggfBytes = acggfBytes;
         }
 
         @Override
         public FunctionId getFunctionId() {
-            return FunctionId.UPSERT_DEPLOYED_JOB;
+            return FunctionId.REDEPLOY_JOB;
         }
 
         public byte[] getACGGFBytes() {

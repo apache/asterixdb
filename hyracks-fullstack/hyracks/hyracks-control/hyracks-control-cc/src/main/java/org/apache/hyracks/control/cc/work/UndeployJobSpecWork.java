@@ -28,10 +28,10 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
 public class UndeployJobSpecWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final DeployedJobSpecId deployedJobSpecId;
-    private final IResultCallback<DeployedJobSpecId> callback;
+    private final IResultCallback<Void> callback;
 
     public UndeployJobSpecWork(ClusterControllerService ccs, DeployedJobSpecId deployedJobSpecId,
-            IResultCallback<DeployedJobSpecId> callback) {
+            IResultCallback<Void> callback) {
         this.deployedJobSpecId = deployedJobSpecId;
         this.ccs = ccs;
         this.callback = callback;
@@ -45,7 +45,7 @@ public class UndeployJobSpecWork extends SynchronizableWork {
             for (NodeControllerState node : nodeManager.getAllNodeControllerStates()) {
                 node.getNodeController().undeployJobSpec(deployedJobSpecId);
             }
-            callback.setValue(deployedJobSpecId);
+            callback.setValue(null);
         } catch (Exception e) {
             callback.setException(e);
         }

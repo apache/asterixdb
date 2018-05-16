@@ -56,7 +56,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
     private static final Logger LOGGER = LogManager.getLogger();
     protected final IStorageComponentProvider componentProvider;
     protected final ICCServiceContext serviceCtx;
-    protected IHyracksClientConnection hcc;
+    protected final IHyracksClientConnection hcc;
     protected volatile boolean recoveryCompleted;
     protected volatile boolean recovering;
 
@@ -126,7 +126,9 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
             throws Exception {
         // Loop over datasets
         for (Dataverse dataverse : MetadataManager.INSTANCE.getDataverses(mdTxnCtx)) {
-            mdTxnCtx = recoverDataset(appCtx, mdTxnCtx, dataverse);
+            mdTxnCtx = recoverDatasets(appCtx, mdTxnCtx, dataverse);
+            // Fixes ASTERIXDB-2386 by caching the dataverse during recovery
+            MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse.getDataverseName());
         }
         return mdTxnCtx;
     }
@@ -138,8 +140,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         }
     }
 
-    private MetadataTransactionContext recoverDataset(ICcApplicationContext appCtx, MetadataTransactionContext mdTxnCtx,
-            Dataverse dataverse) throws Exception {
+    private MetadataTransactionContext recoverDatasets(ICcApplicationContext appCtx,
+            MetadataTransactionContext mdTxnCtx, Dataverse dataverse) throws Exception {
         if (!dataverse.getDataverseName().equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
             MetadataProvider metadataProvider = new MetadataProvider(appCtx, dataverse);
             try {
