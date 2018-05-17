@@ -24,5 +24,15 @@
  */
 
 select element a
-from  [substring('hello world',6,5),substring('hello world',0,11),substring('hello world',2,9),substring('ABCD',2,2),substring('ABCD',0,4),substring('UC Irvine',3,(`string-length`('UC Irvine') - 3)),substring('UC Irvine',0,`string-length`('UC Irvine')),substring(substring('UC Irvine',3),0,`string-length`('Irvine'))] as a
+from [
+    substring('hello world',6,5),
+    substring('hello world',0,11),
+    substring('hello world',2,9),
+    substring('ABCD',2,2),
+    substring('ABCD',0,4),
+    substring('UC Irvine',3,(`string-length`('UC Irvine') - 3)),
+    substring('UC Irvine',0,`string-length`('UC Irvine')),
+    substring(substring('UC Irvine',3),0,`string-length`('Irvine'))
+  ] as a
+
 ;
