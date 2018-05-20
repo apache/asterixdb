@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.asterix.app.data.gen.TupleGenerator.GenerationFunction;
+import org.apache.asterix.app.data.gen.RecordTupleGenerator.GenerationFunction;
 import org.apache.asterix.om.types.ATypeTag;
 
 public class AInt32FieldValueGenerator implements IAsterixFieldValueGenerator<Integer> {

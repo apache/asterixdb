@@ -23,7 +23,7 @@ import java.util.concurrent.Semaphore;
 
 import org.apache.asterix.app.bootstrap.TestNodeController;
 import org.apache.asterix.app.bootstrap.TestNodeController.PrimaryIndexInfo;
-import org.apache.asterix.app.data.gen.TupleGenerator;
+import org.apache.asterix.app.data.gen.RecordTupleGenerator;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
@@ -68,7 +68,7 @@ public class TransactionAbortTest {
     private static IHyracksTaskContext abortCtx;
     private static ITransactionContext abortTxnCtx;
     private static LSMInsertDeleteOperatorNodePushable abortOp;
-    private static TupleGenerator tupleGenerator;
+    private static RecordTupleGenerator tupleGenerator;
 
     @Rule
     public TestRule watcher = new TestMethodTracer();

@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 
@@ -53,14 +54,10 @@ public class IndexCheckpointManagerProvider implements IIndexCheckpointManagerPr
 
     private IndexCheckpointManager create(ResourceReference ref) {
         try {
-            final Path indexPath = getIndexPath(ref);
+            final Path indexPath = StoragePathUtil.getIndexPath(ioManager, ref);
             return new IndexCheckpointManager(indexPath);
         } catch (HyracksDataException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    private Path getIndexPath(ResourceReference indexRef) throws HyracksDataException {
-        return ioManager.resolve(indexRef.getRelativePath().toString()).getFile().toPath();
     }
 }

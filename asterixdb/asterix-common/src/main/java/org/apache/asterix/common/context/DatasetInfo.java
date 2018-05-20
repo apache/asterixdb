@@ -55,7 +55,7 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         this.setRegistered(false);
         this.setMemoryAllocated(false);
         this.logManager = logManager;
-        waitLog.setLogType(LogType.WAIT);
+        waitLog.setLogType(LogType.WAIT_FOR_FLUSHES);
         waitLog.computeAndSetLogSize();
     }
 

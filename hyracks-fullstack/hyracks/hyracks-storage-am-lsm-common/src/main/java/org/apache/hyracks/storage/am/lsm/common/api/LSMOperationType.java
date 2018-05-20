@@ -22,6 +22,7 @@ public enum LSMOperationType {
     SEARCH,
     MODIFICATION,
     FORCE_MODIFICATION,
+    LOAD,
     FLUSH,
     MERGE,
     REPLICATE,

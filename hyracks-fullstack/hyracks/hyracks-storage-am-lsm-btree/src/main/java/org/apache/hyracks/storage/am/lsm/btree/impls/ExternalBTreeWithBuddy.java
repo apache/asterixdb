@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -216,16 +217,16 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
     // For initial load
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws HyracksDataException {
-        return new LSMTwoPCBTreeWithBuddyBulkLoader(fillLevel, verifyInput, 0, false);
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            Map<String, Object> parameters) throws HyracksDataException {
+        return new LSMTwoPCBTreeWithBuddyBulkLoader(fillLevel, verifyInput, 0, false, parameters);
     }
 
     // For transaction bulk load <- could consolidate with the above method ->
     @Override
-    public IIndexBulkLoader createTransactionBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws HyracksDataException {
-        return new LSMTwoPCBTreeWithBuddyBulkLoader(fillLevel, verifyInput, numElementsHint, true);
+    public IIndexBulkLoader createTransactionBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            Map<String, Object> parameters) throws HyracksDataException {
+        return new LSMTwoPCBTreeWithBuddyBulkLoader(fillLevel, verifyInput, numElementsHint, true, parameters);
     }
 
     @Override
@@ -494,20 +495,37 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
     // modifications
     public class LSMTwoPCBTreeWithBuddyBulkLoader implements IIndexBulkLoader, ITwoPCIndexBulkLoader {
         private final ILSMDiskComponent component;
+        private final LoadOperation loadOp;
         private final ILSMDiskComponentBulkLoader componentBulkLoader;
         private final boolean isTransaction;
 
         public LSMTwoPCBTreeWithBuddyBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-                boolean isTransaction) throws HyracksDataException {
+                boolean isTransaction, Map<String, Object> parameters) throws HyracksDataException {
             this.isTransaction = isTransaction;
             // Create the appropriate target
+            LSMComponentFileReferences componentFileRefs;
             if (isTransaction) {
-                component = createTransactionTarget();
+                try {
+                    componentFileRefs = fileManager.getNewTransactionFileReference();
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                }
+                component =
+                        createDiskComponent(bulkLoadComponentFactory, componentFileRefs.getInsertIndexFileReference(),
+                                componentFileRefs.getDeleteIndexFileReference(),
+                                componentFileRefs.getBloomFilterFileReference(), true);
             } else {
-                component = createBulkLoadTarget();
+                componentFileRefs = fileManager.getRelFlushFileReference();
+                component =
+                        createDiskComponent(bulkLoadComponentFactory, componentFileRefs.getInsertIndexFileReference(),
+                                componentFileRefs.getDeleteIndexFileReference(),
+                                componentFileRefs.getBloomFilterFileReference(), true);
             }
 
-            LoadOperation loadOp = new LoadOperation(ioOpCallback, getIndexIdentifier());
+            loadOp = new LoadOperation(componentFileRefs, ioOpCallback, getIndexIdentifier(), parameters);
+            loadOp.setNewComponent(component);
+            ioOpCallback.scheduled(loadOp);
+            ioOpCallback.beforeOperation(loadOp);
             componentBulkLoader =
                     component.createBulkLoader(loadOp, fillFactor, verifyInput, numElementsHint, false, true, false);
         }
@@ -519,16 +537,23 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
 
         @Override
         public void end() throws HyracksDataException {
-            componentBulkLoader.end();
-            if (component.getComponentSize() > 0) {
-                if (isTransaction) {
-                    // Since this is a transaction component, validate and
-                    // deactivate. it could later be added or deleted
-                    component.markAsValid(durable);
-                    component.deactivate();
-                } else {
-                    getHarness().addBulkLoadedComponent(component);
+            try {
+                ioOpCallback.afterOperation(loadOp);
+                componentBulkLoader.end();
+                if (component.getComponentSize() > 0) {
+                    if (isTransaction) {
+                        // Since this is a transaction component, validate and
+                        // deactivate. it could later be added or deleted
+                        component.markAsValid(durable);
+                        ioOpCallback.afterFinalize(loadOp);
+                        component.deactivate();
+                    } else {
+                        ioOpCallback.afterFinalize(loadOp);
+                        getHarness().addBulkLoadedComponent(component);
+                    }
                 }
+            } finally {
+                ioOpCallback.completed(loadOp);
             }
         }
 
@@ -538,25 +563,16 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         }
 
         @Override
-        public void abort() {
+        public void abort() throws HyracksDataException {
             try {
-                componentBulkLoader.abort();
-            } catch (Exception e) {
+                try {
+                    componentBulkLoader.abort();
+                } finally {
+                    ioOpCallback.afterFinalize(loadOp);
+                }
+            } finally {
+                ioOpCallback.completed(loadOp);
             }
-        }
-
-        // This method is used to create a target for a bulk modify operation. This
-        // component must then eventually be either committed or deleted
-        private ILSMDiskComponent createTransactionTarget() throws HyracksDataException {
-            LSMComponentFileReferences componentFileRefs;
-            try {
-                componentFileRefs = fileManager.getNewTransactionFileReference();
-            } catch (IOException e) {
-                throw HyracksDataException.create(e);
-            }
-            return createDiskComponent(bulkLoadComponentFactory, componentFileRefs.getInsertIndexFileReference(),
-                    componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
-                    true);
         }
     }
 

@@ -51,4 +51,9 @@ public abstract class AbstractLSMComponent implements ILSMComponent {
     public final AbstractLSMIndex getLsmIndex() {
         return lsmIndex;
     }
+
+    @Override
+    public int getReaderCount() {
+        return readerCount;
+    }
 }

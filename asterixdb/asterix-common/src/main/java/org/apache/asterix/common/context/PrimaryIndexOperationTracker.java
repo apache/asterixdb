@@ -19,7 +19,10 @@
 
 package org.apache.asterix.common.context;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,16 +40,19 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
+import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
-public class PrimaryIndexOperationTracker extends BaseOperationTracker {
+public class PrimaryIndexOperationTracker extends BaseOperationTracker implements IoOperationCompleteListener {
     private final int partition;
     // Number of active operations on an ILSMIndex instance.
     private final AtomicInteger numActiveOperations;
@@ -54,6 +60,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
     private final ILSMComponentIdGenerator idGenerator;
     private boolean flushOnExit = false;
     private boolean flushLogCreated = false;
+    private final Map<String, FlushOperation> scheduledFlushes = new HashMap<>();
 
     public PrimaryIndexOperationTracker(int datasetID, int partition, ILogManager logManager, DatasetInfo dsInfo,
             ILSMComponentIdGenerator idGenerator) {
@@ -107,6 +114,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
         }
 
         if (needsFlush || flushOnExit) {
+            flushOnExit = false;
             // make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering
             // them until the current flush is scheduled.
             LSMComponentId primaryId = null;
@@ -143,7 +151,6 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
                 throw new IllegalStateException("Primary index not found in dataset " + dsInfo.getDatasetID());
             }
             LogRecord logRecord = new LogRecord();
-            flushOnExit = false;
             if (dsInfo.isDurable()) {
                 /*
                  * Generate a FLUSH log.
@@ -182,13 +189,33 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker {
             Map<String, Object> flushMap = new HashMap<>();
             flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
             flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
-            for (ILSMIndex lsmIndex : dsInfo.getDatasetPartitionOpenIndexes(partition)) {
-                ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-                accessor.getOpContext().setParameters(flushMap);
-                accessor.scheduleFlush();
+            synchronized (scheduledFlushes) {
+                for (ILSMIndex lsmIndex : dsInfo.getDatasetPartitionOpenIndexes(partition)) {
+                    ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+                    accessor.getOpContext().setParameters(flushMap);
+                    ILSMIOOperation flush = accessor.scheduleFlush();
+                    scheduledFlushes.put(flush.getTarget().getRelativePath(), (FlushOperation) flush);
+                    flush.addCompleteListener(this);
+                }
             }
         } finally {
             flushLogCreated = false;
+        }
+    }
+
+    @Override
+    public void completed(ILSMIOOperation operation) {
+        synchronized (scheduledFlushes) {
+            scheduledFlushes.remove(operation.getTarget().getRelativePath());
+        }
+    }
+
+    public List<FlushOperation> getScheduledFlushes() {
+        synchronized (scheduledFlushes) {
+            Collection<FlushOperation> scheduled = scheduledFlushes.values();
+            List<FlushOperation> flushes = new ArrayList<FlushOperation>(scheduled.size());
+            flushes.addAll(scheduled);
+            return flushes;
         }
     }
 

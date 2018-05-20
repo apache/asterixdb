@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
@@ -82,7 +83,13 @@ public class FlushDatasetOperatorDescriptor extends AbstractSingleActivityOperat
                     // lock the dataset granule
                     lockManager.lock(datasetId, -1, LockMode.S, txnCtx);
                     // flush the dataset synchronously
-                    datasetLifeCycleManager.flushDataset(datasetId.getId(), false);
+                    DatasetInfo datasetInfo = datasetLifeCycleManager.getDatasetInfo(datasetId.getId());
+                    // TODO: Remove the isOpen check and let it fail if flush is requested for a dataset that is closed
+                    synchronized (datasetLifeCycleManager) {
+                        if (datasetInfo.isOpen()) {
+                            datasetLifeCycleManager.flushDataset(datasetId.getId(), false);
+                        }
+                    }
                 } catch (ACIDException e) {
                     throw HyracksDataException.create(e);
                 }

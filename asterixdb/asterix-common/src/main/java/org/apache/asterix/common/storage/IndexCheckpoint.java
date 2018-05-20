@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -35,24 +36,28 @@ public class IndexCheckpoint {
     private long id;
     private String validComponentTimestamp;
     private long lowWatermark;
+    private long lastComponentId;
     private Map<Long, Long> masterNodeFlushMap;
 
-    public static IndexCheckpoint first(long lowWatermark) {
+    public static IndexCheckpoint first(String lastComponentTimestamp, long lowWatermark) {
         IndexCheckpoint firstCheckpoint = new IndexCheckpoint();
         firstCheckpoint.id = INITIAL_CHECKPOINT_ID;
         firstCheckpoint.lowWatermark = lowWatermark;
-        firstCheckpoint.validComponentTimestamp = null;
+        firstCheckpoint.validComponentTimestamp = lastComponentTimestamp;
+        firstCheckpoint.lastComponentId = LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId();
         firstCheckpoint.masterNodeFlushMap = new HashMap<>();
         return firstCheckpoint;
     }
 
-    public static IndexCheckpoint next(IndexCheckpoint latest, long lowWatermark, String validComponentTimestamp) {
+    public static IndexCheckpoint next(IndexCheckpoint latest, long lowWatermark, String validComponentTimestamp,
+            long lastComponentId) {
         if (lowWatermark < latest.getLowWatermark()) {
             throw new IllegalStateException("Low watermark should always be increasing");
         }
         IndexCheckpoint next = new IndexCheckpoint();
         next.id = latest.getId() + 1;
         next.lowWatermark = lowWatermark;
+        next.lastComponentId = lastComponentId;
         next.validComponentTimestamp = validComponentTimestamp;
         next.masterNodeFlushMap = latest.getMasterNodeFlushMap();
         // remove any lsn from the map that wont be used anymore
@@ -70,6 +75,10 @@ public class IndexCheckpoint {
 
     public long getLowWatermark() {
         return lowWatermark;
+    }
+
+    public long getLastComponentId() {
+        return lastComponentId;
     }
 
     public Map<Long, Long> getMasterNodeFlushMap() {

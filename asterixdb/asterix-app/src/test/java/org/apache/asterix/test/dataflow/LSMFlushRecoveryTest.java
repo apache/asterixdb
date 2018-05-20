@@ -29,7 +29,7 @@ import java.util.concurrent.Semaphore;
 import org.apache.asterix.app.bootstrap.TestNodeController;
 import org.apache.asterix.app.bootstrap.TestNodeController.PrimaryIndexInfo;
 import org.apache.asterix.app.bootstrap.TestNodeController.SecondaryIndexInfo;
-import org.apache.asterix.app.data.gen.TupleGenerator;
+import org.apache.asterix.app.data.gen.RecordTupleGenerator;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -92,7 +92,7 @@ public class LSMFlushRecoveryTest {
     private static IIndexDataflowHelper[] secondaryIndexDataflowHelpers;
     private static ITransactionContext txnCtx;
     private static LSMInsertDeleteOperatorNodePushable[] insertOps;
-    private static TupleGenerator tupleGenerator;
+    private static RecordTupleGenerator tupleGenerator;
 
     private static final int NUM_PARTITIONS = 2;
     private static final int PARTITION_0 = 0;
@@ -478,6 +478,8 @@ public class LSMFlushRecoveryTest {
             ILSMMemoryComponent primaryMemComponent = primaryIndexes[partitionIndex].getCurrentMemoryComponent();
             ILSMMemoryComponent secondaryMemComponent = secondaryIndexes[partitionIndex].getCurrentMemoryComponent();
             Assert.assertEquals(primaryMemComponent.getId(), secondaryMemComponent.getId());
+            Assert.assertEquals(primaryIndexes[partitionIndex].getCurrentMemoryComponentIndex(),
+                    secondaryIndexes[partitionIndex].getCurrentMemoryComponentIndex());
         }
 
         List<ILSMDiskComponent> primaryDiskComponents = primaryIndexes[partitionIndex].getDiskComponents();

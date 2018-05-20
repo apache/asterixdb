@@ -22,16 +22,20 @@ import java.io.DataInput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.Collection;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.replication.api.IReplicaTask;
+import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.common.LocalResource;
 
 /**
@@ -51,13 +55,27 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
                 appCtx.getIndexCheckpointManagerProvider();
         PersistentLocalResourceRepository resRepo =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
+        final IIOManager ioManager = appCtx.getIoManager();
         final Collection<LocalResource> partitionResources = resRepo.getPartitionResources(partition).values();
         final long currentLSN = appCtx.getTransactionSubsystem().getLogManager().getAppendLSN();
         for (LocalResource ls : partitionResources) {
-            final IIndexCheckpointManager indexCheckpointManager =
-                    indexCheckpointManagerProvider.get(DatasetResourceReference.of(ls));
+            DatasetResourceReference ref = DatasetResourceReference.of(ls);
+            final IIndexCheckpointManager indexCheckpointManager = indexCheckpointManagerProvider.get(ref);
             indexCheckpointManager.delete();
-            indexCheckpointManager.init(currentLSN);
+            // Get most recent timestamp of existing files to avoid deletion
+            Path indexPath = StoragePathUtil.getIndexPath(ioManager, ref);
+            String[] files = indexPath.toFile().list(AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER);
+            if (files == null) {
+                throw HyracksDataException
+                        .create(new IOException(indexPath + " is not a directory or an IO Error occurred"));
+            }
+            String mostRecentTimestamp = null;
+            for (String file : files) {
+                String nextTimeStamp = AbstractLSMIndexFileManager.getComponentEndTime(file);
+                mostRecentTimestamp = mostRecentTimestamp == null || nextTimeStamp.compareTo(mostRecentTimestamp) > 0
+                        ? nextTimeStamp : mostRecentTimestamp;
+            }
+            indexCheckpointManager.init(mostRecentTimestamp, currentLSN);
         }
         ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
     }

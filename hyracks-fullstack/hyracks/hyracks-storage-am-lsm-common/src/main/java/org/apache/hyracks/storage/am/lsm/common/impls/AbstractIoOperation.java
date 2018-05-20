@@ -18,6 +18,10 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.ExceptionUtils;
@@ -25,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
 
 public abstract class AbstractIoOperation implements ILSMIOOperation {
 
@@ -36,6 +41,7 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     private LSMIOOperationStatus status = LSMIOOperationStatus.SUCCESS;
     private ILSMDiskComponent newComponent;
     private boolean completed = false;
+    private List<IoOperationCompleteListener> completeListeners;
 
     public AbstractIoOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
             String indexIdentifier) {
@@ -77,6 +83,7 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
 
     @Override
     public void setFailure(Throwable failure) {
+        status = LSMIOOperationStatus.FAILURE;
         this.failure = ExceptionUtils.suppress(this.failure, failure);
     }
 
@@ -107,6 +114,12 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
         }
         callback.completed(this);
         completed = true;
+        if (completeListeners != null) {
+            for (IoOperationCompleteListener listener : completeListeners) {
+                listener.completed(this);
+            }
+            completeListeners = null;
+        }
         notifyAll();
     }
 
@@ -114,6 +127,23 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     public synchronized void sync() throws InterruptedException {
         while (!completed) {
             wait();
+        }
+    }
+
+    @Override
+    public Map<String, Object> getParameters() {
+        return accessor.getOpContext().getParameters();
+    }
+
+    @Override
+    public synchronized void addCompleteListener(IoOperationCompleteListener listener) {
+        if (completed) {
+            listener.completed(this);
+        } else {
+            if (completeListeners == null) {
+                completeListeners = new LinkedList<>();
+            }
+            completeListeners.add(listener);
         }
     }
 }

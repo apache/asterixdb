@@ -247,7 +247,7 @@ public class LSMHarness implements ILSMHarness {
                 try {
                     //schedule a replication job to delete these inactive disk components from replicas
                     if (replicationEnabled) {
-                        lsmIndex.scheduleReplication(null, inactiveDiskComponentsToBeDeleted, false,
+                        lsmIndex.scheduleReplication(null, inactiveDiskComponentsToBeDeleted,
                                 ReplicationOperation.DELETE, opType);
                     }
                     for (ILSMDiskComponent c : inactiveDiskComponentsToBeDeleted) {
@@ -271,10 +271,12 @@ public class LSMHarness implements ILSMHarness {
                 // newComponent is null if the flush op. was not performed.
                 if (!failedOperation && newComponent != null) {
                     lsmIndex.addDiskComponent(newComponent);
+                    // TODO: The following should also replicate component Id
+                    // even if empty component
                     if (replicationEnabled && newComponent != EmptyComponent.INSTANCE) {
                         componentsToBeReplicated.clear();
                         componentsToBeReplicated.add(newComponent);
-                        triggerReplication(componentsToBeReplicated, false, opType);
+                        triggerReplication(componentsToBeReplicated, opType);
                     }
                     mergePolicy.diskComponentAdded(lsmIndex, false);
                 }
@@ -286,7 +288,7 @@ public class LSMHarness implements ILSMHarness {
                     if (replicationEnabled && newComponent != EmptyComponent.INSTANCE) {
                         componentsToBeReplicated.clear();
                         componentsToBeReplicated.add(newComponent);
-                        triggerReplication(componentsToBeReplicated, false, opType);
+                        triggerReplication(componentsToBeReplicated, opType);
                     }
                     mergePolicy.diskComponentAdded(lsmIndex, fullMergeIsRequested.get());
                 }
@@ -619,7 +621,7 @@ public class LSMHarness implements ILSMHarness {
             if (replicationEnabled) {
                 componentsToBeReplicated.clear();
                 componentsToBeReplicated.add(c);
-                triggerReplication(componentsToBeReplicated, true, LSMOperationType.MERGE);
+                triggerReplication(componentsToBeReplicated, LSMOperationType.LOAD);
             }
             mergePolicy.diskComponentAdded(lsmIndex, false);
         }
@@ -630,20 +632,20 @@ public class LSMHarness implements ILSMHarness {
         return opTracker;
     }
 
-    protected void triggerReplication(List<ILSMDiskComponent> lsmComponents, boolean bulkload, LSMOperationType opType)
+    protected void triggerReplication(List<ILSMDiskComponent> lsmComponents, LSMOperationType opType)
             throws HyracksDataException {
         ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        accessor.scheduleReplication(lsmComponents, bulkload, opType);
+        accessor.scheduleReplication(lsmComponents, opType);
     }
 
     @Override
     public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> lsmComponents,
-            boolean bulkload, LSMOperationType opType) throws HyracksDataException {
+            LSMOperationType opType) throws HyracksDataException {
         //enter the LSM components to be replicated to prevent them from being deleted until they are replicated
         if (!getAndEnterComponents(ctx, LSMOperationType.REPLICATE, false)) {
             return;
         }
-        lsmIndex.scheduleReplication(ctx, lsmComponents, bulkload, ReplicationOperation.REPLICATE, opType);
+        lsmIndex.scheduleReplication(ctx, lsmComponents, ReplicationOperation.REPLICATE, opType);
     }
 
     @Override
@@ -740,7 +742,6 @@ public class LSMHarness implements ILSMHarness {
         ILSMIOOperation ioOperation = null;
         synchronized (opTracker) {
             waitForFlushesAndMerges();
-            ensureNoFailedFlush();
             // We always start with the memory component
             ILSMMemoryComponent memComponent = lsmIndex.getCurrentMemoryComponent();
             deleteMemoryComponent = predicate.test(memComponent);
@@ -769,9 +770,6 @@ public class LSMHarness implements ILSMHarness {
         List<ILSMDiskComponent> toBeDeleted;
         synchronized (opTracker) {
             waitForFlushesAndMerges();
-            // Ensure that current memory component is empty and that no failed flushes happened so far
-            // This is a workaround until ASTERIXDB-2106 is fixed
-            ensureNoFailedFlush();
             List<ILSMDiskComponent> diskComponents = lsmIndex.getDiskComponents();
             for (ILSMDiskComponent component : diskComponents) {
                 if (predicate.test(component)) {
@@ -800,21 +798,6 @@ public class LSMHarness implements ILSMHarness {
                 if (lsmIndex.getDiskComponents().contains(component)) {
                     throw HyracksDataException.create(ErrorCode.A_MERGE_OPERATION_HAS_FAILED, component.toString());
                 }
-            }
-        }
-    }
-
-    /**
-     * This can only be called in the steady state where:
-     * 1. no scheduled flushes
-     * 2. no incoming data
-     *
-     * @throws HyracksDataException
-     */
-    private void ensureNoFailedFlush() throws HyracksDataException {
-        for (ILSMMemoryComponent memoryComponent : lsmIndex.getMemoryComponents()) {
-            if (memoryComponent.getState() == ComponentState.READABLE_UNWRITABLE) {
-                throw HyracksDataException.create(ErrorCode.A_FLUSH_OPERATION_HAS_FAILED);
             }
         }
     }

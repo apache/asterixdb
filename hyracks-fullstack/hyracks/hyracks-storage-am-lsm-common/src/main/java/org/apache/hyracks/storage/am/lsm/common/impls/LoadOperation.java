@@ -18,13 +18,21 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.Map;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 
 public class LoadOperation extends AbstractIoOperation {
 
-    public LoadOperation(ILSMIOOperationCallback callback, String indexIdentifier) {
-        super(null, null, callback, indexIdentifier);
+    private final LSMComponentFileReferences fileReferences;
+    private final Map<String, Object> parameters;
+
+    public LoadOperation(LSMComponentFileReferences fileReferences, ILSMIOOperationCallback callback,
+            String indexIdentifier, Map<String, Object> parameters) {
+        super(null, fileReferences.getInsertIndexFileReference(), callback, indexIdentifier);
+        this.fileReferences = fileReferences;
+        this.parameters = parameters;
     }
 
     @Override
@@ -39,11 +47,16 @@ public class LoadOperation extends AbstractIoOperation {
 
     @Override
     public LSMComponentFileReferences getComponentFiles() {
-        return null;
+        return fileReferences;
     }
 
     @Override
     public void sync() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Map<String, Object> getParameters() {
+        return parameters;
     }
 }

@@ -33,9 +33,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.app.bootstrap.TestNodeController;
 import org.apache.asterix.app.bootstrap.TestNodeController.PrimaryIndexInfo;
+import org.apache.asterix.app.data.gen.RecordTupleGenerator;
+import org.apache.asterix.app.data.gen.RecordTupleGenerator.GenerationFunction;
 import org.apache.asterix.app.data.gen.TestTupleCounterFrameWriter;
-import org.apache.asterix.app.data.gen.TupleGenerator;
-import org.apache.asterix.app.data.gen.TupleGenerator.GenerationFunction;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.DatasetInfo;
@@ -100,7 +100,7 @@ public class StorageTestUtils {
     private StorageTestUtils() {
     }
 
-    static void allowAllOps(TestLsmBtree lsmBtree) {
+    public static void allowAllOps(TestLsmBtree lsmBtree) {
         lsmBtree.clearModifyCallbacks();
         lsmBtree.clearFlushCallbacks();
         lsmBtree.clearSearchCallbacks();
@@ -118,6 +118,12 @@ public class StorageTestUtils {
                 KEY_INDICATORS_LIST, partition);
     }
 
+    public static PrimaryIndexInfo createPrimaryIndex(TestNodeController nc, Dataset dataset, int partition)
+            throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
+        return nc.createPrimaryIndex(dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, STORAGE_MANAGER, KEY_INDEXES,
+                KEY_INDICATORS_LIST, partition);
+    }
+
     public static LSMInsertDeleteOperatorNodePushable getInsertPipeline(TestNodeController nc, IHyracksTaskContext ctx)
             throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
         return getInsertPipeline(nc, ctx, null);
@@ -131,19 +137,38 @@ public class StorageTestUtils {
     }
 
     public static LSMInsertDeleteOperatorNodePushable getInsertPipeline(TestNodeController nc, IHyracksTaskContext ctx,
+            Dataset dataset, Index secondaryIndex, IndexOperation op)
+            throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
+        return nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
+                KEY_INDICATORS_LIST, STORAGE_MANAGER, secondaryIndex, op).getLeft();
+    }
+
+    public static LSMInsertDeleteOperatorNodePushable getInsertPipeline(TestNodeController nc, IHyracksTaskContext ctx,
             Index secondaryIndex) throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
         return nc.getInsertPipeline(ctx, DATASET, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
                 KEY_INDICATORS_LIST, STORAGE_MANAGER, secondaryIndex).getLeft();
     }
 
-    public static TupleGenerator getTupleGenerator() {
-        return new TupleGenerator(RECORD_TYPE, META_TYPE, KEY_INDEXES, KEY_INDICATORS, RECORD_GEN_FUNCTION,
+    public static LSMInsertDeleteOperatorNodePushable getInsertPipeline(TestNodeController nc, IHyracksTaskContext ctx,
+            Dataset dataset, Index secondaryIndex)
+            throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
+        return nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
+                KEY_INDICATORS_LIST, STORAGE_MANAGER, secondaryIndex).getLeft();
+    }
+
+    public static RecordTupleGenerator getTupleGenerator() {
+        return new RecordTupleGenerator(RECORD_TYPE, META_TYPE, KEY_INDEXES, KEY_INDICATORS, RECORD_GEN_FUNCTION,
                 UNIQUE_RECORD_FIELDS, META_GEN_FUNCTION, UNIQUE_META_FIELDS);
     }
 
     public static void searchAndAssertCount(TestNodeController nc, int partition, int numOfRecords)
             throws HyracksDataException, AlgebricksException {
         searchAndAssertCount(nc, partition, DATASET, STORAGE_MANAGER, numOfRecords);
+    }
+
+    public static void searchAndAssertCount(TestNodeController nc, Dataset dataset, int partition, int numOfRecords)
+            throws HyracksDataException, AlgebricksException {
+        searchAndAssertCount(nc, partition, dataset, STORAGE_MANAGER, numOfRecords);
     }
 
     public static void searchAndAssertCount(TestNodeController nc, int partition, Dataset dataset,
@@ -182,6 +207,11 @@ public class StorageTestUtils {
         flushPartition(dslLifecycleMgr, lsmBtree, DATASET, async);
     }
 
+    public static void flushPartition(IDatasetLifecycleManager dslLifecycleMgr, Dataset dataset, TestLsmBtree lsmBtree,
+            boolean async) throws Exception {
+        flushPartition(dslLifecycleMgr, lsmBtree, dataset, async);
+    }
+
     public static void flushPartition(IDatasetLifecycleManager dslLifecycleMgr, TestLsmBtree lsmBtree, Dataset dataset,
             boolean async) throws Exception {
         waitForOperations(lsmBtree);
@@ -211,6 +241,11 @@ public class StorageTestUtils {
         flush(dsLifecycleMgr, lsmBtree, DATASET, async);
     }
 
+    public static void flush(IDatasetLifecycleManager dsLifecycleMgr, Dataset dataset, TestLsmBtree lsmBtree,
+            boolean async) throws Exception {
+        flush(dsLifecycleMgr, lsmBtree, dataset, async);
+    }
+
     public static void flush(IDatasetLifecycleManager dsLifecycleMgr, TestLsmBtree lsmBtree, Dataset dataset,
             boolean async) throws Exception {
         waitForOperations(lsmBtree);
@@ -238,6 +273,11 @@ public class StorageTestUtils {
 
         public Searcher(TestNodeController nc, int partition, TestLsmBtree lsmBtree, int numOfRecords) {
             this(nc, partition, DATASET, STORAGE_MANAGER, lsmBtree, numOfRecords);
+        }
+
+        public Searcher(TestNodeController nc, Dataset dataset, int partition, TestLsmBtree lsmBtree,
+                int numOfRecords) {
+            this(nc, partition, dataset, STORAGE_MANAGER, lsmBtree, numOfRecords);
         }
 
         public Searcher(TestNodeController nc, int partition, Dataset dataset, StorageComponentProvider storageManager,

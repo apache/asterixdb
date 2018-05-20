@@ -385,7 +385,8 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         List<ILSMDiskComponent> mergingComponents = ctx.getComponentsToBeMerged();
         // Merge operation can fail if another merge is already scheduled on those components
         // This should be guarded against by the merge policy but we still protect against here
-        if (isDeactivating || mergingComponents.size() < 2 && ctx.getOperation() != IndexOperation.DELETE_COMPONENTS) {
+        if (isDeactivating
+                || (mergingComponents.size() < 2 && ctx.getOperation() != IndexOperation.DELETE_COMPONENTS)) {
             return NoOpIoOperation.INSTANCE;
         }
         for (int i = 0; i < mergingComponents.size(); i++) {
@@ -398,7 +399,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         mergeCtx.setOperation(ctx.getOperation());
         mergeCtx.getComponentHolder().addAll(mergingComponents);
         propagateMap(ctx, mergeCtx);
-        mergingComponents.stream().map(ILSMDiskComponent.class::cast).forEach(mergeCtx.getComponentsToBeMerged()::add);
+        mergingComponents.stream().forEach(mergeCtx.getComponentsToBeMerged()::add);
         ILSMDiskComponent firstComponent = mergingComponents.get(0);
         ILSMDiskComponent lastComponent = mergingComponents.get(mergingComponents.size() - 1);
         LSMComponentFileReferences mergeFileRefs = getMergeFileReferences(firstComponent, lastComponent);
@@ -494,16 +495,27 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public final IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex) throws HyracksDataException {
+        return createBulkLoader(fillLevel, verifyInput, numElementsHint, checkIfEmptyIndex, null);
+    }
+
+    @Override
+    public IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex, Map<String, Object> parameters) throws HyracksDataException {
         if (checkIfEmptyIndex && !isEmptyIndex()) {
             throw HyracksDataException.create(ErrorCode.LOAD_NON_EMPTY_INDEX);
         }
-        return createBulkLoader(fillLevel, verifyInput, numElementsHint);
+        return createBulkLoader(fillFactor, verifyInput, numElementsHint, parameters);
     }
 
-    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws HyracksDataException {
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            Map<String, Object> parameters) throws HyracksDataException {
         AbstractLSMIndexOperationContext opCtx = createOpContext(NoOpIndexAccessParameters.INSTANCE);
-        LoadOperation loadOp = new LoadOperation(ioOpCallback, getIndexIdentifier());
+        opCtx.setParameters(parameters);
+        LSMComponentFileReferences componentFileRefs = fileManager.getRelFlushFileReference();
+        LoadOperation loadOp = new LoadOperation(componentFileRefs, ioOpCallback, getIndexIdentifier(), parameters);
+        loadOp.setNewComponent(createDiskComponent(bulkLoadComponentFactory,
+                componentFileRefs.getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(),
+                componentFileRefs.getBloomFilterFileReference(), true));
         ioOpCallback.scheduled(loadOp);
         opCtx.setIoOperation(loadOp);
         return new LSMIndexDiskComponentBulkLoader(this, opCtx, fillLevel, verifyInput, numElementsHint);
@@ -679,7 +691,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
 
     @Override
     public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> lsmComponents,
-            boolean bulkload, ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException {
+            ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException {
         //get set of files to be replicated for this component
         Set<String> componentFiles = new HashSet<>();
 
@@ -689,7 +701,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         }
 
         ReplicationExecutionType executionType;
-        if (bulkload) {
+        if (opType == LSMOperationType.LOAD) {
             executionType = ReplicationExecutionType.SYNC;
         } else {
             executionType = ReplicationExecutionType.ASYNC;
@@ -796,6 +808,30 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     }
 
     @Override
+    public void resetCurrentComponentIndex() {
+        synchronized (lsmHarness.getOperationTracker()) {
+            // validate no reader in any of the memory components and that all of them are INVALID
+            for (ILSMMemoryComponent c : memoryComponents) {
+                if (c.getReaderCount() > 0) {
+                    throw new IllegalStateException(
+                            "Attempt to reset current component index while readers are inside the components. " + c);
+                }
+                if (c.getState() != ComponentState.INACTIVE) {
+                    throw new IllegalStateException(
+                            "Attempt to reset current component index while a component is not INACTIVE. " + c);
+                }
+            }
+            currentMutableComponentId.set(0);
+            memoryComponents.get(0);
+            try {
+                memoryComponents.get(0).resetId(null, true);
+            } catch (HyracksDataException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    @Override
     public final ILSMDiskComponent flush(ILSMIOOperation operation) throws HyracksDataException {
         ILSMIndexAccessor accessor = operation.getAccessor();
         ILSMIndexOperationContext opCtx = accessor.getOpContext();
@@ -840,7 +876,8 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         }
     }
 
-    protected String getIndexIdentifier() {
+    @Override
+    public String getIndexIdentifier() {
         return fileManager.getBaseDir().getAbsolutePath();
     }
 
@@ -864,5 +901,4 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     protected abstract ILSMDiskComponent doFlush(ILSMIOOperation operation) throws HyracksDataException;
 
     protected abstract ILSMDiskComponent doMerge(ILSMIOOperation operation) throws HyracksDataException;
-
 }

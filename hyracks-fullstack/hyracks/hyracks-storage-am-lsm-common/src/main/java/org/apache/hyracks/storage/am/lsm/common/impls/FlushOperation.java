@@ -23,11 +23,10 @@ import java.util.Objects;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
-public abstract class FlushOperation extends AbstractIoOperation implements Comparable<ILSMIOOperation> {
+public abstract class FlushOperation extends AbstractIoOperation {
 
     public FlushOperation(ILSMIndexAccessor accessor, FileReference target, ILSMIOOperationCallback callback,
             String indexIdentifier) {
@@ -62,14 +61,6 @@ public abstract class FlushOperation extends AbstractIoOperation implements Comp
     @Override
     public LSMIOOperationType getIOOpertionType() {
         return LSMIOOperationType.FLUSH;
-    }
-
-    @Override
-    public int compareTo(ILSMIOOperation o) {
-        if (o instanceof FlushOperation) {
-            return target.getFile().getName().compareTo(((FlushOperation) o).getTarget().getFile().getName());
-        }
-        return -1;
     }
 
     @Override

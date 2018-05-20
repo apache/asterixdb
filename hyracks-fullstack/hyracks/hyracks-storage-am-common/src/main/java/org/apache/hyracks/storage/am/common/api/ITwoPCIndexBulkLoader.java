@@ -39,6 +39,6 @@ public interface ITwoPCIndexBulkLoader {
     /**
      * Abort the bulk modify op
      */
-    public void abort();
+    public void abort() throws HyracksDataException;
 
 }

@@ -30,6 +30,7 @@ import org.apache.asterix.common.transactions.ICheckpointManager;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.common.transactions.IRecoveryManagerFactory;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.transaction.management.service.locking.ConcurrentLockManager;
@@ -59,7 +60,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
     private long profilerEntityCommitLogCount = 0;
     private EntityCommitProfiler ecp;
 
-    public TransactionSubsystem(INcApplicationContext appCtx) {
+    public TransactionSubsystem(INcApplicationContext appCtx, IRecoveryManagerFactory recoveryManagerFactory) {
         this.appCtx = appCtx;
         this.id = appCtx.getServiceContext().getNodeId();
         this.txnProperties = appCtx.getTransactionProperties();
@@ -78,7 +79,7 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         }
 
         this.logManager = replicationEnabled ? new LogManagerWithReplication(this) : new LogManager(this);
-        this.recoveryManager = new RecoveryManager(this, appCtx.getServiceContext());
+        this.recoveryManager = recoveryManagerFactory.createRecoveryManager(appCtx.getServiceContext(), this);
         if (txnProperties.isCommitProfilerEnabled()) {
             ecp = new EntityCommitProfiler(this, this.txnProperties.getCommitProfilerReportInterval());
             ((ExecutorService) appCtx.getThreadExecutor()).submit(ecp);

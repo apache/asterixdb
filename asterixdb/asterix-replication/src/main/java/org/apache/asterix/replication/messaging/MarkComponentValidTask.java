@@ -34,6 +34,7 @@ import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.api.IReplicationWorker;
+import org.apache.asterix.replication.sync.IndexSynchronizer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 
@@ -43,17 +44,21 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManage
 public class MarkComponentValidTask implements IReplicaTask {
 
     private final long masterLsn;
+    private final long lastComponentId;
     private final String file;
 
-    public MarkComponentValidTask(String file, long masterLsn) {
+    public MarkComponentValidTask(String file, long masterLsn, long lastComponentId) {
         this.file = file;
+        this.lastComponentId = lastComponentId;
         this.masterLsn = masterLsn;
     }
 
     @Override
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) {
         try {
-            if (masterLsn > 0) {
+            if (masterLsn == IndexSynchronizer.BULKLOAD_LSN) {
+                updateBulkLoadedLastComponentTimestamp(appCtx);
+            } else if (masterLsn != IndexSynchronizer.MERGE_LSN) {
                 ensureComponentLsnFlushed(appCtx);
             }
             // delete mask
@@ -63,6 +68,15 @@ public class MarkComponentValidTask implements IReplicaTask {
         } catch (IOException | InterruptedException e) {
             throw new ReplicationException(e);
         }
+    }
+
+    private void updateBulkLoadedLastComponentTimestamp(INcApplicationContext appCtx) throws HyracksDataException {
+        final ResourceReference indexRef = ResourceReference.of(file);
+        final IIndexCheckpointManagerProvider checkpointManagerProvider = appCtx.getIndexCheckpointManagerProvider();
+        final IIndexCheckpointManager indexCheckpointManager = checkpointManagerProvider.get(indexRef);
+        final String componentEndTime = AbstractLSMIndexFileManager.getComponentEndTime(indexRef.getName());
+        indexCheckpointManager.advanceValidComponentTimestamp(componentEndTime);
+
     }
 
     private void ensureComponentLsnFlushed(INcApplicationContext appCtx)
@@ -82,7 +96,7 @@ public class MarkComponentValidTask implements IReplicaTask {
                 replicationTimeOut -= TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
             }
             final String componentEndTime = AbstractLSMIndexFileManager.getComponentEndTime(indexRef.getName());
-            indexCheckpointManager.replicated(componentEndTime, masterLsn);
+            indexCheckpointManager.replicated(componentEndTime, masterLsn, lastComponentId);
         }
     }
 
@@ -97,6 +111,7 @@ public class MarkComponentValidTask implements IReplicaTask {
             final DataOutputStream dos = new DataOutputStream(out);
             dos.writeUTF(file);
             dos.writeLong(masterLsn);
+            dos.writeLong(lastComponentId);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -105,6 +120,7 @@ public class MarkComponentValidTask implements IReplicaTask {
     public static MarkComponentValidTask create(DataInput input) throws IOException {
         final String indexFile = input.readUTF();
         final long lsn = input.readLong();
-        return new MarkComponentValidTask(indexFile, lsn);
+        final long lastComponentId = input.readLong();
+        return new MarkComponentValidTask(indexFile, lsn, lastComponentId);
     }
 }

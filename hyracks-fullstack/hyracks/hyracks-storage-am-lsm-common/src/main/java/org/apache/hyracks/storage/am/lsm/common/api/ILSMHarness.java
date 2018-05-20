@@ -169,13 +169,11 @@ public interface ILSMHarness {
      *            the operation context
      * @param diskComponents
      *            the disk component to be replicated
-     * @param bulkload
-     *            true if the components were bulk loaded, false otherwise
      * @param opType
      *            The operation type
      * @throws HyracksDataException
      */
-    void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> diskComponents, boolean bulkload,
+    void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> diskComponents,
             LSMOperationType opType) throws HyracksDataException;
 
     /**

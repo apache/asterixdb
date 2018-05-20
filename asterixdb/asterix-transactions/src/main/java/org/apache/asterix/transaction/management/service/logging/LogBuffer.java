@@ -89,8 +89,7 @@ public class LogBuffer implements ILogBuffer {
     public void append(ILogRecord logRecord, long appendLsn) {
         logRecord.writeLogRecord(appendBuffer);
 
-        if (logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.FLUSH
-                && logRecord.getLogType() != LogType.WAIT) {
+        if (isLocalTransactionLog(logRecord)) {
             logRecord.getTxnCtx().setLastLSN(appendLsn);
         }
 
@@ -100,13 +99,10 @@ public class LogBuffer implements ILogBuffer {
                 LOGGER.info("append()| appendOffset: " + appendOffset);
             }
             if (logRecord.getLogSource() == LogSource.LOCAL) {
-                if (logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
-                        || logRecord.getLogType() == LogType.WAIT) {
+                if (syncPendingNonFlushLog(logRecord)) {
                     logRecord.isFlushed(false);
                     syncCommitQ.add(logRecord);
-                }
-                if (logRecord.getLogType() == LogType.FLUSH) {
-                    logRecord.isFlushed(false);
+                } else if (logRecord.getLogType() == LogType.FLUSH) {
                     flushQ.add(logRecord);
                 }
             } else if (logRecord.getLogSource() == LogSource.REMOTE && (logRecord.getLogType() == LogType.JOB_COMMIT
@@ -115,6 +111,16 @@ public class LogBuffer implements ILogBuffer {
             }
             this.notify();
         }
+    }
+
+    private boolean syncPendingNonFlushLog(ILogRecord logRecord) {
+        return logRecord.getLogType() == LogType.JOB_COMMIT || logRecord.getLogType() == LogType.ABORT
+                || logRecord.getLogType() == LogType.WAIT || logRecord.getLogType() == LogType.WAIT_FOR_FLUSHES;
+    }
+
+    private boolean isLocalTransactionLog(ILogRecord logRecord) {
+        return logRecord.getLogSource() == LogSource.LOCAL && logRecord.getLogType() != LogType.FLUSH
+                && logRecord.getLogType() != LogType.WAIT && logRecord.getLogType() != LogType.WAIT_FOR_FLUSHES;
     }
 
     @Override
@@ -231,7 +237,8 @@ public class LogBuffer implements ILogBuffer {
                         notifyJobTermination();
                     } else if (logRecord.getLogType() == LogType.FLUSH) {
                         notifyFlushTermination();
-                    } else if (logRecord.getLogType() == LogType.WAIT) {
+                    } else if (logRecord.getLogType() == LogType.WAIT
+                            || logRecord.getLogType() == LogType.WAIT_FOR_FLUSHES) {
                         notifyWaitTermination();
                     }
                 } else if (logRecord.getLogSource() == LogSource.REMOTE && (logRecord.getLogType() == LogType.JOB_COMMIT

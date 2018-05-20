@@ -122,7 +122,7 @@ public class ExternalIndexHarness extends LSMHarness {
                             if (replicationEnabled) {
                                 componentsToBeReplicated.clear();
                                 componentsToBeReplicated.add((ILSMDiskComponent) c);
-                                lsmIndex.scheduleReplication(null, componentsToBeReplicated, false,
+                                lsmIndex.scheduleReplication(null, componentsToBeReplicated,
                                         ReplicationOperation.DELETE, opType);
                             }
                             ((ILSMDiskComponent) c).deactivateAndDestroy();
@@ -142,7 +142,7 @@ public class ExternalIndexHarness extends LSMHarness {
                             if (replicationEnabled) {
                                 componentsToBeReplicated.clear();
                                 componentsToBeReplicated.add(newComponent);
-                                triggerReplication(componentsToBeReplicated, false, opType);
+                                triggerReplication(componentsToBeReplicated, opType);
                             }
                             mergePolicy.diskComponentAdded(lsmIndex, fullMergeIsRequested.get());
                         }
@@ -200,7 +200,7 @@ public class ExternalIndexHarness extends LSMHarness {
             if (replicationEnabled) {
                 componentsToBeReplicated.clear();
                 componentsToBeReplicated.add(c);
-                triggerReplication(componentsToBeReplicated, true, LSMOperationType.MERGE);
+                triggerReplication(componentsToBeReplicated, LSMOperationType.LOAD);
             }
             // Enter the component
             enterComponent(c);
@@ -292,7 +292,7 @@ public class ExternalIndexHarness extends LSMHarness {
             if (replicationEnabled) {
                 componentsToBeReplicated.clear();
                 componentsToBeReplicated.add(diskComponent);
-                lsmIndex.scheduleReplication(null, componentsToBeReplicated, false, ReplicationOperation.DELETE, null);
+                lsmIndex.scheduleReplication(null, componentsToBeReplicated, ReplicationOperation.DELETE, null);
             }
             diskComponent.deactivateAndDestroy();
         }

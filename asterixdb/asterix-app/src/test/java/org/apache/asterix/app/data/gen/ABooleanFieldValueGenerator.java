@@ -22,7 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Random;
 
-import org.apache.asterix.app.data.gen.TupleGenerator.GenerationFunction;
+import org.apache.asterix.app.data.gen.RecordTupleGenerator.GenerationFunction;
 import org.apache.asterix.om.types.ATypeTag;
 
 public class ABooleanFieldValueGenerator implements IAsterixFieldValueGenerator<Boolean> {

@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.Map;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
@@ -26,6 +28,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
 
 public class NoOpIoOperation implements ILSMIOOperation {
     public static final NoOpIoOperation INSTANCE = new NoOpIoOperation();
@@ -111,6 +114,16 @@ public class NoOpIoOperation implements ILSMIOOperation {
     @Override
     public void sync() {
         // No Op
+    }
+
+    @Override
+    public void addCompleteListener(IoOperationCompleteListener listener) {
+        listener.completed(this);
+    }
+
+    @Override
+    public Map<String, Object> getParameters() {
+        return null;
     }
 
 }

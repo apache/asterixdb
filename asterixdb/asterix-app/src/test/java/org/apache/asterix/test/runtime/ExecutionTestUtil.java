@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -105,6 +104,10 @@ public class ExecutionTestUtil {
 
     public static void tearDown(boolean cleanup) throws Exception {
         tearDown(cleanup, integrationUtil, true);
+    }
+
+    public static void tearDown(boolean cleanup, boolean stopHdfs) throws Exception {
+        tearDown(cleanup, integrationUtil, stopHdfs);
     }
 
     public static void tearDown(boolean cleanup, AsterixHyracksIntegrationUtil integrationUtil, boolean stopHdfs)

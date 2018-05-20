@@ -18,9 +18,12 @@
  */
 package org.apache.asterix.common.dataflow;
 
+import java.util.List;
+
 import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 
 public class LSMIndexUtil {
@@ -38,6 +41,17 @@ public class LSMIndexUtil {
                     LSMIOOperationCallback ioOpCallback = (LSMIOOperationCallback) lsmIndex.getIOOperationCallback();
                     ioOpCallback.setFirstLsnForCurrentMemoryComponent(logManager.getAppendLSN());
                 }
+            }
+        }
+    }
+
+    public static void waitFor(List<? extends ILSMIOOperation> ioOperations) throws HyracksDataException {
+        for (int i = 0; i < ioOperations.size(); i++) {
+            try {
+                ioOperations.get(i).sync();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw HyracksDataException.create(e);
             }
         }
     }

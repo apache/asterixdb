@@ -86,7 +86,7 @@ public class EmptyComponent implements ILSMDiskComponent {
 
     @Override
     public ILSMComponentId getId() {
-        return LSMComponentId.MISSING_COMPONENT_ID;
+        return LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID;
     }
 
     @Override
@@ -155,5 +155,10 @@ public class EmptyComponent implements ILSMDiskComponent {
     @Override
     public void schedule(LSMIOOperationType ioOperationType) throws HyracksDataException {
         // Do nothing
+    }
+
+    @Override
+    public int getReaderCount() {
+        return 0;
     }
 }

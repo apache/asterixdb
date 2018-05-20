@@ -148,12 +148,12 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     }
 
     @Override
-    public void scheduleReplication(List<ILSMDiskComponent> lsmComponents, boolean bulkload, LSMOperationType opType)
+    public void scheduleReplication(List<ILSMDiskComponent> lsmComponents, LSMOperationType opType)
             throws HyracksDataException {
         ctx.setOperation(IndexOperation.REPLICATE);
         ctx.getComponentsToBeReplicated().clear();
         ctx.getComponentsToBeReplicated().addAll(lsmComponents);
-        lsmHarness.scheduleReplication(ctx, lsmComponents, bulkload, opType);
+        lsmHarness.scheduleReplication(ctx, lsmComponents, opType);
     }
 
     @Override

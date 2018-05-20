@@ -19,17 +19,17 @@
 package org.apache.asterix.common.utils;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Function;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
-import org.apache.asterix.common.storage.IndexPathElements;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.MappedFileSplit;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
@@ -142,5 +142,17 @@ public class StoragePathUtil {
      */
     public static String getIndexNameFromPath(String path) {
         return Paths.get(path).getFileName().toString();
+    }
+
+    /**
+     * Get the path of the index containing the passed reference
+     *
+     * @param ioManager
+     * @param ref
+     * @return
+     * @throws HyracksDataException
+     */
+    public static Path getIndexPath(IIOManager ioManager, ResourceReference ref) throws HyracksDataException {
+        return ioManager.resolve(ref.getRelativePath().toString()).getFile().toPath();
     }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import java.util.Map;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
@@ -26,6 +28,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
 import org.apache.hyracks.util.trace.TraceUtils;
@@ -54,10 +57,7 @@ class TracedIOOperation implements ILSMIOOperation {
         if (tracer.isEnabled(traceCategory)) {
             tracer.instant("schedule-" + ioOpName, traceCategory, Scope.p,
                     "{\"path\": \"" + ioOp.getTarget().getRelativePath() + "\"}");
-        }
-        if (tracer.isEnabled(traceCategory)) {
-            return ioOp instanceof Comparable ? new ComparableTracedIOOperation(ioOp, tracer, traceCategory)
-                    : new TracedIOOperation(ioOp, tracer, traceCategory);
+            return new TracedIOOperation(ioOp, tracer, traceCategory);
         }
         return ioOp;
     }
@@ -152,33 +152,14 @@ class TracedIOOperation implements ILSMIOOperation {
     public void sync() throws InterruptedException {
         ioOp.sync();
     }
-}
 
-class ComparableTracedIOOperation extends TracedIOOperation implements Comparable<ILSMIOOperation> {
-
-    protected ComparableTracedIOOperation(ILSMIOOperation ioOp, ITracer trace, long traceCategory) {
-        super(ioOp, trace, traceCategory);
+    @Override
+    public void addCompleteListener(IoOperationCompleteListener listener) {
+        ioOp.addCompleteListener(listener);
     }
 
     @Override
-    public int hashCode() {
-        return this.ioOp.hashCode();
+    public Map<String, Object> getParameters() {
+        return ioOp.getParameters();
     }
-
-    @Override
-    public boolean equals(Object other) {
-        return other instanceof ILSMIOOperation && compareTo((ILSMIOOperation) other) == 0;
-    }
-
-    @Override
-    public int compareTo(ILSMIOOperation other) {
-        final ILSMIOOperation myIoOp = this.ioOp;
-        if (myIoOp instanceof Comparable && other instanceof ComparableTracedIOOperation) {
-            return ((Comparable) myIoOp).compareTo(((ComparableTracedIOOperation) other).getIoOp());
-        }
-        LOGGER.warn("Comparing ioOps of type " + myIoOp.getClass().getSimpleName() + " and "
-                + other.getClass().getSimpleName() + " in " + getClass().getSimpleName());
-        return Integer.signum(hashCode() - other.hashCode());
-    }
-
 }

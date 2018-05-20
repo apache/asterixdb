@@ -186,13 +186,11 @@ public interface ILSMIndexAccessor extends IIndexAccessor {
      *
      * @param diskComponents
      *            the components to be replicated
-     * @param bulkload
-     *            true if the components were bulkloaded, false otherwise
      * @param opType
      *            the operation type
      * @throws HyracksDataException
      */
-    void scheduleReplication(List<ILSMDiskComponent> diskComponents, boolean bulkload, LSMOperationType opType)
+    void scheduleReplication(List<ILSMDiskComponent> diskComponents, LSMOperationType opType)
             throws HyracksDataException;
 
     /**

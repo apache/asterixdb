@@ -18,8 +18,11 @@
  */
 package org.apache.asterix.external.operators;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.FileIndexTupleTranslator;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -36,7 +39,8 @@ import org.apache.hyracks.storage.am.common.api.IIndexBuilder;
 import org.apache.hyracks.storage.am.common.api.IIndexBuilderFactory;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
-import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 
 /**
@@ -74,10 +78,13 @@ public class ExternalFilesIndexCreateOperatorDescriptor extends AbstractSingleAc
                 // Open the index
                 indexHelper.open();
                 try {
-                    IIndex index = indexHelper.getIndexInstance();
+                    ILSMIndex index = (ILSMIndex) indexHelper.getIndexInstance();
+                    Map<String, Object> parameters = new HashMap<>();
+                    parameters.put(LSMIOOperationCallback.KEY_FLUSHED_COMPONENT_ID,
+                            LSMComponentId.DEFAULT_COMPONENT_ID);
                     // Create bulk loader
                     IIndexBulkLoader bulkLoader =
-                            index.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false, files.size(), false);
+                            index.createBulkLoader(BTree.DEFAULT_FILL_FACTOR, false, files.size(), false, parameters);
                     // Load files
                     for (ExternalFile file : files) {
                         bulkLoader.add(filesTupleTranslator.getTupleFromFile(file));

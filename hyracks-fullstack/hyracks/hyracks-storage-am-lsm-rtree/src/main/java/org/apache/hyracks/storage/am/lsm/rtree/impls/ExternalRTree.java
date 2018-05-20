@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.rtree.impls;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
@@ -30,7 +31,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomCalculations;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilterSpecification;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
-import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeBulkLoader;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITwoPCIndexBulkLoader;
@@ -48,8 +48,10 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ITwoPCIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.ChainedLSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.impls.ExternalIndexHarness;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import org.apache.hyracks.storage.am.lsm.common.impls.LoadOperation;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
@@ -433,131 +435,99 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
 
     // For initial load
     @Override
-    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws HyracksDataException {
-        return new LSMTwoPCRTreeBulkLoader(fillLevel, verifyInput, 0, false);
+    public IIndexBulkLoader createBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            Map<String, Object> parameters) throws HyracksDataException {
+        return new LSMTwoPCRTreeBulkLoader(fillLevel, verifyInput, 0, false, parameters);
     }
 
     // For transaction bulk load <- could consolidate with the above method ->
     @Override
-    public IIndexBulkLoader createTransactionBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws HyracksDataException {
-        return new LSMTwoPCRTreeBulkLoader(fillLevel, verifyInput, numElementsHint, true);
+    public IIndexBulkLoader createTransactionBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            Map<String, Object> parameters) throws HyracksDataException {
+        return new LSMTwoPCRTreeBulkLoader(fillLevel, verifyInput, numElementsHint, true, parameters);
     }
 
     // The bulk loader used for both initial loading and transaction
     // modifications
     public class LSMTwoPCRTreeBulkLoader implements IIndexBulkLoader, ITwoPCIndexBulkLoader {
         private final ILSMDiskComponent component;
-        private final IIndexBulkLoader rtreeBulkLoader;
-        private final BTreeBulkLoader btreeBulkLoader;
-        private final IIndexBulkLoader builder;
-        private boolean cleanedUpArtifacts = false;
-        private boolean isEmptyComponent = true;
-        private boolean endedBloomFilterLoad = false;
         private final boolean isTransaction;
+        private final LoadOperation loadOp;
+        private final ChainedLSMDiskComponentBulkLoader componentBulkLoader;
 
         public LSMTwoPCRTreeBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
-                boolean isTransaction) throws HyracksDataException {
+                boolean isTransaction, Map<String, Object> parameters) throws HyracksDataException {
             this.isTransaction = isTransaction;
             // Create the appropriate target
+            LSMComponentFileReferences componentFileRefs;
             if (isTransaction) {
-                component = createTransactionTarget();
+                try {
+                    componentFileRefs = fileManager.getNewTransactionFileReference();
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                }
+                component = createDiskComponent(componentFactory, componentFileRefs.getInsertIndexFileReference(),
+                        componentFileRefs.getDeleteIndexFileReference(),
+                        componentFileRefs.getBloomFilterFileReference(), true);
             } else {
-                component = createBulkLoadTarget();
+                componentFileRefs = fileManager.getRelFlushFileReference();
+                component =
+                        createDiskComponent(bulkLoadComponentFactory, componentFileRefs.getInsertIndexFileReference(),
+                                componentFileRefs.getDeleteIndexFileReference(),
+                                componentFileRefs.getBloomFilterFileReference(), true);
             }
 
-            // Create the three loaders
-            rtreeBulkLoader = ((LSMRTreeDiskComponent) component).getIndex().createBulkLoader(fillFactor, verifyInput,
-                    numElementsHint, false);
-            btreeBulkLoader = (BTreeBulkLoader) ((LSMRTreeDiskComponent) component).getBuddyIndex()
-                    .createBulkLoader(fillFactor, verifyInput, numElementsHint, false);
-            int maxBucketsPerElement = BloomCalculations.maxBucketsPerElement(numElementsHint);
-            BloomFilterSpecification bloomFilterSpec =
-                    BloomCalculations.computeBloomSpec(maxBucketsPerElement, bloomFilterFalsePositiveRate);
-            builder = ((LSMRTreeDiskComponent) component).getBloomFilter().createBuilder(numElementsHint,
-                    bloomFilterSpec.getNumHashes(), bloomFilterSpec.getNumBucketsPerElements());
+            loadOp = new LoadOperation(componentFileRefs, ioOpCallback, getIndexIdentifier(), parameters);
+            loadOp.setNewComponent(component);
+            ioOpCallback.scheduled(loadOp);
+            ioOpCallback.beforeOperation(loadOp);
+            componentBulkLoader =
+                    component.createBulkLoader(loadOp, fillFactor, verifyInput, numElementsHint, false, true, false);
         }
 
         @Override
         public void add(ITupleReference tuple) throws HyracksDataException {
-            try {
-                rtreeBulkLoader.add(tuple);
-            } catch (Exception e) {
-                cleanupArtifacts();
-                throw e;
-            }
-            if (isEmptyComponent) {
-                isEmptyComponent = false;
-            }
-        }
-
-        // This is made public in case of a failure, it is better to delete all
-        // created artifacts.
-        public void cleanupArtifacts() throws HyracksDataException {
-            if (!cleanedUpArtifacts) {
-                cleanedUpArtifacts = true;
-                ((LSMRTreeDiskComponent) component).deactivateAndDestroy();
-            }
+            componentBulkLoader.add(tuple);
         }
 
         @Override
         public void end() throws HyracksDataException {
-            if (!cleanedUpArtifacts) {
-                if (!endedBloomFilterLoad) {
-                    builder.end();
-                    endedBloomFilterLoad = true;
+            try {
+                ioOpCallback.afterOperation(loadOp);
+                componentBulkLoader.end();
+                if (component.getComponentSize() > 0) {
+                    if (isTransaction) {
+                        // Since this is a transaction component, validate and
+                        // deactivate. it could later be added or deleted
+                        component.markAsValid(durable);
+                        ioOpCallback.afterFinalize(loadOp);
+                        component.deactivate();
+                    } else {
+                        ioOpCallback.afterFinalize(loadOp);
+                        getHarness().addBulkLoadedComponent(component);
+                    }
                 }
-                rtreeBulkLoader.end();
-                btreeBulkLoader.end();
-                if (isEmptyComponent) {
-                    cleanupArtifacts();
-                } else if (isTransaction) {
-                    // Since this is a transaction component, validate and
-                    // deactivate. it could later be added or deleted
-                    component.markAsValid(durable);
-                    component.deactivate();
-                } else {
-                    getHarness().addBulkLoadedComponent(component);
-                }
+            } finally {
+                ioOpCallback.completed(loadOp);
             }
         }
 
         @Override
         public void delete(ITupleReference tuple) throws HyracksDataException {
-            try {
-                btreeBulkLoader.add(tuple);
-                builder.add(tuple);
-            } catch (Exception e) {
-                cleanupArtifacts();
-                throw e;
-            }
-            if (isEmptyComponent) {
-                isEmptyComponent = false;
-            }
+            componentBulkLoader.delete(tuple);
         }
 
         @Override
-        public void abort() {
+        public void abort() throws HyracksDataException {
             try {
-                cleanupArtifacts();
-            } catch (Exception e) {
-
+                try {
+                    componentBulkLoader.abort();
+                } finally {
+                    ioOpCallback.afterFinalize(loadOp);
+                }
+            } finally {
+                ioOpCallback.completed(loadOp);
             }
-        }
-
-        // This method is used to create a target for a bulk modify operation. This
-        // component must then eventually be either committed or deleted
-        private ILSMDiskComponent createTransactionTarget() throws HyracksDataException {
-            LSMComponentFileReferences componentFileRefs;
-            try {
-                componentFileRefs = fileManager.getNewTransactionFileReference();
-            } catch (IOException e) {
-                throw HyracksDataException.create(e);
-            }
-            return createDiskComponent(componentFactory, componentFileRefs.getInsertIndexFileReference(),
-                    componentFileRefs.getDeleteIndexFileReference(), componentFileRefs.getBloomFilterFileReference(),
-                    true);
         }
     }
 

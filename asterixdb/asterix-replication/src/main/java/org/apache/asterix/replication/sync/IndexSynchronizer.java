@@ -37,12 +37,15 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class IndexSynchronizer {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final long MERGE_LSN = -1;
+    public static final long BULKLOAD_LSN = -2;
     private final IReplicationJob job;
     private final INcApplicationContext appCtx;
 
@@ -91,7 +94,8 @@ public class IndexSynchronizer {
         final FileSynchronizer fileSynchronizer = new FileSynchronizer(appCtx, replica);
         job.getJobFiles().stream().map(StoragePathUtil::getFileRelativePath).forEach(fileSynchronizer::replicate);
         // send mark component valid
-        MarkComponentValidTask markValidTask = new MarkComponentValidTask(indexFile, getReplicatedComponentLsn());
+        MarkComponentValidTask markValidTask =
+                new MarkComponentValidTask(indexFile, getReplicatedComponentLsn(), getReplicatedComponentId());
         ReplicationProtocol.sendTo(replica, markValidTask);
         ReplicationProtocol.waitForAck(replica);
         LOGGER.debug("Replicated component ({}) to replica {}", indexFile, replica);
@@ -118,6 +122,12 @@ public class IndexSynchronizer {
 
     private long getReplicatedComponentLsn() throws HyracksDataException {
         final ILSMIndexReplicationJob indexReplJob = (ILSMIndexReplicationJob) job;
+        if (indexReplJob.getLSMOpType() == LSMOperationType.MERGE) {
+            return MERGE_LSN;
+        } else if (indexReplJob.getLSMOpType() == LSMOperationType.LOAD) {
+            return BULKLOAD_LSN;
+        }
+
         if (indexReplJob.getLSMOpType() != LSMOperationType.FLUSH) {
             return LSMIOOperationCallback.INVALID_LSN;
         }
@@ -125,5 +135,15 @@ public class IndexSynchronizer {
         final ILSMIndexOperationContext ctx = indexReplJob.getLSMIndexOperationContext();
         return ((LSMIOOperationCallback) lsmIndex.getIOOperationCallback())
                 .getComponentLSN(ctx.getComponentsToBeReplicated());
+    }
+
+    private long getReplicatedComponentId() throws HyracksDataException {
+        final ILSMIndexReplicationJob indexReplJob = (ILSMIndexReplicationJob) job;
+        if (indexReplJob.getLSMOpType() != LSMOperationType.FLUSH) {
+            return -1L;
+        }
+        final ILSMIndexOperationContext ctx = indexReplJob.getLSMIndexOperationContext();
+        LSMComponentId id = (LSMComponentId) ctx.getComponentsToBeReplicated().get(0).getId();
+        return id.getMinId();
     }
 }

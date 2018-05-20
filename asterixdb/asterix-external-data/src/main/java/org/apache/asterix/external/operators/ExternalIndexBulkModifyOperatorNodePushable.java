@@ -19,6 +19,8 @@
 package org.apache.asterix.external.operators;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -60,8 +62,9 @@ public class ExternalIndexBulkModifyOperatorNodePushable extends IndexBulkLoadOp
         try {
             writer.open();
             // Transactional BulkLoader
-            bulkLoader =
-                    ((ITwoPCIndex) index).createTransactionBulkLoader(fillFactor, verifyInput, deletedFiles.length);
+            Map<String, Object> parameters = new HashMap<>();
+            bulkLoader = ((ITwoPCIndex) index).createTransactionBulkLoader(fillFactor, verifyInput, deletedFiles.length,
+                    parameters);
             // Delete files
             for (int i = 0; i < deletedFiles.length; i++) {
                 fileNumber.setValue(deletedFiles[i]);

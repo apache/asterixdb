@@ -20,19 +20,21 @@
 package org.apache.asterix.common.ioopcallbacks;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
+import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
@@ -45,13 +47,19 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 // A single LSMIOOperationCallback per LSM index used to perform actions around Flush and Merge operations
 public class LSMIOOperationCallback implements ILSMIOOperationCallback {
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String KEY_FLUSH_LOG_LSN = "FlushLogLsn";
     public static final String KEY_NEXT_COMPONENT_ID = "NextComponentId";
+    public static final String KEY_FLUSHED_COMPONENT_ID = "FlushedComponentId";
     private static final String KEY_FIRST_LSN = "FirstLsn";
     private static final MutableArrayValueReference KEY_METADATA_FLUSH_LOG_LSN =
             new MutableArrayValueReference(KEY_FLUSH_LOG_LSN.getBytes());
@@ -83,8 +91,11 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         if (operation.getStatus() == LSMIOOperationStatus.FAILURE) {
             return;
         }
-        if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
-            Map<String, Object> map = operation.getAccessor().getOpContext().getParameters();
+        if (operation.getIOOpertionType() == LSMIOOperationType.LOAD) {
+            Map<String, Object> map = operation.getParameters();
+            putComponentIdIntoMetadata(operation.getNewComponent(), (LSMComponentId) map.get(KEY_FLUSHED_COMPONENT_ID));
+        } else if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
+            Map<String, Object> map = operation.getParameters();
             putLSNIntoMetadata(operation.getNewComponent(), (Long) map.get(KEY_FLUSH_LOG_LSN));
             putComponentIdIntoMetadata(operation.getNewComponent(),
                     ((FlushOperation) operation).getFlushingComponent().getId());
@@ -104,16 +115,64 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         if (operation.getStatus() == LSMIOOperationStatus.FAILURE) {
             return;
         }
-        if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
-            Map<String, Object> map = operation.getAccessor().getOpContext().getParameters();
-            final Long lsn = (Long) map.get(KEY_FLUSH_LOG_LSN);
-            final Optional<String> componentFile =
-                    operation.getNewComponent().getLSMComponentPhysicalFiles().stream().findAny();
-            if (componentFile.isPresent()) {
-                final ResourceReference ref = ResourceReference.of(componentFile.get());
-                final String componentEndTime = AbstractLSMIndexFileManager.getComponentEndTime(ref.getName());
-                indexCheckpointManagerProvider.get(ref).flushed(componentEndTime, lsn);
+        if (operation.getIOOpertionType() != LSMIOOperationType.LOAD
+                && operation.getAccessor().getOpContext().getOperation() == IndexOperation.DELETE_COMPONENTS) {
+            deleteComponentsFromCheckpoint(operation);
+        } else if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH
+                || operation.getIOOpertionType() == LSMIOOperationType.LOAD) {
+            addComponentToCheckpoint(operation);
+        }
+    }
+
+    private void addComponentToCheckpoint(ILSMIOOperation operation) throws HyracksDataException {
+        // will always update the checkpoint file even if no new component was created
+        FileReference target = operation.getTarget();
+        Map<String, Object> map = operation.getParameters();
+        final Long lsn =
+                operation.getIOOpertionType() == LSMIOOperationType.FLUSH ? (Long) map.get(KEY_FLUSH_LOG_LSN) : 0L;
+        final LSMComponentId id = (LSMComponentId) map.get(KEY_FLUSHED_COMPONENT_ID);
+        final ResourceReference ref = ResourceReference.of(target.getAbsolutePath());
+        final String componentEndTime = AbstractLSMIndexFileManager.getComponentEndTime(ref.getName());
+        indexCheckpointManagerProvider.get(ref).flushed(componentEndTime, lsn, id.getMaxId());
+    }
+
+    private void deleteComponentsFromCheckpoint(ILSMIOOperation operation) throws HyracksDataException {
+        // component was deleted... if a flush, do nothing.. if a merge, must update the checkpoint file
+        if (operation.getIOOpertionType() == LSMIOOperationType.MERGE) {
+            // Get component id of the last disk component
+            LSMComponentId mostRecentComponentId =
+                    getMostRecentComponentId(operation.getAccessor().getOpContext().getComponentsToBeMerged());
+            // Update the checkpoint file
+            FileReference target = operation.getTarget();
+            final ResourceReference ref = ResourceReference.of(target.getAbsolutePath());
+            indexCheckpointManagerProvider.get(ref).setLastComponentId(mostRecentComponentId.getMaxId());
+        } else if (operation.getIOOpertionType() != LSMIOOperationType.FLUSH) {
+            throw new IllegalStateException("Unexpected IO operation: " + operation.getIOOpertionType());
+        }
+    }
+
+    private LSMComponentId getMostRecentComponentId(Collection<ILSMDiskComponent> deletedComponents)
+            throws HyracksDataException {
+        // must sync on opTracker to ensure list of components doesn't change
+        synchronized (lsmIndex.getOperationTracker()) {
+            List<ILSMDiskComponent> diskComponents = lsmIndex.getDiskComponents();
+            if (diskComponents.isEmpty()) {
+                LOGGER.log(Level.INFO, "There are no disk components");
+                return LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID;
             }
+            if (deletedComponents.contains(diskComponents.get(diskComponents.size() - 1))) {
+                LOGGER.log(Level.INFO, "All disk components have been deleted");
+                return LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID;
+            }
+            int mostRecentComponentIndex = 0;
+            for (int i = 0; i < diskComponents.size(); i++) {
+                if (!deletedComponents.contains(diskComponents.get(i))) {
+                    break;
+                }
+                mostRecentComponentIndex++;
+            }
+            ILSMDiskComponent mostRecentDiskComponent = diskComponents.get(mostRecentComponentIndex);
+            return (LSMComponentId) mostRecentDiskComponent.getId();
         }
     }
 
@@ -153,14 +212,6 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         LSMComponentIdUtils.persist(componentId, newComponent.getMetadata());
     }
 
-    /**
-     * Used during the recovery process to force refresh the next component id
-     */
-    public void forceRefreshNextId(ILSMComponentId nextComponentId) {
-        componentIds.clear();
-        componentIds.add(nextComponentId);
-    }
-
     public synchronized void setFirstLsnForCurrentMemoryComponent(long firstLsn) {
         this.firstLsnForCurrentMemoryComponent = firstLsn;
         if (pendingFlushes == 0) {
@@ -195,9 +246,11 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         dsInfo.declareActiveIOOperation();
         if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
             pendingFlushes++;
+            FlushOperation flush = (FlushOperation) operation;
             Map<String, Object> map = operation.getAccessor().getOpContext().getParameters();
             Long flushLsn = (Long) map.get(KEY_FLUSH_LOG_LSN);
             map.put(KEY_FIRST_LSN, firstLsnForCurrentMemoryComponent);
+            map.put(KEY_FLUSHED_COMPONENT_ID, flush.getFlushingComponent().getId());
             componentIds.add((ILSMComponentId) map.get(KEY_NEXT_COMPONENT_ID));
             firstLsnForCurrentMemoryComponent = flushLsn; // Advance the first lsn for new component
         }

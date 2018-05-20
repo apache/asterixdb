@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
@@ -28,6 +29,7 @@ import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMHarness;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
+import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
@@ -128,7 +130,7 @@ public interface ILSMIndex extends IIndex {
 
     boolean isCurrentMutableComponentEmpty() throws HyracksDataException;
 
-    void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> diskComponents, boolean bulkload,
+    void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMDiskComponent> diskComponents,
             ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException;
 
     boolean isMemoryComponentsAllocated();
@@ -184,5 +186,29 @@ public interface ILSMIndex extends IIndex {
      * @param operation
      */
     void cleanUpFilesForFailedOperation(ILSMIOOperation operation);
+
+    /**
+     * @return the absolute path of the index
+     */
+    String getIndexIdentifier();
+
+    /**
+     * Create a bulk loader
+     *
+     * @param fillFactor
+     * @param verifyInput
+     * @param numElementsHint
+     * @param checkIfEmptyIndex
+     * @param parameters
+     * @return
+     * @throws HyracksDataException
+     */
+    IIndexBulkLoader createBulkLoader(float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex, Map<String, Object> parameters) throws HyracksDataException;
+
+    /**
+     * Reset the current memory component id to 0.
+     */
+    void resetCurrentComponentIndex();
 
 }

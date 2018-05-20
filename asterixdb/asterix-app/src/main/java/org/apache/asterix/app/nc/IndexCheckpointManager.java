@@ -22,6 +22,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,29 +55,36 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public synchronized void init(long lsn) throws HyracksDataException {
-        final List<IndexCheckpoint> checkpoints = getCheckpoints();
+    public synchronized void init(String lastComponentTimestamp, long lsn) throws HyracksDataException {
+        List<IndexCheckpoint> checkpoints;
+        try {
+            checkpoints = getCheckpoints();
+        } catch (ClosedByInterruptException e) {
+            throw HyracksDataException.create(e);
+        }
         if (!checkpoints.isEmpty()) {
             LOGGER.warn(() -> "Checkpoints found on initializing: " + indexPath);
             delete();
         }
-        IndexCheckpoint firstCheckpoint = IndexCheckpoint.first(lsn);
+        IndexCheckpoint firstCheckpoint = IndexCheckpoint.first(lastComponentTimestamp, lsn);
         persist(firstCheckpoint);
     }
 
     @Override
-    public synchronized void replicated(String componentTimestamp, long masterLsn) throws HyracksDataException {
+    public synchronized void replicated(String componentTimestamp, long masterLsn, long componentId)
+            throws HyracksDataException {
         final Long localLsn = getLatest().getMasterNodeFlushMap().get(masterLsn);
         if (localLsn == null) {
             throw new IllegalStateException("Component flushed before lsn mapping was received");
         }
-        flushed(componentTimestamp, localLsn);
+        flushed(componentTimestamp, localLsn, componentId);
     }
 
     @Override
-    public synchronized void flushed(String componentTimestamp, long lsn) throws HyracksDataException {
+    public synchronized void flushed(String componentTimestamp, long lsn, long componentId)
+            throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
-        IndexCheckpoint nextCheckpoint = IndexCheckpoint.next(latest, lsn, componentTimestamp);
+        IndexCheckpoint nextCheckpoint = IndexCheckpoint.next(latest, lsn, componentTimestamp, componentId);
         persist(nextCheckpoint);
         deleteHistory(nextCheckpoint.getId(), HISTORY_CHECKPOINTS);
     }
@@ -85,19 +93,19 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     public synchronized void masterFlush(long masterLsn, long localLsn) throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
         latest.getMasterNodeFlushMap().put(masterLsn, localLsn);
-        final IndexCheckpoint next =
-                IndexCheckpoint.next(latest, latest.getLowWatermark(), latest.getValidComponentTimestamp());
+        final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(),
+                latest.getValidComponentTimestamp(), latest.getLastComponentId());
         persist(next);
         notifyAll();
     }
 
     @Override
-    public synchronized long getLowWatermark() {
+    public synchronized long getLowWatermark() throws HyracksDataException {
         return getLatest().getLowWatermark();
     }
 
     @Override
-    public synchronized boolean isFlushed(long masterLsn) {
+    public synchronized boolean isFlushed(long masterLsn) throws HyracksDataException {
         if (masterLsn == BULKLOAD_LSN) {
             return true;
         }
@@ -110,18 +118,28 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public Optional<String> getValidComponentTimestamp() {
-        final String validComponentTimestamp = getLatest().getValidComponentTimestamp();
+    public Optional<String> getValidComponentTimestamp() throws HyracksDataException {
+        String validComponentTimestamp = getLatest().getValidComponentTimestamp();
         return validComponentTimestamp != null ? Optional.of(validComponentTimestamp) : Optional.empty();
     }
 
     @Override
-    public int getCheckpointCount() {
-        return getCheckpoints().size();
+    public int getCheckpointCount() throws HyracksDataException {
+        try {
+            return getCheckpoints().size();
+        } catch (ClosedByInterruptException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
-    private IndexCheckpoint getLatest() {
-        final List<IndexCheckpoint> checkpoints = getCheckpoints();
+    @Override
+    public synchronized IndexCheckpoint getLatest() throws HyracksDataException {
+        List<IndexCheckpoint> checkpoints;
+        try {
+            checkpoints = getCheckpoints();
+        } catch (ClosedByInterruptException e) {
+            throw HyracksDataException.create(e);
+        }
         if (checkpoints.isEmpty()) {
             throw new IllegalStateException("Couldn't find any checkpoints for resource: " + indexPath);
         }
@@ -129,13 +147,34 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         return checkpoints.get(0);
     }
 
-    private List<IndexCheckpoint> getCheckpoints() {
+    @Override
+    public synchronized void setLastComponentId(long componentId) throws HyracksDataException {
+        final IndexCheckpoint latest = getLatest();
+        final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(),
+                latest.getValidComponentTimestamp(), componentId);
+        persist(next);
+    }
+
+    @Override
+    public synchronized void advanceValidComponentTimestamp(String timestamp) throws HyracksDataException {
+        final IndexCheckpoint latest = getLatest();
+        if (latest.getValidComponentTimestamp() == null
+                || timestamp.compareTo(latest.getValidComponentTimestamp()) > 0) {
+            final IndexCheckpoint next =
+                    IndexCheckpoint.next(latest, latest.getLowWatermark(), timestamp, latest.getLastComponentId());
+            persist(next);
+        }
+    }
+
+    private List<IndexCheckpoint> getCheckpoints() throws ClosedByInterruptException {
         List<IndexCheckpoint> checkpoints = new ArrayList<>();
         final File[] checkpointFiles = indexPath.toFile().listFiles(CHECKPOINT_FILE_FILTER);
         if (checkpointFiles != null) {
             for (File checkpointFile : checkpointFiles) {
                 try {
                     checkpoints.add(read(checkpointFile.toPath()));
+                } catch (ClosedByInterruptException e) {
+                    throw e;
                 } catch (IOException e) {
                     LOGGER.warn(() -> "Couldn't read index checkpoint file: " + checkpointFile, e);
                 }

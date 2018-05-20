@@ -19,7 +19,10 @@
 package org.apache.asterix.runtime.operators;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.runtime.operators.LSMSecondaryIndexCreationTupleProcessorNodePushable.DeletedTupleCounter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -32,9 +35,9 @@ import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexDiskComponentBulkLoader;
-import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
 
 /**
+ * Note: only used with correlated merge policy
  * This operator node is used to bulk load incoming tuples (scanned from the primary index)
  * into multiple disk components of the secondary index.
  * Incoming tuple format:
@@ -182,14 +185,12 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
 
     private void loadNewComponent(int componentPos) throws HyracksDataException {
         endCurrentComponent();
-
         int numTuples = getNumDeletedTuples(componentPos);
         ILSMDiskComponent primaryComponent = primaryIndex.getDiskComponents().get(componentPos);
-        componentBulkLoader =
-                (LSMIndexDiskComponentBulkLoader) secondaryIndex.createBulkLoader(1.0f, false, numTuples, false);
-        ILSMDiskComponent diskComponent = componentBulkLoader.getComponent();
-        // TODO move this piece of code to io operation callback
-        LSMComponentIdUtils.persist(primaryComponent.getId(), diskComponent.getMetadata());
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put(LSMIOOperationCallback.KEY_FLUSHED_COMPONENT_ID, primaryComponent.getId());
+        componentBulkLoader = (LSMIndexDiskComponentBulkLoader) secondaryIndex.createBulkLoader(1.0f, false, numTuples,
+                false, parameters);
     }
 
     private void addAntiMatterTuple(ITupleReference tuple) throws HyracksDataException {

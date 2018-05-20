@@ -18,10 +18,13 @@
  */
 package org.apache.asterix.runtime.operators;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -33,7 +36,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
 
 public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorNodePushable {
@@ -71,29 +73,26 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
     @Override
     protected void initializeBulkLoader() throws HyracksDataException {
         ILSMIndex targetIndex = (ILSMIndex) index;
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put(LSMIOOperationCallback.KEY_FLUSHED_COMPONENT_ID, LSMComponentId.DEFAULT_COMPONENT_ID);
         if (usage.equals(BulkLoadUsage.LOAD)) {
-            // for a loaded dataset, we use the default Id 0 which is guaranteed to be smaller
-            // than Ids of all memory components
-
-            // TODO handle component Id for datasets loaded multiple times
-            // TODO move this piece of code to io operation callback
-            bulkLoader = targetIndex.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
-            ILSMDiskComponent diskComponent = ((LSMIndexDiskComponentBulkLoader) bulkLoader).getComponent();
-            LSMComponentIdUtils.persist(LSMComponentId.DEFAULT_COMPONENT_ID, diskComponent.getMetadata());
+            bulkLoader = targetIndex.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                    parameters);
         } else {
             primaryIndexHelper.open();
             primaryIndex = (ILSMIndex) primaryIndexHelper.getIndexInstance();
             List<ILSMDiskComponent> primaryComponents = primaryIndex.getDiskComponents();
-            bulkLoader = targetIndex.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex);
             if (!primaryComponents.isEmpty()) {
-                // TODO move this piece of code to io operation callback
-                // Ideally, this should be done in io operation callback when a bulk load operation is finished
-                // However, currently we don't have an extensible callback mechanism to support this
                 ILSMComponentId bulkloadId = LSMComponentIdUtils.union(primaryComponents.get(0).getId(),
                         primaryComponents.get(primaryComponents.size() - 1).getId());
-                ILSMDiskComponent diskComponent = ((LSMIndexDiskComponentBulkLoader) bulkLoader).getComponent();
-                LSMComponentIdUtils.persist(bulkloadId, diskComponent.getMetadata());
+                parameters.put(LSMIOOperationCallback.KEY_FLUSHED_COMPONENT_ID, bulkloadId);
+            } else {
+                parameters.put(LSMIOOperationCallback.KEY_FLUSHED_COMPONENT_ID,
+                        LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID);
             }
+            bulkLoader = targetIndex.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                    parameters);
+
         }
     }
 

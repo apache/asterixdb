@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.CRC32;
 
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.tuples.SimpleTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
@@ -271,6 +270,7 @@ public class LogRecord implements ILogRecord {
                 computeAndSetLogSize();
                 break;
             case LogType.WAIT:
+            case LogType.WAIT_FOR_FLUSHES:
                 computeAndSetLogSize();
                 break;
             case LogType.JOB_COMMIT:
@@ -462,6 +462,7 @@ public class LogRecord implements ILogRecord {
                 logSize = FLUSH_LOG_SIZE;
                 break;
             case LogType.WAIT:
+            case LogType.WAIT_FOR_FLUSHES:
                 logSize = WAIT_LOG_SIZE;
                 break;
             case LogType.FILTER:

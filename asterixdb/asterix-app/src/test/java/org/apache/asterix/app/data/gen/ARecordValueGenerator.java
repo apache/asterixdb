@@ -21,7 +21,7 @@ package org.apache.asterix.app.data.gen;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.app.data.gen.TupleGenerator.GenerationFunction;
+import org.apache.asterix.app.data.gen.RecordTupleGenerator.GenerationFunction;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;

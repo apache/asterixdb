@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.api;
 
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -135,4 +136,16 @@ public interface ILSMIOOperation extends Callable<LSMIOOperationStatus> {
      * @throws InterruptedException
      */
     void sync() throws InterruptedException;
+
+    /**
+     * Add a listener for operation complete event
+     *
+     * @param listener
+     */
+    void addCompleteListener(IoOperationCompleteListener listener);
+
+    /**
+     * Get parameters passed when calling this IO operation
+     */
+    Map<String, Object> getParameters();
 }

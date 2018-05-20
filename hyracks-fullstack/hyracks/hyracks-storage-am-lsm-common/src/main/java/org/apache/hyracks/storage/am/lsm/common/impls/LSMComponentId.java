@@ -25,11 +25,11 @@ public class LSMComponentId implements ILSMComponentId {
 
     public static final long NOT_FOUND = -1;
 
-    // Use to handle legacy datasets which do not have the component Id
-    public static final ILSMComponentId MISSING_COMPONENT_ID = new LSMComponentId(NOT_FOUND, NOT_FOUND);
+    // Used to represent an empty index with no components
+    public static final LSMComponentId EMPTY_INDEX_LAST_COMPONENT_ID = new LSMComponentId(NOT_FOUND, NOT_FOUND);
 
     // A default component id used for bulk loaded component
-    public static final ILSMComponentId DEFAULT_COMPONENT_ID = new LSMComponentId(0, 0);
+    public static final LSMComponentId DEFAULT_COMPONENT_ID = new LSMComponentId(0, 0);
 
     private long minId;
 
@@ -46,10 +46,12 @@ public class LSMComponentId implements ILSMComponentId {
         this.maxId = maxId;
     }
 
+    @Override
     public long getMinId() {
         return this.minId;
     }
 
+    @Override
     public long getMaxId() {
         return this.maxId;
     }

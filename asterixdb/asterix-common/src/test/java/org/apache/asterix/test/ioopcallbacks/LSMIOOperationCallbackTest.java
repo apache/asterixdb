@@ -19,6 +19,9 @@
 
 package org.apache.asterix.test.ioopcallbacks;
 
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +38,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
@@ -60,6 +64,15 @@ public class LSMIOOperationCallbackTest extends TestCase {
      * 7. destroy
      */
 
+    private static final Format FORMATTER =
+            new SimpleDateFormat(AbstractLSMIndexFileManager.COMPONENT_TIMESTAMP_FORMAT);
+
+    private static String getComponentFileName() {
+        Date date = new Date();
+        String ts = FORMATTER.format(date);
+        return ts + '_' + ts;
+    }
+
     @Test
     public void testNormalSequence() throws HyracksDataException {
         int numMemoryComponents = 2;
@@ -81,7 +94,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
         flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
         ILSMIndexAccessor firstAccessor = new TestLSMIndexAccessor(new TestLSMIndexOperationContext(mockIndex));
         firstAccessor.getOpContext().setParameters(flushMap);
-        FileReference firstTarget = new FileReference(Mockito.mock(IODeviceHandle.class), "path");
+        FileReference firstTarget = new FileReference(Mockito.mock(IODeviceHandle.class), getComponentFileName());
         LSMComponentFileReferences firstFiles = new LSMComponentFileReferences(firstTarget, firstTarget, firstTarget);
         FlushOperation firstFlush = new TestFlushOperation(firstAccessor, firstTarget, callback, indexId, firstFiles,
                 new LSMComponentId(0, 0));
@@ -97,7 +110,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
         flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
         ILSMIndexAccessor secondAccessor = new TestLSMIndexAccessor(new TestLSMIndexOperationContext(mockIndex));
         secondAccessor.getOpContext().setParameters(flushMap);
-        FileReference secondTarget = new FileReference(Mockito.mock(IODeviceHandle.class), "path");
+        FileReference secondTarget = new FileReference(Mockito.mock(IODeviceHandle.class), getComponentFileName());
         LSMComponentFileReferences secondFiles =
                 new LSMComponentFileReferences(secondTarget, secondTarget, secondTarget);
         FlushOperation secondFlush = new TestFlushOperation(secondAccessor, secondTarget, callback, indexId,
@@ -175,7 +188,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
             flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, expectedId);
             ILSMIndexAccessor accessor = new TestLSMIndexAccessor(new TestLSMIndexOperationContext(mockIndex));
             accessor.getOpContext().setParameters(flushMap);
-            FileReference target = new FileReference(Mockito.mock(IODeviceHandle.class), "path");
+            FileReference target = new FileReference(Mockito.mock(IODeviceHandle.class), getComponentFileName());
             LSMComponentFileReferences files = new LSMComponentFileReferences(target, target, target);
             FlushOperation flush =
                     new TestFlushOperation(accessor, target, callback, indexId, files, new LSMComponentId(0, 0));
@@ -210,7 +223,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
         IIndexCheckpointManagerProvider indexCheckpointManagerProvider =
                 Mockito.mock(IIndexCheckpointManagerProvider.class);
         IIndexCheckpointManager indexCheckpointManager = Mockito.mock(IIndexCheckpointManager.class);
-        Mockito.doNothing().when(indexCheckpointManager).flushed(Mockito.any(), Mockito.anyLong());
+        Mockito.doNothing().when(indexCheckpointManager).flushed(Mockito.any(), Mockito.anyLong(), Mockito.anyLong());
         Mockito.doReturn(indexCheckpointManager).when(indexCheckpointManagerProvider).get(Mockito.any());
         return indexCheckpointManagerProvider;
     }

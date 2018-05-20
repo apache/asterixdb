@@ -25,8 +25,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
-import org.apache.hyracks.util.annotations.CriticalPath;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
+import org.apache.hyracks.util.annotations.CriticalPath;
 
 /**
  * Class encapsulates a chain of operations, happening during an LSM disk component bulkload
@@ -51,6 +52,7 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
         bulkloaderChain.add(bulkloader);
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
     @CriticalPath
     public void add(ITupleReference tuple) throws HyracksDataException {
@@ -60,7 +62,8 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
             for (int i = 0; i < bulkloadersCount; i++) {
                 t = bulkloaderChain.get(i).add(t);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            operation.setFailure(e);
             cleanupArtifacts();
             throw e;
         }
@@ -69,6 +72,7 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
         }
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
     @CriticalPath
     public void delete(ITupleReference tuple) throws HyracksDataException {
@@ -78,7 +82,8 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
             for (int i = 0; i < bulkloadersCount; i++) {
                 t = bulkloaderChain.get(i).delete(t);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            operation.setFailure(e);
             cleanupArtifacts();
             throw e;
         }
@@ -112,6 +117,7 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
 
     @Override
     public void abort() throws HyracksDataException {
+        operation.setStatus(LSMIOOperationStatus.FAILURE);
         for (IChainedComponentBulkLoader lsmOperation : bulkloaderChain) {
             lsmOperation.abort();
         }

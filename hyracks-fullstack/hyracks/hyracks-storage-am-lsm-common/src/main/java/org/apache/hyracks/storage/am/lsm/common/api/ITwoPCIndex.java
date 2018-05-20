@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
@@ -30,8 +31,8 @@ public interface ITwoPCIndex {
      * This function is used to create a BulkLoader for a transaction that is capable of insertions and deletions
      * and the bulk loaded component is hidden from the index
      */
-    public IIndexBulkLoader createTransactionBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint)
-            throws HyracksDataException;
+    public IIndexBulkLoader createTransactionBulkLoader(float fillLevel, boolean verifyInput, long numElementsHint,
+            Map<String, Object> parameters) throws HyracksDataException;
 
     /**
      * This function is used to commit the previous transaction if it was resulted in creating any components

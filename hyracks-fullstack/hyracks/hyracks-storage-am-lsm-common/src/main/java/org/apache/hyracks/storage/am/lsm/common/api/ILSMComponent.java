@@ -148,4 +148,9 @@ public interface ILSMComponent {
      * @throws HyracksDataException
      */
     void schedule(LSMIOOperationType ioOperationType) throws HyracksDataException;
+
+    /**
+     * @return the number of readers inside a component
+     */
+    int getReaderCount();
 }

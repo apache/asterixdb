@@ -141,7 +141,7 @@ public class TestLSMIndexAccessor implements ILSMIndexAccessor {
     }
 
     @Override
-    public void scheduleReplication(List<ILSMDiskComponent> diskComponents, boolean bulkload, LSMOperationType opType)
+    public void scheduleReplication(List<ILSMDiskComponent> diskComponents, LSMOperationType opType)
             throws HyracksDataException {
         throw new UnsupportedOperationException();
     }

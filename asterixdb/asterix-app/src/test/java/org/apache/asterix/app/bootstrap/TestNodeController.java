@@ -37,7 +37,6 @@ import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
@@ -58,17 +57,18 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
+import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage;
+import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorNodePushable;
 import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorNodePushable;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
-import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
-import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexModificationOperationCallbackFactory;
 import org.apache.asterix.transaction.management.runtime.CommitRuntime;
 import org.apache.asterix.transaction.management.service.logging.LogReader;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.operators.base.SinkRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -166,7 +166,7 @@ public class TestNodeController {
 
     public void deInit(boolean cleanupOnStop) throws Exception {
         ExternalUDFLibrarian.removeLibraryDir();
-        ExecutionTestUtil.tearDown(cleanupOnStop);
+        ExecutionTestUtil.tearDown(cleanupOnStop, runHDFS);
     }
 
     public void setOpts(List<Pair<IOption, Object>> opts) {
@@ -186,7 +186,7 @@ public class TestNodeController {
         return new TxnId(jobId.getId());
     }
 
-    public Pair<LSMInsertDeleteOperatorNodePushable, CommitRuntime> getInsertPipeline(IHyracksTaskContext ctx,
+    public Pair<LSMInsertDeleteOperatorNodePushable, IPushRuntime> getInsertPipeline(IHyracksTaskContext ctx,
             Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType, int[] filterFields,
             int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
             StorageComponentProvider storageComponentProvider, Index secondaryIndex)
@@ -195,7 +195,39 @@ public class TestNodeController {
                 primaryKeyIndicators, storageComponentProvider, secondaryIndex, IndexOperation.INSERT);
     }
 
-    public Pair<LSMInsertDeleteOperatorNodePushable, CommitRuntime> getInsertPipeline(IHyracksTaskContext ctx,
+    public Pair<SecondaryIndexInfo, LSMIndexBulkLoadOperatorNodePushable> getBulkLoadSecondaryOperator(
+            IHyracksTaskContext ctx, Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType,
+            ARecordType metaType, int[] filterFields, int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
+            StorageComponentProvider storageComponentProvider, Index secondaryIndex, int numElementsHint)
+            throws HyracksDataException, RemoteException, ACIDException, AlgebricksException {
+        try {
+            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
+                    DatasetUtil.getMergePolicyFactory(dataset, mdTxnCtx);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
+                    mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
+            SecondaryIndexInfo secondaryIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, secondaryIndex);
+            IIndexDataflowHelperFactory secondaryIndexHelperFactory = new IndexDataflowHelperFactory(
+                    storageComponentProvider.getStorageManager(), secondaryIndexInfo.fileSplitProvider);
+            IIndexDataflowHelperFactory primaryIndexHelperFactory = new IndexDataflowHelperFactory(
+                    storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
+            int[] fieldPermutation = new int[secondaryIndex.getKeyFieldNames().size()];
+            for (int i = 0; i < fieldPermutation.length; i++) {
+                fieldPermutation[i] = i;
+            }
+            LSMIndexBulkLoadOperatorNodePushable op =
+                    new LSMIndexBulkLoadOperatorNodePushable(secondaryIndexHelperFactory, primaryIndexHelperFactory,
+                            ctx, 0, fieldPermutation, 1.0F, false, numElementsHint, true, secondaryIndexInfo.rDesc,
+                            BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId());
+            op.setOutputFrameWriter(0, new SinkRuntimeFactory().createPushRuntime(ctx)[0], null);
+            return Pair.of(secondaryIndexInfo, op);
+        } catch (Throwable th) {
+            throw HyracksDataException.create(th);
+        }
+    }
+
+    public Pair<LSMInsertDeleteOperatorNodePushable, IPushRuntime> getInsertPipeline(IHyracksTaskContext ctx,
             Dataset dataset, IAType[] primaryKeyTypes, ARecordType recordType, ARecordType metaType, int[] filterFields,
             int[] primaryKeyIndexes, List<Integer> primaryKeyIndicators,
             StorageComponentProvider storageComponentProvider, Index secondaryIndex, IndexOperation op)
@@ -210,10 +242,8 @@ public class TestNodeController {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                     mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
-            IModificationOperationCallbackFactory modOpCallbackFactory =
-                    new PrimaryIndexModificationOperationCallbackFactory(dataset.getDatasetId(),
-                            primaryIndexInfo.primaryKeyIndexes, TXN_SUBSYSTEM_PROVIDER, Operation.get(op),
-                            ResourceType.LSM_BTREE);
+            IModificationOperationCallbackFactory modOpCallbackFactory = dataset.getModificationCallbackFactory(
+                    storageComponentProvider, primaryIndexInfo.index, op, primaryIndexInfo.primaryKeyIndexes);
             IRecordDescriptorProvider recordDescProvider = primaryIndexInfo.getInsertRecordDescriptorProvider();
             RecordDescriptor recordDesc =
                     recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0), 0);
@@ -272,16 +302,18 @@ public class TestNodeController {
                                 secondaryIndexInfo.insertFieldsPermutations, secondaryIndexInfo.rDesc, op, false,
                                 secondaryIndexHelperFactory, secondaryModCallbackFactory, null);
                 assignOp.setOutputFrameWriter(0, secondaryInsertOp, secondaryIndexInfo.rDesc);
-                CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(ctx), dataset.getDatasetId(),
-                        secondaryIndexInfo.primaryKeyIndexes, true, ctx.getTaskAttemptId().getTaskId().getPartition(),
-                        true);
+
+                IPushRuntime commitOp =
+                        dataset.getCommitRuntimeFactory(mdProvider, secondaryIndexInfo.primaryKeyIndexes, true)
+                                .createPushRuntime(ctx)[0];
+
                 secondaryInsertOp.setOutputFrameWriter(0, commitOp, secondaryIndexInfo.rDesc);
                 commitOp.setInputRecordDescriptor(0, secondaryIndexInfo.rDesc);
                 return Pair.of(insertOp, commitOp);
             } else {
-                CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(ctx), dataset.getDatasetId(),
-                        primaryIndexInfo.primaryKeyIndexes, true, ctx.getTaskAttemptId().getTaskId().getPartition(),
-                        true);
+                IPushRuntime commitOp =
+                        dataset.getCommitRuntimeFactory(mdProvider, primaryIndexInfo.primaryKeyIndexes, true)
+                                .createPushRuntime(ctx)[0];
                 insertOp.setOutputFrameWriter(0, commitOp, primaryIndexInfo.rDesc);
                 commitOp.setInputRecordDescriptor(0, primaryIndexInfo.rDesc);
                 return Pair.of(insertOp, commitOp);
@@ -380,7 +412,6 @@ public class TestNodeController {
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), dataverse);
         SecondaryIndexInfo secondaryIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, secondaryIndex);
         try {
-
             IResourceFactory resourceFactory = primaryIndexInfo.dataset.getResourceFactory(mdProvider, secondaryIndex,
                     primaryIndexInfo.recordType, primaryIndexInfo.metaType, mergePolicy.first, mergePolicy.second);
             IndexBuilderFactory indexBuilderFactory =
@@ -419,9 +450,9 @@ public class TestNodeController {
             secondaryIndexSerdes[i] =
                     SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(secondaryKeyTypes[i]);
         }
-        for (; i < primaryKeyTypes.length; i++) {
-            secondaryIndexSerdes[i] =
-                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(primaryKeyTypes[i]);
+        for (; i < secondaryKeyTypes.length + primaryKeyTypes.length; i++) {
+            secondaryIndexSerdes[i] = SerializerDeserializerProvider.INSTANCE
+                    .getSerializerDeserializer(primaryKeyTypes[i - secondaryKeyTypes.length]);
         }
         return secondaryIndexSerdes;
     }
@@ -447,8 +478,9 @@ public class TestNodeController {
         for (; i < secondaryKeyTypes.length; i++) {
             secondaryIndexTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(secondaryKeyTypes[i]);
         }
-        for (; i < primaryKeyTypes.length; i++) {
-            secondaryIndexTypeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(primaryKeyTypes[i]);
+        for (; i < secondaryKeyTypes.length + primaryKeyTypes.length; i++) {
+            secondaryIndexTypeTraits[i] =
+                    TypeTraitProvider.INSTANCE.getTypeTrait(primaryKeyTypes[i - secondaryKeyTypes.length]);
         }
         return secondaryIndexTypeTraits;
     }
@@ -491,12 +523,14 @@ public class TestNodeController {
     }
 
     public static class SecondaryIndexInfo {
-        private final int[] primaryKeyIndexes;
-        private final PrimaryIndexInfo primaryIndexInfo;
-        private final Index secondaryIndex;
-        private final ConstantFileSplitProvider fileSplitProvider;
-        private final RecordDescriptor rDesc;
-        private final int[] insertFieldsPermutations;
+        final int[] primaryKeyIndexes;
+        final PrimaryIndexInfo primaryIndexInfo;
+        final Index secondaryIndex;
+        final ConstantFileSplitProvider fileSplitProvider;
+        final ISerializerDeserializer<?>[] secondaryIndexSerdes;
+        final RecordDescriptor rDesc;
+        final int[] insertFieldsPermutations;
+        final ITypeTraits[] secondaryIndexTypeTraits;
 
         public SecondaryIndexInfo(PrimaryIndexInfo primaryIndexInfo, Index secondaryIndex) {
             this.primaryIndexInfo = primaryIndexInfo;
@@ -507,11 +541,11 @@ public class TestNodeController {
             FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(appCtx.getClusterStateManager(),
                     primaryIndexInfo.dataset, secondaryIndex.getIndexName(), nodes);
             fileSplitProvider = new ConstantFileSplitProvider(splits);
-            ITypeTraits[] secondaryIndexTypeTraits = createSecondaryIndexTypeTraits(primaryIndexInfo.recordType,
+            secondaryIndexTypeTraits = createSecondaryIndexTypeTraits(primaryIndexInfo.recordType,
                     primaryIndexInfo.metaType, primaryIndexInfo.primaryKeyTypes,
                     secondaryIndex.getKeyFieldTypes().toArray(new IAType[secondaryIndex.getKeyFieldTypes().size()]));
-            ISerializerDeserializer<?>[] secondaryIndexSerdes = createSecondaryIndexSerdes(primaryIndexInfo.recordType,
-                    primaryIndexInfo.metaType, primaryIndexInfo.primaryKeyTypes,
+            secondaryIndexSerdes = createSecondaryIndexSerdes(primaryIndexInfo.recordType, primaryIndexInfo.metaType,
+                    primaryIndexInfo.primaryKeyTypes,
                     secondaryIndex.getKeyFieldTypes().toArray(new IAType[secondaryIndex.getKeyFieldTypes().size()]));
             rDesc = new RecordDescriptor(secondaryIndexSerdes, secondaryIndexTypeTraits);
             insertFieldsPermutations = new int[secondaryIndexTypeTraits.length];
@@ -526,6 +560,10 @@ public class TestNodeController {
 
         public IFileSplitProvider getFileSplitProvider() {
             return fileSplitProvider;
+        }
+
+        public ISerializerDeserializer<?>[] getSerdes() {
+            return secondaryIndexSerdes;
         }
     }
 

@@ -18,7 +18,9 @@
  */
 package org.apache.asterix.external.operators;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.indexing.ExternalFile;
@@ -69,9 +71,10 @@ public class ExternalFilesIndexModificationOperatorDescriptor extends AbstractSi
                 indexHelper.open();
                 IIndex index = indexHelper.getIndexInstance();
                 LSMTwoPCBTreeBulkLoader bulkLoader = null;
+                Map<String, Object> parameters = new HashMap<>();
                 try {
                     bulkLoader = (LSMTwoPCBTreeBulkLoader) ((ExternalBTree) index)
-                            .createTransactionBulkLoader(BTree.DEFAULT_FILL_FACTOR, false, files.size());
+                            .createTransactionBulkLoader(BTree.DEFAULT_FILL_FACTOR, false, files.size(), parameters);
                     // Load files
                     // The files must be ordered according to their numbers
                     for (ExternalFile file : files) {

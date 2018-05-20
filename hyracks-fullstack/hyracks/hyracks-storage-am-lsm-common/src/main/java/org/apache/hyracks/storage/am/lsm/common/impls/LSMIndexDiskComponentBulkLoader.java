@@ -35,33 +35,41 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
             boolean verifyInput, long numElementsHint) throws HyracksDataException {
         this.lsmIndex = lsmIndex;
         this.opCtx = opCtx;
-        opCtx.getIoOperation().setNewComponent(lsmIndex.createBulkLoadTarget());
         this.componentBulkLoader = opCtx.getIoOperation().getNewComponent().createBulkLoader(opCtx.getIoOperation(),
                 fillFactor, verifyInput, numElementsHint, false, true, true);
-        lsmIndex.getIOOperationCallback().beforeOperation(opCtx.getIoOperation());
     }
 
     public ILSMDiskComponent getComponent() {
         return opCtx.getIoOperation().getNewComponent();
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
     public void add(ITupleReference tuple) throws HyracksDataException {
-        componentBulkLoader.add(tuple);
+        try {
+            componentBulkLoader.add(tuple);
+        } catch (Throwable th) {
+            opCtx.getIoOperation().setFailure(th);
+            throw th;
+        }
     }
 
+    @SuppressWarnings("squid:S1181")
     public void delete(ITupleReference tuple) throws HyracksDataException {
-        componentBulkLoader.delete(tuple);
+        try {
+            componentBulkLoader.delete(tuple);
+        } catch (Throwable th) {
+            opCtx.getIoOperation().setFailure(th);
+            throw th;
+        }
     }
 
     @Override
     public void end() throws HyracksDataException {
         try {
             try {
+                lsmIndex.getIOOperationCallback().afterOperation(opCtx.getIoOperation());
                 componentBulkLoader.end();
-                if (opCtx.getIoOperation().getNewComponent().getComponentSize() > 0) {
-                    lsmIndex.getIOOperationCallback().afterOperation(opCtx.getIoOperation());
-                }
             } catch (Throwable th) { // NOSONAR Must not call afterFinalize without setting failure
                 opCtx.getIoOperation().setStatus(LSMIOOperationStatus.FAILURE);
                 opCtx.getIoOperation().setFailure(th);
@@ -69,7 +77,8 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
             } finally {
                 lsmIndex.getIOOperationCallback().afterFinalize(opCtx.getIoOperation());
             }
-            if (opCtx.getIoOperation().getNewComponent().getComponentSize() > 0) {
+            if (opCtx.getIoOperation().getStatus() == LSMIOOperationStatus.SUCCESS
+                    && opCtx.getIoOperation().getNewComponent().getComponentSize() > 0) {
                 lsmIndex.getHarness().addBulkLoadedComponent(opCtx.getIoOperation().getNewComponent());
             }
         } finally {
@@ -80,7 +89,6 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
     @Override
     public void abort() throws HyracksDataException {
         opCtx.getIoOperation().setStatus(LSMIOOperationStatus.FAILURE);
-        opCtx.getIoOperation().setNewComponent(null);
         try {
             try {
                 componentBulkLoader.abort();

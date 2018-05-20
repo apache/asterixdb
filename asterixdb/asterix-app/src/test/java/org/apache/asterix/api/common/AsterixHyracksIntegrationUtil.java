@@ -97,7 +97,8 @@ public class AsterixHyracksIntegrationUtil {
      * main method to run a simple 2 node cluster in-process
      * suggested VM arguments: <code>-enableassertions -Xmx2048m -Dfile.encoding=UTF-8</code>
      *
-     * @param args unused
+     * @param args
+     *            unused
      */
     public static void main(String[] args) throws Exception {
         TestUtils.redirectLoggingToConsole();
@@ -226,11 +227,14 @@ public class AsterixHyracksIntegrationUtil {
         return ncConfig;
     }
 
-    protected INCApplication createNCApplication() {
+    protected INCApplication createNCApplication()
+            throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+        // Instead of using this flag, RecoveryManagerTest should set the desired class in its config file
         if (!gracefulShutdown) {
             return new UngracefulShutdownNCApplication();
         }
-        return new NCApplication();
+        String ncAppClass = (String) configManager.get(NCConfig.Option.APP_CLASS);
+        return (INCApplication) Class.forName(ncAppClass).newInstance();
     }
 
     private NCConfig fixupIODevices(NCConfig ncConfig) throws IOException, AsterixException, CmdLineException {

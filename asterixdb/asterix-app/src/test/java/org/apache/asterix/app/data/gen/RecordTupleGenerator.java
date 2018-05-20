@@ -26,7 +26,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.test.common.TestTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-public class TupleGenerator {
+public class RecordTupleGenerator {
 
     private final int[] keyIndexes;
     private final int[] keyIndicators;
@@ -52,7 +52,7 @@ public class TupleGenerator {
      * @param metaGeneration
      * @param uniqueMetaFields
      */
-    public TupleGenerator(ARecordType recordType, ARecordType metaType, int[] keyIndexes, int[] keyIndicators,
+    public RecordTupleGenerator(ARecordType recordType, ARecordType metaType, int[] keyIndexes, int[] keyIndicators,
             GenerationFunction[] recordGeneration, boolean[] uniqueRecordFields, GenerationFunction[] metaGeneration,
             boolean[] uniqueMetaFields) {
         this.keyIndexes = keyIndexes;
