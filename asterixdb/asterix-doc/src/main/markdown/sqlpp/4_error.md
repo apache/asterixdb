@@ -56,7 +56,7 @@ we will get a syntax error as follows:
 
 
 ## <a id="Identifier_resolution_errors">Identifier Resolution Errors</a>
-Referring an undefined identifier can cause an error if the identifier
+Referring to an undefined identifier can cause an error if the identifier
 cannot be successfully resolved as a valid field access.
 
 ##### Example
@@ -64,7 +64,7 @@ cannot be successfully resolved as a valid field access.
     SELECT *
     FROM GleambookUser user;
 
-Assume we have a typo in "GleambookUser" which misses the ending "s",
+If we have a typo as above in "GleambookUsers" that misses the dataset name's ending "s",
 we will get an identifier resolution error as follows:
 
     Error: Cannot find dataset GleambookUser in dataverse Default nor an alias with name GleambookUser!
@@ -74,8 +74,7 @@ we will get an identifier resolution error as follows:
     SELECT name, message
     FROM GleambookUsers u JOIN GleambookMessages m ON m.authorId = u.id;
 
-If the compiler cannot figure out all possible fields in
-`GleambookUsers` and `GleambookMessages`,
+If the compiler cannot figure out how to resolve an unqualified field name, which will occur if there is more than one variable in scope (e.g., `GleambookUsers u` and `GleambookMessages m` as above),
 we will get an identifier resolution error as follows:
 
     Error: Cannot resolve ambiguous alias reference for undefined identifier name
@@ -94,7 +93,7 @@ it processes does not satisfy the type requirement.
 Since function `abs` can only process numeric input values,
 we will get a type error as follows:
 
-    Error: Arithmetic operations are not implemented for string
+    Error: Type mismatch: function abs expects its 1st input parameter to be type tinyint, smallint, integer, bigint, float or double, but the actual input type is string
 
 
 ## <a id="Resource_errors">Resource Errors</a>

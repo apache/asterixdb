@@ -1470,6 +1470,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         throw new AlgebricksException("There is no index with this name " + indexName + ".");
                     }
                 }
+                ensureNonPrimaryIndexDrop(index);
                 // #. prepare a job to drop the index in NC.
                 jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, ds));
 
@@ -1511,6 +1512,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 } else if (ExternalIndexingOperations.isFileIndex(index)) {
                     throw new AlgebricksException("Dropping a dataset's files index is not allowed.");
                 }
+                ensureNonPrimaryIndexDrop(index);
                 // #. prepare a job to drop the index in NC.
                 jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, ds));
                 List<Index> datasetIndexes =
@@ -2821,6 +2823,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void rewriteStatement(Statement stmt) throws CompilationException {
         IStatementRewriter rewriter = rewriterFactory.createStatementRewriter();
         rewriter.rewrite(stmt);
+    }
+
+    private void ensureNonPrimaryIndexDrop(Index index) throws AlgebricksException {
+        if (index.isPrimaryIndex()) {
+            throw new MetadataException(ErrorCode.CANNOT_DROP_INDEX, index.getIndexName(), index.getDatasetName());
+        }
     }
 
     protected void afterCompile() {

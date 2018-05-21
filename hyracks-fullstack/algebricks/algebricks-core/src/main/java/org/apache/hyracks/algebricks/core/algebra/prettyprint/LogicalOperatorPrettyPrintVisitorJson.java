@@ -569,9 +569,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         addIndent(indent).append("\"from-record\": \"")
                 .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent) + "\"");
         if (op.getAdditionalNonFilteringExpressions() != null) {
-            buffer.append(",\n\"meta\": \"");
+            buffer.append(",\n\"meta\": {");
             pprintExprList(op.getAdditionalNonFilteringExpressions(), 0);
-            buffer.append("\"");
+            buffer.append("}");
         }
         buffer.append(",\n");
         addIndent(indent).append("\"partitioned-by\": {");
