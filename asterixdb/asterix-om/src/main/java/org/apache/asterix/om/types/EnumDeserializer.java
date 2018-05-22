@@ -18,24 +18,25 @@
  */
 package org.apache.asterix.om.types;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Array;
 
 public class EnumDeserializer<E extends Enum<E> & IEnumSerializer> {
 
     public static final EnumDeserializer<ATypeTag> ATYPETAGDESERIALIZER =
             new EnumDeserializer<ATypeTag>(ATypeTag.class);
 
-    private Map<Byte, E> enumvalMap = new HashMap<Byte, E>();
+    private final E[] enumvalMap;
 
+    @SuppressWarnings("unchecked")
     private EnumDeserializer(Class<E> enumClass) {
+        enumvalMap = (E[]) Array.newInstance(enumClass, Byte.MAX_VALUE);
         for (E constant : enumClass.getEnumConstants()) {
-            enumvalMap.put(constant.serialize(), constant);
+            enumvalMap[constant.serialize()] = constant;
         }
     }
 
     public E deserialize(byte value) {
-        return enumvalMap.get(value);
+        return enumvalMap[value];
     }
 
 }
