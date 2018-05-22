@@ -15,6 +15,7 @@
 
 package org.apache.hyracks.storage.common.buffercache;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class FIFOLocalWriter implements IFIFOPageWriter {
@@ -29,6 +30,10 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
         CachedPage cPage = (CachedPage) page;
         try {
             bufferCache.write(cPage);
+        } catch (HyracksDataException e) {
+            if (e.getErrorCode() != ErrorCode.FILE_DOES_NOT_EXIST) {
+                throw HyracksDataException.create(e);
+            }
         } finally {
             bufferCache.returnPage(cPage);
             if (DEBUG) {

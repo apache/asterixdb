@@ -588,7 +588,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             fInfo = fileInfoMap.get(fileId);
         }
         if (fInfo == null) {
-            throw new HyracksDataException("No such file mapped");
+            throw HyracksDataException.create(ErrorCode.FILE_DOES_NOT_EXIST, fileId);
         }
         return fInfo;
     }
@@ -607,11 +607,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     void write(CachedPage cPage) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileInfo(cPage);
-        if (fInfo == null) {
-            throw new IllegalStateException("Attempting to write non-existing file");
-        }
         // synchronize on fInfo to prevent the file handle from being deleted until the page is written.
         synchronized (fInfo) {
+            if (fInfo.fileHasBeenDeleted()) {
+                return;
+            }
             ByteBuffer buf = cPage.buffer.duplicate();
             final int totalPages = cPage.getFrameSizeMultiplier();
             final int extraBlockPageId = cPage.getExtraBlockPageId();
@@ -1032,13 +1032,15 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 }
             } finally {
                 try {
-                    ioManager.close(fInfo.getFileHandle());
+                    synchronized (fInfo) {
+                        ioManager.close(fInfo.getFileHandle());
+                        fInfo.markAsDeleted();
+                    }
                 } finally {
                     IoUtil.delete(fileRef);
                 }
             }
         }
-
     }
 
     @Override
