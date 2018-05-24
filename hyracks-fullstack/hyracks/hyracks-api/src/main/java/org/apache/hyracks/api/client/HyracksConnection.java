@@ -26,6 +26,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPut;
@@ -44,10 +49,16 @@ import org.apache.hyracks.api.job.JobInfo;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.topology.ClusterTopology;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.ipc.api.RPCInterface;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
+import org.apache.hyracks.util.ExitUtil;
+import org.apache.hyracks.util.InterruptibleAction;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Connection Class used by a Hyracks Client to interact with a Hyracks Cluster
@@ -56,6 +67,9 @@ import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeseri
  * @author vinayakb
  */
 public final class HyracksConnection implements IHyracksClientConnection {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final String ccHost;
 
     private final int ccPort;
@@ -65,6 +79,15 @@ public final class HyracksConnection implements IHyracksClientConnection {
     private final IHyracksClientInterface hci;
 
     private final ClusterControllerInfo ccInfo;
+
+    private volatile boolean running = false;
+
+    private volatile long reqId = 0L;
+
+    private final ExecutorService uninterruptibleExecutor = Executors.newFixedThreadPool(2,
+            r -> new Thread(r, "HyracksConnection Uninterrubtible thread: " + r.getClass().getSimpleName()));
+
+    private final BlockingQueue<UnInterruptibleRequest<?>> uninterruptibles = new ArrayBlockingQueue<>(1);
 
     /**
      * Constructor to create a connection to the Hyracks Cluster Controller.
@@ -86,6 +109,8 @@ public final class HyracksConnection implements IHyracksClientConnection {
         hci = new HyracksClientInterfaceRemoteProxy(ipc.getReconnectingHandle(new InetSocketAddress(ccHost, ccPort)),
                 rpci);
         ccInfo = hci.getClusterControllerInfo();
+        uninterruptibleExecutor.execute(new UninterrubtileRequestHandler());
+        uninterruptibleExecutor.execute(new UninterrubtileHandlerWatcher());
     }
 
     @Override
@@ -95,7 +120,8 @@ public final class HyracksConnection implements IHyracksClientConnection {
 
     @Override
     public void cancelJob(JobId jobId) throws Exception {
-        hci.cancelJob(jobId);
+        CancelJobRequest request = new CancelJobRequest(jobId);
+        uninterruptiblySubmitAndExecute(request);
     }
 
     @Override
@@ -131,12 +157,13 @@ public final class HyracksConnection implements IHyracksClientConnection {
 
     @Override
     public JobId startJob(DeployedJobSpecId deployedJobSpecId, Map<byte[], byte[]> jobParameters) throws Exception {
-        return hci.startJob(deployedJobSpecId, jobParameters);
+        StartDeployedJobRequest request = new StartDeployedJobRequest(deployedJobSpecId, jobParameters);
+        return interruptiblySubmitAndExecute(request);
     }
 
     @Override
     public JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags) throws Exception {
-        return hci.startJob(JavaSerializationUtils.serialize(acggf), jobFlags);
+        return startJob(null, acggf, jobFlags);
     }
 
     public DeployedJobSpecId deployJobSpec(IActivityClusterGraphGeneratorFactory acggf) throws Exception {
@@ -154,7 +181,7 @@ public final class HyracksConnection implements IHyracksClientConnection {
             hci.waitForCompletion(jobId);
         } catch (InterruptedException e) {
             // Cancels an on-going job if the current thread gets interrupted.
-            hci.cancelJob(jobId);
+            cancelJob(jobId);
             throw e;
         }
     }
@@ -232,7 +259,8 @@ public final class HyracksConnection implements IHyracksClientConnection {
     @Override
     public JobId startJob(DeploymentId deploymentId, IActivityClusterGraphGeneratorFactory acggf,
             EnumSet<JobFlag> jobFlags) throws Exception {
-        return hci.startJob(deploymentId, JavaSerializationUtils.serialize(acggf), jobFlags);
+        StartJobRequest request = new StartJobRequest(deploymentId, acggf, jobFlags);
+        return interruptiblySubmitAndExecute(request);
     }
 
     @Override
@@ -268,5 +296,163 @@ public final class HyracksConnection implements IHyracksClientConnection {
     @Override
     public boolean isConnected() {
         return hci.isConnected();
+    }
+
+    private <T> T uninterruptiblySubmitAndExecute(UnInterruptibleRequest<T> request) throws Exception {
+        InvokeUtil.doUninterruptibly(() -> uninterruptibles.put(request));
+        return uninterruptiblyExecute(request);
+    }
+
+    private <T> T uninterruptiblyExecute(UnInterruptibleRequest<T> request) throws Exception {
+        InvokeUtil.doUninterruptibly(request);
+        return request.result();
+    }
+
+    private <T> T interruptiblySubmitAndExecute(UnInterruptibleRequest<T> request) throws Exception {
+        uninterruptibles.put(request);
+        return uninterruptiblyExecute(request);
+    }
+
+    private abstract class UnInterruptibleRequest<T> implements InterruptibleAction {
+        boolean completed = false;
+        boolean failed = false;
+        Throwable failure = null;
+        T response = null;
+
+        @SuppressWarnings("squid:S1181")
+        private final void handle() {
+            try {
+                response = doHandle();
+            } catch (Throwable th) {
+                failed = true;
+                failure = th;
+            } finally {
+                synchronized (this) {
+                    completed = true;
+                    notifyAll();
+                }
+            }
+        }
+
+        protected abstract T doHandle() throws Exception;
+
+        @Override
+        public final synchronized void run() throws InterruptedException {
+            while (!completed) {
+                wait();
+            }
+        }
+
+        public T result() throws Exception {
+            if (failed) {
+                if (failure instanceof Error) {
+                    throw (Error) failure;
+                }
+                throw (Exception) failure;
+            }
+            return response;
+        }
+    }
+
+    private class CancelJobRequest extends UnInterruptibleRequest<Void> {
+        final JobId jobId;
+
+        public CancelJobRequest(JobId jobId) {
+            this.jobId = jobId;
+        }
+
+        @Override
+        protected Void doHandle() throws Exception {
+            hci.cancelJob(jobId);
+            return null;
+        }
+
+    }
+
+    private class StartDeployedJobRequest extends UnInterruptibleRequest<JobId> {
+
+        private final DeployedJobSpecId deployedJobSpecId;
+        private final Map<byte[], byte[]> jobParameters;
+
+        public StartDeployedJobRequest(DeployedJobSpecId deployedJobSpecId, Map<byte[], byte[]> jobParameters) {
+            this.deployedJobSpecId = deployedJobSpecId;
+            this.jobParameters = jobParameters;
+        }
+
+        @Override
+        protected JobId doHandle() throws Exception {
+            return hci.startJob(deployedJobSpecId, jobParameters);
+        }
+
+    }
+
+    private class StartJobRequest extends UnInterruptibleRequest<JobId> {
+        private final DeploymentId deploymentId;
+        private final IActivityClusterGraphGeneratorFactory acggf;
+        private final EnumSet<JobFlag> jobFlags;
+
+        public StartJobRequest(DeploymentId deploymentId, IActivityClusterGraphGeneratorFactory acggf,
+                EnumSet<JobFlag> jobFlags) {
+            this.deploymentId = deploymentId;
+            this.acggf = acggf;
+            this.jobFlags = jobFlags;
+        }
+
+        @Override
+        protected JobId doHandle() throws Exception {
+            if (deploymentId == null) {
+                return hci.startJob(JavaSerializationUtils.serialize(acggf), jobFlags);
+            } else {
+                return hci.startJob(deploymentId, JavaSerializationUtils.serialize(acggf), jobFlags);
+            }
+        }
+
+    }
+
+    private class UninterrubtileRequestHandler implements Runnable {
+        @SuppressWarnings({ "squid:S2189", "squid:S2142" })
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    UnInterruptibleRequest<?> next = uninterruptibles.take();
+                    reqId++;
+                    running = true;
+                    next.handle();
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.WARN, "Ignoring interrupt. This thread should never be interrupted.");
+                    continue;
+                } finally {
+                    running = false;
+                }
+            }
+        }
+    }
+
+    public class UninterrubtileHandlerWatcher implements Runnable {
+        @Override
+        @SuppressWarnings({ "squid:S2189", "squid:S2142" })
+        public void run() {
+            long currentReqId = 0L;
+            long currentTime = System.nanoTime();
+            while (true) {
+                try {
+                    TimeUnit.MINUTES.sleep(1);
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.WARN, "Ignoring interrupt. This thread should never be interrupted.");
+                    continue;
+                }
+                if (running) {
+                    if (reqId == currentReqId) {
+                        if (TimeUnit.NANOSECONDS.toMinutes(System.nanoTime() - currentTime) > 0) {
+                            ExitUtil.halt(ExitUtil.EC_FAILED_TO_PROCESS_UN_INTERRUPTIBLE_REQUEST);
+                        }
+                    } else {
+                        currentReqId = reqId;
+                        currentTime = System.nanoTime();
+                    }
+                }
+            }
+        }
     }
 }
