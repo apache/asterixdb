@@ -54,11 +54,36 @@
         </executions>
       </plugin>
       <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <id>copy-license</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/../src/main/licenses/templates/</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/../asterix-dashboard/src/node/static/
+                  </directory>
+                  <includes>
+                    <include>3rdpartylicenses.txt</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.hyracks</groupId>
         <artifactId>license-automation-plugin</artifactId>
         <executions>
           <execution>
-            <phase>generate-resources</phase>
+            <phase>prepare-package</phase>
             <goals>
               <goal>generate</goal>
             </goals>
@@ -145,6 +170,11 @@
             </override>
           </overrides>
           <licenses>
+            <license>
+                <displayName>Various 3rd party</displayName>
+                <url>file://${basedir}}/../asterix-dashboard/src/main/resources/dashboard/static/3rdpartylicenses.txt</url>
+                <contentFile>${basedir}}/../asterix-dashboard/src/main/resources/dashboard/static/3rdpartylicenses.txt</contentFile>
+            </license>
             <license>
               <displayName>a BSD 3-clause license</displayName>
               <url>http://asm.objectweb.org/license.html</url>

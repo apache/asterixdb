@@ -29,6 +29,7 @@
 
   <properties>
     <root.dir>${basedir}/..</root.dir>
+    <node.path>${user.home}/.node</node.path>
   </properties>
 
   <dependencies>
@@ -75,10 +76,183 @@
               <excludes combine.children="append">
                 <exclude>src/main/resources/dashboard/static/*
                 </exclude>
+                <exclude>src/main/resources/licenses/*
+                </exclude>
+                <exclude>src/node/**
+                </exclude>
               </excludes>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <configuration>
+          <nodeVersion>v8.11.2</nodeVersion>
+          <npmVersion>6.0.1</npmVersion>
+          <workingDirectory>target/dashboard</workingDirectory>
+          <installDirectory>target/dashboard</installDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>install node and yarn</id>
+            <goals>
+              <goal>install-node-and-npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+          </execution>
+          <execution>
+            <id>npm install</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <arguments>install --no-optional</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run-script mavenbuild</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <arguments>run-script mavenbuild</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <id>copy-resource-one</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>
+                ${basedir}/src/main/resources/licenses
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/target/dashboard/static/
+                  </directory>
+                  <includes>
+                    <include>3rdpartylicenses.txt</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-license</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>
+                ${basedir}/src/main/resources/META-INF/
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>
+                    ${basedir}/target/generated-sources/
+                  </directory>
+                  <includes>
+                    <include>LICENSE</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-static</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>
+                ${basedir}/target/classes/dashboard/static
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/target/node/static/
+                  </directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-node</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>
+                ${basedir}/target/dashboard
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/src/node
+                  </directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <includes>
+            <include>**/dashboard/**</include>
+            <include>**/*.class</include>
+            <include>**/META-INF/*</include>
+          </includes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>license-automation-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <templateRootDir>${basedir}/src/main/resources/licenses
+          </templateRootDir>
+          <generatedFiles>
+            <generatedFile>
+              <template>dashboard-license.ftl</template>
+              <outputFile>LICENSE</outputFile>
+            </generatedFile>
+          </generatedFiles>
+          <location>repo/</location>
+          <timeoutSecs>10</timeoutSecs>
+          <downloadDir>
+            ${project.build.directory}/generated-resources/license
+          </downloadDir>
+          <excludedScopes>
+            <excludedScope>test</excludedScope>
+          </excludedScopes>
+          <licenseDirectory>
+            ${basedir}/src/main/resources/licenses/content
+          </licenseDirectory>
+        </configuration>
       </plugin>
     </plugins>
   </build>

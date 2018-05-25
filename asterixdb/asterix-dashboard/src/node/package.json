@@ -5,13 +5,15 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.config.js --host 0.0.0.0",
-    "build": "ng build",
+    "build": "ng build --prod",
+    "mavenbuild": "node node_modules/.bin/ng build --prod -op static/",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
   "private": true,
   "dependencies": {
+    "@angular-devkit/core": "^0.6.1",
     "@angular/animations": "^5.0.3",
     "@angular/cdk": "^5.0.0-rc.2",
     "@angular/common": "^5.0.3",

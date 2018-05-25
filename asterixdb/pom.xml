@@ -245,6 +245,7 @@
           </checkstyleRules>
           <includes>**/*.java,**/*.jj</includes>
           <resourceIncludes>**/*.properties,**/*.xml,**/*.xsd,**/*.aql,**/*.sqlpp,**/*.sh</resourceIncludes>
+          <resourceExcludes>**/node_modules/**/*</resourceExcludes>
           <sourceDirectories>${project.build.sourceDirectory},${project.build.testSourceDirectory}</sourceDirectories>
         </configuration>
       </plugin>
