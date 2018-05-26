@@ -99,11 +99,12 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
                                 uuidSerde.serialize(uuid, out);
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_UUID_TYPE_TAG);
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
+                                    ATypeTag.SERIALIZED_UUID_TYPE_TAG);
                         }
                     }
 

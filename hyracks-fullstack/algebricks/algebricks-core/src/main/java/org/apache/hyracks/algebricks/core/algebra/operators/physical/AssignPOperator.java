@@ -90,6 +90,7 @@ public class AssignPOperator extends AbstractPhysicalOperator {
 
         AssignRuntimeFactory runtime =
                 new AssignRuntimeFactory(outColumns, evalFactories, projectionList, flushFramesRapidly);
+        runtime.setSourceLocation(assign.getSourceLocation());
 
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
@@ -103,7 +104,6 @@ public class AssignPOperator extends AbstractPhysicalOperator {
         // and contribute one edge from its child
         ILogicalOperator src = assign.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, assign, 0);
-
     }
 
     @Override

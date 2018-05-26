@@ -64,7 +64,7 @@ public class NumericFloorDescriptor extends AbstractScalarFunctionDynamicDescrip
 
         NumericFloorEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericFloorDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericFloorDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

@@ -30,13 +30,14 @@ import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class SerializableSqlSumAggregateFunction extends AbstractSerializableSumAggregateFunction {
     private final boolean isLocalAgg;
 
     public SerializableSqlSumAggregateFunction(IScalarEvaluatorFactory[] args, boolean isLocalAgg,
-            IHyracksTaskContext context) throws HyracksDataException {
-        super(args, context);
+            IHyracksTaskContext context, SourceLocation sourceLoc) throws HyracksDataException {
+        super(args, context, sourceLoc);
         this.isLocalAgg = isLocalAgg;
     }
 
@@ -50,7 +51,8 @@ public class SerializableSqlSumAggregateFunction extends AbstractSerializableSum
         // but if all input value are system null, then we should return
         // null in finish().
         if (isLocalAgg) {
-            throw new UnsupportedItemTypeException(BuiltinFunctions.SQL_SUM, ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
+            throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.SQL_SUM,
+                    ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
         }
     }
 

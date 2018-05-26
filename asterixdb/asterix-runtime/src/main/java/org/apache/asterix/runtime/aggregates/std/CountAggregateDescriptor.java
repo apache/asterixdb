@@ -54,7 +54,7 @@ public class CountAggregateDescriptor extends AbstractAggregateFunctionDynamicDe
 
             @Override
             public IAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new CountAggregateFunction(args, ctx);
+                return new CountAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

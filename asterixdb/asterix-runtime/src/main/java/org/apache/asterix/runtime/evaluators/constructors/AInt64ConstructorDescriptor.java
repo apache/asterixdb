@@ -44,7 +44,7 @@ public class AInt64ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractInt64ConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
+                return new AbstractInt64ConstructorEvaluator(args[0].createScalarEvaluator(ctx), sourceLoc) {
                     @Override
                     public FunctionIdentifier getIdentifier() {
                         return AInt64ConstructorDescriptor.this.getIdentifier();

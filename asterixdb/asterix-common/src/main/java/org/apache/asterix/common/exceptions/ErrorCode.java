@@ -150,6 +150,16 @@ public class ErrorCode {
     public static final int CANNOT_FIND_NON_MISSING_SELECT_OPERATOR = 1067;
     public static final int CANNOT_GET_CONDITIONAL_SPLIT_KEY_VARIABLE = 1068;
     public static final int CANNOT_DROP_INDEX = 1069;
+    public static final int METADATA_ERROR = 1070;
+    public static final int DATAVERSE_EXISTS = 1071;
+    public static final int DATASET_EXISTS = 1072;
+    public static final int UNDEFINED_IDENTIFIER = 1073;
+    public static final int AMBIGUOUS_IDENTIFIER = 1074;
+    public static final int FORBIDDEN_SCOPE = 1075;
+    public static final int UNKNOWN_DATASET = 1076;
+    public static final int UNKNOWN_DATASET_IN_DATAVERSE = 1077;
+    public static final int COMPILATION_UNEXPECTED_OPERATOR = 1078;
+    public static final int COMPILATION_ERROR = 1079;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

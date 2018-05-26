@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -59,7 +60,7 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ABinaryConstructorEvaluator(args[0], ByteArrayHexParserFactory.INSTANCE, ctx);
+                return new ABinaryConstructorEvaluator(args[0], ByteArrayHexParserFactory.INSTANCE, ctx, sourceLoc);
             }
         };
     }
@@ -70,6 +71,7 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
     }
 
     static class ABinaryConstructorEvaluator implements IScalarEvaluator {
+        private final SourceLocation sourceLoc;
         private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
         private final DataOutput out = resultStorage.getDataOutput();
         private final IPointable inputArg = new VoidPointable();
@@ -78,7 +80,9 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
         private UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
         public ABinaryConstructorEvaluator(IScalarEvaluatorFactory copyEvaluatorFactory,
-                IValueParserFactory valueParserFactory, IHyracksTaskContext context) throws HyracksDataException {
+                IValueParserFactory valueParserFactory, IHyracksTaskContext context, SourceLocation sourceLoc)
+                throws HyracksDataException {
+            this.sourceLoc = sourceLoc;
             eval = copyEvaluatorFactory.createScalarEvaluator(context);
             byteArrayParser = valueParserFactory.createValueParser();
         }
@@ -102,11 +106,11 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
                     byteArrayParser.parse(buffer, 0, buffer.length, out);
                     result.set(resultStorage);
                 } else {
-                    throw new TypeMismatchException(BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, 0, tt,
+                    throw new TypeMismatchException(sourceLoc, BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, 0, tt,
                             ATypeTag.SERIALIZED_BINARY_TYPE_TAG, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                 }
             } catch (IOException e) {
-                throw new InvalidDataFormatException(BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, e,
+                throw new InvalidDataFormatException(sourceLoc, BuiltinFunctions.BINARY_HEX_CONSTRUCTOR, e,
                         ATypeTag.SERIALIZED_BINARY_TYPE_TAG);
             }
         }

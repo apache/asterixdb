@@ -55,7 +55,7 @@ public class SqlCountAggregateDescriptor extends AbstractAggregateFunctionDynami
 
             @Override
             public IAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new SqlCountAggregateFunction(args, ctx);
+                return new SqlCountAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

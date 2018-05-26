@@ -53,7 +53,7 @@ public class LocalSqlSumAggregateDescriptor extends AbstractAggregateFunctionDyn
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SqlSumAggregateFunction(args, ctx, true);
+                return new SqlSumAggregateFunction(args, ctx, true, sourceLoc);
             };
         };
     }

@@ -54,7 +54,7 @@ public class SerializableLocalSqlAvgAggregateDescriptor extends AbstractSerializ
             @Override
             public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SerializableLocalSqlAvgAggregateFunction(args, ctx);
+                return new SerializableLocalSqlAvgAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

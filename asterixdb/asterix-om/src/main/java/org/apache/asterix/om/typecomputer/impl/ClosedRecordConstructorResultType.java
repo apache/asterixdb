@@ -71,7 +71,8 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
             fieldTypes[i] = e2Type;
             fieldNames[i] = ConstantExpressionUtil.getStringConstant(e1);
             if (fieldNames[i] == null) {
-                throw new InvalidExpressionException(funcName, 2 * i, e1, LogicalExpressionTag.CONSTANT);
+                throw new InvalidExpressionException(f.getSourceLocation(), funcName, 2 * i, e1,
+                        LogicalExpressionTag.CONSTANT);
             }
             i++;
         }

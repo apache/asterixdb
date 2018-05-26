@@ -22,6 +22,7 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IFormattedException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
 public class AlgebricksException extends Exception implements IFormattedException {
@@ -32,15 +33,17 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
     private final int errorCode;
     private final Serializable[] params;
     private final String nodeId;
+    private final SourceLocation sourceLoc;
 
     @SuppressWarnings("squid:S1165") // exception class not final
     private transient CachedMessage msgCache;
 
-    public AlgebricksException(String component, int errorCode, String message, Throwable cause, String nodeId,
-            Serializable... params) {
+    public AlgebricksException(String component, int errorCode, String message, Throwable cause,
+            SourceLocation sourceLoc, String nodeId, Serializable... params) {
         super(message, cause);
         this.component = component;
         this.errorCode = errorCode;
+        this.sourceLoc = sourceLoc;
         this.nodeId = nodeId;
         this.params = params;
     }
@@ -50,7 +53,7 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
      */
     @Deprecated
     public AlgebricksException(String message) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, message, null, (Serializable[]) null);
+        this(ErrorMessageUtil.NONE, UNKNOWN, message, null, null, (Serializable[]) null);
     }
 
     /**
@@ -66,32 +69,60 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
      */
     @Deprecated
     public AlgebricksException(String message, Throwable cause) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, message, cause, (String) null);
+        this(ErrorMessageUtil.NONE, UNKNOWN, message, cause, null, (Serializable[]) null);
+    }
+
+    public AlgebricksException(String component, int errorCode, SourceLocation sourceLoc, Serializable... params) {
+        this(component, errorCode, null, null, sourceLoc, null, params);
     }
 
     public AlgebricksException(String component, int errorCode, Serializable... params) {
-        this(component, errorCode, null, null, null, params);
+        this(component, errorCode, null, null, null, null, params);
+    }
+
+    public AlgebricksException(Throwable cause, int errorCode, SourceLocation sourceLoc, Serializable... params) {
+        this(ErrorMessageUtil.NONE, errorCode, cause.getMessage(), cause, sourceLoc, null, params);
     }
 
     public AlgebricksException(Throwable cause, int errorCode, Serializable... params) {
-        this(ErrorMessageUtil.NONE, errorCode, cause.getMessage(), cause, null, params);
+        this(ErrorMessageUtil.NONE, errorCode, cause.getMessage(), cause, null, null, params);
+    }
+
+    public AlgebricksException(String component, int errorCode, String message, SourceLocation sourceLoc,
+            Serializable... params) {
+        this(component, errorCode, message, null, sourceLoc, null, params);
     }
 
     public AlgebricksException(String component, int errorCode, String message, Serializable... params) {
-        this(component, errorCode, message, null, null, params);
+        this(component, errorCode, message, null, null, null, params);
+    }
+
+    public AlgebricksException(String component, int errorCode, Throwable cause, SourceLocation sourceLoc,
+            Serializable... params) {
+        this(component, errorCode, cause.getMessage(), cause, sourceLoc, null, params);
     }
 
     public AlgebricksException(String component, int errorCode, Throwable cause, Serializable... params) {
-        this(component, errorCode, cause.getMessage(), cause, null, params);
+        this(component, errorCode, cause.getMessage(), cause, null, null, params);
+    }
+
+    public AlgebricksException(String component, int errorCode, String message, Throwable cause,
+            SourceLocation sourceLoc, Serializable... params) {
+        this(component, errorCode, message, cause, sourceLoc, null, params);
     }
 
     public AlgebricksException(String component, int errorCode, String message, Throwable cause,
             Serializable... params) {
-        this(component, errorCode, message, cause, null, params);
+        this(component, errorCode, message, cause, null, null, params);
+    }
+
+    public static AlgebricksException create(int errorCode, SourceLocation sourceLoc, Serializable... params) {
+        return new AlgebricksException(ErrorCode.HYRACKS, errorCode, ErrorCode.getErrorMessage(errorCode), sourceLoc,
+                params);
     }
 
     public static AlgebricksException create(int errorCode, Serializable... params) {
-        return new AlgebricksException(ErrorCode.HYRACKS, errorCode, ErrorCode.getErrorMessage(errorCode), params);
+        return create(errorCode, null, params);
     }
 
     @Override
@@ -112,11 +143,15 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
         return nodeId;
     }
 
+    public SourceLocation getSourceLocation() {
+        return sourceLoc;
+    }
+
     @Override
     public String getMessage() {
         if (msgCache == null) {
-            msgCache =
-                    new CachedMessage(ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), params));
+            msgCache = new CachedMessage(
+                    ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), sourceLoc, params));
         }
         return msgCache.message;
     }

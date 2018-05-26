@@ -29,6 +29,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.runtime.aggregates.std.AbstractAggregateFunction;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -36,6 +37,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -52,7 +54,7 @@ import java.io.IOException;
  * multilinestring is created. Is the result contains geometries of different types, e.g., points and linestring, the
  * output is a GeometryCollection.
  */
-public class STUnionAggregateFunction implements IAggregateEvaluator {
+public class STUnionAggregateFunction extends AbstractAggregateFunction {
     /**Use WGS 84 (EPSG:4326) as the default coordinate reference system*/
     public static final SpatialReference DEFAULT_CRS = SpatialReference.create(4326);
     @SuppressWarnings("unchecked")
@@ -64,8 +66,9 @@ public class STUnionAggregateFunction implements IAggregateEvaluator {
 
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
 
-    public STUnionAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
+    public STUnionAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(sourceLoc);
         eval = args[0].createScalarEvaluator(context);
     }
 
@@ -110,6 +113,7 @@ public class STUnionAggregateFunction implements IAggregateEvaluator {
     }
 
     protected void processNull() throws UnsupportedItemTypeException {
-        throw new UnsupportedItemTypeException(BuiltinFunctions.ST_UNION, ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
+        throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.ST_UNION,
+                ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
     }
 }

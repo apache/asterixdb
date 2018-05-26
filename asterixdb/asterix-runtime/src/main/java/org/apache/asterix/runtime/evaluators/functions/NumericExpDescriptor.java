@@ -60,7 +60,7 @@ public class NumericExpDescriptor extends AbstractScalarFunctionDynamicDescripto
 
         NumericExpEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericExpDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericExpDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

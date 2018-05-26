@@ -49,7 +49,7 @@ public class StringRegExpLikeWithFlagDescriptor extends AbstractScalarFunctionDy
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractTripleStringBoolEval(ctx, args[0], args[1], args[2],
-                        StringRegExpLikeWithFlagDescriptor.this.getIdentifier()) {
+                        StringRegExpLikeWithFlagDescriptor.this.getIdentifier(), sourceLoc) {
                     private final RegExpMatcher matcher = new RegExpMatcher();
 
                     @Override

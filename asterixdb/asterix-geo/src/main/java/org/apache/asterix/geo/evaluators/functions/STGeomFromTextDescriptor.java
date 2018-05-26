@@ -101,7 +101,7 @@ public class STGeomFromTextDescriptor extends AbstractScalarFunctionDynamicDescr
             int len = inputArg.getLength();
 
             if (data[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                throw new TypeMismatchException(BuiltinFunctions.ST_GEOM_FROM_TEXT, 0, data[offset],
+                throw new TypeMismatchException(sourceLoc, BuiltinFunctions.ST_GEOM_FROM_TEXT, 0, data[offset],
                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
             }
             ByteArrayInputStream inStream = new ByteArrayInputStream(data, offset + 1, len - 1);
@@ -120,7 +120,8 @@ public class STGeomFromTextDescriptor extends AbstractScalarFunctionDynamicDescr
                 result.set(resultStorage);
 
             } catch (IOException e) {
-                throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
+                throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
+                        ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
 
         }

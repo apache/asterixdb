@@ -22,12 +22,13 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class FunctionDecl implements Statement {
+public class FunctionDecl extends AbstractStatement {
     private FunctionSignature signature;
     private List<VarIdentifier> paramList;
     private Expression funcBody;

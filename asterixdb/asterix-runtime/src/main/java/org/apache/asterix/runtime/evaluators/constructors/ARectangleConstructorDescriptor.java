@@ -101,17 +101,17 @@ public class ARectangleConstructorDescriptor extends AbstractScalarFunctionDynam
                                 } else if (aPoint[0].getX() < aPoint[1].getX() && aPoint[0].getY() < aPoint[1].getY()) {
                                     aRectangle.setValue(aPoint[0], aPoint[1]);
                                 } else {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                                 }
                                 rectangle2DSerde.serialize(aRectangle, out);
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                         }
                     }

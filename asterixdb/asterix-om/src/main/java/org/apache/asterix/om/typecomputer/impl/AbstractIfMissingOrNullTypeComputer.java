@@ -96,7 +96,7 @@ abstract class AbstractIfMissingOrNullTypeComputer implements IResultTypeCompute
         return type.getActualType();
     }
 
-    private IAType createOutputType(IAType primeType, ATypeTag quantifier) throws AlgebricksException {
+    private IAType createOutputType(IAType primeType, ATypeTag quantifier) {
         if (quantifier == null || primeType.getTypeTag() == ATypeTag.ANY) {
             return primeType;
         }
@@ -106,7 +106,7 @@ abstract class AbstractIfMissingOrNullTypeComputer implements IResultTypeCompute
             case NULL:
                 return AUnionType.createNullableType(primeType, null);
             default:
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, String.valueOf(quantifier));
+                throw new IllegalStateException(String.valueOf(quantifier));
         }
     }
 }

@@ -63,8 +63,10 @@ public class PullPositionalVariableFromUnnestRule implements IAlgebraicRewriteRu
         ArrayList<Mutable<ILogicalExpression>> rOpExprList = new ArrayList<Mutable<ILogicalExpression>>();
         StatefulFunctionCallExpression fce = new StatefulFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
+        fce.setSourceLocation(op.getSourceLocation());
         rOpExprList.add(new MutableObject<ILogicalExpression>(fce));
         RunningAggregateOperator rOp = new RunningAggregateOperator(rOpVars, rOpExprList);
+        rOp.setSourceLocation(unnest.getSourceLocation());
         rOp.setExecutionMode(unnest.getExecutionMode());
         RunningAggregatePOperator rPop = new RunningAggregatePOperator();
         rOp.setPhysicalOperator(rPop);

@@ -53,7 +53,7 @@ public class LocalSqlAvgAggregateDescriptor extends AbstractAggregateFunctionDyn
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new LocalSqlAvgAggregateFunction(args, ctx);
+                return new LocalSqlAvgAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

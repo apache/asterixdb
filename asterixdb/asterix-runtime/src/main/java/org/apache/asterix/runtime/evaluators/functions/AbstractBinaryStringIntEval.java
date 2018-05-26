@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
@@ -41,8 +42,9 @@ public abstract class AbstractBinaryStringIntEval extends AbstractBinaryStringEv
     private AMutableInt32 resultValue = new AMutableInt32(0);
 
     public AbstractBinaryStringIntEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
-            IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws HyracksDataException {
-        super(context, evalLeftFactory, evalRightFactory, funcID);
+            IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID, SourceLocation sourceLoc)
+            throws HyracksDataException {
+        super(context, evalLeftFactory, evalRightFactory, funcID, sourceLoc);
     }
 
     @Override

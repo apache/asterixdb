@@ -53,7 +53,6 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
-import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 
 public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
@@ -108,9 +107,11 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
                 secondaryBulkLoadOp = createExternalIndexBulkLoadOp(spec, fieldPermutation, dataflowHelperFactory,
                         GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
             }
+            SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
+            sinkRuntimeFactory.setSourceLocation(sourceLoc);
             AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                    new IPushRuntimeFactory[] { new SinkRuntimeFactory() },
-                    new RecordDescriptor[] { secondaryRecDesc });
+                    new IPushRuntimeFactory[] { sinkRuntimeFactory }, new RecordDescriptor[] { secondaryRecDesc });
+            metaOp.setSourceLocation(sourceLoc);
             spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
             root = metaOp;
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
@@ -170,9 +171,10 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             // bulk load op ----> sink op
             sourceOp = targetOp;
+            SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
+            sinkRuntimeFactory.setSourceLocation(sourceLoc);
             targetOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                    new IPushRuntimeFactory[] { new SinkRuntimeFactory() },
-                    new RecordDescriptor[] { secondaryRecDesc });
+                    new IPushRuntimeFactory[] { sinkRuntimeFactory }, new RecordDescriptor[] { secondaryRecDesc });
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             spec.addRoot(targetOp);
@@ -236,7 +238,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             }
             secondaryFieldAccessEvalFactories[i] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                     metadataProvider.getFunctionManager(), isOverridingKeyFieldTypes ? enforcedItemType : sourceType,
-                    index.getKeyFieldNames().get(i), sourceColumn);
+                    index.getKeyFieldNames().get(i), sourceColumn, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(i),
                     index.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
@@ -274,9 +276,9 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         }
 
         if (numFilterFields > 0) {
-            secondaryFieldAccessEvalFactories[numSecondaryKeys] =
-                    metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
-                            metadataProvider.getFunctionManager(), itemType, filterFieldName, numPrimaryKeys);
+            secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getDataFormat()
+                    .getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(), itemType, filterFieldName,
+                            numPrimaryKeys, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
             IAType type = keyTypePair.first;
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);

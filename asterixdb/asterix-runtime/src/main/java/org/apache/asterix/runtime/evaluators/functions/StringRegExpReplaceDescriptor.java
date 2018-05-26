@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -50,7 +48,7 @@ public class StringRegExpReplaceDescriptor extends AbstractScalarFunctionDynamic
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractTripleStringStringEval(ctx, args[0], args[1], args[2],
-                        StringRegExpReplaceDescriptor.this.getIdentifier()) {
+                        StringRegExpReplaceDescriptor.this.getIdentifier(), sourceLoc) {
                     private final RegExpMatcher matcher = new RegExpMatcher();
 
                     @Override

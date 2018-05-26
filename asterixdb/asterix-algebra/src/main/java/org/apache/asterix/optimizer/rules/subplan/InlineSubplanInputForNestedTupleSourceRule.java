@@ -56,6 +56,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /*
 This rule  is to remove SubplanOperators containing DataScan, InnerJoin, LeftOuterJoin.
@@ -356,6 +357,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
                 LogicalOperatorTag.INNERJOIN, LogicalOperatorTag.LEFTOUTERJOIN))) {
             return new Pair<>(false, new LinkedHashMap<>());
         }
+        SourceLocation sourceLoc = subplanOp.getSourceLocation();
         Mutable<ILogicalOperator> inputOpRef = subplanOp.getInputs().get(0);
         ILogicalOperator inputOpBackup = inputOpRef.getValue();
         // Creates parameters for the left outer join operator.
@@ -382,7 +384,8 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
 
         // Creates a variable to indicate whether a left input tuple is killed in the plan rooted at rightInputOp.
         LogicalVariable assignVar = context.newVar();
-        ILogicalOperator assignOp = new AssignOperator(assignVar, new MutableObject<>(ConstantExpression.TRUE));
+        AssignOperator assignOp = new AssignOperator(assignVar, new MutableObject<>(ConstantExpression.TRUE));
+        assignOp.setSourceLocation(rightInputOp.getSourceLocation());
         assignOp.getInputs().add(rightInputOpRef);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
         rightInputOpRef = new MutableObject<>(assignOp);
@@ -391,20 +394,31 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         List<Mutable<ILogicalExpression>> joinPredicates = new ArrayList<>();
         for (LogicalVariable liveVar : primaryKeyVars) {
             List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
-            arguments.add(new MutableObject<>(new VariableReferenceExpression(liveVar)));
+            VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
+            liveVarRef.setSourceLocation(sourceLoc);
+            arguments.add(new MutableObject<>(liveVarRef));
             LogicalVariable rightVar = varMap.get(liveVar);
-            arguments.add(new MutableObject<>(new VariableReferenceExpression(rightVar)));
-            ILogicalExpression expr = new ScalarFunctionCallExpression(
+            VariableReferenceExpression rightVarRef = new VariableReferenceExpression(rightVar);
+            rightVarRef.setSourceLocation(sourceLoc);
+            arguments.add(new MutableObject<>(rightVarRef));
+            ScalarFunctionCallExpression expr = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), arguments);
+            expr.setSourceLocation(sourceLoc);
             joinPredicates.add(new MutableObject<>(expr));
         }
 
-        ILogicalExpression joinExpr = joinPredicates.size() > 1
-                ? new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.AND),
-                        joinPredicates)
-                : joinPredicates.size() > 0 ? joinPredicates.get(0).getValue() : ConstantExpression.TRUE;
+        ILogicalExpression joinExpr;
+        if (joinPredicates.size() > 1) {
+            ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
+                    FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.AND), joinPredicates);
+            andExpr.setSourceLocation(sourceLoc);
+            joinExpr = andExpr;
+        } else {
+            joinExpr = joinPredicates.size() > 0 ? joinPredicates.get(0).getValue() : ConstantExpression.TRUE;
+        }
         LeftOuterJoinOperator leftOuterJoinOp =
                 new LeftOuterJoinOperator(new MutableObject<>(joinExpr), inputOpRef, rightInputOpRef);
+        leftOuterJoinOp.setSourceLocation(sourceLoc);
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(rightInputOp, context);
         context.computeAndSetTypeEnvironmentForOperator(leftOuterJoinOp);
 
@@ -413,11 +427,14 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByDecorList = new ArrayList<>();
         List<ILogicalPlan> nestedPlans = new ArrayList<>();
         GroupByOperator groupbyOp = new GroupByOperator(groupByList, groupByDecorList, nestedPlans);
+        groupbyOp.setSourceLocation(sourceLoc);
 
         LinkedHashMap<LogicalVariable, LogicalVariable> replacedVarMap = new LinkedHashMap<>();
         for (LogicalVariable liveVar : primaryKeyVars) {
             LogicalVariable newVar = context.newVar();
-            groupByList.add(new Pair<>(newVar, new MutableObject<>(new VariableReferenceExpression(liveVar))));
+            VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
+            liveVarRef.setSourceLocation(inputOpBackup.getSourceLocation());
+            groupByList.add(new Pair<>(newVar, new MutableObject<>(liveVarRef)));
             // Adds variables for replacements in ancestors.
             replacedVarMap.put(liveVar, newVar);
         }
@@ -425,7 +442,9 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             if (primaryKeyVars.contains(liveVar)) {
                 continue;
             }
-            groupByDecorList.add(new Pair<>(null, new MutableObject<>(new VariableReferenceExpression(liveVar))));
+            VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
+            liveVarRef.setSourceLocation(sourceLoc);
+            groupByDecorList.add(new Pair<>(null, new MutableObject<>(liveVarRef)));
         }
 
         // Sets up the nested plan for the groupby operator.
@@ -436,23 +455,33 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs = varMapAndOrderExprs.second;
         if (!orderExprs.isEmpty()) {
             OrderOperator orderOp = new OrderOperator(orderExprs);
+            orderOp.setSourceLocation(sourceLoc);
             currentOpRef = new MutableObject<>(orderOp);
             lowestAggregateRefInSubplan.getValue().getInputs().add(currentOpRef);
         }
 
         // Adds a select operator into the nested plan for group-by to remove tuples with NULL on {@code assignVar},
         // i.e., subplan input tuples that are filtered out within a subplan.
-        Mutable<ILogicalExpression> filterVarExpr = new MutableObject<>(new VariableReferenceExpression(assignVar));
+        VariableReferenceExpression assignVarRef = new VariableReferenceExpression(assignVar);
+        assignVarRef.setSourceLocation(sourceLoc);
+        Mutable<ILogicalExpression> filterVarExpr = new MutableObject<>(assignVarRef);
         List<Mutable<ILogicalExpression>> args = new ArrayList<>();
         args.add(filterVarExpr);
         List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<>();
-        argsForNotFunction.add(new MutableObject<>(
-                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING), args)));
-        SelectOperator selectOp = new SelectOperator(new MutableObject<>(new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), argsForNotFunction)), false, null);
+        ScalarFunctionCallExpression isMissingExpr =
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING), args);
+        isMissingExpr.setSourceLocation(sourceLoc);
+        argsForNotFunction.add(new MutableObject<>(isMissingExpr));
+        ScalarFunctionCallExpression notExpr = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), argsForNotFunction);
+        notExpr.setSourceLocation(sourceLoc);
+        SelectOperator selectOp = new SelectOperator(new MutableObject<>(notExpr), false, null);
+        selectOp.setSourceLocation(sourceLoc);
         currentOpRef.getValue().getInputs().add(new MutableObject<>(selectOp));
 
-        selectOp.getInputs().add(new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(groupbyOp))));
+        NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(groupbyOp));
+        ntsOp.setSourceLocation(sourceLoc);
+        selectOp.getInputs().add(new MutableObject<>(ntsOp));
         List<Mutable<ILogicalOperator>> nestedRoots = new ArrayList<>();
         nestedRoots.add(aggOpRef);
         nestedPlans.add(new ALogicalPlanImpl(nestedRoots));
@@ -476,6 +505,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
     private Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> applySpecialFlattening(
             Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         SubplanOperator subplanOp = (SubplanOperator) opRef.getValue();
+        SourceLocation sourceLoc = subplanOp.getSourceLocation();
         Mutable<ILogicalOperator> inputOpRef = subplanOp.getInputs().get(0);
         LinkedHashMap<LogicalVariable, LogicalVariable> replacedVarMap = new LinkedHashMap<>();
 
@@ -508,10 +538,13 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByList = new ArrayList<>();
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> groupByDecorList = new ArrayList<>();
         GroupByOperator groupbyOp = new GroupByOperator(groupByList, groupByDecorList, subplanOp.getNestedPlans());
+        groupbyOp.setSourceLocation(sourceLoc);
 
         for (LogicalVariable coverVar : primaryKeyVars) {
             LogicalVariable newVar = context.newVar();
-            groupByList.add(new Pair<>(newVar, new MutableObject<>(new VariableReferenceExpression(coverVar))));
+            VariableReferenceExpression coverVarRef = new VariableReferenceExpression(coverVar);
+            coverVarRef.setSourceLocation(sourceLoc);
+            groupByList.add(new Pair<>(newVar, new MutableObject<>(coverVarRef)));
             // Adds variables for replacements in ancestors.
             replacedVarMap.put(coverVar, newVar);
         }
@@ -519,7 +552,9 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             if (primaryKeyVars.contains(liveVar)) {
                 continue;
             }
-            groupByDecorList.add(new Pair<>(null, new MutableObject<>(new VariableReferenceExpression(liveVar))));
+            VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
+            liveVarRef.setSourceLocation(sourceLoc);
+            groupByDecorList.add(new Pair<>(null, new MutableObject<>(liveVarRef)));
         }
         groupbyOp.getInputs().add(new MutableObject<>(topJoinRef.getValue()));
 
@@ -528,28 +563,42 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             // i.e., subplan input tuples that are filtered out within a subplan.
             List<Mutable<ILogicalExpression>> nullCheckExprRefs = new ArrayList<>();
             for (LogicalVariable notNullVar : notNullVars) {
-                Mutable<ILogicalExpression> filterVarExpr =
-                        new MutableObject<>(new VariableReferenceExpression(notNullVar));
+                VariableReferenceExpression notNullVarRef = new VariableReferenceExpression(notNullVar);
+                notNullVarRef.setSourceLocation(sourceLoc);
+                Mutable<ILogicalExpression> filterVarExpr = new MutableObject<>(notNullVarRef);
                 List<Mutable<ILogicalExpression>> args = new ArrayList<>();
                 args.add(filterVarExpr);
                 List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<>();
-                argsForNotFunction.add(new MutableObject<>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING), args)));
-                nullCheckExprRefs.add(new MutableObject<>(new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), argsForNotFunction)));
+                ScalarFunctionCallExpression isMissingExpr = new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING), args);
+                isMissingExpr.setSourceLocation(sourceLoc);
+                argsForNotFunction.add(new MutableObject<>(isMissingExpr));
+                ScalarFunctionCallExpression notExpr = new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), argsForNotFunction);
+                notExpr.setSourceLocation(sourceLoc);
+                nullCheckExprRefs.add(new MutableObject<>(notExpr));
             }
-            Mutable<ILogicalExpression> selectExprRef = nullCheckExprRefs.size() > 1
-                    ? new MutableObject<>(new ScalarFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(BuiltinFunctions.AND), nullCheckExprRefs))
-                    : nullCheckExprRefs.get(0);
+            Mutable<ILogicalExpression> selectExprRef;
+            if (nullCheckExprRefs.size() > 1) {
+                ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.AND), nullCheckExprRefs);
+                andExpr.setSourceLocation(sourceLoc);
+                selectExprRef = new MutableObject<>(andExpr);
+            } else {
+                selectExprRef = nullCheckExprRefs.get(0);
+            }
             SelectOperator selectOp = new SelectOperator(selectExprRef, false, null);
+            selectOp.setSourceLocation(sourceLoc);
             topJoinRef.setValue(selectOp);
-            selectOp.getInputs()
-                    .add(new MutableObject<>(new NestedTupleSourceOperator(new MutableObject<>(groupbyOp))));
+            NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(groupbyOp));
+            ntsOp.setSourceLocation(sourceLoc);
+            selectOp.getInputs().add(new MutableObject<>(ntsOp));
         } else {
             // The original join operator in the Subplan is a left-outer join.
             // Therefore, no null-check variable is injected and no SelectOperator needs to be added.
-            topJoinRef.setValue(new NestedTupleSourceOperator(new MutableObject<>(groupbyOp)));
+            NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(groupbyOp));
+            ntsOp.setSourceLocation(sourceLoc);
+            topJoinRef.setValue(ntsOp);
         }
         opRef.setValue(groupbyOp);
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(groupbyOp, context);

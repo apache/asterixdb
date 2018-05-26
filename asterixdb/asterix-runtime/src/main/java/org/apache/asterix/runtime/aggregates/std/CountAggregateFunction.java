@@ -21,15 +21,16 @@ package org.apache.asterix.runtime.aggregates.std;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * COUNT returns the number of items in the given list. Note that COUNT(NULL) is not allowed.
  */
 public class CountAggregateFunction extends AbstractCountAggregateFunction {
 
-    public CountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+    public CountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, SourceLocation sourceLoc)
             throws HyracksDataException {
-        super(args, context);
+        super(args, context, sourceLoc);
     }
 
     @Override

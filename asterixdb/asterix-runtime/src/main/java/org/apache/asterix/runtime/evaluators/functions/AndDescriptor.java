@@ -107,7 +107,7 @@ public class AndDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 continue;
                             }
                             if (bytes[offset] != ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG) {
-                                throw new TypeMismatchException(getIdentifier(), i, bytes[offset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), i, bytes[offset],
                                         ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
                             }
                             boolean argResult = ABooleanSerializerDeserializer.getBoolean(bytes, offset + 1);

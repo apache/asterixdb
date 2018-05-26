@@ -21,13 +21,14 @@ package org.apache.asterix.runtime.aggregates.serializable.std;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * count(NULL) returns NULL.
  */
 public class SerializableCountAggregateFunction extends AbstractSerializableCountAggregateFunction {
-    public SerializableCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
-        super(args, context);
+    public SerializableCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(args, context, sourceLoc);
     }
 }

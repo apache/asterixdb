@@ -85,7 +85,7 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                     int numOfPoints = AInt16SerializerDeserializer.getShort(bytes, offset + 1);
 
                                     if (numOfPoints < 3) {
-                                        throw new InvalidDataFormatException(getIdentifier(),
+                                        throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                                 ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                     }
                                     area = Math.abs(SpatialUtils.polygonArea(bytes, offset, numOfPoints));
@@ -118,7 +118,7 @@ public class SpatialAreaDescriptor extends AbstractScalarFunctionDynamicDescript
                                     out.writeDouble(area);
                                     break;
                                 default:
-                                    throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                                    throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                             ATypeTag.SERIALIZED_POLYGON_TYPE_TAG, ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
                                             ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                             }

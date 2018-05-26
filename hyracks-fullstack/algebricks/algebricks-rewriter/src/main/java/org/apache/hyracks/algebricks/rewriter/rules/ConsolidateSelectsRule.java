@@ -79,6 +79,7 @@ public class ConsolidateSelectsRule implements IAlgebraicRewriteRule {
             // Initialize the new conjuncts, if necessary.
             if (conj == null) {
                 conj = new ScalarFunctionCallExpression(andFn);
+                conj.setSourceLocation(firstSelect.getSourceLocation());
                 // Add the first select's condition.
                 conj.getArguments().add(new MutableObject<ILogicalExpression>(firstSelect.getCondition().getValue()));
             }

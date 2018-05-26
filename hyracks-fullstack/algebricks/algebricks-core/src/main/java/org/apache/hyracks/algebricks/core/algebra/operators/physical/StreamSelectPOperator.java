@@ -70,6 +70,7 @@ public class StreamSelectPOperator extends AbstractPhysicalOperator {
                 new StreamSelectRuntimeFactory(cond, null, context.getBinaryBooleanInspectorFactory(),
                         select.getRetainMissing(), inputSchemas[0].findVariable(select.getMissingPlaceholderVariable()),
                         context.getMissingWriterFactory());
+        runtime.setSourceLocation(select.getSourceLocation());
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         builder.contributeMicroOperator(select, runtime, recDesc);

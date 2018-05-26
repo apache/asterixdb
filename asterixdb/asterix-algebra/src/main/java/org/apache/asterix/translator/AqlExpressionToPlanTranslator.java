@@ -170,7 +170,7 @@ class AqlExpressionToPlanTranslator extends LangExpressionToPlanTranslator imple
             throws CompilationException {
         List<ILangExpression> inputExprs = new ArrayList<>();
         inputExprs.addAll(unionExpr.getExprs());
-        Pair<ILogicalOperator, LogicalVariable> result = translateUnionAllFromInputExprs(inputExprs, tupSource);
+        Pair<ILogicalOperator, LogicalVariable> result = translateUnionAllFromInputExprs(inputExprs, tupSource, null);
         return aggListifyForSubquery(result.second, new MutableObject<>(result.first), false);
     }
 

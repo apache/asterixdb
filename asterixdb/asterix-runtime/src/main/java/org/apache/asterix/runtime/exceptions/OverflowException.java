@@ -22,17 +22,11 @@ package org.apache.asterix.runtime.exceptions;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class OverflowException extends RuntimeDataException {
-
     // Overflow.
-    public OverflowException(FunctionIdentifier fid) {
-        super(ErrorCode.OVERFLOW, fid.getName());
+    public OverflowException(SourceLocation sourceLoc, FunctionIdentifier fid) {
+        super(ErrorCode.OVERFLOW, sourceLoc, fid.getName());
     }
-
-    // Overflow.
-    public OverflowException(String functionName) {
-        super(ErrorCode.OVERFLOW, functionName);
-    }
-
 }

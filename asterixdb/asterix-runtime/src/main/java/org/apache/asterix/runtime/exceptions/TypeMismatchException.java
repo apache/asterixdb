@@ -26,6 +26,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class TypeMismatchException extends RuntimeDataException {
 
@@ -36,9 +37,24 @@ public class TypeMismatchException extends RuntimeDataException {
     }
 
     // Parameter type mistmatch.
+    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, byte actualTypeTag,
+            byte... expectedTypeTags) {
+        super(ErrorCode.TYPE_MISMATCH, sourceLoc, fid.getName(), indexToPosition(i),
+                toExpectedTypeString(expectedTypeTags),
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
+    }
+
+    // Parameter type mistmatch.
     public TypeMismatchException(String functionName, Integer i, byte actualTypeTag, byte... expectedTypeTags) {
         super(ErrorCode.TYPE_MISMATCH, functionName, indexToPosition(i), toExpectedTypeString(expectedTypeTags),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 
+    // Parameter type mistmatch.
+    public TypeMismatchException(SourceLocation sourceLoc, String functionName, Integer i, byte actualTypeTag,
+            byte... expectedTypeTags) {
+        super(ErrorCode.TYPE_MISMATCH, sourceLoc, functionName, indexToPosition(i),
+                toExpectedTypeString(expectedTypeTags),
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
+    }
 }

@@ -48,7 +48,7 @@ public class LSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexInsertUpd
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMInsertDeleteOperatorNodePushable(ctx, partition, fieldPermutation, inputRecDesc, op, isPrimary,
-                indexHelperFactory, modCallbackFactory, tupleFilterFactory);
+                indexHelperFactory, modCallbackFactory, tupleFilterFactory, sourceLoc);
     }
 
     public boolean isPrimary() {

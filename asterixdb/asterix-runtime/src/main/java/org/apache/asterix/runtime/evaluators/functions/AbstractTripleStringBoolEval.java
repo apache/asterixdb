@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
@@ -36,9 +37,9 @@ public abstract class AbstractTripleStringBoolEval extends AbstractTripleStringE
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     public AbstractTripleStringBoolEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
-            IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, FunctionIdentifier funcID)
-            throws HyracksDataException {
-        super(context, eval0, eval1, eval2, funcID);
+            IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, FunctionIdentifier funcID,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(context, eval0, eval1, eval2, funcID, sourceLoc);
     }
 
     @SuppressWarnings("unchecked")

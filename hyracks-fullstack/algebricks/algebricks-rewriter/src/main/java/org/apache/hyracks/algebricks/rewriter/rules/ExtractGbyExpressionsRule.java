@@ -73,7 +73,9 @@ public class ExtractGbyExpressionsRule extends AbstractExtractExprRule {
             ILogicalExpression expr = gbyPair.second.getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                 LogicalVariable v = extractExprIntoAssignOpRef(expr, opRef2, context);
-                gbyPair.second.setValue(new VariableReferenceExpression(v));
+                VariableReferenceExpression vRef = new VariableReferenceExpression(v);
+                vRef.setSourceLocation(expr.getSourceLocation());
+                gbyPair.second.setValue(vRef);
             }
         }
         return true;
@@ -88,7 +90,9 @@ public class ExtractGbyExpressionsRule extends AbstractExtractExprRule {
             ILogicalExpression expr = decorPair.second.getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 LogicalVariable v = extractExprIntoAssignOpRef(expr, opRef2, context);
-                decorPair.second.setValue(new VariableReferenceExpression(v));
+                VariableReferenceExpression vRef = new VariableReferenceExpression(v);
+                vRef.setSourceLocation(expr.getSourceLocation());
+                decorPair.second.setValue(vRef);
             }
         }
         return true;

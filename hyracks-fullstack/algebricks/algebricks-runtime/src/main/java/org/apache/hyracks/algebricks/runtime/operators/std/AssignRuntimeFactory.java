@@ -172,7 +172,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                         }
                     }
                 } catch (HyracksDataException e) {
-                    throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e, tupleIndex);
+                    throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e, sourceLoc, tupleIndex);
                 }
             }
 

@@ -140,7 +140,7 @@ public class NumericRoundDescriptor extends AbstractScalarFunctionDynamicDescrip
                             aDouble.setValue(val);
                             serde.serialize(aDouble, out);
                         } else {
-                            throw new TypeMismatchException(getIdentifier(), 0, data[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data[offset],
                                     ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
                                     ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
                                     ATypeTag.SERIALIZED_FLOAT_TYPE_TAG, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);

@@ -20,6 +20,8 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -102,7 +104,7 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 if (!expr.isFunctional()) {
                     AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-                    throw new AlgebricksException(
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, fce.getSourceLocation(),
                             "Found non-functional function " + fce.getFunctionIdentifier() + " in op " + op);
                 }
             }

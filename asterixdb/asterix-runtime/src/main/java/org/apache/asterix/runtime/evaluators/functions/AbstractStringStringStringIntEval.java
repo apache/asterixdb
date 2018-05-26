@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -57,10 +58,12 @@ public abstract class AbstractStringStringStringIntEval implements IScalarEvalua
 
     // Function ID, for error reporting.
     protected final FunctionIdentifier funcID;
+    protected final SourceLocation sourceLoc;
 
     AbstractStringStringStringIntEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, IScalarEvaluatorFactory eval3,
-            FunctionIdentifier funcID) throws HyracksDataException {
+            FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
+        this.sourceLoc = sourceLoc;
         this.eval0 = eval0.createScalarEvaluator(context);
         this.eval1 = eval1.createScalarEvaluator(context);
         this.eval2 = eval2.createScalarEvaluator(context);
@@ -96,18 +99,18 @@ public abstract class AbstractStringStringStringIntEval implements IScalarEvalua
 
         // Type check.
         if (bytes0[start0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 0, bytes0[start0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, funcID, 0, bytes0[start0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         if (bytes1[start1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 1, bytes1[start1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, funcID, 1, bytes1[start1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         if (bytes2[start2] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 2, bytes2[start2], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, funcID, 2, bytes2[start2], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         if (bytes3[start3] != ATypeTag.SERIALIZED_INT8_TYPE_TAG && bytes3[start3] != ATypeTag.SERIALIZED_INT16_TYPE_TAG
                 && bytes3[start3] != ATypeTag.SERIALIZED_INT32_TYPE_TAG
                 && bytes3[start3] != ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 3, bytes3[start3], ATypeTag.SERIALIZED_INT8_TYPE_TAG,
+            throw new TypeMismatchException(sourceLoc, funcID, 3, bytes3[start3], ATypeTag.SERIALIZED_INT8_TYPE_TAG,
                     ATypeTag.SERIALIZED_INT16_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
                     ATypeTag.SERIALIZED_INT64_TYPE_TAG);
         }

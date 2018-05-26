@@ -19,6 +19,8 @@
 package org.apache.asterix.optimizer.rules;
 
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
@@ -110,7 +112,7 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 if (reqType == null || !reqType.isOpen()) {
                     int n = expr.getArguments().size();
                     if (n % 2 > 0) {
-                        throw new AlgebricksException(
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
                                 "Record constructor expected to have an even number of arguments: " + expr);
                     }
                     for (int i = 0; i < n / 2; i++) {
@@ -166,7 +168,7 @@ public class SetClosedRecordConstructorsRule implements IAlgebraicRewriteRule {
                 throws AlgebricksException {
             Object varType = env.getVarType(expr.getVariableReference());
             if (varType == null) {
-                throw new AlgebricksException(
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
                         "Could not infer type for variable '" + expr.getVariableReference() + "'.");
             }
             return new ClosedDataInfo(false, TypeHelper.isClosed((IAType) varType), expr);

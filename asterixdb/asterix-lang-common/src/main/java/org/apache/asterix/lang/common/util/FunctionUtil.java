@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
@@ -43,6 +44,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FunctionUtil {
 
@@ -68,7 +70,8 @@ public class FunctionUtil {
 
     @FunctionalInterface
     public interface IFunctionNormalizer {
-        FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs) throws CompilationException;
+        FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs, SourceLocation sourceLoc)
+                throws CompilationException;
     }
 
     /**
@@ -116,8 +119,9 @@ public class FunctionUtil {
                 if (!namespace.equals(FunctionConstants.ASTERIX_NS)
                         && !namespace.equals(AlgebricksBuiltinFunctions.ALGEBRICKS_NS)
                         && metadataProvider.findDataverse(namespace) == null) {
-                    throw new CompilationException("In function call \"" + namespace + "." + signature.getName()
-                            + "(...)\", the dataverse \"" + namespace + "\" cannot be found!");
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
+                            "In function call \"" + namespace + "." + signature.getName() + "(...)\", the dataverse \""
+                                    + namespace + "\" cannot be found!");
                 }
             } catch (AlgebricksException e) {
                 throw new CompilationException(e);
@@ -130,7 +134,8 @@ public class FunctionUtil {
             }
             if (function == null) {
                 FunctionSignature normalizedSignature = functionNormalizer == null ? signature
-                        : functionNormalizer.normalizeBuiltinFunctionSignature(signature);
+                        : functionNormalizer.normalizeBuiltinFunctionSignature(signature,
+                                functionCall.getSourceLocation());
                 if (BuiltinFunctions.isBuiltinCompilerFunction(normalizedSignature, includePrivateFunctions)) {
                     continue;
                 }
@@ -141,7 +146,8 @@ public class FunctionUtil {
                 } else {
                     messageBuilder.append("function " + signature + " is not defined");
                 }
-                throw new CompilationException(messageBuilder.toString());
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
+                        messageBuilder.toString());
             }
 
             if (function.getLanguage().equalsIgnoreCase(Function.LANGUAGE_AQL)
@@ -149,7 +155,7 @@ public class FunctionUtil {
                 FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
                 if (functionDecl != null) {
                     if (functionDecls.contains(functionDecl)) {
-                        throw new CompilationException(
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
                                 "Recursive invocation " + functionDecls.get(functionDecls.size() - 1).getSignature()
                                         + " <==> " + functionDecl.getSignature());
                     }

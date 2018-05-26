@@ -62,7 +62,7 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
 
-                    protected final IntervalLogic il = new IntervalLogic();
+                    protected final IntervalLogic il = new IntervalLogic(sourceLoc);
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
                     private TaggedValuePointable argPtr0 =
@@ -100,7 +100,8 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                             byte intervalType1 = interval1.getType();
 
                             if (intervalType0 != intervalType1) {
-                                throw new IncompatibleTypeException(getIdentifier(), intervalType0, intervalType1);
+                                throw new IncompatibleTypeException(sourceLoc, getIdentifier(), intervalType0,
+                                        intervalType1);
                             }
 
                             if (il.overlaps(interval0, interval1) || il.overlappedBy(interval0, interval1)
@@ -115,10 +116,10 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                             result.set(resultStorage);
                             return;
                         } else if (type0 != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, type0,
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, type0,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         } else {
-                            throw new IncompatibleTypeException(getIdentifier(), type0, type1);
+                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(), type0, type1);
                         }
                     }
 

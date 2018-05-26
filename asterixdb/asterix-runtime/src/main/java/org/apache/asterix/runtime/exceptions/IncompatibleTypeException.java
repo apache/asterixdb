@@ -23,19 +23,23 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class IncompatibleTypeException extends RuntimeDataException {
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
-    public IncompatibleTypeException(FunctionIdentifier fid, byte typeTagLeft, byte typeTagRight) {
-        super(ErrorCode.TYPE_INCOMPATIBLE, fid.getName(),
+    public IncompatibleTypeException(SourceLocation sourceLoc, FunctionIdentifier fid, byte typeTagLeft,
+            byte typeTagRight) {
+        super(ErrorCode.TYPE_INCOMPATIBLE, sourceLoc, fid.getName(),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTagLeft),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTagRight));
     }
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
-    public IncompatibleTypeException(String functionName, byte typeTagLeft, byte typeTagRight) {
-        super(ErrorCode.TYPE_INCOMPATIBLE, functionName, EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTagLeft),
+    public IncompatibleTypeException(SourceLocation sourceLoc, String functionName, byte typeTagLeft,
+            byte typeTagRight) {
+        super(ErrorCode.TYPE_INCOMPATIBLE, sourceLoc, functionName,
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTagLeft),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(typeTagRight));
     }
 }

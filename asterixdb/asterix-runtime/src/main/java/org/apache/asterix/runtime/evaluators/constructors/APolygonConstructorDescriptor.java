@@ -86,7 +86,7 @@ public class APolygonConstructorDescriptor extends AbstractScalarFunctionDynamic
                                 String s = utf8Ptr.toString();
                                 String[] points = WS.split(s.trim());
                                 if (points.length <= 2) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 }
                                 out.writeByte(ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
@@ -98,11 +98,11 @@ public class APolygonConstructorDescriptor extends AbstractScalarFunctionDynamic
                                 }
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
                     }

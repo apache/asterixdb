@@ -60,7 +60,8 @@ public class RecordRemoveFieldsDescriptor extends AbstractScalarFunctionDynamicD
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new RecordRemoveFieldsEvalFactory(args[0], args[1], outputRecordType, inputRecType, inputListType);
+        return new RecordRemoveFieldsEvalFactory(args[0], args[1], outputRecordType, inputRecType, inputListType,
+                sourceLoc);
     }
 
     @Override

@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class RecordMergeTypeComputer implements IResultTypeComputer {
     public static final RecordMergeTypeComputer INSTANCE = new RecordMergeTypeComputer();
@@ -56,12 +57,12 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
         boolean unknownable = TypeHelper.canBeUnknown(t0) || TypeHelper.canBeUnknown(t1);
         ARecordType recType0 = TypeComputeUtils.extractRecordType(t0);
         if (recType0 == null) {
-            throw new TypeMismatchException(funcName, 0, t0.getTypeTag(), ATypeTag.OBJECT);
+            throw new TypeMismatchException(f.getSourceLocation(), funcName, 0, t0.getTypeTag(), ATypeTag.OBJECT);
         }
 
         ARecordType recType1 = TypeComputeUtils.extractRecordType(t1);
         if (recType1 == null) {
-            throw new TypeMismatchException(funcName, 1, t1.getTypeTag(), ATypeTag.OBJECT);
+            throw new TypeMismatchException(f.getSourceLocation(), funcName, 1, t1.getTypeTag(), ATypeTag.OBJECT);
         }
 
         List<String> resultFieldNames = new ArrayList<>();
@@ -90,11 +91,13 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
             if (pos >= 0) {
                 IAType resultFieldType = resultFieldTypes.get(pos);
                 if (resultFieldType.getTypeTag() != fieldTypes[i].getTypeTag()) {
-                    throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldNames[i]);
+                    throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, f.getSourceLocation(),
+                            fieldNames[i]);
                 }
                 // Assuming fieldTypes[i].getTypeTag() = resultFieldType.getTypeTag()
                 if (fieldTypes[i].getTypeTag() == ATypeTag.OBJECT) {
-                    resultFieldTypes.set(pos, mergedNestedType(fieldNames[i], fieldTypes[i], resultFieldType));
+                    resultFieldTypes.set(pos,
+                            mergedNestedType(fieldNames[i], fieldTypes[i], resultFieldType, f.getSourceLocation()));
                 }
             } else {
                 additionalFieldNames.add(fieldNames[i]);
@@ -116,9 +119,10 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
         return resultType;
     }
 
-    private IAType mergedNestedType(String fieldName, IAType fieldType1, IAType fieldType0) throws AlgebricksException {
+    private IAType mergedNestedType(String fieldName, IAType fieldType1, IAType fieldType0, SourceLocation sourceLoc)
+            throws AlgebricksException {
         if (fieldType1.getTypeTag() != ATypeTag.OBJECT || fieldType0.getTypeTag() != ATypeTag.OBJECT) {
-            throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName);
+            throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, sourceLoc, fieldName);
         }
 
         ARecordType resultType = (ARecordType) fieldType0;
@@ -131,8 +135,8 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
                 // If a sub-record do merge, else ignore and let the values decide what to do
                 if (fieldType1Copy.getFieldTypes()[i].getTypeTag() == ATypeTag.OBJECT) {
                     IAType[] oldTypes = resultType.getFieldTypes();
-                    oldTypes[pos] =
-                            mergedNestedType(fname, fieldType1Copy.getFieldTypes()[i], resultType.getFieldTypes()[pos]);
+                    oldTypes[pos] = mergedNestedType(fname, fieldType1Copy.getFieldTypes()[i],
+                            resultType.getFieldTypes()[pos], sourceLoc);
                     resultType = new ARecordType(resultType.getTypeName(), resultType.getFieldNames(), oldTypes,
                             resultType.isOpen());
                 }

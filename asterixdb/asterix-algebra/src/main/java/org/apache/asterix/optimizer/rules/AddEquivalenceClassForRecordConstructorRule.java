@@ -112,14 +112,16 @@ public class AddEquivalenceClassForRecordConstructorRule implements IAlgebraicRe
                 LogicalVariable fieldVar = varExpr.getVariableReference();
                 Map<LogicalVariable, EquivalenceClass> ecs = context.getEquivalenceClassMap(assignOp);
                 if (ecs == null) {
-                    ecs = new HashMap<LogicalVariable, EquivalenceClass>();
+                    ecs = new HashMap<>();
                     context.putEquivalenceClassMap(assignOp, ecs);
                 }
-                ILogicalExpression expr = new ScalarFunctionCallExpression(
+                VariableReferenceExpression recordVarRef = new VariableReferenceExpression(recordVar);
+                recordVarRef.setSourceLocation(funcExpr.getSourceLocation());
+                ScalarFunctionCallExpression expr = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
-                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(recordVar)),
-                        new MutableObject<ILogicalExpression>(
+                        new MutableObject<>(recordVarRef), new MutableObject<>(
                                 new ConstantExpression(new AsterixConstantValue(new AInt32(parameterIndex / 2))))); // Every two parameters corresponds to a field.
+                expr.setSourceLocation(funcExpr.getSourceLocation());
                 EquivalenceClass equivClass = new EquivalenceClass(Collections.singletonList(fieldVar), fieldVar,
                         Collections.singletonList(expr));
                 ecs.put(fieldVar, equivClass);

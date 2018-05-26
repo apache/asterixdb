@@ -58,6 +58,6 @@ public class ListifyAggregateDescriptor extends AbstractAggregateFunctionDynamic
 
     @Override
     public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new ListifyAggregateFunctionEvalFactory(args, oltype);
+        return new ListifyAggregateFunctionEvalFactory(args, oltype, sourceLoc);
     }
 }

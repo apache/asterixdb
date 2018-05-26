@@ -56,7 +56,7 @@ public class NumericDivDescriptor extends AbstractNumericArithmeticEval {
             throw new RuntimeDataException(ErrorCode.DIVISION_BY_ZERO);
         }
         if ((lhs == Long.MIN_VALUE) && (rhs == -1L)) {
-            throw new OverflowException(getIdentifier());
+            throw new OverflowException(sourceLoc, getIdentifier());
         }
         return lhs / rhs;
     }
@@ -68,6 +68,6 @@ public class NumericDivDescriptor extends AbstractNumericArithmeticEval {
 
     @Override
     protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
-        throw new UnsupportedTypeException(getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
+        throw new UnsupportedTypeException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
     }
 }

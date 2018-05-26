@@ -50,7 +50,7 @@ public class GetJobParameterByNameDescriptor extends AbstractScalarFunctionDynam
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractUnaryStringStringEval(ctx, args[0],
-                        GetJobParameterByNameDescriptor.this.getIdentifier()) {
+                        GetJobParameterByNameDescriptor.this.getIdentifier(), sourceLoc) {
                     private byte[] result;
 
                     @Override

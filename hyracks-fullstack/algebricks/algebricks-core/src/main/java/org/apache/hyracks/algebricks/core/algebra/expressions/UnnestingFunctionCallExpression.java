@@ -50,6 +50,7 @@ public class UnnestingFunctionCallExpression extends AbstractFunctionCallExpress
         UnnestingFunctionCallExpression ufce = new UnnestingFunctionCallExpression(finfo, clonedArgs);
         ufce.setReturnsUniqueValues(returnsUniqueValues);
         ufce.setOpaqueParameters(this.getOpaqueParameters());
+        ufce.setSourceLocation(sourceLoc);
         return ufce;
     }
 

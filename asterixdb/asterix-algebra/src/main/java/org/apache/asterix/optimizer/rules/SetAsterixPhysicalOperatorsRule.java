@@ -25,6 +25,8 @@ import org.apache.asterix.algebra.operators.physical.BTreeSearchPOperator;
 import org.apache.asterix.algebra.operators.physical.InvertedIndexPOperator;
 import org.apache.asterix.algebra.operators.physical.RTreeSearchPOperator;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -131,6 +133,7 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                     AggregateFunctionCallExpression serialAggExpr =
                                             BuiltinFunctions.makeSerializableAggregateFunctionExpression(
                                                     expr.getFunctionIdentifier(), expr.getArguments());
+                                    serialAggExpr.setSourceLocation(expr.getSourceLocation());
                                     if (mergeAggregationExpressionFactory.createMergeAggregation(
                                             originalVariables.get(i), serialAggExpr, context) == null) {
                                         hasIntermediateAgg = false;
@@ -157,6 +160,7 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                         AggregateFunctionCallExpression serialAggExpr =
                                                 BuiltinFunctions.makeSerializableAggregateFunctionExpression(
                                                         expr.getFunctionIdentifier(), expr.getArguments());
+                                        serialAggExpr.setSourceLocation(expr.getSourceLocation());
                                         aggOp.getExpressions().get(i).setValue(serialAggExpr);
                                     }
                                     ExternalGroupByPOperator externalGby = new ExternalGroupByPOperator(
@@ -184,8 +188,7 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                         context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy()));
                             }
                         }
-                    } else if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag()
-                            .equals(LogicalOperatorTag.RUNNINGAGGREGATE)) {
+                    } else if (r0.getValue().getOperatorTag().equals(LogicalOperatorTag.RUNNINGAGGREGATE)) {
                         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = gby.getGroupByList();
                         List<LogicalVariable> columnList = new ArrayList<LogicalVariable>(gbyList.size());
                         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyList) {
@@ -198,8 +201,9 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                         op.setPhysicalOperator(new PreclusteredGroupByPOperator(columnList, gby.isGroupAll(),
                                 context.getPhysicalOptimizationConfig().getMaxFramesForGroupBy()));
                     } else {
-                        throw new AlgebricksException("Unsupported nested operator within a group-by: "
-                                + ((AbstractLogicalOperator) (r0.getValue())).getOperatorTag().name());
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, gby.getSourceLocation(),
+                                "Unsupported nested operator within a group-by: "
+                                        + r0.getValue().getOperatorTag().name());
                     }
                 }
             }
@@ -235,8 +239,9 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                                 mp.findDataSourceIndex(jobGenParams.getIndexName(), dataSourceId);
                         INodeDomain storageDomain = mp.findNodeDomain(dataset.getNodeGroupName());
                         if (dsi == null) {
-                            throw new AlgebricksException("Could not find index " + jobGenParams.getIndexName()
-                                    + " for dataset " + dataSourceId);
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR, op.getSourceLocation(),
+                                    "Could not find index " + jobGenParams.getIndexName() + " for dataset "
+                                            + dataSourceId);
                         }
                         IndexType indexType = jobGenParams.getIndexType();
                         boolean requiresBroadcast = jobGenParams.getRequiresBroadcast();
@@ -288,13 +293,13 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
     private static void generateMergeAggregationExpressions(GroupByOperator gby, IOptimizationContext context)
             throws AlgebricksException {
         if (gby.getNestedPlans().size() != 1) {
-            throw new AlgebricksException(
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, gby.getSourceLocation(),
                     "External group-by currently works only for one nested plan with one root containing"
                             + "an aggregate and a nested-tuple-source.");
         }
         ILogicalPlan p0 = gby.getNestedPlans().get(0);
         if (p0.getRoots().size() != 1) {
-            throw new AlgebricksException(
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, gby.getSourceLocation(),
                     "External group-by currently works only for one nested plan with one root containing"
                             + "an aggregate and a nested-tuple-source.");
         }
@@ -303,8 +308,9 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
         Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
         AbstractLogicalOperator r0Logical = (AbstractLogicalOperator) r0.getValue();
         if (r0Logical.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
-            throw new AlgebricksException("The merge aggregation expression generation should not process a "
-                    + r0Logical.getOperatorTag() + " operator.");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, gby.getSourceLocation(),
+                    "The merge aggregation expression generation should not process a " + r0Logical.getOperatorTag()
+                            + " operator.");
         }
         AggregateOperator aggOp = (AggregateOperator) r0.getValue();
         List<Mutable<ILogicalExpression>> aggFuncRefs = aggOp.getExpressions();
@@ -312,11 +318,13 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
         int n = aggOp.getExpressions().size();
         List<Mutable<ILogicalExpression>> mergeExpressionRefs = new ArrayList<Mutable<ILogicalExpression>>();
         for (int i = 0; i < n; i++) {
+            ILogicalExpression aggFuncExpr = aggFuncRefs.get(i).getValue();
             ILogicalExpression mergeExpr = mergeAggregationExpressionFactory
-                    .createMergeAggregation(aggProducedVars.get(i), aggFuncRefs.get(i).getValue(), context);
+                    .createMergeAggregation(aggProducedVars.get(i), aggFuncExpr, context);
             if (mergeExpr == null) {
-                throw new AlgebricksException("The aggregation function " + aggFuncRefs.get(i).getValue()
-                        + " does not have a registered intermediate aggregation function.");
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, aggFuncExpr.getSourceLocation(),
+                        "The aggregation function " + aggFuncExpr
+                                + " does not have a registered intermediate aggregation function.");
             }
             mergeExpressionRefs.add(new MutableObject<ILogicalExpression>(mergeExpr));
         }

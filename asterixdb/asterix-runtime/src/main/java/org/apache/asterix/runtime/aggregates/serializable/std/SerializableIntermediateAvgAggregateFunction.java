@@ -26,13 +26,14 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SerializableIntermediateAvgAggregateFunction extends AbstractSerializableAvgAggregateFunction {
 
-    public SerializableIntermediateAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
-        super(args, context);
+    public SerializableIntermediateAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(args, context, sourceLoc);
     }
 
     @Override

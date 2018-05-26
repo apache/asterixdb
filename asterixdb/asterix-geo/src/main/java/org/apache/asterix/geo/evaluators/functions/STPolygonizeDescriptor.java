@@ -114,7 +114,7 @@ public class STPolygonizeDescriptor extends AbstractScalarFunctionDynamicDescrip
             } else if (typeTag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                 serde = new AOrderedListSerializerDeserializer(type);
             } else {
-                throw new TypeMismatchException(BuiltinFunctions.ST_POLYGONIZE, 0, typeTag,
+                throw new TypeMismatchException(sourceLoc, BuiltinFunctions.ST_POLYGONIZE, 0, typeTag,
                         ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
             }
 
@@ -132,7 +132,8 @@ public class STPolygonizeDescriptor extends AbstractScalarFunctionDynamicDescrip
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AGEOMETRY)
                         .serialize(new AGeometry(geometryCollection), out);
             } catch (IOException e) {
-                throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
+                throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
+                        ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
             result.set(resultStorage);
         }

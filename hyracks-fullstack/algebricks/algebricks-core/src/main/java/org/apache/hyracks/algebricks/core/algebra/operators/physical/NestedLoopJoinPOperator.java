@@ -139,15 +139,14 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
         ITuplePairComparatorFactory comparatorFactory =
                 new TuplePairEvaluatorFactory(cond, context.getBinaryBooleanInspectorFactory());
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        IOperatorDescriptor opDesc = null;
+        IOperatorDescriptor opDesc;
 
         switch (kind) {
-            case INNER: {
+            case INNER:
                 opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, false,
                         null);
                 break;
-            }
-            case LEFT_OUTER: {
+            case LEFT_OUTER:
                 IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
                 for (int j = 0; j < nonMatchWriterFactories.length; j++) {
                     nonMatchWriterFactories[j] = context.getMissingWriterFactory();
@@ -155,12 +154,12 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
                 opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, true,
                         nonMatchWriterFactories);
                 break;
-            }
-            default: {
+            default:
                 throw new NotImplementedException();
-            }
         }
-        contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
+
+        opDesc.setSourceLocation(join.getSourceLocation());
+        contributeOpDesc(builder, join, opDesc);
 
         ILogicalOperator src1 = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src1, 0, op, 0);

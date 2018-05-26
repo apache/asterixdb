@@ -262,10 +262,12 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         List<List<LogicalVariable>> inputVars = new ArrayList<>(subRoots.size());
         for (int i = 0; i < subRoots.size(); i++) {
             if (lop.getOperatorTag() != subRoots.get(i).getOperatorTag()) {
-                throw new AlgebricksException("The data source root should have the same operator type.");
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, lop.getSourceLocation(),
+                        "The data source root should have the same operator type.");
             }
             if (lop.getInputs().size() != 1) {
-                throw new AlgebricksException("The primary search has multiple inputs.");
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, lop.getSourceLocation(),
+                        "The primary search has multiple inputs.");
             }
 
             ILogicalOperator curRoot = subRoots.get(i);
@@ -274,7 +276,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExpression : order
                     .getOrderExpressions()) {
                 if (orderExpression.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                    throw new AlgebricksException(
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                            orderExpression.second.getValue().getSourceLocation(),
                             "The order by expression should be variables, but they aren't variables.");
                 }
                 VariableReferenceExpression orderedVar =
@@ -286,6 +289,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
         List<LogicalVariable> outputVar = inputVars.get(0);
         IntersectOperator intersect = new IntersectOperator(outputVar, inputVars);
+        intersect.setSourceLocation(lop.getSourceLocation());
         for (ILogicalOperator secondarySearch : subRoots) {
             intersect.getInputs().add(secondarySearch.getInputs().get(0));
         }

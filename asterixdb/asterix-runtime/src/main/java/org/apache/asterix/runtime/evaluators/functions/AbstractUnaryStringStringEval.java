@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -50,11 +51,13 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput dataOutput = resultStorage.getDataOutput();
     private final FunctionIdentifier funcID;
+    protected final SourceLocation sourceLoc;
 
     AbstractUnaryStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory,
-            FunctionIdentifier funcID) throws HyracksDataException {
+            FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
         this.argEval = argEvalFactory.createScalarEvaluator(context);
         this.funcID = funcID;
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -65,7 +68,8 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
         int offset = argPtr.getStartOffset();
         byte inputTypeTag = argBytes[offset];
         if (inputTypeTag != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 0, argBytes[offset], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, funcID, 0, argBytes[offset],
+                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         stringPtr.set(argBytes, offset + 1, argPtr.getLength() - 1);
         resultArray.reset();

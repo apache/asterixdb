@@ -96,11 +96,11 @@ public class APoint3DConstructorDescriptor extends AbstractScalarFunctionDynamic
                                 point3DSerde.serialize(aPoint3D, out);
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_POINT3D_TYPE_TAG);
                         }
                     }

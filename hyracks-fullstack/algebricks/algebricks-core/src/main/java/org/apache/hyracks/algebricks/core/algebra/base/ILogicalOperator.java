@@ -33,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public interface ILogicalOperator {
 
@@ -103,4 +104,6 @@ public interface ILogicalOperator {
      * Indicates whether the expressions used by this operator must be variable reference expressions.
      */
     public boolean requiresVariableReferenceExpressions();
+
+    SourceLocation getSourceLocation();
 }

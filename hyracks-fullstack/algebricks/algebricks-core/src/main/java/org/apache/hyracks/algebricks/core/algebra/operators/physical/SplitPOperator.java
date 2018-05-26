@@ -60,10 +60,11 @@ public class SplitPOperator extends AbstractReplicatePOperator {
 
         IBinaryIntegerInspectorFactory intInsepctorFactory = context.getBinaryIntegerInspectorFactory();
 
-        SplitOperatorDescriptor splitOpDesc = new SplitOperatorDescriptor(spec, recDescriptor, outputArity,
+        SplitOperatorDescriptor sopDesc = new SplitOperatorDescriptor(spec, recDescriptor, outputArity,
                 brachingExprEvalFactory, intInsepctorFactory, defaultBranch, propageToAllBranchAsDefault);
+        sopDesc.setSourceLocation(sop.getSourceLocation());
 
-        contributeOpDesc(builder, (AbstractLogicalOperator) op, splitOpDesc);
+        contributeOpDesc(builder, sop, sopDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
     }

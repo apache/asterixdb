@@ -45,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FuzzyEqRule implements IAlgebraicRewriteRule {
 
@@ -88,6 +89,7 @@ public class FuzzyEqRule implements IAlgebraicRewriteRule {
         AbstractFunctionCallExpression funcExp = (AbstractFunctionCallExpression) exp;
         FunctionIdentifier fi = funcExp.getFunctionIdentifier();
         if (fi.equals(BuiltinFunctions.FUZZY_EQ)) {
+            SourceLocation sourceLoc = funcExp.getSourceLocation();
             List<Mutable<ILogicalExpression>> inputExps = funcExp.getArguments();
 
             String simFuncName = FuzzyUtils.getSimFunction(metadataProvider);
@@ -100,13 +102,15 @@ public class FuzzyEqRule implements IAlgebraicRewriteRule {
             FunctionIdentifier simFunctionIdentifier = FuzzyUtils.getFunctionIdentifier(simFuncName);
             ScalarFunctionCallExpression similarityExp = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(simFunctionIdentifier), similarityArgs);
+            similarityExp.setSourceLocation(sourceLoc);
             // Add annotations from the original fuzzy-eq function.
             similarityExp.getAnnotations().putAll(funcExp.getAnnotations());
             ArrayList<Mutable<ILogicalExpression>> cmpArgs = new ArrayList<Mutable<ILogicalExpression>>();
             cmpArgs.add(new MutableObject<ILogicalExpression>(similarityExp));
             IAObject simThreshold = FuzzyUtils.getSimThreshold(metadataProvider, simFuncName);
-            cmpArgs.add(new MutableObject<ILogicalExpression>(
-                    new ConstantExpression(new AsterixConstantValue(simThreshold))));
+            ConstantExpression simThresholdExpr = new ConstantExpression(new AsterixConstantValue(simThreshold));
+            simThresholdExpr.setSourceLocation(sourceLoc);
+            cmpArgs.add(new MutableObject<ILogicalExpression>(simThresholdExpr));
             ScalarFunctionCallExpression cmpExpr = FuzzyUtils.getComparisonExpr(simFuncName, cmpArgs);
             expRef.setValue(cmpExpr);
             return true;

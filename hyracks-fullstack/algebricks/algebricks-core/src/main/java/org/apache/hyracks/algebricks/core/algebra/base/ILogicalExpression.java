@@ -27,6 +27,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public interface ILogicalExpression {
 
@@ -73,4 +74,6 @@ public interface ILogicalExpression {
     public abstract ILogicalExpression cloneExpression();
 
     public boolean isFunctional();
+
+    SourceLocation getSourceLocation();
 }

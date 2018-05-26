@@ -40,6 +40,7 @@ import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVisitor {
 
@@ -76,14 +77,17 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
     }
 
     private Expression processLikeOperator(OperatorExpr operatorExpr, OperatorType opType) {
-        Expression likeExpr =
+        CallExpr likeExpr =
                 new CallExpr(new FunctionSignature(BuiltinFunctions.STRING_LIKE), operatorExpr.getExprList());
+        likeExpr.setSourceLocation(operatorExpr.getSourceLocation());
         switch (opType) {
             case LIKE:
                 return likeExpr;
             case NOT_LIKE:
-                return new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
+                CallExpr notLikeExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
                         new ArrayList<>(Collections.singletonList(likeExpr)));
+                notLikeExpr.setSourceLocation(operatorExpr.getSourceLocation());
+                return notLikeExpr;
             default:
                 throw new IllegalArgumentException(String.valueOf(opType));
         }
@@ -91,29 +95,37 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
 
     private Expression processInOperator(OperatorExpr operatorExpr, OperatorType opType) throws CompilationException {
         VariableExpr bindingVar = new VariableExpr(context.newVariable());
+        bindingVar.setSourceLocation(operatorExpr.getSourceLocation());
         Expression itemExpr = operatorExpr.getExprList().get(0);
         Expression collectionExpr = operatorExpr.getExprList().get(1);
         OperatorExpr comparison = new OperatorExpr();
         comparison.addOperand(itemExpr);
         comparison.addOperand(bindingVar);
         comparison.setCurrentop(true);
+        comparison.setSourceLocation(operatorExpr.getSourceLocation());
         if (opType == OperatorType.IN) {
             comparison.addOperator(OperatorType.EQ);
-            return new QuantifiedExpression(Quantifier.SOME,
+            QuantifiedExpression quantExpr = new QuantifiedExpression(Quantifier.SOME,
                     new ArrayList<>(Collections.singletonList(new QuantifiedPair(bindingVar, collectionExpr))),
                     comparison);
+            quantExpr.setSourceLocation(operatorExpr.getSourceLocation());
+            return quantExpr;
         } else {
             comparison.addOperator(OperatorType.NEQ);
-            return new QuantifiedExpression(Quantifier.EVERY,
+            QuantifiedExpression quantExpr = new QuantifiedExpression(Quantifier.EVERY,
                     new ArrayList<>(Collections.singletonList(new QuantifiedPair(bindingVar, collectionExpr))),
                     comparison);
+            quantExpr.setSourceLocation(operatorExpr.getSourceLocation());
+            return quantExpr;
         }
     }
 
     private Expression processConcatOperator(OperatorExpr operatorExpr) {
         // All operators have to be "||"s (according to the grammar).
-        return new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, FunctionMapUtil.CONCAT, 1),
+        CallExpr callExpr = new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_NS, FunctionMapUtil.CONCAT, 1),
                 operatorExpr.getExprList());
+        callExpr.setSourceLocation(operatorExpr.getSourceLocation());
+        return callExpr;
     }
 
     private Expression processBetweenOperator(OperatorExpr operatorExpr, OperatorType opType)
@@ -124,24 +136,33 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         Expression right = operatorExpr.getExprList().get(2);
 
         // Creates the expression left <= target.
-        Expression leftComparison = createLessThanExpression(left, target, operatorExpr.getHints());
+        Expression leftComparison =
+                createLessThanExpression(left, target, operatorExpr.getHints(), operatorExpr.getSourceLocation());
         // Creates the expression target <= right.
-        Expression rightComparison = createLessThanExpression(target, right, operatorExpr.getHints());
+        Expression rightComparison =
+                createLessThanExpression(target, right, operatorExpr.getHints(), operatorExpr.getSourceLocation());
         OperatorExpr andExpr = new OperatorExpr();
         andExpr.addOperand(leftComparison);
         andExpr.addOperand(rightComparison);
         andExpr.addOperator(OperatorType.AND);
-        return opType == OperatorType.BETWEEN ? andExpr
-                : new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
-                        new ArrayList<>(Collections.singletonList(andExpr)));
+        andExpr.setSourceLocation(operatorExpr.getSourceLocation());
+        if (opType == OperatorType.BETWEEN) {
+            return andExpr;
+        } else {
+            CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
+                    new ArrayList<>(Collections.singletonList(andExpr)));
+            callExpr.setSourceLocation(operatorExpr.getSourceLocation());
+            return callExpr;
+        }
     }
 
-    private Expression createLessThanExpression(Expression lhs, Expression rhs, List<IExpressionAnnotation> hints)
-            throws CompilationException {
+    private Expression createLessThanExpression(Expression lhs, Expression rhs, List<IExpressionAnnotation> hints,
+            SourceLocation sourceLoc) {
         OperatorExpr comparison = new OperatorExpr();
         comparison.addOperand(lhs);
         comparison.addOperand(rhs);
         comparison.addOperator(OperatorType.LE);
+        comparison.setSourceLocation(sourceLoc);
         if (hints != null) {
             for (IExpressionAnnotation hint : hints) {
                 comparison.addHint(hint);

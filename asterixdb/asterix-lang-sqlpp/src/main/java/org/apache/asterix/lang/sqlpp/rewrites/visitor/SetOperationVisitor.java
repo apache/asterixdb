@@ -38,6 +38,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * This visitor rewrites set operation queries with order by and limit into
@@ -81,19 +82,28 @@ public class SetOperationVisitor extends AbstractSqlppExpressionScopingVisitor {
         OrderbyClause orderBy = selectExpression.getOrderbyClause();
         LimitClause limit = selectExpression.getLimitClause();
 
+        SourceLocation sourceLoc = selectExpression.getSourceLocation();
+
         // Wraps the set operation part with a subquery.
         SelectExpression nestedSelectExpression = new SelectExpression(null, selectSetOperation, null, null, true);
+        nestedSelectExpression.setSourceLocation(sourceLoc);
         VariableExpr newBindingVar = new VariableExpr(context.newVariable()); // Binding variable for the subquery.
+        newBindingVar.setSourceLocation(sourceLoc);
         FromTerm newFromTerm = new FromTerm(nestedSelectExpression, newBindingVar, null, null);
+        newFromTerm.setSourceLocation(sourceLoc);
         FromClause newFromClause = new FromClause(new ArrayList<>(Collections.singletonList(newFromTerm)));
+        newFromClause.setSourceLocation(sourceLoc);
         SelectClause selectClause = new SelectClause(new SelectElement(newBindingVar), null, false);
+        selectClause.setSourceLocation(sourceLoc);
         SelectBlock selectBlock = new SelectBlock(selectClause, newFromClause, null, null, null, null, null);
+        selectBlock.setSourceLocation(sourceLoc);
         SelectSetOperation newSelectSetOperation =
                 new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
-
+        newSelectSetOperation.setSourceLocation(sourceLoc);
         // Puts together the generated select-from-where query and order by/limit.
         SelectExpression newSelectExpression = new SelectExpression(selectExpression.getLetList(),
                 newSelectSetOperation, orderBy, limit, selectExpression.isSubquery());
+        newSelectExpression.setSourceLocation(sourceLoc);
         return super.visit(newSelectExpression, arg);
     }
 

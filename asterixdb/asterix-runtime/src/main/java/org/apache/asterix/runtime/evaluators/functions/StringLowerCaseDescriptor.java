@@ -49,7 +49,8 @@ public class StringLowerCaseDescriptor extends AbstractScalarFunctionDynamicDesc
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractUnaryStringStringEval(ctx, args[0], StringLowerCaseDescriptor.this.getIdentifier()) {
+                return new AbstractUnaryStringStringEval(ctx, args[0], StringLowerCaseDescriptor.this.getIdentifier(),
+                        sourceLoc) {
 
                     @Override
                     protected void process(UTF8StringPointable inputString, IPointable resultPointable)

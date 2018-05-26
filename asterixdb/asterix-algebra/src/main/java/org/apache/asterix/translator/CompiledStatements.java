@@ -28,6 +28,7 @@ import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * An AQL statement instance is translated into an instance of type CompileX
@@ -36,11 +37,24 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 public class CompiledStatements {
 
     public interface ICompiledStatement {
-
         Statement.Kind getKind();
+
+        SourceLocation getSourceLocation();
     }
 
-    public static class CompiledDatasetDropStatement implements ICompiledStatement {
+    public static abstract class AbstractCompiledStatement implements ICompiledStatement {
+        private SourceLocation sourceLoc;
+
+        public void setSourceLocation(SourceLocation sourceLoc) {
+            this.sourceLoc = sourceLoc;
+        }
+
+        public SourceLocation getSourceLocation() {
+            return sourceLoc;
+        }
+    }
+
+    public static class CompiledDatasetDropStatement extends AbstractCompiledStatement {
         private final String dataverseName;
         private final String datasetName;
 
@@ -64,7 +78,7 @@ public class CompiledStatements {
     }
 
     // added by yasser
-    public static class CompiledCreateDataverseStatement implements ICompiledStatement {
+    public static class CompiledCreateDataverseStatement extends AbstractCompiledStatement {
         private final String dataverseName;
         private final String format;
 
@@ -87,7 +101,7 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledNodeGroupDropStatement implements ICompiledStatement {
+    public static class CompiledNodeGroupDropStatement extends AbstractCompiledStatement {
         private final String nodeGroupName;
 
         public CompiledNodeGroupDropStatement(String nodeGroupName) {
@@ -104,7 +118,7 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledIndexDropStatement implements ICompiledStatement {
+    public static class CompiledIndexDropStatement extends AbstractCompiledStatement {
         private final String dataverseName;
         private final String datasetName;
         private final String indexName;
@@ -133,7 +147,7 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledDataverseDropStatement implements ICompiledStatement {
+    public static class CompiledDataverseDropStatement extends AbstractCompiledStatement {
         private final String dataverseName;
         private final boolean ifExists;
 
@@ -156,7 +170,7 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledTypeDropStatement implements ICompiledStatement {
+    public static class CompiledTypeDropStatement extends AbstractCompiledStatement {
         private final String typeName;
 
         public CompiledTypeDropStatement(String nodeGroupName) {
@@ -173,14 +187,15 @@ public class CompiledStatements {
         }
     }
 
-    public static interface ICompiledDmlStatement extends ICompiledStatement {
+    public interface ICompiledDmlStatement extends ICompiledStatement {
 
-        public String getDataverseName();
+        String getDataverseName();
 
-        public String getDatasetName();
+        String getDatasetName();
     }
 
-    public static class CompiledCreateIndexStatement implements ICompiledDmlStatement {
+    public static class CompiledCreateIndexStatement extends AbstractCompiledStatement
+            implements ICompiledDmlStatement {
         private final Dataset dataset;
         private final Index index;
 
@@ -213,7 +228,8 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledLoadFromFileStatement implements ICompiledDmlStatement {
+    public static class CompiledLoadFromFileStatement extends AbstractCompiledStatement
+            implements ICompiledDmlStatement {
         private final String dataverseName;
         private final String datasetName;
         private final boolean alreadySorted;
@@ -257,7 +273,7 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledInsertStatement implements ICompiledDmlStatement {
+    public static class CompiledInsertStatement extends AbstractCompiledStatement implements ICompiledDmlStatement {
         private final String dataverseName;
         private final String datasetName;
         private final Query query;
@@ -320,7 +336,8 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledSubscribeFeedStatement implements ICompiledDmlStatement {
+    public static class CompiledSubscribeFeedStatement extends AbstractCompiledStatement
+            implements ICompiledDmlStatement {
 
         private FeedConnectionRequest request;
         private final int varCounter;
@@ -354,7 +371,7 @@ public class CompiledStatements {
         }
     }
 
-    public static class CompiledDeleteStatement implements ICompiledDmlStatement {
+    public static class CompiledDeleteStatement extends AbstractCompiledStatement implements ICompiledDmlStatement {
         private final String dataverseName;
         private final String datasetName;
         private final Expression condition;
@@ -399,7 +416,7 @@ public class CompiledStatements {
 
     }
 
-    public static class CompiledCompactStatement implements ICompiledStatement {
+    public static class CompiledCompactStatement extends AbstractCompiledStatement {
         private final String dataverseName;
         private final String datasetName;
 

@@ -89,14 +89,14 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                         int listOffset = inputArgList.getStartOffset();
                         if (listBytes[listOffset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                 && listBytes[listOffset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, listBytes[listOffset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, listBytes[listOffset],
                                     ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
                                     ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                         }
                         byte[] sepBytes = inputArgSep.getByteArray();
                         int sepOffset = inputArgSep.getStartOffset();
                         if (sepBytes[sepOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, sepBytes[sepOffset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, sepBytes[sepOffset],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
                         int sepLen = UTF8StringUtil.getUTFLength(sepBytes, sepOffset + 1);
@@ -126,7 +126,8 @@ public class StringJoinDescriptor extends AbstractScalarFunctionDynamicDescripto
                                         result.set(resultStorage);
                                         return;
                                     }
-                                    throw new UnsupportedItemTypeException(getIdentifier(), itemType.serialize());
+                                    throw new UnsupportedItemTypeException(sourceLoc, getIdentifier(),
+                                            itemType.serialize());
                                 }
                                 int currentSize = UTF8StringUtil.getUTFLength(listBytes, itemOffset);
                                 if (i != size - 1 && currentSize != 0) {

@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -52,12 +53,14 @@ public abstract class AbstractBooleanConstructorEvaluator implements IScalarEval
     protected static final byte[] FALSE = UTF8StringUtil.writeStringToBytes("false");
 
     protected final IScalarEvaluator inputEval;
+    protected final SourceLocation sourceLoc;
     protected final IPointable inputArg;
     protected final ArrayBackedValueStorage resultStorage;
     protected final DataOutput out;
 
-    protected AbstractBooleanConstructorEvaluator(IScalarEvaluator inputEval) {
+    protected AbstractBooleanConstructorEvaluator(IScalarEvaluator inputEval, SourceLocation sourceLoc) {
         this.inputEval = inputEval;
+        this.sourceLoc = sourceLoc;
         inputArg = new VoidPointable();
         resultStorage = new ArrayBackedValueStorage();
         out = resultStorage.getDataOutput();
@@ -70,7 +73,7 @@ public abstract class AbstractBooleanConstructorEvaluator implements IScalarEval
             resultStorage.reset();
             evaluateImpl(result);
         } catch (IOException e) {
-            throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
+            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e, ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
         }
     }
 
@@ -87,10 +90,10 @@ public abstract class AbstractBooleanConstructorEvaluator implements IScalarEval
             } else if (UTF8_BINARY_CMP.compare(bytes, startOffset + 1, len - 1, FALSE, 0, FALSE.length) == 0) {
                 setBoolean(result, false);
             } else {
-                throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
+                throw new InvalidDataFormatException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
             }
         } else {
-            throw new TypeMismatchException(getIdentifier(), 0, tt, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
     }
 

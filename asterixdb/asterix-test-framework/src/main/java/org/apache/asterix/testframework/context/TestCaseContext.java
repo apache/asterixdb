@@ -202,6 +202,11 @@ public class TestCaseContext {
         return filePath;
     }
 
+    public boolean isSourceLocationExpected(CompilationUnit cUnit) {
+        Boolean v = cUnit.isSourceLocation();
+        return v != null ? v : testSuite.isSourceLocation();
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(testCase.getFilePath());

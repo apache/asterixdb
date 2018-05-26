@@ -105,7 +105,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         int offset = inputVal.getStartOffset();
 
                         if (data[offset] != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, data[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data[offset],
                                     ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                         }
                         float similarityThreshold = (float) ADoubleSerializerDeserializer.getDouble(data, offset + 1);
@@ -116,7 +116,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         offset = inputVal.getStartOffset();
                         int len = inputVal.getLength();
                         if (data[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, data[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, data[offset],
                                     ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                         }
                         SimilarityFilters similarityFilters =
@@ -126,7 +126,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         data = inputVal.getByteArray();
                         offset = inputVal.getStartOffset();
                         if (data[offset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 2, data[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 2, data[offset],
                                     ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                         }
                         int length1 = IntegerPointable.getInteger(data, offset + 1);
@@ -135,7 +135,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
                         data = inputVal.getByteArray();
                         offset = inputVal.getStartOffset();
                         if (data[offset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 3, data[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 3, data[offset],
                                     ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                         }
                         int length2 = IntegerPointable.getInteger(data, offset + 1);
@@ -156,7 +156,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                             if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                     && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                throw new TypeMismatchException(getIdentifier(), 4, data[offset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 4, data[offset],
                                         ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
                                         ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                             }
@@ -192,7 +192,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
 
                             if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                     && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                throw new TypeMismatchException(getIdentifier(), 5, data[offset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 5, data[offset],
                                         ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
                                         ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                             }

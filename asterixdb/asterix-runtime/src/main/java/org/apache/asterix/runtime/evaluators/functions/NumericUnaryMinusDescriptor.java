@@ -60,7 +60,7 @@ public class NumericUnaryMinusDescriptor extends AbstractScalarFunctionDynamicDe
 
         NumericUnaryMinusEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericUnaryMinusDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericUnaryMinusDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

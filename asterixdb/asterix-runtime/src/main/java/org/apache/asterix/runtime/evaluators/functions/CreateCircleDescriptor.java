@@ -91,11 +91,11 @@ public class CreateCircleDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                         // Type check: (point, double)
                         if (bytes0[offset0] != ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                     ATypeTag.SERIALIZED_POINT_TYPE_TAG);
                         }
                         if (bytes1[offset1] != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                     ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                         }
 

@@ -52,7 +52,7 @@ public class MinAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new MinMaxAggregateFunction(args, ctx, true, false);
+                return new MinMaxAggregateFunction(args, ctx, true, false, sourceLoc);
             }
         };
     }

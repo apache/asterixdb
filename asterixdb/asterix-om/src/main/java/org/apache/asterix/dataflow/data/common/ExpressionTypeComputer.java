@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.common;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -55,8 +57,10 @@ public class ExpressionTypeComputer implements IExpressionTypeComputer {
                 try {
                     return env.getVarType(((VariableReferenceExpression) expr).getVariableReference());
                 } catch (Exception e) {
-                    throw new AlgebricksException("Could not resolve type for " + expr.toString() + ","
-                            + "please check whether the used variable has been defined!", e);
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
+                            "Could not resolve type for " + expr.toString() + ","
+                                    + "please check whether the used variable has been defined!",
+                            e);
                 }
             default:
                 throw new IllegalStateException();

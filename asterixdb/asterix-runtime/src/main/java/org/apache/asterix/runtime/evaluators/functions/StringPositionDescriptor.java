@@ -58,7 +58,7 @@ public class StringPositionDescriptor extends AbstractStringOffsetConfigurableDe
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractBinaryStringIntEval(ctx, args[0], args[1],
-                        StringPositionDescriptor.this.getIdentifier()) {
+                        StringPositionDescriptor.this.getIdentifier(), sourceLoc) {
 
                     @Override
                     protected int compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {

@@ -42,7 +42,8 @@ public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpre
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         //TODO(buyingyi): rewrite SQL temporal functions
         FunctionSignature functionSignature = callExpr.getFunctionSignature();
-        callExpr.setFunctionSignature(FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, true));
+        callExpr.setFunctionSignature(FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, true,
+                callExpr.getSourceLocation()));
         List<Expression> newExprList = new ArrayList<>();
         for (Expression expr : callExpr.getExprList()) {
             newExprList.add(expr.accept(this, arg));
@@ -73,13 +74,16 @@ public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpre
             newExprList.add(thenExprList.get(index));
         }
         newExprList.add(newCaseExpr.getElseExpr());
-        return new CallExpr(functionSignature, newExprList);
+        CallExpr callExpr = new CallExpr(functionSignature, newExprList);
+        callExpr.setSourceLocation(caseExpr.getSourceLocation());
+        return callExpr;
     }
 
     // Normalizes WHEN expressions so that it can have correct NULL/MISSING semantics as well
     // as type promotion semantics.
     private CaseExpression normalizeCaseExpr(CaseExpression caseExpr) throws CompilationException {
         LiteralExpr trueLiteral = new LiteralExpr(TrueLiteral.INSTANCE);
+        trueLiteral.setSourceLocation(caseExpr.getSourceLocation());
         Expression conditionExpr = caseExpr.getConditionExpr();
         if (trueLiteral.equals(conditionExpr)) {
             return caseExpr;
@@ -90,9 +94,13 @@ public class SqlppBuiltinFunctionRewriteVisitor extends AbstractSqlppSimpleExpre
             operatorExpr.addOperand((Expression) SqlppRewriteUtil.deepCopy(expr));
             operatorExpr.addOperand(caseExpr.getConditionExpr());
             operatorExpr.addOperator(OperatorType.EQ);
+            operatorExpr.setSourceLocation(expr.getSourceLocation());
             normalizedWhenExprs.add(operatorExpr);
         }
-        return new CaseExpression(trueLiteral, normalizedWhenExprs, caseExpr.getThenExprs(), caseExpr.getElseExpr());
+        CaseExpression newCaseExpr =
+                new CaseExpression(trueLiteral, normalizedWhenExprs, caseExpr.getThenExprs(), caseExpr.getElseExpr());
+        newCaseExpr.setSourceLocation(caseExpr.getSourceLocation());
+        return newCaseExpr;
     }
 
 }

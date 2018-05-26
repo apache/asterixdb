@@ -252,7 +252,7 @@ public class TestNodeController {
             LSMInsertDeleteOperatorNodePushable insertOp =
                     new LSMInsertDeleteOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
                             primaryIndexInfo.primaryIndexInsertFieldsPermutations, recordDesc, op, true,
-                            indexHelperFactory, modOpCallbackFactory, null);
+                            indexHelperFactory, modOpCallbackFactory, null, null);
 
             // For now, this assumes a single secondary index. recordDesc is always <pk-record-meta>
             // for the index, we will have to create an assign operator that extract the sk
@@ -267,8 +267,9 @@ public class TestNodeController {
                             ? indicators.get(i).intValue() == Index.RECORD_INDICATOR ? recordType : metaType
                             : recordType;
                     int pos = skNames.get(i).size() > 1 ? -1 : sourceType.getFieldIndex(skNames.get(i).get(0));
-                    secondaryFieldAccessEvalFactories[i] = mdProvider.getDataFormat().getFieldAccessEvaluatorFactory(
-                            mdProvider.getFunctionManager(), sourceType, secondaryIndex.getKeyFieldNames().get(i), pos);
+                    secondaryFieldAccessEvalFactories[i] =
+                            mdProvider.getDataFormat().getFieldAccessEvaluatorFactory(mdProvider.getFunctionManager(),
+                                    sourceType, secondaryIndex.getKeyFieldNames().get(i), pos, null);
                 }
                 // outColumns are computed inside the assign runtime
                 int[] outColumns = new int[skNames.size()];
@@ -300,7 +301,7 @@ public class TestNodeController {
                 LSMInsertDeleteOperatorNodePushable secondaryInsertOp =
                         new LSMInsertDeleteOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
                                 secondaryIndexInfo.insertFieldsPermutations, secondaryIndexInfo.rDesc, op, false,
-                                secondaryIndexHelperFactory, secondaryModCallbackFactory, null);
+                                secondaryIndexHelperFactory, secondaryModCallbackFactory, null, null);
                 assignOp.setOutputFrameWriter(0, secondaryInsertOp, secondaryIndexInfo.rDesc);
 
                 IPushRuntime commitOp =

@@ -25,15 +25,17 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class SubstringTypeComputer extends AbstractResultTypeComputer {
     public static final SubstringTypeComputer INSTANCE = new SubstringTypeComputer();
 
     @Override
-    public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    public void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         if (argIndex == 0 && tag != ATypeTag.STRING) {
-            throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.STRING);
+            throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag, ATypeTag.STRING);
         }
         if (argIndex > 0 && argIndex <= 2) {
             switch (tag) {
@@ -43,8 +45,8 @@ public class SubstringTypeComputer extends AbstractResultTypeComputer {
                 case BIGINT:
                     break;
                 default:
-                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
-                            ATypeTag.INTEGER, ATypeTag.BIGINT);
+                    throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag, ATypeTag.TINYINT,
+                            ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT);
             }
         }
     }

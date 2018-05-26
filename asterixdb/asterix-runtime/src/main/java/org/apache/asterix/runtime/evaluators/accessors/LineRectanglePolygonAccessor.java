@@ -137,7 +137,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                         startOffset + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                                 if (numOfPoints < 3) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 }
                                 listBuilder.reset(pointListType);
@@ -153,7 +153,7 @@ public class LineRectanglePolygonAccessor extends AbstractScalarFunctionDynamicD
                                 }
                                 listBuilder.write(out, true);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, bytes[startOffset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[startOffset],
                                         ATypeTag.SERIALIZED_LINE_TYPE_TAG, ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG,
                                         ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                             }

@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewriteRule {
 
@@ -67,7 +68,7 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
 
     protected Pair<Boolean, Mutable<ILogicalOperator>> tryToPushAgg(AggregateOperator initAgg, GroupByOperator newGbyOp,
             Set<SimilarAggregatesInfo> toReplaceSet, IOptimizationContext context) throws AlgebricksException {
-
+        SourceLocation sourceLoc = initAgg.getSourceLocation();
         List<LogicalVariable> initVars = initAgg.getVariables();
         List<Mutable<ILogicalExpression>> initExprs = initAgg.getExpressions();
         int numExprs = initVars.size();
@@ -87,6 +88,7 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
         for (int i = 0; i < numExprs; i++) {
             Mutable<ILogicalExpression> expRef = initExprs.get(i);
             AggregateFunctionCallExpression aggFun = (AggregateFunctionCallExpression) expRef.getValue();
+            SourceLocation aggFunSourceLoc = aggFun.getSourceLocation();
             IFunctionInfo fi1 = aggFun.getStepOneAggregate();
             // Clone the aggregate's args.
             List<Mutable<ILogicalExpression>> newArgs = new ArrayList<>(aggFun.getArguments().size());
@@ -98,10 +100,13 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
             SimilarAggregatesInfo inf = new SimilarAggregatesInfo();
             LogicalVariable newAggVar = context.newVar();
             pushedVars.add(newAggVar);
-            inf.stepOneResult = new VariableReferenceExpression(newAggVar);
+            VariableReferenceExpression newAggVarRef = new VariableReferenceExpression(newAggVar);
+            newAggVarRef.setSourceLocation(aggFunSourceLoc);
+            inf.stepOneResult = newAggVarRef;
             inf.simAggs = new ArrayList<>();
             toReplaceSet.add(inf);
             AggregateFunctionCallExpression aggLocal = new AggregateFunctionCallExpression(fi1, false, newArgs);
+            aggLocal.setSourceLocation(aggFunSourceLoc);
             pushedExprs.add(new MutableObject<>(aggLocal));
             AggregateExprInfo aei = new AggregateExprInfo();
             aei.aggExprRef = expRef;
@@ -112,6 +117,7 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
 
         if (!pushedVars.isEmpty()) {
             AggregateOperator pushedAgg = new AggregateOperator(pushedVars, pushedExprs);
+            pushedAgg.setSourceLocation(sourceLoc);
             pushedAgg.setExecutionMode(ExecutionMode.LOCAL);
             // If newGbyOp is null, then we optimizing an aggregate without group by.
             if (newGbyOp != null) {
@@ -133,6 +139,7 @@ public abstract class AbstractIntroduceCombinerRule implements IAlgebraicRewrite
 
                 // Hook up the nested aggregate op with the outer group by.
                 NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<>(newGbyOp));
+                nts.setSourceLocation(sourceLoc);
                 nts.setExecutionMode(ExecutionMode.LOCAL);
                 bottomRef.setValue(nts);
                 pushedAgg.getInputs().add(inputRef);

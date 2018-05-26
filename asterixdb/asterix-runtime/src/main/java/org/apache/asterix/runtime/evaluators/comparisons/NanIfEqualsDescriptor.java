@@ -56,7 +56,7 @@ public class NanIfEqualsDescriptor extends AbstractScalarFunctionDynamicDescript
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractIfEqualsEvaluator(args[0].createScalarEvaluator(ctx),
-                        args[1].createScalarEvaluator(ctx)) {
+                        args[1].createScalarEvaluator(ctx), sourceLoc) {
 
                     final AMutableDouble equalsResult = new AMutableDouble(Double.NaN);
 

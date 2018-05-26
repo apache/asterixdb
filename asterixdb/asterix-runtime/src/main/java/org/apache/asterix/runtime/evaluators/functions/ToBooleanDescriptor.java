@@ -60,7 +60,7 @@ public class ToBooleanDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractBooleanConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
+                return new AbstractBooleanConstructorEvaluator(args[0].createScalarEvaluator(ctx), sourceLoc) {
                     @Override
                     protected void evaluateImpl(IPointable result) throws HyracksDataException {
                         byte[] bytes = inputArg.getByteArray();

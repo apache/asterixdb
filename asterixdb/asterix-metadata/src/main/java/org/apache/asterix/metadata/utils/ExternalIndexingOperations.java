@@ -63,6 +63,7 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentP
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexBuilderFactory;
@@ -241,6 +242,7 @@ public class ExternalIndexingOperations {
      * @param dataset
      * @param files
      * @param indexerDesc
+     * @param sourceLoc
      * @return
      * @throws AlgebricksException
      * @throws HyracksDataException
@@ -248,23 +250,27 @@ public class ExternalIndexingOperations {
      */
     private static Pair<ExternalScanOperatorDescriptor, AlgebricksPartitionConstraint> getIndexingOperator(
             MetadataProvider metadataProvider, JobSpecification jobSpec, IAType itemType, Dataset dataset,
-            List<ExternalFile> files, RecordDescriptor indexerDesc) throws HyracksDataException, AlgebricksException {
+            List<ExternalFile> files, RecordDescriptor indexerDesc, SourceLocation sourceLoc)
+            throws HyracksDataException, AlgebricksException {
         ExternalDatasetDetails externalDatasetDetails = (ExternalDatasetDetails) dataset.getDatasetDetails();
         Map<String, String> configuration = externalDatasetDetails.getProperties();
         IAdapterFactory adapterFactory = AdapterFactoryProvider.getIndexingAdapterFactory(
                 metadataProvider.getApplicationContext().getServiceContext(), externalDatasetDetails.getAdapter(),
                 configuration, (ARecordType) itemType, files, true, null);
-        return new Pair<>(new ExternalScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory),
-                adapterFactory.getPartitionConstraint());
+        ExternalScanOperatorDescriptor scanOp =
+                new ExternalScanOperatorDescriptor(jobSpec, indexerDesc, adapterFactory);
+        scanOp.setSourceLocation(sourceLoc);
+        return new Pair<>(scanOp, adapterFactory.getPartitionConstraint());
     }
 
     public static Pair<ExternalScanOperatorDescriptor, AlgebricksPartitionConstraint> createExternalIndexingOp(
             JobSpecification spec, MetadataProvider metadataProvider, Dataset dataset, ARecordType itemType,
-            RecordDescriptor indexerDesc, List<ExternalFile> files) throws HyracksDataException, AlgebricksException {
+            RecordDescriptor indexerDesc, List<ExternalFile> files, SourceLocation sourceLoc)
+            throws HyracksDataException, AlgebricksException {
         return getIndexingOperator(metadataProvider, spec, itemType, dataset,
                 files == null ? MetadataManager.INSTANCE
                         .getDatasetExternalFiles(metadataProvider.getMetadataTxnContext(), dataset) : files,
-                indexerDesc);
+                indexerDesc, sourceLoc);
     }
 
     /**
@@ -420,8 +426,8 @@ public class ExternalIndexingOperations {
     }
 
     public static JobSpecification buildIndexUpdateOp(Dataset ds, Index index, List<ExternalFile> metadataFiles,
-            List<ExternalFile> addedFiles, List<ExternalFile> appendedFiles, MetadataProvider metadataProvider)
-            throws AlgebricksException {
+            List<ExternalFile> addedFiles, List<ExternalFile> appendedFiles, MetadataProvider metadataProvider,
+            SourceLocation sourceLoc) throws AlgebricksException {
         // Create files list
         ArrayList<ExternalFile> files = new ArrayList<>();
 
@@ -441,7 +447,7 @@ public class ExternalIndexingOperations {
         for (ExternalFile file : appendedFiles) {
             files.add(file);
         }
-        return IndexUtil.buildSecondaryIndexLoadingJobSpec(ds, index, metadataProvider, files);
+        return IndexUtil.buildSecondaryIndexLoadingJobSpec(ds, index, metadataProvider, files, sourceLoc);
     }
 
     public static JobSpecification buildCommitJob(Dataset ds, List<Index> indexes, MetadataProvider metadataProvider)

@@ -100,7 +100,8 @@ public class CancellationTestExecutor extends TestExecutor {
     }
 
     @Override
-    protected boolean isUnExpected(Exception e, List<String> expectedErrors, int numOfErrors, MutableInt queryCount) {
+    protected boolean isUnExpected(Exception e, List<String> expectedErrors, int numOfErrors, MutableInt queryCount,
+            boolean expectedSourceLoc) {
         // Get the expected exception
         for (Iterator<String> iter = expectedErrors.iterator(); iter.hasNext();) {
             String expectedError = iter.next();

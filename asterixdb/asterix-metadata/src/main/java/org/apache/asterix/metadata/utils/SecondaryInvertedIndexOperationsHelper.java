@@ -88,11 +88,12 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         // Sanity checks.
         if (numPrimaryKeys > 1) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_FOR_DATASET_WITH_COMPOSITE_PRIMARY_INDEX,
-                    indexType, RecordUtil.toFullyQualifiedName(dataset.getDataverseName(), dataset.getDatasetName()));
+                    sourceLoc, indexType,
+                    RecordUtil.toFullyQualifiedName(dataset.getDataverseName(), dataset.getDatasetName()));
         }
         if (numSecondaryKeys > 1) {
-            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_NUM_OF_FIELD, numSecondaryKeys,
-                    indexType, 1);
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_NUM_OF_FIELD, sourceLoc,
+                    numSecondaryKeys, indexType, 1);
         }
         if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
                 || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
@@ -113,7 +114,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         if (numSecondaryKeys > 0) {
             secondaryFieldAccessEvalFactories[0] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                     metadataProvider.getFunctionManager(), isOverridingKeyFieldTypes ? enforcedItemType : itemType,
-                    index.getKeyFieldNames().get(0), numPrimaryKeys);
+                    index.getKeyFieldNames().get(0), numPrimaryKeys, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
                     index.getKeyFieldNames().get(0), itemType);
             secondaryKeyType = keyTypePair.first;
@@ -123,9 +124,9 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
             secondaryTypeTraits[0] = typeTraitProvider.getTypeTrait(secondaryKeyType);
         }
         if (numFilterFields > 0) {
-            secondaryFieldAccessEvalFactories[numSecondaryKeys] =
-                    metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
-                            metadataProvider.getFunctionManager(), itemType, filterFieldName, numPrimaryKeys);
+            secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getDataFormat()
+                    .getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(), itemType, filterFieldName,
+                            numPrimaryKeys, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
             IAType type = keyTypePair.first;
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
@@ -242,8 +243,11 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, invIndexBulkLoadOp,
                 secondaryPartitionConstraint);
 
+        SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
+        sinkRuntimeFactory.setSourceLocation(sourceLoc);
         AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                new IPushRuntimeFactory[] { new SinkRuntimeFactory() }, new RecordDescriptor[] {});
+                new IPushRuntimeFactory[] { sinkRuntimeFactory }, new RecordDescriptor[] {});
+        metaOp.setSourceLocation(sourceLoc);
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
@@ -271,6 +275,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         BinaryTokenizerOperatorDescriptor tokenizerOp =
                 new BinaryTokenizerOperatorDescriptor(spec, tokenKeyPairRecDesc, tokenizerFactory, docField,
                         primaryKeyFields, isPartitioned, false, false, MissingWriterFactory.INSTANCE);
+        tokenizerOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, tokenizerOp,
                 primaryPartitionConstraint);
         return tokenizerOp;

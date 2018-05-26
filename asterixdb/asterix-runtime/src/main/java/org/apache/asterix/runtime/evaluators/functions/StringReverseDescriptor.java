@@ -49,7 +49,7 @@ public class StringReverseDescriptor extends AbstractScalarFunctionDynamicDescri
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractUnaryStringStringEval(ctx, args[0], getIdentifier()) {
+                return new AbstractUnaryStringStringEval(ctx, args[0], getIdentifier(), sourceLoc) {
                     @Override
                     void process(UTF8StringPointable inputString, IPointable resultPointable) throws IOException {
                         UTF8StringPointable.reverse(inputString, resultBuilder, resultArray);

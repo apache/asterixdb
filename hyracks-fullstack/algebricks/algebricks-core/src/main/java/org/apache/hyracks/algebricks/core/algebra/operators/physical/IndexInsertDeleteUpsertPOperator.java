@@ -118,19 +118,30 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
 
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = null;
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(insertDeleteUpsertOp);
-        if (insertDeleteUpsertOp.getOperation() == Kind.INSERT) {
-            runtimeAndConstraints = mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv,
-                    primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec, false);
-        } else if (insertDeleteUpsertOp.getOperation() == Kind.DELETE) {
-            runtimeAndConstraints = mp.getIndexDeleteRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv,
-                    primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec);
-        } else if (insertDeleteUpsertOp.getOperation() == Kind.UPSERT) {
-            runtimeAndConstraints = mp.getIndexUpsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv,
-                    primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, prevSecondaryKeys,
-                    prevAdditionalFilteringKey, inputDesc, context, spec);
+        Kind operation = insertDeleteUpsertOp.getOperation();
+        switch (operation) {
+            case INSERT:
+                runtimeAndConstraints =
+                        mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys,
+                                secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec, false);
+                break;
+            case DELETE:
+                runtimeAndConstraints =
+                        mp.getIndexDeleteRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys,
+                                secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec);
+                break;
+            case UPSERT:
+                runtimeAndConstraints = mp.getIndexUpsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas,
+                        typeEnv, primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, prevSecondaryKeys,
+                        prevAdditionalFilteringKey, inputDesc, context, spec);
+                break;
+            default:
+                throw new AlgebricksException("Unsupported Operation " + operation);
         }
-        builder.contributeHyracksOperator(insertDeleteUpsertOp, runtimeAndConstraints.first);
-        builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
+        IOperatorDescriptor opDesc = runtimeAndConstraints.first;
+        opDesc.setSourceLocation(insertDeleteUpsertOp.getSourceLocation());
+        builder.contributeHyracksOperator(insertDeleteUpsertOp, opDesc);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, runtimeAndConstraints.second);
         ILogicalOperator src = insertDeleteUpsertOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, insertDeleteUpsertOp, 0);
     }

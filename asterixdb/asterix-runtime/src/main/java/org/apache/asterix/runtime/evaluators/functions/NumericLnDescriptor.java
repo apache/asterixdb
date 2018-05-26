@@ -60,7 +60,7 @@ public class NumericLnDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
         NumericLnEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericLnDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericLnDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

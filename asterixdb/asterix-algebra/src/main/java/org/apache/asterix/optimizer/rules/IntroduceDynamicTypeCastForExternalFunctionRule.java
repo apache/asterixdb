@@ -74,8 +74,8 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
         IAType inputRecordType;
         ARecordType requiredRecordType;
         for (int iter1 = 0; iter1 < funcCallExpr.getArguments().size(); iter1++) {
-            inputRecordType = (IAType) op.computeOutputTypeEnvironment(context)
-                    .getType(funcCallExpr.getArguments().get(iter1).getValue());
+            Mutable<ILogicalExpression> argExpr = funcCallExpr.getArguments().get(iter1);
+            inputRecordType = (IAType) op.computeOutputTypeEnvironment(context).getType(argExpr.getValue());
             if (!(((ExternalScalarFunctionInfo) funcCallExpr.getFunctionInfo()).getArgumenTypes()
                     .get(iter1) instanceof ARecordType)) {
                 continue;
@@ -92,14 +92,16 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
                 inputRecordType = ((AUnionType) inputRecordType).getActualType();
                 checkUnknown = true;
             }
-            boolean castFlag = !IntroduceDynamicTypeCastRule.compatible(requiredRecordType, inputRecordType);
+            boolean castFlag = !IntroduceDynamicTypeCastRule.compatible(requiredRecordType, inputRecordType,
+                    argExpr.getValue().getSourceLocation());
             if (castFlag || checkUnknown) {
                 AbstractFunctionCallExpression castFunc =
                         new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE));
-                castFunc.getArguments().add(funcCallExpr.getArguments().get(iter1));
+                castFunc.setSourceLocation(argExpr.getValue().getSourceLocation());
+                castFunc.getArguments().add(argExpr);
                 TypeCastUtils.setRequiredAndInputTypes(castFunc, requiredRecordType, inputRecordType);
                 funcCallExpr.getArguments().set(iter1, new MutableObject<>(castFunc));
-                changed = changed || true;
+                changed = true;
             }
         }
         return changed;

@@ -89,7 +89,7 @@ public class TimeFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                         int offset = argPtr.getStartOffset();
 
                         if (bytes[offset] != ATypeTag.SERIALIZED_DATETIME_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
                         long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1);

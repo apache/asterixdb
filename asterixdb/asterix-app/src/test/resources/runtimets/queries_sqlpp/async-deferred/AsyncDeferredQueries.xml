@@ -53,6 +53,7 @@
         <compilation-unit name="async-exhausted-result">
             <output-dir compare="Text">async-exhausted-result</output-dir>
             <expected-error>HYR0093</expected-error>
+            <source-location>false</source-location>
         </compilation-unit>
     </test-case>
 </test-group>

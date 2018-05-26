@@ -52,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDelete
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
 
@@ -122,6 +123,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         }
         AssignOperator assignOp = (AssignOperator) parentOp;
         LogicalVariable inputRecord;
+        SourceLocation inputRecordSourceLoc;
 
         boolean hasFilter = false;
         AbstractLogicalOperator grandparentOp = (AbstractLogicalOperator) parentOp.getInputs().get(0).getValue();
@@ -130,9 +132,11 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         if (grandparentOp.getOperatorTag() == LogicalOperatorTag.PROJECT) {
             ProjectOperator projectOp = (ProjectOperator) grandparentOp;
             inputRecord = projectOp.getVariables().get(0);
+            inputRecordSourceLoc = projectOp.getSourceLocation();
         } else if (grandparentOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             DataSourceScanOperator dssOp = (DataSourceScanOperator) grandparentOp;
             inputRecord = dssOp.getVariables().get(0);
+            inputRecordSourceLoc = dssOp.getSourceLocation();
         } else if (grandparentOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AbstractLogicalOperator greatgrandparentOp =
                     (AbstractLogicalOperator) grandparentOp.getInputs().get(0).getValue();
@@ -142,6 +146,7 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
             //filter case
             ProjectOperator projectOp = (ProjectOperator) greatgrandparentOp;
             inputRecord = projectOp.getVariables().get(0);
+            inputRecordSourceLoc = projectOp.getSourceLocation();
             newAssignParentOp = greatgrandparentOp;
             newAssignChildOp = grandparentOp;
             hasFilter = true;
@@ -149,15 +154,18 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
             return false;
         }
 
+        SourceLocation insertOpSourceLoc = insertOp.getSourceLocation();
         List<String> pkFieldName =
                 ((InternalDatasetDetails) dds.getDataset().getDatasetDetails()).getPrimaryKey().get(0);
-        ILogicalExpression rec0 = new VariableReferenceExpression(inputRecord);
-        ILogicalExpression rec1 = createPrimaryKeyRecordExpression(pkFieldName);
-        ILogicalExpression mergedRec = createRecordMergeFunction(rec0, rec1);
+        VariableReferenceExpression rec0 = new VariableReferenceExpression(inputRecord);
+        rec0.setSourceLocation(inputRecordSourceLoc);
+        ILogicalExpression rec1 = createPrimaryKeyRecordExpression(pkFieldName, insertOpSourceLoc);
+        ILogicalExpression mergedRec = createRecordMergeFunction(rec0, rec1, insertOpSourceLoc);
         ILogicalExpression nonNullMergedRec = createNotNullFunction(mergedRec);
 
         LogicalVariable v = context.newVar();
         AssignOperator newAssign = new AssignOperator(v, new MutableObject<ILogicalExpression>(nonNullMergedRec));
+        newAssign.setSourceLocation(insertOpSourceLoc);
         newAssign.getInputs().add(new MutableObject<ILogicalOperator>(newAssignParentOp));
         newAssignChildOp.getInputs().set(0, new MutableObject<ILogicalOperator>(newAssign));
         if (hasFilter) {
@@ -184,21 +192,25 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
         args.add(new MutableObject<ILogicalExpression>(mergedRec));
         AbstractFunctionCallExpression notNullFn =
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CHECK_UNKNOWN), args);
+        notNullFn.setSourceLocation(mergedRec.getSourceLocation());
         return notNullFn;
     }
 
-    private AbstractFunctionCallExpression createPrimaryKeyRecordExpression(List<String> pkFieldName) {
+    private AbstractFunctionCallExpression createPrimaryKeyRecordExpression(List<String> pkFieldName,
+            SourceLocation sourceLoc) {
         //Create lowest level of nested uuid
         AbstractFunctionCallExpression uuidFn =
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_UUID));
+        uuidFn.setSourceLocation(sourceLoc);
         List<Mutable<ILogicalExpression>> openRecordConsArgs = new ArrayList<>();
-        Mutable<ILogicalExpression> pkFieldNameExpression = new MutableObject<ILogicalExpression>(
-                new ConstantExpression(new AsterixConstantValue(new AString(pkFieldName.get(pkFieldName.size() - 1)))));
-        openRecordConsArgs.add(pkFieldNameExpression);
-        Mutable<ILogicalExpression> pkFieldValueExpression = new MutableObject<ILogicalExpression>(uuidFn);
-        openRecordConsArgs.add(pkFieldValueExpression);
+        ConstantExpression pkFieldNameExpression =
+                new ConstantExpression(new AsterixConstantValue(new AString(pkFieldName.get(pkFieldName.size() - 1))));
+        pkFieldNameExpression.setSourceLocation(sourceLoc);
+        openRecordConsArgs.add(new MutableObject<>(pkFieldNameExpression));
+        openRecordConsArgs.add(new MutableObject<>(uuidFn));
         AbstractFunctionCallExpression openRecFn = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
+        openRecFn.setSourceLocation(sourceLoc);
 
         //Create higher levels
         for (int i = pkFieldName.size() - 2; i > -1; i--) {
@@ -209,17 +221,20 @@ public class IntroduceAutogenerateIDRule implements IAlgebraicRewriteRule {
             openRecordConsArgs.add(new MutableObject<ILogicalExpression>(openRecFn));
             openRecFn = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR), openRecordConsArgs);
+            openRecFn.setSourceLocation(sourceLoc);
         }
 
         return openRecFn;
     }
 
-    private AbstractFunctionCallExpression createRecordMergeFunction(ILogicalExpression rec0, ILogicalExpression rec1) {
+    private AbstractFunctionCallExpression createRecordMergeFunction(ILogicalExpression rec0, ILogicalExpression rec1,
+            SourceLocation sourceLoc) {
         List<Mutable<ILogicalExpression>> recordMergeFnArgs = new ArrayList<>();
         recordMergeFnArgs.add(new MutableObject<>(rec0));
         recordMergeFnArgs.add(new MutableObject<>(rec1));
         AbstractFunctionCallExpression recordMergeFn = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.RECORD_MERGE), recordMergeFnArgs);
+        recordMergeFn.setSourceLocation(sourceLoc);
         return recordMergeFn;
     }
 }

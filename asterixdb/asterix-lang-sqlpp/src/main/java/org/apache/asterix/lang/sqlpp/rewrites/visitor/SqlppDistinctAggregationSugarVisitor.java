@@ -43,6 +43,7 @@ import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionV
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * An AST pre-processor to rewrite distinct aggregates into regular aggregates as follows: <br/>
@@ -81,17 +82,28 @@ public class SqlppDistinctAggregationSugarVisitor extends AbstractSqlppSimpleExp
      * rewrites {@code expr -> FROM expr AS i SELECT DISTINCT VALUE i}
      */
     private Expression rewriteArgument(Expression argExpr) throws CompilationException {
+        SourceLocation sourceLoc = argExpr.getSourceLocation();
         // From clause
         VariableExpr fromBindingVar = new VariableExpr(context.newVariable());
+        fromBindingVar.setSourceLocation(sourceLoc);
         FromTerm fromTerm = new FromTerm(argExpr, fromBindingVar, null, null);
+        fromTerm.setSourceLocation(sourceLoc);
         FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
+        fromClause.setSourceLocation(sourceLoc);
 
         // Select clause.
-        SelectClause selectClause = new SelectClause(new SelectElement(fromBindingVar), null, true);
+        SelectElement selectElement = new SelectElement(fromBindingVar);
+        selectElement.setSourceLocation(sourceLoc);
+        SelectClause selectClause = new SelectClause(selectElement, null, true);
+        selectClause.setSourceLocation(sourceLoc);
 
         // Construct the select expression.
         SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, null, null, null, null);
+        selectBlock.setSourceLocation(sourceLoc);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
-        return new SelectExpression(null, selectSetOperation, null, null, true);
+        selectSetOperation.setSourceLocation(sourceLoc);
+        SelectExpression selectExpr = new SelectExpression(null, selectSetOperation, null, null, true);
+        selectExpr.setSourceLocation(sourceLoc);
+        return selectExpr;
     }
 }

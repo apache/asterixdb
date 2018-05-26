@@ -23,17 +23,22 @@ import java.io.Serializable;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.runtime.evaluators.comparisons.ComparisonHelper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 
 public class IntervalLogic implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private final ComparisonHelper ch = new ComparisonHelper();
+    private final ComparisonHelper ch;
     private final transient IPointable s1 = VoidPointable.FACTORY.createPointable();
     private final transient IPointable e1 = VoidPointable.FACTORY.createPointable();
     private final transient IPointable s2 = VoidPointable.FACTORY.createPointable();
     private final transient IPointable e2 = VoidPointable.FACTORY.createPointable();
+
+    public IntervalLogic(SourceLocation sourceLoc) {
+        ch = new ComparisonHelper(sourceLoc);
+    }
 
     public boolean validateInterval(AIntervalPointable ip1) throws HyracksDataException {
         ip1.getStart(s1);

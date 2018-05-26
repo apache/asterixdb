@@ -44,7 +44,7 @@ public class ABooleanConstructorDescriptor extends AbstractScalarFunctionDynamic
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractBooleanConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
+                return new AbstractBooleanConstructorEvaluator(args[0].createScalarEvaluator(ctx), sourceLoc) {
                     @Override
                     protected FunctionIdentifier getIdentifier() {
                         return ABooleanConstructorDescriptor.this.getIdentifier();

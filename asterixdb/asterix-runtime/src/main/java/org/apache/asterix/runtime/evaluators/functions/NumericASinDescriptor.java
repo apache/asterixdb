@@ -60,7 +60,7 @@ public class NumericASinDescriptor extends AbstractScalarFunctionDynamicDescript
 
         NumericASinEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericASinDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericASinDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

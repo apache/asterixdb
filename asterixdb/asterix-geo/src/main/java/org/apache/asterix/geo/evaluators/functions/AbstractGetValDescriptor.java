@@ -31,8 +31,8 @@ public abstract class AbstractGetValDescriptor extends AbstractScalarFunctionDyn
         } else if (bytes[offset] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
             return AInt64SerializerDeserializer.getLong(bytes, offset + 1);
         } else {
-            throw new TypeMismatchException(getIdentifier(), 1, bytes[offset], ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG,
-                    ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes[offset],
+                    ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG);
         }
     }
 

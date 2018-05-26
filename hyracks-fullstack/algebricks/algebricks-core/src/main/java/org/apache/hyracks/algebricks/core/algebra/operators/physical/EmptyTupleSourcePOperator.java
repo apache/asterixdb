@@ -63,6 +63,7 @@ public class EmptyTupleSourcePOperator extends AbstractPhysicalOperator {
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
         EmptyTupleSourceRuntimeFactory runtime = new EmptyTupleSourceRuntimeFactory();
+        runtime.setSourceLocation(op.getSourceLocation());
         RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {});
         builder.contributeMicroOperator(op, runtime, recDesc);
     }

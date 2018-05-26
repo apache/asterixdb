@@ -25,6 +25,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class RecordPairsTypeComputer extends AbstractResultTypeComputer {
 
@@ -34,10 +35,11 @@ public class RecordPairsTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag typeTag = type.getTypeTag();
         if (typeTag != ATypeTag.OBJECT) {
-            throw new TypeMismatchException(funcName, argIndex, typeTag, ATypeTag.OBJECT);
+            throw new TypeMismatchException(sourceLoc, funcName, argIndex, typeTag, ATypeTag.OBJECT);
         }
     }
 

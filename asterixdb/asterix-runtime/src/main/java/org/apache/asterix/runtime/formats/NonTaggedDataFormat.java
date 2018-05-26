@@ -79,6 +79,7 @@ import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class NonTaggedDataFormat implements IDataFormat {
@@ -120,7 +121,7 @@ public class NonTaggedDataFormat implements IDataFormat {
     @SuppressWarnings("unchecked")
     @Override
     public IScalarEvaluatorFactory getFieldAccessEvaluatorFactory(IFunctionManager functionManager, ARecordType recType,
-            List<String> fldName, int recordColumn) throws AlgebricksException {
+            List<String> fldName, int recordColumn, SourceLocation sourceLoc) throws AlgebricksException {
         IScalarEvaluatorFactory recordEvalFactory = new ColumnAccessEvalFactory(recordColumn);
 
         if (fldName.size() == 1) {
@@ -141,6 +142,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                     IScalarEvaluatorFactory fldIndexEvalFactory =
                             new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
                     IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                    fDesc.setSourceLocation(sourceLoc);
                     fDesc.setImmutableStates(recType);
                     return fDesc.createEvaluatorFactory(
                             new IScalarEvaluatorFactory[] { recordEvalFactory, fldIndexEvalFactory });
@@ -157,6 +159,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 IScalarEvaluatorFactory fldNameEvalFactory =
                         new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
                 IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
+                fDesc.setSourceLocation(sourceLoc);
                 return fDesc.createEvaluatorFactory(
                         new IScalarEvaluatorFactory[] { recordEvalFactory, fldNameEvalFactory });
             }
@@ -164,6 +167,7 @@ public class NonTaggedDataFormat implements IDataFormat {
 
         if (fldName.size() > 1) {
             IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_NESTED);
+            fDesc.setSourceLocation(sourceLoc);
             fDesc.setImmutableStates(recType, fldName);
             return fDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { recordEvalFactory });
         }
@@ -174,10 +178,10 @@ public class NonTaggedDataFormat implements IDataFormat {
     @SuppressWarnings("unchecked")
     @Override
     public IScalarEvaluatorFactory[] createMBRFactory(IFunctionManager functionManager, ARecordType recType,
-            List<String> fldName, int recordColumn, int dimension, List<String> filterFieldName, boolean isPointMBR)
-            throws AlgebricksException {
+            List<String> fldName, int recordColumn, int dimension, List<String> filterFieldName, boolean isPointMBR,
+            SourceLocation sourceLoc) throws AlgebricksException {
         IScalarEvaluatorFactory evalFactory =
-                getFieldAccessEvaluatorFactory(functionManager, recType, fldName, recordColumn);
+                getFieldAccessEvaluatorFactory(functionManager, recType, fldName, recordColumn, sourceLoc);
         int numOfFields = isPointMBR ? dimension : dimension * 2;
         IScalarEvaluatorFactory[] evalFactories =
                 new IScalarEvaluatorFactory[numOfFields + (filterFieldName == null ? 0 : 1)];
@@ -209,7 +213,7 @@ public class NonTaggedDataFormat implements IDataFormat {
         }
         if (filterFieldName != null) {
             evalFactories[numOfFields] =
-                    getFieldAccessEvaluatorFactory(functionManager, recType, filterFieldName, recordColumn);
+                    getFieldAccessEvaluatorFactory(functionManager, recType, filterFieldName, recordColumn, sourceLoc);
         }
         return evalFactories;
     }
@@ -217,7 +221,8 @@ public class NonTaggedDataFormat implements IDataFormat {
     @SuppressWarnings("unchecked")
     @Override
     public Triple<IScalarEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
-            IFunctionManager functionManager, ARecordType recType, List<String> fldName) throws AlgebricksException {
+            IFunctionManager functionManager, ARecordType recType, List<String> fldName, SourceLocation sourceLoc)
+            throws AlgebricksException {
         String[] names = recType.getFieldNames();
         int n = names.length;
         if (fldName.size() > 1) {
@@ -237,6 +242,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                     IScalarEvaluatorFactory fldIndexEvalFactory =
                             new ConstantEvalFactory(Arrays.copyOf(abvs.getByteArray(), abvs.getLength()));
                     IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
+                    fDesc.setSourceLocation(sourceLoc);
                     fDesc.setImmutableStates(recType);
                     IScalarEvaluatorFactory evalFactory = fDesc.createEvaluatorFactory(
                             new IScalarEvaluatorFactory[] { recordEvalFactory, fldIndexEvalFactory });
@@ -246,6 +252,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                     ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                             new MutableObject<>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
                             new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(i)))));
+                    partitionFun.setSourceLocation(sourceLoc);
                     return new Triple<>(evalFactory, partitionFun, recType.getFieldTypes()[i]);
                 }
             }
@@ -261,6 +268,7 @@ public class NonTaggedDataFormat implements IDataFormat {
                 throw new AlgebricksException(e);
             }
             IFunctionDescriptor fDesc = functionManager.lookupFunction(BuiltinFunctions.FIELD_ACCESS_NESTED);
+            fDesc.setSourceLocation(sourceLoc);
             fDesc.setImmutableStates(recType, fldName);
             IScalarEvaluatorFactory evalFactory =
                     fDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { recordEvalFactory });
@@ -269,6 +277,7 @@ public class NonTaggedDataFormat implements IDataFormat {
             ScalarFunctionCallExpression partitionFun = new ScalarFunctionCallExpression(finfoAccess,
                     new MutableObject<>(new VariableReferenceExpression(METADATA_DUMMY_VAR)),
                     new MutableObject<>(new ConstantExpression(new AsterixConstantValue(as))));
+            partitionFun.setSourceLocation(sourceLoc);
             return new Triple<>(evalFactory, partitionFun, recType.getSubFieldType(fldName));
         }
         throw new AlgebricksException("Could not find field " + fldName + " in the schema.");

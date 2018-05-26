@@ -21,10 +21,11 @@ package org.apache.asterix.lang.common.statement;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class CreateFeedPolicyStatement implements Statement {
+public class CreateFeedPolicyStatement extends AbstractStatement {
 
     private final String policyName;
     private final String sourcePolicyName;

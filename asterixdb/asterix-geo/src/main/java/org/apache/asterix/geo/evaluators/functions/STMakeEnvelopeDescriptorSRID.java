@@ -137,7 +137,8 @@ public class STMakeEnvelopeDescriptorSRID extends AbstractGetValDescriptor {
                 out.write(bytes);
                 result.set(resultStorage);
             } catch (IOException e) {
-                throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
+                throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
+                        ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
 
         }

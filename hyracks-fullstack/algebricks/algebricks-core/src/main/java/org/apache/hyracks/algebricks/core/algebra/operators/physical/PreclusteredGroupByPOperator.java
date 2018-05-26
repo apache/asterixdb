@@ -27,7 +27,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
@@ -38,7 +37,7 @@ import org.apache.hyracks.algebricks.runtime.operators.aggreg.NestedPlansRunning
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
 
 public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOperator {
@@ -71,7 +70,7 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
         int fdColumns[] = getFdColumns(gby, inputSchemas[0]);
         // compile subplans and set the gby op. schema accordingly
         AlgebricksPipeline[] subplans = compileSubplans(inputSchemas[0], gby, opSchema, context);
-        IAggregatorDescriptorFactory aggregatorFactory;
+        AbstractAggregatorDescriptorFactory aggregatorFactory;
 
         List<ILogicalPlan> nestedPlans = gby.getNestedPlans();
         if (!nestedPlans.isEmpty() && nestedPlans.get(0).getRoots().get(0).getValue()
@@ -80,6 +79,7 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
         } else {
             aggregatorFactory = new NestedPlansAccumulatingAggregatorFactory(subplans, keys, fdColumns);
         }
+        aggregatorFactory.setSourceLocation(gby.getSourceLocation());
 
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
         IBinaryComparatorFactory[] comparatorFactories = JobGenHelper
@@ -89,8 +89,9 @@ public class PreclusteredGroupByPOperator extends AbstractPreclusteredGroupByPOp
 
         PreclusteredGroupOperatorDescriptor opDesc = new PreclusteredGroupOperatorDescriptor(spec, keys,
                 comparatorFactories, aggregatorFactory, recordDescriptor, groupAll, framesLimit);
+        opDesc.setSourceLocation(gby.getSourceLocation());
 
-        contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
+        contributeOpDesc(builder, gby, opDesc);
 
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

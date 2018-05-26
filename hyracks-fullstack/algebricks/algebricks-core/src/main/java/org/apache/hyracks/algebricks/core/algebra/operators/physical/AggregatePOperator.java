@@ -102,6 +102,7 @@ public class AggregatePOperator extends AbstractPhysicalOperator {
         }
 
         AggregateRuntimeFactory runtime = new AggregateRuntimeFactory(aggFactories);
+        runtime.setSourceLocation(aggOp.getSourceLocation());
 
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);

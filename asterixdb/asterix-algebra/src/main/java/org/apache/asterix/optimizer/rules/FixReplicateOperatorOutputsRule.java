@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -102,7 +103,8 @@ public class FixReplicateOperatorOutputsRule implements IAlgebraicRewriteRule {
                         && ((DelegateOperator) op).getDelegate() instanceof CommitOperator)) {
             for (Map.Entry<AbstractReplicateOperator, MutableInt> entry : replicateOperators.entrySet()) {
                 if (entry.getKey().getOutputs().size() != entry.getValue().getValue()) {
-                    throw new AlgebricksException(ErrorCode.ASTERIX, ErrorCode.COMPILATION_FAILED_DUE_TO_REPLICATE_OP);
+                    throw new AsterixException(ErrorCode.COMPILATION_FAILED_DUE_TO_REPLICATE_OP,
+                            op.getSourceLocation());
                 }
             }
             return false;

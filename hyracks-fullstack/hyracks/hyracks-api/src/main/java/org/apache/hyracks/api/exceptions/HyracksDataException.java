@@ -51,8 +51,19 @@ public class HyracksDataException extends HyracksException {
         return new HyracksDataException(cause);
     }
 
+    public static HyracksDataException create(int code, SourceLocation sourceLoc, Serializable... params) {
+        return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), null, sourceLoc,
+                params);
+    }
+
     public static HyracksDataException create(int code, Serializable... params) {
         return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), params);
+    }
+
+    public static HyracksDataException create(int code, Throwable cause, SourceLocation sourceLoc,
+            Serializable... params) {
+        return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), cause, sourceLoc,
+                params);
     }
 
     public static HyracksDataException create(int code, Throwable cause, Serializable... params) {
@@ -109,6 +120,11 @@ public class HyracksDataException extends HyracksException {
     public HyracksDataException(String component, int errorCode, String message, Throwable cause,
             Serializable... params) {
         super(component, errorCode, message, cause, null, params);
+    }
+
+    public HyracksDataException(String component, int errorCode, String message, Throwable cause,
+            SourceLocation sourceLoc, Serializable... params) {
+        super(component, errorCode, message, cause, sourceLoc, null, params);
     }
 
     public static HyracksDataException create(HyracksDataException e, String nodeId) {

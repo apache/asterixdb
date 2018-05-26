@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FieldAccessNestedResultType extends AbstractResultTypeComputer {
     public static final FieldAccessNestedResultType INSTANCE = new FieldAccessNestedResultType();
@@ -46,29 +47,31 @@ public class FieldAccessNestedResultType extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
         if (argIndex == 0 && actualTypeTag != ATypeTag.OBJECT) {
-            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.OBJECT);
+            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.OBJECT);
         }
         if (argIndex == 1) {
             switch (actualTypeTag) {
                 case STRING:
                     break;
                 case ARRAY:
-                    checkOrderedList(funcName, type);
+                    checkOrderedList(funcName, type, sourceLoc);
                     break;
                 default:
-                    throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING, ATypeTag.ARRAY);
+                    throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.STRING,
+                            ATypeTag.ARRAY);
             }
         }
     }
 
-    private void checkOrderedList(String funcName, IAType type) throws AlgebricksException {
+    private void checkOrderedList(String funcName, IAType type, SourceLocation sourceLoc) throws AlgebricksException {
         AOrderedListType listType = (AOrderedListType) type;
         ATypeTag itemTypeTag = listType.getItemType().getTypeTag();
         if (itemTypeTag != ATypeTag.STRING && itemTypeTag != ATypeTag.ANY) {
-            throw new UnsupportedItemTypeException(funcName, itemTypeTag);
+            throw new UnsupportedItemTypeException(sourceLoc, funcName, itemTypeTag);
         }
     }
 

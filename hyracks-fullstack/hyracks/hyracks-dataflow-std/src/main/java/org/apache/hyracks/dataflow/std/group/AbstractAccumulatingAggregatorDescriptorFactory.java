@@ -23,7 +23,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class AbstractAccumulatingAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
+public abstract class AbstractAccumulatingAggregatorDescriptorFactory extends AbstractAggregatorDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
 

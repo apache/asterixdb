@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -54,6 +55,7 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
@@ -92,7 +94,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
             // Merges the variables defined in the current from term into the scope of the current from clause.
             Scope scopeForFromTerm = scopeChecker.removeCurrentScope();
-            mergeScopes(scopeForFromClause, scopeForFromTerm);
+            mergeScopes(scopeForFromClause, scopeForFromTerm, fromTerm.getSourceLocation());
         }
         return null;
     }
@@ -105,12 +107,12 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
         // Registers the data item variable.
         VariableExpr leftVar = fromTerm.getLeftVariable();
-        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), leftVar.getVar());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), leftVar.getVar(), leftVar.getSourceLocation());
 
         // Registers the positional variable
         if (fromTerm.hasPositionalVariable()) {
             VariableExpr posVar = fromTerm.getPositionalVariable();
-            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar(), posVar.getSourceLocation());
         }
         // Visits join/unnest/nest clauses.
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
@@ -130,16 +132,16 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
         // Registers the data item variable.
         VariableExpr rightVar = joinClause.getRightVariable();
-        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar(), rightVar.getSourceLocation());
 
         if (joinClause.hasPositionalVariable()) {
             // Registers the positional variable.
             VariableExpr posVar = joinClause.getPositionalVariable();
-            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar(), posVar.getSourceLocation());
         }
 
         Scope rightScope = scopeChecker.removeCurrentScope();
-        mergeScopes(leftScope, rightScope);
+        mergeScopes(leftScope, rightScope, joinClause.getRightExpression().getSourceLocation());
         scopeChecker.pushExistingScope(leftScope);
         // The condition expression can refer to the just registered variables
         // for the right branch.
@@ -156,12 +158,12 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
         // Registers the data item variable.
         VariableExpr rightVar = nestClause.getRightVariable();
-        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar(), rightVar.getSourceLocation());
 
         if (nestClause.hasPositionalVariable()) {
             // Registers the positional variable.
             VariableExpr posVar = nestClause.getPositionalVariable();
-            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar(), posVar.getSourceLocation());
         }
 
         // The condition expression can refer to the just registered variables
@@ -176,12 +178,12 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
 
         // register the data item variable
         VariableExpr rightVar = unnestClause.getRightVariable();
-        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar());
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), rightVar.getVar(), rightVar.getSourceLocation());
 
         if (unnestClause.hasPositionalVariable()) {
             // register the positional variable
             VariableExpr posVar = unnestClause.getPositionalVariable();
-            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), posVar.getVar(), posVar.getSourceLocation());
         }
         return null;
     }
@@ -234,7 +236,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             gbyKeyVarExpr.setExpr(visit(gbyKeyVarExpr.getExpr(), gc));
             VariableExpr gbyKeyVar = gbyKeyVarExpr.getVar();
             if (gbyKeyVar != null) {
-                addNewVarSymbolToScope(newScope, gbyKeyVar.getVar());
+                addNewVarSymbolToScope(newScope, gbyKeyVar.getVar(), gbyKeyVar.getSourceLocation());
             }
         }
         if (gc.hasGroupFieldList()) {
@@ -247,12 +249,13 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
                 decorVarExpr.setExpr(visit(decorVarExpr.getExpr(), gc));
                 VariableExpr decorVar = decorVarExpr.getVar();
                 if (decorVar != null) {
-                    addNewVarSymbolToScope(newScope, decorVar.getVar());
+                    addNewVarSymbolToScope(newScope, decorVar.getVar(), decorVar.getSourceLocation());
                 }
             }
         }
         if (gc.hasGroupVar()) {
-            addNewVarSymbolToScope(newScope, gc.getGroupVar().getVar());
+            VariableExpr groupVar = gc.getGroupVar();
+            addNewVarSymbolToScope(newScope, groupVar.getVar(), groupVar.getSourceLocation());
         }
         if (gc.hasWithMap()) {
             Map<Expression, VariableExpr> newWithMap = new HashMap<>();
@@ -260,7 +263,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
                 Expression expr = visit(entry.getKey(), arg);
                 Expression newKey = expr;
                 VariableExpr value = entry.getValue();
-                addNewVarSymbolToScope(newScope, value.getVar());
+                addNewVarSymbolToScope(newScope, value.getVar(), value.getSourceLocation());
                 newWithMap.put(newKey, value);
             }
             gc.setWithVarMap(newWithMap);
@@ -285,7 +288,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     public Expression visit(LetClause letClause, ILangExpression arg) throws CompilationException {
         scopeChecker.extendCurrentScope();
         letClause.setBindingExpr(visit(letClause.getBindingExpr(), letClause));
-        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), letClause.getVarExpr().getVar());
+        VariableExpr varExpr = letClause.getVarExpr();
+        addNewVarSymbolToScope(scopeChecker.getCurrentScope(), varExpr.getVar(), varExpr.getSourceLocation());
         return null;
     }
 
@@ -327,7 +331,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         scopeChecker.createNewScope();
         for (QuantifiedPair pair : qe.getQuantifiedList()) {
             pair.setExpr(visit(pair.getExpr(), qe));
-            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), pair.getVarExpr().getVar());
+            VariableExpr varExpr = pair.getVarExpr();
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), varExpr.getVar(), varExpr.getSourceLocation());
         }
         qe.setSatisfiesExpr(visit(qe.getSatisfiesExpr(), qe));
         scopeChecker.removeCurrentScope();
@@ -338,7 +343,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     public Expression visit(VariableExpr varExpr, ILangExpression arg) throws CompilationException {
         String varName = varExpr.getVar().getValue();
         if (scopeChecker.isInForbiddenScopes(varName)) {
-            throw new CompilationException(
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, varExpr.getSourceLocation(),
                     "Inside limit clauses, it is disallowed to reference a variable having the same name as any variable bound in the same scope as the limit clause.");
         }
         Identifier ident = scopeChecker.lookupSymbol(varName);
@@ -361,7 +366,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // Registers the (inserted) data item variable.
         VariableExpr bindingVar = insertStatement.getVar();
         if (bindingVar != null) {
-            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), bindingVar.getVar());
+            addNewVarSymbolToScope(scopeChecker.getCurrentScope(), bindingVar.getVar(), bindingVar.getSourceLocation());
         }
 
         // Visits the expression for the returning expression.
@@ -373,20 +378,22 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     // Adds a new encountered alias identifier into a scope
-    private void addNewVarSymbolToScope(Scope scope, VarIdentifier var) throws CompilationException {
+    private void addNewVarSymbolToScope(Scope scope, VarIdentifier var, SourceLocation sourceLoc)
+            throws CompilationException {
         if (scope.findLocalSymbol(var.getValue()) != null) {
-            throw new CompilationException(
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                     "Duplicate alias definitions: " + SqlppVariableUtil.toUserDefinedName(var.getValue()));
         }
         scope.addNewVarSymbolToScope(var);
     }
 
     // Merges <code>scopeToBeMerged</code> into <code>hostScope</code>.
-    private void mergeScopes(Scope hostScope, Scope scopeToBeMerged) throws CompilationException {
+    private void mergeScopes(Scope hostScope, Scope scopeToBeMerged, SourceLocation sourceLoc)
+            throws CompilationException {
         Set<String> symbolsToBeMerged = scopeToBeMerged.getLocalSymbols();
         for (String symbolToBeMerged : symbolsToBeMerged) {
             if (hostScope.findLocalSymbol(symbolToBeMerged) != null) {
-                throw new CompilationException(
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                         "Duplicate alias definitions: " + SqlppVariableUtil.toUserDefinedName(symbolToBeMerged));
             }
         }

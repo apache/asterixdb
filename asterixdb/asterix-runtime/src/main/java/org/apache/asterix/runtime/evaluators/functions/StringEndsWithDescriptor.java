@@ -49,7 +49,8 @@ public class StringEndsWithDescriptor extends AbstractScalarFunctionDynamicDescr
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
 
-                return new AbstractBinaryStringBoolEval(ctx, args[0], args[1], BuiltinFunctions.STRING_ENDS_WITH) {
+                return new AbstractBinaryStringBoolEval(ctx, args[0], args[1], BuiltinFunctions.STRING_ENDS_WITH,
+                        sourceLoc) {
 
                     @Override
                     protected boolean compute(UTF8StringPointable left, UTF8StringPointable right) throws IOException {

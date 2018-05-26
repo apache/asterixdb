@@ -87,7 +87,7 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                             if (listBytes[listOffset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                     && listBytes[listOffset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                throw new TypeMismatchException(getIdentifier(), 0, listBytes[listOffset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, listBytes[listOffset],
                                         ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
                                         ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                             }
@@ -113,7 +113,8 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                         result.set(resultStorage);
                                         return;
                                     }
-                                    throw new UnsupportedItemTypeException(getIdentifier(), itemType.serialize());
+                                    throw new UnsupportedItemTypeException(sourceLoc, getIdentifier(),
+                                            itemType.serialize());
                                 }
                                 utf8Len += UTF8StringUtil.getUTFLength(listBytes, itemOffset);
                             }

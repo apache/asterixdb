@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -48,6 +49,7 @@ import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -259,12 +261,16 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
         }
 
         private Expression wrapAggregationArgument(Expression argExpr) throws CompilationException {
+            SourceLocation sourceLoc = argExpr.getSourceLocation();
             Expression expr = argExpr;
             Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
 
             VariableExpr fromBindingVar = new VariableExpr(context.newVariable());
+            fromBindingVar.setSourceLocation(sourceLoc);
             FromTerm fromTerm = new FromTerm(groupVar, fromBindingVar, null, null);
+            fromTerm.setSourceLocation(sourceLoc);
             FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
+            fromClause.setSourceLocation(sourceLoc);
 
             // Maps field variable expressions to field accesses.
             Map<Expression, Expression> varExprMap = new HashMap<>();
@@ -272,31 +278,42 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
                 // Reference to a field in the group variable.
                 if (fieldVars.containsKey(usedVar)) {
                     // Rewrites to a reference to a field in the group variable.
-                    varExprMap.put(usedVar,
-                            new FieldAccessor(fromBindingVar, new VarIdentifier(fieldVars.get(usedVar).getValue())));
+                    FieldAccessor fa =
+                            new FieldAccessor(fromBindingVar, new VarIdentifier(fieldVars.get(usedVar).getValue()));
+                    fa.setSourceLocation(usedVar.getSourceLocation());
+                    varExprMap.put(usedVar, fa);
                 } else if (outerVars.contains(usedVar)) {
                     // Do nothing
                 } else if (fieldVars.size() == 1) {
                     // Rewrites to a reference to a single field in the group variable.
-                    varExprMap.put(usedVar,
-                            new FieldAccessor(new FieldAccessor(fromBindingVar, fieldVars.values().iterator().next()),
-                                    SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar())));
+                    FieldAccessor faInner = new FieldAccessor(fromBindingVar, fieldVars.values().iterator().next());
+                    faInner.setSourceLocation(usedVar.getSourceLocation());
+                    FieldAccessor faOuter =
+                            new FieldAccessor(faInner, SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar()));
+                    faOuter.setSourceLocation(usedVar.getSourceLocation());
+                    varExprMap.put(usedVar, faOuter);
                 } else {
-                    throw new CompilationException("Cannot resolve alias reference for undefined identifier "
-                            + usedVar.getVar().getValue() + " in " + fieldVars);
+                    throw new CompilationException(ErrorCode.UNDEFINED_IDENTIFIER, usedVar.getSourceLocation(),
+                            usedVar.getVar().getValue(), String.valueOf(fieldVars));
                 }
             }
 
             // Select clause.
             SelectElement selectElement =
                     new SelectElement(SqlppRewriteUtil.substituteExpression(expr, varExprMap, context));
+            selectElement.setSourceLocation(sourceLoc);
             SelectClause selectClause = new SelectClause(selectElement, null, false);
+            selectClause.setSourceLocation(sourceLoc);
 
             // Construct the select expression.
             SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, null, null, null, null);
+            selectBlock.setSourceLocation(sourceLoc);
             SelectSetOperation selectSetOperation =
                     new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
-            return new SelectExpression(null, selectSetOperation, null, null, true);
+            selectSetOperation.setSourceLocation(sourceLoc);
+            SelectExpression selectExpr = new SelectExpression(null, selectSetOperation, null, null, true);
+            selectExpr.setSourceLocation(sourceLoc);
+            return selectExpr;
         }
     }
 }

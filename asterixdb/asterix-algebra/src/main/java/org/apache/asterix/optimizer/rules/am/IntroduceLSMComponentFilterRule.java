@@ -66,6 +66,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
 
@@ -134,7 +135,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
     }
 
     private AssignOperator createAssignOperator(List<IOptimizableFuncExpr> optFuncExprs,
-            List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars, IOptimizationContext context) {
+            List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars, IOptimizationContext context,
+            SourceLocation sourceLoc) {
         List<LogicalVariable> assignKeyVarList = new ArrayList<>();
         List<Mutable<ILogicalExpression>> assignKeyExprList = new ArrayList<>();
 
@@ -154,7 +156,9 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 maxFilterVars.add(var);
             }
         }
-        return new AssignOperator(assignKeyVarList, assignKeyExprList);
+        AssignOperator assignOp = new AssignOperator(assignKeyVarList, assignKeyExprList);
+        assignOp.setSourceLocation(sourceLoc);
+        return assignOp;
     }
 
     private void assignFilterFromQuery(List<IOptimizableFuncExpr> optFuncExprs, AbstractLogicalOperator op,
@@ -175,15 +179,17 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     List<LogicalVariable> minFilterVars = new ArrayList<>();
                     List<LogicalVariable> maxFilterVars = new ArrayList<>();
 
-                    AssignOperator assignOp = createAssignOperator(optFuncExprs, minFilterVars, maxFilterVars, context);
+                    AssignOperator assignOp = createAssignOperator(optFuncExprs, minFilterVars, maxFilterVars, context,
+                            dataSourceScanOp.getSourceLocation());
 
                     dataSourceScanOp.setMinFilterVars(minFilterVars);
                     dataSourceScanOp.setMaxFilterVars(maxFilterVars);
 
                     List<Mutable<ILogicalExpression>> additionalFilteringExpressions = new ArrayList<>();
                     for (LogicalVariable var : assignOp.getVariables()) {
-                        additionalFilteringExpressions
-                                .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
+                        VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+                        varRef.setSourceLocation(assignOp.getSourceLocation());
+                        additionalFilteringExpressions.add(new MutableObject<ILogicalExpression>(varRef));
                     }
 
                     dataSourceScanOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
@@ -206,16 +212,17 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         List<LogicalVariable> minFilterVars = new ArrayList<>();
                         List<LogicalVariable> maxFilterVars = new ArrayList<>();
 
-                        AssignOperator assignOp =
-                                createAssignOperator(optFuncExprs, minFilterVars, maxFilterVars, context);
+                        AssignOperator assignOp = createAssignOperator(optFuncExprs, minFilterVars, maxFilterVars,
+                                context, unnestMapOp.getSourceLocation());
 
                         unnestMapOp.setMinFilterVars(minFilterVars);
                         unnestMapOp.setMaxFilterVars(maxFilterVars);
 
                         List<Mutable<ILogicalExpression>> additionalFilteringExpressions = new ArrayList<>();
                         for (LogicalVariable var : assignOp.getVariables()) {
-                            additionalFilteringExpressions
-                                    .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
+                            VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+                            varRef.setSourceLocation(assignOp.getSourceLocation());
+                            additionalFilteringExpressions.add(new MutableObject<ILogicalExpression>(varRef));
                         }
                         unnestMapOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
                         assignOp.getInputs().add(new MutableObject<>(unnestMapOp.getInputs().get(0).getValue()));
@@ -320,6 +327,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         }
 
         IntersectOperator intersectWithFilter = new IntersectOperator(outputVars, compareVars, filterVars);
+        intersectWithFilter.setSourceLocation(intersect.getSourceLocation());
         intersectWithFilter.getInputs().addAll(intersect.getInputs());
         return intersectWithFilter;
     }
@@ -343,9 +351,12 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         primaryOp.setMinFilterVars(Collections.singletonList(minFilterVar));
         primaryOp.setMaxFilterVars(Collections.singletonList(maxFilterVar));
 
+        VariableReferenceExpression minFilterVarRef = new VariableReferenceExpression(minFilterVar);
+        minFilterVarRef.setSourceLocation(primaryOp.getSourceLocation());
+        VariableReferenceExpression maxFilterVarRef = new VariableReferenceExpression(maxFilterVar);
+        maxFilterVarRef.setSourceLocation(primaryOp.getSourceLocation());
         List<Mutable<ILogicalExpression>> indexFilterExpression =
-                Arrays.asList(new MutableObject<>(new VariableReferenceExpression(minFilterVar)),
-                        new MutableObject<>(new VariableReferenceExpression(maxFilterVar)));
+                Arrays.asList(new MutableObject<>(minFilterVarRef), new MutableObject<>(maxFilterVarRef));
 
         primaryOp.setAdditionalFilteringExpressions(indexFilterExpression);
         context.computeAndSetTypeEnvironmentForOperator(primaryOp);
@@ -366,7 +377,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                     FunctionIdentifier fid = f.getFunctionIdentifier();
                     if (!fid.equals(BuiltinFunctions.INDEX_SEARCH)) {
-                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, fid.getName());
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, f.getSourceLocation(),
+                                fid.getName());
                     }
                     AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                     jobGenParams.readFromFuncArgs(f.getArguments());
@@ -414,7 +426,8 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         dataverseName = jobGenParams.dataverseName;
                         datasetName = jobGenParams.datasetName;
                     } else {
-                        throw new AlgebricksException("Unexpected function for Unnest Map: " + fid);
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, f.getSourceLocation(),
+                                "Unexpected function for Unnest Map: " + fid);
                     }
                     return ((MetadataProvider) context.getMetadataProvider()).findDataset(dataverseName, datasetName);
                 }

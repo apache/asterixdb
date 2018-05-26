@@ -133,6 +133,7 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
 
         // Create the new ORDER operator, set the topK value, and replace the current one.
         OrderOperator newOrderOp = new OrderOperator(orderOp.getOrderExpressions(), (int) topK);
+        newOrderOp.setSourceLocation(orderOp.getSourceLocation());
         newOrderOp.setPhysicalOperator(
                 new StableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort(), newOrderOp.getTopK()));
         newOrderOp.getInputs().addAll(orderOp.getInputs());

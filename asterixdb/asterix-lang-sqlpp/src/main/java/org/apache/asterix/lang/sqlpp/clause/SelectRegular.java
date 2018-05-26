@@ -23,11 +23,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
-public class SelectRegular implements Clause {
+public class SelectRegular extends AbstractClause {
 
     private List<Projection> projections;
 

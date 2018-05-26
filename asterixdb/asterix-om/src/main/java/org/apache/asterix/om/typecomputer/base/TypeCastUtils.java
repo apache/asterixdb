@@ -44,7 +44,7 @@ public class TypeCastUtils {
             ATypeTag actualTypeTag = TypeComputeUtils.getActualType(inputType).getTypeTag();
             if (!ATypeHierarchy.isCompatible(requiredTypeTag, actualTypeTag)) {
                 String funcName = expr.getFunctionIdentifier().getName();
-                throw new IncompatibleTypeException(funcName, actualTypeTag, requiredTypeTag);
+                throw new IncompatibleTypeException(expr.getSourceLocation(), funcName, actualTypeTag, requiredTypeTag);
             }
             expr.setOpaqueParameters(opaqueParameters);
             changed = true;

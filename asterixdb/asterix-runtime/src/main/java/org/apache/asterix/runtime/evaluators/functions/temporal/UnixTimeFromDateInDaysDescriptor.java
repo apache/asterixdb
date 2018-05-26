@@ -82,7 +82,7 @@ public class UnixTimeFromDateInDaysDescriptor extends AbstractScalarFunctionDyna
                         int offset = argPtr.getStartOffset();
 
                         if (bytes[offset] != ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                         }
                         long dateChronon = ADateSerializerDeserializer.getChronon(bytes, offset + 1);

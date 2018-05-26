@@ -210,7 +210,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     result.set(resultStorage);
                                     return;
                                 default:
-                                    throw new TypeMismatchException(getIdentifier(), i, bytes[offset],
+                                    throw new TypeMismatchException(sourceLoc, getIdentifier(), i, bytes[offset],
                                             ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
                                             ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
                                             ATypeTag.SERIALIZED_FLOAT_TYPE_TAG, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG,
@@ -234,10 +234,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                             case TINYINT:
                                 lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
                                 if (lres > Byte.MAX_VALUE) {
-                                    throw new OverflowException(getIdentifier());
+                                    throw new OverflowException(sourceLoc, getIdentifier());
                                 }
                                 if (lres < Byte.MIN_VALUE) {
-                                    throw new UnderflowException(getIdentifier());
+                                    throw new UnderflowException(sourceLoc, getIdentifier());
                                 }
                                 aInt8.setValue((byte) lres);
                                 int8Serde.serialize(aInt8, out);
@@ -245,10 +245,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                             case SMALLINT:
                                 lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
                                 if (lres > Short.MAX_VALUE) {
-                                    throw new OverflowException(getIdentifier());
+                                    throw new OverflowException(sourceLoc, getIdentifier());
                                 }
                                 if (lres < Short.MIN_VALUE) {
-                                    throw new UnderflowException(getIdentifier());
+                                    throw new UnderflowException(sourceLoc, getIdentifier());
                                 }
                                 aInt16.setValue((short) lres);
                                 int16Serde.serialize(aInt16, out);
@@ -256,10 +256,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                             case INTEGER:
                                 lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
                                 if (lres > Integer.MAX_VALUE) {
-                                    throw new OverflowException(getIdentifier());
+                                    throw new OverflowException(sourceLoc, getIdentifier());
                                 }
                                 if (lres < Integer.MIN_VALUE) {
-                                    throw new UnderflowException(getIdentifier());
+                                    throw new UnderflowException(sourceLoc, getIdentifier());
                                 }
                                 aInt32.setValue((int) lres);
                                 int32Serde.serialize(aInt32, out);
@@ -272,10 +272,10 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                             case FLOAT:
                                 dres = evaluateDouble(operandsFloating[0], operandsFloating[1]);
                                 if (dres > Float.MAX_VALUE) {
-                                    throw new OverflowException(getIdentifier());
+                                    throw new OverflowException(sourceLoc, getIdentifier());
                                 }
                                 if (dres < -Float.MAX_VALUE) {
-                                    throw new UnderflowException(getIdentifier());
+                                    throw new UnderflowException(sourceLoc, getIdentifier());
                                 }
                                 aFloat.setValue((float) dres);
                                 floatSerde.serialize(aFloat, out);
@@ -330,7 +330,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                             ADayTimeDurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1);
                                     break;
                                 default:
-                                    throw new UnsupportedTypeException(getIdentifier(), bytes1[offset1]);
+                                    throw new UnsupportedTypeException(sourceLoc, getIdentifier(), bytes1[offset1]);
                             }
 
                             dayTime = evaluateTimeInstanceArithmetic(leftChronon, rightChronon);
@@ -363,8 +363,8 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                     ADurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1);
                                             break;
                                         default:
-                                            throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
-                                                    bytes1[offset1]);
+                                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(),
+                                                    bytes0[offset0], bytes1[offset1]);
                                     }
                                     break;
                                 case DATE:
@@ -393,8 +393,8 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                     offset1 + 1);
                                             break;
                                         default:
-                                            throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
-                                                    bytes1[offset1]);
+                                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(),
+                                                    bytes0[offset0], bytes1[offset1]);
                                     }
                                     break;
                                 case YEARMONTHDURATION:
@@ -413,8 +413,8 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                     * GregorianCalendarSystem.CHRONON_OF_DAY;
                                             break;
                                         default:
-                                            throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
-                                                    bytes1[offset1]);
+                                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(),
+                                                    bytes0[offset0], bytes1[offset1]);
                                     }
                                     break;
                                 case DURATION:
@@ -446,12 +446,12 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                                 break;
                                             }
                                         default:
-                                            throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
-                                                    bytes1[offset1]);
+                                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(),
+                                                    bytes0[offset0], bytes1[offset1]);
                                     }
                                     break;
                                 default:
-                                    throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
+                                    throw new IncompatibleTypeException(sourceLoc, getIdentifier(), bytes0[offset0],
                                             bytes1[offset1]);
                             }
 
@@ -476,7 +476,7 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     serde.serialize(aDatetime, out);
                                     break;
                                 default:
-                                    throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0],
+                                    throw new IncompatibleTypeException(sourceLoc, getIdentifier(), bytes0[offset0],
                                             bytes1[offset1]);
                             }
                         }

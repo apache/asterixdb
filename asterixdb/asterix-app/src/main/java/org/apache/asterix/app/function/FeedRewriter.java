@@ -21,6 +21,8 @@ package org.apache.asterix.app.function;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils;
@@ -70,7 +72,8 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
         AbstractFunctionCallExpression f = UnnestToDataScanRule.getFunctionCall(opRef);
         UnnestOperator unnest = (UnnestOperator) opRef.getValue();
         if (unnest.getPositionalVariable() != null) {
-            throw new AlgebricksException("No positional variables are allowed over feeds.");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
+                    "No positional variables are allowed over feeds.");
         }
         String dataverse = ConstantExpressionUtil.getStringArgument(f, 0);
         String sourceFeedName = ConstantExpressionUtil.getStringArgument(f, 1);
@@ -85,7 +88,8 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
         if (policy == null) {
             policy = BuiltinFeedPolicies.getFeedPolicy(policyName);
             if (policy == null) {
-                throw new AlgebricksException("Unknown feed policy:" + policyName);
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
+                        "Unknown feed policy:" + policyName);
             }
         }
         ArrayList<LogicalVariable> feedDataScanOutputVariables = new ArrayList<>();
@@ -104,6 +108,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             feedDataScanOutputVariables.addAll(pkVars);
         }
         DataSourceScanOperator scan = new DataSourceScanOperator(feedDataScanOutputVariables, ds);
+        scan.setSourceLocation(unnest.getSourceLocation());
         List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
         scanInpList.addAll(unnest.getInputs());
         opRef.setValue(scan);
@@ -152,10 +157,10 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
                 List<String> key = partitioningKeys.get(i);
                 if (keySourceIndicator == null || keySourceIndicator.get(i).intValue() == 0) {
                     PlanTranslationUtil.prepareVarAndExpression(key, recordVar, pkVars, keyAccessExpression, null,
-                            context);
+                            context, null);
                 } else {
                     PlanTranslationUtil.prepareMetaKeyAccessExpression(key, recordVar, keyAccessExpression, pkVars,
-                            null, context);
+                            null, context, null);
                 }
             }
             keyAccessExpression.forEach(

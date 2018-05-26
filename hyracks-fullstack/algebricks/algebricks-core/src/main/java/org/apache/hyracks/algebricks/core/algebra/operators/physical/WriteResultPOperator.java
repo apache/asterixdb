@@ -101,9 +101,10 @@ public class WriteResultPOperator extends AbstractPhysicalOperator {
         JobSpecification spec = builder.getJobSpec();
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = mp.getWriteResultRuntime(
                 dataSource, propagatedSchema, keys, payload, additionalFilteringKeys, context, spec);
-
-        builder.contributeHyracksOperator(writeResultOp, runtimeAndConstraints.first);
-        builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
+        IOperatorDescriptor opDesc = runtimeAndConstraints.first;
+        opDesc.setSourceLocation(writeResultOp.getSourceLocation());
+        builder.contributeHyracksOperator(writeResultOp, opDesc);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, runtimeAndConstraints.second);
         ILogicalOperator src = writeResultOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, writeResultOp, 0);
     }

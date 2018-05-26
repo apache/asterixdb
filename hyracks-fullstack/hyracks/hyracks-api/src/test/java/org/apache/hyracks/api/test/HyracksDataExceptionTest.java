@@ -36,7 +36,7 @@ public class HyracksDataExceptionTest {
     @Test
     public void returnedMessageWithNoComponentTest() {
         HyracksDataException cause = new HyracksDataException(ErrorMessageUtil.NONE, ErrorCode.ERROR_PROCESSING_TUPLE,
-                ErrorCode.getErrorMessage(ErrorCode.ERROR_PROCESSING_TUPLE), null, null, 2);
+                ErrorCode.getErrorMessage(ErrorCode.ERROR_PROCESSING_TUPLE), 2);
         HyracksDataException causeWithNodeId = HyracksDataException.create(cause, "nc1");
         Assert.assertEquals(cause.getMessage(), causeWithNodeId.getMessage());
     }

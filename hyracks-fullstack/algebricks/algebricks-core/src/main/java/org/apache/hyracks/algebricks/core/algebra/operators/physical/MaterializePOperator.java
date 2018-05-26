@@ -74,6 +74,7 @@ public class MaterializePOperator extends AbstractPhysicalOperator {
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         MaterializingOperatorDescriptor materializationOpDesc =
                 new MaterializingOperatorDescriptor(builder.getJobSpec(), recDescriptor, isSingleActivity);
+        materializationOpDesc.setSourceLocation(op.getSourceLocation());
         contributeOpDesc(builder, (AbstractLogicalOperator) op, materializationOpDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

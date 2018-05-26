@@ -44,15 +44,15 @@ import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractSerializableSumAggregateFunction implements ISerializedAggregateEvaluator {
+public abstract class AbstractSerializableSumAggregateFunction extends AbstractSerializableAggregateFunction {
     protected static final int AGG_TYPE_OFFSET = 0;
     private static final int SUM_OFFSET = 1;
 
@@ -67,8 +67,9 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
     @SuppressWarnings("rawtypes")
     public ISerializerDeserializer serde;
 
-    public AbstractSerializableSumAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
+    public AbstractSerializableSumAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(sourceLoc);
         eval = args[0].createScalarEvaluator(context);
     }
 
@@ -100,7 +101,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(BuiltinFunctions.SUM, bytes[offset], aggType.serialize());
+            throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.SUM, bytes[offset], aggType.serialize());
         }
 
         if (ATypeHierarchy.canPromote(aggType, typeTag)) {
@@ -147,7 +148,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
                 break;
             }
             default:
-                throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, bytes[offset]);
+                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.SUM, bytes[offset]);
         }
         state[start + AGG_TYPE_OFFSET] = aggType.serialize();
         BufferSerDeUtil.writeDouble(sum, state, start + SUM_OFFSET);
@@ -206,7 +207,7 @@ public abstract class AbstractSerializableSumAggregateFunction implements ISeria
                     break;
                 }
                 default:
-                    throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, aggType.serialize());
+                    throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.SUM, aggType.serialize());
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);

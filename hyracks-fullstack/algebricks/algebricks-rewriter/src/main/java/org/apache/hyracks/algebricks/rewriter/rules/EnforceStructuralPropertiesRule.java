@@ -89,6 +89,7 @@ import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
 public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
@@ -526,16 +527,20 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
     private Mutable<ILogicalOperator> enforceOrderProperties(List<LocalOrderProperty> oList,
             Mutable<ILogicalOperator> topOp, boolean isMicroOp, IOptimizationContext context)
             throws AlgebricksException {
+        SourceLocation sourceLoc = topOp.getValue().getSourceLocation();
         List<Pair<IOrder, Mutable<ILogicalExpression>>> oe = new LinkedList<>();
         for (LocalOrderProperty orderProperty : oList) {
             for (OrderColumn oc : orderProperty.getOrderColumns()) {
                 IOrder ordType = (oc.getOrder() == OrderKind.ASC) ? OrderOperator.ASC_ORDER : OrderOperator.DESC_ORDER;
-                Pair<IOrder, Mutable<ILogicalExpression>> pair = new Pair<>(ordType,
-                        new MutableObject<ILogicalExpression>(new VariableReferenceExpression(oc.getColumn())));
+                VariableReferenceExpression ocColumnRef = new VariableReferenceExpression(oc.getColumn());
+                ocColumnRef.setSourceLocation(sourceLoc);
+                Pair<IOrder, Mutable<ILogicalExpression>> pair =
+                        new Pair<>(ordType, new MutableObject<ILogicalExpression>(ocColumnRef));
                 oe.add(pair);
             }
         }
         OrderOperator oo = new OrderOperator(oe);
+        oo.setSourceLocation(sourceLoc);
         oo.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
         if (isMicroOp) {
             oo.setPhysicalOperator(new InMemoryStableSortPOperator());

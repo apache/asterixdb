@@ -83,7 +83,7 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 result.setValue(len);
                                 int64Serde.serialize(result, out);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, serString[offset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, serString[offset],
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                             resultPointable.set(resultStorage);

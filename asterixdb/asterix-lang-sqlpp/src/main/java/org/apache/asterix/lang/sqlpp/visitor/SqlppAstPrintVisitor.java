@@ -250,7 +250,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     public Void visit(CallExpr pf, Integer step) throws CompilationException {
         FunctionSignature functionSignature = pf.getFunctionSignature();
         FunctionSignature normalizedFunctionSignature =
-                FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, false);
+                FunctionMapUtil.normalizeBuiltinFunctionSignature(functionSignature, false, pf.getSourceLocation());
         if (BuiltinFunctions.isBuiltinCompilerFunction(normalizedFunctionSignature, true)) {
             functionSignature = normalizedFunctionSignature;
         }

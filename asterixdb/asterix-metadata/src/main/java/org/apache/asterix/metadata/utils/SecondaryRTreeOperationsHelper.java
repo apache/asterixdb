@@ -99,7 +99,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
         int recordColumn = dataset.getDatasetType() == DatasetType.INTERNAL ? numPrimaryKeys : 0;
         secondaryFieldAccessEvalFactories = metadataProvider.getDataFormat().createMBRFactory(
                 metadataProvider.getFunctionManager(), isOverridingKeyFieldTypes ? enforcedItemType : itemType,
-                secondaryKeyFields.get(0), recordColumn, numDimensions, filterFieldName, isPointMBR);
+                secondaryKeyFields.get(0), recordColumn, numDimensions, filterFieldName, isPointMBR, sourceLoc);
         secondaryComparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
         valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
         ISerializerDeserializer[] secondaryRecFields =
@@ -228,8 +228,11 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             // Create secondary RTree bulk load op.
             TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec, fieldPermutation,
                     indexDataflowHelperFactory, GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
+            SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
+            sinkRuntimeFactory.setSourceLocation(sourceLoc);
             AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                    new IPushRuntimeFactory[] { new SinkRuntimeFactory() }, new RecordDescriptor[] {});
+                    new IPushRuntimeFactory[] { sinkRuntimeFactory }, new RecordDescriptor[] {});
+            metaOp.setSourceLocation(sourceLoc);
             // Connect the operators.
             spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
@@ -285,9 +288,11 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
                 secondaryBulkLoadOp = createExternalIndexBulkLoadOp(spec, fieldPermutation, indexDataflowHelperFactory,
                         GlobalConfig.DEFAULT_TREE_FILL_FACTOR);
             }
+            SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
+            sinkRuntimeFactory.setSourceLocation(sourceLoc);
             AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                    new IPushRuntimeFactory[] { new SinkRuntimeFactory() },
-                    new RecordDescriptor[] { secondaryRecDesc });
+                    new IPushRuntimeFactory[] { sinkRuntimeFactory }, new RecordDescriptor[] { secondaryRecDesc });
+            metaOp.setSourceLocation(sourceLoc);
             spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
             root = metaOp;
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);

@@ -21,12 +21,12 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 import org.apache.hyracks.algebricks.data.IAWriter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
-public class PrinterRuntimeFactory implements IPushRuntimeFactory {
+public class PrinterRuntimeFactory extends AbstractPushRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 

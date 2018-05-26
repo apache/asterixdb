@@ -56,7 +56,7 @@ public class RecordConcatStrictDescriptor extends AbstractScalarFunctionDynamicD
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new RecordConcatEvalFactory(args, argTypes, true);
+        return new RecordConcatEvalFactory(args, argTypes, true, sourceLoc);
     }
 
     @Override

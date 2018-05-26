@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -46,14 +47,16 @@ public abstract class AbstractDoubleConstructorEvaluator implements IScalarEvalu
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
     protected final IScalarEvaluator inputEval;
+    protected final SourceLocation sourceLoc;
     protected final ArrayBackedValueStorage resultStorage;
     protected final DataOutput out;
     protected final IPointable inputArg;
     protected final AMutableDouble aDouble;
     protected final UTF8StringPointable utf8Ptr;
 
-    protected AbstractDoubleConstructorEvaluator(IScalarEvaluator inputEval) {
+    protected AbstractDoubleConstructorEvaluator(IScalarEvaluator inputEval, SourceLocation sourceLoc) {
         this.inputEval = inputEval;
+        this.sourceLoc = sourceLoc;
         resultStorage = new ArrayBackedValueStorage();
         out = resultStorage.getDataOutput();
         inputArg = new VoidPointable();
@@ -68,7 +71,7 @@ public abstract class AbstractDoubleConstructorEvaluator implements IScalarEvalu
             resultStorage.reset();
             evaluateImpl(result);
         } catch (IOException e) {
-            throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
+            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
         }
     }
 
@@ -87,12 +90,12 @@ public abstract class AbstractDoubleConstructorEvaluator implements IScalarEvalu
                 handleUparseableString(result);
             }
         } else {
-            throw new TypeMismatchException(getIdentifier(), 0, tt, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
     }
 
     protected void handleUparseableString(IPointable result) throws HyracksDataException {
-        throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
+        throw new InvalidDataFormatException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
     }
 
     protected abstract FunctionIdentifier getIdentifier();

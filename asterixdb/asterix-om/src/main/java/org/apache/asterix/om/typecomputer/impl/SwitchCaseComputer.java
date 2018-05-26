@@ -47,7 +47,8 @@ public class SwitchCaseComputer implements IResultTypeComputer {
 
         int argNumber = fce.getArguments().size();
         if (argNumber < 3) {
-            throw new CompilationException(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER, funcName, argNumber);
+            throw new CompilationException(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER, fce.getSourceLocation(),
+                    funcName, argNumber);
         }
         int argSize = fce.getArguments().size();
         List<IAType> types = new ArrayList<>();

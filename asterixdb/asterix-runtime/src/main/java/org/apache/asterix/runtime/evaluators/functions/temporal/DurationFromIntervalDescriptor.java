@@ -85,7 +85,7 @@ public class DurationFromIntervalDescriptor extends AbstractScalarFunctionDynami
                         int offset = argPtr.getStartOffset();
 
                         if (bytes[offset] != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
                         long chrononStart = AIntervalSerializerDeserializer.getIntervalStart(bytes, offset + 1);

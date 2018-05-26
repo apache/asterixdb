@@ -60,7 +60,7 @@ public class NumericCeilingDescriptor extends AbstractScalarFunctionDynamicDescr
 
         NumericCeilingEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericCeilingDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericCeilingDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

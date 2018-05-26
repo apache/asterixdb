@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -35,7 +36,7 @@ import java.util.Map;
  * The new create feed statement only concerns the feed adaptor configuration.
  * All feeds are considered as primary feeds.
  */
-public class CreateFeedStatement implements Statement {
+public class CreateFeedStatement extends AbstractStatement {
 
     private final Pair<Identifier, Identifier> qName;
     private final boolean ifNotExists;

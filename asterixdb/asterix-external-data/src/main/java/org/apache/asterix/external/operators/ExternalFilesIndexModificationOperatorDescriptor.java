@@ -89,7 +89,7 @@ public class ExternalFilesIndexModificationOperatorDescriptor extends AbstractSi
                             case NO_OP:
                                 break;
                             default:
-                                throw HyracksDataException.create(ErrorCode.UNKNOWN_EXTERNAL_FILE_PENDING_OP,
+                                throw HyracksDataException.create(ErrorCode.UNKNOWN_EXTERNAL_FILE_PENDING_OP, sourceLoc,
                                         file.getPendingOp());
                         }
                     }

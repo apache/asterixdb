@@ -23,6 +23,7 @@ import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,6 +43,8 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     protected final int outputArity;
 
     protected String displayName;
+
+    protected SourceLocation sourceLoc;
 
     public AbstractOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity) {
         odId = spec.createOperatorDescriptorId(this);
@@ -84,6 +87,16 @@ public abstract class AbstractOperatorDescriptor implements IOperatorDescriptor 
     @Override
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    @Override
+    public SourceLocation getSourceLocation() {
+        return sourceLoc;
+    }
+
+    @Override
+    public void setSourceLocation(SourceLocation sourceLoc) {
+        this.sourceLoc = sourceLoc;
     }
 
     @Override

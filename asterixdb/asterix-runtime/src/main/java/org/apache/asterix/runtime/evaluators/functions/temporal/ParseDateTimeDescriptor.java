@@ -96,11 +96,11 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                         int len1 = argPtr1.getLength();
 
                         if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
                         if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
                         utf8Ptr.set(bytes0, offset0 + 1, len0 - 1);
@@ -127,7 +127,7 @@ public class ParseDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                             formatStart += formatLength + 1;
                         }
                         if (!processSuccessfully) {
-                            throw new InvalidDataFormatException(getIdentifier(),
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                     ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
                         aDateTime.setValue(aInt64.getLongValue());

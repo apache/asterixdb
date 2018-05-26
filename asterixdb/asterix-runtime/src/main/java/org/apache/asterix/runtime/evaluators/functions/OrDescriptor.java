@@ -103,7 +103,7 @@ public class OrDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                                 continue;
                             }
                             if (data[offset] != ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG) {
-                                throw new TypeMismatchException(getIdentifier(), i, data[offset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), i, data[offset],
                                         ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
                             }
                             boolean argResult = ABooleanSerializerDeserializer.getBoolean(data, offset + 1);

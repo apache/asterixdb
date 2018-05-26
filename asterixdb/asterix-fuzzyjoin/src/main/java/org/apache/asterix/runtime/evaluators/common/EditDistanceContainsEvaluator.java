@@ -24,13 +24,14 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 
 public class EditDistanceContainsEvaluator extends EditDistanceCheckEvaluator {
 
-    public EditDistanceContainsEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
-        super(args, context);
+    public EditDistanceContainsEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(args, context, sourceLoc);
     }
 
     @Override
@@ -51,8 +52,9 @@ public class EditDistanceContainsEvaluator extends EditDistanceCheckEvaluator {
                 return ed.getSimilarityContains(firstOrdListIter, secondOrdListIter, edThresh);
             }
             default: {
-                throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_CONTAINS, 0, argType.serialize(),
-                        ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
+                throw new TypeMismatchException(sourceLoc, BuiltinFunctions.EDIT_DISTANCE_CONTAINS, 0,
+                        argType.serialize(), ATypeTag.SERIALIZED_STRING_TYPE_TAG,
+                        ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
         }
     }

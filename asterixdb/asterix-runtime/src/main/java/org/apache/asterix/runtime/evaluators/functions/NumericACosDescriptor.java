@@ -59,7 +59,7 @@ public class NumericACosDescriptor extends AbstractScalarFunctionDynamicDescript
 
         NumericACosEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericACosDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericACosDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

@@ -78,7 +78,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             fromTerms.add((FromTerm) fromTerm.accept(this, arg));
         }
-        return new FromClause(fromTerms);
+        FromClause copy = new FromClause(fromTerms);
+        copy.setSourceLocation(fromClause.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -94,7 +96,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
             correlateClauses.add((AbstractBinaryCorrelateClause) correlateClause.accept(this, arg));
         }
-        return new FromTerm(fromExpr, fromVar, positionVar, correlateClauses);
+        FromTerm copy = new FromTerm(fromExpr, fromVar, positionVar, correlateClauses);
+        copy.setSourceLocation(fromTerm.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -104,8 +108,10 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr rightPositionVar = joinClause.getPositionalVariable() == null ? null
                 : (VariableExpr) joinClause.getPositionalVariable().accept(this, arg);
         Expression conditionExpresion = (Expression) joinClause.getConditionExpression().accept(this, arg);
-        return new JoinClause(joinClause.getJoinType(), rightExpression, rightVar, rightPositionVar,
+        JoinClause copy = new JoinClause(joinClause.getJoinType(), rightExpression, rightVar, rightPositionVar,
                 conditionExpresion);
+        copy.setSourceLocation(joinClause.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -115,8 +121,10 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr rightPositionVar = nestClause.getPositionalVariable() == null ? null
                 : (VariableExpr) nestClause.getPositionalVariable().accept(this, arg);
         Expression conditionExpresion = (Expression) nestClause.getConditionExpression().accept(this, arg);
-        return new NestClause(nestClause.getJoinType(), rightExpression, rightVar, rightPositionVar,
+        NestClause copy = new NestClause(nestClause.getJoinType(), rightExpression, rightVar, rightPositionVar,
                 conditionExpresion);
+        copy.setSourceLocation(nestClause.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -125,13 +133,18 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr rightVar = (VariableExpr) unnestClause.getRightVariable().accept(this, arg);
         VariableExpr rightPositionVar = unnestClause.getPositionalVariable() == null ? null
                 : (VariableExpr) unnestClause.getPositionalVariable().accept(this, arg);
-        return new UnnestClause(unnestClause.getJoinType(), rightExpression, rightVar, rightPositionVar);
+        UnnestClause copy = new UnnestClause(unnestClause.getJoinType(), rightExpression, rightVar, rightPositionVar);
+        copy.setSourceLocation(unnestClause.getSourceLocation());
+        return copy;
     }
 
     @Override
     public Projection visit(Projection projection, Void arg) throws CompilationException {
-        return new Projection(projection.star() ? null : (Expression) projection.getExpression().accept(this, arg),
-                projection.getName(), projection.star(), projection.varStar());
+        Projection copy =
+                new Projection(projection.star() ? null : (Expression) projection.getExpression().accept(this, arg),
+                        projection.getName(), projection.star(), projection.varStar());
+        copy.setSourceLocation(projection.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -170,8 +183,10 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             havingClause = (HavingClause) selectBlock.getHavingClause().accept(this, arg);
         }
         selectCluase = (SelectClause) selectBlock.getSelectClause().accept(this, arg);
-        return new SelectBlock(selectCluase, fromClause, letClauses, whereClause, gbyClause, gbyLetClauses,
+        SelectBlock copy = new SelectBlock(selectCluase, fromClause, letClauses, whereClause, gbyClause, gbyLetClauses,
                 havingClause);
+        copy.setSourceLocation(selectBlock.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -184,12 +199,16 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         if (selectClause.selectRegular()) {
             selectRegular = (SelectRegular) selectClause.getSelectRegular().accept(this, arg);
         }
-        return new SelectClause(selectElement, selectRegular, selectClause.distinct());
+        SelectClause copy = new SelectClause(selectElement, selectRegular, selectClause.distinct());
+        copy.setSourceLocation(selectClause.getSourceLocation());
+        return copy;
     }
 
     @Override
     public SelectElement visit(SelectElement selectElement, Void arg) throws CompilationException {
-        return new SelectElement((Expression) selectElement.getExpression().accept(this, arg));
+        SelectElement copy = new SelectElement((Expression) selectElement.getExpression().accept(this, arg));
+        copy.setSourceLocation(selectElement.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -198,7 +217,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (Projection projection : selectRegular.getProjections()) {
             projections.add((Projection) projection.accept(this, arg));
         }
-        return new SelectRegular(projections);
+        SelectRegular copy = new SelectRegular(projections);
+        copy.setSourceLocation(selectRegular.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -221,28 +242,39 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             }
             rightInputs.add(new SetOperationRight(right.getSetOpType(), right.isSetSemantics(), newRightInput));
         }
-        return new SelectSetOperation(newLeftInput, rightInputs);
+        SelectSetOperation copy = new SelectSetOperation(newLeftInput, rightInputs);
+        copy.setSourceLocation(selectSetOperation.getSourceLocation());
+        return copy;
     }
 
     @Override
     public HavingClause visit(HavingClause havingClause, Void arg) throws CompilationException {
-        return new HavingClause((Expression) havingClause.getFilterExpression().accept(this, arg));
+        HavingClause copy = new HavingClause((Expression) havingClause.getFilterExpression().accept(this, arg));
+        copy.setSourceLocation(havingClause.getSourceLocation());
+        return copy;
     }
 
     @Override
     public Query visit(Query q, Void arg) throws CompilationException {
-        return new Query(q.isExplain(), q.isTopLevel(), (Expression) q.getBody().accept(this, arg), q.getVarCounter(),
-                q.getExternalVars());
+        Query copy = new Query(q.isExplain(), q.isTopLevel(), (Expression) q.getBody().accept(this, arg),
+                q.getVarCounter(), q.getExternalVars());
+        copy.setSourceLocation(q.getSourceLocation());
+        return copy;
     }
 
     @Override
     public FunctionDecl visit(FunctionDecl fd, Void arg) throws CompilationException {
-        return new FunctionDecl(fd.getSignature(), fd.getParamList(), (Expression) fd.getFuncBody().accept(this, arg));
+        FunctionDecl copy =
+                new FunctionDecl(fd.getSignature(), fd.getParamList(), (Expression) fd.getFuncBody().accept(this, arg));
+        copy.setSourceLocation(fd.getSourceLocation());
+        return copy;
     }
 
     @Override
     public WhereClause visit(WhereClause whereClause, Void arg) throws CompilationException {
-        return new WhereClause((Expression) whereClause.getWhereExpr().accept(this, arg));
+        WhereClause copy = new WhereClause((Expression) whereClause.getWhereExpr().accept(this, arg));
+        copy.setSourceLocation(whereClause.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -251,7 +283,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (Expression orderExpr : oc.getOrderbyList()) {
             newOrderbyList.add((Expression) orderExpr.accept(this, arg));
         }
-        return new OrderbyClause(newOrderbyList, oc.getModifierList());
+        OrderbyClause copy = new OrderbyClause(newOrderbyList, oc.getModifierList());
+        copy.setSourceLocation(oc.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -281,21 +315,27 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (Pair<Expression, Identifier> field : gc.getGroupFieldList()) {
             groupFieldList.add(new Pair<>((Expression) field.first.accept(this, arg), field.second));
         }
-        return new GroupbyClause(gbyPairList, decorPairList, withVarMap, groupVarExpr, groupFieldList,
+        GroupbyClause copy = new GroupbyClause(gbyPairList, decorPairList, withVarMap, groupVarExpr, groupFieldList,
                 gc.hasHashGroupByHint(), gc.isGroupAll());
+        copy.setSourceLocation(gc.getSourceLocation());
+        return copy;
     }
 
     @Override
     public LimitClause visit(LimitClause limitClause, Void arg) throws CompilationException {
         Expression limitExpr = (Expression) limitClause.getLimitExpr().accept(this, arg);
         Expression offsetExpr = limitClause.hasOffset() ? (Expression) limitClause.getOffset().accept(this, arg) : null;
-        return new LimitClause(limitExpr, offsetExpr);
+        LimitClause copy = new LimitClause(limitExpr, offsetExpr);
+        copy.setSourceLocation(limitClause.getSourceLocation());
+        return copy;
     }
 
     @Override
     public LetClause visit(LetClause letClause, Void arg) throws CompilationException {
-        return new LetClause((VariableExpr) letClause.getVarExpr().accept(this, arg),
+        LetClause copy = new LetClause((VariableExpr) letClause.getVarExpr().accept(this, arg),
                 (Expression) letClause.getBindingExpr().accept(this, arg));
+        copy.setSourceLocation(letClause.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -317,11 +357,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
         // visit order by
         if (selectExpression.hasOrderby()) {
-            List<Expression> orderExprs = new ArrayList<>();
-            for (Expression orderExpr : selectExpression.getOrderbyClause().getOrderbyList()) {
-                orderExprs.add((Expression) orderExpr.accept(this, arg));
-            }
-            orderby = new OrderbyClause(orderExprs, selectExpression.getOrderbyClause().getModifierList());
+            orderby = (OrderbyClause) selectExpression.getOrderbyClause().accept(this, arg);
         }
 
         // visit limit
@@ -338,7 +374,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public ListConstructor visit(ListConstructor lc, Void arg) throws CompilationException {
-        return new ListConstructor(lc.getType(), copyExprList(lc.getExprList(), arg));
+        ListConstructor copy = new ListConstructor(lc.getType(), copyExprList(lc.getExprList(), arg));
+        copy.setSourceLocation(lc.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -349,13 +387,17 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
                     (Expression) binding.getRightExpr().accept(this, arg));
             bindings.add(fb);
         }
-        return new RecordConstructor(bindings);
+        RecordConstructor copy = new RecordConstructor(bindings);
+        copy.setSourceLocation(rc.getSourceLocation());
+        return copy;
     }
 
     @Override
     public OperatorExpr visit(OperatorExpr operatorExpr, Void arg) throws CompilationException {
-        return new OperatorExpr(copyExprList(operatorExpr.getExprList(), arg), operatorExpr.getExprBroadcastIdx(),
-                operatorExpr.getOpList(), operatorExpr.isCurrentop());
+        OperatorExpr copy = new OperatorExpr(copyExprList(operatorExpr.getExprList(), arg),
+                operatorExpr.getExprBroadcastIdx(), operatorExpr.getOpList(), operatorExpr.isCurrentop());
+        copy.setSourceLocation(operatorExpr.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -363,7 +405,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         Expression conditionExpr = (Expression) ifExpr.getCondExpr().accept(this, arg);
         Expression thenExpr = (Expression) ifExpr.getThenExpr().accept(this, arg);
         Expression elseExpr = (Expression) ifExpr.getElseExpr().accept(this, arg);
-        return new IfExpr(conditionExpr, thenExpr, elseExpr);
+        IfExpr copy = new IfExpr(conditionExpr, thenExpr, elseExpr);
+        copy.setSourceLocation(ifExpr.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -375,7 +419,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
             quantifiedPairs.add(new QuantifiedPair(var, expr));
         }
         Expression condition = (Expression) qe.getSatisfiesExpr().accept(this, arg);
-        return new QuantifiedExpression(qe.getQuantifier(), quantifiedPairs, condition);
+        QuantifiedExpression copy = new QuantifiedExpression(qe.getQuantifier(), quantifiedPairs, condition);
+        copy.setSourceLocation(qe.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -384,24 +430,31 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (Expression expr : callExpr.getExprList()) {
             newExprList.add((Expression) expr.accept(this, arg));
         }
-        return new CallExpr(callExpr.getFunctionSignature(), newExprList);
+        CallExpr copy = new CallExpr(callExpr.getFunctionSignature(), newExprList);
+        copy.setSourceLocation(callExpr.getSourceLocation());
+        return copy;
     }
 
     @Override
     public VariableExpr visit(VariableExpr varExpr, Void arg) throws CompilationException {
         VariableExpr clonedVar = new VariableExpr(new VarIdentifier(varExpr.getVar()));
+        clonedVar.setSourceLocation(varExpr.getSourceLocation());
         clonedVar.setIsNewVar(varExpr.getIsNewVar());
         return clonedVar;
     }
 
     @Override
     public UnaryExpr visit(UnaryExpr u, Void arg) throws CompilationException {
-        return new UnaryExpr(u.getExprType(), (Expression) u.getExpr().accept(this, arg));
+        UnaryExpr copy = new UnaryExpr(u.getExprType(), (Expression) u.getExpr().accept(this, arg));
+        copy.setSourceLocation(u.getSourceLocation());
+        return copy;
     }
 
     @Override
     public FieldAccessor visit(FieldAccessor fa, Void arg) throws CompilationException {
-        return new FieldAccessor((Expression) fa.getExpr().accept(this, arg), fa.getIdent());
+        FieldAccessor copy = new FieldAccessor((Expression) fa.getExpr().accept(this, arg), fa.getIdent());
+        copy.setSourceLocation(fa.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -411,7 +464,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         if (ia.getIndexExpr() != null) {
             indexExpr = (Expression) ia.getIndexExpr().accept(this, arg);
         }
-        return new IndexAccessor(expr, indexExpr);
+        IndexAccessor copy = new IndexAccessor(expr, indexExpr);
+        copy.setSourceLocation(ia.getSourceLocation());
+        return copy;
     }
 
     @Override
@@ -420,7 +475,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         List<Expression> whenExprList = copyExprList(caseExpr.getWhenExprs(), arg);
         List<Expression> thenExprList = copyExprList(caseExpr.getThenExprs(), arg);
         Expression elseExpr = (Expression) caseExpr.getElseExpr().accept(this, arg);
-        return new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
+        CaseExpression copy = new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
+        copy.setSourceLocation(caseExpr.getSourceLocation());
+        return copy;
     }
 
     private List<Expression> copyExprList(List<Expression> exprs, Void arg) throws CompilationException {
@@ -430,5 +487,4 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         }
         return newExprList;
     }
-
 }

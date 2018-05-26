@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -73,6 +74,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         VariableExpr varExpr = lc.getVarExpr();
         VariableExpr newVe = generateNewVariable(context, varExpr);
         LetClause newLet = new LetClause(newVe, (Expression) p1.first);
+        newLet.setSourceLocation(lc.getSourceLocation());
         return new Pair<>(newLet, VariableCloneAndSubstitutionUtil.eliminateSubstFromList(lc.getVarExpr(), env));
     }
 
@@ -107,6 +109,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         }
         GroupbyClause newGroup = new GroupbyClause(newGbyList, newDecorList, newWithMap, newGroupVar, newGroupFieldList,
                 gc.hasHashGroupByHint(), gc.isGroupAll());
+        newGroup.setSourceLocation(gc.getSourceLocation());
         return new Pair<>(newGroup, newSubs);
     }
 
@@ -126,6 +129,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         }
         Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = qe.getSatisfiesExpr().accept(this, newSubs);
         QuantifiedExpression qe2 = new QuantifiedExpression(qe.getQuantifier(), newPairs, (Expression) p2.first);
+        qe2.setSourceLocation(qe.getSourceLocation());
         return new Pair<>(qe2, newSubs);
     }
 
@@ -134,6 +138,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = wc.getWhereExpr().accept(this, env);
         WhereClause newW = new WhereClause((Expression) p1.first);
+        newW.setSourceLocation(wc.getSourceLocation());
         return new Pair<>(newW, p1.second);
     }
 
@@ -142,6 +147,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             VariableSubstitutionEnvironment env) throws CompilationException {
         List<Expression> exprList = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(pf.getExprList(), env, this);
         CallExpr f = new CallExpr(pf.getFunctionSignature(), exprList);
+        f.setSourceLocation(pf.getSourceLocation());
         return new Pair<>(f, env);
     }
 
@@ -152,11 +158,12 @@ public class CloneAndSubstituteVariablesVisitor extends
         for (VarIdentifier vi : fd.getParamList()) {
             VariableExpr varExpr = new VariableExpr(vi);
             if (!env.constainsOldVar(varExpr)) {
-                throw new CompilationException("Parameter " + vi + " does not appear in the substitution list.");
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, fd.getSourceLocation(),
+                        "Parameter " + vi + " does not appear in the substitution list.");
             }
             Expression newExpr = env.findSubstitution(varExpr);
             if (newExpr.getKind() != Kind.VARIABLE_EXPRESSION) {
-                throw new CompilationException(
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, fd.getSourceLocation(),
                         "Parameter " + vi + " cannot be substituted by a non-variable expression.");
             }
             newList.add(((VariableExpr) newExpr).getVar());
@@ -164,6 +171,7 @@ public class CloneAndSubstituteVariablesVisitor extends
 
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = fd.getFuncBody().accept(this, env);
         FunctionDecl newF = new FunctionDecl(fd.getSignature(), newList, (Expression) p1.first);
+        newF.setSourceLocation(fd.getSourceLocation());
         return new Pair<>(newF, env);
     }
 
@@ -174,6 +182,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = ifexpr.getThenExpr().accept(this, env);
         Pair<ILangExpression, VariableSubstitutionEnvironment> p3 = ifexpr.getElseExpr().accept(this, env);
         IfExpr i = new IfExpr((Expression) p1.first, (Expression) p2.first, (Expression) p3.first);
+        i.setSourceLocation(ifexpr.getSourceLocation());
         return new Pair<>(i, env);
     }
 
@@ -189,6 +198,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             p2 = new Pair<>(null, null);
         }
         LimitClause c = new LimitClause((Expression) p1.first, (Expression) p2.first);
+        c.setSourceLocation(lc.getSourceLocation());
         return new Pair<>(c, env);
     }
 
@@ -198,6 +208,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         List<Expression> oldExprList = lc.getExprList();
         List<Expression> exprs = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(oldExprList, env, this);
         ListConstructor c = new ListConstructor(lc.getType(), exprs);
+        c.setSourceLocation(lc.getSourceLocation());
         return new Pair<>(c, env);
     }
 
@@ -217,6 +228,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             exprs.add((Expression) p1.first);
         }
         OperatorExpr oe = new OperatorExpr(exprs, op.getExprBroadcastIdx(), op.getOpList(), op.isCurrentop());
+        oe.setSourceLocation(op.getSourceLocation());
         return new Pair<>(oe, env);
     }
 
@@ -229,6 +241,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         oc2.setNumFrames(oc.getNumFrames());
         oc2.setNumTuples(oc.getNumTuples());
         oc2.setRangeMap(oc.getRangeMap());
+        oc2.setSourceLocation(oc.getSourceLocation());
         return new Pair<>(oc2, env);
     }
 
@@ -238,6 +251,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         Query newQ = new Query(q.isExplain());
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = q.getBody().accept(this, env);
         newQ.setBody((Expression) p1.first);
+        newQ.setSourceLocation(q.getSourceLocation());
         return new Pair<>(newQ, p1.second);
     }
 
@@ -253,6 +267,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             newFbs.add(fb2);
         }
         RecordConstructor newRc = new RecordConstructor(newFbs);
+        newRc.setSourceLocation(rc.getSourceLocation());
         return new Pair<>(newRc, env);
     }
 
@@ -261,6 +276,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = u.getExpr().accept(this, env);
         UnaryExpr newU = new UnaryExpr(u.getExprType(), (Expression) p1.first);
+        newU.setSourceLocation(u.getSourceLocation());
         return new Pair<>(newU, env);
     }
 
@@ -275,6 +291,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         }
         IndexAccessor i = new IndexAccessor((Expression) p1.first, indexExpr);
         i.setAny(ia.isAny());
+        i.setSourceLocation(ia.getSourceLocation());
         return new Pair<>(i, env);
     }
 
@@ -283,6 +300,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p = fa.getExpr().accept(this, env);
         FieldAccessor newF = new FieldAccessor((Expression) p.first, fa.getIdent());
+        newF.setSourceLocation(fa.getSourceLocation());
         return new Pair<>(newF, p.second);
     }
 
@@ -301,7 +319,9 @@ public class CloneAndSubstituteVariablesVisitor extends
             // it is a variable from the context
             VarIdentifier var = context.getRewrittenVar(expr.getVar().getId());
             if (var != null) {
-                return new VariableExpr(var);
+                VariableExpr newVarExpr = new VariableExpr(var);
+                newVarExpr.setSourceLocation(expr.getSourceLocation());
+                return newVarExpr;
             }
         }
         return expr;
@@ -319,7 +339,9 @@ public class CloneAndSubstituteVariablesVisitor extends
     public VariableExpr generateNewVariable(LangRewritingContext context, VariableExpr varExpr) {
         VarIdentifier vi = varExpr.getVar();
         VarIdentifier newVar = context.mapOldId(vi.getId(), vi.getValue());
-        return new VariableExpr(newVar);
+        VariableExpr newVarExpr = new VariableExpr(newVar);
+        newVarExpr.setSourceLocation(varExpr.getSourceLocation());
+        return newVarExpr;
     }
 
     /**

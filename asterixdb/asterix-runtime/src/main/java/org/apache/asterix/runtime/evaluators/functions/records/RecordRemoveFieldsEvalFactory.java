@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -56,16 +57,17 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
     private ARecordType requiredRecType;
     private ARecordType inputRecType;
     private AOrderedListType inputListType;
+    private final SourceLocation sourceLoc;
 
     public RecordRemoveFieldsEvalFactory(IScalarEvaluatorFactory inputRecordEvalFactory,
             IScalarEvaluatorFactory removeFieldPathsFactory, ARecordType requiredRecType, ARecordType inputRecType,
-            AOrderedListType inputListType) {
+            AOrderedListType inputListType, SourceLocation sourceLoc) {
         this.inputRecordEvalFactory = inputRecordEvalFactory;
         this.removeFieldPathsFactory = removeFieldPathsFactory;
         this.requiredRecType = requiredRecType;
         this.inputRecType = inputRecType;
         this.inputListType = inputListType;
-
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -98,13 +100,13 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
 
                 byte inputTypeTag0 = inputArg0.getByteArray()[inputArg0.getStartOffset()];
                 if (inputTypeTag0 != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                    throw new TypeMismatchException(BuiltinFunctions.REMOVE_FIELDS, 0, inputTypeTag0,
+                    throw new TypeMismatchException(sourceLoc, BuiltinFunctions.REMOVE_FIELDS, 0, inputTypeTag0,
                             ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                 }
 
                 byte inputTypeTag1 = inputArg1.getByteArray()[inputArg1.getStartOffset()];
                 if (inputTypeTag1 != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                    throw new TypeMismatchException(BuiltinFunctions.REMOVE_FIELDS, 1, inputTypeTag1,
+                    throw new TypeMismatchException(sourceLoc, BuiltinFunctions.REMOVE_FIELDS, 1, inputTypeTag1,
                             ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                 }
 

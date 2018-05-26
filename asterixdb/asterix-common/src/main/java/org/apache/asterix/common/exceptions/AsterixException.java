@@ -21,6 +21,7 @@ package org.apache.asterix.common.exceptions;
 import java.io.Serializable;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class AsterixException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
@@ -33,9 +34,12 @@ public class AsterixException extends AlgebricksException {
         super(message);
     }
 
+    public AsterixException(int errorCode, SourceLocation sourceLoc, Serializable... params) {
+        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), sourceLoc, params);
+    }
+
     public AsterixException(int errorCode, Serializable... params) {
         super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
-
     }
 
     /**
@@ -45,6 +49,11 @@ public class AsterixException extends AlgebricksException {
     @Deprecated
     public AsterixException(Throwable cause) {
         super(cause);
+    }
+
+    public AsterixException(int errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), sourceLoc, params);
+        addSuppressed(cause);
     }
 
     public AsterixException(int errorCode, Throwable cause, Serializable... params) {
@@ -58,6 +67,10 @@ public class AsterixException extends AlgebricksException {
     @Deprecated
     public AsterixException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public static AsterixException create(int errorCode, SourceLocation sourceLoc, Serializable... params) {
+        return new AsterixException(errorCode, sourceLoc, params);
     }
 
     public static AsterixException create(int errorCode, Serializable... params) {

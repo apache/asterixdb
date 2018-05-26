@@ -112,17 +112,17 @@ public class AInt8ConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                             && offset + 2 == end) {
                                         break;
                                     } else {
-                                        throw new InvalidDataFormatException(getIdentifier(),
+                                        throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                                 ATypeTag.SERIALIZED_INT8_TYPE_TAG);
                                     }
                                     if (value < limit + digit) {
-                                        throw new InvalidDataFormatException(getIdentifier(),
+                                        throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                                 ATypeTag.SERIALIZED_INT8_TYPE_TAG);
                                     }
                                     value = (byte) (value - digit);
                                 }
                                 if (value > 0) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_INT8_TYPE_TAG);
                                 }
                                 if (value < 0 && positive) {
@@ -133,11 +133,11 @@ public class AInt8ConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                 int8Serde.serialize(aInt8, out);
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e1) {
-                            throw new InvalidDataFormatException(getIdentifier(), e1,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e1,
                                     ATypeTag.SERIALIZED_INT8_TYPE_TAG);
                         }
                     }

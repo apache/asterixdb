@@ -105,15 +105,14 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
         RecordDescriptor recDescriptor =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        IOperatorDescriptor opDesc = null;
+        IOperatorDescriptor opDesc;
 
         switch (kind) {
-            case INNER: {
+            case INNER:
                 opDesc = new InMemoryHashJoinOperatorDescriptor(spec, keysLeft, keysRight, hashFunFactories,
                         comparatorFactories, recDescriptor, tableSize, predEvaluatorFactory, memSizeInFrames);
                 break;
-            }
-            case LEFT_OUTER: {
+            case LEFT_OUTER:
                 IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
                 for (int j = 0; j < nonMatchWriterFactories.length; j++) {
                     nonMatchWriterFactories[j] = context.getMissingWriterFactory();
@@ -122,11 +121,11 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
                         comparatorFactories, predEvaluatorFactory, recDescriptor, true, nonMatchWriterFactories,
                         tableSize, memSizeInFrames);
                 break;
-            }
-            default: {
+            default:
                 throw new NotImplementedException();
-            }
         }
+
+        opDesc.setSourceLocation(op.getSourceLocation());
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
         ILogicalOperator src1 = op.getInputs().get(0).getValue();

@@ -67,6 +67,7 @@ public class IntroduceRandomPartitioningFeedComputationRule implements IAlgebrai
         }
 
         ExchangeOperator exchangeOp = new ExchangeOperator();
+        exchangeOp.setSourceLocation(op.getSourceLocation());
         INodeDomain runtimeDomain = feedDataSource.getComputationNodeDomain();
 
         exchangeOp.setPhysicalOperator(new RandomPartitionExchangePOperator(runtimeDomain));

@@ -62,7 +62,7 @@ public class FindBinaryFromDescriptor extends AbstractStringOffsetConfigurableDe
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractFindBinaryEvaluator(ctx, args, baseOffset, getIdentifier().getName()) {
+                return new AbstractFindBinaryEvaluator(ctx, args, baseOffset, getIdentifier().getName(), sourceLoc) {
                     @Override
                     protected int getFromOffset(IFrameTupleReference tuple) throws HyracksDataException {
                         return ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 2,

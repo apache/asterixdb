@@ -27,11 +27,11 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -40,7 +40,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 /**
  * COUNT returns the number of items in the given list. Note that COUNT(NULL) is not allowed.
  */
-public abstract class AbstractCountAggregateFunction implements IAggregateEvaluator {
+public abstract class AbstractCountAggregateFunction extends AbstractAggregateFunction {
     private AMutableInt64 result = new AMutableInt64(-1);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<AInt64> int64Serde =
@@ -51,8 +51,9 @@ public abstract class AbstractCountAggregateFunction implements IAggregateEvalua
 
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
 
-    public AbstractCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
+    public AbstractCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(sourceLoc);
         eval = args[0].createScalarEvaluator(context);
     }
 

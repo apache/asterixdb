@@ -57,7 +57,9 @@ public class GenerateColumnNameVisitor extends AbstractSqlppExpressionScopingVis
     public Expression visit(GroupbyClause groupbyClause, ILangExpression arg) throws CompilationException {
         for (GbyVariableExpressionPair gbyKeyPair : groupbyClause.getGbyPairList()) {
             if (gbyKeyPair.getVar() == null) {
-                gbyKeyPair.setVar(new VariableExpr(context.newVariable()));
+                VariableExpr varExpr = new VariableExpr(context.newVariable());
+                varExpr.setSourceLocation(gbyKeyPair.getExpr().getSourceLocation());
+                gbyKeyPair.setVar(varExpr);
             }
         }
         return super.visit(groupbyClause, arg);

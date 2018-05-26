@@ -22,12 +22,14 @@ import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.runtime.aggregates.std.AbstractAggregateFunction;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -38,15 +40,18 @@ public class ListifyAggregateFunctionEvalFactory implements IAggregateEvaluatorF
     private static final long serialVersionUID = 1L;
     private IScalarEvaluatorFactory[] args;
     private final AOrderedListType orderedlistType;
+    private final SourceLocation sourceLoc;
 
-    public ListifyAggregateFunctionEvalFactory(IScalarEvaluatorFactory[] args, AOrderedListType type) {
+    public ListifyAggregateFunctionEvalFactory(IScalarEvaluatorFactory[] args, AOrderedListType type,
+            SourceLocation sourceLoc) {
         this.args = args;
         this.orderedlistType = type;
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
     public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-        return new IAggregateEvaluator() {
+        return new AbstractAggregateFunction(sourceLoc) {
 
             private IPointable inputVal = new VoidPointable();
             private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);

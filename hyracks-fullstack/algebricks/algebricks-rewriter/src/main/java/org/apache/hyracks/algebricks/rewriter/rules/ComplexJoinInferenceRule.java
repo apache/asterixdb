@@ -83,6 +83,7 @@ public class ComplexJoinInferenceRule implements IAlgebraicRewriteRule {
         ntsToEtsInSubplan(subplan, context);
         cleanupJoins(subplan);
         InnerJoinOperator join = new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+        join.setSourceLocation(op.getSourceLocation());
         join.getInputs().add(opRef3);
         opRef2.setValue(OperatorManipulationUtil.eliminateSingleSubplanOverEts(subplan));
         join.getInputs().add(new MutableObject<ILogicalOperator>(op));

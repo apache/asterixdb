@@ -95,7 +95,9 @@ public class VariableReferenceExpression extends AbstractLogicalExpression {
 
     @Override
     public AbstractLogicalExpression cloneExpression() {
-        return new VariableReferenceExpression(variable);
+        VariableReferenceExpression varRef = new VariableReferenceExpression(variable);
+        varRef.setSourceLocation(sourceLoc);
+        return varRef;
     }
 
     @Override

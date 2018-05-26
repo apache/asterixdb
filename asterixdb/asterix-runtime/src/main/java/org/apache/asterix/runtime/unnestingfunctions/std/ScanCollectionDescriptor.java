@@ -35,6 +35,7 @@ import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -57,16 +58,18 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
 
     @Override
     public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new ScanCollectionUnnestingFunctionFactory(args[0]);
+        return new ScanCollectionUnnestingFunctionFactory(args[0], sourceLoc);
     }
 
     public static class ScanCollectionUnnestingFunctionFactory implements IUnnestingEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
         private IScalarEvaluatorFactory listEvalFactory;
+        private final SourceLocation sourceLoc;
 
-        public ScanCollectionUnnestingFunctionFactory(IScalarEvaluatorFactory arg) {
+        public ScanCollectionUnnestingFunctionFactory(IScalarEvaluatorFactory arg, SourceLocation sourceLoc) {
             this.listEvalFactory = arg;
+            this.sourceLoc = sourceLoc;
         }
 
         @Override
@@ -91,7 +94,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                     }
                     if (typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                             && typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                        throw new TypeMismatchException(BuiltinFunctions.SCAN_COLLECTION, 0, typeTag,
+                        throw new TypeMismatchException(sourceLoc, BuiltinFunctions.SCAN_COLLECTION, 0, typeTag,
                                 ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                     }
                     listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());

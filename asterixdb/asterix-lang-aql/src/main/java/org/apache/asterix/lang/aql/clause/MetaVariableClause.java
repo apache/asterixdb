@@ -20,11 +20,11 @@ package org.apache.asterix.lang.aql.clause;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.base.IAQLPlusVisitor;
-import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class MetaVariableClause implements Clause {
+public class MetaVariableClause extends AbstractClause {
     private VarIdentifier var;
 
     @Override

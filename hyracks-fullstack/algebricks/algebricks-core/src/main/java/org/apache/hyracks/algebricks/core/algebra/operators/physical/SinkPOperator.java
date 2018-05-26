@@ -79,6 +79,7 @@ public class SinkPOperator extends AbstractPhysicalOperator {
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
 
         SinkOperatorDescriptor opDesc = new SinkOperatorDescriptor(spec, op.getInputs().size());
+        opDesc.setSourceLocation(op.getSourceLocation());
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
         for (int i = 0; i < op.getInputs().size(); i++) {

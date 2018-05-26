@@ -18,25 +18,29 @@
  */
 package org.apache.asterix.om.functions;
 
-import org.apache.asterix.common.functions.FunctionDescriptorTag;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class AbstractFunctionDescriptor implements IFunctionDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    @Override
-    public abstract FunctionIdentifier getIdentifier();
+    protected SourceLocation sourceLoc;
 
     @Override
-    public abstract FunctionDescriptorTag getFunctionDescriptorTag();
+    public void setImmutableStates(Object... states) {
+    }
+
+    @Override
+    public void setSourceLocation(SourceLocation sourceLoc) {
+        this.sourceLoc = sourceLoc;
+    }
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) throws AlgebricksException {
@@ -66,5 +70,4 @@ public abstract class AbstractFunctionDescriptor implements IFunctionDescriptor 
             throws AlgebricksException {
         throw new NotImplementedException("Not Implemented: " + getIdentifier());
     }
-
 }

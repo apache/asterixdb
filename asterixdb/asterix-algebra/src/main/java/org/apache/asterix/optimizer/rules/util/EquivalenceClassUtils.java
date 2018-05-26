@@ -116,11 +116,13 @@ public class EquivalenceClassUtils {
                 fieldIndexInRecord = metaFieldNameToIndexMap.get(pkFieldName);
             }
             LogicalVariable var = indexSearchVars.get(pkIndex);
-            ILogicalExpression expr = new ScalarFunctionCallExpression(
+            VariableReferenceExpression referredRecordVarRef = new VariableReferenceExpression(referredRecordVar);
+            referredRecordVarRef.setSourceLocation(operator.getSourceLocation());
+            ScalarFunctionCallExpression expr = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(referredRecordVar)),
-                    new MutableObject<ILogicalExpression>(
+                    new MutableObject<ILogicalExpression>(referredRecordVarRef), new MutableObject<ILogicalExpression>(
                             new ConstantExpression(new AsterixConstantValue(new AInt32(fieldIndexInRecord)))));
+            expr.setSourceLocation(operator.getSourceLocation());
             EquivalenceClass equivClass =
                     new EquivalenceClass(Collections.singletonList(var), var, Collections.singletonList(expr));
             Map<LogicalVariable, EquivalenceClass> equivalenceMap = context.getEquivalenceClassMap(operator);

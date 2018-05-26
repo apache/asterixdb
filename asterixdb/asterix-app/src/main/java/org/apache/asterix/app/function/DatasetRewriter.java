@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -68,7 +70,8 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         UnnestOperator unnest = (UnnestOperator) opRef.getValue();
         if (unnest.getPositionalVariable() != null) {
             // TODO remove this after enabling the support of positional variables in data scan
-            throw new AlgebricksException("No positional variables are allowed over datasets.");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
+                    "No positional variables are allowed over datasets.");
         }
         ILogicalExpression expr = f.getArguments().get(0).getValue();
         if (expr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
@@ -90,7 +93,8 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         String datasetName = datasetReference.second;
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new AlgebricksException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
+                    "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
         }
         DataSourceId asid = new DataSourceId(dataverseName, datasetName);
         List<LogicalVariable> variables = new ArrayList<>();
@@ -107,6 +111,7 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
             variables.add(context.newVar());
         }
         DataSourceScanOperator scan = new DataSourceScanOperator(variables, dataSource);
+        scan.setSourceLocation(unnest.getSourceLocation());
         List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
         scanInpList.addAll(unnest.getInputs());
         opRef.setValue(scan);

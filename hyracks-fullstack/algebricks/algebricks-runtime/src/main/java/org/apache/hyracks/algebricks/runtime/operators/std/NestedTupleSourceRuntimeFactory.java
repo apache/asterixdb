@@ -21,12 +21,12 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
+import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class NestedTupleSourceRuntimeFactory implements IPushRuntimeFactory {
+public class NestedTupleSourceRuntimeFactory extends AbstractPushRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 

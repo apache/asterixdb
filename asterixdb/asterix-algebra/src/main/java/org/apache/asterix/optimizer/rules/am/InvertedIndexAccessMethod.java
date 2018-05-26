@@ -84,6 +84,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Log
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveEditDistanceSearchModifierFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.ConjunctiveListEditDistanceSearchModifierFactory;
@@ -431,6 +432,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             addKeyVarsAndExprs(optFuncExpr, keyVarList, keyExprList, context);
             // Assign operator that sets the secondary-index search-key fields.
             inputOp = new AssignOperator(keyVarList, keyExprList);
+            inputOp.setSourceLocation(dataSourceScan.getSourceLocation());
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
             inputOp.getInputs().add(new MutableObject<>(
                     OperatorManipulationUtil.deepCopy(dataSourceScan.getInputs().get(0).getValue())));
@@ -571,6 +573,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Change join into a select with the same condition.
         SelectOperator topSelect = new SelectOperator(new MutableObject<ILogicalExpression>(joinCond), isLeftOuterJoin,
                 newNullPlaceHolderVar);
+        topSelect.setSourceLocation(indexPlanRootOp.getSourceLocation());
         topSelect.getInputs().add(indexSubTree.getRootRef());
         topSelect.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(topSelect);
@@ -595,6 +598,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         indexSubTreeVar));
             }
             UnionAllOperator unionAllOp = new UnionAllOperator(varMap);
+            unionAllOp.setSourceLocation(topOp.getSourceLocation());
             unionAllOp.getInputs().add(new MutableObject<ILogicalOperator>(topOp));
             unionAllOp.getInputs().add(panicJoinRef);
             unionAllOp.setExecutionMode(ExecutionMode.PARTITIONED);
@@ -606,9 +610,10 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // The inner (build) branch of the join is the subtree with the data scan, since the result of the similarity join could potentially be big.
         // This choice may not always be the most efficient, but it seems more robust than the alternative.
         Mutable<ILogicalExpression> eqJoinConditionRef =
-                createPrimaryKeysEqJoinCondition(originalSubTreePKs, surrogateSubTreePKs);
+                createPrimaryKeysEqJoinCondition(originalSubTreePKs, surrogateSubTreePKs, topOp.getSourceLocation());
         InnerJoinOperator topEqJoin = new InnerJoinOperator(eqJoinConditionRef, originalProbeSubTreeRootRef,
                 new MutableObject<ILogicalOperator>(topOp));
+        topEqJoin.setSourceLocation(topOp.getSourceLocation());
         topEqJoin.setExecutionMode(ExecutionMode.PARTITIONED);
         joinRef.setValue(topEqJoin);
         context.computeAndSetTypeEnvironmentForOperator(topEqJoin);
@@ -690,23 +695,30 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     private Mutable<ILogicalExpression> createPrimaryKeysEqJoinCondition(List<LogicalVariable> originalSubTreePKs,
-            List<LogicalVariable> surrogateSubTreePKs) {
+            List<LogicalVariable> surrogateSubTreePKs, SourceLocation sourceLoc) {
         List<Mutable<ILogicalExpression>> eqExprs = new ArrayList<Mutable<ILogicalExpression>>();
         int numPKVars = originalSubTreePKs.size();
         for (int i = 0; i < numPKVars; i++) {
             List<Mutable<ILogicalExpression>> args = new ArrayList<Mutable<ILogicalExpression>>();
-            args.add(
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(surrogateSubTreePKs.get(i))));
-            args.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(originalSubTreePKs.get(i))));
-            ILogicalExpression eqFunc =
+            VariableReferenceExpression surrogateSubTreePKRef =
+                    new VariableReferenceExpression(surrogateSubTreePKs.get(i));
+            surrogateSubTreePKRef.setSourceLocation(sourceLoc);
+            args.add(new MutableObject<ILogicalExpression>(surrogateSubTreePKRef));
+            VariableReferenceExpression originalSubTreePKRef =
+                    new VariableReferenceExpression(originalSubTreePKs.get(i));
+            originalSubTreePKRef.setSourceLocation(sourceLoc);
+            args.add(new MutableObject<ILogicalExpression>(originalSubTreePKRef));
+            ScalarFunctionCallExpression eqFunc =
                     new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), args);
+            eqFunc.setSourceLocation(sourceLoc);
             eqExprs.add(new MutableObject<ILogicalExpression>(eqFunc));
         }
         if (eqExprs.size() == 1) {
             return eqExprs.get(0);
         } else {
-            ILogicalExpression andFunc = new ScalarFunctionCallExpression(
+            ScalarFunctionCallExpression andFunc = new ScalarFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.AND), eqExprs);
+            andFunc.setSourceLocation(sourceLoc);
             return new MutableObject<ILogicalExpression>(andFunc);
         }
     }
@@ -715,16 +727,19 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree,
             IOptimizableFuncExpr optFuncExpr, Index chosenIndex, Map<LogicalVariable, LogicalVariable> panicVarMap,
             IOptimizationContext context) throws AlgebricksException {
+        ILogicalOperator probeRootOp = probeSubTree.getRoot();
+        SourceLocation sourceLoc = probeRootOp.getSourceLocation();
         LogicalVariable inputSearchVar = getInputSearchVar(optFuncExpr, indexSubTree);
 
         // We split the plan into two "branches", and add selections on each side.
         AbstractLogicalOperator replicateOp = new ReplicateOperator(2);
-        replicateOp.getInputs().add(new MutableObject<ILogicalOperator>(probeSubTree.getRoot()));
+        replicateOp.setSourceLocation(sourceLoc);
+        replicateOp.getInputs().add(new MutableObject<ILogicalOperator>(probeRootOp));
         replicateOp.setExecutionMode(ExecutionMode.PARTITIONED);
         context.computeAndSetTypeEnvironmentForOperator(replicateOp);
 
         // Create select ops for removing tuples that are filterable and not filterable, respectively.
-        IVariableTypeEnvironment probeTypeEnv = context.getOutputTypeEnvironment(probeSubTree.getRoot());
+        IVariableTypeEnvironment probeTypeEnv = context.getOutputTypeEnvironment(probeRootOp);
         IAType inputSearchVarType;
         if (chosenIndex.isEnforced()) {
             inputSearchVarType = optFuncExpr.getFieldType(optFuncExpr.findLogicalVar(inputSearchVar));
@@ -770,14 +785,16 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             IAType inputSearchVarType, IOptimizableFuncExpr optFuncExpr, Index chosenIndex,
             IOptimizationContext context, Mutable<ILogicalOperator> isFilterableSelectOpRef,
             Mutable<ILogicalOperator> isNotFilterableSelectOpRef) throws AlgebricksException {
+        SourceLocation sourceLoc = inputOp.getSourceLocation();
         // Create select operator for removing tuples that are not filterable.
         // First determine the proper filter function and args based on the type of the input search var.
         ILogicalExpression isFilterableExpr = null;
         switch (inputSearchVarType.getTypeTag()) {
             case STRING: {
                 List<Mutable<ILogicalExpression>> isFilterableArgs = new ArrayList<Mutable<ILogicalExpression>>(4);
-                isFilterableArgs
-                        .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(inputSearchVar)));
+                VariableReferenceExpression inputSearchVarRef = new VariableReferenceExpression(inputSearchVar);
+                inputSearchVarRef.setSourceLocation(sourceLoc);
+                isFilterableArgs.add(new MutableObject<ILogicalExpression>(inputSearchVarRef));
                 // Since we are optimizing a join, the similarity threshold should be the only constant in the optimizable function expression.
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(optFuncExpr.getConstantExpr(0)));
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(
@@ -793,8 +810,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             case MULTISET:
             case ARRAY:
                 List<Mutable<ILogicalExpression>> isFilterableArgs = new ArrayList<Mutable<ILogicalExpression>>(2);
-                isFilterableArgs
-                        .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(inputSearchVar)));
+                VariableReferenceExpression inputSearchVarRef = new VariableReferenceExpression(inputSearchVar);
+                inputSearchVarRef.setSourceLocation(sourceLoc);
+                isFilterableArgs.add(new MutableObject<ILogicalExpression>(inputSearchVarRef));
                 // Since we are optimizing a join, the similarity threshold should be the only constant in the optimizable function expression.
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(optFuncExpr.getConstantExpr(0)));
                 isFilterableExpr = new ScalarFunctionCallExpression(
@@ -802,11 +820,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         isFilterableArgs);
                 break;
             default:
-                throw CompilationException.create(ErrorCode.NO_SUPPORTED_TYPE);
+                throw new CompilationException(ErrorCode.NO_SUPPORTED_TYPE, sourceLoc);
         }
 
         SelectOperator isFilterableSelectOp =
                 new SelectOperator(new MutableObject<ILogicalExpression>(isFilterableExpr), false, null);
+        isFilterableSelectOp.setSourceLocation(sourceLoc);
         isFilterableSelectOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         isFilterableSelectOp.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(isFilterableSelectOp);
@@ -814,10 +833,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Select operator for removing tuples that are filterable.
         List<Mutable<ILogicalExpression>> isNotFilterableArgs = new ArrayList<Mutable<ILogicalExpression>>();
         isNotFilterableArgs.add(new MutableObject<ILogicalExpression>(isFilterableExpr));
-        ILogicalExpression isNotFilterableExpr = new ScalarFunctionCallExpression(
+        ScalarFunctionCallExpression isNotFilterableExpr = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), isNotFilterableArgs);
+        isNotFilterableExpr.setSourceLocation(sourceLoc);
         SelectOperator isNotFilterableSelectOp =
                 new SelectOperator(new MutableObject<ILogicalExpression>(isNotFilterableExpr), false, null);
+        isNotFilterableSelectOp.setSourceLocation(sourceLoc);
         isNotFilterableSelectOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         isNotFilterableSelectOp.setExecutionMode(ExecutionMode.LOCAL);
         context.computeAndSetTypeEnvironmentForOperator(isNotFilterableSelectOp);
@@ -854,7 +875,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 typeTag = ((AUnionType) type).getActualType().getTypeTag();
             }
             if (typeTag != ATypeTag.ARRAY && typeTag != ATypeTag.STRING && typeTag != ATypeTag.MULTISET) {
-                throw CompilationException.create(ErrorCode.NO_SUPPORTED_TYPE);
+                throw new CompilationException(ErrorCode.NO_SUPPORTED_TYPE,
+                        optFuncExpr.getFuncExpr().getSourceLocation());
             }
         }
         jobGenParams.setSearchKeyType(typeTag);
@@ -1246,7 +1268,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         index.getGramLength(), prePost, false);
             }
             default: {
-                throw CompilationException.create(ErrorCode.NO_TOKENIZER_FOR_TYPE, index.getIndexType());
+                throw new CompilationException(ErrorCode.NO_TOKENIZER_FOR_TYPE, index.getIndexType());
             }
         }
     }
@@ -1291,12 +1313,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                         }
                     }
                     default: {
-                        throw CompilationException.create(ErrorCode.INCOMPATIBLE_SEARCH_MODIFIER, searchModifierType,
+                        throw new CompilationException(ErrorCode.INCOMPATIBLE_SEARCH_MODIFIER, searchModifierType,
                                 index.getIndexType());
                     }
                 }
             default:
-                throw CompilationException.create(ErrorCode.UNKNOWN_SEARCH_MODIFIER, searchModifierType);
+                throw new CompilationException(ErrorCode.UNKNOWN_SEARCH_MODIFIER, searchModifierType);
         }
     }
 

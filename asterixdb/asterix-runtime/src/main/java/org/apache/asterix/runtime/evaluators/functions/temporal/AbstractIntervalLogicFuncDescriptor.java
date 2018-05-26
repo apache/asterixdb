@@ -51,7 +51,7 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
 
                 return new IScalarEvaluator() {
 
-                    protected final IntervalLogic il = new IntervalLogic();
+                    protected final IntervalLogic il = new IntervalLogic(sourceLoc);
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
                     private TaggedValuePointable argPtr0 =
@@ -78,12 +78,12 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
 
                         byte typeTag0 = argPtr0.getTag();
                         if (typeTag0 != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, typeTag0,
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, typeTag0,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
                         byte typeTag1 = argPtr0.getTag();
                         if (typeTag1 != ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, typeTag1,
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, typeTag1,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
 
@@ -91,7 +91,7 @@ public abstract class AbstractIntervalLogicFuncDescriptor extends AbstractScalar
                         argPtr1.getValue(interval1);
 
                         if (typeTag0 != typeTag1) {
-                            throw new IncompatibleTypeException(getIdentifier(), typeTag0, typeTag1);
+                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(), typeTag0, typeTag1);
                         }
 
                         ABoolean res = compareIntervals(il, interval0, interval1) ? ABoolean.TRUE : ABoolean.FALSE;

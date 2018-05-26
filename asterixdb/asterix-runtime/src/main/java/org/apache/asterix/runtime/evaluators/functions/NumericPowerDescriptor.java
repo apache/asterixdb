@@ -45,7 +45,7 @@ public class NumericPowerDescriptor extends AbstractNumericArithmeticEval {
     @Override
     protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
         if (rhs > Integer.MAX_VALUE) {
-            throw new OverflowException(getIdentifier());
+            throw new OverflowException(sourceLoc, getIdentifier());
         }
         return LongMath.checkedPow(lhs, (int) rhs);
     }
@@ -69,12 +69,12 @@ public class NumericPowerDescriptor extends AbstractNumericArithmeticEval {
     @Override
     protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
             throws HyracksDataException {
-        throw new UnsupportedTypeException(getIdentifier().getName(), ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
+        throw new UnsupportedTypeException(sourceLoc, getIdentifier().getName(), ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
     }
 
     @Override
     protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
-        throw new UnsupportedTypeException(getIdentifier().getName(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
+        throw new UnsupportedTypeException(sourceLoc, getIdentifier().getName(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
     }
 
 }

@@ -135,8 +135,10 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> externalLoopup =
                 metadataProvider.buildExternalDataLookupRuntime(builder.getJobSpec(), dataset, ridIndexes, retainInput,
                         typeEnv, opSchema, context, metadataProvider, retainMissing);
-        builder.contributeHyracksOperator(unnestMap, externalLoopup.first);
-        builder.contributeAlgebricksPartitionConstraint(externalLoopup.first, externalLoopup.second);
+        IOperatorDescriptor opDesc = externalLoopup.first;
+        opDesc.setSourceLocation(unnestMap.getSourceLocation());
+        builder.contributeHyracksOperator(unnestMap, opDesc);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, externalLoopup.second);
         ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
     }

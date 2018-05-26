@@ -36,6 +36,7 @@ import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -46,17 +47,19 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractStringConstructorEvaluator implements IScalarEvaluator {
 
     protected final IScalarEvaluator inputEval;
+    protected final SourceLocation sourceLoc;
     protected final IPointable inputArg;
     protected final ArrayBackedValueStorage resultStorage;
     protected final DataOutput out;
     protected final UTF8StringBuilder builder;
     protected final GrowableArray baaos;
 
-    protected AbstractStringConstructorEvaluator(IScalarEvaluator inputEval) {
+    protected AbstractStringConstructorEvaluator(IScalarEvaluator inputEval, SourceLocation sourceLoc) {
+        this.inputEval = inputEval;
+        this.sourceLoc = sourceLoc;
         resultStorage = new ArrayBackedValueStorage();
         out = resultStorage.getDataOutput();
         inputArg = new VoidPointable();
-        this.inputEval = inputEval;
         builder = new UTF8StringBuilder();
         baaos = new GrowableArray();
     }
@@ -68,7 +71,7 @@ public abstract class AbstractStringConstructorEvaluator implements IScalarEvalu
             resultStorage.reset();
             evaluateImpl(result);
         } catch (IOException e) {
-            throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
     }
 
@@ -156,7 +159,7 @@ public abstract class AbstractStringConstructorEvaluator implements IScalarEvalu
                 case MULTISET:
                 case UUID:
                 default:
-                    throw new UnsupportedTypeException(getIdentifier(), serString[offset]);
+                    throw new UnsupportedTypeException(sourceLoc, getIdentifier(), serString[offset]);
             }
             builder.finish();
             out.write(ATypeTag.SERIALIZED_STRING_TYPE_TAG);

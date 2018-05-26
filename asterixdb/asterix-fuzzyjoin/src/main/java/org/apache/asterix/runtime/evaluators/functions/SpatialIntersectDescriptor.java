@@ -122,7 +122,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 offset1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints1 < 3) {
-                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
+                                    ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
 
                         int counter = 0;
@@ -231,7 +232,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 offset1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints1 < 3) {
-                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
+                                    ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
                         for (int i = 0; i < numOfPoints1; i++) {
                             double startX2 = ADoubleSerializerDeserializer.getDouble(bytes1,
@@ -383,7 +385,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                         int v = middleVertex;
                         while (!foundEar) {
                             if (0 >= (nonSimplePolygonDetection--)) {
-                                throw new InvalidDataFormatException(getIdentifier(),
+                                throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                         ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                             }
                             int u = v;
@@ -676,7 +678,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 offset1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints1 < 3) {
-                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
+                                    ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
 
                         getCounterClockWisePolygon(bytes1, offset1, pointsOffsets1, numOfPoints1);
@@ -728,7 +731,8 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 offset0 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                         if (numOfPoints < 3) {
-                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
+                                    ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
 
                         getCounterClockWisePolygon(bytes0, offset0, pointsOffsets0, numOfPoints);
@@ -825,7 +829,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         res = pointInRectangle(bytes0, offset0, bytes1, offset1);
                                         break;
                                     default:
-                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                                 ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
@@ -894,7 +898,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         res = lineRectangleIntersection(bytes0, offset0, bytes1, offset1);
                                         break;
                                     default:
-                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                                 ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
@@ -916,7 +920,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                                 offset1 + APolygonSerializerDeserializer.getNumberOfPointsOffset());
 
                                         if (numOfPoints0 < 3 || numOfPoints1 < 3) {
-                                            throw new InvalidDataFormatException(getIdentifier(),
+                                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                                     ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                         }
 
@@ -987,7 +991,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         res = rectanglePolygonIntersection(bytes1, offset1, bytes0, offset0);
                                         break;
                                     default:
-                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                                 ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
@@ -1012,7 +1016,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         res = rectangleCircleIntersection(bytes1, offset1, bytes0, offset0);
                                         break;
                                     default:
-                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                                 ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
@@ -1061,7 +1065,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                         }
                                         break;
                                     default:
-                                        throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                        throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                                 ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_POLYGON_TYPE_TAG,
                                                 ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
@@ -1069,7 +1073,7 @@ public class SpatialIntersectDescriptor extends AbstractScalarFunctionDynamicDes
                                 }
                                 break;
                             default:
-                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                         ATypeTag.SERIALIZED_POINT_TYPE_TAG, ATypeTag.SERIALIZED_LINE_TYPE_TAG,
                                         ATypeTag.SERIALIZED_POLYGON_TYPE_TAG, ATypeTag.SERIALIZED_CIRCLE_TYPE_TAG,
                                         ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);

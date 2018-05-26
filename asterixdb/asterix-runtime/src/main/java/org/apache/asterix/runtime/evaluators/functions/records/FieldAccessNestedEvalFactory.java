@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -54,16 +55,17 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private IScalarEvaluatorFactory recordEvalFactory;
-    private ARecordType recordType;
-    private List<String> fieldPath;
+    private final IScalarEvaluatorFactory recordEvalFactory;
+    private final ARecordType recordType;
+    private final List<String> fieldPath;
+    private final SourceLocation sourceLoc;
 
     public FieldAccessNestedEvalFactory(IScalarEvaluatorFactory recordEvalFactory, ARecordType recordType,
-            List<String> fldName) {
+            List<String> fldName, SourceLocation sourceLoc) {
         this.recordEvalFactory = recordEvalFactory;
         this.recordType = recordType;
         this.fieldPath = fldName;
-
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -116,8 +118,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                     int len = inputArg0.getLength();
 
                     if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new TypeMismatchException(BuiltinFunctions.FIELD_ACCESS_NESTED, 0, serRecord[start],
-                                ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
+                        throw new TypeMismatchException(sourceLoc, BuiltinFunctions.FIELD_ACCESS_NESTED, 0,
+                                serRecord[start], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
 
                     int subFieldIndex = -1;
@@ -139,8 +141,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             subType = ((AUnionType) subType).getActualType();
                             byte serializedTypeTag = subType.getTypeTag().serialize();
                             if (serializedTypeTag != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                                throw new UnsupportedTypeException(BuiltinFunctions.FIELD_ACCESS_NESTED.getName(),
-                                        serializedTypeTag);
+                                throw new UnsupportedTypeException(sourceLoc,
+                                        BuiltinFunctions.FIELD_ACCESS_NESTED.getName(), serializedTypeTag);
                             }
                             if (subType.getTypeTag() == ATypeTag.OBJECT) {
                                 recTypeInfos[pathIndex].reset((ARecordType) subType);
@@ -195,7 +197,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                         // type check
                         if (pathIndex < fieldPointables.length - 1
                                 && serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                            throw new UnsupportedTypeException(BuiltinFunctions.FIELD_ACCESS_NESTED, serRecord[start]);
+                            throw new UnsupportedTypeException(sourceLoc, BuiltinFunctions.FIELD_ACCESS_NESTED,
+                                    serRecord[start]);
                         }
                     }
 
@@ -229,8 +232,8 @@ public class FieldAccessNestedEvalFactory implements IScalarEvaluatorFactory {
                             return;
                         }
                         if (serRecord[start] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                            throw new UnsupportedTypeException(BuiltinFunctions.FIELD_ACCESS_NESTED.getName(),
-                                    serRecord[start]);
+                            throw new UnsupportedTypeException(sourceLoc,
+                                    BuiltinFunctions.FIELD_ACCESS_NESTED.getName(), serRecord[start]);
                         }
                     }
                     // emit the final result.

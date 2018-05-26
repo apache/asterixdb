@@ -24,12 +24,14 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class SleepTypeComputer extends AbstractResultTypeComputer {
     public static final SleepTypeComputer INSTANCE = new SleepTypeComputer();
 
     @Override
-    public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    public void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         if (argIndex == 1) {
             switch (type.getTypeTag()) {
                 case TINYINT:
@@ -38,7 +40,7 @@ public class SleepTypeComputer extends AbstractResultTypeComputer {
                 case BIGINT:
                     break;
                 default:
-                    throw new TypeMismatchException(funcName, argIndex, type.getTypeTag(), ATypeTag.TINYINT,
+                    throw new TypeMismatchException(sourceLoc, funcName, argIndex, type.getTypeTag(), ATypeTag.TINYINT,
                             ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT);
             }
         }

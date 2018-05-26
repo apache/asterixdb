@@ -76,7 +76,9 @@ public class ExtractGroupByDecorVariablesRule implements IAlgebraicRewriteRule {
             exprs.add(exprRef);
 
             // Normalizes the decor entry -- expression be a variable reference
-            decorVarExpr.second = new MutableObject<>(new VariableReferenceExpression(newVar));
+            VariableReferenceExpression newVarRef = new VariableReferenceExpression(newVar);
+            newVarRef.setSourceLocation(expr.getSourceLocation());
+            decorVarExpr.second = new MutableObject<>(newVarRef);
         }
         if (!changed) {
             return false;

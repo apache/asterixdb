@@ -25,6 +25,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * This abstract class takes care of the handling of optional types.
@@ -39,23 +40,26 @@ public abstract class AbstractResultTypeComputer implements IResultTypeComputer 
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression functionCallExpression = (AbstractFunctionCallExpression) expression;
         String funcName = functionCallExpression.getFunctionIdentifier().getName();
-        return TypeComputeUtils.resolveResultType(expression, env, (index, type) -> checkArgType(funcName, index, type),
-                this::getResultType, propagateNullAndMissing());
+        return TypeComputeUtils.resolveResultType(expression, env,
+                (index, type, sourceLoc) -> checkArgType(funcName, index, type, sourceLoc), this::getResultType,
+                propagateNullAndMissing());
     }
 
     /**
      * Checks whether an input type violates the requirement.
      *
-     * @param funcName
-     *            the function name.
      * @param argIndex,
      *            the index of the argument to consider.
      * @param type,
      *            the type of the input argument.
+     * @param funcName
+     *            the function name.
+     * @param sourceLoc
+     *            the source location
      * @throws AlgebricksException
      */
-    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
-
+    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
     }
 
     /**

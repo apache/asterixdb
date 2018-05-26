@@ -63,7 +63,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.sort.SortGroupByOperatorDescriptor;
 
 public class SortGroupByPOperator extends AbstractPhysicalOperator {
@@ -258,10 +258,12 @@ public class SortGroupByPOperator extends AbstractPhysicalOperator {
         RecordDescriptor partialAggRecordDescriptor =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), localInputSchemas[0], context);
 
-        IAggregatorDescriptorFactory aggregatorFactory =
+        AbstractAggregatorDescriptorFactory aggregatorFactory =
                 new SimpleAlgebricksAccumulatingAggregatorFactory(aff, keyAndDecFields);
-        IAggregatorDescriptorFactory mergeFactory =
+        aggregatorFactory.setSourceLocation(gby.getSourceLocation());
+        AbstractAggregatorDescriptorFactory mergeFactory =
                 new SimpleAlgebricksAccumulatingAggregatorFactory(merges, keyAndDecFields);
+        mergeFactory.setSourceLocation(gby.getSourceLocation());
 
         INormalizedKeyComputerFactory normalizedKeyFactory = null;
         INormalizedKeyComputerFactoryProvider nkcfProvider = context.getNormalizedKeyComputerFactoryProvider();
@@ -275,6 +277,7 @@ public class SortGroupByPOperator extends AbstractPhysicalOperator {
         SortGroupByOperatorDescriptor gbyOpDesc = new SortGroupByOperatorDescriptor(spec, frameLimit, keys,
                 keyAndDecFields, normalizedKeyFactory, compFactories, aggregatorFactory, mergeFactory,
                 partialAggRecordDescriptor, recordDescriptor, false);
+        gbyOpDesc.setSourceLocation(gby.getSourceLocation());
 
         contributeOpDesc(builder, gby, gbyOpDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();

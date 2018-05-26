@@ -23,6 +23,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class IncompatibleTypeException extends CompilationException {
 
@@ -32,7 +33,19 @@ public class IncompatibleTypeException extends CompilationException {
     }
 
     // Incompatible input parameters, e.g., "1.0" > 1.0
+    public IncompatibleTypeException(SourceLocation sourceLoc, FunctionIdentifier fid, ATypeTag typeTagLeft,
+            ATypeTag typeTagRight) {
+        super(ErrorCode.COMPILATION_TYPE_INCOMPATIBLE, sourceLoc, fid.getName(), typeTagLeft, typeTagRight);
+    }
+
+    // Incompatible input parameters, e.g., "1.0" > 1.0
     public IncompatibleTypeException(String functionName, ATypeTag typeTagLeft, ATypeTag typeTagRight) {
         super(ErrorCode.COMPILATION_TYPE_INCOMPATIBLE, functionName, typeTagLeft, typeTagRight);
+    }
+
+    // Incompatible input parameters, e.g., "1.0" > 1.0
+    public IncompatibleTypeException(SourceLocation sourceLoc, String functionName, ATypeTag typeTagLeft,
+            ATypeTag typeTagRight) {
+        super(ErrorCode.COMPILATION_TYPE_INCOMPATIBLE, sourceLoc, functionName, typeTagLeft, typeTagRight);
     }
 }

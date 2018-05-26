@@ -94,11 +94,11 @@ public class TemporalIntervalStartDateAccessor extends AbstractScalarFunctionDyn
                                     aDate.setValue((int) (startTime));
                                     dateSerde.serialize(aDate, out);
                                 } else {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, bytes[startOffset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[startOffset],
                                         ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                             }
                         } catch (IOException e) {

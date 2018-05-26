@@ -22,17 +22,12 @@ package org.apache.asterix.runtime.exceptions;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnderflowException extends RuntimeDataException {
 
     // Underflow.
-    public UnderflowException(FunctionIdentifier fid) {
-        super(ErrorCode.UNDERFLOW, fid.getName());
+    public UnderflowException(SourceLocation sourceLoc, FunctionIdentifier fid) {
+        super(ErrorCode.UNDERFLOW, sourceLoc, fid.getName());
     }
-
-    // Underflow.
-    public UnderflowException(String functionName) {
-        super(ErrorCode.UNDERFLOW, functionName);
-    }
-
 }

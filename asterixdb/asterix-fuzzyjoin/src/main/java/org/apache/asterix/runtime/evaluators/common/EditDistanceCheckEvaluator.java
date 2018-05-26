@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -53,9 +54,9 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
     protected final ISerializerDeserializer<ABoolean> booleanSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
-    public EditDistanceCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
-        super(args, context);
+    public EditDistanceCheckEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(args, context, sourceLoc);
         edThreshEval = args[2].createScalarEvaluator(context);
         listBuilder = new OrderedListBuilder();
         listItemVal = new ArrayBackedValueStorage();
@@ -110,7 +111,7 @@ public class EditDistanceCheckEvaluator extends EditDistanceEvaluator {
             }
 
             default: {
-                throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE_CHECK, 0, argType.serialize(),
+                throw new TypeMismatchException(sourceLoc, BuiltinFunctions.EDIT_DISTANCE_CHECK, 0, argType.serialize(),
                         ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
 

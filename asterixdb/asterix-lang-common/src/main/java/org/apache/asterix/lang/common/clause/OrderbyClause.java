@@ -22,12 +22,12 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
 
-public class OrderbyClause implements Clause {
+public class OrderbyClause extends AbstractClause {
     private List<Expression> orderbyList;
     private List<OrderModifier> modifierList;
     private IRangeMap rangeMap;

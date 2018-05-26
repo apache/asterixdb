@@ -97,7 +97,7 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             int srcLen = argString.getLength();
                             // Type check for the first argument.
                             if (srcString[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new TypeMismatchException(getIdentifier(), 0, srcString[srcOffset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, srcString[srcOffset],
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
@@ -107,8 +107,8 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
                             int patternLen = argPattern.getLength();
                             // Type check for the second argument.
                             if (patternString[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                throw new TypeMismatchException(getIdentifier(), 1, patternString[patternOffset],
-                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 1,
+                                        patternString[patternOffset], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
                             // Sets the UTF8 String pointables.

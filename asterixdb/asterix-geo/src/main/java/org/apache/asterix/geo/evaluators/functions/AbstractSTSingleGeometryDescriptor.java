@@ -92,7 +92,7 @@ public abstract class AbstractSTSingleGeometryDescriptor extends AbstractScalarF
 
                 ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
                 if (tag != ATypeTag.GEOMETRY) {
-                    throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                    throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                             ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
                 }
 

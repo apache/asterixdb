@@ -117,6 +117,7 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
 
         InnerJoinOperator product =
                 new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+        product.setSourceLocation(op.getSourceLocation());
         // Outer branch.
         product.getInputs().add(new MutableObject<ILogicalOperator>(outerRoot));
         // Inner branch.

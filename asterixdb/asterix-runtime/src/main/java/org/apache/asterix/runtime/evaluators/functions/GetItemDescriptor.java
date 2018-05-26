@@ -61,7 +61,7 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
         return BuiltinFunctions.GET_ITEM;
     }
 
-    private static class GetItemEvalFactory implements IScalarEvaluatorFactory {
+    private class GetItemEvalFactory implements IScalarEvaluatorFactory {
 
         private static final long serialVersionUID = 1L;
         private IScalarEvaluatorFactory listEvalFactory;
@@ -105,8 +105,8 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             itemIndex = ATypeHierarchy.getIntegerValue(BuiltinFunctions.GET_ITEM.getName(), 0,
                                     indexBytes, indexOffset);
                         } else {
-                            throw new TypeMismatchException(BuiltinFunctions.GET_ITEM, 0, serOrderedList[offset],
-                                    ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
+                            throw new TypeMismatchException(sourceLoc, BuiltinFunctions.GET_ITEM, 0,
+                                    serOrderedList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                         }
 
                         if (itemIndex < 0 || itemIndex >= AOrderedListSerializerDeserializer

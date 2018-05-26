@@ -69,7 +69,8 @@ public class ExtractDistinctByExpressionsRule extends AbstractExtractExprRule {
                 continue;
             }
             LogicalVariable v = extractExprIntoAssignOpRef(expr.getValue(), opRef2, context);
-            ILogicalExpression newExpr = new VariableReferenceExpression(v);
+            VariableReferenceExpression newExpr = new VariableReferenceExpression(v);
+            newExpr.setSourceLocation(expr.getValue().getSourceLocation());
             newExprList.add(new MutableObject<ILogicalExpression>(newExpr));
             changed = true;
         }

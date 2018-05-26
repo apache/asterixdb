@@ -82,7 +82,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
                                     argPtr.getStartOffset() + 1);
                             if (argResult) {
                                 LOGGER.log(Level.ERROR, ctx.getTaskAttemptId() + " injecting failure");
-                                throw new RuntimeDataException(ErrorCode.INJECTED_FAILURE, getIdentifier());
+                                throw new RuntimeDataException(ErrorCode.INJECTED_FAILURE, sourceLoc, getIdentifier());
                             }
                         }
 

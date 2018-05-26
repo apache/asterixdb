@@ -102,6 +102,7 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
@@ -190,6 +191,8 @@ public class APIFramework {
         // establish facts
         final boolean isQuery = query != null;
         final boolean isLoad = statement != null && statement.getKind() == Statement.Kind.LOAD;
+        final SourceLocation sourceLoc =
+                query != null ? query.getSourceLocation() : statement != null ? statement.getSourceLocation() : null;
 
         SessionConfig conf = output.config();
         if (isQuery && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
@@ -209,9 +212,9 @@ public class APIFramework {
             generateLogicalPlan(plan, output.config().getPlanFormat());
         }
         CompilerProperties compilerProperties = metadataProvider.getApplicationContext().getCompilerProperties();
-        Map<String, String> querySpecificConfig = validateConfig(metadataProvider.getConfig());
+        Map<String, String> querySpecificConfig = validateConfig(metadataProvider.getConfig(), sourceLoc);
         final PhysicalOptimizationConfig physOptConf =
-                getPhysicalOptimizationConfig(compilerProperties, querySpecificConfig);
+                getPhysicalOptimizationConfig(compilerProperties, querySpecificConfig, sourceLoc);
 
         HeuristicCompilerFactoryBuilder builder =
                 new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
@@ -300,20 +303,20 @@ public class APIFramework {
     }
 
     protected PhysicalOptimizationConfig getPhysicalOptimizationConfig(CompilerProperties compilerProperties,
-            Map<String, String> querySpecificConfig) throws AlgebricksException {
+            Map<String, String> querySpecificConfig, SourceLocation sourceLoc) throws AlgebricksException {
         int frameSize = compilerProperties.getFrameSize();
         int sortFrameLimit = getFrameLimit(CompilerProperties.COMPILER_SORTMEMORY_KEY,
                 querySpecificConfig.get(CompilerProperties.COMPILER_SORTMEMORY_KEY),
-                compilerProperties.getSortMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_SORT);
+                compilerProperties.getSortMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_SORT, sourceLoc);
         int groupFrameLimit = getFrameLimit(CompilerProperties.COMPILER_GROUPMEMORY_KEY,
                 querySpecificConfig.get(CompilerProperties.COMPILER_GROUPMEMORY_KEY),
-                compilerProperties.getGroupMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_GROUP_BY);
+                compilerProperties.getGroupMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_GROUP_BY, sourceLoc);
         int joinFrameLimit = getFrameLimit(CompilerProperties.COMPILER_JOINMEMORY_KEY,
                 querySpecificConfig.get(CompilerProperties.COMPILER_JOINMEMORY_KEY),
-                compilerProperties.getJoinMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_JOIN);
+                compilerProperties.getJoinMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_JOIN, sourceLoc);
         int textSearchFrameLimit = getFrameLimit(CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY,
                 querySpecificConfig.get(CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY),
-                compilerProperties.getTextSearchMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_TEXTSEARCH);
+                compilerProperties.getTextSearchMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_TEXTSEARCH, sourceLoc);
         final PhysicalOptimizationConfig physOptConf = OptimizationConfUtil.getPhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
         physOptConf.setMaxFramesExternalSort(sortFrameLimit);
@@ -450,12 +453,17 @@ public class APIFramework {
 
     // Gets the frame limit.
     private static int getFrameLimit(String parameterName, String parameter, long memBudgetInConfiguration,
-            int frameSize, int minFrameLimit) throws AlgebricksException {
+            int frameSize, int minFrameLimit, SourceLocation sourceLoc) throws AlgebricksException {
         IOptionType<Long> longBytePropertyInterpreter = OptionTypes.LONG_BYTE_UNIT;
-        long memBudget = parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.parse(parameter);
+        long memBudget;
+        try {
+            memBudget = parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.parse(parameter);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
         int frameLimit = (int) (memBudget / frameSize);
         if (frameLimit < minFrameLimit) {
-            throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, parameterName,
+            throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, sourceLoc, parameterName,
                     frameSize * minFrameLimit);
         }
         // Sets the frame limit to the minimum frame limit if the caculated frame limit is too small.
@@ -469,10 +477,12 @@ public class APIFramework {
     }
 
     // Validates if the query contains unsupported query parameters.
-    private static Map<String, String> validateConfig(Map<String, String> config) throws AlgebricksException {
+    private static Map<String, String> validateConfig(Map<String, String> config, SourceLocation sourceLoc)
+            throws AlgebricksException {
         for (String parameterName : config.keySet()) {
             if (!CONFIGURABLE_PARAMETER_NAMES.contains(parameterName)) {
-                throw AsterixException.create(ErrorCode.COMPILATION_UNSUPPORTED_QUERY_PARAMETER, parameterName);
+                throw AsterixException.create(ErrorCode.COMPILATION_UNSUPPORTED_QUERY_PARAMETER, sourceLoc,
+                        parameterName);
             }
         }
         return config;

@@ -22,18 +22,10 @@ public class NotImplementedException extends RuntimeException {
     private static final long serialVersionUID = 2L;
 
     public NotImplementedException() {
-        System.err.println("Not implemented.");
+        super("Not implemented.");
     }
 
     public NotImplementedException(String message) {
         super(message);
-    }
-
-    public NotImplementedException(Throwable cause) {
-        super(cause);
-    }
-
-    public NotImplementedException(String message, Throwable cause) {
-        super(message, cause);
     }
 }

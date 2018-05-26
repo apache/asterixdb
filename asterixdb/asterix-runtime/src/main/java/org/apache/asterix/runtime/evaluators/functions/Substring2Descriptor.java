@@ -91,7 +91,7 @@ public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescri
                         offset = argString.getStartOffset();
                         int len = argString.getLength();
                         if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
                         string.set(bytes, offset + 1, len - 1);

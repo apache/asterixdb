@@ -53,7 +53,7 @@ public class ToDoubleDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractDoubleConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
+                return new AbstractDoubleConstructorEvaluator(args[0].createScalarEvaluator(ctx), sourceLoc) {
                     @Override
                     protected void evaluateImpl(IPointable result) throws IOException {
                         byte[] bytes = inputArg.getByteArray();

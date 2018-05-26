@@ -212,7 +212,10 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
     private ILogicalExpression getScalarExpr(FunctionIdentifier func, ILogicalExpression interval) {
         List<Mutable<ILogicalExpression>> intervalArg = new ArrayList<>();
         intervalArg.add(new MutableObject<ILogicalExpression>(interval));
-        return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(func), intervalArg);
+        ScalarFunctionCallExpression fnExpr =
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(func), intervalArg);
+        fnExpr.setSourceLocation(interval.getSourceLocation());
+        return fnExpr;
     }
 
     private ILogicalExpression getScalarExpr(FunctionIdentifier func, ILogicalExpression interval1,
@@ -220,7 +223,10 @@ public class TranslateIntervalExpressionRule implements IAlgebraicRewriteRule {
         List<Mutable<ILogicalExpression>> intervalArg = new ArrayList<>();
         intervalArg.add(new MutableObject<ILogicalExpression>(interval1));
         intervalArg.add(new MutableObject<ILogicalExpression>(interval2));
-        return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(func), intervalArg);
+        ScalarFunctionCallExpression fnExpr =
+                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(func), intervalArg);
+        fnExpr.setSourceLocation(interval1.getSourceLocation());
+        return fnExpr;
     }
 
 }

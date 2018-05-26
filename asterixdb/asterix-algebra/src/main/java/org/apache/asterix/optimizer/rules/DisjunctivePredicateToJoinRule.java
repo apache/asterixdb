@@ -51,6 +51,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
 
@@ -117,6 +118,8 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
             }
         }
 
+        SourceLocation sourceLoc = select.getSourceLocation();
+
         AOrderedList list = new AOrderedList(new AOrderedListType(valType, "orderedlist"));
         for (AsterixConstantValue value : values) {
             list.add(value.getObject());
@@ -129,14 +132,19 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
         Mutable<ILogicalExpression> mutCExp = new MutableObject<>(cExp);
         IFunctionInfo scanFctInfo = BuiltinFunctions.getAsterixFunctionInfo(BuiltinFunctions.SCAN_COLLECTION);
         UnnestingFunctionCallExpression scanExp = new UnnestingFunctionCallExpression(scanFctInfo, mutCExp);
+        scanExp.setSourceLocation(sourceLoc);
         LogicalVariable scanVar = context.newVar();
         UnnestOperator unn = new UnnestOperator(scanVar, new MutableObject<>(scanExp));
+        unn.setSourceLocation(sourceLoc);
         unn.getInputs().add(new MutableObject<>(ets));
         context.computeAndSetTypeEnvironmentForOperator(unn);
 
         IFunctionInfo eqFctInfo = BuiltinFunctions.getAsterixFunctionInfo(AlgebricksBuiltinFunctions.EQ);
         AbstractFunctionCallExpression eqExp = new ScalarFunctionCallExpression(eqFctInfo);
-        eqExp.getArguments().add(new MutableObject<>(new VariableReferenceExpression(scanVar)));
+        eqExp.setSourceLocation(sourceLoc);
+        VariableReferenceExpression scanVarRef = new VariableReferenceExpression(scanVar);
+        scanVarRef.setSourceLocation(sourceLoc);
+        eqExp.getArguments().add(new MutableObject<>(scanVarRef));
         eqExp.getArguments().add(new MutableObject<>(varEx.cloneExpression()));
         eqExp.getAnnotations().put(IndexedNLJoinExpressionAnnotation.INSTANCE,
                 IndexedNLJoinExpressionAnnotation.INSTANCE);
@@ -145,6 +153,7 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
         eqExp.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
 
         InnerJoinOperator jOp = new InnerJoinOperator(new MutableObject<>(eqExp));
+        jOp.setSourceLocation(sourceLoc);
         jOp.getInputs().add(new MutableObject<>(unn));
         jOp.getInputs().add(select.getInputs().get(0));
 

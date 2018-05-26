@@ -101,6 +101,7 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         SubplanRuntimeFactory runtime =
                 new SubplanRuntimeFactory(np, missingWriterFactories, inputRecordDesc, recDesc, null);
+        runtime.setSourceLocation(subplan.getSourceLocation());
         builder.contributeMicroOperator(subplan, runtime, recDesc);
 
         ILogicalOperator src = op.getInputs().get(0).getValue();

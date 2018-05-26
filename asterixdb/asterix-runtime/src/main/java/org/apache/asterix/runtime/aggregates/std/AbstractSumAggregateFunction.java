@@ -41,18 +41,18 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
-import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractSumAggregateFunction implements IAggregateEvaluator {
+public abstract class AbstractSumAggregateFunction extends AbstractAggregateFunction {
     protected ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private IPointable inputVal = new VoidPointable();
     private IScalarEvaluator eval;
@@ -67,8 +67,9 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
     @SuppressWarnings("rawtypes")
     protected ISerializerDeserializer serde;
 
-    public AbstractSumAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
+    public AbstractSumAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(sourceLoc);
         eval = args[0].createScalarEvaluator(context);
     }
 
@@ -94,7 +95,8 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(BuiltinFunctions.SUM, typeTag.serialize(), aggType.serialize());
+            throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.SUM, typeTag.serialize(),
+                    aggType.serialize());
         }
 
         if (ATypeHierarchy.canPromote(aggType, typeTag)) {
@@ -137,7 +139,7 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
                 break;
             }
             default: {
-                throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, aggType.serialize());
+                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.SUM, aggType.serialize());
             }
         }
     }
@@ -194,7 +196,7 @@ public abstract class AbstractSumAggregateFunction implements IAggregateEvaluato
                     break;
                 }
                 default:
-                    throw new UnsupportedItemTypeException(BuiltinFunctions.SUM, aggType.serialize());
+                    throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.SUM, aggType.serialize());
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);

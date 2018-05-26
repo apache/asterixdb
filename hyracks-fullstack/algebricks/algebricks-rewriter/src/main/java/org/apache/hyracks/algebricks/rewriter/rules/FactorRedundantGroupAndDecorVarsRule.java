@@ -39,6 +39,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FactorRedundantGroupAndDecorVarsRule implements IAlgebraicRewriteRule {
 
@@ -78,8 +79,11 @@ public class FactorRedundantGroupAndDecorVarsRule implements IAlgebraicRewriteRu
             LogicalVariable lhs = varRhsToLhs.get(v);
             if (lhs != null) {
                 if (p.first != null) {
-                    AssignOperator assign = new AssignOperator(p.first,
-                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(lhs)));
+                    VariableReferenceExpression lhsRef = new VariableReferenceExpression(lhs);
+                    SourceLocation sourceLoc = p.second.getValue().getSourceLocation();
+                    lhsRef.setSourceLocation(sourceLoc);
+                    AssignOperator assign = new AssignOperator(p.first, new MutableObject<ILogicalExpression>(lhsRef));
+                    assign.setSourceLocation(sourceLoc);
                     ILogicalOperator op = opRef.getValue();
                     assign.getInputs().add(new MutableObject<ILogicalOperator>(op));
                     opRef.setValue(assign);

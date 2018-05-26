@@ -86,7 +86,7 @@ public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                             ABoolean aResult = argRes ? ABoolean.FALSE : ABoolean.TRUE;
                             booleanSerde.serialize(aResult, out);
                         } else {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
                         }
                         result.set(resultStorage);

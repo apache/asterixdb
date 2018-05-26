@@ -28,6 +28,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class NonTaggedGetItemResultType extends AbstractResultTypeComputer {
 
@@ -37,15 +38,17 @@ public class NonTaggedGetItemResultType extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
         if (argIndex == 0) {
             if (type.getTypeTag() != ATypeTag.MULTISET && type.getTypeTag() != ATypeTag.ARRAY) {
-                throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING, ATypeTag.ARRAY);
+                throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.STRING,
+                        ATypeTag.ARRAY);
             }
         } else {
             if (!ATypeHierarchy.isCompatible(type.getTypeTag(), ATypeTag.INTEGER)) {
-                throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.INTEGER);
+                throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.INTEGER);
             }
         }
     }

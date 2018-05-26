@@ -77,7 +77,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             // therefore we propagate the substitution environment.
             currentEnv = p.second;
         }
-        return new Pair<>(new FromClause(newFromTerms), currentEnv);
+        FromClause newFromClause = new FromClause(newFromTerms);
+        newFromClause.setSourceLocation(fromClause.getSourceLocation());
+        return new Pair<>(newFromClause, currentEnv);
     }
 
     @Override
@@ -114,7 +116,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 }
             }
         }
-        return new Pair<>(new FromTerm(newLeftExpr, newLeftVar, newLeftPosVar, newCorrelateClauses), currentEnv);
+        FromTerm newFromTerm = new FromTerm(newLeftExpr, newLeftVar, newLeftPosVar, newCorrelateClauses);
+        newFromTerm.setSourceLocation(fromTerm.getSourceLocation());
+        return new Pair<>(newFromTerm, currentEnv);
     }
 
     @Override
@@ -139,6 +143,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
 
         JoinClause newJoinClause =
                 new JoinClause(joinClause.getJoinType(), newRightExpr, newRightVar, newRightPosVar, conditionExpr);
+        newJoinClause.setSourceLocation(joinClause.getSourceLocation());
         return new Pair<>(newJoinClause, currentEnv);
     }
 
@@ -162,9 +167,10 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         // The condition can refer to the newRightVar and newRightPosVar.
         Expression conditionExpr = (Expression) nestClause.getConditionExpression().accept(this, currentEnv).first;
 
-        NestClause newJoinClause =
+        NestClause newNestClause =
                 new NestClause(nestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar, conditionExpr);
-        return new Pair<>(newJoinClause, currentEnv);
+        newNestClause.setSourceLocation(nestClause.getSourceLocation());
+        return new Pair<>(newNestClause, currentEnv);
     }
 
     @Override
@@ -185,9 +191,10 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             currentEnv.removeSubstitution(newRightPosVar);
         }
         // The condition can refer to the newRightVar and newRightPosVar.
-        UnnestClause newJoinClause =
+        UnnestClause newUnnestClause =
                 new UnnestClause(unnestClause.getJoinType(), rightExpr, newRightVar, newRightPosVar);
-        return new Pair<>(newJoinClause, currentEnv);
+        newUnnestClause.setSourceLocation(unnestClause.getSourceLocation());
+        return new Pair<>(newUnnestClause, currentEnv);
     }
 
     @Override
@@ -198,6 +205,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         }
         Projection newProjection = new Projection((Expression) projection.getExpression().accept(this, env).first,
                 projection.getName(), projection.star(), projection.varStar());
+        newProjection.setSourceLocation(projection.getSourceLocation());
         return new Pair<>(newProjection, env);
     }
 
@@ -255,8 +263,10 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         WhereClause whereClause = newWhere == null ? null : (WhereClause) newWhere.first;
         GroupbyClause groupbyClause = newGroupby == null ? null : (GroupbyClause) newGroupby.first;
         HavingClause havingClause = newHaving == null ? null : (HavingClause) newHaving.first;
-        return new Pair<>(new SelectBlock((SelectClause) newSelect.first, fromClause, newLetClauses, whereClause,
-                groupbyClause, newLetClausesAfterGby, havingClause), currentEnv);
+        SelectBlock newSelectBlock = new SelectBlock((SelectClause) newSelect.first, fromClause, newLetClauses,
+                whereClause, groupbyClause, newLetClausesAfterGby, havingClause);
+        newSelectBlock.setSourceLocation(selectBlock.getSourceLocation());
+        return new Pair<>(newSelectBlock, currentEnv);
     }
 
     @Override
@@ -266,13 +276,15 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         if (selectClause.selectElement()) {
             Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectElement =
                     selectClause.getSelectElement().accept(this, env);
-            return new Pair<>(new SelectClause((SelectElement) newSelectElement.first, null, distinct),
-                    newSelectElement.second);
+            SelectClause newSelectClause = new SelectClause((SelectElement) newSelectElement.first, null, distinct);
+            newSelectClause.setSourceLocation(selectClause.getSourceLocation());
+            return new Pair<>(newSelectClause, newSelectElement.second);
         } else {
             Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectRegular =
                     selectClause.getSelectRegular().accept(this, env);
-            return new Pair<>(new SelectClause(null, (SelectRegular) newSelectRegular.first, distinct),
-                    newSelectRegular.second);
+            SelectClause newSelectClause = new SelectClause(null, (SelectRegular) newSelectRegular.first, distinct);
+            newSelectClause.setSourceLocation(selectClause.getSourceLocation());
+            return new Pair<>(newSelectClause, newSelectRegular.second);
         }
     }
 
@@ -281,7 +293,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> newExpr =
                 selectElement.getExpression().accept(this, env);
-        return new Pair<>(new SelectElement((Expression) newExpr.first), newExpr.second);
+        SelectElement newSelectElement = new SelectElement((Expression) newExpr.first);
+        newSelectElement.setSourceLocation(selectElement.getSourceLocation());
+        return new Pair<>(newSelectElement, newExpr.second);
     }
 
     @Override
@@ -291,7 +305,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         for (Projection projection : selectRegular.getProjections()) {
             newProjections.add((Projection) projection.accept(this, env).first);
         }
-        return new Pair<>(new SelectRegular(newProjections), env);
+        SelectRegular newSelectRegular = new SelectRegular(newProjections);
+        newSelectRegular.setSourceLocation(selectRegular.getSourceLocation());
+        return new Pair<>(newSelectRegular, env);
     }
 
     @Override
@@ -329,6 +345,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             }
         }
         SelectSetOperation newSelectSetOperation = new SelectSetOperation(newLeftInput, newRightInputs);
+        newSelectSetOperation.setSourceLocation(selectSetOperation.getSourceLocation());
         return new Pair<>(newSelectSetOperation, selectSetOperation.hasRightInputs() ? env : leftResult.second);
     }
 
@@ -366,9 +383,10 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             newLimitClause = (LimitClause) p.first;
             currentEnv = p.second;
         }
-        return new Pair<>(
-                new SelectExpression(newLetList, newSelectSetOperation, newOrderbyClause, newLimitClause, subquery),
-                currentEnv);
+        SelectExpression newSelectExpression =
+                new SelectExpression(newLetList, newSelectSetOperation, newOrderbyClause, newLimitClause, subquery);
+        newSelectExpression.setSourceLocation(selectExpression.getSourceLocation());
+        return new Pair<>(newSelectExpression, currentEnv);
     }
 
     @Override
@@ -376,6 +394,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             VariableSubstitutionEnvironment env) throws CompilationException {
         Pair<ILangExpression, VariableSubstitutionEnvironment> p = havingClause.getFilterExpression().accept(this, env);
         HavingClause newHavingClause = new HavingClause((Expression) p.first);
+        newHavingClause.setSourceLocation(havingClause.getSourceLocation());
         return new Pair<>(newHavingClause, p.second);
     }
 
@@ -389,7 +408,7 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 VariableCloneAndSubstitutionUtil.visitAndCloneExprList(caseExpr.getThenExprs(), env, this);
         Expression elseExpr = (Expression) caseExpr.getElseExpr().accept(this, env).first;
         CaseExpression newCaseExpr = new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
+        newCaseExpr.setSourceLocation(caseExpr.getSourceLocation());
         return new Pair<>(newCaseExpr, env);
     }
-
 }

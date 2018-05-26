@@ -23,6 +23,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnsupportedItemTypeException extends CompilationException {
 
@@ -32,7 +33,17 @@ public class UnsupportedItemTypeException extends CompilationException {
     }
 
     // Unsupported item type.
+    public UnsupportedItemTypeException(SourceLocation sourceLoc, FunctionIdentifier fid, ATypeTag itemTypeTag) {
+        super(ErrorCode.COMPILATION_TYPE_ITEM, sourceLoc, fid.getName(), itemTypeTag);
+    }
+
+    // Unsupported item type.
     public UnsupportedItemTypeException(String functionName, ATypeTag itemTypeTag) {
         super(ErrorCode.COMPILATION_TYPE_ITEM, functionName, itemTypeTag);
+    }
+
+    // Unsupported item type.
+    public UnsupportedItemTypeException(SourceLocation sourceLoc, String functionName, ATypeTag itemTypeTag) {
+        super(ErrorCode.COMPILATION_TYPE_ITEM, sourceLoc, functionName, itemTypeTag);
     }
 }

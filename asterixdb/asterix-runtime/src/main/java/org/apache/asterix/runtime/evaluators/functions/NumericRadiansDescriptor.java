@@ -46,7 +46,7 @@ public class NumericRadiansDescriptor extends AbstractScalarFunctionDynamicDescr
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractUnaryNumericDoubleFunctionEval(ctx, args[0], getIdentifier()) {
+                return new AbstractUnaryNumericDoubleFunctionEval(ctx, args[0], getIdentifier(), sourceLoc) {
                     @Override
                     protected void processDouble(double arg, IPointable resultPointable) throws HyracksDataException {
                         aDouble.setValue(Math.toRadians(arg));

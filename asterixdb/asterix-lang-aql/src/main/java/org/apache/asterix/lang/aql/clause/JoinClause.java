@@ -22,11 +22,12 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.aql.visitor.base.IAQLPlusVisitor;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class JoinClause implements Clause {
+public class JoinClause extends AbstractClause {
 
     public static enum JoinKind {
         INNER,

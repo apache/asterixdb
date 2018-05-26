@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntroduceCombinerRule {
 
@@ -105,7 +106,9 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         for (LogicalVariable var : freeVars) {
             if (!propagatedVars.contains(var)) {
                 LogicalVariable newDecorVar = context.newVar();
-                newGbyOp.addDecorExpression(newDecorVar, new VariableReferenceExpression(var));
+                VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+                varRef.setSourceLocation(gbyOp.getSourceLocation());
+                newGbyOp.addDecorExpression(newDecorVar, varRef);
                 VariableUtilities.substituteVariables(gbyOp.getNestedPlans().get(0).getRoots().get(0).getValue(), var,
                         newDecorVar, context);
             }
@@ -128,10 +131,12 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
 
     private GroupByOperator opToPush(GroupByOperator gbyOp, BookkeepingInfo bi, IOptimizationContext context)
             throws AlgebricksException {
+        SourceLocation sourceLoc = gbyOp.getSourceLocation();
         // Hook up input to new group-by.
         Mutable<ILogicalOperator> opRef3 = gbyOp.getInputs().get(0);
         ILogicalOperator op3 = opRef3.getValue();
         GroupByOperator newGbyOp = new GroupByOperator();
+        newGbyOp.setSourceLocation(sourceLoc);
         newGbyOp.getInputs().add(new MutableObject<ILogicalOperator>(op3));
         // Copy annotations.
         Map<String, Object> annotations = newGbyOp.getAnnotations();
@@ -199,7 +204,9 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         // set the vars in the new op
         int n = newOpGbyList.size();
         for (int i = 0; i < n; i++) {
-            newGbyOp.addGbyExpression(replGbyList.get(i), new VariableReferenceExpression(newOpGbyList.get(i)));
+            VariableReferenceExpression varRef = new VariableReferenceExpression(newOpGbyList.get(i));
+            varRef.setSourceLocation(sourceLoc);
+            newGbyOp.addGbyExpression(replGbyList.get(i), varRef);
             VariableUtilities.substituteVariables(gbyOp, newOpGbyList.get(i), replGbyList.get(i), false, context);
         }
 

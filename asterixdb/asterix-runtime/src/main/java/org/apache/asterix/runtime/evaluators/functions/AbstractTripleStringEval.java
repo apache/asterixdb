@@ -28,6 +28,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -55,13 +56,16 @@ abstract class AbstractTripleStringEval implements IScalarEvaluator {
 
     // Function ID, for error reporting.
     protected final FunctionIdentifier funcID;
+    protected final SourceLocation sourceLoc;
 
     AbstractTripleStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0, IScalarEvaluatorFactory eval1,
-            IScalarEvaluatorFactory eval2, FunctionIdentifier funcID) throws HyracksDataException {
+            IScalarEvaluatorFactory eval2, FunctionIdentifier funcID, SourceLocation sourceLoc)
+            throws HyracksDataException {
         this.eval0 = eval0.createScalarEvaluator(context);
         this.eval1 = eval1.createScalarEvaluator(context);
         this.eval2 = eval2.createScalarEvaluator(context);
         this.funcID = funcID;
+        this.sourceLoc = sourceLoc;
     }
 
     @SuppressWarnings("unchecked")
@@ -87,13 +91,13 @@ abstract class AbstractTripleStringEval implements IScalarEvaluator {
 
         // Type check.
         if (bytes0[start0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 0, bytes0[start0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, funcID, 0, bytes0[start0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         if (bytes1[start1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 1, bytes1[start1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, funcID, 1, bytes1[start1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         if (bytes2[start2] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 2, bytes2[start2], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, funcID, 2, bytes2[start2], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
 
         // Sets argument UTF8Pointables.

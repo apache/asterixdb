@@ -51,7 +51,7 @@ public class LessThanDescriptor extends AbstractScalarFunctionDynamicDescriptor 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractValueComparisonEvaluator(args[0].createScalarEvaluator(ctx),
-                        args[1].createScalarEvaluator(ctx)) {
+                        args[1].createScalarEvaluator(ctx), sourceLoc) {
 
                     @Override
                     protected boolean getComparisonResult(int r) {

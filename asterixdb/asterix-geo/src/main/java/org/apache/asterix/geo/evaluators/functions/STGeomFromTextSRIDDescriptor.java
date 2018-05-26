@@ -110,10 +110,12 @@ public class STGeomFromTextSRIDDescriptor extends AbstractScalarFunctionDynamicD
             int offset0 = inputArg0.getStartOffset();
 
             if (data[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                throw new TypeMismatchException(getIdentifier(), 0, data[offset], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data[offset],
+                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
             }
             if (data0[offset0] != ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-                throw new TypeMismatchException(getIdentifier(), 0, data0[offset0], ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data0[offset0],
+                        ATypeTag.SERIALIZED_INT64_TYPE_TAG);
             }
 
             ByteArrayInputStream inStream = new ByteArrayInputStream(data, offset + 1, len - 1);
@@ -133,7 +135,8 @@ public class STGeomFromTextSRIDDescriptor extends AbstractScalarFunctionDynamicD
                 result.set(resultStorage);
 
             } catch (IOException e) {
-                throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
+                throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
+                        ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
 
         }

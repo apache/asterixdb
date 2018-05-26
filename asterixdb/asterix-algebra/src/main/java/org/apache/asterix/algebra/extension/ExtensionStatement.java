@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.algebra.extension;
 
-import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
@@ -29,7 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 /**
  * An interface that provides an extension mechanism to extend a language with additional statements
  */
-public abstract class ExtensionStatement implements Statement {
+public abstract class ExtensionStatement extends AbstractStatement {
 
     @Override
     public final Kind getKind() {

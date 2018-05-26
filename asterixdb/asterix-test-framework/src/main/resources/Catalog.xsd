@@ -63,6 +63,14 @@
             </xs:annotation>
          </xs:attribute>
 
+         <xs:attribute name="SourceLocation" type="xs:boolean" default="false">
+            <xs:annotation>
+               <xs:documentation>
+                  whether to expect a source location in error messages
+               </xs:documentation>
+            </xs:annotation>
+         </xs:attribute>
+
       </xs:complexType>
 
       <xs:unique name="unique-test-group">
@@ -156,6 +164,17 @@
                      <xs:annotation>
                         <xs:documentation>
                            Zero or more expected errors for this query.
+                        </xs:documentation>
+                     </xs:annotation>
+                  </xs:element>
+
+                  <!-- Whether the source location is expected in the error message -->
+
+                  <xs:element name="source-location" type="xs:boolean" minOccurs="0">
+                     <xs:annotation>
+                        <xs:documentation>
+                           Whether to expect a source location in the error message
+                           (default is defined by the test-suite element)
                         </xs:documentation>
                      </xs:annotation>
                   </xs:element>

@@ -53,7 +53,7 @@ public class AvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new AvgAggregateFunction(args, ctx);
+                return new AvgAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

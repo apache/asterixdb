@@ -21,13 +21,14 @@ package org.apache.asterix.lang.common.statement;
 import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class DeleteStatement implements Statement {
+public class DeleteStatement extends AbstractStatement {
 
     private VariableExpr vars;
     private Identifier dataverseName;

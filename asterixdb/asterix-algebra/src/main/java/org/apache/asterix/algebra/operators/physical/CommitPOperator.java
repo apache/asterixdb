@@ -85,6 +85,7 @@ public class CommitPOperator extends AbstractPhysicalOperator {
 
         //get dataset splits
         IPushRuntimeFactory runtime = dataset.getCommitRuntimeFactory(metadataProvider, primaryKeyFields, isSink);
+        runtime.setSourceLocation(op.getSourceLocation());
         builder.contributeMicroOperator(op, runtime, recDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

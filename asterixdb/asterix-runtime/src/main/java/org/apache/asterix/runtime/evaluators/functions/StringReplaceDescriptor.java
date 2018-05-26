@@ -48,7 +48,7 @@ public class StringReplaceDescriptor extends AbstractScalarFunctionDynamicDescri
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractTripleStringEval(ctx, args[0], args[1], args[2], getIdentifier()) {
+                return new AbstractTripleStringEval(ctx, args[0], args[1], args[2], getIdentifier(), sourceLoc) {
 
                     final StringReplacer replacer = new StringReplacer();
 

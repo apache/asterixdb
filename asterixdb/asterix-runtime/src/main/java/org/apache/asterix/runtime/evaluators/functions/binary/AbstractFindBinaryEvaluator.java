@@ -28,6 +28,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -46,8 +47,8 @@ public abstract class AbstractFindBinaryEvaluator extends AbstractBinaryScalarEv
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
     public AbstractFindBinaryEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory[] copyEvaluatorFactories,
-            int baseOffset, String functionName) throws HyracksDataException {
-        super(context, copyEvaluatorFactories);
+            int baseOffset, String functionName, SourceLocation sourceLoc) throws HyracksDataException {
+        super(context, copyEvaluatorFactories, sourceLoc);
         this.baseOffset = baseOffset;
         this.functionName = functionName;
     }

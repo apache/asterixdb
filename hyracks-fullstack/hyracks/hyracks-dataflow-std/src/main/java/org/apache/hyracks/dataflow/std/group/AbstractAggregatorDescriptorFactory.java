@@ -16,14 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.translator;
 
-import org.apache.asterix.common.exceptions.CompilationException;
+package org.apache.hyracks.dataflow.std.group;
 
-public class TranslationException extends CompilationException {
-    private static final long serialVersionUID = 685960054131778068L;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
-    public TranslationException(String msg) {
-        super(msg);
+public abstract class AbstractAggregatorDescriptorFactory implements IAggregatorDescriptorFactory {
+    private static final long serialVersionUID = 1L;
+
+    protected SourceLocation sourceLoc;
+
+    public SourceLocation getSourceLocation() {
+        return sourceLoc;
+    }
+
+    public void setSourceLocation(SourceLocation sourceLoc) {
+        this.sourceLoc = sourceLoc;
     }
 }

@@ -42,6 +42,7 @@ public class MergeAggregationExpressionFactory implements IMergeAggregationExpre
         AggregateFunctionCallExpression agg = (AggregateFunctionCallExpression) expr;
         FunctionIdentifier fid = agg.getFunctionIdentifier();
         VariableReferenceExpression tempVarExpr = new VariableReferenceExpression(originalProducedVar);
+        tempVarExpr.setSourceLocation(agg.getSourceLocation());
         List<Mutable<ILogicalExpression>> arguments = new ArrayList<Mutable<ILogicalExpression>>();
         Mutable<ILogicalExpression> mutableExpression = new MutableObject<ILogicalExpression>(tempVarExpr);
         arguments.add(mutableExpression);
@@ -56,6 +57,9 @@ public class MergeAggregationExpressionFactory implements IMergeAggregationExpre
              */
             return null;
         }
-        return BuiltinFunctions.makeAggregateFunctionExpression(mergeFid, arguments);
+        AggregateFunctionCallExpression mergeExpr =
+                BuiltinFunctions.makeAggregateFunctionExpression(mergeFid, arguments);
+        mergeExpr.setSourceLocation(agg.getSourceLocation());
+        return mergeExpr;
     }
 }

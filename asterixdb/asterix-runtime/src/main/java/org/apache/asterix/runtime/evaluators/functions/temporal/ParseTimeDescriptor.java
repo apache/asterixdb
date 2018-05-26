@@ -96,11 +96,11 @@ public class ParseTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         int len1 = argPtr1.getLength();
 
                         if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
                         if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
                         utf8Ptr.set(bytes0, offset0 + 1, len0 - 1);
@@ -127,7 +127,8 @@ public class ParseTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             formatStart += formatLength + 1;
                         }
                         if (!processSuccessfully) {
-                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
+                                    ATypeTag.SERIALIZED_TIME_TYPE_TAG);
                         }
                         aTime.setValue((int) aInt64.getLongValue());
                         timeSerde.serialize(aTime, out);

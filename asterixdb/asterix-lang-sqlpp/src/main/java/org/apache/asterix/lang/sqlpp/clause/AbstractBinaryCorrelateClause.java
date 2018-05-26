@@ -21,12 +21,12 @@ package org.apache.asterix.lang.sqlpp.clause;
 
 import java.util.Objects;
 
-import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 
-public abstract class AbstractBinaryCorrelateClause implements Clause {
+public abstract class AbstractBinaryCorrelateClause extends AbstractClause {
 
     private JoinType joinType;
     private Expression rightExpr;

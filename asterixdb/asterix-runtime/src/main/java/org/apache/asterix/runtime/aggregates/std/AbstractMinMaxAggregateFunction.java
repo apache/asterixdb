@@ -26,19 +26,19 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
-import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvaluator {
+public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateFunction {
     private IPointable inputVal = new VoidPointable();
     private ArrayBackedValueStorage outputVal = new ArrayBackedValueStorage();
     private ArrayBackedValueStorage tempValForCasting = new ArrayBackedValueStorage();
@@ -50,8 +50,9 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
     private ITypeConvertComputer tpc;
     private final boolean isMin;
 
-    public AbstractMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin)
-            throws HyracksDataException {
+    public AbstractMinMaxAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isMin,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(sourceLoc);
         eval = args[0].createScalarEvaluator(context);
         this.isMin = isMin;
     }
@@ -87,7 +88,7 @@ public abstract class AbstractMinMaxAggregateFunction implements IAggregateEvalu
             // Initialize min value.
             outputVal.assign(inputVal);
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException("min/max", typeTag.serialize(), aggType.serialize());
+            throw new IncompatibleTypeException(sourceLoc, "min/max", typeTag.serialize(), aggType.serialize());
         } else {
 
             // If a system_null is encountered locally, it would be an error; otherwise if it is seen

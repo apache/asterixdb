@@ -102,9 +102,11 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
                 createTreeIndexBulkLoadOp(spec, metadataProvider, taggedSecondaryRecDesc,
                         createFieldPermutationForBulkLoadOp(), getNumSecondaryKeys(), numPrimaryKeys, false);
 
-        AlgebricksMetaOperatorDescriptor metaOp =
-                new AlgebricksMetaOperatorDescriptor(spec, 1, 0, new IPushRuntimeFactory[] { new SinkRuntimeFactory() },
-                        new RecordDescriptor[] { taggedSecondaryRecDesc });
+        SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
+        sinkRuntimeFactory.setSourceLocation(sourceLoc);
+        AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
+                new IPushRuntimeFactory[] { sinkRuntimeFactory }, new RecordDescriptor[] { taggedSecondaryRecDesc });
+        metaOp.setSourceLocation(sourceLoc);
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
@@ -155,7 +157,7 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
             }
             secondaryFieldAccessEvalFactories[i] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                     metadataProvider.getFunctionManager(), isOverridingKeyTypes ? enforcedItemType : sourceType,
-                    index.getKeyFieldNames().get(i), sourceColumn);
+                    index.getKeyFieldNames().get(i), sourceColumn, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(i),
                     index.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
@@ -185,7 +187,7 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
         if (numFilterFields > 0) {
             secondaryFieldAccessEvalFactories[numSecondaryKeys] =
                     metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
-                            metadataProvider.getFunctionManager(), itemType, filterFieldName, recordColumn);
+                            metadataProvider.getFunctionManager(), itemType, filterFieldName, recordColumn, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
             IAType type = keyTypePair.first;
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);

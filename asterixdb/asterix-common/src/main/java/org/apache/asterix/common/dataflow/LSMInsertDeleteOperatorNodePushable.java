@@ -28,6 +28,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -48,6 +49,7 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
 
     public static final String KEY_INDEX = "Index";
     private final boolean isPrimary;
+    private final SourceLocation sourceLoc;
     // This class has both lsmIndex and index (in super class) pointing to the same object
     private AbstractLSMIndex lsmIndex;
     private int i = 0;
@@ -69,10 +71,11 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
     public LSMInsertDeleteOperatorNodePushable(IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
             RecordDescriptor inputRecDesc, IndexOperation op, boolean isPrimary,
             IIndexDataflowHelperFactory indexHelperFactory, IModificationOperationCallbackFactory modCallbackFactory,
-            ITupleFilterFactory tupleFilterFactory) throws HyracksDataException {
+            ITupleFilterFactory tupleFilterFactory, SourceLocation sourceLoc) throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, op, modCallbackFactory,
                 tupleFilterFactory);
         this.isPrimary = isPrimary;
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -138,8 +141,8 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
                         }
                         break;
                     default: {
-                        throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, op.toString(),
-                                LSMInsertDeleteOperatorNodePushable.class.getSimpleName());
+                        throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, sourceLoc,
+                                op.toString(), LSMInsertDeleteOperatorNodePushable.class.getSimpleName());
                     }
                 }
             }
@@ -147,10 +150,10 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
             if (e.getErrorCode() == ErrorCode.INVALID_OPERATOR_OPERATION) {
                 throw e;
             } else {
-                throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e, i);
+                throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e, sourceLoc, i);
             }
         } catch (Exception e) {
-            throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e, i);
+            throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e, sourceLoc, i);
         }
 
         writeBuffer.ensureFrameSize(buffer.capacity());

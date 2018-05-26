@@ -22,7 +22,11 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public interface IPushRuntimeFactory extends Serializable {
     IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException;
+
+    default void setSourceLocation(SourceLocation sourceLoc) {
+    }
 }

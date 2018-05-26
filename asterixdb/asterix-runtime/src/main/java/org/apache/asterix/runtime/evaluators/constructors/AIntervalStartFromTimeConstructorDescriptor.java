@@ -111,7 +111,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 intervalStart = ATimeParserFactory.parseTimePart(bytes0, utf8Ptr.getCharStartOffset(),
                                         stringLength);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                         ATypeTag.SERIALIZED_TIME_TYPE_TAG, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
@@ -121,7 +121,7 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
 
                             if (bytes1[offset1] == ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
                                 if (ADurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1) != 0) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
 
@@ -137,14 +137,14 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                                 ADurationParserFactory.parseDuration(bytes1, utf8Ptr.getCharStartOffset(), stringLength,
                                         aDuration, ADurationParseOption.All);
                                 if (aDuration.getMonths() != 0) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
 
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart, 0,
                                         aDuration.getMilliseconds(), false);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                         ATypeTag.SERIALIZED_DURATION_TYPE_TAG,
                                         ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
@@ -155,14 +155,14 @@ public class AIntervalStartFromTimeConstructorDescriptor extends AbstractScalarF
                             }
 
                             if (intervalEnd < intervalStart) {
-                                throw new InvalidDataFormatException(getIdentifier(),
+                                throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                         ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                             }
 
                             aInterval.setValue(intervalStart, intervalEnd, ATypeTag.SERIALIZED_TIME_TYPE_TAG);
                             intervalSerde.serialize(aInterval, out);
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
                         result.set(resultStorage);

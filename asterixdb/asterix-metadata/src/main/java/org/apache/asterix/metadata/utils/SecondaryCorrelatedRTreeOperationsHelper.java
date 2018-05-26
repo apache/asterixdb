@@ -77,7 +77,8 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
         int numSecondaryKeys = secondaryKeyFields.size();
         boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
         if (numSecondaryKeys != 1) {
-            throw AsterixException.create(ErrorCode.INDEX_RTREE_MULTIPLE_FIELDS_NOT_ALLOWED, numSecondaryKeys);
+            throw AsterixException.create(ErrorCode.INDEX_RTREE_MULTIPLE_FIELDS_NOT_ALLOWED, sourceLoc,
+                    numSecondaryKeys);
         }
         Pair<IAType, Boolean> spatialTypePair =
                 Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), itemType);
@@ -89,7 +90,7 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
         int recordColumn = NUM_TAG_FIELDS + numPrimaryKeys;
         secondaryFieldAccessEvalFactories = metadataProvider.getDataFormat().createMBRFactory(
                 metadataProvider.getFunctionManager(), isOverridingKeyFieldTypes ? enforcedItemType : itemType,
-                secondaryKeyFields.get(0), recordColumn, numDimensions, filterFieldName, isPointMBR);
+                secondaryKeyFields.get(0), recordColumn, numDimensions, filterFieldName, isPointMBR, sourceLoc);
         secondaryComparatorFactories = new IBinaryComparatorFactory[numNestedSecondaryKeyFields];
         valueProviderFactories = new IPrimitiveValueProviderFactory[numNestedSecondaryKeyFields];
         ISerializerDeserializer[] secondaryRecFields =
@@ -212,8 +213,11 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
                 metadataProvider, secondaryRecDescConsideringPointMBR, createFieldPermutationForBulkLoadOp(),
                 numNestedSecondaryKeFieldsConsideringPointMBR, numPrimaryKeys, false);
 
+        SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
+        sinkRuntimeFactory.setSourceLocation(sourceLoc);
         AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                new IPushRuntimeFactory[] { new SinkRuntimeFactory() }, new RecordDescriptor[] {});
+                new IPushRuntimeFactory[] { sinkRuntimeFactory }, new RecordDescriptor[] {});
+        metaOp.setSourceLocation(sourceLoc);
 
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);

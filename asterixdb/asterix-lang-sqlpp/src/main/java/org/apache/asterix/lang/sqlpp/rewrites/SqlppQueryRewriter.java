@@ -225,7 +225,8 @@ class SqlppQueryRewriter implements IQueryRewriter {
         for (Expression topLevelExpr : topExpr.getDirectlyEnclosedExpressions()) {
             usedStoredFunctionDecls.addAll(FunctionUtil.retrieveUsedStoredFunctions(metadataProvider, topLevelExpr,
                     funIds, null, expr -> getFunctionCalls(expr), func -> functionRepository.getFunctionDecl(func),
-                    signature -> FunctionMapUtil.normalizeBuiltinFunctionSignature(signature, false)));
+                    (signature, sourceLoc) -> FunctionMapUtil.normalizeBuiltinFunctionSignature(signature, false,
+                            sourceLoc)));
         }
         declaredFunctions.addAll(usedStoredFunctionDecls);
         if (inlineUdfs && !declaredFunctions.isEmpty()) {

@@ -221,12 +221,15 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
             aggArgs.add(aggOpExpr.getArguments().get(0));
             AggregateFunctionCallExpression aggFuncExpr =
                     BuiltinFunctions.makeAggregateFunctionExpression(aggFuncIdent, aggArgs);
+            aggFuncExpr.setSourceLocation(assignFuncExpr.getSourceLocation());
             LogicalVariable newVar = context.newVar();
             aggOp.getVariables().add(newVar);
             aggOp.getExpressions().add(new MutableObject<ILogicalExpression>(aggFuncExpr));
 
             // The assign now just "renames" the variable to make sure the upstream plan still works.
-            srcAssignExprRef.setValue(new VariableReferenceExpression(newVar));
+            VariableReferenceExpression newVarRef = new VariableReferenceExpression(newVar);
+            newVarRef.setSourceLocation(assignFuncExpr.getSourceLocation());
+            srcAssignExprRef.setValue(newVarRef);
         }
 
         context.computeAndSetTypeEnvironmentForOperator(aggOp);

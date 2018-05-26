@@ -52,7 +52,7 @@ public class SqlMaxAggregateDescriptor extends AbstractAggregateFunctionDynamicD
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SqlMinMaxAggregateFunction(args, ctx, false, false);
+                return new SqlMinMaxAggregateFunction(args, ctx, false, false, sourceLoc);
             }
         };
     }

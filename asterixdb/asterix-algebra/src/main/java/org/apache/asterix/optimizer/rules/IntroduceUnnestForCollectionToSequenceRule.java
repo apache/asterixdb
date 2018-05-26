@@ -85,11 +85,13 @@ public class IntroduceUnnestForCollectionToSequenceRule implements IAlgebraicRew
         }
         /** change the assign operator to an unnest operator */
         LogicalVariable var = assign.getVariables().get(0);
+        UnnestingFunctionCallExpression scanCollExpr =
+                new UnnestingFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
+                        new MutableObject<ILogicalExpression>(argExpr));
+        scanCollExpr.setSourceLocation(func.getSourceLocation());
         @SuppressWarnings("unchecked")
-        UnnestOperator unnest = new UnnestOperator(var,
-                new MutableObject<ILogicalExpression>(new UnnestingFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
-                        new MutableObject<ILogicalExpression>(argExpr))));
+        UnnestOperator unnest = new UnnestOperator(var, new MutableObject<ILogicalExpression>(scanCollExpr));
+        unnest.setSourceLocation(assign.getSourceLocation());
         unnest.getInputs().addAll(assign.getInputs());
         opRef.setValue(unnest);
         context.computeAndSetTypeEnvironmentForOperator(unnest);

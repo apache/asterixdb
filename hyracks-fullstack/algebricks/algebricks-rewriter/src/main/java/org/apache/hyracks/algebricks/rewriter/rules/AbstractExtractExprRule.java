@@ -36,6 +36,7 @@ public abstract class AbstractExtractExprRule implements IAlgebraicRewriteRule {
             IOptimizationContext context) throws AlgebricksException {
         LogicalVariable v = context.newVar();
         AssignOperator a = new AssignOperator(v, new MutableObject<ILogicalExpression>(gExpr));
+        a.setSourceLocation(gExpr.getSourceLocation());
         a.getInputs().add(new MutableObject<ILogicalOperator>(opRef2.getValue()));
         opRef2.setValue(a);
         if (gExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {

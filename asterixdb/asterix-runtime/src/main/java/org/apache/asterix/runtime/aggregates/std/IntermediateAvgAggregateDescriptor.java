@@ -54,7 +54,7 @@ public class IntermediateAvgAggregateDescriptor extends AbstractAggregateFunctio
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new IntermediateAvgAggregateFunction(args, ctx);
+                return new IntermediateAvgAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

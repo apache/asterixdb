@@ -49,6 +49,7 @@ public class MicroUnionAllPOperator extends AbstractUnionAllPOperator {
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
 
         MicroUnionAllRuntimeFactory runtime = new MicroUnionAllRuntimeFactory(op.getInputs().size());
+        runtime.setSourceLocation(op.getSourceLocation());
         builder.contributeMicroOperator(op, runtime, recordDescriptor);
 
         super.contributeRuntimeOperator(builder, context, op, opSchema, inputSchemas, outerPlanSchema);

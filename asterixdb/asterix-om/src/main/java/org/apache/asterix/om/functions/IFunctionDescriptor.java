@@ -28,11 +28,13 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public interface IFunctionDescriptor extends Serializable {
 
-    default void setImmutableStates(Object... states) {
-    }
+    void setImmutableStates(Object... states);
+
+    void setSourceLocation(SourceLocation sourceLoc);
 
     FunctionIdentifier getIdentifier();
 

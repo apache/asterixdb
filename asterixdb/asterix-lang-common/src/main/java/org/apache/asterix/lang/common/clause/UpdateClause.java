@@ -21,14 +21,14 @@ package org.apache.asterix.lang.common.clause;
 import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class UpdateClause implements Clause {
+public class UpdateClause extends AbstractClause {
 
     private Expression target;
     private Expression value;

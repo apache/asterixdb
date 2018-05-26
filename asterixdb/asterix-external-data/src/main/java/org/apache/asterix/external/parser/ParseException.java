@@ -65,15 +65,14 @@ public class ParseException extends HyracksDataException {
     public String getMessage() {
         StringBuilder msg = new StringBuilder("Parse error");
         if (filename != null) {
-            msg.append(" in file " + filename);
+            msg.append(" in file ").append(filename);
         }
         if (line >= 0) {
+            msg.append(" in line ").append(line);
             if (column >= 0) {
-                msg.append(" at (" + line + ", " + column + ")");
-            } else {
-                msg.append(" in line " + line);
+                msg.append(", at column ").append(column);
             }
         }
-        return msg.append(": " + super.getMessage()).toString();
+        return msg.append(": ").append(super.getMessage()).toString();
     }
 }

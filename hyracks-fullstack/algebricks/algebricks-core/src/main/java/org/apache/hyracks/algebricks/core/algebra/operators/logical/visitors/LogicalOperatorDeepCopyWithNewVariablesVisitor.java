@@ -146,6 +146,10 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         dest.getAnnotations().putAll(src.getAnnotations());
     }
 
+    private void copySourceLocation(ILogicalOperator src, AbstractLogicalOperator dest) {
+        dest.setSourceLocation(src.getSourceLocation());
+    }
+
     public ILogicalOperator deepCopy(ILogicalOperator op) throws AlgebricksException {
         // The deep copy call outside this visitor always has a null argument.
         return deepCopy(op, null);
@@ -269,6 +273,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             AbstractLogicalOperator opCopy) throws AlgebricksException {
         deepCopyInputs(op, opCopy, arg);
         copyAnnotations(op, opCopy);
+        copySourceLocation(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
     }
 
@@ -337,6 +342,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     @Override
     public ILogicalOperator visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op, ILogicalOperator arg) {
         EmptyTupleSourceOperator opCopy = new EmptyTupleSourceOperator();
+        copySourceLocation(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
@@ -371,6 +377,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
                         deepCopyOperatorReference(op.getInputs().get(0), arg),
                         deepCopyOperatorReference(op.getInputs().get(1), arg));
         copyAnnotations(op, opCopy);
+        copySourceLocation(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }
@@ -383,6 +390,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
                         deepCopyOperatorReference(op.getInputs().get(0), arg),
                         deepCopyOperatorReference(op.getInputs().get(1), arg));
         copyAnnotations(op, opCopy);
+        copySourceLocation(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
         return opCopy;
     }

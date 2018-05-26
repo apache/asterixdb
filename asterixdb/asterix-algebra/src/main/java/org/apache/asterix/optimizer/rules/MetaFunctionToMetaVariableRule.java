@@ -21,6 +21,8 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.IMutationDataSource;
@@ -45,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * This rule rewrites all meta() function calls in a query plan
@@ -204,7 +207,8 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
         }
         // The user query provides more than one parameter for the meta function.
         if (argRefs.size() > 1) {
-            throw new AlgebricksException("The meta function can at most have one argument!");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
+                    "The meta function can at most have one argument!");
         }
 
         // The user query provides exact one parameter for the meta function.
@@ -218,16 +222,21 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
             if (!dataVar.equals(argVar)) {
                 return false;
             }
-            exprRef.setValue(new VariableReferenceExpression(metaVar));
+            VariableReferenceExpression metaVarRef = new VariableReferenceExpression(metaVar);
+            metaVarRef.setSourceLocation(expr.getSourceLocation());
+            exprRef.setValue(metaVarRef);
             return true;
         }
 
         // The user query provides zero parameter for the meta function.
         if (variableRequired) {
-            throw new AlgebricksException("Cannot resolve to ambiguity on the meta function call --"
-                    + " there are more than one dataset choices!");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
+                    "Cannot resolve to ambiguity on the meta function call --"
+                            + " there are more than one dataset choices!");
         }
-        exprRef.setValue(new VariableReferenceExpression(metaVar));
+        VariableReferenceExpression metaVarRef = new VariableReferenceExpression(metaVar);
+        metaVarRef.setSourceLocation(expr.getSourceLocation());
+        exprRef.setValue(metaVarRef);
         return true;
     }
 }
@@ -268,6 +277,7 @@ class MetaKeyToFieldAccessTransform implements ILogicalExpressionReferenceTransf
         if (!funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.META_KEY)) {
             return false;
         }
+        SourceLocation sourceLoc = expr.getSourceLocation();
         // Get arguments
         // first argument : Resource key
         // second argument: field
@@ -286,13 +296,18 @@ class MetaKeyToFieldAccessTransform implements ILogicalExpressionReferenceTransf
                 functionIdentifier = BuiltinFunctions.FIELD_ACCESS_BY_NAME;
                 break;
             default:
-                throw new AlgebricksException("Unsupported field name type " + fieldNameType.getTypeTag());
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        "Unsupported field name type " + fieldNameType.getTypeTag());
         }
         IFunctionInfo finfoAccess = FunctionUtil.getFunctionInfo(functionIdentifier);
         ArrayList<Mutable<ILogicalExpression>> argExprs = new ArrayList<>(2);
-        argExprs.add(new MutableObject<>(new VariableReferenceExpression(metaVar)));
+        VariableReferenceExpression metaVarRef = new VariableReferenceExpression(metaVar);
+        metaVarRef.setSourceLocation(sourceLoc);
+        argExprs.add(new MutableObject<>(metaVarRef));
         argExprs.add(new MutableObject<>(fieldNameExpression));
-        exprRef.setValue(new ScalarFunctionCallExpression(finfoAccess, argExprs));
+        ScalarFunctionCallExpression fAccessExpr = new ScalarFunctionCallExpression(finfoAccess, argExprs);
+        fAccessExpr.setSourceLocation(sourceLoc);
+        exprRef.setValue(fAccessExpr);
         return true;
     }
 }
@@ -321,7 +336,9 @@ class MetaKeyExpressionReferenceTransform implements ILogicalExpressionReference
         // Function is meta key access
         for (int i = 0; i < metaKeyAccessExpressions.size(); i++) {
             if (metaKeyAccessExpressions.get(i).equals(funcExpr)) {
-                exprRef.setValue(new VariableReferenceExpression(keyVars.get(i)));
+                VariableReferenceExpression varRef = new VariableReferenceExpression(keyVars.get(i));
+                varRef.setSourceLocation(expr.getSourceLocation());
+                exprRef.setValue(varRef);
                 return true;
             }
         }

@@ -47,19 +47,19 @@ import org.apache.asterix.runtime.evaluators.common.AccessibleByteArrayEval;
 import org.apache.asterix.runtime.evaluators.common.ClosedRecordConstructorEvalFactory.ClosedRecordConstructorEval;
 import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
-import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluator {
+public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunction {
     private static final int SUM_FIELD_ID = 0;
     private static final int COUNT_FIELD_ID = 1;
 
@@ -93,8 +93,9 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
     private ISerializerDeserializer<ANull> nullSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
-    public AbstractAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
+    public AbstractAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(sourceLoc);
         eval = args[0].createScalarEvaluator(context);
         recType = new ARecordType(null, new String[] { "sum", "count" },
                 new IAType[] { BuiltinType.ADOUBLE, BuiltinType.AINT64 }, false);
@@ -134,7 +135,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(BuiltinFunctions.AVG, data[offset], aggType.serialize());
+            throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.AVG, data[offset], aggType.serialize());
         } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
             aggType = typeTag;
         }
@@ -171,7 +172,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
                 break;
             }
             default: {
-                throw new UnsupportedItemTypeException(BuiltinFunctions.AVG, data[offset]);
+                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.AVG, data[offset]);
             }
         }
     }
@@ -234,7 +235,7 @@ public abstract class AbstractAvgAggregateFunction implements IAggregateEvaluato
                 break;
             }
             default: {
-                throw new UnsupportedItemTypeException("intermediate/global-Avg", serBytes[offset]);
+                throw new UnsupportedItemTypeException(sourceLoc, "intermediate/global-Avg", serBytes[offset]);
             }
         }
     }

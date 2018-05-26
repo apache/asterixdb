@@ -93,7 +93,7 @@ public class STGeomFromWKBDescriptor extends AbstractScalarFunctionDynamicDescri
             int len = inputArg.getLength();
 
             if (data[offset] != ATypeTag.SERIALIZED_BINARY_TYPE_TAG) {
-                throw new TypeMismatchException(BuiltinFunctions.ST_GEOM_FROM_WKB, 0, data[offset],
+                throw new TypeMismatchException(sourceLoc, BuiltinFunctions.ST_GEOM_FROM_WKB, 0, data[offset],
                         ATypeTag.SERIALIZED_BINARY_TYPE_TAG);
             }
             try {
@@ -105,7 +105,8 @@ public class STGeomFromWKBDescriptor extends AbstractScalarFunctionDynamicDescri
                 out.write(data);
                 result.set(resultStorage);
             } catch (IOException e) {
-                throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
+                throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
+                        ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
 
         }

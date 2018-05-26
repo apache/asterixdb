@@ -81,7 +81,7 @@ public class MonthsFromYearMonthDurationDescriptor extends AbstractScalarFunctio
                         int offset = argPtr0.getStartOffset();
 
                         if (bytes[offset] != ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG);
                         }
                         aInt64.setValue(AYearMonthDurationSerializerDeserializer.getYearMonth(bytes, offset + 1));

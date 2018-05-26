@@ -22,13 +22,14 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class UpdateStatement implements Statement {
+public class UpdateStatement extends AbstractStatement {
 
     private VariableExpr vars;
     private Expression target;

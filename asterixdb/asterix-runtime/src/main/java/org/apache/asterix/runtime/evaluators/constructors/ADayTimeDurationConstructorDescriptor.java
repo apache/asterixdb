@@ -99,11 +99,11 @@ public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctio
                                 dayTimeDurationSerde.serialize(aDayTimeDuration, out);
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (Exception e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG);
                         }
                     }

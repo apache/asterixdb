@@ -19,8 +19,6 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -59,7 +57,7 @@ public class StringRegExpPositionDescriptor extends AbstractStringOffsetConfigur
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractBinaryStringIntEval(ctx, args[0], args[1],
-                        StringRegExpPositionDescriptor.this.getIdentifier()) {
+                        StringRegExpPositionDescriptor.this.getIdentifier(), sourceLoc) {
                     private final RegExpMatcher matcher = new RegExpMatcher();
 
                     @Override

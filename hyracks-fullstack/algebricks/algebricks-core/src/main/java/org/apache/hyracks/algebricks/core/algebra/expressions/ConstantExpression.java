@@ -174,6 +174,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         annotationMap.forEach((key, value1) -> m.put(key, value1.copy()));
         ConstantExpression c = new ConstantExpression(value);
         c.annotationMap = m;
+        c.setSourceLocation(sourceLoc);
         return c;
     }
 

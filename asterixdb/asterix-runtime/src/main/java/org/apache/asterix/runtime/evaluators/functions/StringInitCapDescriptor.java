@@ -50,7 +50,8 @@ public class StringInitCapDescriptor extends AbstractScalarFunctionDynamicDescri
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractUnaryStringStringEval(ctx, args[0], StringInitCapDescriptor.this.getIdentifier()) {
+                return new AbstractUnaryStringStringEval(ctx, args[0], StringInitCapDescriptor.this.getIdentifier(),
+                        sourceLoc) {
                     @Override
                     protected void process(UTF8StringPointable inputString, IPointable resultPointable)
                             throws IOException {

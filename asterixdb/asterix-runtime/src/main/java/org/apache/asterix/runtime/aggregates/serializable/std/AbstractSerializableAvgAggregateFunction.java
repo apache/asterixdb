@@ -49,16 +49,16 @@ import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractSerializableAvgAggregateFunction implements ISerializedAggregateEvaluator {
+public abstract class AbstractSerializableAvgAggregateFunction extends AbstractSerializableAggregateFunction {
     private static final int SUM_FIELD_ID = 0;
     private static final int COUNT_FIELD_ID = 1;
 
@@ -90,8 +90,9 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
     private ISerializerDeserializer<ANull> nullSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
-    public AbstractSerializableAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
+    public AbstractSerializableAvgAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(sourceLoc);
         eval = args[0].createScalarEvaluator(context);
     }
 
@@ -136,7 +137,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(BuiltinFunctions.AVG, bytes[offset], aggType.serialize());
+            throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.AVG, bytes[offset], aggType.serialize());
         } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
             aggType = typeTag;
         }
@@ -173,7 +174,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 break;
             }
             default:
-                throw new UnsupportedItemTypeException(BuiltinFunctions.AVG, bytes[offset]);
+                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.AVG, bytes[offset]);
         }
         BufferSerDeUtil.writeDouble(sum, state, start + SUM_OFFSET);
         BufferSerDeUtil.writeLong(count, state, start + COUNT_OFFSET);
@@ -252,7 +253,7 @@ public abstract class AbstractSerializableAvgAggregateFunction implements ISeria
                 break;
             }
             default:
-                throw new UnsupportedItemTypeException(BuiltinFunctions.AVG, serBytes[offset]);
+                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.AVG, serBytes[offset]);
         }
     }
 

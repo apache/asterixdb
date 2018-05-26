@@ -20,7 +20,10 @@ package org.apache.asterix.lang.common.base;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public interface ILangExpression {
-    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException;
+    <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException;
+
+    SourceLocation getSourceLocation();
 }

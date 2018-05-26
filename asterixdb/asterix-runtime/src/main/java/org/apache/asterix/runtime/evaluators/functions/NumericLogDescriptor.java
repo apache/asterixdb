@@ -60,7 +60,7 @@ public class NumericLogDescriptor extends AbstractScalarFunctionDynamicDescripto
 
         NumericLogEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericLogDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericLogDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

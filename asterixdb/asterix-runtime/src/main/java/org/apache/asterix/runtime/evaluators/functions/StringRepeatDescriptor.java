@@ -87,7 +87,7 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 ATypeHierarchy.getIntegerValue(getIdentifier().getName(), 1, bytes, offset);
                         // Checks repeatingTimes. It should be a non-negative value.
                         if (repeatingTimes < 0) {
-                            throw new RuntimeDataException(ErrorCode.NEGATIVE_VALUE, getIdentifier(), 1,
+                            throw new RuntimeDataException(ErrorCode.NEGATIVE_VALUE, sourceLoc, getIdentifier(), 1,
                                     repeatingTimes);
                         }
 
@@ -96,7 +96,7 @@ public class StringRepeatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         offset = argString.getStartOffset();
                         // Checks the type of the string argument.
                         if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
 

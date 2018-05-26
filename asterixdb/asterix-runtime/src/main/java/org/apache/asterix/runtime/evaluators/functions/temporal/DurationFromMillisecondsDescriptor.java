@@ -100,7 +100,7 @@ public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDy
                                 aDuration.setValue(0, AInt64SerializerDeserializer.getLong(bytes, offset + 1));
                                 break;
                             default:
-                                throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                         ATypeTag.SERIALIZED_INT8_TYPE_TAG, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
                                         ATypeTag.SERIALIZED_INT32_TYPE_TAG, ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                         }

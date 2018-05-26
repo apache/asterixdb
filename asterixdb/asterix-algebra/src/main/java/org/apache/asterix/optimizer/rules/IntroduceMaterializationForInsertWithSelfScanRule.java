@@ -63,6 +63,7 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
 
         if (sameDataset) {
             MaterializeOperator materializeOperator = new MaterializeOperator();
+            materializeOperator.setSourceLocation(op.getSourceLocation());
             MaterializePOperator materializePOperator = new MaterializePOperator(true);
             materializeOperator.setPhysicalOperator(materializePOperator);
 

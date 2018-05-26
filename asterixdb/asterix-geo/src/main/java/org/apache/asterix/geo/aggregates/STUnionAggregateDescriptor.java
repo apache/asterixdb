@@ -54,7 +54,7 @@ public class STUnionAggregateDescriptor extends AbstractAggregateFunctionDynamic
 
             @Override
             public IAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new STUnionAggregateFunction(args, ctx);
+                return new STUnionAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

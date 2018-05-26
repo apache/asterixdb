@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import java.util.List;
+
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -30,6 +32,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class TypeComputeUtils {
 
@@ -40,13 +43,13 @@ public class TypeComputeUtils {
     private static final byte NULL = 16;
 
     @FunctionalInterface
-    public static interface ArgTypeChecker {
-        public void checkArgTypes(int argIndex, IAType argType) throws AlgebricksException;
+    public interface ArgTypeChecker {
+        void checkArgTypes(int argIndex, IAType argType, SourceLocation argSrcLoc) throws AlgebricksException;
     }
 
     @FunctionalInterface
-    public static interface ResultTypeGenerator {
-        public IAType getResultType(ILogicalExpression expr, IAType... knownInputTypes) throws AlgebricksException;
+    public interface ResultTypeGenerator {
+        IAType getResultType(ILogicalExpression expr, IAType... knownInputTypes) throws AlgebricksException;
     }
 
     private TypeComputeUtils() {
@@ -73,9 +76,10 @@ public class TypeComputeUtils {
             throws AlgebricksException {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
 
-        IAType[] inputTypes = new IAType[fce.getArguments().size()];
+        List<Mutable<ILogicalExpression>> arguments = fce.getArguments();
+        IAType[] inputTypes = new IAType[arguments.size()];
         int index = 0;
-        for (Mutable<ILogicalExpression> argRef : fce.getArguments()) {
+        for (Mutable<ILogicalExpression> argRef : arguments) {
             ILogicalExpression arg = argRef.getValue();
             inputTypes[index++] = (IAType) env.getType(arg);
         }
@@ -89,7 +93,7 @@ public class TypeComputeUtils {
                     || argTypeTag == ATypeTag.MISSING) {
                 continue;
             }
-            checker.checkArgTypes(argIndex, knownInputTypes[argIndex]);
+            checker.checkArgTypes(argIndex, knownInputTypes[argIndex], fce.getSourceLocation());
         }
 
         // Computes the result type.

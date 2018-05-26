@@ -19,11 +19,11 @@
 package org.apache.asterix.lang.common.clause;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.base.Clause;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class WhereClause implements Clause {
+public class WhereClause extends AbstractClause {
     private Expression whereExpr;
 
     public WhereClause() {

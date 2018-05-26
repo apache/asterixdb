@@ -25,6 +25,8 @@ import java.util.List;
 
 import org.apache.asterix.algebra.base.OperatorAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -125,7 +127,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
 
         Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
         if (dataset == null) {
-            throw new AlgebricksException("Dataset " + asid.getDatasourceName() + " not found.");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, scan.getSourceLocation(),
+                    "Dataset " + asid.getDatasourceName() + " not found.");
         }
         if (dataset.getDatasetType() != DatasetType.INTERNAL) {
             return false;
@@ -228,8 +231,10 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 for (Pair<LogicalVariable, LogicalVariable> m : varMappings) {
                     LogicalVariable v2 = context.newVar();
                     LogicalVariable oldVar = access.getVariables().get(0);
+                    VariableReferenceExpression v2Ref = new VariableReferenceExpression(v2);
+                    v2Ref.setSourceLocation(g.getSourceLocation());
                     g.getDecorList().add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(oldVar,
-                            new MutableObject<ILogicalExpression>(new VariableReferenceExpression(v2))));
+                            new MutableObject<ILogicalExpression>(v2Ref)));
                     changed = true;
                     access.getVariables().set(0, v2);
                     VariableUtilities.substituteVariables(access, m.first, m.second, context);
@@ -275,8 +280,9 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                     }
                 }
             }
-            throw new AlgebricksException("Field access " + access.getExpressions().get(0).getValue()
-                    + " does not correspond to any input of operator " + op2);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, access.getSourceLocation(),
+                    "Field access " + access.getExpressions().get(0).getValue()
+                            + " does not correspond to any input of operator " + op2);
         } else {
             // Check if the accessed field is not one of the partitioning key
             // fields. If yes, we can equate the two variables.
@@ -294,7 +300,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
                 Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
                 if (dataset == null) {
-                    throw new AlgebricksException("Dataset " + asid.getDatasourceName() + " not found.");
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, scan.getSourceLocation(),
+                            "Dataset " + asid.getDatasourceName() + " not found.");
                 }
                 if (dataset.getDatasetType() != DatasetType.INTERNAL) {
                     setAsFinal(access, context, finalAnnot);
@@ -319,7 +326,9 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                             return false;
                         }
                         LogicalVariable keyVar = scan.getVariables().get(p);
-                        access.getExpressions().get(0).setValue(new VariableReferenceExpression(keyVar));
+                        VariableReferenceExpression keyVarRef = new VariableReferenceExpression(keyVar);
+                        keyVarRef.setSourceLocation(varRef.getSourceLocation());
+                        access.getExpressions().get(0).setValue(keyVarRef);
                         return true;
 
                     }
@@ -368,8 +377,11 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             return false;
         }
         AssignOperator a2 = (AssignOperator) op2;
-        if (getFirstExpr(access).equals(getFirstExpr(a2))) {
-            access.getExpressions().get(0).setValue(new VariableReferenceExpression(a2.getVariables().get(0)));
+        ILogicalExpression accessExpr0 = getFirstExpr(access);
+        if (accessExpr0.equals(getFirstExpr(a2))) {
+            VariableReferenceExpression varRef = new VariableReferenceExpression(a2.getVariables().get(0));
+            varRef.setSourceLocation(accessExpr0.getSourceLocation());
+            access.getExpressions().get(0).setValue(varRef);
             return true;
         } else {
             return false;

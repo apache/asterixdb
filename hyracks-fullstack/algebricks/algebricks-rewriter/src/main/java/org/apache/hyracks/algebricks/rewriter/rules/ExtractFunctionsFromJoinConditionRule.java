@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Factors out function expressions from each comparison function or similarity function in join condition by
@@ -104,9 +105,11 @@ public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteR
         } else if (AlgebricksBuiltinFunctions.isComparisonFunction(fi) || isComparisonFunction(fi)) {
             for (Mutable<ILogicalExpression> exprRef : fexp.getArguments()) {
                 if (exprRef.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    SourceLocation exprRefSourceLoc = exprRef.getValue().getSourceLocation();
                     LogicalVariable newVar = context.newVar();
                     AssignOperator newAssign = new AssignOperator(newVar,
                             new MutableObject<ILogicalExpression>(exprRef.getValue().cloneExpression()));
+                    newAssign.setSourceLocation(exprRefSourceLoc);
                     newAssign.setExecutionMode(joinOp.getExecutionMode());
 
                     // Place assign below joinOp.
@@ -137,7 +140,9 @@ public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteR
 
                     if (modified) {
                         // Replace original expr with variable reference.
-                        exprRef.setValue(new VariableReferenceExpression(newVar));
+                        VariableReferenceExpression newVarRef = new VariableReferenceExpression(newVar);
+                        newVarRef.setSourceLocation(exprRefSourceLoc);
+                        exprRef.setValue(newVarRef);
                         context.computeAndSetTypeEnvironmentForOperator(newAssign);
                         context.computeAndSetTypeEnvironmentForOperator(joinOp);
                     }

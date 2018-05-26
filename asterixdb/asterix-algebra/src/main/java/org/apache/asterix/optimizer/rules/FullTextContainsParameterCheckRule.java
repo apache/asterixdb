@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Checks whether the given parameters of the ftcontains() function are correct during the compilation.
@@ -144,8 +145,8 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
 
                 // The number of parameters should be three: exp1, exp2, and the option
                 if (oldExprs.size() != numberOfCorrectArguments) {
-                    throw CompilationException.create(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER, fi,
-                            oldExprs.size());
+                    throw CompilationException.create(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER,
+                            funcExpr.getSourceLocation(), fi, oldExprs.size());
                 }
 
                 // The last expression before the option needs to be copied first.
@@ -184,8 +185,8 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
             ILogicalExpression firstExpr = exprs.get(0).getValue();
             if (firstExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT
                     && ConstantExpressionUtil.getConstantIaObjectType(firstExpr) != ATypeTag.STRING) {
-                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, functionName,
-                        ConstantExpressionUtil.getConstantIaObjectType(firstExpr));
+                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, firstExpr.getSourceLocation(),
+                        functionName, ConstantExpressionUtil.getConstantIaObjectType(firstExpr));
             }
 
             // Check the second parameter - Expression2. If it's a constant, then we can check the type here.
@@ -198,7 +199,8 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
                     case ARRAY:
                         break;
                     default:
-                        throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, functionName, exprTypeTag);
+                        throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, secondExpr.getSourceLocation(),
+                                functionName, exprTypeTag);
                 }
             }
         }
@@ -216,12 +218,14 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
             FunctionIdentifier openRecConsFi = openRecConsExpr.getFunctionIdentifier();
             if (openRecConsFi != BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR
                     && openRecConsFi != BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR) {
-                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, functionName, openRecConsFi);
+                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, openRecConsExpr.getSourceLocation(),
+                        functionName, openRecConsFi);
             }
 
             // We multiply 2 because the layout of the arguments are: [expr, val, expr1, val1, ...]
             if (openRecConsExpr.getArguments().size() > FullTextContainsDescriptor.getParamTypeMap().size() * 2) {
-                throw CompilationException.create(ErrorCode.TOO_MANY_OPTIONS_FOR_FUNCTION, functionName);
+                throw CompilationException.create(ErrorCode.TOO_MANY_OPTIONS_FOR_FUNCTION,
+                        openRecConsExpr.getSourceLocation(), functionName);
             }
 
             for (int i = 0; i < openRecConsExpr.getArguments().size(); i = i + 2) {
@@ -231,13 +235,14 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
                 String option = ConstantExpressionUtil.getStringConstant(optionExpr);
 
                 if (optionExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT || option == null) {
-                    throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, functionName,
-                            optionExpr.getExpressionTag());
+                    throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, optionExpr.getSourceLocation(),
+                            functionName, optionExpr.getExpressionTag());
                 }
 
                 option = option.toLowerCase();
                 if (!FullTextContainsDescriptor.getParamTypeMap().containsKey(option)) {
-                    throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, functionName, option);
+                    throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, optionExprVal.getSourceLocation(),
+                            functionName, option);
                 }
 
                 String optionTypeStringVal = null;
@@ -248,22 +253,25 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
                         case STRING:
                             optionTypeStringVal = ConstantExpressionUtil.getStringConstant(optionExprVal);
                             if (optionTypeStringVal == null) {
-                                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, functionName, option);
+                                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED,
+                                        optionExprVal.getSourceLocation(), functionName, option);
                             }
                             optionTypeStringVal = optionTypeStringVal.toLowerCase();
                             break;
                         default:
                             // Currently, we only have a string parameter. So, the flow doesn't reach here.
-                            throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, functionName, option);
+                            throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED,
+                                    optionExprVal.getSourceLocation(), functionName, option);
                     }
 
                     // Check the validity of option value
                     switch (option) {
                         case FullTextContainsDescriptor.SEARCH_MODE_OPTION:
-                            checkSearchModeOption(optionTypeStringVal, functionName);
+                            checkSearchModeOption(optionTypeStringVal, functionName, optionExprVal.getSourceLocation());
                             break;
                         default:
-                            throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, functionName, option);
+                            throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED,
+                                    optionExprVal.getSourceLocation(), functionName, option);
                     }
                 }
 
@@ -273,12 +281,13 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
             }
         }
 
-        private void checkSearchModeOption(String optionVal, String functionName) throws AlgebricksException {
+        private void checkSearchModeOption(String optionVal, String functionName, SourceLocation sourceLoc)
+                throws AlgebricksException {
             if (optionVal.equals(FullTextContainsDescriptor.CONJUNCTIVE_SEARCH_MODE_OPTION)
                     || optionVal.equals(FullTextContainsDescriptor.DISJUNCTIVE_SEARCH_MODE_OPTION)) {
                 return;
             } else {
-                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, functionName, optionVal);
+                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, sourceLoc, functionName, optionVal);
             }
         }
 

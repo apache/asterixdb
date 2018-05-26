@@ -24,6 +24,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnaryMinusTypeComputer extends AbstractResultTypeComputer {
 
@@ -33,7 +34,8 @@ public class UnaryMinusTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    public void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
             case TINYINT:
@@ -44,7 +46,7 @@ public class UnaryMinusTypeComputer extends AbstractResultTypeComputer {
             case DOUBLE:
                 break;
             default:
-                throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
+                throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
                         ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE);
         }
     }

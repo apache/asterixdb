@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
@@ -165,7 +167,7 @@ public class StaticTypeCastUtil {
                 }
             }
             if (!compatible(reqType, inputType)) {
-                throw new AlgebricksException(
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, funcExpr.getSourceLocation(),
                         "type mismatch, required: " + reqType.toString() + " actual: " + inputType.toString());
             }
             return changed;

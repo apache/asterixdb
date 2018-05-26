@@ -21,12 +21,12 @@ package org.apache.asterix.transaction.management.runtime;
 
 import org.apache.asterix.common.api.IJobEventListenerFactory;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 
-public class CommitRuntimeFactory implements IPushRuntimeFactory {
+public class CommitRuntimeFactory extends AbstractPushRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 

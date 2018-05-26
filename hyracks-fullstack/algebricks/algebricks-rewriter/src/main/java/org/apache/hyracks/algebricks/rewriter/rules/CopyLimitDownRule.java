@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamLimitPOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class CopyLimitDownRule implements IAlgebraicRewriteRule {
 
@@ -84,9 +85,11 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
             ILogicalOperator safeOp = safeOpRef.getValue();
             Mutable<ILogicalOperator> unsafeOpRef = safeOp.getInputs().get(0);
             ILogicalOperator unsafeOp = unsafeOpRef.getValue();
+            SourceLocation sourceLoc = limitOp.getSourceLocation();
             LimitOperator limitCloneOp = null;
             if (limitOp.getOffset().getValue() == null) {
                 limitCloneOp = new LimitOperator(limitOp.getMaxObjects().getValue(), false);
+                limitCloneOp.setSourceLocation(sourceLoc);
             } else {
                 // Need to add an offset to the given limit value
                 // since the original topmost limit will use the offset value.
@@ -98,7 +101,9 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
                         new MutableObject<ILogicalExpression>(limitOp.getMaxObjects().getValue().cloneExpression()));
                 addArgs.add(new MutableObject<ILogicalExpression>(limitOp.getOffset().getValue().cloneExpression()));
                 ScalarFunctionCallExpression maxPlusOffset = new ScalarFunctionCallExpression(finfoAdd, addArgs);
+                maxPlusOffset.setSourceLocation(sourceLoc);
                 limitCloneOp = new LimitOperator(maxPlusOffset, false);
+                limitCloneOp.setSourceLocation(sourceLoc);
             }
             limitCloneOp.setPhysicalOperator(new StreamLimitPOperator());
             limitCloneOp.getInputs().add(new MutableObject<ILogicalOperator>(unsafeOp));

@@ -116,7 +116,7 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                                 if (bytes0[startOffset + timeOffset] != 'T') {
                                     timeOffset += 2;
                                     if (argPtr0.getByteArray()[startOffset + timeOffset] != 'T') {
-                                        throw new InvalidDataFormatException(getIdentifier(),
+                                        throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                                 ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                     }
                                 }
@@ -125,7 +125,7 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                                 intervalStart += ATimeParserFactory.parseTimePart(bytes0, startOffset + timeOffset + 1,
                                         stringLength - timeOffset - 1);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                         ATypeTag.SERIALIZED_DATETIME_TYPE_TAG, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
@@ -149,19 +149,19 @@ public class AIntervalStartFromDateTimeConstructorDescriptor extends AbstractSca
                                 intervalEnd = DurationArithmeticOperations.addDuration(intervalStart,
                                         aDuration.getMonths(), aDuration.getMilliseconds(), false);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                         ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
 
                             if (intervalEnd < intervalStart) {
-                                throw new InvalidDataFormatException(getIdentifier(),
+                                throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                         ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                             }
 
                             aInterval.setValue(intervalStart, intervalEnd, ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                             intervalSerde.serialize(aInterval, out);
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
                         result.set(resultStorage);

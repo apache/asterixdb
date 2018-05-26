@@ -19,12 +19,12 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class StopFeedStatement implements Statement {
+public class StopFeedStatement extends AbstractStatement {
 
     private final Identifier dataverseName;
     private final Identifier feedName;

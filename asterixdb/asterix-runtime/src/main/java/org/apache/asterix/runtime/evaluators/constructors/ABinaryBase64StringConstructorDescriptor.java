@@ -46,7 +46,7 @@ public class ABinaryBase64StringConstructorDescriptor extends AbstractScalarFunc
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new ABinaryHexStringConstructorDescriptor.ABinaryConstructorEvaluator(args[0],
-                        ByteArrayBase64ParserFactory.INSTANCE, ctx);
+                        ByteArrayBase64ParserFactory.INSTANCE, ctx, sourceLoc);
             }
         };
     }

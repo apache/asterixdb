@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleS
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * In principle, an unnest operator produces a sequence of items from a collection.
@@ -104,25 +105,35 @@ public class ListifyUnnestingFunctionRule implements IAlgebraicRewriteRule {
             return false;
         }
 
+        SourceLocation sourceLoc = func.getSourceLocation();
+
         // Generates the listified collection in a subplan.
         SubplanOperator subplanOperator = new SubplanOperator();
+        subplanOperator.setSourceLocation(sourceLoc);
         // Creates a nested tuple source operator.
         NestedTupleSourceOperator ntsOperator = new NestedTupleSourceOperator(new MutableObject<>(subplanOperator));
-
+        ntsOperator.setSourceLocation(sourceLoc);
         // Unnests the dataset.
         LogicalVariable unnestVar = context.newVar();
-        ILogicalExpression unnestExpr = new UnnestingFunctionCallExpression(functionInfo, func.getArguments());
+        UnnestingFunctionCallExpression unnestExpr =
+                new UnnestingFunctionCallExpression(functionInfo, func.getArguments());
+        unnestExpr.setSourceLocation(sourceLoc);
         UnnestOperator unnestOperator = new UnnestOperator(unnestVar, new MutableObject<>(unnestExpr));
+        unnestOperator.setSourceLocation(sourceLoc);
         unnestOperator.getInputs().add(new MutableObject<>(ntsOperator));
 
         // Listify the dataset into one collection.
         LogicalVariable aggVar = context.newVar();
-        Mutable<ILogicalExpression> aggArgExprRef = new MutableObject<>(new VariableReferenceExpression(unnestVar));
-        ILogicalExpression aggExpr =
+        VariableReferenceExpression unnestVarRef = new VariableReferenceExpression(unnestVar);
+        unnestVarRef.setSourceLocation(sourceLoc);
+        Mutable<ILogicalExpression> aggArgExprRef = new MutableObject<>(unnestVarRef);
+        AggregateFunctionCallExpression aggExpr =
                 new AggregateFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.LISTIFY), false,
                         new ArrayList<>(Collections.singletonList(aggArgExprRef)));
+        aggExpr.setSourceLocation(sourceLoc);
         AggregateOperator aggregateOperator = new AggregateOperator(new ArrayList<>(Collections.singletonList(aggVar)),
                 new ArrayList<>(Collections.singletonList(new MutableObject<>(aggExpr))));
+        aggregateOperator.setSourceLocation(sourceLoc);
         aggregateOperator.getInputs().add(new MutableObject<>(unnestOperator));
 
         // Adds the aggregate operator as the root of the subplan.
@@ -136,7 +147,9 @@ public class ListifyUnnestingFunctionRule implements IAlgebraicRewriteRule {
         // asterixdb/asterix-app/src/test/resources/runtimets/results/list/query-ASTERIXDB-159-3
         subplanOperator.getInputs().add(op.getInputs().get(0));
         op.getInputs().set(0, new MutableObject<>(subplanOperator));
-        exprRef.setValue(new VariableReferenceExpression(aggVar));
+        VariableReferenceExpression aggVarRef = new VariableReferenceExpression(aggVar);
+        aggVarRef.setSourceLocation(sourceLoc);
+        exprRef.setValue(aggVarRef);
 
         // Computes type environments for new operators.
         context.computeAndSetTypeEnvironmentForOperator(ntsOperator);

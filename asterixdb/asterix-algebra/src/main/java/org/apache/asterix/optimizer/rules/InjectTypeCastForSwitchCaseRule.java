@@ -103,6 +103,7 @@ public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
                 ScalarFunctionCallExpression castFunc =
                         new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE),
                                 new ArrayList<>(Collections.singletonList(new MutableObject<>(argExpr))));
+                castFunc.setSourceLocation(argExpr.getSourceLocation());
                 TypeCastUtils.setRequiredAndInputTypes(castFunc, producedType, type);
                 argRef.setValue(castFunc);
                 rewritten = true;

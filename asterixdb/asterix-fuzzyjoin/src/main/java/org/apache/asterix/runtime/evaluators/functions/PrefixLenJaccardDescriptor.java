@@ -94,7 +94,7 @@ public class PrefixLenJaccardDescriptor extends AbstractScalarFunctionDynamicDes
                         byte[] data = thresholdPtr.getByteArray();
                         int offset = thresholdPtr.getStartOffset();
                         if (data[offset] != ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, data[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, data[offset],
                                     ATypeTag.SERIALIZED_FLOAT_TYPE_TAG);
                         }
                         float similarityThreshold = AFloatSerializerDeserializer.getFloat(data, offset + 1);

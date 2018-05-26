@@ -23,20 +23,22 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class InvalidDataFormatException extends RuntimeDataException {
 
-    public InvalidDataFormatException(FunctionIdentifier fid, byte expectedTypeTag) {
-        super(ErrorCode.INVALID_FORMAT, fid.getName(),
+    public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, byte expectedTypeTag) {
+        super(ErrorCode.INVALID_FORMAT, sourceLoc, fid.getName(),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(expectedTypeTag));
     }
 
-    public InvalidDataFormatException(FunctionIdentifier fid, String expectedType) {
-        super(ErrorCode.INVALID_FORMAT, fid.getName(), expectedType);
+    public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, String expectedType) {
+        super(ErrorCode.INVALID_FORMAT, sourceLoc, fid.getName(), expectedType);
     }
 
-    public InvalidDataFormatException(FunctionIdentifier fid, Throwable cause, byte expectedTypeTag) {
-        super(ErrorCode.INVALID_FORMAT, fid.getName(), cause, expectedTypeTag);
+    public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, Throwable cause,
+            byte expectedTypeTag) {
+        super(ErrorCode.INVALID_FORMAT, sourceLoc, fid.getName(), cause, expectedTypeTag);
         addSuppressed(cause);
     }
 

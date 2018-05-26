@@ -23,13 +23,14 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class Query implements IReturningStatement {
+public class Query extends AbstractStatement implements IReturningStatement {
     private final boolean explain;
     private boolean topLevel = true;
     private Expression body;

@@ -22,7 +22,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
@@ -50,9 +49,10 @@ public class ReplicatePOperator extends AbstractReplicatePOperator {
         int outputArity = rop.getOutputArity();
         boolean[] outputMaterializationFlags = rop.getOutputMaterializationFlags();
 
-        ReplicateOperatorDescriptor splitOpDesc =
+        ReplicateOperatorDescriptor ropDesc =
                 new ReplicateOperatorDescriptor(spec, recDescriptor, outputArity, outputMaterializationFlags);
-        contributeOpDesc(builder, (AbstractLogicalOperator) op, splitOpDesc);
+        ropDesc.setSourceLocation(rop.getSourceLocation());
+        contributeOpDesc(builder, rop, ropDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
     }

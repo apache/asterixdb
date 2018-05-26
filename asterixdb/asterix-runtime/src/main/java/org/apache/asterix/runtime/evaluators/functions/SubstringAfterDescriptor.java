@@ -81,11 +81,11 @@ public class SubstringAfterDescriptor extends AbstractScalarFunctionDynamicDescr
                         int patternLen = array1.getLength();
 
                         if (src[srcOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, src[srcOffset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, src[srcOffset],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
                         if (pattern[patternOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, pattern[patternOffset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, pattern[patternOffset],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
 

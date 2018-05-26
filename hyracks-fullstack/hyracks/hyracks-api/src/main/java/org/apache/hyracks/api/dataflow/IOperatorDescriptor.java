@@ -20,11 +20,11 @@ package org.apache.hyracks.api.dataflow;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.constraints.IConstraintAcceptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Descriptor for operators in Hyracks.
@@ -37,7 +37,7 @@ public interface IOperatorDescriptor extends Serializable {
      *
      * @return operator id
      */
-    public OperatorDescriptorId getOperatorId();
+    OperatorDescriptorId getOperatorId();
 
     /**
      * Sets the id of the operator.
@@ -51,21 +51,21 @@ public interface IOperatorDescriptor extends Serializable {
      *
      * @return Number of inputs.
      */
-    public int getInputArity();
+    int getInputArity();
 
     /**
      * Returns the number of outputs out of this operator.
      *
      * @return Number of outputs.
      */
-    public int getOutputArity();
+    int getOutputArity();
 
     /**
      * Gets the output record descriptor
      *
      * @return Array of RecordDescriptor, one per output.
      */
-    public RecordDescriptor[] getOutputRecordDescriptors();
+    RecordDescriptor[] getOutputRecordDescriptors();
 
     /**
      * Contributes the activity graph that describes the behavior of this
@@ -74,7 +74,7 @@ public interface IOperatorDescriptor extends Serializable {
      * @param builder
      *            - graph builder
      */
-    public void contributeActivities(IActivityGraphBuilder builder);
+    void contributeActivities(IActivityGraphBuilder builder);
 
     /**
      * Contributes any scheduling constraints imposed by this operator.
@@ -84,20 +84,30 @@ public interface IOperatorDescriptor extends Serializable {
      * @param plan
      *            - Job Plan
      */
-    public void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ICCServiceContext ccServiceCtx);
+    void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ICCServiceContext ccServiceCtx);
 
     /**
      * Gets the display name.
      */
-    public String getDisplayName();
+    String getDisplayName();
 
     /**
      * Sets the display name.
      */
-    public void setDisplayName(String displayName);
+    void setDisplayName(String displayName);
+
+    /**
+     * Gets the source location.
+     */
+    SourceLocation getSourceLocation();
+
+    /**
+     * Sets the source location.
+     */
+    void setSourceLocation(SourceLocation sourceLoc);
 
     /**
      * Translates this operator descriptor to JSON.
      */
-    public ObjectNode toJSON();
+    ObjectNode toJSON();
 }

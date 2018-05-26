@@ -89,7 +89,7 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
 
                             if (listBytes[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                                     && listBytes[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                                throw new TypeMismatchException(getIdentifier(), 0, listBytes[offset],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, listBytes[offset],
                                         ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
                                         ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                             }
@@ -107,16 +107,16 @@ public class CreatePolygonDescriptor extends AbstractScalarFunctionDynamicDescri
                                         missingSerde.serialize(AMissing.MISSING, out);
                                         return;
                                     }
-                                    throw new UnsupportedItemTypeException(BuiltinFunctions.CREATE_POLYGON,
+                                    throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.CREATE_POLYGON,
                                             itemType.serialize());
                                 }
 
                             }
                             if (listAccessor.size() < 6) {
-                                throw new InvalidDataFormatException(getIdentifier(),
+                                throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                         ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                             } else if (listAccessor.size() % 2 != 0) {
-                                throw new InvalidDataFormatException(getIdentifier(),
+                                throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                         ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                             }
                             out.writeByte(ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);

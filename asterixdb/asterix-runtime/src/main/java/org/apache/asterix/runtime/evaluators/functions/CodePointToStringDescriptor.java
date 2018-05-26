@@ -95,7 +95,8 @@ public class CodePointToStringDescriptor extends AbstractScalarFunctionDynamicDe
                                                 offset);
                                         break;
                                     default:
-                                        throw new UnsupportedTypeException(getIdentifier(), serOrderedList[offset]);
+                                        throw new UnsupportedTypeException(sourceLoc, getIdentifier(),
+                                                serOrderedList[offset]);
                                 }
                             }
                             // calculate length first

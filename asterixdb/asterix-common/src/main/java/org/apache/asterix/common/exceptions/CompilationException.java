@@ -22,12 +22,21 @@ package org.apache.asterix.common.exceptions;
 import java.io.Serializable;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class CompilationException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
 
+    public CompilationException(int errorCode, SourceLocation sourceLoc, Serializable... params) {
+        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), sourceLoc, params);
+    }
+
     public CompilationException(int errorCode, Serializable... params) {
         super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
+    }
+
+    public CompilationException(int errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), cause, sourceLoc, params);
     }
 
     public CompilationException(int errorCode, Throwable cause, Serializable... params) {

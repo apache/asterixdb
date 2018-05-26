@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -83,12 +84,15 @@ public class ErrorMessageUtil {
      * @param errorCode
      *            the error code itself
      * @param message
-     *            the user provided error message (a format string as specified in {@link java.util.Formatter})
+     *            the user provided error message (a format string as specified in {@link Formatter})
+     * @param sourceLoc
+     *            the source location where the error originated
      * @param params
-     *            an array of objects taht will be provided to the {@link java.util.Formatter}
+     *            an array of objects taht will be provided to the {@link Formatter}
      * @return the formatted string
      */
-    public static String formatMessage(String component, int errorCode, String message, Serializable... params) {
+    public static String formatMessage(String component, int errorCode, String message, SourceLocation sourceLoc,
+            Serializable... params) {
         try (Formatter fmt = new Formatter()) {
             if (!NONE.equals(component)) {
                 fmt.format("%1$s%2$04d: ", component, errorCode);
@@ -98,6 +102,10 @@ public class ErrorMessageUtil {
                 return message;
             }
             fmt.format(message == null ? "null" : message, (Object[]) params);
+            if (sourceLoc != null) {
+                fmt.out().append(" (in line ").append(String.valueOf(sourceLoc.getLine())).append(", at column ")
+                        .append(String.valueOf(sourceLoc.getColumn())).append(')');
+            }
             return fmt.out().toString();
         } catch (Exception e) {
             // Do not throw further exceptions during exception processing.
@@ -105,5 +113,4 @@ public class ErrorMessageUtil {
             return e.getMessage();
         }
     }
-
 }

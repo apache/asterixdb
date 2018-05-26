@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -41,10 +42,13 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
 
     private IScalarEvaluatorFactory recordEvalFactory;
     private final ARecordType recordType;
+    private final SourceLocation sourceLoc;
 
-    public GetRecordFieldsEvalFactory(IScalarEvaluatorFactory recordEvalFactory, ARecordType recordType) {
+    public GetRecordFieldsEvalFactory(IScalarEvaluatorFactory recordEvalFactory, ARecordType recordType,
+            SourceLocation sourceLoc) {
         this.recordEvalFactory = recordEvalFactory;
         this.recordType = recordType;
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -68,7 +72,7 @@ public class GetRecordFieldsEvalFactory implements IScalarEvaluatorFactory {
                 int len = inputArg0.getLength();
 
                 if (data[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                    throw new TypeMismatchException(BuiltinFunctions.GET_RECORD_FIELDS, 0, data[offset],
+                    throw new TypeMismatchException(sourceLoc, BuiltinFunctions.GET_RECORD_FIELDS, 0, data[offset],
                             ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                 }
 

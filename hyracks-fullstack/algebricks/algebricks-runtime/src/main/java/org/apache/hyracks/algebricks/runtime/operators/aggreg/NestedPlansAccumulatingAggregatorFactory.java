@@ -150,8 +150,8 @@ public class NestedPlansAccumulatingAggregatorFactory extends AbstractAccumulati
                     ArrayTupleBuilder tb = outputWriter.getTupleBuilder();
                     byte[] data = tb.getByteArray();
                     if (data.length > memoryBudget) {
-                        throw HyracksDataException.create(ErrorCode.GROUP_BY_MEMORY_BUDGET_EXCEEDS, data.length,
-                                memoryBudget);
+                        throw HyracksDataException.create(ErrorCode.GROUP_BY_MEMORY_BUDGET_EXCEEDS, sourceLoc,
+                                data.length, memoryBudget);
                     }
                 }
             }

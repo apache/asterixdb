@@ -60,7 +60,7 @@ public class NumericSignDescriptor extends AbstractScalarFunctionDynamicDescript
 
         NumericSignEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericSignDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericSignDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

@@ -46,7 +46,7 @@ public class EditDistanceContainsDescriptor extends AbstractScalarFunctionDynami
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new EditDistanceContainsEvaluator(args, ctx);
+                return new EditDistanceContainsEvaluator(args, ctx, sourceLoc);
             }
         };
     }

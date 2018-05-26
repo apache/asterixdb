@@ -98,6 +98,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
@@ -337,12 +338,14 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      *            a mutable progress state used for error handling during the drop operation
      * @param hcc
      *            a client connection to hyracks master for job execution
+     * @param sourceLoc
      * @throws Exception
      *             if an error occur during the drop process or if the dataset can't be dropped for any reason
      */
     public void drop(MetadataProvider metadataProvider, MutableObject<MetadataTransactionContext> mdTxnCtx,
             List<JobSpecification> jobsToExecute, MutableBoolean bActiveTxn, MutableObject<ProgressState> progress,
-            IHyracksClientConnection hcc, boolean dropCorrespondingNodeGroup) throws Exception {
+            IHyracksClientConnection hcc, boolean dropCorrespondingNodeGroup, SourceLocation sourceLoc)
+            throws Exception {
         Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<>();
         if (getDatasetType() == DatasetType.INTERNAL) {
             // prepare job spec(s) that would disconnect any active feeds involving the dataset.
@@ -361,7 +364,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                     MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx.getValue(), dataverseName, datasetName);
             for (int j = 0; j < indexes.size(); j++) {
                 if (indexes.get(j).isSecondaryIndex()) {
-                    jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(indexes.get(j), metadataProvider, this));
+                    jobsToExecute
+                            .add(IndexUtil.buildDropIndexJobSpec(indexes.get(j), metadataProvider, this, sourceLoc));
                 }
             }
             jobsToExecute.add(DatasetUtil.dropDatasetJobSpec(this, metadataProvider));
@@ -398,7 +402,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                     MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx.getValue(), dataverseName, datasetName);
             for (int j = 0; j < indexes.size(); j++) {
                 if (ExternalIndexingOperations.isFileIndex(indexes.get(j))) {
-                    jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(indexes.get(j), metadataProvider, this));
+                    jobsToExecute
+                            .add(IndexUtil.buildDropIndexJobSpec(indexes.get(j), metadataProvider, this, sourceLoc));
                 } else {
                     jobsToExecute.add(DatasetUtil.buildDropFilesIndexJobSpec(metadataProvider, this));
                 }

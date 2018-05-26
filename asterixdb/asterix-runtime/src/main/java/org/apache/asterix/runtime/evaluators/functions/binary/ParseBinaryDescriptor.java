@@ -67,7 +67,7 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractBinaryScalarEvaluator(ctx, args) {
+                return new AbstractBinaryScalarEvaluator(ctx, args, sourceLoc) {
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer<ABinary> binarySerde =
@@ -108,7 +108,7 @@ public class ParseBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
 
                             aBinary.setValue(base64Parser.getByteArray(), 0, base64Parser.getLength());
                         } else {
-                            throw new UnsupportedItemTypeException(getIdentifier(), formatTag.serialize());
+                            throw new UnsupportedItemTypeException(sourceLoc, getIdentifier(), formatTag.serialize());
                         }
                         binarySerde.serialize(aBinary, dataOutput);
                         result.set(resultStorage);

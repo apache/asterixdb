@@ -23,7 +23,7 @@ import java.util.Objects;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class UnorderedListTypeDefinition implements TypeExpression {
+public class UnorderedListTypeDefinition extends AbstractTypeExpression {
 
     private TypeExpression itemTypeExpression;
 

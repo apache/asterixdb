@@ -20,10 +20,11 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class FunctionDropStatement implements Statement {
+public class FunctionDropStatement extends AbstractStatement {
 
     private final FunctionSignature signature;
     private boolean ifExists;

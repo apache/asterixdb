@@ -54,7 +54,7 @@ public class ToStringDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractStringConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
+                return new AbstractStringConstructorEvaluator(args[0].createScalarEvaluator(ctx), sourceLoc) {
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ANull> nullSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);

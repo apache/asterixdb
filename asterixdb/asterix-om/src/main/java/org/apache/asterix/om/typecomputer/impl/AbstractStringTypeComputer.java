@@ -24,14 +24,16 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 abstract public class AbstractStringTypeComputer extends AbstractResultTypeComputer {
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
         if (actualTypeTag != ATypeTag.STRING) {
-            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING);
+            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.STRING);
         }
     }
 

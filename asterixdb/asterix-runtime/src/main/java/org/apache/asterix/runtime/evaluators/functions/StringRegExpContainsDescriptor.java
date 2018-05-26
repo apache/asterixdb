@@ -50,7 +50,7 @@ public class StringRegExpContainsDescriptor extends AbstractScalarFunctionDynami
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractBinaryStringBoolEval(ctx, args[0], args[1],
-                        StringRegExpContainsDescriptor.this.getIdentifier()) {
+                        StringRegExpContainsDescriptor.this.getIdentifier(), sourceLoc) {
                     private final RegExpMatcher matcher = new RegExpMatcher();
 
                     @Override

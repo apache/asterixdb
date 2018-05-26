@@ -125,7 +125,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 intervalStart = intervalStart * GregorianCalendarSystem.CHRONON_OF_DAY;
                             }
                         } else {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
 
@@ -134,7 +134,8 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                         int offset1 = argPtr1.getStartOffset();
                         ATypeTag type1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
                         if (intervalTypeTag != bytes1[offset1]) {
-                            throw new IncompatibleTypeException(getIdentifier(), intervalTypeTag, bytes1[offset1]);
+                            throw new IncompatibleTypeException(sourceLoc, getIdentifier(), intervalTypeTag,
+                                    bytes1[offset1]);
                         }
 
                         long anchorTime;
@@ -150,7 +151,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                 anchorTime = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                 break;
                             default:
-                                throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                         ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_TIME_TYPE_TAG,
                                         ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
@@ -178,11 +179,11 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ((totalMonths < 0 && totalMonths % yearMonth != 0) ? -1 : 0);
 
                                 if (firstBinIndex > Integer.MAX_VALUE) {
-                                    throw new OverflowException(getIdentifier());
+                                    throw new OverflowException(sourceLoc, getIdentifier());
                                 }
 
                                 if (firstBinIndex < Integer.MIN_VALUE) {
-                                    throw new UnderflowException(getIdentifier());
+                                    throw new UnderflowException(sourceLoc, getIdentifier());
                                 }
                                 break;
 
@@ -195,7 +196,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                         + ((totalChronon < 0 && totalChronon % dayTime != 0) ? -1 : 0);
                                 break;
                             default:
-                                throw new TypeMismatchException(getIdentifier(), 2, bytes2[offset2],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 2, bytes2[offset2],
                                         ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG,
                                         ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG);
                         }
@@ -233,7 +234,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
 
                             } else if (intervalTypeTag == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
                                 if (yearMonth != 0) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
 
@@ -248,7 +249,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
 
                                 if (binStartChronon < 0 || binStartChronon >= GregorianCalendarSystem.CHRONON_OF_DAY) {
                                     // avoid the case where a time bin is before 00:00:00 or no early than 24:00:00
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                 }
 
@@ -272,7 +273,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                     }
 
                                     if (binEndChronon < binStartChronon) {
-                                        throw new InvalidDataFormatException(getIdentifier(),
+                                        throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                                 ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                                     }
                                 }
@@ -292,7 +293,7 @@ public class OverlapBinsDescriptor extends AbstractScalarFunctionDynamicDescript
                                     binOffset++;
                                 } while (binEndChronon < intervalEnd);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                         ATypeTag.SERIALIZED_DATE_TYPE_TAG, ATypeTag.SERIALIZED_TIME_TYPE_TAG,
                                         ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                             }

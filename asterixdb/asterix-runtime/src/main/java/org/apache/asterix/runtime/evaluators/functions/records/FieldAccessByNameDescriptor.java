@@ -41,7 +41,7 @@ public class FieldAccessByNameDescriptor extends AbstractScalarFunctionDynamicDe
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
-        return new FieldAccessByNameEvalFactory(args[0], args[1]);
+        return new FieldAccessByNameEvalFactory(args[0], args[1], sourceLoc);
     }
 
 }

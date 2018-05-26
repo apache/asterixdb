@@ -36,43 +36,52 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class PlanTranslationUtil {
     private static final LogicalVariable DUMMY_VAR = new LogicalVariable(-1);
 
     public static void prepareMetaKeyAccessExpression(List<String> field, LogicalVariable resVar,
             List<Mutable<ILogicalExpression>> assignExpressions, List<LogicalVariable> vars,
-            List<Mutable<ILogicalExpression>> varRefs, IVariableContext context) {
+            List<Mutable<ILogicalExpression>> varRefs, IVariableContext context, SourceLocation sourceLoc) {
         IAObject value = (field.size() > 1) ? new AOrderedList(field) : new AString(field.get(0));
         ScalarFunctionCallExpression metaKeyFunction =
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.META_KEY));
-        metaKeyFunction.getArguments()
-                .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(resVar)));
+        metaKeyFunction.setSourceLocation(sourceLoc);
+        VariableReferenceExpression resVarRef = new VariableReferenceExpression(resVar);
+        resVarRef.setSourceLocation(sourceLoc);
+        metaKeyFunction.getArguments().add(new MutableObject<ILogicalExpression>(resVarRef));
         metaKeyFunction.getArguments()
                 .add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(value))));
         assignExpressions.add(new MutableObject<ILogicalExpression>(metaKeyFunction));
         LogicalVariable v = context.newVar();
         vars.add(v);
         if (varRefs != null) {
-            varRefs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(v)));
+            VariableReferenceExpression vRef = new VariableReferenceExpression(v);
+            vRef.setSourceLocation(sourceLoc);
+            varRefs.add(new MutableObject<ILogicalExpression>(vRef));
         }
     }
 
     public static void prepareVarAndExpression(List<String> field, LogicalVariable resVar, List<LogicalVariable> vars,
             List<Mutable<ILogicalExpression>> assignExpressions, List<Mutable<ILogicalExpression>> varRefs,
-            IVariableContext context) {
-        ScalarFunctionCallExpression f = createFieldAccessExpression(new VariableReferenceExpression(DUMMY_VAR), field);
+            IVariableContext context, SourceLocation sourceLoc) {
+        VariableReferenceExpression dummyVarRef = new VariableReferenceExpression(DUMMY_VAR);
+        dummyVarRef.setSourceLocation(sourceLoc);
+        ScalarFunctionCallExpression f = createFieldAccessExpression(dummyVarRef, field, sourceLoc);
         f.substituteVar(DUMMY_VAR, resVar);
         assignExpressions.add(new MutableObject<ILogicalExpression>(f));
         LogicalVariable v = context.newVar();
         vars.add(v);
         if (varRefs != null) {
-            varRefs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(v)));
+            VariableReferenceExpression vRef = new VariableReferenceExpression(v);
+            vRef.setSourceLocation(sourceLoc);
+            varRefs.add(new MutableObject<ILogicalExpression>(vRef));
         }
     }
 
     private static ScalarFunctionCallExpression createFieldAccessExpression(ILogicalExpression target,
-            List<String> field) {
+            List<String> field, SourceLocation sourceLoc) {
         FunctionIdentifier functionIdentifier;
         IAObject value;
         if (field.size() > 1) {
@@ -83,7 +92,9 @@ public class PlanTranslationUtil {
             value = new AString(field.get(0));
         }
         IFunctionInfo finfoAccess = FunctionUtil.getFunctionInfo(functionIdentifier);
-        return new ScalarFunctionCallExpression(finfoAccess, new MutableObject<>(target),
+        ScalarFunctionCallExpression faExpr = new ScalarFunctionCallExpression(finfoAccess, new MutableObject<>(target),
                 new MutableObject<>(new ConstantExpression(new AsterixConstantValue(value))));
+        faExpr.setSourceLocation(sourceLoc);
+        return faExpr;
     }
 }

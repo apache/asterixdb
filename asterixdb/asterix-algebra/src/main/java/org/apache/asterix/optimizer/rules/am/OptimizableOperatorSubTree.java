@@ -302,7 +302,8 @@ public class OptimizableOperatorSubTree {
             // Find the dataset corresponding to the datasource in the metadata.
             ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {
-                throw CompilationException.create(ErrorCode.NO_METADATA_FOR_DATASET, datasetName);
+                throw new CompilationException(ErrorCode.NO_METADATA_FOR_DATASET, root.getSourceLocation(),
+                        datasetName);
             }
             // Get the record type for that dataset.
             IAType itemType = metadataProvider.findType(ds.getItemTypeDataverseName(), ds.getItemTypeName());
@@ -426,7 +427,7 @@ public class OptimizableOperatorSubTree {
                 break;
             case NO_DATASOURCE:
             default:
-                throw CompilationException.create(ErrorCode.SUBTREE_HAS_NO_DATA_SOURCE);
+                throw new CompilationException(ErrorCode.SUBTREE_HAS_NO_DATA_SOURCE, root.getSourceLocation());
         }
     }
 
@@ -446,7 +447,7 @@ public class OptimizableOperatorSubTree {
                 return new ArrayList<>();
             case NO_DATASOURCE:
             default:
-                throw CompilationException.create(ErrorCode.SUBTREE_HAS_NO_DATA_SOURCE);
+                throw new CompilationException(ErrorCode.SUBTREE_HAS_NO_DATA_SOURCE, root.getSourceLocation());
         }
     }
 
@@ -467,7 +468,8 @@ public class OptimizableOperatorSubTree {
                     return new ArrayList<>();
                 case NO_DATASOURCE:
                 default:
-                    throw CompilationException.create(ErrorCode.SUBTREE_HAS_NO_ADDTIONAL_DATA_SOURCE);
+                    throw new CompilationException(ErrorCode.SUBTREE_HAS_NO_ADDTIONAL_DATA_SOURCE,
+                            root.getSourceLocation());
             }
         } else {
             return null;

@@ -195,7 +195,9 @@ public class PushFunctionsBelowJoin implements IAlgebraicRewriteRule {
                 LogicalVariable replacementVar = context.newVar();
                 assignVars.add(replacementVar);
                 assignExprs.add(new MutableObject<ILogicalExpression>(funcExpr));
-                funcExprRef.setValue(new VariableReferenceExpression(replacementVar));
+                VariableReferenceExpression replacementVarRef = new VariableReferenceExpression(replacementVar);
+                replacementVarRef.setSourceLocation(funcExpr.getSourceLocation());
+                funcExprRef.setValue(replacementVarRef);
                 funcIter.remove();
             }
         }

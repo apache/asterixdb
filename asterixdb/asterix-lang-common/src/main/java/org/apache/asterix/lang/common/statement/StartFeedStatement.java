@@ -20,12 +20,12 @@
 package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class StartFeedStatement implements Statement {
+public class StartFeedStatement extends AbstractStatement {
 
     public static final String WAIT_FOR_COMPLETION = "wait-for-completion-feed";
     private Identifier dataverseName;

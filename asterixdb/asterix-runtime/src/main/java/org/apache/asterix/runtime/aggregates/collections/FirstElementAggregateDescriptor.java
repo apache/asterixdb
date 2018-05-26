@@ -38,7 +38,7 @@ public class FirstElementAggregateDescriptor extends AbstractAggregateFunctionDy
 
     @Override
     public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new FirstElementEvalFactory(args, false);
+        return new FirstElementEvalFactory(args, false, sourceLoc);
     }
 
 }

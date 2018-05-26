@@ -23,7 +23,8 @@ import java.util.List;
 
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
-public abstract class AbstractExpression implements Expression {
+public abstract class AbstractExpression extends AbstractLangExpression implements Expression {
+
     protected List<IExpressionAnnotation> hints;
 
     public void addHint(IExpressionAnnotation hint) {

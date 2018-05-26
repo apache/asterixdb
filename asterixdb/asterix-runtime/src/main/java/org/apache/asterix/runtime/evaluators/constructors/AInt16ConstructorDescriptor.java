@@ -112,17 +112,17 @@ public class AInt16ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                             && serString[offset + 2] == '6' && offset + 3 == end) {
                                         break;
                                     } else {
-                                        throw new InvalidDataFormatException(getIdentifier(),
+                                        throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                                 ATypeTag.SERIALIZED_INT16_TYPE_TAG);
                                     }
                                     if (value < limit + digit) {
-                                        throw new InvalidDataFormatException(getIdentifier(),
+                                        throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                                 ATypeTag.SERIALIZED_INT16_TYPE_TAG);
                                     }
                                     value = (short) (value - digit);
                                 }
                                 if (value > 0) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_INT16_TYPE_TAG);
                                 }
                                 if (value < 0 && positive) {
@@ -133,11 +133,11 @@ public class AInt16ConstructorDescriptor extends AbstractScalarFunctionDynamicDe
                                 int16Serde.serialize(aInt16, out);
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_INT16_TYPE_TAG);
                         }
                     }

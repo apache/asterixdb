@@ -62,6 +62,7 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
                 secondaryFileSplitProvider, resourceFactory, true);
         IndexCreateOperatorDescriptor secondaryIndexCreateOp =
                 new IndexCreateOperatorDescriptor(spec, indexBuilderFactory);
+        secondaryIndexCreateOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
         spec.addRoot(secondaryIndexCreateOp);
@@ -78,6 +79,7 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
                 metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
         // The index drop operation should be persistent regardless of temp datasets or permanent dataset.
         IndexDropOperatorDescriptor btreeDrop = new IndexDropOperatorDescriptor(spec, dataflowHelperFactory, options);
+        btreeDrop.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeDrop,
                 splitsAndConstraint.second);
         spec.addRoot(btreeDrop);
@@ -93,6 +95,7 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
                 metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
         LSMTreeIndexCompactOperatorDescriptor compactOp =
                 new LSMTreeIndexCompactOperatorDescriptor(spec, dataflowHelperFactory);
+        compactOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 secondaryPartitionConstraint);
         spec.addRoot(compactOp);

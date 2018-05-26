@@ -19,12 +19,14 @@
 package org.apache.asterix.runtime.aggregates.collections;
 
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.aggregates.std.AbstractAggregateFunction;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -35,15 +37,17 @@ class FirstElementEvalFactory implements IAggregateEvaluatorFactory {
     private static final long serialVersionUID = 1L;
     private final IScalarEvaluatorFactory[] args;
     private final boolean isLocal;
+    private final SourceLocation sourceLoc;
 
-    FirstElementEvalFactory(IScalarEvaluatorFactory[] args, boolean isLocal) {
+    FirstElementEvalFactory(IScalarEvaluatorFactory[] args, boolean isLocal, SourceLocation sourceLoc) {
         this.args = args;
         this.isLocal = isLocal;
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
     public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-        return new IAggregateEvaluator() {
+        return new AbstractAggregateFunction(sourceLoc) {
 
             private boolean first = true;
             // Needs to copy the bytes from inputVal to outputVal because the byte space of inputVal could be re-used

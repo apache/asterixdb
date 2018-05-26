@@ -91,13 +91,12 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
      * @param hashFunctionFactories
      * @param comparatorFactories
      * @param recordDescriptor
-     * @throws HyracksDataException
      */
     public HybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memsize, int inputsize0,
             int recordsPerFrame, double factor, int[] keys0, int[] keys1,
             IBinaryHashFunctionFactory[] hashFunctionFactories, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor, IPredicateEvaluatorFactory predEvalFactory, boolean isLeftOuter,
-            IMissingWriterFactory[] nullWriterFactories1) throws HyracksDataException {
+            IMissingWriterFactory[] nullWriterFactories1) {
         super(spec, 2, 1);
         this.memsize = memsize;
         this.inputsize0 = inputsize0;

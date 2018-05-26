@@ -93,11 +93,11 @@ public class SpatialDistanceDescriptor extends AbstractScalarFunctionDynamicDesc
                                             offset1 + APointSerializerDeserializer.getCoordinateOffset(Coordinate.Y));
                                     distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
                                 } else {
-                                    throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                                    throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                             ATypeTag.SERIALIZED_POINT_TYPE_TAG);
                                 }
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                         ATypeTag.SERIALIZED_POINT_TYPE_TAG);
                             }
                             out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);

@@ -68,6 +68,7 @@ public class StreamProjectPOperator extends AbstractPropagatePropertiesForUsedVa
             projectionList[i++] = pos;
         }
         StreamProjectRuntimeFactory runtime = new StreamProjectRuntimeFactory(projectionList, flushFramesRapidly);
+        runtime.setSourceLocation(project.getSourceLocation());
         RecordDescriptor recDesc =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         builder.contributeMicroOperator(project, runtime, recDesc);

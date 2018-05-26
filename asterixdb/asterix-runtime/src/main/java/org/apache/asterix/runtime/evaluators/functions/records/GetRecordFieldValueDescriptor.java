@@ -57,6 +57,6 @@ public class GetRecordFieldValueDescriptor extends AbstractScalarFunctionDynamic
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
-        return new GetRecordFieldValueEvalFactory(args[0], args[1], recType);
+        return new GetRecordFieldValueEvalFactory(args[0], args[1], recType, sourceLoc);
     }
 }

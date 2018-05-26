@@ -25,6 +25,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -43,11 +44,15 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     protected final IPointable outRight = VoidPointable.FACTORY.createPointable();
     protected final IScalarEvaluator evalLeft;
     protected final IScalarEvaluator evalRight;
-    private final ComparisonHelper ch = new ComparisonHelper();
+    protected final SourceLocation sourceLoc;
+    private final ComparisonHelper ch;
 
-    public AbstractComparisonEvaluator(IScalarEvaluator evalLeft, IScalarEvaluator evalRight) {
+    public AbstractComparisonEvaluator(IScalarEvaluator evalLeft, IScalarEvaluator evalRight,
+            SourceLocation sourceLoc) {
         this.evalLeft = evalLeft;
         this.evalRight = evalRight;
+        this.sourceLoc = sourceLoc;
+        ch = new ComparisonHelper(sourceLoc);
     }
 
     @Override

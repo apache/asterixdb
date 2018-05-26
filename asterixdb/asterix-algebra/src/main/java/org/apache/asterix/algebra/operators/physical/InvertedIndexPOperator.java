@@ -120,10 +120,12 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                         jobGenParams.getIndexName(), jobGenParams.getSearchKeyType(), keyIndexes,
                         jobGenParams.getSearchModifierType(), jobGenParams.getSimilarityThreshold(),
                         minFilterFieldIndexes, maxFilterFieldIndexes, jobGenParams.getIsFullTextSearch(), frameLimit);
+        IOperatorDescriptor opDesc = invIndexSearch.first;
+        opDesc.setSourceLocation(unnestMapOp.getSourceLocation());
 
         // Contribute operator in hyracks job.
-        builder.contributeHyracksOperator(unnestMapOp, invIndexSearch.first);
-        builder.contributeAlgebricksPartitionConstraint(invIndexSearch.first, invIndexSearch.second);
+        builder.contributeHyracksOperator(unnestMapOp, opDesc);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, invIndexSearch.second);
         ILogicalOperator srcExchange = unnestMapOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMapOp, 0);
     }

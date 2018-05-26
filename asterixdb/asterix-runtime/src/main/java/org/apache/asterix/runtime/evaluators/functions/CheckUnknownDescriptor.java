@@ -68,7 +68,7 @@ public class CheckUnknownDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                         if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
                                 || data[offset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
-                            throw new UnsupportedTypeException(getIdentifier(), data[offset]);
+                            throw new UnsupportedTypeException(sourceLoc, getIdentifier(), data[offset]);
                         }
                         result.set(inputArg);
                     }

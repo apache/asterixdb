@@ -27,6 +27,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComputer {
 
@@ -36,10 +37,11 @@ public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComput
     }
 
     @Override
-    public void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    public void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         if (tag != ATypeTag.ANY && tag != ATypeTag.ARRAY && tag != ATypeTag.MULTISET) {
-            throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.ARRAY, ATypeTag.MULTISET);
+            throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag, ATypeTag.ARRAY, ATypeTag.MULTISET);
         }
     }
 

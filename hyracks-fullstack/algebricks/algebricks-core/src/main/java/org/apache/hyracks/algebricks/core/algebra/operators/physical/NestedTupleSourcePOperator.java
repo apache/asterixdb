@@ -98,6 +98,7 @@ public class NestedTupleSourcePOperator extends AbstractPhysicalOperator {
             throws AlgebricksException {
         propagatedSchema.addAllVariables(outerPlanSchema);
         NestedTupleSourceRuntimeFactory runtime = new NestedTupleSourceRuntimeFactory();
+        runtime.setSourceLocation(op.getSourceLocation());
         RecordDescriptor recDesc =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         builder.contributeMicroOperator(op, runtime, recDesc);

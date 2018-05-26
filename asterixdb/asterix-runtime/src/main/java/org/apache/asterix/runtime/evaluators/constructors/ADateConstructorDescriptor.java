@@ -93,7 +93,7 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 // the string to be parsed should be at least 8 characters: YYYYMMDD
                                 if (stringLength < 8) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                                 }
 
@@ -117,11 +117,12 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                 dateSerde.serialize(aDate, out);
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_DATE_TYPE_TAG);
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
+                                    ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                         }
                     }
                 };

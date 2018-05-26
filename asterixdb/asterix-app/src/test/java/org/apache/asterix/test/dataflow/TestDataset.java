@@ -33,6 +33,7 @@ import org.apache.asterix.transaction.management.runtime.CommitRuntime;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -56,7 +57,7 @@ public class TestDataset extends Dataset {
     @Override
     public IPushRuntimeFactory getCommitRuntimeFactory(MetadataProvider metadataProvider,
             int[] primaryKeyFieldPermutation, boolean isSink) throws AlgebricksException {
-        return new IPushRuntimeFactory() {
+        return new AbstractPushRuntimeFactory() {
             @Override
             public IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new IPushRuntime[] { new CommitRuntime(ctx, new TxnId(ctx.getJobletContext().getJobId().getId()),

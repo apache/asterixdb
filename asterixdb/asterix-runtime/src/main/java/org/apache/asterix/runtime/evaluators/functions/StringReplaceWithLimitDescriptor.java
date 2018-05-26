@@ -48,7 +48,8 @@ public class StringReplaceWithLimitDescriptor extends AbstractScalarFunctionDyna
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractStringStringStringIntEval(ctx, args[0], args[1], args[2], args[3], getIdentifier()) {
+                return new AbstractStringStringStringIntEval(ctx, args[0], args[1], args[2], args[3], getIdentifier(),
+                        sourceLoc) {
 
                     final StringReplacer replacer = new StringReplacer();
 

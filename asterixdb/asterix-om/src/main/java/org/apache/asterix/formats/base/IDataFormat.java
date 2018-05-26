@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public interface IDataFormat {
     public ISerializerDeserializerProvider getSerdeProvider();
@@ -66,16 +67,17 @@ public interface IDataFormat {
     public IMissingWriterFactory getMissingWriterFactory();
 
     public Triple<IScalarEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(
-            IFunctionManager functionManager, ARecordType recType, List<String> fldName) throws AlgebricksException;
+            IFunctionManager functionManager, ARecordType recType, List<String> fldName, SourceLocation sourceLoc)
+            throws AlgebricksException;
 
     public IScalarEvaluatorFactory getFieldAccessEvaluatorFactory(IFunctionManager functionManager, ARecordType recType,
-            List<String> fldName, int recordColumn) throws AlgebricksException;
+            List<String> fldName, int recordColumn, SourceLocation sourceLoc) throws AlgebricksException;
 
     public IScalarEvaluatorFactory getConstantEvalFactory(IAlgebricksConstantValue value) throws AlgebricksException;
 
     public IScalarEvaluatorFactory[] createMBRFactory(IFunctionManager functionManager, ARecordType recType,
-            List<String> fldName, int recordColumn, int dimension, List<String> filterFieldName, boolean isPointMBR)
-            throws AlgebricksException;
+            List<String> fldName, int recordColumn, int dimension, List<String> filterFieldName, boolean isPointMBR,
+            SourceLocation sourceLoc) throws AlgebricksException;
 
     public IExpressionEvalSizeComputer getExpressionEvalSizeComputer();
 

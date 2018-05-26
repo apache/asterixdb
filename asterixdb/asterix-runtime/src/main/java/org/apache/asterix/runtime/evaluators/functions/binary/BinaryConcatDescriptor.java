@@ -66,7 +66,7 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractBinaryScalarEvaluator(ctx, args) {
+                return new AbstractBinaryScalarEvaluator(ctx, args, sourceLoc) {
 
                     private final ListAccessor listAccessor = new ListAccessor();
                     private final byte[] metaBuffer = new byte[5];
@@ -87,7 +87,7 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         byte typeTag = data[offset];
                         if (typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG
                                 && typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, typeTag,
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, typeTag,
                                     ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG,
                                     ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                         }
@@ -102,7 +102,8 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                         result.set(resultStorage);
                                         return;
                                     }
-                                    throw new UnsupportedItemTypeException(getIdentifier(), itemType.serialize());
+                                    throw new UnsupportedItemTypeException(sourceLoc, getIdentifier(),
+                                            itemType.serialize());
                                 }
                                 concatLength += ByteArrayPointable.getContentLength(data, itemOffset);
                             }

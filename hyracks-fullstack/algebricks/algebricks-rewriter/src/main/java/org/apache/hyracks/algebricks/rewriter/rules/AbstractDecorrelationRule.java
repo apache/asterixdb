@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependenc
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule {
 
@@ -91,9 +92,11 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
 
     protected void buildVarExprList(Collection<LogicalVariable> vars, IOptimizationContext context, GroupByOperator g,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> outVeList) throws AlgebricksException {
+        SourceLocation sourceLoc = g.getSourceLocation();
         for (LogicalVariable ov : vars) {
             LogicalVariable newVar = context.newVar();
-            ILogicalExpression varExpr = new VariableReferenceExpression(newVar);
+            VariableReferenceExpression varExpr = new VariableReferenceExpression(newVar);
+            varExpr.setSourceLocation(sourceLoc);
             outVeList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(ov,
                     new MutableObject<ILogicalExpression>(varExpr)));
             for (ILogicalPlan p : g.getNestedPlans()) {

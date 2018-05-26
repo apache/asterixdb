@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePO
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamProjectPOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
@@ -162,7 +163,9 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 continue;
             }
             candidate = group.get(0);
+            SourceLocation candidateSourceLoc = candidate.getValue().getSourceLocation();
             ReplicateOperator rop = new ReplicateOperator(group.size(), materializationFlags);
+            rop.setSourceLocation(candidateSourceLoc);
             rop.setPhysicalOperator(new ReplicatePOperator());
             Mutable<ILogicalOperator> ropRef = new MutableObject<ILogicalOperator>(rop);
             AbstractLogicalOperator aopCandidate = (AbstractLogicalOperator) candidate.getValue();
@@ -204,7 +207,9 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             VariableUtilities.getLiveVariables(candidate.getValue(), liveVarsNew);
             ArrayList<Mutable<ILogicalExpression>> assignExprs = new ArrayList<Mutable<ILogicalExpression>>();
             for (LogicalVariable liveVar : liveVarsNew) {
-                assignExprs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(liveVar)));
+                VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
+                liveVarRef.setSourceLocation(candidateSourceLoc);
+                assignExprs.add(new MutableObject<ILogicalExpression>(liveVarRef));
             }
             for (Mutable<ILogicalOperator> ref : group) {
                 if (ref.equals(candidate)) {
@@ -218,10 +223,14 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                     liveVars.add(variableMappingBack.get(liveVarsNew.get(i)));
                 }
 
+                SourceLocation refSourceLoc = ref.getValue().getSourceLocation();
+
                 AbstractLogicalOperator assignOperator = new AssignOperator(liveVars, assignExprs);
+                assignOperator.setSourceLocation(refSourceLoc);
                 assignOperator.setExecutionMode(rop.getExecutionMode());
                 assignOperator.setPhysicalOperator(new AssignPOperator());
                 AbstractLogicalOperator projectOperator = new ProjectOperator(liveVars);
+                projectOperator.setSourceLocation(refSourceLoc);
                 projectOperator.setPhysicalOperator(new StreamProjectPOperator());
                 projectOperator.setExecutionMode(rop.getExecutionMode());
                 AbstractLogicalOperator exchOp = new ExchangeOperator();

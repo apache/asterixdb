@@ -262,6 +262,7 @@ public class OperatorManipulationUtil {
     public static ILogicalOperator deepCopy(ILogicalOperator op) throws AlgebricksException {
         OperatorDeepCopyVisitor visitor = new OperatorDeepCopyVisitor();
         AbstractLogicalOperator copiedOperator = (AbstractLogicalOperator) op.accept(visitor, null);
+        copiedOperator.setSourceLocation(op.getSourceLocation());
         copiedOperator.setExecutionMode(op.getExecutionMode());
         copiedOperator.getAnnotations().putAll(op.getAnnotations());
         copiedOperator.setSchema(op.getSchema());

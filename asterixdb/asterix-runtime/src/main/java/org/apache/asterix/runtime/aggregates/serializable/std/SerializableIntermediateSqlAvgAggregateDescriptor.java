@@ -55,7 +55,7 @@ public class SerializableIntermediateSqlAvgAggregateDescriptor
             @Override
             public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SerializableIntermediateSqlAvgAggregateFunction(args, ctx);
+                return new SerializableIntermediateSqlAvgAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

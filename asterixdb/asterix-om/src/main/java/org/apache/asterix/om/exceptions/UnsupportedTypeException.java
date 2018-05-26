@@ -23,6 +23,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnsupportedTypeException extends CompilationException {
 
@@ -32,7 +33,17 @@ public class UnsupportedTypeException extends CompilationException {
     }
 
     // Unsupported input type.
+    public UnsupportedTypeException(SourceLocation sourceLoc, FunctionIdentifier fid, ATypeTag actualTypeTag) {
+        super(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, fid.getName(), actualTypeTag);
+    }
+
+    // Unsupported input type.
     public UnsupportedTypeException(String funcName, ATypeTag actualTypeTag) {
         super(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, funcName, actualTypeTag);
+    }
+
+    // Unsupported input type.
+    public UnsupportedTypeException(SourceLocation sourceLoc, String funcName, ATypeTag actualTypeTag) {
+        super(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, funcName, actualTypeTag);
     }
 }

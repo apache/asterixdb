@@ -116,7 +116,7 @@ public class ParseGeoJSONDescriptor extends AbstractScalarFunctionDynamicDescrip
             int len = inputArg.getLength();
 
             if (data[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                throw new TypeMismatchException(BuiltinFunctions.GEOMETRY_CONSTRUCTOR, 0, data[offset],
+                throw new TypeMismatchException(sourceLoc, BuiltinFunctions.GEOMETRY_CONSTRUCTOR, 0, data[offset],
                         ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
             }
             ByteArrayInputStream inStream = new ByteArrayInputStream(data, offset + 1, len - 1);
@@ -133,7 +133,8 @@ public class ParseGeoJSONDescriptor extends AbstractScalarFunctionDynamicDescrip
                 out.write(wKBGeometryBuffer);
                 result.set(resultStorage);
             } catch (IOException e) {
-                throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
+                throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
+                        ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
 
         }

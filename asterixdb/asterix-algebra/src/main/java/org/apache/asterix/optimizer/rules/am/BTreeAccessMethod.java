@@ -68,6 +68,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
@@ -353,7 +354,8 @@ public class BTreeAccessMethod implements IAccessMethod {
                 keyPos = indexOf(optFuncExpr.getFieldName(1), chosenIndex.getKeyFieldNames());
             }
             if (keyPos < 0) {
-                throw CompilationException.create(ErrorCode.NO_INDEX_FIELD_NAME_FOR_GIVEN_FUNC_EXPR);
+                throw CompilationException.create(ErrorCode.NO_INDEX_FIELD_NAME_FOR_GIVEN_FUNC_EXPR,
+                        optFuncExpr.getFuncExpr().getSourceLocation());
             }
             // returnedSearchKeyExpr contains a pair of search expression.
             // The second expression will not be null only if we are creating an EQ search predicate
@@ -368,7 +370,9 @@ public class BTreeAccessMethod implements IAccessMethod {
             if (searchKeyExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 constantAtRuntimeExpressions[keyPos] = searchKeyExpr;
                 constAtRuntimeExprVars[keyPos] = context.newVar();
-                searchKeyExpr = new VariableReferenceExpression(constAtRuntimeExprVars[keyPos]);
+                VariableReferenceExpression varRef = new VariableReferenceExpression(constAtRuntimeExprVars[keyPos]);
+                varRef.setSourceLocation(searchKeyExpr.getSourceLocation());
+                searchKeyExpr = varRef;
             }
 
             LimitType limit = getLimitType(optFuncExpr, probeSubTree);
@@ -576,6 +580,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         if (!assignKeyVarList.isEmpty()) {
             // Assign operator that sets the constant secondary-index search-key fields if necessary.
             AssignOperator assignSearchKeys = new AssignOperator(assignKeyVarList, assignKeyExprList);
+            assignSearchKeys.setSourceLocation(dataSourceOp.getSourceLocation());
             if (probeSubTree == null) {
                 // We are optimizing a selection query.
                 // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
@@ -694,26 +699,33 @@ public class BTreeAccessMethod implements IAccessMethod {
                 IFunctionInfo primaryIndexSearch = FunctionUtil.getFunctionInfo(BuiltinFunctions.INDEX_SEARCH);
                 UnnestingFunctionCallExpression primaryIndexSearchFunc =
                         new UnnestingFunctionCallExpression(primaryIndexSearch, primaryIndexFuncArgs);
+                primaryIndexSearchFunc.setSourceLocation(dataSourceOp.getSourceLocation());
                 primaryIndexSearchFunc.setReturnsUniqueValues(true);
+                AbstractUnnestMapOperator unnestMapOp;
                 if (!leftOuterUnnestMapRequired) {
-                    indexSearchOp = new UnnestMapOperator(scanVariables,
+                    unnestMapOp = new UnnestMapOperator(scanVariables,
                             new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
                             retainInput);
                 } else {
-                    indexSearchOp = new LeftOuterUnnestMapOperator(scanVariables,
+                    unnestMapOp = new LeftOuterUnnestMapOperator(scanVariables,
                             new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
                             true);
                 }
+                unnestMapOp.setSourceLocation(dataSourceOp.getSourceLocation());
+                indexSearchOp = unnestMapOp;
             } else {
+                AbstractUnnestMapOperator unnestMapOp;
                 if (!leftOuterUnnestMapRequired) {
-                    indexSearchOp = new UnnestMapOperator(scanVariables,
+                    unnestMapOp = new UnnestMapOperator(scanVariables,
                             ((UnnestMapOperator) secondaryIndexUnnestOp).getExpressionRef(), primaryIndexOutputTypes,
                             retainInput);
                 } else {
-                    indexSearchOp = new LeftOuterUnnestMapOperator(scanVariables,
+                    unnestMapOp = new LeftOuterUnnestMapOperator(scanVariables,
                             ((LeftOuterUnnestMapOperator) secondaryIndexUnnestOp).getExpressionRef(),
                             primaryIndexOutputTypes, true);
                 }
+                unnestMapOp.setSourceLocation(dataSourceOp.getSourceLocation());
+                indexSearchOp = unnestMapOp;
             }
 
             indexSearchOp.getInputs().add(new MutableObject<>(inputOp));
@@ -775,7 +787,7 @@ public class BTreeAccessMethod implements IAccessMethod {
         // The original select cond must be an AND. Check it just to be sure.
         if (funcExpr.getFunctionIdentifier() != AlgebricksBuiltinFunctions.AND) {
             throw new CompilationException(ErrorCode.COMPILATION_FUNC_EXPRESSION_CANNOT_UTILIZE_INDEX,
-                    funcExpr.toString());
+                    funcExpr.getSourceLocation(), funcExpr.toString());
         }
         // Clean the conjuncts.
         for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
@@ -902,7 +914,9 @@ public class BTreeAccessMethod implements IAccessMethod {
     private ILogicalExpression createSelectCondition(List<Mutable<ILogicalExpression>> predList) {
         if (predList.size() > 1) {
             IFunctionInfo finfo = FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.AND);
-            return new ScalarFunctionCallExpression(finfo, predList);
+            ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(finfo, predList);
+            andExpr.setSourceLocation(predList.get(0).getValue().getSourceLocation());
+            return andExpr;
         }
         return predList.get(0).getValue();
     }

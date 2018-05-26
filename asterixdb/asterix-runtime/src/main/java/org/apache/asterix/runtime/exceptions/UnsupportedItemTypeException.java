@@ -23,16 +23,19 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnsupportedItemTypeException extends RuntimeDataException {
 
     // Unsupported item type.
-    public UnsupportedItemTypeException(FunctionIdentifier fid, byte itemTypeTag) {
-        super(ErrorCode.TYPE_ITEM, fid.getName(), EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag));
+    public UnsupportedItemTypeException(SourceLocation sourceLoc, FunctionIdentifier fid, byte itemTypeTag) {
+        super(ErrorCode.TYPE_ITEM, sourceLoc, fid.getName(),
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag));
     }
 
     // Unsupported item type.
-    public UnsupportedItemTypeException(String functionName, byte itemTypeTag) {
-        super(ErrorCode.TYPE_ITEM, functionName, EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag));
+    public UnsupportedItemTypeException(SourceLocation sourceLoc, String functionName, byte itemTypeTag) {
+        super(ErrorCode.TYPE_ITEM, sourceLoc, functionName,
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(itemTypeTag));
     }
 }

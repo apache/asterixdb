@@ -56,7 +56,7 @@ public class SerializableSqlCountAggregateDescriptor extends AbstractSerializabl
             @Override
             public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SerializableSqlCountAggregateFunction(args, ctx);
+                return new SerializableSqlCountAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

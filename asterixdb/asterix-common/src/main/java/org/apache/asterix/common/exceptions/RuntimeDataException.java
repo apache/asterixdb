@@ -22,6 +22,7 @@ package org.apache.asterix.common.exceptions;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class RuntimeDataException extends HyracksDataException {
     private static final long serialVersionUID = 1L;
@@ -30,7 +31,15 @@ public class RuntimeDataException extends HyracksDataException {
         super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
     }
 
+    public RuntimeDataException(int errorCode, SourceLocation sourceLoc, Serializable... params) {
+        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), null, sourceLoc, params);
+    }
+
     public RuntimeDataException(int errorCode, Throwable cause, Serializable... params) {
         super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), cause, params);
+    }
+
+    public RuntimeDataException(int errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), cause, sourceLoc, params);
     }
 }

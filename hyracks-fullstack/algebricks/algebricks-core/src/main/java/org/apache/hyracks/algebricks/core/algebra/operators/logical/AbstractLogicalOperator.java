@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
 import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
@@ -68,6 +69,8 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
     protected final List<Mutable<ILogicalOperator>> inputs;
     protected List<LogicalVariable> schema;
+
+    private SourceLocation sourceLoc;
 
     public AbstractLogicalOperator() {
         inputs = new ArrayList<>();
@@ -194,5 +197,14 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     @Override
     public boolean requiresVariableReferenceExpressions() {
         return true;
+    }
+
+    @Override
+    public SourceLocation getSourceLocation() {
+        return sourceLoc;
+    }
+
+    public void setSourceLocation(SourceLocation sourceLoc) {
+        this.sourceLoc = sourceLoc;
     }
 }

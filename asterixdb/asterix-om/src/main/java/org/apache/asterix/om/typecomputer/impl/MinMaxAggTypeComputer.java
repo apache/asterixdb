@@ -25,6 +25,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
 
@@ -34,7 +35,8 @@ public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         switch (tag) {
             case DOUBLE:
@@ -52,7 +54,7 @@ public class MinMaxAggTypeComputer extends AbstractResultTypeComputer {
             case ANY:
                 return;
             default:
-                throw new UnsupportedTypeException(funcName, tag);
+                throw new UnsupportedTypeException(sourceLoc, funcName, tag);
         }
     }
 

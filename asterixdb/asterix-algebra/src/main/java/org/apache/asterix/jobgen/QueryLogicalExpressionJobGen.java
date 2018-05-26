@@ -194,10 +194,11 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         }
     }
 
-    private IFunctionDescriptor resolveFunction(ILogicalExpression expr, IVariableTypeEnvironment env,
+    private IFunctionDescriptor resolveFunction(AbstractFunctionCallExpression expr, IVariableTypeEnvironment env,
             JobGenContext context) throws AlgebricksException {
-        FunctionIdentifier fnId = ((AbstractFunctionCallExpression) expr).getFunctionIdentifier();
+        FunctionIdentifier fnId = expr.getFunctionIdentifier();
         IFunctionDescriptor fd = functionManager.lookupFunction(fnId);
+        fd.setSourceLocation(expr.getSourceLocation());
         IFunctionTypeInferer fnTypeInfer = functionManager.lookupFunctionTypeInferer(fnId);
         if (fnTypeInfer != null) {
             CompilerProperties compilerProps = ((IApplicationContext) context.getAppContext()).getCompilerProperties();

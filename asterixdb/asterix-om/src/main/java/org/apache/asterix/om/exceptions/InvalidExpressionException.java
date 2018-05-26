@@ -27,6 +27,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class InvalidExpressionException extends CompilationException {
 
@@ -36,9 +37,21 @@ public class InvalidExpressionException extends CompilationException {
                 toExpectedTypeString(exprKinds));
     }
 
+    public InvalidExpressionException(SourceLocation sourceLoc, FunctionIdentifier fid, int index,
+            ILogicalExpression actualExpr, LogicalExpressionTag... exprKinds) {
+        super(ErrorCode.COMPILATION_INVALID_EXPRESSION, sourceLoc, fid.getName(), indexToPosition(index),
+                actualExpr.toString(), toExpectedTypeString(exprKinds));
+    }
+
     public InvalidExpressionException(String functionName, int index, ILogicalExpression actualExpr,
             LogicalExpressionTag... exprKinds) {
         super(ErrorCode.COMPILATION_INVALID_EXPRESSION, functionName, indexToPosition(index), actualExpr.toString(),
                 toExpectedTypeString(exprKinds));
+    }
+
+    public InvalidExpressionException(SourceLocation sourceLoc, String functionName, int index,
+            ILogicalExpression actualExpr, LogicalExpressionTag... exprKinds) {
+        super(ErrorCode.COMPILATION_INVALID_EXPRESSION, sourceLoc, functionName, indexToPosition(index),
+                actualExpr.toString(), toExpectedTypeString(exprKinds));
     }
 }

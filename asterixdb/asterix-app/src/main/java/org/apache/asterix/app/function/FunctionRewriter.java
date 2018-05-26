@@ -21,6 +21,8 @@ package org.apache.asterix.app.function;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -55,24 +57,29 @@ public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter 
         AbstractFunctionCallExpression f = UnnestToDataScanRule.getFunctionCall(opRef);
         List<Mutable<ILogicalExpression>> args = f.getArguments();
         if (args.size() != functionId.getArity()) {
-            throw new AlgebricksException("Function " + functionId.getNamespace() + "." + functionId.getName()
-                    + " expects " + functionId.getArity() + " arguments");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, f.getSourceLocation(),
+                    "Function " + functionId.getNamespace() + "." + functionId.getName() + " expects "
+                            + functionId.getArity() + " arguments");
         }
         for (int i = 0; i < args.size(); i++) {
-            if (args.get(i).getValue().getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                throw new AlgebricksException("Function " + functionId.getNamespace() + "." + functionId.getName()
-                        + " expects constant arguments while arg[" + i + "] is of type "
-                        + args.get(i).getValue().getExpressionTag());
+            ILogicalExpression argExpr = args.get(i).getValue();
+            if (argExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, argExpr.getSourceLocation(),
+                        "Function " + functionId.getNamespace() + "." + functionId.getName()
+                                + " expects constant arguments while arg[" + i + "] is of type "
+                                + argExpr.getExpressionTag());
             }
         }
         UnnestOperator unnest = (UnnestOperator) opRef.getValue();
         if (unnest.getPositionalVariable() != null) {
-            throw new AlgebricksException("No positional variables are allowed over datasource functions");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
+                    "No positional variables are allowed over datasource functions");
         }
         FunctionDataSource datasource = toDatasource(context, f);
         List<LogicalVariable> variables = new ArrayList<>();
         variables.add(unnest.getVariable());
         DataSourceScanOperator scan = new DataSourceScanOperator(variables, datasource);
+        scan.setSourceLocation(unnest.getSourceLocation());
         List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
         scanInpList.addAll(unnest.getInputs());
         opRef.setValue(scan);

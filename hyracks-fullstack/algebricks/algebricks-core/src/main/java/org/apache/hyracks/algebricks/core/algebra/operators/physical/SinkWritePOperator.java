@@ -101,10 +101,12 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
 
         IMetadataProvider<?, ?> mp = context.getMetadataProvider();
 
-        Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> runtime =
+        Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> runtimeAndConstraints =
                 mp.getWriteFileRuntime(write.getDataSink(), columns, pf, inputDesc);
+        IPushRuntimeFactory runtime = runtimeAndConstraints.first;
+        runtime.setSourceLocation(write.getSourceLocation());
 
-        builder.contributeMicroOperator(write, runtime.first, recDesc, runtime.second);
+        builder.contributeMicroOperator(write, runtime, recDesc, runtimeAndConstraints.second);
         ILogicalOperator src = write.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, write, 0);
     }

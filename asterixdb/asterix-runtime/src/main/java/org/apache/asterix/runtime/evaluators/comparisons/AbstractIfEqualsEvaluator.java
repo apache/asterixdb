@@ -21,12 +21,13 @@ package org.apache.asterix.runtime.evaluators.comparisons;
 
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 
 public abstract class AbstractIfEqualsEvaluator extends AbstractComparisonEvaluator {
 
-    AbstractIfEqualsEvaluator(IScalarEvaluator evalLeft, IScalarEvaluator evalRight) {
-        super(evalLeft, evalRight);
+    AbstractIfEqualsEvaluator(IScalarEvaluator evalLeft, IScalarEvaluator evalRight, SourceLocation sourceLoc) {
+        super(evalLeft, evalRight, sourceLoc);
     }
 
     @Override

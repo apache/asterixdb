@@ -84,7 +84,7 @@ public class GetDayTimeDurationDescriptor extends AbstractScalarFunctionDynamicD
                         int offset = argPtr0.getStartOffset();
 
                         if (bytes[offset] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
                         }
 

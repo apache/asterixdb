@@ -104,6 +104,7 @@ public class SetupCommitExtensionOpRule implements IAlgebraicRewriteRule {
 
         //create ExtensionOperator and put the commitOperator in it.
         DelegateOperator extensionOperator = new DelegateOperator(commitOperator);
+        extensionOperator.setSourceLocation(eOp.getSourceLocation());
         extensionOperator.setPhysicalOperator(commitPOperator);
 
         //update plan link

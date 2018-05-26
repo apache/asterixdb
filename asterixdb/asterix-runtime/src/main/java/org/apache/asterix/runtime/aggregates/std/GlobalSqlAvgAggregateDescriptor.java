@@ -54,7 +54,7 @@ public class GlobalSqlAvgAggregateDescriptor extends AbstractAggregateFunctionDy
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new GlobalSqlAvgAggregateFunction(args, ctx);
+                return new GlobalSqlAvgAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

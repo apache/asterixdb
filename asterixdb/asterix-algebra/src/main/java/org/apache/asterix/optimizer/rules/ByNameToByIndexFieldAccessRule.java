@@ -47,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
 
@@ -100,10 +101,14 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
         if (firstArg.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
+        SourceLocation sourceLoc = firstArg.getSourceLocation();
         LogicalVariable var1 = context.newVar();
         AssignOperator assignOp = new AssignOperator(new ArrayList<>(Collections.singletonList(var1)),
                 new ArrayList<>(Collections.singletonList(new MutableObject<>(firstArg))));
-        fce.getArguments().get(0).setValue(new VariableReferenceExpression(var1));
+        assignOp.setSourceLocation(sourceLoc);
+        VariableReferenceExpression var1Ref = new VariableReferenceExpression(var1);
+        var1Ref.setSourceLocation(sourceLoc);
+        fce.getArguments().get(0).setValue(var1Ref);
         assignOp.getInputs().add(new MutableObject<>(op.getInputs().get(0).getValue()));
         op.getInputs().get(0).setValue(assignOp);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
@@ -148,8 +153,10 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
         if (k < 0) {
             return null;
         }
-        return new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
-                fce.getArguments().get(0),
+        ScalarFunctionCallExpression faExpr = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX), fce.getArguments().get(0),
                 new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(k)))));
+        faExpr.setSourceLocation(fce.getSourceLocation());
+        return faExpr;
     }
 }

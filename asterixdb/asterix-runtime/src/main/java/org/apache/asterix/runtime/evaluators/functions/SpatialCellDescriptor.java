@@ -128,19 +128,19 @@ public class SpatialCellDescriptor extends AbstractScalarFunctionDynamicDescript
                                 rectangleSerde.serialize(aRectangle, out);
                             } else {
                                 if (tag0 != ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
-                                    throw new TypeMismatchException(getIdentifier(), 0, tag0,
+                                    throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tag0,
                                             ATypeTag.SERIALIZED_POINT_TYPE_TAG);
                                 }
                                 if (tag1 != ATypeTag.SERIALIZED_POINT_TYPE_TAG) {
-                                    throw new TypeMismatchException(getIdentifier(), 1, tag1,
+                                    throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, tag1,
                                             ATypeTag.SERIALIZED_POINT_TYPE_TAG);
                                 }
                                 if (tag2 != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                                    throw new TypeMismatchException(getIdentifier(), 2, tag2,
+                                    throw new TypeMismatchException(sourceLoc, getIdentifier(), 2, tag2,
                                             ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                                 }
                                 if (tag3 != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                                    throw new TypeMismatchException(getIdentifier(), 3, tag3,
+                                    throw new TypeMismatchException(sourceLoc, getIdentifier(), 3, tag3,
                                             ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                                 }
                             }

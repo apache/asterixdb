@@ -90,7 +90,8 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
 
                         try {
                             if (bytes0[offset0] != bytes1[offset1]) {
-                                throw new IncompatibleTypeException(getIdentifier(), bytes0[offset0], bytes1[offset1]);
+                                throw new IncompatibleTypeException(sourceLoc, getIdentifier(), bytes0[offset0],
+                                        bytes1[offset1]);
                             }
 
                             long intervalStart, intervalEnd;
@@ -110,18 +111,18 @@ public class AIntervalConstructorDescriptor extends AbstractScalarFunctionDynami
                                     intervalEnd = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                     break;
                                 default:
-                                    throw new UnsupportedItemTypeException(getIdentifier(), bytes0[offset0]);
+                                    throw new UnsupportedItemTypeException(sourceLoc, getIdentifier(), bytes0[offset0]);
                             }
 
                             if (intervalEnd < intervalStart) {
-                                throw new InvalidDataFormatException(getIdentifier(),
+                                throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                         ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                             }
 
                             aInterval.setValue(intervalStart, intervalEnd, intervalType.serialize());
                             intervalSerde.serialize(aInterval, out);
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_INTERVAL_TYPE_TAG);
                         }
                         result.set(resultStorage);

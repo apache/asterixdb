@@ -56,7 +56,8 @@ public class StringLTrimDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractUnaryStringStringEval(ctx, args[0], StringLTrimDescriptor.this.getIdentifier()) {
+                return new AbstractUnaryStringStringEval(ctx, args[0], StringLTrimDescriptor.this.getIdentifier(),
+                        sourceLoc) {
                     private StringTrimmer stringTrimmer = new StringTrimmer(resultBuilder, resultArray, " ");
 
                     @Override

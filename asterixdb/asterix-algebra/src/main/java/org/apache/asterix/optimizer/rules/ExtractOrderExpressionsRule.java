@@ -65,7 +65,9 @@ public class ExtractOrderExpressionsRule extends AbstractExtractExprRule {
             ILogicalExpression expr = orderPair.second.getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE && !AnalysisUtil.isAccessToFieldRecord(expr)) {
                 LogicalVariable v = extractExprIntoAssignOpRef(expr, opRef2, context);
-                orderPair.second.setValue(new VariableReferenceExpression(v));
+                VariableReferenceExpression vRef = new VariableReferenceExpression(v);
+                vRef.setSourceLocation(expr.getSourceLocation());
+                orderPair.second.setValue(vRef);
             }
         }
         context.computeAndSetTypeEnvironmentForOperator(oo);

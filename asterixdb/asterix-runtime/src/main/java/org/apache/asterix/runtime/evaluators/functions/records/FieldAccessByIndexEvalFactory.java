@@ -35,6 +35,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -49,13 +50,15 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
     private IScalarEvaluatorFactory fieldIndexEvalFactory;
     private int nullBitmapSize;
     private ARecordType recordType;
+    private final SourceLocation sourceLoc;
 
     public FieldAccessByIndexEvalFactory(IScalarEvaluatorFactory recordEvalFactory,
-            IScalarEvaluatorFactory fieldIndexEvalFactory, ARecordType recordType) {
+            IScalarEvaluatorFactory fieldIndexEvalFactory, ARecordType recordType, SourceLocation sourceLoc) {
         this.recordEvalFactory = recordEvalFactory;
         this.fieldIndexEvalFactory = fieldIndexEvalFactory;
         this.recordType = recordType;
         this.nullBitmapSize = RecordUtil.computeNullBitmapSize(recordType);
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -89,15 +92,15 @@ public class FieldAccessByIndexEvalFactory implements IScalarEvaluatorFactory {
                     int offset = inputArg0.getStartOffset();
 
                     if (serRecord[offset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new TypeMismatchException(BuiltinFunctions.FIELD_ACCESS_BY_INDEX, 0, serRecord[offset],
-                                ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
+                        throw new TypeMismatchException(sourceLoc, BuiltinFunctions.FIELD_ACCESS_BY_INDEX, 0,
+                                serRecord[offset], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
                     eval1.evaluate(tuple, inputArg1);
                     byte[] indexBytes = inputArg1.getByteArray();
                     int indexOffset = inputArg1.getStartOffset();
                     if (indexBytes[indexOffset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                        throw new TypeMismatchException(BuiltinFunctions.FIELD_ACCESS_BY_INDEX, 1, indexBytes[offset],
-                                ATypeTag.SERIALIZED_INT32_TYPE_TAG);
+                        throw new TypeMismatchException(sourceLoc, BuiltinFunctions.FIELD_ACCESS_BY_INDEX, 1,
+                                indexBytes[offset], ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                     }
                     fieldIndex = IntegerPointable.getInteger(indexBytes, indexOffset + 1);
                     fieldValueType = recordType.getFieldTypes()[fieldIndex];

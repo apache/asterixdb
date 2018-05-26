@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -45,7 +47,8 @@ public class DatasetResourcesRewriter extends FunctionRewriter {
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new AlgebricksException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, f.getSourceLocation(),
+                    "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
         }
         return new DatasetResourcesDatasource(context.getComputationNodeDomain(), dataset.getDatasetId());
     }

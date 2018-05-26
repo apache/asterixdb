@@ -41,6 +41,7 @@ import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
@@ -74,6 +75,12 @@ public class ComparisonHelper implements Serializable {
     private final IBinaryComparator byteArrayComparator =
             new PointableBinaryComparatorFactory(ByteArrayPointable.FACTORY).createBinaryComparator();
 
+    private final SourceLocation sourceLoc;
+
+    public ComparisonHelper(SourceLocation sourceLoc) {
+        this.sourceLoc = sourceLoc;
+    }
+
     public int compare(ATypeTag typeTag1, ATypeTag typeTag2, IPointable arg1, IPointable arg2)
             throws HyracksDataException {
         switch (typeTag1) {
@@ -101,7 +108,8 @@ public class ComparisonHelper implements Serializable {
     private int compareStrongTypedWithArg(ATypeTag expectedTypeTag, ATypeTag actualTypeTag, IPointable arg1,
             IPointable arg2) throws HyracksDataException {
         if (expectedTypeTag != actualTypeTag) {
-            throw new IncompatibleTypeException(COMPARISON, actualTypeTag.serialize(), expectedTypeTag.serialize());
+            throw new IncompatibleTypeException(sourceLoc, COMPARISON, actualTypeTag.serialize(),
+                    expectedTypeTag.serialize());
         }
         int result;
         byte[] leftBytes = arg1.getByteArray();
@@ -160,7 +168,7 @@ public class ComparisonHelper implements Serializable {
                         rightLen);
                 break;
             default:
-                throw new UnsupportedTypeException(COMPARISON, actualTypeTag.serialize());
+                throw new UnsupportedTypeException(sourceLoc, COMPARISON, actualTypeTag.serialize());
         }
         return result;
     }
@@ -171,7 +179,8 @@ public class ComparisonHelper implements Serializable {
             byte b1 = arg2.getByteArray()[arg2.getStartOffset()];
             return compareByte(b0, b1);
         }
-        throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG, typeTag2.serialize());
+        throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG,
+                typeTag2.serialize());
     }
 
     private int compareStringWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
@@ -179,7 +188,8 @@ public class ComparisonHelper implements Serializable {
             return strBinaryComp.compare(arg1.getByteArray(), arg1.getStartOffset(), arg1.getLength() - 1,
                     arg2.getByteArray(), arg2.getStartOffset(), arg2.getLength() - 1);
         }
-        throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_STRING_TYPE_TAG, typeTag2.serialize());
+        throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_STRING_TYPE_TAG,
+                typeTag2.serialize());
     }
 
     private int compareDoubleWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
@@ -203,7 +213,7 @@ public class ComparisonHelper implements Serializable {
             case DOUBLE:
                 return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset));
             default: {
-                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG,
+                throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG,
                         typeTag2.serialize());
             }
         }
@@ -230,7 +240,7 @@ public class ComparisonHelper implements Serializable {
             case DOUBLE:
                 return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset));
             default:
-                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
+                throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
                         typeTag2.serialize());
         }
     }
@@ -256,7 +266,7 @@ public class ComparisonHelper implements Serializable {
             case DOUBLE:
                 return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset));
             default:
-                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
+                throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
                         typeTag2.serialize());
         }
     }
@@ -294,7 +304,7 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default:
-                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
+                throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
                         typeTag2.serialize());
         }
     }
@@ -332,7 +342,7 @@ public class ComparisonHelper implements Serializable {
                 return compareDouble(s, v2);
             }
             default: {
-                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
+                throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
                         typeTag2.serialize());
             }
         }
@@ -359,7 +369,7 @@ public class ComparisonHelper implements Serializable {
             case DOUBLE:
                 return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightStart));
             default:
-                throw new IncompatibleTypeException(COMPARISON, ATypeTag.SERIALIZED_INT8_TYPE_TAG,
+                throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_INT8_TYPE_TAG,
                         typeTag2.serialize());
         }
     }

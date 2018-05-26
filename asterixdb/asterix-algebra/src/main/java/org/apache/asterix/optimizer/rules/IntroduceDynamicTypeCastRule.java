@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -52,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeRe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Dynamically cast a variable from its type to a specified required type, in a
@@ -164,7 +167,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         }
 
         /** see whether the input record type needs to be casted */
-        boolean cast = !compatible(requiredRecordType, inputRecordType);
+        boolean cast = !compatible(requiredRecordType, inputRecordType, op.getSourceLocation());
 
         if (checkUnknown) {
             recordVar = addWrapperFunction(requiredRecordType, recordVar, op, context, BuiltinFunctions.CHECK_UNKNOWN);
@@ -197,6 +200,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         for (int index = 0; index < opRefs.size(); index++) {
             Mutable<ILogicalOperator> opRef = opRefs.get(index);
             ILogicalOperator op = opRef.getValue();
+            SourceLocation sourceLoc = op.getSourceLocation();
 
             /** get produced vars */
             List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
@@ -209,13 +213,16 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     IAType actualType = (IAType) env.getVarType(var);
                     AbstractFunctionCallExpression cast =
                             new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fd));
-                    cast.getArguments()
-                            .add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(var)));
+                    cast.setSourceLocation(sourceLoc);
+                    VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+                    varRef.setSourceLocation(sourceLoc);
+                    cast.getArguments().add(new MutableObject<ILogicalExpression>(varRef));
                     /** enforce the required record type */
                     TypeCastUtils.setRequiredAndInputTypes(cast, requiredRecordType, actualType);
                     LogicalVariable newAssignVar = context.newVar();
                     AssignOperator newAssignOperator =
                             new AssignOperator(newAssignVar, new MutableObject<ILogicalExpression>(cast));
+                    newAssignOperator.setSourceLocation(sourceLoc);
                     newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(op));
                     opRef.setValue(newAssignOperator);
                     context.computeAndSetTypeEnvironmentForOperator(newAssignOperator);
@@ -240,15 +247,18 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
      *
      * @param reqType
      * @param inputType
+     * @param sourceLoc
      * @return true if compatible; false otherwise
      * @throws AlgebricksException
      */
-    public static boolean compatible(ARecordType reqType, IAType inputType) throws AlgebricksException {
+    public static boolean compatible(ARecordType reqType, IAType inputType, SourceLocation sourceLoc)
+            throws AlgebricksException {
         if (inputType.getTypeTag() == ATypeTag.ANY) {
             return false;
         }
         if (inputType.getTypeTag() != ATypeTag.OBJECT) {
-            throw new AlgebricksException("The input type " + inputType + " is not a valid record type!");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                    "The input type " + inputType + " is not a valid record type!");
         }
         ARecordType inputRecType = (ARecordType) inputType;
         if (reqType.isOpen() != inputRecType.isOpen()) {

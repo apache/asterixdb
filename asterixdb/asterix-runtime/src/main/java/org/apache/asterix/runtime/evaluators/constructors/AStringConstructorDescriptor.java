@@ -45,7 +45,7 @@ public class AStringConstructorDescriptor extends AbstractScalarFunctionDynamicD
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractStringConstructorEvaluator(args[0].createScalarEvaluator(ctx)) {
+                return new AbstractStringConstructorEvaluator(args[0].createScalarEvaluator(ctx), sourceLoc) {
                     @Override
                     protected FunctionIdentifier getIdentifier() {
                         return AStringConstructorDescriptor.this.getIdentifier();

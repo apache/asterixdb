@@ -59,6 +59,7 @@ public class AggregateFunctionCallExpression extends AbstractFunctionCallExpress
         AggregateFunctionCallExpression fun = new AggregateFunctionCallExpression(finfo, twoStep, clonedArgs);
         fun.setStepTwoAggregate(stepTwoAggregate);
         fun.setStepOneAggregate(stepOneAggregate);
+        fun.setSourceLocation(sourceLoc);
         return fun;
     }
 

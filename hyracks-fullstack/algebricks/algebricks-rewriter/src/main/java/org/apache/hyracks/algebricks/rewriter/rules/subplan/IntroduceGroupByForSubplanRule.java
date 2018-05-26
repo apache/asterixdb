@@ -62,6 +62,7 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * The rule searches for SUBPLAN operator with a optional PROJECT operator and
@@ -236,26 +237,35 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
             default:
                 break;
         }
+
+        SourceLocation sourceLoc = subplan.getSourceLocation();
+
         if (testForNull == null) {
             testForNull = context.newVar();
             AssignOperator tmpAsgn =
                     new AssignOperator(testForNull, new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+            tmpAsgn.setSourceLocation(sourceLoc);
             tmpAsgn.getInputs().add(new MutableObject<ILogicalOperator>(rightRef.getValue()));
             rightRef.setValue(tmpAsgn);
             context.computeAndSetTypeEnvironmentForOperator(tmpAsgn);
         }
 
         IFunctionInfo finfoEq = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.IS_MISSING);
-        ILogicalExpression isNullTest = new ScalarFunctionCallExpression(finfoEq,
+        ScalarFunctionCallExpression isNullTest = new ScalarFunctionCallExpression(finfoEq,
                 new MutableObject<ILogicalExpression>(new VariableReferenceExpression(testForNull)));
+        isNullTest.setSourceLocation(sourceLoc);
         IFunctionInfo finfoNot = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.NOT);
         ScalarFunctionCallExpression nonNullTest =
                 new ScalarFunctionCallExpression(finfoNot, new MutableObject<ILogicalExpression>(isNullTest));
+        nonNullTest.setSourceLocation(sourceLoc);
         SelectOperator selectNonNull =
                 new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest), false, null);
+        selectNonNull.setSourceLocation(sourceLoc);
         GroupByOperator g = new GroupByOperator();
+        g.setSourceLocation(sourceLoc);
         Mutable<ILogicalOperator> newSubplanRef = new MutableObject<ILogicalOperator>(subplan);
         NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<ILogicalOperator>(g));
+        nts.setSourceLocation(sourceLoc);
         opRef.setValue(g);
         selectNonNull.getInputs().add(new MutableObject<ILogicalOperator>(nts));
 
@@ -318,10 +328,12 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
     private Map<LogicalVariable, LogicalVariable> buildVarExprList(Collection<LogicalVariable> vars,
             IOptimizationContext context, GroupByOperator g,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> outVeList) throws AlgebricksException {
+        SourceLocation sourceLoc = g.getSourceLocation();
         Map<LogicalVariable, LogicalVariable> m = new HashMap<LogicalVariable, LogicalVariable>();
         for (LogicalVariable ov : vars) {
             LogicalVariable newVar = context.newVar();
             ILogicalExpression varExpr = new VariableReferenceExpression(newVar);
+            ((VariableReferenceExpression) varExpr).setSourceLocation(sourceLoc);
             outVeList.add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(ov,
                     new MutableObject<ILogicalExpression>(varExpr)));
             for (ILogicalPlan p : g.getNestedPlans()) {

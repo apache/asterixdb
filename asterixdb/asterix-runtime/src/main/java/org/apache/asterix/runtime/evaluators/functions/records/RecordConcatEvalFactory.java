@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -56,10 +57,14 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
 
     private final boolean failOnArgTypeMismatch;
 
-    RecordConcatEvalFactory(IScalarEvaluatorFactory[] args, ARecordType[] argTypes, boolean failOnArgTypeMismatch) {
+    private final SourceLocation sourceLoc;
+
+    RecordConcatEvalFactory(IScalarEvaluatorFactory[] args, ARecordType[] argTypes, boolean failOnArgTypeMismatch,
+            SourceLocation sourceLoc) {
         this.args = args;
         this.argTypes = argTypes;
         this.failOnArgTypeMismatch = failOnArgTypeMismatch;
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -161,7 +166,7 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
                     returnNull = true;
                 } else if (typeTag != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                     if (failOnArgTypeMismatch) {
-                        throw new TypeMismatchException(BuiltinFunctions.RECORD_CONCAT, i, typeTag,
+                        throw new TypeMismatchException(sourceLoc, BuiltinFunctions.RECORD_CONCAT, i, typeTag,
                                 ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     } else {
                         returnNull = true;

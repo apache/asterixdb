@@ -55,7 +55,7 @@ public class NullIfEqualsDescriptor extends AbstractScalarFunctionDynamicDescrip
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractIfEqualsEvaluator(args[0].createScalarEvaluator(ctx),
-                        args[1].createScalarEvaluator(ctx)) {
+                        args[1].createScalarEvaluator(ctx), sourceLoc) {
 
                     @SuppressWarnings("unchecked")
                     final ISerializerDeserializer<ANull> nullSerde =

@@ -119,9 +119,11 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = mp.getScannerRuntime(dataSource, vars, projectVars,
                 scan.isProjectPushed(), scan.getMinFilterVars(), scan.getMaxFilterVars(), tupleFilterFactory,
                 scan.getOutputLimit(), opSchema, typeEnv, context, builder.getJobSpec(), implConfig);
-        builder.contributeHyracksOperator(scan, p.first);
+        IOperatorDescriptor opDesc = p.first;
+        opDesc.setSourceLocation(scan.getSourceLocation());
+        builder.contributeHyracksOperator(scan, opDesc);
         if (p.second != null) {
-            builder.contributeAlgebricksPartitionConstraint(p.first, p.second);
+            builder.contributeAlgebricksPartitionConstraint(opDesc, p.second);
         }
 
         ILogicalOperator srcExchange = scan.getInputs().get(0).getValue();

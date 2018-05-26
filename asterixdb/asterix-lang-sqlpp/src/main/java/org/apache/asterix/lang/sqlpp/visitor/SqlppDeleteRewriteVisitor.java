@@ -59,36 +59,45 @@ public class SqlppDeleteRewriteVisitor extends AbstractSqlppAstVisitor<Void, Voi
         LiteralExpr argumentLiteral = new LiteralExpr(new StringLiteral(arg));
         arguments.add(argumentLiteral);
         CallExpr callExpression = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), arguments);
+        callExpression.setSourceLocation(deleteStmt.getSourceLocation());
 
         // From clause.
         VariableExpr var = deleteStmt.getVariableExpr();
         FromTerm fromTerm = new FromTerm(callExpression, var, null, null);
-        @SuppressWarnings("unchecked")
+        fromTerm.setSourceLocation(var.getSourceLocation());
         FromClause fromClause = new FromClause(Collections.singletonList(fromTerm));
+        fromClause.setSourceLocation(var.getSourceLocation());
 
         // Where clause.
         WhereClause whereClause = null;
         Expression condition = deleteStmt.getCondition();
         if (condition != null) {
             whereClause = new WhereClause(condition);
+            whereClause.setSourceLocation(condition.getSourceLocation());
         }
 
         // Select clause.
         VariableExpr returnExpr = new VariableExpr(var.getVar());
         returnExpr.setIsNewVar(false);
+        returnExpr.setSourceLocation(var.getSourceLocation());
         SelectElement selectElement = new SelectElement(returnExpr);
+        selectElement.setSourceLocation(deleteStmt.getSourceLocation());
         SelectClause selectClause = new SelectClause(selectElement, null, false);
+        selectClause.setSourceLocation(deleteStmt.getSourceLocation());
 
         // Construct the select expression.
         SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, whereClause, null, null, null);
+        selectBlock.setSourceLocation(var.getSourceLocation());
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
+        selectSetOperation.setSourceLocation(var.getSourceLocation());
         SelectExpression selectExpression = new SelectExpression(null, selectSetOperation, null, null, false);
+        selectExpression.setSourceLocation(var.getSourceLocation());
         Query query = new Query(false, false, selectExpression, 0);
         query.setBody(selectExpression);
+        query.setSourceLocation(deleteStmt.getSourceLocation());
 
         // return the delete statement.
         deleteStmt.setQuery(query);
         return null;
     }
-
 }

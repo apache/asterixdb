@@ -63,7 +63,8 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
         IAType type0 = (IAType) env.getType(funcExpr.getArguments().get(0).getValue());
         ARecordType inputRecordType = TypeComputeUtils.extractRecordType(type0);
         if (inputRecordType == null) {
-            throw new TypeMismatchException(funcName, 0, type0.getTypeTag(), ATypeTag.OBJECT);
+            throw new TypeMismatchException(funcExpr.getSourceLocation(), funcName, 0, type0.getTypeTag(),
+                    ATypeTag.OBJECT);
         }
 
         ILogicalExpression arg1 = funcExpr.getArguments().get(1).getValue();
@@ -109,8 +110,8 @@ public class RecordAddFieldsTypeComputer implements IResultTypeComputer {
                         if (fn[j].equals(FIELD_NAME_NAME)) {
                             ILogicalExpression fieldNameExpr = recConsExpr.getArguments().get(j).getValue();
                             if (ConstantExpressionUtil.getStringConstant(fieldNameExpr) == null) {
-                                throw new InvalidExpressionException(funcName, 1, fieldNameExpr,
-                                        LogicalExpressionTag.CONSTANT);
+                                throw new InvalidExpressionException(funcExpr.getSourceLocation(), funcName, 1,
+                                        fieldNameExpr, LogicalExpressionTag.CONSTANT);
                             }
                             // Get the actual "field-name" string
                             fieldName = ConstantExpressionUtil.getStringArgument(recConsExpr, j + 1);

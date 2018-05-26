@@ -53,7 +53,7 @@ public class SerializableSqlSumAggregateDescriptor extends AbstractSerializableA
             @Override
             public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SerializableSqlSumAggregateFunction(args, false, ctx);
+                return new SerializableSqlSumAggregateFunction(args, false, ctx, sourceLoc);
             }
         };
     }

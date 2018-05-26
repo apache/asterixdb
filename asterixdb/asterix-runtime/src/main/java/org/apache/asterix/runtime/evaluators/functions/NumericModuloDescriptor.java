@@ -55,11 +55,11 @@ public class NumericModuloDescriptor extends AbstractNumericArithmeticEval {
     @Override
     protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
             throws HyracksDataException {
-        throw new UnsupportedTypeException(getIdentifier(), ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
+        throw new UnsupportedTypeException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
     }
 
     @Override
     protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
-        throw new UnsupportedTypeException(getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
+        throw new UnsupportedTypeException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
     }
 }

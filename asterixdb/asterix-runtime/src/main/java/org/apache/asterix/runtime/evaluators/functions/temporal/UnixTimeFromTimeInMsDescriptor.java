@@ -82,7 +82,7 @@ public class UnixTimeFromTimeInMsDescriptor extends AbstractScalarFunctionDynami
                         int offset = argPtr.getStartOffset();
 
                         if (bytes[offset] != ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_TIME_TYPE_TAG);
                         }
                         long timeChronon = ATimeSerializerDeserializer.getChronon(bytes, offset + 1);

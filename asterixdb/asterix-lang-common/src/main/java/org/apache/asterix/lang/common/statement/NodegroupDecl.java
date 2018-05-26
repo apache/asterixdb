@@ -21,11 +21,12 @@ package org.apache.asterix.lang.common.statement;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class NodegroupDecl implements Statement {
+public class NodegroupDecl extends AbstractStatement {
 
     private Identifier nodegroupName;
     private List<Identifier> nodeControllerNames;

@@ -25,8 +25,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class AbstractLogicalExpression implements ILogicalExpression {
+
+    protected SourceLocation sourceLoc;
 
     @Override
     public void getConstraintsAndEquivClasses(Collection<FunctionalDependency> fds,
@@ -45,4 +48,12 @@ public abstract class AbstractLogicalExpression implements ILogicalExpression {
         return true;
     }
 
+    @Override
+    public SourceLocation getSourceLocation() {
+        return sourceLoc;
+    }
+
+    public void setSourceLocation(SourceLocation sourceLoc) {
+        this.sourceLoc = sourceLoc;
+    }
 }

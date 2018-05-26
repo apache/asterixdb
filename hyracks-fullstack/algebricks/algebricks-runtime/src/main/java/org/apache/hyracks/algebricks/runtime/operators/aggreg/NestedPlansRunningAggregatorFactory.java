@@ -37,11 +37,11 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory;
 import org.apache.hyracks.dataflow.std.group.AggregateState;
 import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptor;
-import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 
-public class NestedPlansRunningAggregatorFactory implements IAggregatorDescriptorFactory {
+public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescriptorFactory {
 
     private static final long serialVersionUID = 1L;
     private final AlgebricksPipeline[] subplans;

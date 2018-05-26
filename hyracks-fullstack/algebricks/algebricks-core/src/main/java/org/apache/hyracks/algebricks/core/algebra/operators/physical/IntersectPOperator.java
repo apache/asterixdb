@@ -151,7 +151,7 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
         } catch (HyracksException e) {
             throw new AlgebricksException(e);
         }
-
+        opDescriptor.setSourceLocation(op.getSourceLocation());
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDescriptor);
         for (int i = 0; i < op.getInputs().size(); i++) {
             builder.contributeGraphEdge(op.getInputs().get(i).getValue(), 0, op, i);

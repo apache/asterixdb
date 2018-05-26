@@ -141,6 +141,7 @@ public class EnforceOrderByAfterSubplan implements IAlgebraicRewriteRule {
             List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprs =
                     deepCopyOrderAndExpression(sourceOrderOp.getOrderExpressions());
             OrderOperator newOrderOp = new OrderOperator(orderExprs);
+            newOrderOp.setSourceLocation(sourceOrderOp.getSourceLocation());
             context.addToDontApplySet(this, newOrderOp);
             inputs.set(i, new MutableObject<ILogicalOperator>(newOrderOp));
             newOrderOp.getInputs().add(inputOpRef);

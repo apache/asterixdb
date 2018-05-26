@@ -57,6 +57,6 @@ public class GetRecordFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
-        return new GetRecordFieldsEvalFactory(args[0], recType);
+        return new GetRecordFieldsEvalFactory(args[0], recType, sourceLoc);
     }
 }

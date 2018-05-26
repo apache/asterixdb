@@ -55,7 +55,8 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
             case UNION: {
                 AUnionType ut = (AUnionType) t;
                 if (!ut.isUnknownableType()) {
-                    throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.MULTISET, ATypeTag.ARRAY);
+                    throw new TypeMismatchException(fun.getSourceLocation(), funcName, 0, actualTypeTag,
+                            ATypeTag.MULTISET, ATypeTag.ARRAY);
                 }
                 IAType t2 = ut.getActualType();
                 ATypeTag tag2 = t2.getTypeTag();
@@ -63,12 +64,14 @@ public class SubsetCollectionTypeComputer implements IResultTypeComputer {
                     AbstractCollectionType act = (AbstractCollectionType) t2;
                     return act.getItemType();
                 }
-                throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.MULTISET, ATypeTag.ARRAY);
+                throw new TypeMismatchException(fun.getSourceLocation(), funcName, 0, actualTypeTag, ATypeTag.MULTISET,
+                        ATypeTag.ARRAY);
             }
             case ANY:
                 return BuiltinType.ANY;
             default:
-                throw new TypeMismatchException(funcName, 0, actualTypeTag, ATypeTag.MULTISET, ATypeTag.ARRAY);
+                throw new TypeMismatchException(fun.getSourceLocation(), funcName, 0, actualTypeTag, ATypeTag.MULTISET,
+                        ATypeTag.ARRAY);
         }
     }
 }

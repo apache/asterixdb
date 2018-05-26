@@ -49,7 +49,8 @@ public class StringUpperCaseDescriptor extends AbstractScalarFunctionDynamicDesc
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractUnaryStringStringEval(ctx, args[0], StringUpperCaseDescriptor.this.getIdentifier()) {
+                return new AbstractUnaryStringStringEval(ctx, args[0], StringUpperCaseDescriptor.this.getIdentifier(),
+                        sourceLoc) {
 
                     @Override
                     protected void process(UTF8StringPointable inputString, IPointable resultPointable)

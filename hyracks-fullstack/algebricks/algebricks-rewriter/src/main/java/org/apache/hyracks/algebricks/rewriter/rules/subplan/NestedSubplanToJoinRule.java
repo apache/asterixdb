@@ -39,6 +39,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSo
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * replace Subplan operators with nested loop joins where the join condition is true, if the Subplan
@@ -103,20 +104,24 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
                 continue;
             }
 
+            SourceLocation sourceLoc = subplan.getSourceLocation();
+
             /**
              * Expends the input and roots into a DAG of nested loop joins.
              * Though joins should be left-outer joins, a left-outer join with condition TRUE is equivalent to an inner join.
              **/
             Mutable<ILogicalExpression> expr = new MutableObject<ILogicalExpression>(ConstantExpression.TRUE);
             Mutable<ILogicalOperator> nestedRootRef = nestedRoots.get(0);
-            ILogicalOperator join =
+            InnerJoinOperator join =
                     new InnerJoinOperator(expr, new MutableObject<ILogicalOperator>(subplanInput), nestedRootRef);
+            join.setSourceLocation(sourceLoc);
 
             /** rewrite the nested tuple source to be empty tuple source */
             rewriteNestedTupleSource(nestedRootRef, context);
 
             for (int i = 1; i < nestedRoots.size(); i++) {
                 join = new InnerJoinOperator(expr, new MutableObject<ILogicalOperator>(join), nestedRoots.get(i));
+                join.setSourceLocation(sourceLoc);
             }
             op1.getInputs().get(index).setValue(join);
             context.computeAndSetTypeEnvironmentForOperator(join);

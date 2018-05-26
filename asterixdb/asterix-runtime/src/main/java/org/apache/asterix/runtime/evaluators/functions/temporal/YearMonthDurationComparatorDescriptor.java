@@ -83,17 +83,17 @@ public class YearMonthDurationComparatorDescriptor extends AbstractScalarFunctio
                         int offset1 = argPtr1.getStartOffset();
 
                         if (bytes0[offset0] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                     ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
                         }
                         if (bytes1[offset1] != ATypeTag.SERIALIZED_DURATION_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                     ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
                         }
 
                         if ((ADurationSerializerDeserializer.getDayTime(bytes0, offset0 + 1) != 0)
                                 || (ADurationSerializerDeserializer.getDayTime(bytes1, offset1 + 1) != 0)) {
-                            throw new InvalidDataFormatException(getIdentifier(),
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                     ATypeTag.SERIALIZED_YEAR_MONTH_DURATION_TYPE_TAG);
                         }
 

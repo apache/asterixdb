@@ -88,6 +88,7 @@ public class IntroduceLeftOuterJoinForSubplanRule implements IAlgebraicRewriteRu
                 }
                 ntsRef.setValue(opUnder.getValue());
                 LeftOuterJoinOperator loj = new LeftOuterJoinOperator(join.getCondition());
+                loj.setSourceLocation(join.getSourceLocation());
                 loj.getInputs().add(leftRef);
                 loj.getInputs().add(rightRef);
                 opRef.setValue(loj);

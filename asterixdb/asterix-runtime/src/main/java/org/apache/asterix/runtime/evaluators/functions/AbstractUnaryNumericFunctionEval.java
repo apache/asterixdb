@@ -45,6 +45,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -92,11 +93,13 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
 
     // The function identifier, used for error messages.
     private final FunctionIdentifier funcID;
+    private final SourceLocation sourceLoc;
 
     public AbstractUnaryNumericFunctionEval(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory,
-            FunctionIdentifier funcID) throws HyracksDataException {
+            FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
         this.argEval = argEvalFactory.createScalarEvaluator(context);
         this.funcID = funcID;
+        this.sourceLoc = sourceLoc;
     }
 
     @SuppressWarnings("unchecked")
@@ -126,7 +129,7 @@ abstract class AbstractUnaryNumericFunctionEval implements IScalarEvaluator {
             double val = ADoubleSerializerDeserializer.getDouble(data, offset + 1);
             processDouble(val, result);
         } else {
-            throw new TypeMismatchException(funcID, 0, data[offset], ATypeTag.SERIALIZED_INT8_TYPE_TAG,
+            throw new TypeMismatchException(sourceLoc, funcID, 0, data[offset], ATypeTag.SERIALIZED_INT8_TYPE_TAG,
                     ATypeTag.SERIALIZED_INT16_TYPE_TAG, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
                     ATypeTag.SERIALIZED_INT64_TYPE_TAG, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
                     ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);

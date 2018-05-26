@@ -262,13 +262,16 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
         List<LogicalVariable> lhs = new ArrayList<>();
         List<Mutable<ILogicalExpression>> rhs = new ArrayList<>();
         lhs.add(outerUnnest.getVariable());
-        rhs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(listifyVar)));
+        VariableReferenceExpression listifyVarRef = new VariableReferenceExpression(listifyVar);
+        listifyVarRef.setSourceLocation(gbyOperator.getSourceLocation());
+        rhs.add(new MutableObject<ILogicalExpression>(listifyVarRef));
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = gbyOperator.getGroupByList();
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> gbyPair : gbyList) {
             lhs.add(gbyPair.first);
             rhs.add(gbyPair.second);
         }
         AssignOperator assignOp = new AssignOperator(lhs, rhs);
+        assignOp.setSourceLocation(outerUnnest.getSourceLocation());
         assignOp.getInputs().add(new MutableObject<ILogicalOperator>(lojOperator));
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
         opRef.setValue(assignOp);

@@ -91,7 +91,7 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         byte[] data = inputVal.getByteArray();
                         int offset = inputVal.getStartOffset();
                         if (data[offset] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, data[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data[offset],
                                     ATypeTag.SERIALIZED_INT32_TYPE_TAG);
                         }
                         int length = IntegerPointable.getInteger(data, offset + 1);
@@ -101,7 +101,7 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         data = inputVal.getByteArray();
                         offset = inputVal.getStartOffset();
                         if (data[offset] != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, data[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, data[offset],
                                     ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
                         }
                         float similarityThreshold = (float) ADoubleSerializerDeserializer.getDouble(data, offset + 1);
@@ -112,7 +112,7 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         offset = inputVal.getStartOffset();
                         int len = inputVal.getLength();
                         if (data[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 2, data[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 2, data[offset],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
                         SimilarityFilters similarityFilters =

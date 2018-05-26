@@ -54,7 +54,7 @@ public class SerializableGlobalAvgAggregateDescriptor extends AbstractSerializab
             @Override
             public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SerializableGlobalAvgAggregateFunction(args, ctx);
+                return new SerializableGlobalAvgAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

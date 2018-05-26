@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
@@ -43,6 +44,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopingVisitor {
 
@@ -94,9 +96,10 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     private Expression resolve(VariableExpr varExpr, String dataverseName, String datasetName,
             Expression originalExprWithUndefinedIdentifier, ILangExpression parent) throws CompilationException {
 
-        String varName = varExpr.getVar().getValue();
+        SourceLocation sourceLoc = varExpr.getSourceLocation();
 
-        VarIdentifier var = lookupVariable(varName);
+        String varName = varExpr.getVar().getValue();
+        VarIdentifier var = lookupVariable(varName, sourceLoc);
         if (var != null) {
             // Exists such an identifier
             varExpr.setIsNewVar(false);
@@ -106,61 +109,63 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
 
         boolean resolveToDatasetOnly = resolveToDatasetOnly(originalExprWithUndefinedIdentifier, parent);
         if (resolveToDatasetOnly) {
-            return resolveAsDataset(dataverseName, datasetName);
+            return resolveAsDataset(dataverseName, datasetName, sourceLoc);
         }
 
         Set<VariableExpr> localVars = scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope());
         switch (localVars.size()) {
             case 0:
-                return resolveAsDataset(dataverseName, datasetName);
+                return resolveAsDataset(dataverseName, datasetName, sourceLoc);
             case 1:
                 return resolveAsFieldAccess(localVars.iterator().next(),
-                        SqlppVariableUtil.toUserDefinedVariableName(varName).getValue());
+                        SqlppVariableUtil.toUserDefinedVariableName(varName).getValue(), sourceLoc);
             default:
                 // More than one possibilities.
-                throw new CompilationException("Cannot resolve ambiguous alias reference for undefined identifier "
-                        + SqlppVariableUtil.toUserDefinedVariableName(varName).getValue() + " in " + localVars);
+                throw new CompilationException(ErrorCode.AMBIGUOUS_IDENTIFIER, sourceLoc,
+                        SqlppVariableUtil.toUserDefinedVariableName(varName).getValue(), String.valueOf(localVars));
         }
     }
 
-    private VarIdentifier lookupVariable(String varName) throws CompilationException {
+    private VarIdentifier lookupVariable(String varName, SourceLocation sourceLoc) throws CompilationException {
         if (scopeChecker.isInForbiddenScopes(varName)) {
-            throw new CompilationException(
-                    "Inside limit clauses, it is disallowed to reference a variable having the same name"
-                            + " as any variable bound in the same scope as the limit clause.");
+            throw new CompilationException(ErrorCode.FORBIDDEN_SCOPE, sourceLoc);
         }
         Identifier ident = scopeChecker.lookupSymbol(varName);
         return ident != null ? (VarIdentifier) ident : null;
     }
 
-    private Expression resolveAsDataset(String dataverseName, String datasetName) throws CompilationException {
-        if (!datasetExists(dataverseName, datasetName)) {
-            throwUnresolvableError(dataverseName, datasetName);
+    private Expression resolveAsDataset(String dataverseName, String datasetName, SourceLocation sourceLoc)
+            throws CompilationException {
+        if (!datasetExists(dataverseName, datasetName, sourceLoc)) {
+            throwUnresolvableError(dataverseName, datasetName, sourceLoc);
         }
         String fullyQualifiedName = dataverseName == null ? datasetName : dataverseName + "." + datasetName;
         List<Expression> argList = new ArrayList<>(1);
         argList.add(new LiteralExpr(new StringLiteral(fullyQualifiedName)));
-        return new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), argList);
+        CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), argList);
+        callExpr.setSourceLocation(sourceLoc);
+        return callExpr;
     }
 
     // Rewrites for an field access by name
-    private Expression resolveAsFieldAccess(VariableExpr var, String fieldName) throws CompilationException {
+    private Expression resolveAsFieldAccess(VariableExpr var, String fieldName, SourceLocation sourceLoc) {
         List<Expression> argList = new ArrayList<>(2);
         argList.add(var);
         argList.add(new LiteralExpr(new StringLiteral(fieldName)));
-        return new CallExpr(new FunctionSignature(BuiltinFunctions.FIELD_ACCESS_BY_NAME), argList);
+        CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.FIELD_ACCESS_BY_NAME), argList);
+        callExpr.setSourceLocation(sourceLoc);
+        return callExpr;
     }
 
-    private void throwUnresolvableError(String dataverseName, String datasetName) throws CompilationException {
+    private void throwUnresolvableError(String dataverseName, String datasetName, SourceLocation sourceLoc)
+            throws CompilationException {
         String defaultDataverseName = metadataProvider.getDefaultDataverseName();
         if (dataverseName == null && defaultDataverseName == null) {
-            throw new CompilationException("Cannot find dataset " + datasetName
-                    + " because there is no dataverse declared, nor an alias with name " + datasetName + "!");
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET, sourceLoc, datasetName);
         }
         //If no available dataset nor in-scope variable to resolve to, we throw an error.
-        throw new CompilationException("Cannot find dataset " + datasetName + " in dataverse "
-                + (dataverseName == null ? defaultDataverseName : dataverseName) + " nor an alias with name "
-                + datasetName + "!");
+        throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                dataverseName == null ? defaultDataverseName : dataverseName);
     }
 
     // For a From/Join/UNNEST/Quantifiers binding expression, we resolve the undefined identifier reference as
@@ -171,12 +176,13 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         return parent.accept(visitor, originalExpressionWithUndefinedIdentifier);
     }
 
-    private boolean datasetExists(String dataverseName, String datasetName) throws CompilationException {
+    private boolean datasetExists(String dataverseName, String datasetName, SourceLocation sourceLoc)
+            throws CompilationException {
         try {
             return metadataProvider.findDataset(dataverseName, datasetName) != null
                     || fullyQualifiedDatasetNameExists(datasetName);
         } catch (AlgebricksException e) {
-            throw new CompilationException(e);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }
     }
 

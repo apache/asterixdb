@@ -60,6 +60,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionVisitor<Boolean, List<FunctionDecl>> {
 
@@ -289,12 +290,18 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
                 if (e.getKind() == Kind.VARIABLE_EXPRESSION) {
                     subts.addSubstituion(new VariableExpr(param), e);
                 } else {
+                    SourceLocation sourceLoc = e.getSourceLocation();
                     VarIdentifier newV = context.newVariable();
                     Pair<ILangExpression, VariableSubstitutionEnvironment> p1 =
                             e.accept(cloneVisitor, new VariableSubstitutionEnvironment());
-                    LetClause c = new LetClause(new VariableExpr(newV), (Expression) p1.first);
+                    VariableExpr newVRef1 = new VariableExpr(newV);
+                    newVRef1.setSourceLocation(sourceLoc);
+                    LetClause c = new LetClause(newVRef1, (Expression) p1.first);
+                    c.setSourceLocation(sourceLoc);
                     clauses.add(c);
-                    subts.addSubstituion(new VariableExpr(param), new VariableExpr(newV));
+                    VariableExpr newVRef2 = new VariableExpr(newV);
+                    newVRef2.setSourceLocation(sourceLoc);
+                    subts.addSubstituion(new VariableExpr(param), newVRef2);
                 }
             }
 
@@ -325,7 +332,9 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     private Expression rewriteFunctionBody(FunctionDecl fnDecl) throws CompilationException {
+        SourceLocation sourceLoc = fnDecl.getSourceLocation();
         Query wrappedQuery = new Query(false);
+        wrappedQuery.setSourceLocation(sourceLoc);
         wrappedQuery.setBody(fnDecl.getFuncBody());
         wrappedQuery.setTopLevel(false);
         wrappedQuery.setExternalVars(fnDecl.getParamList());
@@ -340,7 +349,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
             try {
                 fnDataverse = metadataProvider.findDataverse(fnNamespace);
             } catch (AlgebricksException e) {
-                throw new CompilationException(ErrorCode.NO_DATAVERSE_WITH_NAME, e, fnNamespace);
+                throw new CompilationException(ErrorCode.NO_DATAVERSE_WITH_NAME, e, sourceLoc, fnNamespace);
             }
         }
 

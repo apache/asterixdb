@@ -89,7 +89,7 @@ public class SecondaryBTreeOperationsHelperTest {
             index = metadataProvider.getIndex(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName,
                     primaryIndexName);
             Assert.assertNotNull(index);
-            jobSpecification = IndexUtil.buildSecondaryIndexLoadingJobSpec(dataset, index, metadataProvider);
+            jobSpecification = IndexUtil.buildSecondaryIndexLoadingJobSpec(dataset, index, metadataProvider, null);
             jobSpecification.getOperatorMap().values().forEach(iOperatorDescriptor -> {
                 Assert.assertFalse(iOperatorDescriptor instanceof AbstractSorterOperatorDescriptor);
             });
@@ -99,7 +99,7 @@ public class SecondaryBTreeOperationsHelperTest {
             index = metadataProvider.getIndex(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName,
                     secondaryIndexName);
             Assert.assertNotNull(index);
-            jobSpecification = IndexUtil.buildSecondaryIndexLoadingJobSpec(dataset, index, metadataProvider);
+            jobSpecification = IndexUtil.buildSecondaryIndexLoadingJobSpec(dataset, index, metadataProvider, null);
             final long numOfSortOperators = jobSpecification.getOperatorMap().values().stream()
                     .filter(op -> op instanceof AbstractSorterOperatorDescriptor).count();
             Assert.assertTrue(numOfSortOperators != 0);

@@ -35,6 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOpera
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class EliminateSubplanRule implements IAlgebraicRewriteRule {
 
@@ -101,6 +102,7 @@ public class EliminateSubplanRule implements IAlgebraicRewriteRule {
     private void elimSubplanOverEts(Mutable<ILogicalOperator> opRef, IOptimizationContext ctx)
             throws AlgebricksException {
         SubplanOperator subplan = (SubplanOperator) opRef.getValue();
+        SourceLocation sourceLoc = subplan.getSourceLocation();
         for (ILogicalPlan p : subplan.getNestedPlans()) {
             for (Mutable<ILogicalOperator> r : p.getRoots()) {
                 OperatorManipulationUtil.ntsToEts(r, ctx);
@@ -117,6 +119,7 @@ public class EliminateSubplanRule implements IAlgebraicRewriteRule {
                 } else {
                     InnerJoinOperator j =
                             new InnerJoinOperator(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+                    j.setSourceLocation(sourceLoc);
                     j.getInputs().add(new MutableObject<ILogicalOperator>(topOp));
                     j.getInputs().add(r);
                     ctx.setOutputTypeEnvironment(j, j.computeOutputTypeEnvironment(ctx));

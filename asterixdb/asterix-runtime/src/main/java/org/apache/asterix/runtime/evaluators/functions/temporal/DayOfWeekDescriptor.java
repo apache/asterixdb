@@ -94,7 +94,7 @@ public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             chronon = ADateSerializerDeserializer.getChronon(bytes, offset + 1)
                                     * GregorianCalendarSystem.CHRONON_OF_DAY;
                         } else {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes[offset],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
                                     ATypeTag.SERIALIZED_DATETIME_TYPE_TAG, ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                         }
 

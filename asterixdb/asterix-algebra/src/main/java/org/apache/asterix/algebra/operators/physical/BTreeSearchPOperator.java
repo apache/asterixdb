@@ -139,9 +139,11 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                 jobGenParams.getIndexName(), lowKeyIndexes, highKeyIndexes, jobGenParams.isLowKeyInclusive(),
                 jobGenParams.isHighKeyInclusive(), propagateFilter, minFilterFieldIndexes, maxFilterFieldIndexes,
                 tupleFilterFactory, outputLimit, unnestMap.getGenerateCallBackProceedResultVar());
+        IOperatorDescriptor opDesc = btreeSearch.first;
+        opDesc.setSourceLocation(unnestMap.getSourceLocation());
 
-        builder.contributeHyracksOperator(unnestMap, btreeSearch.first);
-        builder.contributeAlgebricksPartitionConstraint(btreeSearch.first, btreeSearch.second);
+        builder.contributeHyracksOperator(unnestMap, opDesc);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, btreeSearch.second);
 
         ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);

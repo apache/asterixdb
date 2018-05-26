@@ -34,7 +34,7 @@ import org.apache.hyracks.algebricks.runtime.operators.aggreg.SimpleAlgebricksAc
 import org.apache.hyracks.algebricks.runtime.operators.group.MicroPreClusteredGroupRuntimeFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
+import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory;
 
 public class MicroPreSortedDistinctByPOperator extends AbstractPreSortedDistinctByPOperator {
 
@@ -62,8 +62,9 @@ public class MicroPreSortedDistinctByPOperator extends AbstractPreSortedDistinct
         IBinaryComparatorFactory[] comparatorFactories = JobGenHelper
                 .variablesToAscBinaryComparatorFactories(columnList, context.getTypeEnvironment(op), context);
         IAggregateEvaluatorFactory[] aggFactories = new IAggregateEvaluatorFactory[] {};
-        IAggregatorDescriptorFactory aggregatorFactory =
+        AbstractAggregatorDescriptorFactory aggregatorFactory =
                 new SimpleAlgebricksAccumulatingAggregatorFactory(aggFactories, keysAndDecs);
+        aggregatorFactory.setSourceLocation(op.getSourceLocation());
 
         RecordDescriptor recordDescriptor =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
@@ -73,6 +74,7 @@ public class MicroPreSortedDistinctByPOperator extends AbstractPreSortedDistinct
         /* make fd columns part of the key but the comparator only compares the distinct key columns */
         MicroPreClusteredGroupRuntimeFactory runtime = new MicroPreClusteredGroupRuntimeFactory(keysAndDecs,
                 comparatorFactories, aggregatorFactory, inputRecordDesc, recordDescriptor, null);
+        runtime.setSourceLocation(op.getSourceLocation());
         builder.contributeMicroOperator(op, runtime, recordDescriptor);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);

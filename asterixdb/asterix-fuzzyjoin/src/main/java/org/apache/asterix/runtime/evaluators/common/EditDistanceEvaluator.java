@@ -37,6 +37,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -53,6 +54,7 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     protected final IPointable argPtr2 = new VoidPointable();
     protected final IScalarEvaluator firstStringEval;
     protected final IScalarEvaluator secondStringEval;
+    protected final SourceLocation sourceLoc;
     protected final SimilarityMetricEditDistance ed = new SimilarityMetricEditDistance();
     protected final OrderedListIterator firstOrdListIter = new OrderedListIterator();
     protected final OrderedListIterator secondOrdListIter = new OrderedListIterator();
@@ -66,10 +68,11 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
     protected ATypeTag firstTypeTag;
     protected ATypeTag secondTypeTag;
 
-    public EditDistanceEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
+    public EditDistanceEvaluator(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, SourceLocation sourceLoc)
             throws HyracksDataException {
         firstStringEval = args[0].createScalarEvaluator(context);
         secondStringEval = args[1].createScalarEvaluator(context);
+        this.sourceLoc = sourceLoc;
     }
 
     @Override
@@ -115,7 +118,7 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
                 return (int) ed.computeSimilarity(firstOrdListIter, secondOrdListIter);
             }
             default: {
-                throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE, 0, argType.serialize(),
+                throw new TypeMismatchException(sourceLoc, BuiltinFunctions.EDIT_DISTANCE, 0, argType.serialize(),
                         ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
             }
 
@@ -124,13 +127,13 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
 
     protected boolean checkArgTypes(ATypeTag typeTag1, ATypeTag typeTag2) throws HyracksDataException {
         if (typeTag1 != typeTag2) {
-            throw new IncompatibleTypeException(BuiltinFunctions.EDIT_DISTANCE, typeTag1.serialize(),
+            throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.EDIT_DISTANCE, typeTag1.serialize(),
                     typeTag2.serialize());
         }
 
         // Since they are equal, check one tag is enough.
         if (typeTag1 != ATypeTag.STRING && typeTag1 != ATypeTag.ARRAY) { // could be an list
-            throw new TypeMismatchException(BuiltinFunctions.EDIT_DISTANCE, 0, typeTag1.serialize(),
+            throw new TypeMismatchException(sourceLoc, BuiltinFunctions.EDIT_DISTANCE, 0, typeTag1.serialize(),
                     ATypeTag.SERIALIZED_STRING_TYPE_TAG, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
         }
 
@@ -138,12 +141,14 @@ public class EditDistanceEvaluator implements IScalarEvaluator {
             itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                     .deserialize(argPtr1.getByteArray()[argPtr1.getStartOffset() + 1]);
             if (itemTypeTag == ATypeTag.ANY) {
-                throw new UnsupportedItemTypeException(BuiltinFunctions.EDIT_DISTANCE, itemTypeTag.serialize());
+                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.EDIT_DISTANCE,
+                        itemTypeTag.serialize());
             }
             itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                     .deserialize(argPtr2.getByteArray()[argPtr2.getStartOffset() + 1]);
             if (itemTypeTag == ATypeTag.ANY) {
-                throw new UnsupportedItemTypeException(BuiltinFunctions.EDIT_DISTANCE, itemTypeTag.serialize());
+                throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.EDIT_DISTANCE,
+                        itemTypeTag.serialize());
             }
         }
         return true;

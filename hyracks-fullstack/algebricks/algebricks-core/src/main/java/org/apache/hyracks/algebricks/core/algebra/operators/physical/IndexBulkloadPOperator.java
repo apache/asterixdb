@@ -135,8 +135,10 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints =
                 mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys,
                         secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec, true);
-        builder.contributeHyracksOperator(indexInsertDeleteOp, runtimeAndConstraints.first);
-        builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
+        IOperatorDescriptor opDesc = runtimeAndConstraints.first;
+        opDesc.setSourceLocation(indexInsertDeleteOp.getSourceLocation());
+        builder.contributeHyracksOperator(indexInsertDeleteOp, opDesc);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, runtimeAndConstraints.second);
         ILogicalOperator src = indexInsertDeleteOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, indexInsertDeleteOp, 0);
     }

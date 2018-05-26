@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
@@ -53,9 +54,12 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
 
     // Function ID, for error reporting.
     private final FunctionIdentifier funcID;
+    private final SourceLocation sourceLoc;
 
     public AbstractBinaryStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory evalLeftFactory,
-            IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID) throws HyracksDataException {
+            IScalarEvaluatorFactory evalRightFactory, FunctionIdentifier funcID, SourceLocation sourceLoc)
+            throws HyracksDataException {
+        this.sourceLoc = sourceLoc;
         this.evalLeft = evalLeftFactory.createScalarEvaluator(context);
         this.evalRight = evalRightFactory.createScalarEvaluator(context);
         this.funcID = funcID;
@@ -80,10 +84,10 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
 
         // Type check.
         if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 0, bytes0[offset0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, funcID, 0, bytes0[offset0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(funcID, 1, bytes1[offset1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            throw new TypeMismatchException(sourceLoc, funcID, 1, bytes1[offset1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
 
         // Sets StringUTF8Pointables.

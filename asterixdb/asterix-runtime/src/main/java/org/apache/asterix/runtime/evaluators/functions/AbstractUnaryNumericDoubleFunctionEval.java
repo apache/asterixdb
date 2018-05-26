@@ -23,6 +23,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 
 /**
@@ -31,8 +32,8 @@ import org.apache.hyracks.data.std.api.IPointable;
 abstract class AbstractUnaryNumericDoubleFunctionEval extends AbstractUnaryNumericFunctionEval {
 
     public AbstractUnaryNumericDoubleFunctionEval(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory,
-            FunctionIdentifier funcID) throws HyracksDataException {
-        super(context, argEvalFactory, funcID);
+            FunctionIdentifier funcID, SourceLocation sourceLoc) throws HyracksDataException {
+        super(context, argEvalFactory, funcID, sourceLoc);
     }
 
     @Override

@@ -64,7 +64,7 @@ public class NumericAbsDescriptor extends AbstractScalarFunctionDynamicDescripto
 
         NumericAbsEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericAbsDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericAbsDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

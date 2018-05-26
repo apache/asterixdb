@@ -19,11 +19,10 @@
 package org.apache.hyracks.algebricks.runtime.operators.base;
 
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
-import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class AbstractOneInputOneOutputRuntimeFactory implements IPushRuntimeFactory {
+public abstract class AbstractOneInputOneOutputRuntimeFactory extends AbstractPushRuntimeFactory {
 
     private static final long serialVersionUID = 1L;
 

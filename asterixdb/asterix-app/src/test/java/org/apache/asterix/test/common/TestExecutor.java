@@ -1569,7 +1569,8 @@ public class TestExecutor {
                     }
                 } catch (Exception e) {
                     numOfErrors++;
-                    boolean unexpected = isUnExpected(e, expectedErrors, numOfErrors, queryCount);
+                    boolean unexpected = isUnExpected(e, expectedErrors, numOfErrors, queryCount,
+                            testCaseCtx.isSourceLocationExpected(cUnit));
                     if (unexpected) {
                         LOGGER.error("testFile {} raised an unexpected exception", testFile, e);
                         if (failedGroup != null) {
@@ -1615,20 +1616,39 @@ public class TestExecutor {
         throw new Exception("Test \"" + testFile + "\" FAILED!", e);
     }
 
-    protected boolean isUnExpected(Exception e, List<String> expectedErrors, int numOfErrors, MutableInt queryCount) {
+    protected boolean isUnExpected(Exception e, List<String> expectedErrors, int numOfErrors, MutableInt queryCount,
+            boolean expectedSourceLoc) {
         String expectedError = null;
         if (expectedErrors.size() < numOfErrors) {
             return true;
         } else {
             // Get the expected exception
             expectedError = expectedErrors.get(numOfErrors - 1);
-            if (e.toString().contains(expectedError)) {
-                return false;
-            } else {
+            String actualError = e.toString();
+            if (!actualError.contains(expectedError)) {
                 LOGGER.error("Expected to find the following in error text: +++++{}+++++", expectedError);
                 return true;
             }
+            if (expectedSourceLoc && !containsSourceLocation(actualError)) {
+                LOGGER.error("Expected to find source location \"{}, {}\" in error text: +++++{}+++++",
+                        ERR_MSG_SRC_LOC_LINE_REGEX, ERR_MSG_SRC_LOC_COLUMN_REGEX, actualError);
+                return true;
+            }
+            return false;
         }
+    }
+
+    private static final String ERR_MSG_SRC_LOC_LINE_REGEX = "in line \\d+";
+    private static final Pattern ERR_MSG_SRC_LOC_LINE_PATTERN =
+            Pattern.compile(ERR_MSG_SRC_LOC_LINE_REGEX, Pattern.CASE_INSENSITIVE);
+
+    private static final String ERR_MSG_SRC_LOC_COLUMN_REGEX = "at column \\d+";
+    private static final Pattern ERR_MSG_SRC_LOC_COLUMN_PATTERN =
+            Pattern.compile(ERR_MSG_SRC_LOC_COLUMN_REGEX, Pattern.CASE_INSENSITIVE);
+
+    private boolean containsSourceLocation(String errorMessage) {
+        Matcher lineMatcher = ERR_MSG_SRC_LOC_LINE_PATTERN.matcher(errorMessage);
+        return lineMatcher.find() && ERR_MSG_SRC_LOC_COLUMN_PATTERN.matcher(errorMessage).find(lineMatcher.end());
     }
 
     private static File getTestCaseQueryBeforeCrashFile(String actualPath, TestCaseContext testCaseCtx,

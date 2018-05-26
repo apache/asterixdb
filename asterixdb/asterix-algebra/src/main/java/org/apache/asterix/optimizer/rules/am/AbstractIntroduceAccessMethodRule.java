@@ -625,7 +625,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
         List<String> fieldName = null;
         if (subTree.getDataSourceType() == DataSourceType.COLLECTION_SCAN) {
-            optFuncExpr.setLogicalExpr(funcVarIndex, new VariableReferenceExpression(var));
+            VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+            varRef.setSourceLocation(unnestOp.getSourceLocation());
+            optFuncExpr.setLogicalExpr(funcVarIndex, varRef);
         } else {
             fieldName = getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0, subTree.getRecordType(),
                     funcVarIndex, optFuncExpr.getFuncExpr().getArguments().get(funcVarIndex).getValue(),
@@ -731,7 +733,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             optFuncExpr.setFieldName(funcVarIndex, fieldName);
             optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
             optFuncExpr.setSourceVar(funcVarIndex, var);
-            optFuncExpr.setLogicalExpr(funcVarIndex, new VariableReferenceExpression(var));
+            VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+            varRef.setSourceLocation(subTree.getDataSourceRef().getValue().getSourceLocation());
+            optFuncExpr.setLogicalExpr(funcVarIndex, varRef);
             setTypeTag(context, subTree, optFuncExpr, funcVarIndex);
             if (subTree.hasDataSourceScan()) {
                 fillIndexExprs(datasetIndexes, fieldName, fieldType, optFuncExpr, optFuncExprIndex, funcVarIndex,

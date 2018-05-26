@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class TypeReferenceExpression implements TypeExpression {
+public class TypeReferenceExpression extends AbstractTypeExpression {
 
     private final Pair<Identifier, Identifier> ident;
 

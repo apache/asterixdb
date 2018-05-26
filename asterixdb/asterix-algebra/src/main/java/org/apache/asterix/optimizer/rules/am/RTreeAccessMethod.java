@@ -254,6 +254,7 @@ public class RTreeAccessMethod implements IAccessMethod {
             // The create MBR function "extracts" one field of an MBR around the given spatial object.
             AbstractFunctionCallExpression createMBR =
                     new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_MBR));
+            createMBR.setSourceLocation(optFuncExpr.getFuncExpr().getSourceLocation());
             // Spatial object is the constant from the func expr we are optimizing.
             createMBR.getArguments().add(new MutableObject<>(returnedSearchKeyExpr));
             // The number of dimensions
@@ -274,11 +275,13 @@ public class RTreeAccessMethod implements IAccessMethod {
         if (probeSubTree == null) {
             // We are optimizing a selection query.
             // Input to this assign is the EmptyTupleSource (which the dataSourceScan also must have had as input).
+            assignSearchKeys.setSourceLocation(dataSourceOp.getSourceLocation());
             assignSearchKeys.getInputs().add(
                     new MutableObject<>(OperatorManipulationUtil.deepCopy(dataSourceOp.getInputs().get(0).getValue())));
             assignSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
         } else {
             // We are optimizing a join, place the assign op top of the probe subtree.
+            assignSearchKeys.setSourceLocation(probeSubTree.getRoot().getSourceLocation());
             assignSearchKeys.getInputs().add(probeSubTree.getRootRef());
             assignSearchKeys.setExecutionMode(dataSourceOp.getExecutionMode());
             OperatorPropertiesUtil.typeOpRec(probeSubTree.getRootRef(), context);

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -33,6 +34,7 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FunctionMapUtil {
 
@@ -114,16 +116,18 @@ public class FunctionMapUtil {
      *
      * @param fs,
      *            the user typed function.
+     * @param sourceLoc
      * @return the system internal function.
      */
-    public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs, boolean checkSql92Aggregate)
-            throws CompilationException {
+    public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs, boolean checkSql92Aggregate,
+            SourceLocation sourceLoc) throws CompilationException {
         if (isCoreAggregateFunction(fs)) {
             return internalizeCoreAggregateFunctionName(fs);
         } else if (checkSql92Aggregate && isSql92AggregateFunction(fs)) {
-            throw new CompilationException(fs.getName()
-                    + " is a SQL-92 aggregate function. The SQL++ core aggregate function " + CORE_SQL_AGGREGATE_PREFIX
-                    + fs.getName().toLowerCase() + " could potentially express the intent.");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                    fs.getName() + " is a SQL-92 aggregate function. The SQL++ core aggregate function "
+                            + CORE_SQL_AGGREGATE_PREFIX + fs.getName().toLowerCase()
+                            + " could potentially express the intent.");
         }
         String mappedName = CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(fs).getName();
         return new FunctionSignature(fs.getNamespace(), mappedName, fs.getArity());
@@ -143,8 +147,10 @@ public class FunctionMapUtil {
             return callExpr;
         }
         callExpr.setFunctionSignature(new FunctionSignature(FunctionConstants.ASTERIX_NS, internalFuncName, 1));
-        callExpr.setExprList(new ArrayList<>(Collections.singletonList(
-                new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, callExpr.getExprList()))));
+        ListConstructor listConstr =
+                new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, callExpr.getExprList());
+        listConstr.setSourceLocation(callExpr.getSourceLocation());
+        callExpr.setExprList(new ArrayList<>(Collections.singletonList(listConstr)));
         return callExpr;
     }
 

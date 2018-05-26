@@ -37,6 +37,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.dataflow.std.sort.AbstractSorterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.TopKSorterOperatorDescriptor;
 
@@ -98,22 +99,21 @@ public class StableSortPOperator extends AbstractStableSortPOperator {
             i++;
         }
 
+        AbstractSorterOperatorDescriptor sortOpDesc;
         // topK == -1 means that a topK value is not provided.
         if (topK == -1) {
-            ExternalSortOperatorDescriptor sortOpDesc =
+            sortOpDesc =
                     new ExternalSortOperatorDescriptor(spec, maxNumberOfFrames, sortFields, nkcf, comps, recDescriptor);
-            contributeOpDesc(builder, (AbstractLogicalOperator) op, sortOpDesc);
-            ILogicalOperator src = op.getInputs().get(0).getValue();
-            builder.contributeGraphEdge(src, 0, op, 0);
         } else {
             // Since topK value is provided, topK optimization is possible.
             // We call topKSorter instead of calling ExternalSortOperator.
-            TopKSorterOperatorDescriptor sortOpDesc = new TopKSorterOperatorDescriptor(spec, maxNumberOfFrames, topK,
-                    sortFields, nkcf, comps, recDescriptor);
-            contributeOpDesc(builder, (AbstractLogicalOperator) op, sortOpDesc);
-            ILogicalOperator src = op.getInputs().get(0).getValue();
-            builder.contributeGraphEdge(src, 0, op, 0);
+            sortOpDesc = new TopKSorterOperatorDescriptor(spec, maxNumberOfFrames, topK, sortFields, nkcf, comps,
+                    recDescriptor);
         }
+        sortOpDesc.setSourceLocation(op.getSourceLocation());
+        contributeOpDesc(builder, (AbstractLogicalOperator) op, sortOpDesc);
+        ILogicalOperator src = op.getInputs().get(0).getValue();
+        builder.contributeGraphEdge(src, 0, op, 0);
     }
 
     @Override

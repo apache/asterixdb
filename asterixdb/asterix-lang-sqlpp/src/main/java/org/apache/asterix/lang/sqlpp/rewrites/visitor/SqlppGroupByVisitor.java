@@ -72,6 +72,7 @@ public class SqlppGroupByVisitor extends AbstractSqlppSimpleExpressionVisitor {
         // Sets the group variable.
         if (!gbyClause.hasGroupVar()) {
             VariableExpr groupVar = new VariableExpr(context.newVariable());
+            groupVar.setSourceLocation(gbyClause.getSourceLocation());
             gbyClause.setGroupVar(groupVar);
         }
 
@@ -95,9 +96,11 @@ public class SqlppGroupByVisitor extends AbstractSqlppSimpleExpressionVisitor {
             List<GbyVariableExpressionPair> gbyPairList = new ArrayList<>();
             List<GbyVariableExpressionPair> decorPairList = new ArrayList<>();
             VariableExpr groupVar = new VariableExpr(context.newVariable());
+            groupVar.setSourceLocation(selectBlock.getSourceLocation());
             List<Pair<Expression, Identifier>> groupFieldList = createGroupFieldList(selectBlock);
             GroupbyClause gbyClause = new GroupbyClause(gbyPairList, decorPairList, new HashMap<>(), groupVar,
                     groupFieldList, false, true);
+            gbyClause.setSourceLocation(selectBlock.getSourceLocation());
             selectBlock.setGroupbyClause(gbyClause);
         }
     }
@@ -128,8 +131,10 @@ public class SqlppGroupByVisitor extends AbstractSqlppSimpleExpressionVisitor {
     private void addToGroupFieldList(List<Pair<Expression, Identifier>> groupFieldList,
             Collection<VariableExpr> fromBindingVars) {
         for (VariableExpr varExpr : fromBindingVars) {
-            Pair<Expression, Identifier> varIdPair = new Pair<>(new VariableExpr(varExpr.getVar()),
-                    SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar()));
+            VariableExpr newVarExpr = new VariableExpr(varExpr.getVar());
+            newVarExpr.setSourceLocation(varExpr.getSourceLocation());
+            Pair<Expression, Identifier> varIdPair =
+                    new Pair<>(newVarExpr, SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar()));
             groupFieldList.add(varIdPair);
         }
     }

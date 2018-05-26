@@ -205,8 +205,11 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         List<LogicalVariable> assgnVars = new ArrayList<>(1);
         assgnVars.add(unnest1.getVariable());
         List<Mutable<ILogicalExpression>> assgnExprs = new ArrayList<>(1);
-        assgnExprs.add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(paramVar)));
+        VariableReferenceExpression paramVarRef = new VariableReferenceExpression(paramVar);
+        paramVarRef.setSourceLocation(arg0.getSourceLocation());
+        assgnExprs.add(new MutableObject<ILogicalExpression>(paramVarRef));
         AssignOperator assign = new AssignOperator(assgnVars, assgnExprs);
+        assign.setSourceLocation(agg.getSourceLocation());
         assign.getInputs().add(agg.getInputs().get(0));
         context.computeAndSetTypeEnvironmentForOperator(assign);
         LogicalVariable posVar = unnest1.getPositionalVariable();
@@ -220,8 +223,10 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             List<Mutable<ILogicalExpression>> rAggExprs = new ArrayList<>(1);
             StatefulFunctionCallExpression tidFun = new StatefulFunctionCallExpression(
                     FunctionUtil.getFunctionInfo(BuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
+            tidFun.setSourceLocation(agg.getSourceLocation());
             rAggExprs.add(new MutableObject<ILogicalExpression>(tidFun));
             RunningAggregateOperator rAgg = new RunningAggregateOperator(raggVars, rAggExprs);
+            rAgg.setSourceLocation(agg.getSourceLocation());
             rAgg.getInputs().add(new MutableObject<ILogicalOperator>(assign));
             aggregateParentRef.setValue(rAgg);
             context.computeAndSetTypeEnvironmentForOperator(rAgg);
@@ -289,6 +294,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         List<LogicalVariable> assgnVars = new ArrayList<>(1);
         assgnVars.add(aggVar);
         AssignOperator assign = new AssignOperator(assgnVars, scanFunc.getArguments());
+        assign.setSourceLocation(agg.getSourceLocation());
         assign.getInputs().add(unnest.getInputs().get(0));
         context.computeAndSetTypeEnvironmentForOperator(assign);
         opRef.setValue(assign);

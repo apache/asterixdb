@@ -102,9 +102,11 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
                 builder.getJobSpec(), outputVars, opSchema, typeEnv, context, jobGenParams.getRetainInput(), retainNull,
                 dataset, jobGenParams.getIndexName(), keyIndexes, propagateIndexFilter, minFilterFieldIndexes,
                 maxFilterFieldIndexes, unnestMap.getGenerateCallBackProceedResultVar());
+        IOperatorDescriptor opDesc = rtreeSearch.first;
+        opDesc.setSourceLocation(unnestMap.getSourceLocation());
 
-        builder.contributeHyracksOperator(unnestMap, rtreeSearch.first);
-        builder.contributeAlgebricksPartitionConstraint(rtreeSearch.first, rtreeSearch.second);
+        builder.contributeHyracksOperator(unnestMap, opDesc);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, rtreeSearch.second);
         ILogicalOperator srcExchange = unnestMap.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
     }

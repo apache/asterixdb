@@ -28,6 +28,7 @@ import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FieldAccessByNameResultType extends AbstractResultTypeComputer {
 
@@ -37,13 +38,14 @@ public class FieldAccessByNameResultType extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
         if (argIndex == 0 && actualTypeTag != ATypeTag.OBJECT) {
-            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.OBJECT);
+            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.OBJECT);
         }
         if (argIndex == 1 && actualTypeTag != ATypeTag.STRING) {
-            throw new TypeMismatchException(funcName, argIndex, actualTypeTag, ATypeTag.STRING);
+            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.STRING);
         }
     }
 

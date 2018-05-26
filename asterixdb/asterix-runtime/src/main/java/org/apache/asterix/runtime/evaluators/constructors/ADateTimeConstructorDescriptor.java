@@ -91,7 +91,7 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                 int startOffset = utf8Ptr.getCharStartOffset();
                                 // the string to be parsed should be at least 14 characters: YYYYMMDDhhmmss
                                 if (stringLength < 14) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                                 }
                                 // +1 if it is negative (-)
@@ -102,7 +102,7 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                 if (serString[startOffset + timeOffset] != 'T') {
                                     timeOffset += 2;
                                     if (serString[startOffset + timeOffset] != 'T') {
-                                        throw new InvalidDataFormatException(getIdentifier(),
+                                        throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                                 ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                                     }
                                 }
@@ -117,11 +117,11 @@ public class ADateTimeConstructorDescriptor extends AbstractScalarFunctionDynami
                                 datetimeSerde.serialize(aDateTime, out);
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
                     }

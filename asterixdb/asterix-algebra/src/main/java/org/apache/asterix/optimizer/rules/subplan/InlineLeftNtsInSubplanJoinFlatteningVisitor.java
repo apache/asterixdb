@@ -192,6 +192,7 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
         // After rewriting, the original inner join should become an left outer join.
         if (rewritten) {
             returnOp = new LeftOuterJoinOperator(op.getCondition());
+            returnOp.setSourceLocation(op.getSourceLocation());
             returnOp.getInputs().addAll(op.getInputs());
             injectNullCheckVars(returnOp);
         }
@@ -231,13 +232,16 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
         List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExprList = new ArrayList<>();
         // Adds keyVars to the prefix of sorting columns.
         for (LogicalVariable liveVar : liveVarsFromSubplanInput) {
+            VariableReferenceExpression liveVarRef = new VariableReferenceExpression(liveVar);
+            liveVarRef.setSourceLocation(op.getSourceLocation());
             orderExprList.add(new Pair<IOrder, Mutable<ILogicalExpression>>(OrderOperator.ASC_ORDER,
-                    new MutableObject<ILogicalExpression>(new VariableReferenceExpression(liveVar))));
+                    new MutableObject<ILogicalExpression>(liveVarRef)));
         }
         orderExprList.addAll(op.getOrderExpressions());
 
         // Creates an order operator with the new expression list.
         OrderOperator orderOp = new OrderOperator(orderExprList);
+        orderOp.setSourceLocation(op.getSourceLocation());
         orderOp.getInputs().addAll(op.getInputs());
         context.computeAndSetTypeEnvironmentForOperator(orderOp);
         return orderOp;
@@ -399,8 +403,9 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
      */
     private void injectNullCheckVars(AbstractBinaryJoinOperator joinOp) {
         LogicalVariable assignVar = context.newVar();
-        ILogicalOperator assignOp =
+        AssignOperator assignOp =
                 new AssignOperator(assignVar, new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+        assignOp.setSourceLocation(joinOp.getSourceLocation());
         assignOp.getInputs().add(joinOp.getInputs().get(1));
         joinOp.getInputs().set(1, new MutableObject<ILogicalOperator>(assignOp));
         nullCheckVars.add(assignVar);

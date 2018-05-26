@@ -85,11 +85,12 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
         // Sanity checks.
         if (numPrimaryKeys > 1) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_FOR_DATASET_WITH_COMPOSITE_PRIMARY_INDEX,
-                    indexType, RecordUtil.toFullyQualifiedName(dataset.getDataverseName(), dataset.getDatasetName()));
+                    sourceLoc, indexType,
+                    RecordUtil.toFullyQualifiedName(dataset.getDataverseName(), dataset.getDatasetName()));
         }
         if (numSecondaryKeys > 1) {
-            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_NUM_OF_FIELD, numSecondaryKeys,
-                    indexType, 1);
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_NUM_OF_FIELD, sourceLoc,
+                    numSecondaryKeys, indexType, 1);
         }
         if (indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
                 || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX) {
@@ -111,7 +112,7 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
         if (numSecondaryKeys > 0) {
             secondaryFieldAccessEvalFactories[0] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                     metadataProvider.getFunctionManager(), isOverridingKeyFieldTypes ? enforcedItemType : itemType,
-                    index.getKeyFieldNames().get(0), recordColumn);
+                    index.getKeyFieldNames().get(0), recordColumn, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
                     index.getKeyFieldNames().get(0), itemType);
             secondaryKeyType = keyTypePair.first;
@@ -123,7 +124,7 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
         if (numFilterFields > 0) {
             secondaryFieldAccessEvalFactories[numSecondaryKeys] =
                     metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
-                            metadataProvider.getFunctionManager(), itemType, filterFieldName, recordColumn);
+                            metadataProvider.getFunctionManager(), itemType, filterFieldName, recordColumn, sourceLoc);
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, itemType);
             IAType type = keyTypePair.first;
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
@@ -244,8 +245,11 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
                 createTreeIndexBulkLoadOp(spec, metadataProvider, taggedTokenKeyPairRecDesc,
                         createFieldPermutationForBulkLoadOp(), getNumSecondaryKeys(), numPrimaryKeys, true);
 
+        SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
+        sinkRuntimeFactory.setSourceLocation(sourceLoc);
         AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                new IPushRuntimeFactory[] { new SinkRuntimeFactory() }, new RecordDescriptor[] {});
+                new IPushRuntimeFactory[] { sinkRuntimeFactory }, new RecordDescriptor[] {});
+        metaOp.setSourceLocation(sourceLoc);
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);

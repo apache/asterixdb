@@ -41,8 +41,8 @@ public class BooleanFunctionTypeComputer extends AbstractResultTypeComputer {
         AbstractFunctionCallExpression functionCallExpression = (AbstractFunctionCallExpression) expression;
         String funcName = functionCallExpression.getFunctionIdentifier().getName();
         // Boolean type computer doesn't follow the null/missing-in/out semantics.
-        return TypeComputeUtils.resolveResultType(expression, env, (index, type) -> checkArgType(funcName, index, type),
-                this::getResultType, false);
+        return TypeComputeUtils.resolveResultType(expression, env,
+                (index, type, sourceLoc) -> checkArgType(funcName, index, type, sourceLoc), this::getResultType, false);
     }
 
     @Override

@@ -60,7 +60,7 @@ public class NumericSqrtDescriptor extends AbstractScalarFunctionDynamicDescript
 
         NumericSqrtEvaluator(IHyracksTaskContext context, IScalarEvaluatorFactory argEvalFactory)
                 throws HyracksDataException {
-            super(context, argEvalFactory, NumericSqrtDescriptor.this.getIdentifier());
+            super(context, argEvalFactory, NumericSqrtDescriptor.this.getIdentifier(), sourceLoc);
         }
 
         @Override

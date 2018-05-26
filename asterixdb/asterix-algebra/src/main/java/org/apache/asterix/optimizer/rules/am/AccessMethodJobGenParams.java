@@ -107,8 +107,8 @@ public class AccessMethodJobGenParams {
                 new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(varList.size()))));
         funcArgs.add(numKeysRef);
         for (LogicalVariable keyVar : varList) {
-            Mutable<ILogicalExpression> keyVarRef = new MutableObject<>(new VariableReferenceExpression(keyVar));
-            funcArgs.add(keyVarRef);
+            VariableReferenceExpression keyVarRef = new VariableReferenceExpression(keyVar);
+            funcArgs.add(new MutableObject<>(keyVarRef));
         }
     }
 

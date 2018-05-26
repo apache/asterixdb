@@ -31,9 +31,9 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.ISerializedAggregateEvaluator;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -41,7 +41,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 /**
  * count(NULL) returns NULL.
  */
-public abstract class AbstractSerializableCountAggregateFunction implements ISerializedAggregateEvaluator {
+public abstract class AbstractSerializableCountAggregateFunction extends AbstractSerializableAggregateFunction {
     private static final int MET_NULL_OFFSET = 0;
     private static final int COUNT_OFFSET = 1;
 
@@ -55,8 +55,9 @@ public abstract class AbstractSerializableCountAggregateFunction implements ISer
     private IPointable inputVal = new VoidPointable();
     private IScalarEvaluator eval;
 
-    public AbstractSerializableCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context)
-            throws HyracksDataException {
+    public AbstractSerializableCountAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
+        super(sourceLoc);
         eval = args[0].createScalarEvaluator(context);
     }
 

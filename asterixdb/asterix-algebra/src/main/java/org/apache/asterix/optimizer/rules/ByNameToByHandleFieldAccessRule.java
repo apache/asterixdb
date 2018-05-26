@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ByNameToByHandleFieldAccessRule implements IAlgebraicRewriteRule {
 
@@ -65,6 +66,7 @@ public class ByNameToByHandleFieldAccessRule implements IAlgebraicRewriteRule {
         AbstractFunctionCallExpression fce =
                 (AbstractFunctionCallExpression) fieldAccessOp.getExpressions().get(0).getValue();
         ILogicalExpression a1 = fce.getArguments().get(0).getValue();
+        SourceLocation sourceLoc = fieldAccessOp.getSourceLocation();
 
         VariableReferenceExpression x;
         if (a1.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
@@ -76,7 +78,9 @@ public class ByNameToByHandleFieldAccessRule implements IAlgebraicRewriteRule {
             ArrayList<Mutable<ILogicalExpression>> exprArray = new ArrayList<Mutable<ILogicalExpression>>(1);
             exprArray.add(new MutableObject<ILogicalExpression>(a1));
             AssignOperator assignVar = new AssignOperator(varArray, exprArray);
+            assignVar.setSourceLocation(sourceLoc);
             x = new VariableReferenceExpression(var1);
+            x.setSourceLocation(sourceLoc);
             assignVar.getInputs().add(opUnder);
             opUnder = new MutableObject<ILogicalOperator>(assignVar);
         }
@@ -88,24 +92,33 @@ public class ByNameToByHandleFieldAccessRule implements IAlgebraicRewriteRule {
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.TYPE_OF));
         typeOf.getArguments().add(new MutableObject<ILogicalExpression>(x));
         AssignOperator typAssign = new AssignOperator(t, new MutableObject<ILogicalExpression>(typeOf));
+        typAssign.setSourceLocation(sourceLoc);
         typAssign.getInputs().add(opUnder);
 
         // let $w := get-handle($t, path-expression)
         LogicalVariable w = context.newVar();
         AbstractFunctionCallExpression getHandle =
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.GET_HANDLE));
-        getHandle.getArguments().add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(t)));
+        getHandle.setSourceLocation(sourceLoc);
+        VariableReferenceExpression tRef = new VariableReferenceExpression(t);
+        tRef.setSourceLocation(sourceLoc);
+        getHandle.getArguments().add(new MutableObject<ILogicalExpression>(tRef));
         // the accessed field
         getHandle.getArguments().add(new MutableObject<ILogicalExpression>(fce.getArguments().get(1).getValue()));
         AssignOperator handleAssign = new AssignOperator(w, new MutableObject<ILogicalExpression>(getHandle));
+        handleAssign.setSourceLocation(sourceLoc);
         handleAssign.getInputs().add(new MutableObject<ILogicalOperator>(typAssign));
 
         // let $y := get-data(x, $w)
         AbstractFunctionCallExpression getData =
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.GET_DATA));
+        getData.setSourceLocation(sourceLoc);
         VariableReferenceExpression ref2 = new VariableReferenceExpression(x.getVariableReference());
+        ref2.setSourceLocation(sourceLoc);
         getData.getArguments().add(new MutableObject<ILogicalExpression>(ref2));
-        getData.getArguments().add(new MutableObject<ILogicalExpression>(new VariableReferenceExpression(w)));
+        VariableReferenceExpression wRef = new VariableReferenceExpression(w);
+        wRef.setSourceLocation(sourceLoc);
+        getData.getArguments().add(new MutableObject<ILogicalExpression>(wRef));
         fieldAccessOp.getExpressions().get(0).setValue(getData);
         List<Mutable<ILogicalOperator>> faInputs = fieldAccessOp.getInputs();
         faInputs.clear();

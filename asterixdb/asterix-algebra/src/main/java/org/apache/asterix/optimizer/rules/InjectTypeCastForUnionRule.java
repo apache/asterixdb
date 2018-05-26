@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * This rule injects type casts for inputs of a UnionAllOperator if those
@@ -69,6 +70,7 @@ public class InjectTypeCastForUnionRule implements IAlgebraicRewriteRule {
         IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op);
         Mutable<ILogicalOperator> branchOpRef = op.getInputs().get(childIndex);
         IVariableTypeEnvironment childEnv = context.getOutputTypeEnvironment(branchOpRef.getValue());
+        SourceLocation sourceLoc = branchOpRef.getValue().getSourceLocation();
 
         // The two lists are used for the assign operator that calls cast functions.
         List<LogicalVariable> varsToCast = new ArrayList<>();
@@ -89,9 +91,12 @@ public class InjectTypeCastForUnionRule implements IAlgebraicRewriteRule {
             // Resets triple variables to new variables that bind to the results of type casting.
             triple.first = childIndex == 0 ? castedVar : triple.first;
             triple.second = childIndex > 0 ? castedVar : triple.second;
-            ScalarFunctionCallExpression castFunc = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE), new ArrayList<>(Collections
-                            .singletonList(new MutableObject<>(new VariableReferenceExpression(varToCast)))));
+            VariableReferenceExpression varToCastRef = new VariableReferenceExpression(varToCast);
+            varToCastRef.setSourceLocation(sourceLoc);
+            ScalarFunctionCallExpression castFunc =
+                    new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE),
+                            new ArrayList<>(Collections.singletonList(new MutableObject<>(varToCastRef))));
+            castFunc.setSourceLocation(sourceLoc);
             TypeCastUtils.setRequiredAndInputTypes(castFunc, producedType, inputType);
 
             // Adds the variable and function expression into lists, for the assign operator.
@@ -103,6 +108,7 @@ public class InjectTypeCastForUnionRule implements IAlgebraicRewriteRule {
         }
         // Injects an assign operator to perform type casts.
         AssignOperator assignOp = new AssignOperator(varsToCast, castFunctionsForLeft);
+        assignOp.setSourceLocation(sourceLoc);
         assignOp.getInputs().add(new MutableObject<>(branchOpRef.getValue()));
         branchOpRef.setValue(assignOp);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);

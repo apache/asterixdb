@@ -119,7 +119,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         for (Expression topLevelExpr : topStatement.getDirectlyEnclosedExpressions()) {
             storedFunctionDecls.addAll(FunctionUtil.retrieveUsedStoredFunctions(metadataProvider, topLevelExpr, funIds,
                     null, expr -> getFunctionCalls(expr), func -> functionParser.getFunctionDecl(func),
-                    signature -> CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(signature)));
+                    (signature, sourceLoc) -> CommonFunctionMapUtil.normalizeBuiltinFunctionSignature(signature)));
             declaredFunctions.addAll(storedFunctionDecls);
         }
         if (!declaredFunctions.isEmpty()) {

@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class BreakSelectIntoConjunctsRule implements IAlgebraicRewriteRule {
 
@@ -58,6 +59,8 @@ public class BreakSelectIntoConjunctsRule implements IAlgebraicRewriteRule {
             return false;
         }
 
+        SourceLocation sourceLoc = select.getSourceLocation();
+
         Mutable<ILogicalOperator> childOfSelect = select.getInputs().get(0);
         boolean fst = true;
         ILogicalOperator botOp = select;
@@ -70,6 +73,7 @@ public class BreakSelectIntoConjunctsRule implements IAlgebraicRewriteRule {
             } else {
                 SelectOperator newSelect = new SelectOperator(new MutableObject<ILogicalExpression>(e),
                         select.getRetainMissing(), select.getMissingPlaceholderVariable());
+                newSelect.setSourceLocation(sourceLoc);
                 List<Mutable<ILogicalOperator>> botInpList = botOp.getInputs();
                 botInpList.clear();
                 botInpList.add(new MutableObject<ILogicalOperator>(newSelect));

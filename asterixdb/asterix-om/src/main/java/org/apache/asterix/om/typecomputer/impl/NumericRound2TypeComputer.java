@@ -29,6 +29,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
 
@@ -39,7 +40,8 @@ public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
     }
 
     @Override
-    protected void checkArgType(String funcName, int argIndex, IAType type) throws AlgebricksException {
+    protected void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
         if (argIndex == 0) {
             switch (tag) {
@@ -51,8 +53,8 @@ public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
                 case DOUBLE:
                     break;
                 default:
-                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
-                            ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE);
+                    throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag, ATypeTag.TINYINT,
+                            ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE);
             }
         }
         if (argIndex == 1) {
@@ -63,8 +65,8 @@ public class NumericRound2TypeComputer extends AbstractResultTypeComputer {
                 case BIGINT:
                     break;
                 default:
-                    throw new TypeMismatchException(funcName, argIndex, tag, ATypeTag.TINYINT, ATypeTag.SMALLINT,
-                            ATypeTag.INTEGER, ATypeTag.BIGINT);
+                    throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag, ATypeTag.TINYINT,
+                            ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT);
             }
         }
     }

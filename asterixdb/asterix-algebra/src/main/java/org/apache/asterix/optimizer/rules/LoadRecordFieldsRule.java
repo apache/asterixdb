@@ -25,6 +25,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.asterix.algebra.base.OperatorAnnotation;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -140,6 +142,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                     // create an assign
                     LogicalVariable v = context.newVar();
                     AssignOperator a2 = new AssignOperator(v, new MutableObject<ILogicalExpression>(f));
+                    a2.setSourceLocation(expr.getSourceLocation());
                     pushFieldAssign(a2, topOp, context);
                     context.computeAndSetTypeEnvironmentForOperator(a2);
                     ILogicalExpression arg = f.getArguments().get(0).getValue();
@@ -154,7 +157,9 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                             context.addPrimaryKey(pk);
                         }
                     }
-                    exprRef.setValue(new VariableReferenceExpression(v));
+                    VariableReferenceExpression varRef = new VariableReferenceExpression(v);
+                    varRef.setSourceLocation(expr.getSourceLocation());
+                    exprRef.setValue(varRef);
                     return true;
                 } else {
                     boolean pushed = false;
@@ -217,7 +222,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                         }
                     }
                 }
-                throw new AlgebricksException(
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, a2.getSourceLocation(),
                         "Field access " + getFirstExpr(a2) + " does not correspond to any input of operator " + topOp);
             }
         }

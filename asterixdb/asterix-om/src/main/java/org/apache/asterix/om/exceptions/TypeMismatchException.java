@@ -26,6 +26,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class TypeMismatchException extends CompilationException {
 
@@ -37,9 +38,22 @@ public class TypeMismatchException extends CompilationException {
     }
 
     // Parameter type mistmatch.
+    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, ATypeTag actualTypeTag,
+            ATypeTag... expectedTypeTags) {
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH, sourceLoc, fid.getName(), indexToPosition(i),
+                toExpectedTypeString(expectedTypeTags), actualTypeTag);
+    }
+
+    // Parameter type mistmatch.
     public TypeMismatchException(String functionName, Integer i, ATypeTag actualTypeTag, ATypeTag... expectedTypeTags) {
         super(ErrorCode.COMPILATION_TYPE_MISMATCH, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
     }
 
+    // Parameter type mistmatch.
+    public TypeMismatchException(SourceLocation sourceLoc, String functionName, Integer i, ATypeTag actualTypeTag,
+            ATypeTag... expectedTypeTags) {
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH, sourceLoc, functionName, indexToPosition(i),
+                toExpectedTypeString(expectedTypeTags), actualTypeTag);
+    }
 }

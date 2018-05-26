@@ -21,6 +21,7 @@ package org.apache.asterix.common.exceptions;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,8 +63,16 @@ public class MetadataException extends CompilationException {
         super(errorCode, params);
     }
 
+    public MetadataException(int errorCode, SourceLocation sourceLoc, Serializable... params) {
+        super(errorCode, sourceLoc, params);
+    }
+
     public MetadataException(int errorCode, Throwable cause, Serializable... params) {
         super(errorCode, cause, params);
+    }
+
+    public MetadataException(int errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(errorCode, cause, sourceLoc, params);
     }
 
     public static MetadataException create(Throwable cause) {

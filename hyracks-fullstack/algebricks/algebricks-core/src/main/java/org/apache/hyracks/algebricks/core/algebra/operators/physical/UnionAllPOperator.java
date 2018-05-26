@@ -50,6 +50,7 @@ public class UnionAllPOperator extends AbstractUnionAllPOperator {
 
         UnionAllOperatorDescriptor opDesc =
                 new UnionAllOperatorDescriptor(builder.getJobSpec(), op.getInputs().size(), recordDescriptor);
+        opDesc.setSourceLocation(op.getSourceLocation());
         contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
         super.contributeRuntimeOperator(builder, context, op, opSchema, inputSchemas, outerPlanSchema);

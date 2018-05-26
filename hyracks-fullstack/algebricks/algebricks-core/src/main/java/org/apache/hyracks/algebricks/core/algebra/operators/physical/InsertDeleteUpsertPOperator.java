@@ -106,22 +106,28 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
         RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
 
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints = null;
-        if (operation == Kind.INSERT) {
-            runtimeAndConstraints = mp.getInsertRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
-                    additionalFilteringKeys, additionalNonFilteringFields, inputDesc, context, spec, false);
-        } else if (operation == Kind.DELETE) {
-            runtimeAndConstraints = mp.getDeleteRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
-                    additionalFilteringKeys, inputDesc, context, spec);
-        } else if (operation == Kind.UPSERT) {
-            runtimeAndConstraints = mp.getUpsertRuntime(dataSource, inputSchemas[0], typeEnv, keys, payload,
-                    additionalFilteringKeys, additionalNonFilteringFields, inputDesc, context, spec);
-        } else {
-            throw new AlgebricksException("Unsupported Operation " + operation);
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints;
+        switch (operation) {
+            case INSERT:
+                runtimeAndConstraints = mp.getInsertRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
+                        additionalFilteringKeys, additionalNonFilteringFields, inputDesc, context, spec, false);
+                break;
+            case DELETE:
+                runtimeAndConstraints = mp.getDeleteRuntime(dataSource, propagatedSchema, typeEnv, keys, payload,
+                        additionalFilteringKeys, inputDesc, context, spec);
+                break;
+            case UPSERT:
+                runtimeAndConstraints = mp.getUpsertRuntime(dataSource, inputSchemas[0], typeEnv, keys, payload,
+                        additionalFilteringKeys, additionalNonFilteringFields, inputDesc, context, spec);
+                break;
+            default:
+                throw new AlgebricksException("Unsupported Operation " + operation);
         }
 
-        builder.contributeHyracksOperator(insertDeleteOp, runtimeAndConstraints.first);
-        builder.contributeAlgebricksPartitionConstraint(runtimeAndConstraints.first, runtimeAndConstraints.second);
+        IOperatorDescriptor opDesc = runtimeAndConstraints.first;
+        opDesc.setSourceLocation(insertDeleteOp.getSourceLocation());
+        builder.contributeHyracksOperator(insertDeleteOp, opDesc);
+        builder.contributeAlgebricksPartitionConstraint(opDesc, runtimeAndConstraints.second);
         ILogicalOperator src = insertDeleteOp.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, insertDeleteOp, 0);
     }

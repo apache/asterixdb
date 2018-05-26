@@ -23,17 +23,24 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnsupportedTypeException extends RuntimeDataException {
 
     // Unsupported input type.
-    public UnsupportedTypeException(FunctionIdentifier fid, byte actualTypeTag) {
-        super(ErrorCode.TYPE_UNSUPPORTED, fid.getName(),
+    public UnsupportedTypeException(SourceLocation sourceLoc, FunctionIdentifier fid, byte actualTypeTag) {
+        super(ErrorCode.TYPE_UNSUPPORTED, sourceLoc, fid.getName(),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 
     // Unsupported input type.
     public UnsupportedTypeException(String funcName, byte actualTypeTag) {
         super(ErrorCode.TYPE_UNSUPPORTED, funcName, EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
+    }
+
+    // Unsupported input type.
+    public UnsupportedTypeException(SourceLocation sourceLoc, String funcName, byte actualTypeTag) {
+        super(ErrorCode.TYPE_UNSUPPORTED, sourceLoc, funcName,
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 }

@@ -93,7 +93,7 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
                                 // the string to be parsed should be at least 6 characters: hhmmss
                                 if (stringLength < 6) {
-                                    throw new InvalidDataFormatException(getIdentifier(),
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
                                             ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                                 }
 
@@ -108,11 +108,11 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
                                 timeSerde.serialize(aTime, out);
                                 result.set(resultStorage);
                             } else {
-                                throw new TypeMismatchException(getIdentifier(), 0, tt,
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
                                         ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         } catch (IOException e) {
-                            throw new InvalidDataFormatException(getIdentifier(), e,
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                                     ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
                         }
                     }

@@ -27,7 +27,7 @@ import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class RecordTypeDefinition implements TypeExpression {
+public class RecordTypeDefinition extends AbstractTypeExpression {
 
     public enum RecordKind {
         OPEN,

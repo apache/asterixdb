@@ -56,7 +56,7 @@ public class BinaryLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractBinaryScalarEvaluator(ctx, args) {
+                return new AbstractBinaryScalarEvaluator(ctx, args, sourceLoc) {
 
                     private AMutableInt64 result = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")

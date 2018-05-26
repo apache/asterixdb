@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IVariableContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
@@ -80,6 +81,10 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
         dest.setOpaqueParameters(newOpaqueParameters);
     }
 
+    private void copySourceLocation(ILogicalExpression src, AbstractLogicalExpression dest) {
+        dest.setSourceLocation(src.getSourceLocation());
+    }
+
     public MutableObject<ILogicalExpression> deepCopyExpressionReference(Mutable<ILogicalExpression> exprRef)
             throws AlgebricksException {
         return new MutableObject<>(deepCopy(exprRef.getValue()));
@@ -104,12 +109,15 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
         exprCopy.setStepTwoAggregate(expr.getStepTwoAggregate());
         deepCopyAnnotations(expr, exprCopy);
         deepCopyOpaqueParameters(expr, exprCopy);
+        copySourceLocation(expr, exprCopy);
         return exprCopy;
     }
 
     @Override
     public ILogicalExpression visitConstantExpression(ConstantExpression expr, Void arg) throws AlgebricksException {
-        return new ConstantExpression(expr.getValue());
+        ConstantExpression exprCopy = new ConstantExpression(expr.getValue());
+        copySourceLocation(expr, exprCopy);
+        return exprCopy;
     }
 
     @Override
@@ -119,6 +127,7 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
                 deepCopyExpressionReferenceList(expr.getArguments()));
         deepCopyAnnotations(expr, exprCopy);
         deepCopyOpaqueParameters(expr, exprCopy);
+        copySourceLocation(expr, exprCopy);
         return exprCopy;
 
     }
@@ -130,6 +139,7 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
                 expr.getPropertiesComputer(), deepCopyExpressionReferenceList(expr.getArguments()));
         deepCopyAnnotations(expr, exprCopy);
         deepCopyOpaqueParameters(expr, exprCopy);
+        copySourceLocation(expr, exprCopy);
         return exprCopy;
     }
 
@@ -140,6 +150,7 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
                 deepCopyExpressionReferenceList(expr.getArguments()));
         deepCopyAnnotations(expr, exprCopy);
         deepCopyOpaqueParameters(expr, exprCopy);
+        copySourceLocation(expr, exprCopy);
         return exprCopy;
     }
 
@@ -153,13 +164,17 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
         LogicalVariable givenVarReplacement = inVarMapping.get(var);
         if (givenVarReplacement != null) {
             outVarMapping.put(var, givenVarReplacement);
-            return new VariableReferenceExpression(givenVarReplacement);
+            VariableReferenceExpression varRef = new VariableReferenceExpression(givenVarReplacement);
+            copySourceLocation(expr, varRef);
+            return varRef;
         }
         LogicalVariable varCopy = outVarMapping.get(var);
         if (varCopy == null) {
             varCopy = varContext.newVar();
             outVarMapping.put(var, varCopy);
         }
-        return new VariableReferenceExpression(varCopy);
+        VariableReferenceExpression varRef = new VariableReferenceExpression(varCopy);
+        copySourceLocation(expr, varRef);
+        return varRef;
     }
 }

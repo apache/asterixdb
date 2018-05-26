@@ -115,16 +115,17 @@ public class STRelateDescriptor extends AbstractScalarFunctionDynamicDescriptor 
             int len1 = inputArg1.getLength();
 
             if (bytes[offset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                throw new TypeMismatchException(getIdentifier(), 0, bytes[offset], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes[offset],
+                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
             }
             ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
             if (tag != ATypeTag.GEOMETRY) {
-                throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                         ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
             tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
             if (tag != ATypeTag.GEOMETRY) {
-                throw new TypeMismatchException(getIdentifier(), 0, bytes1[offset1],
+                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes1[offset1],
                         ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
 
@@ -140,7 +141,8 @@ public class STRelateDescriptor extends AbstractScalarFunctionDynamicDescriptor 
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN)
                         .serialize(val ? ABoolean.TRUE : ABoolean.FALSE, out);
             } catch (IOException e) {
-                throw new InvalidDataFormatException(getIdentifier(), e, ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
+                throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
+                        ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
             result.set(resultStorage);
         }

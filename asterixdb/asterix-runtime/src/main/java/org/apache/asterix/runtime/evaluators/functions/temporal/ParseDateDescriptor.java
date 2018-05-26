@@ -104,11 +104,11 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                         int len1 = argPtr1.getLength();
 
                         if (bytes0[offset0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, bytes0[offset0],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
                         if (bytes1[offset1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, bytes1[offset1],
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, bytes1[offset1],
                                     ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                         }
 
@@ -136,7 +136,8 @@ public class ParseDateDescriptor extends AbstractScalarFunctionDynamicDescriptor
                             formatStart += formatLength + 1;
                         }
                         if (!processSuccessfully) {
-                            throw new InvalidDataFormatException(getIdentifier(), ATypeTag.SERIALIZED_DATE_TYPE_TAG);
+                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
+                                    ATypeTag.SERIALIZED_DATE_TYPE_TAG);
                         }
                         aDate.setValue((int) (aInt64.getLongValue() / GregorianCalendarSystem.CHRONON_OF_DAY));
                         dateSerde.serialize(aDate, out);

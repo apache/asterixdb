@@ -51,7 +51,7 @@ public class StringRegExpLikeDescriptor extends AbstractScalarFunctionDynamicDes
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractBinaryStringBoolEval(ctx, args[0], args[1],
-                        StringRegExpLikeDescriptor.this.getIdentifier()) {
+                        StringRegExpLikeDescriptor.this.getIdentifier(), sourceLoc) {
                     private final RegExpMatcher matcher = new RegExpMatcher();
 
                     @Override

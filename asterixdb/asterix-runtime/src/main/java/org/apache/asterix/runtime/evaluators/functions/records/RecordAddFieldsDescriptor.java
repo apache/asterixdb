@@ -147,14 +147,14 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                         // Make sure we get a valid record
                         byte typeTag0 = argPtr0.getByteArray()[argPtr0.getStartOffset()];
                         if (typeTag0 != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 0, typeTag0,
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, typeTag0,
                                     ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                         }
 
                         // Make sure we get a valid list
                         byte typeTag1 = argPtr1.getByteArray()[argPtr1.getStartOffset()];
                         if (typeTag1 != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                            throw new TypeMismatchException(getIdentifier(), 1, typeTag1,
+                            throw new TypeMismatchException(sourceLoc, getIdentifier(), 1, typeTag1,
                                     ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
                         }
 
@@ -229,7 +229,8 @@ public class RecordAddFieldsDescriptor extends AbstractScalarFunctionDynamicDesc
                                 }
 
                                 if (namePointable == null || valuePointable == null) {
-                                    throw new InvalidDataFormatException(getIdentifier(), "fields to be added");
+                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
+                                            "fields to be added");
                                 }
 
                                 // Check that the field being added is a valid field
