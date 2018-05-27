@@ -675,7 +675,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
             ILSMMemoryComponent cmc = getCurrentMemoryComponent();
             ComponentState state = cmc.getState();
             return state == ComponentState.READABLE_UNWRITABLE_FLUSHING || state == ComponentState.INACTIVE
-                    || !cmc.isModified();
+                    || state == ComponentState.UNREADABLE_UNWRITABLE || !cmc.isModified();
         }
     }
 

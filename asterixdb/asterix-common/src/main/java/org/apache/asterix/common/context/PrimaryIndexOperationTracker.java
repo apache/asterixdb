@@ -51,8 +51,11 @@ import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class PrimaryIndexOperationTracker extends BaseOperationTracker implements IoOperationCompleteListener {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final int partition;
     // Number of active operations on an ILSMIndex instance.
     private final AtomicInteger numActiveOperations;
@@ -113,22 +116,33 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
             }
         }
 
+        ILSMIndex primaryLsmIndex = null;
         if (needsFlush || flushOnExit) {
             flushOnExit = false;
             // make the current mutable components READABLE_UNWRITABLE to stop coming modify operations from entering
             // them until the current flush is scheduled.
             LSMComponentId primaryId = null;
             //Double check that the primary index has been modified
+
             synchronized (this) {
                 if (numActiveOperations.get() > 0) {
                     throw new IllegalStateException(
                             "Can't request a flush on an index with active operations: " + numActiveOperations.get());
                 }
                 for (ILSMIndex lsmIndex : indexes) {
-                    if (lsmIndex.isPrimaryIndex() && lsmIndex.isCurrentMutableComponentEmpty()) {
-                        return;
+                    if (lsmIndex.isPrimaryIndex()) {
+                        if (lsmIndex.isCurrentMutableComponentEmpty()) {
+                            LOGGER.info("Primary index on dataset {} and partition {} is empty... skipping flush");
+                            return;
+                        }
+                        primaryLsmIndex = lsmIndex;
+                        break;
                     }
                 }
+            }
+            if (primaryLsmIndex == null) {
+                throw new IllegalStateException(
+                        "Primary index not found in dataset " + dsInfo.getDatasetID() + " and partition " + partition);
             }
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMOperationTracker opTracker = lsmIndex.getOperationTracker();
@@ -148,7 +162,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                 }
             }
             if (primaryId == null) {
-                throw new IllegalStateException("Primary index not found in dataset " + dsInfo.getDatasetID());
+                throw new IllegalStateException("Primary index found in dataset " + dsInfo.getDatasetID()
+                        + " and partition " + partition + " and is modified but its component id is null");
             }
             LogRecord logRecord = new LogRecord();
             if (dsInfo.isDurable()) {
