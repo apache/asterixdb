@@ -40,7 +40,7 @@ public class QueryWebInterfaceServlet extends StaticResourceServlet {
     private static final Logger LOGGER = LogManager.getLogger();
     private ICcApplicationContext appCtx;
 
-    public QueryWebInterfaceServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String[] paths) {
+    QueryWebInterfaceServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
         this.appCtx = appCtx;
     }

@@ -402,6 +402,7 @@
             <usedDependency>org.apache.asterix:asterix-external-data</usedDependency>
             <usedDependency>org.codehaus.mojo.appassembler:appassembler-booter</usedDependency>
             <usedDependency>org.apache.asterix:asterix-fuzzyjoin</usedDependency>
+            <usedDependency>org.apache.asterix:asterix-dashboard</usedDependency>
           </usedDependencies>
         </configuration>
       </plugin>
@@ -654,6 +655,11 @@
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-test-support</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-dashboard</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 </project>

@@ -29,8 +29,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.asterix.api.http.IQueryWebServerRegistrant;
 import org.apache.asterix.api.http.ctx.StatementExecutorContext;
 import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
@@ -46,7 +48,6 @@ import org.apache.asterix.api.http.server.QueryCancellationServlet;
 import org.apache.asterix.api.http.server.QueryResultApiServlet;
 import org.apache.asterix.api.http.server.QueryServiceServlet;
 import org.apache.asterix.api.http.server.QueryStatusApiServlet;
-import org.apache.asterix.api.http.server.QueryWebInterfaceServlet;
 import org.apache.asterix.api.http.server.RebalanceApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.ShutdownApiServlet;
@@ -272,7 +273,9 @@ public class CCApplication extends BaseCCApplication {
         HttpServer queryWebServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
                 externalProperties.getQueryWebInterfacePort());
         queryWebServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
-        queryWebServer.addServlet(new QueryWebInterfaceServlet(appCtx, queryWebServer.ctx(), new String[] { "/*" }));
+        ServiceLoader.load(IQueryWebServerRegistrant.class).iterator()
+                .forEachRemaining(c -> c.register(appCtx, queryWebServer));
+
         return queryWebServer;
     }
 
