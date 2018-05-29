@@ -22,7 +22,7 @@
   "b": isboolean(false),
   "c": is_boolean(null),
   "d": is_boolean(missing),
-  "e": isbool("d"),
+  "e": is_bool("d"),
   "f": isbool(4.0),
   "g": isbool(5),
   "h": isbool(["1", 2]),

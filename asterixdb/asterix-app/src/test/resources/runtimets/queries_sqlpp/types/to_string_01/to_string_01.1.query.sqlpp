@@ -19,7 +19,7 @@
  {
   "t1": tostring(false),
   "t2": tostr(true),
-  "t3": to_string(int8("8")),
+  "t3": to_str(int8("8")),
   "t4": to_string(int16("16")),
   "t5": to_string(int32("32")),
   "t6": to_string(int64("64")),
