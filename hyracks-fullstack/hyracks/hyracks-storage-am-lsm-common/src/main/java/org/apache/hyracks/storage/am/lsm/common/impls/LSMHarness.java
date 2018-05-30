@@ -829,19 +829,24 @@ public class LSMHarness implements ILSMHarness {
             throws HyracksDataException {
         BlockingIOOperationCallbackWrapper ioCallback =
                 new BlockingIOOperationCallbackWrapper(lsmIndex.getIOOperationCallback());
-        boolean deleteMemoryComponent;
+        boolean deleteMemoryComponent = false;
         synchronized (opTracker) {
             waitForFlushesAndMerges();
             ensureNoFailedFlush();
-            // We always start with the memory component
-            ILSMMemoryComponent memComponent = lsmIndex.getCurrentMemoryComponent();
-            deleteMemoryComponent = predicate.test(memComponent);
-            if (deleteMemoryComponent) {
-                // schedule a delete for flushed component
-                ctx.reset();
-                ctx.setOperation(IndexOperation.DELETE_MEMORY_COMPONENT);
-                // ScheduleFlush is actually a try operation
-                scheduleFlush(ctx, ioCallback);
+            if (lsmIndex.isMemoryComponentsAllocated()) {
+                // We always start with the memory component
+                ILSMMemoryComponent memComponent = lsmIndex.getCurrentMemoryComponent();
+                deleteMemoryComponent = predicate.test(memComponent);
+                if (deleteMemoryComponent) {
+                    // schedule a delete for flushed component
+                    ctx.reset();
+                    ctx.setOperation(IndexOperation.DELETE_MEMORY_COMPONENT);
+                    // ScheduleFlush is actually a try operation
+                    scheduleFlush(ctx, ioCallback);
+                } else {
+                    // shouldn't try to delete disk components while memory component is still there
+                    return;
+                }
             }
         }
         // Here, we are releasing the opTracker to allow other operations:
@@ -862,6 +867,9 @@ public class LSMHarness implements ILSMHarness {
             for (ILSMDiskComponent component : diskComponents) {
                 if (predicate.test(component)) {
                     ctx.getComponentsToBeMerged().add(component);
+                } else {
+                    // can't delete components while newer ones are still there
+                    break;
                 }
             }
             if (ctx.getComponentsToBeMerged().isEmpty()) {
