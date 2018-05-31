@@ -63,8 +63,10 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
 
     @Override
     public final void stop() throws HyracksDataException, InterruptedException {
-        abort();
         synchronized (this) {
+            if (!done) {
+                abort();
+            }
             while (!done) {
                 wait();
             }

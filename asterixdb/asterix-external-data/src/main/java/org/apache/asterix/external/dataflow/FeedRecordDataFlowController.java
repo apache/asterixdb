@@ -40,6 +40,7 @@ import org.apache.logging.log4j.Logger;
 public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowController {
     public static final String INCOMING_RECORDS_COUNT_FIELD_NAME = "incoming-records-count";
     public static final String FAILED_AT_PARSER_RECORDS_COUNT_FIELD_NAME = "failed-at-parser-records-count";
+    public static final String READER_STATS_FIELD_NAME = "reader-stats";
 
     public enum State {
         CREATED,
@@ -257,7 +258,15 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
 
     @Override
     public String getStats() {
-        return "{\"" + INCOMING_RECORDS_COUNT_FIELD_NAME + "\": " + incomingRecordsCount + ", \""
-                + FAILED_AT_PARSER_RECORDS_COUNT_FIELD_NAME + "\": " + failedRecordsCount + "}";
+        String readerStats = recordReader.getStats();
+        StringBuilder str = new StringBuilder();
+        str.append("{");
+        if (readerStats != null) {
+            str.append("\"").append(READER_STATS_FIELD_NAME).append("\":").append(readerStats).append(", ");
+        }
+        str.append("\"").append(INCOMING_RECORDS_COUNT_FIELD_NAME).append("\": ").append(incomingRecordsCount)
+                .append(", \"").append(FAILED_AT_PARSER_RECORDS_COUNT_FIELD_NAME).append("\": ")
+                .append(failedRecordsCount).append("}");
+        return str.toString();
     }
 }

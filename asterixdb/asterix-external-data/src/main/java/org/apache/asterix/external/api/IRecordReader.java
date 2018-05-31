@@ -77,4 +77,11 @@ public interface IRecordReader<T> extends Closeable {
     public default IFeedMarker getProgressReporter() {
         return null;
     }
+
+    /**
+     * @return JSON String containing ingestion stats
+     */
+    default String getStats() {
+        return null;
+    }
 }
