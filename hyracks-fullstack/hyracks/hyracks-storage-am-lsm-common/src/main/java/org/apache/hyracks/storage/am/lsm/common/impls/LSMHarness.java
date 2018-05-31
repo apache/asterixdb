@@ -483,10 +483,10 @@ public class LSMHarness implements ILSMHarness {
     public ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx) throws HyracksDataException {
         ILSMIOOperation flush;
         LOGGER.info("Flush is being scheduled on {}", lsmIndex);
+        if (!lsmIndex.isMemoryComponentsAllocated()) {
+            lsmIndex.allocateMemoryComponents();
+        }
         synchronized (opTracker) {
-            if (!lsmIndex.isMemoryComponentsAllocated()) {
-                lsmIndex.allocateMemoryComponents();
-            }
             try {
                 flush = lsmIndex.createFlushOperation(ctx);
             } finally {
@@ -738,32 +738,36 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void deleteComponents(ILSMIndexOperationContext ctx, Predicate<ILSMComponent> predicate)
             throws HyracksDataException {
-        boolean deleteMemoryComponent;
         ILSMIOOperation ioOperation = null;
+        // We need to always start the component delete from current memory component.
+        // This will ensure Primary and secondary component id still matches after component delete
+        if (!lsmIndex.isMemoryComponentsAllocated()) {
+            lsmIndex.allocateMemoryComponents();
+        }
         synchronized (opTracker) {
             waitForFlushesAndMerges();
             // We always start with the memory component
             ILSMMemoryComponent memComponent = lsmIndex.getCurrentMemoryComponent();
-            deleteMemoryComponent = predicate.test(memComponent);
-            if (deleteMemoryComponent) {
+            if (predicate.test(memComponent)) {
                 // schedule a delete for flushed component
                 ctx.reset();
                 ctx.setOperation(IndexOperation.DELETE_COMPONENTS);
                 ioOperation = scheduleFlush(ctx);
+            } else {
+                // since we're not deleting the memory component, we can't delete any previous component
+                return;
             }
         }
         // Here, we are releasing the opTracker to allow other operations:
         // (searches, delete flush we will schedule, delete merge we will schedule).
-        if (deleteMemoryComponent) {
-            try {
-                ioOperation.sync();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw HyracksDataException.create(e);
-            }
-            if (ioOperation.getStatus() == LSMIOOperationStatus.FAILURE) {
-                throw HyracksDataException.create(ioOperation.getFailure());
-            }
+        try {
+            ioOperation.sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw HyracksDataException.create(e);
+        }
+        if (ioOperation.getStatus() == LSMIOOperationStatus.FAILURE) {
+            throw HyracksDataException.create(ioOperation.getFailure());
         }
         ctx.reset();
         ctx.setOperation(IndexOperation.DELETE_COMPONENTS);
@@ -774,6 +778,9 @@ public class LSMHarness implements ILSMHarness {
             for (ILSMDiskComponent component : diskComponents) {
                 if (predicate.test(component)) {
                     ctx.getComponentsToBeMerged().add(component);
+                } else {
+                    // Can't delete older components when newer one is still there
+                    break;
                 }
             }
             if (ctx.getComponentsToBeMerged().isEmpty()) {
