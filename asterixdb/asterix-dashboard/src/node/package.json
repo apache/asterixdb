@@ -6,7 +6,7 @@
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.config.js --host 0.0.0.0",
     "build": "ng build --prod",
-    "mavenbuild": "node node_modules/.bin/ng build --prod -op static/",
+    "mavenbuild": "node node_modules/.bin/ng build --prod -op static/ -d dashboard/",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"

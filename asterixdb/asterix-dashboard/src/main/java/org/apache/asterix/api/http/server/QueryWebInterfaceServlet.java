@@ -51,7 +51,7 @@ public class QueryWebInterfaceServlet extends StaticResourceServlet {
         if ("/".equals(requestURI)) {
             HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML);
             // Dashboard Administration Console
-            deliverResource("/dashboard/static/index.html", response);
+            deliverResource("/dashboard/index.html", response);
         } else {
             deliverResource(requestURI, response);
         }

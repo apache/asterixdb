@@ -33,4 +33,4 @@ ${license.content}
     notices and license terms. Your use of these subcomponents is subject
     to the terms and condition of the following licenses.
 ===
-<#include "3rdpartylicenses.txt">
+<#include "/target/dashboard/static/3rdpartylicenses.txt">
