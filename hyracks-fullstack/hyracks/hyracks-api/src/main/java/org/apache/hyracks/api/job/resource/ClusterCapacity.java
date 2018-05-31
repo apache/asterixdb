@@ -25,6 +25,7 @@ import java.util.Objects;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.util.StorageUtil;
 
 public class ClusterCapacity implements IClusterCapacity {
 
@@ -118,6 +119,7 @@ public class ClusterCapacity implements IClusterCapacity {
 
     @Override
     public String toString() {
-        return "(memory: " + aggregatedMemoryByteSize + " bytes, CPU cores: " + aggregatedCores + ")";
+        return "(memory: " + StorageUtil.toHumanReadableSize(aggregatedMemoryByteSize) + " bytes, CPU cores: "
+                + aggregatedCores + ")";
     }
 }
