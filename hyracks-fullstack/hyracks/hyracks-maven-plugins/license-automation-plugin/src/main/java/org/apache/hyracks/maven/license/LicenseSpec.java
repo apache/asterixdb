@@ -18,26 +18,18 @@
  */
 package org.apache.hyracks.maven.license;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class LicenseSpec {
+public class LicenseSpec extends ArtifactSpec {
 
     public static final int DEFAULT_METRIC = 100;
     public static final int UNDEFINED_LICENSE_METRIC = 999;
 
-    public static final String BAD_CHARS = "[ \"#$%&'()*+,/:;<=>\\[\\]^`\\{\\|\\}~]";
-    private String url;
-    private String contentFile;
-    private List<String> aliasUrls = new ArrayList<>();
     private String displayName;
     private int metric = DEFAULT_METRIC;
-    private String content;
 
     @SuppressWarnings("unused")
     public LicenseSpec() {
@@ -61,42 +53,6 @@ public class LicenseSpec {
         if (displayName != null) {
             this.displayName = displayName;
         }
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public String getContentFile() {
-        return getContentFile(true);
-    }
-
-    @SuppressWarnings("squid:S1166")
-    public String getContentFile(boolean fixupExtension) {
-        if (contentFile == null) {
-            String file;
-            try {
-                URI uri = new URI(url);
-                file = ((uri.getHost() != null ? uri.getHost() : "") + uri.getPath()).replaceAll(BAD_CHARS, "_");
-            } catch (URISyntaxException e) {
-                file = url.replaceAll(BAD_CHARS, "_");
-            }
-            return (!fixupExtension || file.endsWith(".txt")) ? file : file + ".txt";
-        } else {
-            return contentFile;
-        }
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public List<String> getAliasUrls() {
-        return aliasUrls;
     }
 
     public String getDisplayName() {

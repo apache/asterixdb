@@ -20,11 +20,13 @@ package org.apache.hyracks.maven.license;
 
 import static org.apache.hyracks.maven.license.LicenseUtil.toGav;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_LICENSE_OVERRIDE;
+import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_NOTICE_OVERRIDE;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -122,6 +124,7 @@ public abstract class LicenseMojo extends AbstractMojo {
     Map<String, LicenseSpec> urlToLicenseMap = new HashMap<>();
     Map<String, LicensedProjects> licenseMap = new TreeMap<>();
     private Map<Pair<String, ProjectFlag>, Object> projectFlags = new HashMap<>();
+    Map<String, String> noticeOverrides = new HashMap<String, String>();
 
     protected boolean seenWarning;
 
@@ -180,17 +183,17 @@ public abstract class LicenseMojo extends AbstractMojo {
             }
 
             public void warn(CharSequence charSequence) {
-                seenWarning();
+                seenWarning(charSequence);
                 originalLog.warn(charSequence);
             }
 
             public void warn(CharSequence charSequence, Throwable throwable) {
-                seenWarning();
+                seenWarning(charSequence, throwable);
                 originalLog.warn(charSequence, throwable);
             }
 
             public void warn(Throwable throwable) {
-                seenWarning();
+                seenWarning(throwable);
                 originalLog.warn(throwable);
             }
 
@@ -199,25 +202,26 @@ public abstract class LicenseMojo extends AbstractMojo {
             }
 
             public void error(CharSequence charSequence) {
-                seenWarning();
+                seenWarning(charSequence);
                 originalLog.error(charSequence);
             }
 
             public void error(CharSequence charSequence, Throwable throwable) {
-                seenWarning();
+                seenWarning(charSequence, throwable);
                 originalLog.error(charSequence, throwable);
             }
 
             public void error(Throwable throwable) {
-                seenWarning();
+                seenWarning(throwable);
                 originalLog.error(throwable);
             }
 
-            private void seenWarning() {
+            private void seenWarning(Object... args) {
                 seenWarning = true;
                 if (warningTouchFile != null) {
                     try {
-                        FileUtils.touch(warningTouchFile);
+                        FileUtils.write(warningTouchFile, String.valueOf(Arrays.asList(args)), StandardCharsets.UTF_8,
+                                true);
                     } catch (IOException e) {
                         originalLog.error("unable to touch " + warningTouchFile, e);
                     }
@@ -340,12 +344,16 @@ public abstract class LicenseMojo extends AbstractMojo {
             MavenProject dep = dependencyGavMap.get(gav);
             if (dep == null) {
                 getLog().warn("Unused override dependency " + gav + "; ignoring...");
-            } else {
+            } else if (override.getUrl() != null) {
                 final List<Pair<String, String>> newLicense =
                         Collections.singletonList(new ImmutablePair<>(override.getUrl(), override.getName()));
                 List<Pair<String, String>> prevLicense = dependencyLicenseMap.put(dep, newLicense);
-                getLog().warn("license list for " + toGav(dep) + " changed with <override>; was: " + prevLicense
-                        + ", now: " + newLicense);
+                warnUnlessFlag(dep, IGNORE_LICENSE_OVERRIDE, "license list for " + toGav(dep)
+                        + " changed with <override>; was: " + prevLicense + ", now: " + newLicense);
+            } else if (override.getNoticeUrl() != null) {
+                noticeOverrides.put(gav, override.getNoticeUrl());
+                warnUnlessFlag(dep, IGNORE_NOTICE_OVERRIDE,
+                        "notice for " + toGav(dep) + " changed with <override>; now: " + override.getNoticeUrl());
             }
         }
         return dependencyLicenseMap;

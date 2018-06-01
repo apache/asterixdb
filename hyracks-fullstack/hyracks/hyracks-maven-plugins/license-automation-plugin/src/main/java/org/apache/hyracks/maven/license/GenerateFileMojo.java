@@ -22,6 +22,7 @@ import static org.apache.hyracks.maven.license.ProjectFlag.ALTERNATE_LICENSE_FIL
 import static org.apache.hyracks.maven.license.ProjectFlag.ALTERNATE_NOTICE_FILE;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_MISSING_EMBEDDED_LICENSE;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_MISSING_EMBEDDED_NOTICE;
+import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_NOTICE_OVERRIDE;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -118,8 +119,8 @@ public class GenerateFileMojo extends LicenseMojo {
             rebuildLicenseContentProjectMap();
             combineCommonGavs();
             SourcePointerResolver.execute(this);
-            persistLicenseMap();
             buildNoticeProjectMap();
+            persistLicenseMap();
             generateFiles();
             if (seenWarning && failOnWarning) {
                 throw new MojoFailureException(
@@ -137,30 +138,30 @@ public class GenerateFileMojo extends LicenseMojo {
         }
         licenseSpecs.addAll(urlToLicenseMap.values());
         for (LicenseSpec license : licenseSpecs) {
-            resolveLicenseContent(license, true);
+            resolveArtifactContent(license, true);
         }
     }
 
-    private String resolveLicenseContent(LicenseSpec license, boolean bestEffort) throws IOException {
-        if (license.getContent() == null) {
-            getLog().debug("Resolving content for " + license.getUrl() + " (" + license.getContentFile() + ")");
-            File cFile = new File(license.getContentFile());
+    private String resolveArtifactContent(ArtifactSpec artifact, boolean bestEffort) throws IOException {
+        if (artifact.getContent() == null) {
+            getLog().debug("Resolving content for " + artifact.getUrl() + " (" + artifact.getContentFile() + ")");
+            File cFile = new File(artifact.getContentFile());
             if (!cFile.isAbsolute()) {
-                cFile = new File(licenseDirectory, license.getContentFile());
+                cFile = new File(licenseDirectory, artifact.getContentFile());
             }
             if (!cFile.exists()) {
                 if (!bestEffort) {
-                    getLog().warn("MISSING: license content file (" + cFile + ") for url: " + license.getUrl());
-                    license.setContent("MISSING: " + license.getContentFile() + " (" + license.getUrl() + ")");
+                    getLog().warn("MISSING: content file (" + cFile + ") for url: " + artifact.getUrl());
+                    artifact.setContent("MISSING: " + artifact.getContentFile() + " (" + artifact.getUrl() + ")");
                 }
             } else {
-                getLog().info("Reading license content from file: " + cFile);
+                getLog().info("Reading content from file: " + cFile);
                 StringWriter sw = new StringWriter();
                 LicenseUtil.readAndTrim(sw, cFile);
-                license.setContent(sw.toString());
+                artifact.setContent(sw.toString());
             }
         }
-        return license.getContent();
+        return artifact.getContent();
     }
 
     private void combineCommonGavs() {
@@ -260,7 +261,7 @@ public class GenerateFileMojo extends LicenseMojo {
                     warnUnlessFlag(p.gav(), IGNORE_MISSING_EMBEDDED_LICENSE,
                             "Using license other than from within artifact: " + p.gav() + " (" + lps.getLicense()
                                     + ")");
-                    licenseText = resolveLicenseContent(lps.getLicense(), false);
+                    licenseText = resolveArtifactContent(lps.getLicense(), false);
                 }
                 LicenseSpec spec = lps.getLicense();
                 if (spec.getDisplayName() == null) {
@@ -292,11 +293,21 @@ public class GenerateFileMojo extends LicenseMojo {
         return projects;
     }
 
-    private void buildNoticeProjectMap() {
+    private void buildNoticeProjectMap() throws IOException {
         noticeMap = new TreeMap<>(WHITESPACE_NORMALIZED_COMPARATOR);
         for (Project p : getProjects()) {
+            String noticeText = p.getNoticeText();
+            if (noticeText == null && noticeOverrides.containsKey(p.gav())) {
+                String noticeUrl = noticeOverrides.get(p.gav());
+                warnUnlessFlag(p.gav(), IGNORE_NOTICE_OVERRIDE,
+                        "Using notice other than from within artifact: " + p.gav() + " (" + noticeUrl + ")");
+                p.setNoticeText(resolveArtifactContent(new NoticeSpec(noticeUrl), false));
+            } else if (noticeText == null && !noticeOverrides.containsKey(p.gav())
+                    && Boolean.TRUE.equals(getProjectFlag(p.gav(), IGNORE_NOTICE_OVERRIDE))) {
+                getLog().warn(p + " has IGNORE_NOTICE_OVERRIDE flag set, but no override defined...");
+            }
             prependSourcePointerToNotice(p);
-            final String noticeText = p.getNoticeText();
+            noticeText = p.getNoticeText();
             if (noticeText == null) {
                 continue;
             }

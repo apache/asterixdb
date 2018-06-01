@@ -168,6 +168,10 @@
               <gav>org.codehaus.mojo.appassembler:appassembler-model:2.0.0</gav>
               <url>https://raw.githubusercontent.com/mojohaus/appassembler/appassembler-2.0.0/LICENSE.txt</url>
             </override>
+            <override>
+              <gav>io.netty:netty-all:4.1.6.Final</gav>
+              <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.16.Final/NOTICE.txt</noticeUrl>
+            </override>
           </overrides>
           <licenses>
             <license>
