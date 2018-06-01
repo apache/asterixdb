@@ -24,7 +24,7 @@
   "d": is_number(missing),
   "e": is_number("d"),
   "f": isnumber(4.0),
-  "g": isnum(5),
+  "g": is_num(5),
   "h": isnum(["1", 2]),
   "i": isnum({"a":1})
 };

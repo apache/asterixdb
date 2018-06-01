@@ -19,7 +19,7 @@
 
 {
   "t1": [ toobject(missing) is missing, toobj(null) is null ],
-  "t2": is_object(to_object({})),
+  "t2": is_object(to_obj({})),
   "t3": to_object({}),
   "t4": to_object({"a":1}),
   "t5": to_object({"a":1, "b":2}),

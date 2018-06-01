@@ -19,7 +19,7 @@
 
 {
     "t1": [ toatomic(missing) is missing, toatom(null) is null ],
-    "t2": [ to_atomic(1), to_atomic(true), to_atomic("hello") ],
+    "t2": [ to_atom(1), to_atomic(true), to_atomic("hello") ],
     "t3": [ to_atomic([]), to_atomic([2]), to_atomic([2,3]), to_atomic([[[[4]]]]) ],
     "t4": [ to_atomic({{}}), to_atomic({{2}}), to_atomic({{2,3}}), to_atomic({{{{{{{{4}}}}}}}}) ],
     "t5": [ to_atomic({}), to_atomic({"a":2}), to_atomic({"a":2, "b":3}), to_atomic({"a":{"b":{"c":{"d":4}}}}) ],

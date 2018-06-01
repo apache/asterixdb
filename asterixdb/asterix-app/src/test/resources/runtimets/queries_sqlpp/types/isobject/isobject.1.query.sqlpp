@@ -22,7 +22,7 @@
   "b": isobject(false),
   "c": is_object(null),
   "d": is_object(missing),
-  "e": isobj("d"),
+  "e": is_obj("d"),
   "f": isobj(4.0),
   "g": isobj(5),
   "h": isobj(["1", 2]),

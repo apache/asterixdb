@@ -73,12 +73,124 @@
                     implementation="org.apache.rat.analysis.license.MITLicense"/>
               </licenses>
               <excludes combine.children="append">
-                <exclude>src/main/resources/dashboard/static/*
-                </exclude>
+                <exclude>src/main/resources/dashboard/static/*</exclude>
+                <exclude>src/node/**</exclude>
               </excludes>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <version>1.6</version>
+        <configuration>
+          <nodeVersion>v10.3.0</nodeVersion>
+          <npmVersion>6.1.0</npmVersion>
+          <workingDirectory>target/dashboard</workingDirectory>
+          <installDirectory>target/dashboard</installDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>install node and yarn</id>
+            <goals>
+              <goal>install-node-and-npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+          </execution>
+          <execution>
+            <id>npm install</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <arguments>install --cache ${settings.localRepository}/.npm-cache --no-optional</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run-script mavenbuild</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <arguments>run-script mavenbuild</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-static</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>
+                ${basedir}/target/classes/dashboard/
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/target/dashboard/static/
+                  </directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-node</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>
+                ${basedir}/target/dashboard
+              </outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/src/node
+                  </directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>license-automation-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <templateRootDir>${basedir}</templateRootDir>
+          <outputDir>${project.build.directory}/classes/META-INF</outputDir>
+          <generatedFiles>
+            <generatedFile>
+              <template>src/main/licenses/dashboard-license.ftl</template>
+              <outputFile>LICENSE</outputFile>
+            </generatedFile>
+          </generatedFiles>
+          <location>repo/</location>
+          <timeoutSecs>10</timeoutSecs>
+          <downloadDir>
+            ${project.build.directory}/generated-resources/license
+          </downloadDir>
+          <excludedScopes>
+            <excludedScope>test</excludedScope>
+          </excludedScopes>
+          <licenseDirectory>${basedir}/src/main/licenses/content</licenseDirectory>
+        </configuration>
       </plugin>
     </plugins>
   </build>

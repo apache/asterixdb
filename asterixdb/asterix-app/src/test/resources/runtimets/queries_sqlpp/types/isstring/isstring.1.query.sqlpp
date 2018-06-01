@@ -22,7 +22,7 @@
   "b": isstring(false),
   "c": isstring(null),
   "d": isstr(missing),
-  "e": isstr("d"),
+  "e": is_str("d"),
   "f": isstr(4.0),
   "g": isstr(5),
   "h": isstr(["1", 2]),

@@ -19,7 +19,7 @@
 
 ## <a id="TypeFunctions">Type Functions</a> ##
 
-### is_array (isarray) ###
+### is_array ###
  * Syntax:
 
         is_array(expr)
@@ -53,7 +53,7 @@
 
  The function has an alias `isarray`.
 
-### is_atomic (isatomic, isatom) ###
+### is_atomic (is_atom) ###
  * Syntax:
 
         is_atomic(expr)
@@ -84,9 +84,9 @@
 
         { "a": true, "b": true, "c": null, "e": true, "f": true, "g": true, "h": false, "i": false }
 
- The function has two aliases, `isatomic` or `isatom`.
+ The function has three aliases: `isatomic`, `is_atom`, and `isatom`.
 
-### is_boolean (isboolean, isbool) ###
+### is_boolean (is_bool) ###
  * Syntax:
 
         is_boolean(expr)
@@ -118,10 +118,10 @@
 
         { "a": true, "b": true, "c": null, "e": false, "f": false, "g": false, "h": false, "i": false }
 
- The function has two aliases, `isboolean` or `isbool`.
+ The function has three aliases: `isboolean`, `is_bool`, and `isbool`.
 
 
-### is_number (isnumber, isnum) ###
+### is_number (is_num) ###
  * Syntax:
 
         is_number(expr)
@@ -154,9 +154,9 @@
 
         { "a": false, "b": false, "c": null, "e": false, "f": true, "g": true, "h": false, "i": false }
 
- The function has two aliases, `isnumber` or `isnum`.
+ The function has three aliases: `isnumber`, `is_num`, and `isnum`.
 
-### is_object (isobject, isobj) ###
+### is_object (is_obj) ###
  * Syntax:
 
         is_object(expr)
@@ -188,10 +188,10 @@
 
        { "a": false, "b": false, "c": null, "e": false, "f": false, "g": false, "h": false, "i": true }
 
- The function has two aliases, `isobject` or `isobj`.
+ The function has three aliases: `isobject`, `is_obj`, and `isobj`.
 
 
-### is_string (isstring, isstr) ###
+### is_string (is_str) ###
  * Syntax:
 
         is_string(expr)
@@ -223,7 +223,7 @@
 
         { "a": false, "b": false, "c": null, "e": true, "f": false, "g": false, "h": false, "i": false }
 
- The function has two aliases, `isstring` or `isstr`.
+ The function has three aliases: `isstring`, `is_str`, and `isstr`.
 
 
 ### is_null ###
@@ -321,7 +321,7 @@
 
  The function has an alias `toarray`.
 
-### to_atomic ###
+### to_atomic (to_atom) ###
   * Syntax:
 
         to_atomic(expr)
@@ -353,9 +353,9 @@
 
         { "v1": "asterix", "v2": "asterix", "v3": null, "v4": "asterix", "v5": null }
 
- The function has two aliases, `toatomic` or `toatom`.
+ The function has three aliases: `toatomic`, `to_atom`, and `toatom`.
 
-### to_boolean ###
+### to_boolean (to_bool) ###
   * Syntax:
 
         to_boolean(expr)
@@ -386,7 +386,7 @@
 
         { "v1": false, "v2": true, "v3": false, "v4": true }
 
- The function has two aliases, `toboolean` or `tobool`.
+ The function has three aliases: `toboolean`, `to_bool`, and `tobool`.
 
 ### to_bigint ###
   * Syntax:
@@ -458,7 +458,7 @@
 
  The function has an alias `todouble`.
 
-### to_number ###
+### to_number (to_num) ###
   * Syntax:
 
         to_number(expr)
@@ -491,9 +491,9 @@
 
         { "v1": 0, "v2": 1, "v3": 10, "v4": 11.5, "v5": 12.5 }
 
- The function has two aliases, `tonumber` or `tonum`.
+ The function has three aliases: `tonumber`, `to_num`, and `tonum`.
 
-### to_object ###
+### to_object (to_obj) ###
   * Syntax:
 
         to_object(expr)
@@ -518,9 +518,9 @@
 
         { "v1": {"value": "asterix"}, "v2": {} }
 
- The function has two aliases, `toobject` or `toobj`.
+ The function has three aliases: `toobject`, `to_obj`, and `toobj`.
 
-### to_string ###
+### to_string (to_str) ###
   * Syntax:
 
         to_string(expr)
@@ -551,4 +551,4 @@
 
         { "v1": "false", "v2": "true", "v3": "10", "v4": "11.5", "v5": "asterix" }
 
- The function has two aliases, `tostring` or `tostr`.
+ The function has three aliases: `tostring`, `to_str`, and `tostr`.

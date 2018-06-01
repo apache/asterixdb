@@ -16,15 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.api.http.server;
 
-{
-  "a": isboolean(true),
-  "b": isboolean(false),
-  "c": is_boolean(null),
-  "d": is_boolean(missing),
-  "e": is_bool("d"),
-  "f": isbool(4.0),
-  "g": isbool(5),
-  "h": isbool(["1", 2]),
-  "i": isbool({"a":1})
-};
+import org.apache.asterix.api.http.IQueryWebServerRegistrant;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.hyracks.http.server.HttpServer;
+
+public class QueryWebInterfaceServletRegistrant implements IQueryWebServerRegistrant {
+
+    @Override
+    public void register(ICcApplicationContext appCtx, HttpServer webServer) {
+        webServer.addServlet(new QueryWebInterfaceServlet(appCtx, webServer.ctx(), "/*"));
+    }
+}

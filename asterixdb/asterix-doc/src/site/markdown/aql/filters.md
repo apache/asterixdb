@@ -25,8 +25,7 @@
 * [Filters in AsterixDB](#FiltersInAsterixDB)
 * [Filters and Merge Policies](#FiltersAndMergePolicies)
 
-## <a id="Motivation">Motivation</a> <font size="4"><a
-   href="#toc">[Back to TOC]</a></font>
+## <a id="Motivation">Motivation</a> <font size="4"><a href="#toc">[Back to TOC]</a></font>
 
 Traditional relational databases usually employ conventional index
 structures such as B+ trees due to their low read latency.  However,
@@ -86,9 +85,7 @@ same filtering technique can also be used with any secondary LSM index
 (e.g., spatial and temporal predicates), to obtain similar pruning
 power.
 
-## <a id="FiltersInAsterixDB">Filters in AsterixDB</a> <font
-   size="4"><a href="#toc">[Back to TOC]</a></font>
-
+## <a id="FiltersInAsterixDB">Filters in AsterixDB</a> <font size="4"><a href="#toc">[Back to TOC]</a></font>
 
 We have added support for LSM-based filters to all of AsterixDB's
 index types. To enable the use of filters, the user must specify the
@@ -98,11 +95,9 @@ filter's key when creating a dataset, as shown below:
 
         create dataset Tweets(TweetType) primary key tweetid with filter on send-time;
 
-
 Filters can be created on any totally ordered datatype (i.e., any
 field that can be indexed using a B+ -tree), such as integers,
 doubles, floats, UUIDs, datetimes, etc.
-
 
 When a dataset with a filter is created, the name of the filter's key
 field is persisted in the `Metadata.Dataset` dataset (which is the metadata
@@ -117,10 +112,7 @@ dataset). AsterixDB will automatically maintain the filters and will
 leverage them to efficiently answer queries whenever possible (i.e.,
 when a query has predicates on the filter's key).
 
-
-## <a id="FiltersAndMergePolicies">Filters and Merge Policies</a> <font
-size="4"><a href="#toc">[Back to TOC]</a></font>
-
+## <a id="FiltersAndMergePolicies">Filters and Merge Policies</a> <font size="4"><a href="#toc">[Back to TOC]</a></font>
 
 The AsterixDB default merge policy, the prefix merge policy, relies on
 component sizes and the number of components to decide which
@@ -153,5 +145,3 @@ indexes will always have the same number of disk components as their
 primary index under the correlated-prefix merge policy. This has
 improved query performance, since disk components of secondary indexes
 now have a much better chance of being pruned.
-
-

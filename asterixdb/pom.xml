@@ -245,6 +245,7 @@
           </checkstyleRules>
           <includes>**/*.java,**/*.jj</includes>
           <resourceIncludes>**/*.properties,**/*.xml,**/*.xsd,**/*.aql,**/*.sqlpp,**/*.sh</resourceIncludes>
+          <resourceExcludes>**/node_modules/**/*</resourceExcludes>
           <sourceDirectories>${project.build.sourceDirectory},${project.build.testSourceDirectory}</sourceDirectories>
         </configuration>
       </plugin>
@@ -537,7 +538,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-site-plugin</artifactId>
-          <version>3.4</version>
+          <version>3.7.1</version>
         </plugin>
         <plugin>
           <groupId>org.jvnet.jaxb2.maven2</groupId>
