@@ -21,7 +21,7 @@
   "t1": tonumber(false),
   "t2": to_number(true),
   "t3": tonum(int8("8")),
-  "t4": to_number(int16("16")),
+  "t4": to_num(int16("16")),
   "t5": to_number(int32("32")),
   "t6": to_number(int64("64")),
   "t7": to_number(float("1.5")),

@@ -16,15 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.api.http;
 
-{
-  "a": isboolean(true),
-  "b": isboolean(false),
-  "c": is_boolean(null),
-  "d": is_boolean(missing),
-  "e": is_bool("d"),
-  "f": isbool(4.0),
-  "g": isbool(5),
-  "h": isbool(["1", 2]),
-  "i": isbool({"a":1})
-};
+public interface QueryWebServerRegistrant extends IServletRegistrant {
+}

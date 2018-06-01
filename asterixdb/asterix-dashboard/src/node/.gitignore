@@ -9,6 +9,7 @@
 /documents
 # /static
 /dist
+/static
 
 # IDEs and editors
 /.idea

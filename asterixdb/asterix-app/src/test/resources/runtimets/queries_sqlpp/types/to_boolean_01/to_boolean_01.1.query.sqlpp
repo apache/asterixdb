@@ -20,8 +20,8 @@
  "t1": toboolean(false),
  "t2": to_boolean(true),
 
- "t3": to_boolean(int8("0")),
- "t4": to_boolean(int8("10")),
+ "t3": tobool(int8("0")),
+ "t4": to_bool(int8("10")),
 
  "t5": to_boolean(int16("0")),
  "t6": to_boolean(int16("10")),

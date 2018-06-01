@@ -53,15 +53,20 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("isunknown", "is-unknown"); // isunknown, internal: is-unknown
         addFunctionMapping("isatomic", "is-atomic"); // isatomic, internal: is-atomic
         addFunctionMapping("isatom", "is-atomic"); // isatom, internal: is-atomic
+        addFunctionMapping("is_atom", "is-atomic"); // is_atom, internal: is-atomic
         addFunctionMapping("isboolean", "is-boolean"); // isboolean, internal: is-boolean
         addFunctionMapping("isbool", "is-boolean"); // isbool, internal: is-boolean
+        addFunctionMapping("is_bool", "is-boolean"); // is_bool, internal: is-boolean
         addFunctionMapping("isnumber", "is-number"); // isnumber, internal: is-number
         addFunctionMapping("isnum", "is-number"); // isnum, internal: is-number
+        addFunctionMapping("is_num", "is-number"); // is_num, internal: is-number
         addFunctionMapping("isstring", "is-string"); // isstring, internal: is-string
         addFunctionMapping("isstr", "is-string"); // isstr, internal: is-string
+        addFunctionMapping("is_str", "is-string"); // is_str, internal: is-string
         addFunctionMapping("isarray", "is-array"); // isarray, internal: is-array
         addFunctionMapping("isobject", "is-object"); // isobject, internal: is-object
         addFunctionMapping("isobj", "is-object"); // isobj, internal: is-object
+        addFunctionMapping("is_obj", "is-object"); // is_obj, internal: is-object
         addFunctionMapping("ifmissing", "if-missing"); // ifmissing, internal: if-missing
         addFunctionMapping("ifnull", "if-null"); // ifnull, internal: if-null
         addFunctionMapping("ifmissingornull", "if-missing-or-null"); // ifmissingornull, internal: if-missing-or-null
@@ -76,16 +81,21 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("toarray", "to-array"); // toarray, internal: to-array
         addFunctionMapping("toatomic", "to-atomic"); // toatomic, internal: to-atomic
         addFunctionMapping("toatom", "to-atomic"); // toatom, internal: to-atomic
+        addFunctionMapping("to_atom", "to-atomic"); // to_atom, internal: to-atomic
         addFunctionMapping("toboolean", "to-boolean"); // toboolean, internal: to-boolean
         addFunctionMapping("tobool", "to-boolean"); // tobool, internal: to-boolean
+        addFunctionMapping("to_bool", "to-boolean"); // to_bool, internal: to-boolean
         addFunctionMapping("tobigint", "to-bigint"); // tobigint, internal: to-bigint
         addFunctionMapping("todouble", "to-double"); // todouble, internal: to-double
         addFunctionMapping("tostring", "to-string"); // tostring, internal: to-string
         addFunctionMapping("tostr", "to-string"); // tostr, internal: to-string
+        addFunctionMapping("to_str", "to-string"); // to_str, internal: to-string
         addFunctionMapping("tonumber", "to-number"); // tonumber, internal: to-number
         addFunctionMapping("tonum", "to-number"); // tonum, internal: to-number
+        addFunctionMapping("to_num", "to-number"); // to_num, internal: to-number
         addFunctionMapping("toobject", "to-object"); // toobject, internal: to-object
         addFunctionMapping("toobj", "to-object"); // toobj, internal: to-object
+        addFunctionMapping("to_obj", "to-object"); // to_obj, internal: to-object
 
         // Object functions
         // record-merge, internal: object-merge

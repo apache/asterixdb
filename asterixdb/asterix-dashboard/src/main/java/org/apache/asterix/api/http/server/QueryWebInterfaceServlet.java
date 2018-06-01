@@ -40,7 +40,7 @@ public class QueryWebInterfaceServlet extends StaticResourceServlet {
     private static final Logger LOGGER = LogManager.getLogger();
     private ICcApplicationContext appCtx;
 
-    public QueryWebInterfaceServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String[] paths) {
+    QueryWebInterfaceServlet(ICcApplicationContext appCtx, ConcurrentMap<String, Object> ctx, String... paths) {
         super(ctx, paths);
         this.appCtx = appCtx;
     }
@@ -51,7 +51,7 @@ public class QueryWebInterfaceServlet extends StaticResourceServlet {
         if ("/".equals(requestURI)) {
             HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_HTML);
             // Dashboard Administration Console
-            deliverResource("/dashboard/static/index.html", response);
+            deliverResource("/dashboard/index.html", response);
         } else {
             deliverResource(requestURI, response);
         }

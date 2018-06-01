@@ -22,7 +22,7 @@
   "b": isatomic(false),
   "c": is_atomic(null),
   "d": is_atomic(missing),
-  "e": isatom("d"),
+  "e": is_atom("d"),
   "f": isatom(4.0),
   "g": isatom(5),
   "h": isatom(["1", 2]),

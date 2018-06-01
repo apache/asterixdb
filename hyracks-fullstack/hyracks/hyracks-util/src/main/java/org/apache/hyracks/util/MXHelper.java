@@ -64,27 +64,27 @@ public class MXHelper {
         return getOpenFileDescriptorCount != null;
     }
 
-    public static Long getCurrentOpenFileCount() {
+    public static long getCurrentOpenFileCount() {
         if (getOpenFileDescriptorCount == null) {
-            return -1L;
+            return -1;
         }
         try {
-            return (Long) getOpenFileDescriptorCount.invoke(osMXBean);
+            return (long) getOpenFileDescriptorCount.invoke(osMXBean);
         } catch (Throwable e) { // NOSONAR
             LOGGER.log(Level.WARN, "Failure invoking getOpenFileDescriptorCount", e);
-            return -1L;
+            return -1;
         }
     }
 
-    public static Long getMaxOpenFileCount() {
+    public static long getMaxOpenFileCount() {
         if (getMaxFileDescriptorCount == null) {
-            return -1L;
+            return -1;
         }
         try {
-            return (Long) getMaxFileDescriptorCount.invoke(osMXBean);
+            return (long) getMaxFileDescriptorCount.invoke(osMXBean);
         } catch (Throwable e) { // NOSONAR
             LOGGER.log(Level.WARN, "Failure invoking getMaxFileDescriptorCount", e);
-            return -1L;
+            return -1;
         }
     }
 
