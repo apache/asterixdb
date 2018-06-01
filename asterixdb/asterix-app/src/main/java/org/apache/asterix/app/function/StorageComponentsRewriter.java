@@ -47,8 +47,8 @@ public class StorageComponentsRewriter extends FunctionRewriter {
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, f.getSourceLocation(),
-                    "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, f.getSourceLocation(), datasetName,
+                    dataverseName);
         }
         return new StorageComponentsDatasource(context.getComputationNodeDomain(), dataset.getDatasetId());
     }

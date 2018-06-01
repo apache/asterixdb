@@ -349,7 +349,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
             try {
                 fnDataverse = metadataProvider.findDataverse(fnNamespace);
             } catch (AlgebricksException e) {
-                throw new CompilationException(ErrorCode.NO_DATAVERSE_WITH_NAME, e, sourceLoc, fnNamespace);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, fnNamespace);
             }
         }
 

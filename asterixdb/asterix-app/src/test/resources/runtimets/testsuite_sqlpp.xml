@@ -3645,7 +3645,7 @@
       <compilation-unit name="partition-by-nonexistent-field">
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
         <expected-error>Field "id" is not found</expected-error>
-        <expected-error>Cannot find dataset testds in dataverse test</expected-error>
+        <expected-error>Cannot find dataset with name testds in dataverse test</expected-error>
         <expected-error>Cannot find dataset testds in dataverse test nor an alias with name testds!</expected-error>
       </compilation-unit>
     </test-case>
@@ -8478,7 +8478,7 @@
     <test-case FilePath="load">
       <compilation-unit name="issue650_query">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Unable to load dataset Users since it does not exist</expected-error>
+        <expected-error>Cannot find dataset with name Users in dataverse fuzzyjoin</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">

@@ -33,12 +33,14 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 abstract class AbstractIfMissingOrNullTypeComputer implements IResultTypeComputer {
     @Override
     public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expression;
+        SourceLocation sourceLoc = fce.getSourceLocation();
         IAType outPrimeType = null;
         ATypeTag outQuantifier = null; // could be 'missing' or 'null'
 
@@ -66,22 +68,23 @@ abstract class AbstractIfMissingOrNullTypeComputer implements IResultTypeCompute
                     } else {
                         IAType primeType = getOutputPrimeType(unionType);
                         ATypeTag quantifier = outQuantifier != null ? outQuantifier : getOutputQuantifier(unionType);
-                        return createOutputType(TypeResolverUtil.resolve(outPrimeType, primeType), quantifier);
+                        return createOutputType(TypeResolverUtil.resolve(outPrimeType, primeType), quantifier,
+                                sourceLoc);
                     }
                 }
             } else {
                 // ANY or no intersection
                 return outPrimeType == null ? argType
-                        : createOutputType(TypeResolverUtil.resolve(outPrimeType, argType), outQuantifier);
+                        : createOutputType(TypeResolverUtil.resolve(outPrimeType, argType), outQuantifier, sourceLoc);
             }
         }
 
         if (outPrimeType == null) {
             return BuiltinType.ANULL;
         }
-        IAType outType = createOutputType(outPrimeType, ATypeTag.NULL);
+        IAType outType = createOutputType(outPrimeType, ATypeTag.NULL, sourceLoc);
         if (outQuantifier == ATypeTag.MISSING) {
-            outType = createOutputType(outType, ATypeTag.MISSING);
+            outType = createOutputType(outType, ATypeTag.MISSING, sourceLoc);
         }
         return outType;
     }
@@ -96,7 +99,8 @@ abstract class AbstractIfMissingOrNullTypeComputer implements IResultTypeCompute
         return type.getActualType();
     }
 
-    private IAType createOutputType(IAType primeType, ATypeTag quantifier) {
+    private IAType createOutputType(IAType primeType, ATypeTag quantifier, SourceLocation sourceLoc)
+            throws CompilationException {
         if (quantifier == null || primeType.getTypeTag() == ATypeTag.ANY) {
             return primeType;
         }
@@ -106,7 +110,8 @@ abstract class AbstractIfMissingOrNullTypeComputer implements IResultTypeCompute
             case NULL:
                 return AUnionType.createNullableType(primeType, null);
             default:
-                throw new IllegalStateException(String.valueOf(quantifier));
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                        "Unexpected quantifier: " + quantifier);
         }
     }
 }

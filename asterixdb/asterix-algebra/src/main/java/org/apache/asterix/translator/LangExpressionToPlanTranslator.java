@@ -195,8 +195,8 @@ class LangExpressionToPlanTranslator
         Dataset dataset = metadataProvider.findDataset(clffs.getDataverseName(), clffs.getDatasetName());
         if (dataset == null) {
             // This would never happen since we check for this in AqlTranslator
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Unable to load dataset " + clffs.getDatasetName() + " since it does not exist");
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, clffs.getDatasetName(),
+                    clffs.getDataverseName());
         }
         IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType =
@@ -639,8 +639,8 @@ class LangExpressionToPlanTranslator
             String datasetName, SourceLocation sourceLoc) throws AlgebricksException {
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Cannot find dataset " + datasetName + " in dataverse " + dataverseName);
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                    dataverseName);
         }
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -773,8 +773,8 @@ class LangExpressionToPlanTranslator
         }
 
         if (f == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Unknown function " + signature.getName() + "@" + signature.getArity());
+            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc,
+                    signature.getName() + "@" + signature.getArity());
         }
 
         // Put hints into function call expr.

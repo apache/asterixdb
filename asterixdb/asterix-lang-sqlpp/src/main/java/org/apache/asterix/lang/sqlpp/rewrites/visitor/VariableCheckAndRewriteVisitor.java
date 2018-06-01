@@ -161,10 +161,10 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             throws CompilationException {
         String defaultDataverseName = metadataProvider.getDefaultDataverseName();
         if (dataverseName == null && defaultDataverseName == null) {
-            throw new CompilationException(ErrorCode.UNKNOWN_DATASET, sourceLoc, datasetName);
+            throw new CompilationException(ErrorCode.NAME_RESOLVE_UNKNOWN_DATASET, sourceLoc, datasetName);
         }
         //If no available dataset nor in-scope variable to resolve to, we throw an error.
-        throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+        throw new CompilationException(ErrorCode.NAME_RESOLVE_UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                 dataverseName == null ? defaultDataverseName : dataverseName);
     }
 

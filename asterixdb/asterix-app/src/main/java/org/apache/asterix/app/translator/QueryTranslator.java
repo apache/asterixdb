@@ -403,7 +403,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 resultSetIdCounter);
                         break;
                     default:
-                        throw new IllegalStateException(String.valueOf(stmt.getKind()));
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
+                                "Unexpected statement: " + stmt.getKind());
                 }
             }
         } finally {
@@ -441,7 +442,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dvName);
             if (dv == null) {
-                throw new MetadataException(ErrorCode.NO_DATAVERSE_WITH_NAME, sourceLoc, dvName);
+                throw new MetadataException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dvName);
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return dv;
@@ -468,7 +469,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return;
                 } else {
-                    throw new AsterixException(ErrorCode.DATAVERSE_EXISTS, stmt.getSourceLocation(), dvName);
+                    throw new CompilationException(ErrorCode.DATAVERSE_EXISTS, stmt.getSourceLocation(), dvName);
                 }
             }
             MetadataManager.INSTANCE.addDataverse(metadataProvider.getMetadataTxnContext(),
@@ -558,8 +559,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Datatype dt = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                     itemTypeDataverseName, itemTypeName);
             if (dt == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        ": type " + itemTypeName + " could not be found.");
+                throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, itemTypeName);
             }
             String ngName = ngNameId != null ? ngNameId.getValue()
                     : configureNodegroupForDataset(appCtx, dd.getHints(), dataverseName, datasetName, metadataProvider,
@@ -622,7 +622,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     break;
                 default:
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "Unknown datatype " + dd.getDatasetType());
+                            "Unknown dataset type " + dd.getDatasetType());
             }
 
             // #. initialize DatasetIdFactory if it is not initialized.
@@ -774,8 +774,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "There is no dataset with this name " + datasetName + " in dataverse " + dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                        dataverseName);
             }
 
             index = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
@@ -785,8 +785,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return;
                 } else {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "An index with this name " + indexName + " already exists.");
+                    throw new CompilationException(ErrorCode.INDEX_EXISTS, sourceLoc, indexName);
                 }
             }
             // can't create secondary primary index on an external dataset
@@ -863,8 +862,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     overridesFieldTypes = true;
                 }
                 if (fieldType == null) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "Unknown type " + (fieldExpr.second == null ? fieldExpr.first : fieldExpr.second));
+                    throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, fieldExpr.second == null
+                            ? String.valueOf(fieldExpr.first) : String.valueOf(fieldExpr.second));
                 }
 
                 // try to add the key & its source to the set of keys, if key couldn't be added,
@@ -1180,14 +1179,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "Unknown dataverse " + dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
             }
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
             if (dt != null) {
                 if (!stmtCreateType.getIfNotExists()) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "A datatype with this name " + typeName + " already exists.");
+                    throw new CompilationException(ErrorCode.TYPE_EXISTS, sourceLoc, typeName);
                 }
             } else {
                 if (BuiltinTypeMap.getBuiltinType(typeName) != null) {
@@ -1233,8 +1230,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return;
                 } else {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "There is no dataverse with this name " + dataverseName + ".");
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
                 }
             }
             // # check whether any function in current dataverse is being used by others
@@ -1408,7 +1404,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
                     return;
                 } else {
-                    throw new AsterixException(ErrorCode.NO_DATASET_WITH_NAME, dataverseName, datasetName);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                            dataverseName);
                 }
             }
             ds.drop(metadataProvider, mdTxnCtx, jobsToExecute, bActiveTxn, progress, hcc, dropCorrespondingNodeGroup,
@@ -1471,8 +1468,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "There is no dataset with this name " + datasetName + " in dataverse " + dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                        dataverseName);
             }
             ActiveNotificationHandler activeEventHandler =
                     (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
@@ -1498,8 +1495,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                         return;
                     } else {
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "There is no index with this name " + indexName + ".");
+                        throw new CompilationException(ErrorCode.UNKNOWN_INDEX, sourceLoc, indexName);
                     }
                 }
                 ensureNonPrimaryIndexDrop(index, sourceLoc);
@@ -1539,8 +1535,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                         return;
                     } else {
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "There is no index with this name " + indexName + ".");
+                        throw new CompilationException(ErrorCode.UNKNOWN_INDEX, sourceLoc, indexName);
                     }
                 } else if (ExternalIndexingOperations.isFileIndex(index)) {
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -1663,8 +1658,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
             if (dt == null) {
                 if (!stmtTypeDrop.getIfExists()) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "There is no datatype with this name " + typeName + ".");
+                    throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, typeName);
                 }
             } else {
                 MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, dataverseName, typeName);
@@ -1689,8 +1683,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodegroupName);
             if (ng == null) {
                 if (!stmtDelete.getIfExists()) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "There is no nodegroup with this name " + nodegroupName + ".");
+                    throw new CompilationException(ErrorCode.UNKNOWN_NODEGROUP, sourceLoc, nodegroupName);
                 }
             } else {
                 MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, nodegroupName, false);
@@ -1719,8 +1712,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "There is no dataverse with this name " + dataverse + ".");
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverse);
             }
 
             //Check whether the function is use-able
@@ -1788,7 +1780,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
             if (function == null && !stmtDropFunction.getIfExists()) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Unknown function " + signature);
+                throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature);
             } else if (isFunctionUsed(mdTxnCtx, signature, null)) {
                 throw new MetadataException(ErrorCode.METADATA_DROP_FUCTION_IN_USE, sourceLoc, signature);
             } else {
@@ -2325,8 +2317,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     dataverseName, feedName, datasetName);
             Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "Dataset " + dataverseName + "." + datasetName + " doesn't exist");
+                throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                        dataverseName);
             }
             if (fc == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Feed " + feedName
@@ -2360,8 +2352,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "There is no dataset with this name " + datasetName + " in dataverse " + dataverseName + ".");
+                throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                        dataverseName);
             }
             // Prepare jobs to compact the datatset and its indexes
             List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
@@ -2654,8 +2646,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ds = metadataProvider.findDataset(dataverseName, datasetName);
             // Dataset exists ?
             if (ds == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "There is no dataset with this name " + datasetName + " in dataverse " + dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                        dataverseName);
             }
             // Dataset external ?
             if (ds.getDatasetType() != DatasetType.EXTERNAL) {

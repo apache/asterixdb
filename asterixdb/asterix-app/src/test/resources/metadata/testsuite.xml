@@ -399,13 +399,13 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_272_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>There is no dataset with this name Foo in dataverse test</expected-error>
+        <expected-error>Cannot find dataset with name Foo in dataverse test</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_272_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>There is no dataset with this name Foo in dataverse test</expected-error>
+        <expected-error>Cannot find dataset with name Foo in dataverse test</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This case should be fixed to return a proper message rather than NPE -->

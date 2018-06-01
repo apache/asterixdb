@@ -127,8 +127,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
 
         Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
         if (dataset == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, scan.getSourceLocation(),
-                    "Dataset " + asid.getDatasourceName() + " not found.");
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, scan.getSourceLocation(),
+                    asid.getDatasourceName(), asid.getDataverseName());
         }
         if (dataset.getDatasetType() != DatasetType.INTERNAL) {
             return false;
@@ -300,8 +300,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
                 Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
                 if (dataset == null) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, scan.getSourceLocation(),
-                            "Dataset " + asid.getDatasourceName() + " not found.");
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, scan.getSourceLocation(),
+                            asid.getDatasourceName(), asid.getDataverseName());
                 }
                 if (dataset.getDatasetType() != DatasetType.INTERNAL) {
                     setAsFinal(access, context, finalAnnot);

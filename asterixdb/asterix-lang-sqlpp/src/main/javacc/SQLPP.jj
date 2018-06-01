@@ -359,8 +359,9 @@ class SQLPPParser extends ScopeChecker implements IParser {
         return token != null ? new SourceLocation(token.beginLine, token.beginColumn) : null;
     }
 
-    protected static void setSourceLocation(AbstractLangExpression expr, Token sourceLocToken) {
-        expr.setSourceLocation(getSourceLocation(sourceLocToken));
+    protected static <T extends AbstractLangExpression> T addSourceLocation(T expr, Token token) {
+        expr.setSourceLocation(getSourceLocation(token));
+        return expr;
     }
 }
 
@@ -426,8 +427,7 @@ DataverseDecl DataverseDeclaration() throws ParseException:
     {
       defaultDataverse = dvName;
       DataverseDecl dvDecl = new DataverseDecl(new Identifier(dvName));
-      setSourceLocation(dvDecl, startToken);
-      return dvDecl;
+      return addSourceLocation(dvDecl, startToken);
     }
 }
 
@@ -485,8 +485,7 @@ TypeDecl TypeSpecification(Token startStmtToken, String hint, boolean dgen, Toke
       }
       TypeDataGen tddg = new TypeDataGen(dgen, filename, numValues);
       TypeDecl stmt = new TypeDecl(nameComponents.first, nameComponents.second, typeExpr, tddg, ifNotExists);
-      setSourceLocation(stmt, startStmtToken);
-      return stmt;
+      return addSourceLocation(stmt, startStmtToken);
     }
 }
 
@@ -511,8 +510,7 @@ NodegroupDecl NodegroupSpecification(Token startStmtToken) throws ParseException
   )*
     {
       NodegroupDecl stmt = new NodegroupDecl(new Identifier(name), ncNames, ifNotExists);
-      setSourceLocation(stmt, startStmtToken);
-      return stmt;
+      return addSourceLocation(stmt, startStmtToken);
     }
 }
 
@@ -614,8 +612,7 @@ DatasetDecl DatasetSpecification(Token startStmtToken) throws ParseException:
       }
   )
     {
-      setSourceLocation(stmt, startStmtToken);
-      return stmt;
+      return addSourceLocation(stmt, startStmtToken);
     }
 }
 
@@ -631,8 +628,7 @@ RefreshExternalDatasetStatement RefreshExternalDatasetStatement() throws ParseEx
       RefreshExternalDatasetStatement stmt = new RefreshExternalDatasetStatement();
       stmt.setDataverseName(nameComponents.first);
       stmt.setDatasetName(nameComponents.second);
-      setSourceLocation(stmt, startToken);
-      return stmt;
+      return addSourceLocation(stmt, startToken);
     }
 }
 
@@ -684,8 +680,7 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
       stmt.setGramLength(indexType.gramLength);
     }
     stmt.setEnforced(enforced);
-    setSourceLocation(stmt, startStmtToken);
-    return stmt;
+    return addSourceLocation(stmt, startStmtToken);
   }
 }
 
@@ -754,8 +749,7 @@ CreateDataverseStatement DataverseSpecification(Token startStmtToken) throws Par
   ifNotExists = IfNotExists()
     {
       CreateDataverseStatement stmt = new CreateDataverseStatement(new Identifier(dvName), null, ifNotExists);
-      setSourceLocation(stmt, startStmtToken);
-      return stmt;
+      return addSourceLocation(stmt, startStmtToken);
     }
 }
 
@@ -796,8 +790,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken) throws Parse
       removeCurrentScope();
       defaultDataverse = currentDataverse;
       CreateFunctionStatement stmt = new CreateFunctionStatement(signature, paramList, functionBody, functionBodyExpr, ifNotExists);
-      setSourceLocation(stmt, startStmtToken);
-      return stmt;
+      return addSourceLocation(stmt, startStmtToken);
     }
 }
 
@@ -817,8 +810,7 @@ CreateFeedStatement FeedSpecification(Token startStmtToken) throws ParseExceptio
   {
     try {
       stmt = new CreateFeedStatement(nameComponents, withRecord, ifNotExists);
-      setSourceLocation(stmt, startStmtToken);
-      return stmt;
+      return addSourceLocation(stmt, startStmtToken);
     } catch (AlgebricksException e) {
       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
     }
@@ -851,8 +843,7 @@ CreateFeedPolicyStatement FeedPolicySpecification(Token startStmtToken) throws P
      )
   )
     {
-      setSourceLocation(stmt, startStmtToken);
-      return stmt;
+      return addSourceLocation(stmt, startStmtToken);
     }
 }
 
@@ -1013,8 +1004,7 @@ Statement DropStatement() throws ParseException:
       }
   )
   {
-    setSourceLocation(stmt, startToken);
-    return stmt;
+    return addSourceLocation(stmt, startToken);
   }
 }
 
@@ -1051,8 +1041,7 @@ InsertStatement InsertStatement() throws ParseException:
       query.setTopLevel(true);
       InsertStatement stmt = new InsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(),
         var, returnExpression);
-      setSourceLocation(stmt, startToken);
-      return stmt;
+      return addSourceLocation(stmt, startToken);
     }
 }
 
@@ -1075,8 +1064,7 @@ UpsertStatement UpsertStatement() throws ParseException:
       query.setTopLevel(true);
       UpsertStatement stmt = new UpsertStatement(nameComponents.first, nameComponents.second, query, getVarCounter(),
         var, returnExpression);
-      setSourceLocation(stmt, startToken);
-      return stmt;
+      return addSourceLocation(stmt, startToken);
     }
 }
 
@@ -1097,12 +1085,11 @@ DeleteStatement DeleteStatement() throws ParseException:
         varExpr = new VariableExpr();
         VarIdentifier var = SqlppVariableUtil.toInternalVariableIdentifier(nameComponents.second.getValue());
         varExpr.setVar(var);
-        setSourceLocation(varExpr, startToken);
+        addSourceLocation(varExpr, startToken);
       }
       DeleteStatement stmt = new DeleteStatement(varExpr, nameComponents.first, nameComponents.second,
           condition, getVarCounter());
-      setSourceLocation(stmt, startToken);
-      return stmt;
+      return addSourceLocation(stmt, startToken);
   }
 }
 
@@ -1129,8 +1116,7 @@ UpdateStatement UpdateStatement() throws ParseException:
   )*) <RIGHTPAREN>
     {
       UpdateStatement stmt = new UpdateStatement(vars, target, condition, ucs);
-      setSourceLocation(stmt, startToken);
-      return stmt;
+      return addSourceLocation(stmt, startToken);
     }
 }
 
@@ -1169,8 +1155,7 @@ Statement SetStatement() throws ParseException:
   <SET> { startToken = token; } pn = Identifier() pv = ConstantString()
     {
       SetStatement stmt = new SetStatement(pn, pv);
-      setSourceLocation(stmt, startToken);
-      return stmt;
+      return addSourceLocation(stmt, startToken);
     }
 }
 
@@ -1188,8 +1173,7 @@ Statement WriteStatement() throws ParseException:
     ( <USING> writerClass = ConstantString() )?
     {
       WriteStatement stmt = new WriteStatement(new Identifier(nodeName), fileName, writerClass);
-      setSourceLocation(stmt, startToken);
-      return stmt;
+      return addSourceLocation(stmt, startToken);
     }
 }
 
@@ -1217,8 +1201,7 @@ LoadStatement LoadStatement() throws ParseException:
   )?
     {
       LoadStatement stmt = new LoadStatement(dataverseName, datasetName, adapterName, properties, alreadySorted);
-      setSourceLocation(stmt, startToken);
-      return stmt;
+      return addSourceLocation(stmt, startToken);
     }
 }
 
@@ -1243,8 +1226,7 @@ Statement CompactStatement() throws ParseException:
   <COMPACT> { startToken = token; } Dataset() nameComponents = QualifiedName()
     {
       CompactStatement stmt = new CompactStatement(nameComponents.first, nameComponents.second);
-      setSourceLocation(stmt, startToken);
-      return stmt;
+      return addSourceLocation(stmt, startToken);
     }
 }
 
@@ -1275,8 +1257,7 @@ Statement StartStatement(Token startStmtToken) throws ParseException:
   <FEED> feedNameComponents = QualifiedName()
   {
     stmt = new StartFeedStatement (feedNameComponents);
-    setSourceLocation(stmt, startStmtToken);
-    return stmt;
+    return addSourceLocation(stmt, startStmtToken);
   }
 }
 
@@ -1290,8 +1271,7 @@ AbstractStatement StopStatement(Token startStmtToken) throws ParseException:
   <FEED> feedNameComponents = QualifiedName()
   {
     stmt = new StopFeedStatement (feedNameComponents);
-    setSourceLocation(stmt, startStmtToken);
-    return stmt;
+    return addSourceLocation(stmt, startStmtToken);
   }
 }
 
@@ -1310,8 +1290,7 @@ AbstractStatement DisconnectStatement(Token startStmtToken) throws ParseExceptio
       }
   )
   {
-    setSourceLocation(stmt, startStmtToken);
-    return stmt;
+    return addSourceLocation(stmt, startStmtToken);
   }
 }
 
@@ -1358,8 +1337,7 @@ AbstractStatement ConnectStatement(Token startStmtToken) throws ParseException:
       }
   )
   {
-    setSourceLocation(stmt, startStmtToken);
-    return stmt;
+    return addSourceLocation(stmt, startStmtToken);
   }
 }
 
@@ -1511,8 +1489,7 @@ RecordTypeDefinition RecordTypeDef() throws ParseException:
         recordKind = RecordTypeDefinition.RecordKind.OPEN;
       }
       recType.setRecordKind(recordKind);
-      setSourceLocation(recType, startToken);
-      return recType;
+      return addSourceLocation(recType, startToken);
    }
 }
 
@@ -1546,8 +1523,7 @@ TypeReferenceExpression TypeReference() throws ParseException:
     }
 
     TypeReferenceExpression typeRef = new TypeReferenceExpression(id);
-    setSourceLocation(typeRef, token);
-    return typeRef;
+    return addSourceLocation(typeRef, token);
   }
 }
 
@@ -1562,8 +1538,7 @@ OrderedListTypeDefinition OrderedListTypeDef() throws ParseException:
   <RIGHTBRACKET>
   {
     OrderedListTypeDefinition typeDef = new OrderedListTypeDefinition(type);
-    setSourceLocation(typeDef, startToken);
-    return typeDef;
+    return addSourceLocation(typeDef, startToken);
   }
 }
 
@@ -1578,8 +1553,7 @@ UnorderedListTypeDefinition UnorderedListTypeDef() throws ParseException:
   <RIGHTDBLBRACE>
   {
     UnorderedListTypeDefinition typeDef = new UnorderedListTypeDefinition(type);
-    setSourceLocation(typeDef, startToken);
-    return typeDef;
+    return addSourceLocation(typeDef, startToken);
   }
 }
 
@@ -1817,8 +1791,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
     getCurrentScope().addFunctionDescriptor(signature, false);
     FunctionDecl stmt = new FunctionDecl(signature, paramList, funcBody);
     removeCurrentScope();
-    setSourceLocation(stmt, startToken);
-    return stmt;
+    return addSourceLocation(stmt, startToken);
   }
 }
 
@@ -1880,9 +1853,9 @@ Expression OperatorExpr() throws ParseException:
       {
         if (op == null) {
           op = new OperatorExpr();
-          op.setSourceLocation(getSourceLocation(token));
           op.addOperand(operand);
           op.setCurrentop(true);
+          addSourceLocation(op, token);
         }
         try{
             op.addOperator(token.image.toLowerCase());
@@ -1915,9 +1888,9 @@ Expression AndExpr() throws ParseException:
       {
         if (op == null) {
           op = new OperatorExpr();
-          op.setSourceLocation(getSourceLocation(token));
           op.addOperand(operand);
           op.setCurrentop(true);
+          addSourceLocation(op, token);
         }
         try{
            op.addOperator(token.image.toLowerCase());
@@ -1950,8 +1923,7 @@ Expression NotExpr() throws ParseException:
     if(not) {
         FunctionSignature signature = new FunctionSignature(BuiltinFunctions.NOT);
         CallExpr callExpr = new CallExpr(signature, new ArrayList<Expression>(Collections.singletonList(inputExpr)));
-        setSourceLocation(callExpr, startToken);
-        return callExpr;
+        return addSourceLocation(callExpr, startToken);
     } else {
         return inputExpr;
     }
@@ -1992,9 +1964,9 @@ Expression RelExpr() throws ParseException:
           }
           if (op == null) {
             op = new OperatorExpr();
-            op.setSourceLocation(getSourceLocation(token));
             op.addOperand(operand, false); // broadcast is always for the right branch
             op.setCurrentop(true);
+            addSourceLocation(op, token);
           }
           try{
             op.addOperator(operator);
@@ -2044,9 +2016,9 @@ Expression BetweenExpr() throws ParseException:
           }
           if (op == null) {
             op = new OperatorExpr();
-            op.setSourceLocation(getSourceLocation(token));
             op.addOperand(operand);
             op.setCurrentop(true);
+            addSourceLocation(op, token);
           }
           try{
             op.addOperator(operator);
@@ -2097,11 +2069,11 @@ Expression IsExpr() throws ParseException:
       {
         FunctionSignature signature = new FunctionSignature(fn);
         expr = new CallExpr(signature, new ArrayList<Expression>(Collections.singletonList(operand)));
-        expr.setSourceLocation(getSourceLocation(token));
+        addSourceLocation(expr, token);
         if (not) {
            FunctionSignature notSignature = new FunctionSignature(BuiltinFunctions.NOT);
            expr = new CallExpr(notSignature, new ArrayList<Expression>(Collections.singletonList(expr)));
-           expr.setSourceLocation(getSourceLocation(notToken));
+           addSourceLocation(expr, notToken);
         }
       }
     )?
@@ -2123,9 +2095,9 @@ Expression LikeExpr() throws ParseException:
         (<NOT> { not = true; })? <LIKE>
         {
           op = new OperatorExpr();
-          op.setSourceLocation(getSourceLocation(token));
           op.addOperand(operand);
           op.setCurrentop(true);
+          addSourceLocation(op, token);
 
           String operator = token.image.toLowerCase();
           if (not) {
@@ -2162,9 +2134,9 @@ Expression ConcatExpr() throws ParseException:
       {
         if (op == null) {
           op = new OperatorExpr();
-          op.setSourceLocation(getSourceLocation(token));
           op.addOperand(operand);
           op.setCurrentop(true);
+          addSourceLocation(op, token);
         }
         op.addOperator(OperatorType.CONCAT);
     }
@@ -2193,9 +2165,9 @@ Expression AddExpr() throws ParseException:
       {
         if (op == null) {
           op = new OperatorExpr();
-          op.setSourceLocation(getSourceLocation(token));
           op.addOperand(operand);
           op.setCurrentop(true);
+          addSourceLocation(op, token);
         }
         op.addOperator(opType);
     }
@@ -2229,9 +2201,9 @@ Expression MultExpr() throws ParseException:
       {
         if (op == null) {
           op = new OperatorExpr();
-          op.setSourceLocation(getSourceLocation(token));
           op.addOperand(operand);
           op.setCurrentop(true);
+          addSourceLocation(op, token);
         }
         op.addOperator(opType);
     }
@@ -2257,9 +2229,9 @@ Expression ExponentExpr() throws ParseException:
     {
         if (op == null) {
           op = new OperatorExpr();
-          op.setSourceLocation(getSourceLocation(token));
           op.addOperand(operand);
           op.setCurrentop(true);
+          addSourceLocation(op, token);
         }
         op.addOperator(OperatorType.CARET);
     }
@@ -2287,7 +2259,7 @@ Expression UnaryExpr() throws ParseException:
            exprType = "not_" + exprType;
         }
         uexpr = new UnaryExpr();
-        uexpr.setSourceLocation(getSourceLocation(token));
+        addSourceLocation(uexpr, token);
         try {
             uexpr.setExprType(exprType);
         } catch (CompilationException e){
@@ -2300,8 +2272,7 @@ Expression UnaryExpr() throws ParseException:
     {
        if (uexpr == null) {
          return expr;
-       }
-       else {
+       } else {
          uexpr.setExpr(expr);
          return uexpr;
        }
@@ -2332,8 +2303,7 @@ FieldAccessor FieldAccessor(Expression inputExpr) throws ParseException:
    <DOT> { startToken = token; } ident = Identifier()
     {
       FieldAccessor fa = new FieldAccessor(inputExpr, new Identifier(ident));
-      setSourceLocation(fa, startToken);
-      return fa;
+      return addSourceLocation(fa, startToken);
     }
 }
 
@@ -2363,8 +2333,7 @@ IndexAccessor IndexAccessor(Expression inputExpr) throws ParseException:
   <RIGHTBRACKET>
   {
     IndexAccessor ia = new IndexAccessor(inputExpr, expr);
-    setSourceLocation(ia, startToken);
-    return ia;
+    return addSourceLocation(ia, startToken);
   }
 }
 
@@ -2439,8 +2408,7 @@ Expression Literal() throws ParseException:
     }
   )
     {
-      setSourceLocation(lit, token);
-      return lit;
+      return addSourceLocation(lit, token);
     }
 }
 
@@ -2466,8 +2434,7 @@ VariableExpr VariableRef() throws ParseException:
        varExp.setIsNewVar(false);
        var.setValue(id);
      }
-     setSourceLocation(varExp, token);
-     return varExp;
+     return addSourceLocation(varExp, token);
     }
 }
 
@@ -2487,8 +2454,7 @@ VariableExpr Variable() throws ParseException:
      }
      varExp.setVar(var);
      var.setValue(id);
-     setSourceLocation(varExp, token);
-     return varExp;
+     return addSourceLocation(varExp, token);
     }
 }
 
@@ -2517,8 +2483,7 @@ ListConstructor OrderedListConstructor() throws ParseException:
   <RIGHTBRACKET>
   {
     ListConstructor expr = new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, exprList);
-    setSourceLocation(expr, startToken);
-    return expr;
+    return addSourceLocation(expr, startToken);
   }
 }
 
@@ -2533,8 +2498,7 @@ ListConstructor UnorderedListConstructor() throws ParseException:
   <RIGHTDBLBRACE>
   {
     ListConstructor expr = new ListConstructor(ListConstructor.Type.UNORDERED_LIST_CONSTRUCTOR, exprList);
-    setSourceLocation(expr, startToken);
-    return expr;
+    return addSourceLocation(expr, startToken);
   }
 }
 
@@ -2575,8 +2539,7 @@ RecordConstructor RecordConstructor() throws ParseException:
   <RIGHTBRACE>
   {
     RecordConstructor expr = new RecordConstructor(fbList);
-    setSourceLocation(expr, startToken);
-    return expr;
+    return addSourceLocation(expr, startToken);
   }
 }
 
@@ -2696,12 +2659,10 @@ Expression CaseExpr() throws ParseException:
    {
      if (conditionExpr == null) {
         LiteralExpr litExpr = new LiteralExpr(TrueLiteral.INSTANCE);
-        setSourceLocation(litExpr, startToken);
-        conditionExpr = litExpr;
+        conditionExpr = addSourceLocation(litExpr, startToken);
      }
      CaseExpression caseExpr = new CaseExpression(conditionExpr, whenExprs, thenExprs, elseExpr);
-     setSourceLocation(caseExpr, startToken);
-     return caseExpr;
+     return addSourceLocation(caseExpr, startToken);
    }
 }
 
@@ -2891,8 +2852,7 @@ SelectElement SelectElement() throws ParseException:
   (<RAW>|<ELEMENT>|<VALUE>) { startToken = token; } expr = Expression()
   {
     SelectElement selectElement = new SelectElement(expr);
-    setSourceLocation(selectElement, startToken);
-    return selectElement;
+    return addSourceLocation(selectElement, startToken);
   }
 }
 
@@ -2940,8 +2900,7 @@ FromClause FromClause() throws ParseException :
     (LOOKAHEAD(2) <COMMA> fromTerm = FromTerm() { fromTerms.add(fromTerm); } )*
   {
     FromClause fromClause = new FromClause(fromTerms);
-    setSourceLocation(fromClause, startToken);
-    return fromClause;
+    return addSourceLocation(fromClause, startToken);
   }
 }
 
@@ -2992,8 +2951,7 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
         rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
     JoinClause joinClause = new JoinClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
-    setSourceLocation(joinClause, startToken);
-    return joinClause;
+    return addSourceLocation(joinClause, startToken);
   }
 }
 
@@ -3011,8 +2969,7 @@ UnnestClause UnnestClause(JoinType joinType) throws ParseException :
       rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
     UnnestClause unnestClause = new UnnestClause(joinType, rightExpr, rightVar, posVar);
-    setSourceLocation(unnestClause, startToken);
-    return unnestClause;
+    return addSourceLocation(unnestClause, startToken);
   }
 }
 
@@ -3052,8 +3009,7 @@ WhereClause WhereClause() throws ParseException :
     <WHERE> { startToken = token; } whereExpr = Expression()
     {
       WhereClause wc = new WhereClause(whereExpr);
-      setSourceLocation(wc, startToken);
-      return wc;
+      return addSourceLocation(wc, startToken);
     }
 }
 
@@ -3107,8 +3063,7 @@ OrderbyClause OrderbyClause() throws ParseException :
     {
       oc.setModifierList(modifierList);
       oc.setOrderbyList(orderbyList);
-      setSourceLocation(oc, startToken);
-      return oc;
+      return addSourceLocation(oc, startToken);
     }
 }
 
@@ -3193,9 +3148,8 @@ GroupbyClause GroupbyClause()throws ParseException :
       gbc.setWithVarMap(new HashMap<Expression, VariableExpr>());
       gbc.setGroupVar(groupVar);
       gbc.setGroupFieldList(groupFieldList);
-      setSourceLocation(gbc, startToken);
       replaceCurrentScope(newScope);
-      return gbc;
+      return addSourceLocation(gbc, startToken);
     }
 }
 
@@ -3208,8 +3162,7 @@ HavingClause HavingClause() throws ParseException:
     <HAVING> { startToken = token; } filterExpr = Expression()
     {
        HavingClause havingClause = new HavingClause(filterExpr);
-       setSourceLocation(havingClause, startToken);
-       return havingClause;
+       return addSourceLocation(havingClause, startToken);
     }
 }
 
@@ -3225,9 +3178,8 @@ LimitClause LimitClause() throws ParseException:
     (<OFFSET> expr = Expression() { lc.setOffset(expr); })?
 
   {
-    setSourceLocation(lc, startToken);
     popForbiddenScope();
-    return lc;
+    return addSourceLocation(lc, startToken);
   }
 }
 
@@ -3264,9 +3216,8 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
      {
        qc.setSatisfiesExpr(satisfiesExpr);
        qc.setQuantifiedList(quantifiedList);
-       setSourceLocation(qc, startToken);
        removeCurrentScope();
-       return qc;
+       return addSourceLocation(qc, startToken);
      }
 }
 

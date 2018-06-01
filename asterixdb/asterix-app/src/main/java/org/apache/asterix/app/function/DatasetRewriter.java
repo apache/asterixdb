@@ -93,8 +93,8 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         String datasetName = datasetReference.second;
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
-                    "Could not find dataset " + datasetName + " in dataverse " + dataverseName);
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, unnest.getSourceLocation(),
+                    datasetName, dataverseName);
         }
         DataSourceId asid = new DataSourceId(dataverseName, datasetName);
         List<LogicalVariable> variables = new ArrayList<>();
