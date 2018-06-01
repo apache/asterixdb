@@ -18,33 +18,32 @@
  */
 package org.apache.hyracks.maven.license;
 
-public class Override {
+import java.util.List;
 
-    @SuppressWarnings("unused") // set by Maven plugin configuration
-    private String url;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    @SuppressWarnings("unused") // set by Maven plugin configuration
-    private String gav;
+public class NoticeSpec extends ArtifactSpec {
 
-    @SuppressWarnings("unused") // set by Maven plugin configuration
-    private String name;
-
-    @SuppressWarnings("unused") // set by Maven plugin configuration
-    private String noticeUrl;
-
-    public String getGav() {
-        return gav;
+    @SuppressWarnings("unused")
+    public NoticeSpec() {
+        // called by Maven configuration
     }
 
-    public String getUrl() {
-        return url;
+    @JsonCreator
+    public NoticeSpec(@JsonProperty("aliasUrls") List<String> aliasUrls, @JsonProperty("content") String content,
+            @JsonProperty("contentFile") String contentFile, @JsonProperty("url") String url) {
+        this.aliasUrls = aliasUrls;
+        this.content = content;
+        this.contentFile = contentFile;
+        this.url = url;
     }
 
-    public String getName() {
-        return name;
+    public NoticeSpec(String url) {
+        this.url = url;
     }
 
-    public String getNoticeUrl() {
-        return noticeUrl;
+    public String toString() {
+        return getUrl();
     }
 }

@@ -32,6 +32,7 @@ enum ProjectFlag {
     IGNORE_MISSING_EMBEDDED_LICENSE,
     IGNORE_MISSING_EMBEDDED_NOTICE,
     IGNORE_LICENSE_OVERRIDE,
+    IGNORE_NOTICE_OVERRIDE,
     ALTERNATE_LICENSE_FILE,
     ALTERNATE_NOTICE_FILE;
 
@@ -48,6 +49,7 @@ enum ProjectFlag {
             case IGNORE_MISSING_EMBEDDED_LICENSE:
             case IGNORE_MISSING_EMBEDDED_NOTICE:
             case IGNORE_LICENSE_OVERRIDE:
+            case IGNORE_NOTICE_OVERRIDE:
                 if (Stream.of(StringUtils.split(value, ",")).anyMatch(depObj.getVersion()::equals)) {
                     licenseMojo.getProjectFlags().put(Pair.of(toGav(depObj), this), Boolean.TRUE);
                 } else {

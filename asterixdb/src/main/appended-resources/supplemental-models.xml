@@ -162,6 +162,7 @@
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
         <license.ignoreMissingEmbeddedLicense>4.1.25.Final</license.ignoreMissingEmbeddedLicense>
         <license.ignoreMissingEmbeddedNotice>4.1.25.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.25.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
