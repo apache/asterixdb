@@ -147,7 +147,12 @@ public class GenerateFileMojo extends LicenseMojo {
             getLog().debug("Resolving content for " + artifact.getUrl() + " (" + artifact.getContentFile() + ")");
             File cFile = new File(artifact.getContentFile());
             if (!cFile.isAbsolute()) {
-                cFile = new File(licenseDirectory, artifact.getContentFile());
+                for (File directory : licenseDirectories) {
+                    cFile = new File(directory, artifact.getContentFile());
+                    if (cFile.exists()) {
+                        break;
+                    }
+                }
             }
             if (!cFile.exists()) {
                 if (!bestEffort) {

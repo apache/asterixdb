@@ -74,6 +74,9 @@ public abstract class LicenseMojo extends AbstractMojo {
     protected List<LicenseSpec> licenses = new ArrayList<>();
 
     @Parameter
+    protected List<NoticeSpec> notices = new ArrayList<>();
+
+    @Parameter
     protected Set<String> excludedScopes = new HashSet<>();
 
     @Parameter
@@ -106,7 +109,10 @@ public abstract class LicenseMojo extends AbstractMojo {
     @Parameter(required = true)
     private String location;
 
-    @Parameter(required = true)
+    @Parameter
+    protected List<File> licenseDirectories = new ArrayList<>();
+
+    @Parameter
     protected File licenseDirectory;
 
     @Parameter
@@ -122,6 +128,7 @@ public abstract class LicenseMojo extends AbstractMojo {
     private List<Pattern> excludePatterns;
 
     Map<String, LicenseSpec> urlToLicenseMap = new HashMap<>();
+    Map<String, NoticeSpec> urlToNoticeMap = new HashMap<>();
     Map<String, LicensedProjects> licenseMap = new TreeMap<>();
     private Map<Pair<String, ProjectFlag>, Object> projectFlags = new HashMap<>();
     Map<String, String> noticeOverrides = new HashMap<String, String>();
@@ -133,6 +140,9 @@ public abstract class LicenseMojo extends AbstractMojo {
     }
 
     protected void init() throws MojoExecutionException {
+        if (licenseDirectory != null) {
+            licenseDirectories.add(0, licenseDirectory);
+        }
         if (warningTouchFile != null) {
             warningTouchFile.getParentFile().mkdirs();
         }
@@ -140,7 +150,7 @@ public abstract class LicenseMojo extends AbstractMojo {
         excludedScopes.add("system");
         excludePatterns = compileExcludePatterns();
         supplementModels = SupplementalModelHelper.loadSupplements(getLog(), models);
-        buildUrlLicenseMap();
+        buildUrlMaps();
     }
 
     private void interceptLogs() {
@@ -321,13 +331,23 @@ public abstract class LicenseMojo extends AbstractMojo {
         }
     }
 
-    private void buildUrlLicenseMap() throws MojoExecutionException {
+    private void buildUrlMaps() throws MojoExecutionException {
         for (LicenseSpec license : licenses) {
             if (urlToLicenseMap.put(license.getUrl(), license) != null) {
                 throw new MojoExecutionException("Duplicate URL mapping: " + license.getUrl());
             }
             for (String alias : license.getAliasUrls()) {
                 if (urlToLicenseMap.put(alias, license) != null) {
+                    throw new MojoExecutionException("Duplicate URL mapping: " + alias);
+                }
+            }
+        }
+        for (NoticeSpec notice : notices) {
+            if (urlToNoticeMap.put(notice.getUrl(), notice) != null) {
+                throw new MojoExecutionException("Duplicate URL mapping: " + notice.getUrl());
+            }
+            for (String alias : notice.getAliasUrls()) {
+                if (urlToNoticeMap.put(alias, notice) != null) {
                     throw new MojoExecutionException("Duplicate URL mapping: " + alias);
                 }
             }
