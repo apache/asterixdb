@@ -26,7 +26,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -40,9 +41,10 @@ public abstract class AbstractValueComparisonEvaluator extends AbstractCompariso
     protected ISerializerDeserializer<ANull> nullSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
-    public AbstractValueComparisonEvaluator(IScalarEvaluator evalLeft, IScalarEvaluator evalRight,
-            SourceLocation sourceLoc) {
-        super(evalLeft, evalRight, sourceLoc);
+    public AbstractValueComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
+            IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext ctx, SourceLocation sourceLoc)
+            throws HyracksDataException {
+        super(evalLeftFactory, evalRightFactory, ctx, sourceLoc);
     }
 
     @Override

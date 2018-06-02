@@ -37,16 +37,18 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.exceptions.IncompatibleTypeException;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-import org.apache.hyracks.data.std.primitive.FloatPointable;
-import org.apache.hyracks.data.std.primitive.IntegerPointable;
+
+import static org.apache.asterix.om.types.ATypeTag.TINYINT;
 
 public class ComparisonHelper implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -81,21 +83,21 @@ public class ComparisonHelper implements Serializable {
         this.sourceLoc = sourceLoc;
     }
 
-    public int compare(ATypeTag typeTag1, ATypeTag typeTag2, IPointable arg1, IPointable arg2)
+    public int compare(ATypeTag typeTag1, ATypeTag typeTag2, IPointable arg1, IPointable arg2, Number obj1, Number obj2)
             throws HyracksDataException {
         switch (typeTag1) {
             case TINYINT:
-                return compareInt8WithArg(typeTag2, arg1, arg2);
+                return compareInt8WithArg(typeTag2, arg1, arg2, obj1, obj2);
             case SMALLINT:
-                return compareInt16WithArg(typeTag2, arg1, arg2);
+                return compareInt16WithArg(typeTag2, arg1, arg2, obj1, obj2);
             case INTEGER:
-                return compareInt32WithArg(typeTag2, arg1, arg2);
+                return compareInt32WithArg(typeTag2, arg1, arg2, obj1, obj2);
             case BIGINT:
-                return compareInt64WithArg(typeTag2, arg1, arg2);
+                return compareInt64WithArg(typeTag2, arg1, arg2, obj1, obj2);
             case FLOAT:
-                return compareFloatWithArg(typeTag2, arg1, arg2);
+                return compareFloatWithArg(typeTag2, arg1, arg2, obj1, obj2);
             case DOUBLE:
-                return compareDoubleWithArg(typeTag2, arg1, arg2);
+                return compareDoubleWithArg(typeTag2, arg1, arg2, obj1, obj2);
             case STRING:
                 return compareStringWithArg(typeTag2, arg1, arg2);
             case BOOLEAN:
@@ -103,6 +105,11 @@ public class ComparisonHelper implements Serializable {
             default:
                 return compareStrongTypedWithArg(typeTag1, typeTag2, arg1, arg2);
         }
+    }
+
+    public int compare(ATypeTag typeTag1, ATypeTag typeTag2, IPointable arg1, IPointable arg2)
+            throws HyracksDataException {
+        return compare(typeTag1, typeTag2, arg1, arg2, null, null);
     }
 
     private int compareStrongTypedWithArg(ATypeTag expectedTypeTag, ATypeTag actualTypeTag, IPointable arg1,
@@ -192,26 +199,27 @@ public class ComparisonHelper implements Serializable {
                 typeTag2.serialize());
     }
 
-    private int compareDoubleWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
+    private int compareDoubleWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2, Number obj1, Number obj2)
+            throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
         int rightOffset = arg2.getStartOffset();
 
-        double s = ADoubleSerializerDeserializer.getDouble(leftBytes, leftOffset);
+        double s = getOrDeserializeDouble(leftBytes, leftOffset, obj1);
         switch (typeTag2) {
             case TINYINT:
-                return compareDouble(s, AInt8SerializerDeserializer.getByte(rightBytes, rightOffset));
+                return compareDouble(s, getOrDeserializeTinyInt(rightBytes, rightOffset, obj2));
             case SMALLINT:
-                return compareDouble(s, AInt16SerializerDeserializer.getShort(rightBytes, rightOffset));
+                return compareDouble(s, getOrDeserializeSmallInt(rightBytes, rightOffset, obj2));
             case INTEGER:
-                return compareDouble(s, AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
+                return compareDouble(s, getOrDeserializeInt(rightBytes, rightOffset, obj2));
             case BIGINT:
-                return compareDouble(s, AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
+                return compareDouble(s, getOrDeserializeBigInt(rightBytes, rightOffset, obj2));
             case FLOAT:
-                return compareDouble(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset));
+                return compareDouble(s, getOrDeserializeFloat(rightBytes, rightOffset, obj2));
             case DOUBLE:
-                return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset));
+                return compareDouble(s, getOrDeserializeDouble(rightBytes, rightOffset, obj2));
             default: {
                 throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG,
                         typeTag2.serialize());
@@ -219,159 +227,163 @@ public class ComparisonHelper implements Serializable {
         }
     }
 
-    private int compareFloatWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
+    private int compareFloatWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2, Number obj1, Number obj2)
+            throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
         int rightOffset = arg2.getStartOffset();
 
-        float s = FloatPointable.getFloat(leftBytes, leftOffset);
+        float s = getOrDeserializeFloat(leftBytes, leftOffset, obj1);
         switch (typeTag2) {
             case TINYINT:
-                return compareFloat(s, AInt8SerializerDeserializer.getByte(rightBytes, rightOffset));
+                return compareFloat(s, getOrDeserializeTinyInt(rightBytes, rightOffset, obj2));
             case SMALLINT:
-                return compareFloat(s, AInt16SerializerDeserializer.getShort(rightBytes, rightOffset));
+                return compareFloat(s, getOrDeserializeSmallInt(rightBytes, rightOffset, obj2));
             case INTEGER:
-                return compareFloat(s, AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
+                return compareFloat(s, getOrDeserializeInt(rightBytes, rightOffset, obj2));
             case BIGINT:
-                return compareFloat(s, AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
+                return compareFloat(s, getOrDeserializeBigInt(rightBytes, rightOffset, obj2));
             case FLOAT:
-                return compareFloat(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset));
+                return compareFloat(s, getOrDeserializeFloat(rightBytes, rightOffset, obj2));
             case DOUBLE:
-                return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset));
+                return compareDouble(s, getOrDeserializeDouble(rightBytes, rightOffset, obj2));
             default:
                 throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_FLOAT_TYPE_TAG,
                         typeTag2.serialize());
         }
     }
 
-    private int compareInt64WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
+    private int compareInt64WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2, Number obj1, Number obj2)
+            throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
         int rightOffset = arg2.getStartOffset();
 
-        long s = AInt64SerializerDeserializer.getLong(leftBytes, leftOffset);
+        long s = getOrDeserializeBigInt(leftBytes, leftOffset, obj1);
         switch (typeTag2) {
             case TINYINT:
-                return compareLong(s, AInt8SerializerDeserializer.getByte(rightBytes, rightOffset));
+                return compareLong(s, getOrDeserializeTinyInt(rightBytes, rightOffset, obj2));
             case SMALLINT:
-                return compareLong(s, AInt16SerializerDeserializer.getShort(rightBytes, rightOffset));
+                return compareLong(s, getOrDeserializeSmallInt(rightBytes, rightOffset, obj2));
             case INTEGER:
-                return compareLong(s, AInt32SerializerDeserializer.getInt(rightBytes, rightOffset));
+                return compareLong(s, getOrDeserializeInt(rightBytes, rightOffset, obj2));
             case BIGINT:
-                return compareLong(s, AInt64SerializerDeserializer.getLong(rightBytes, rightOffset));
+                return compareLong(s, getOrDeserializeBigInt(rightBytes, rightOffset, obj2));
             case FLOAT:
-                return compareFloat(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset));
+                return compareFloat(s, getOrDeserializeFloat(rightBytes, rightOffset, obj2));
             case DOUBLE:
-                return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset));
+                return compareDouble(s, getOrDeserializeDouble(rightBytes, rightOffset, obj2));
             default:
                 throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_INT64_TYPE_TAG,
                         typeTag2.serialize());
         }
     }
 
-    private int compareInt32WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
+    private int compareInt32WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2, Number obj1, Number obj2)
+            throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
         int rightOffset = arg2.getStartOffset();
 
-        int s = IntegerPointable.getInteger(leftBytes, leftOffset);
+        int s = getOrDeserializeInt(leftBytes, leftOffset, obj1);
         switch (typeTag2) {
-            case TINYINT: {
-                byte v2 = AInt8SerializerDeserializer.getByte(rightBytes, rightOffset);
-                return compareInt(s, v2);
-            }
-            case SMALLINT: {
-                short v2 = AInt16SerializerDeserializer.getShort(rightBytes, rightOffset);
-                return compareInt(s, v2);
-            }
-            case INTEGER: {
-                int v2 = AInt32SerializerDeserializer.getInt(rightBytes, rightOffset);
-                return compareInt(s, v2);
-            }
-            case BIGINT: {
-                long v2 = AInt64SerializerDeserializer.getLong(rightBytes, rightOffset);
-                return compareLong(s, v2);
-            }
-            case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset);
-                return compareFloat(s, v2);
-            }
-            case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
+            case TINYINT:
+                return compareInt(s, getOrDeserializeTinyInt(rightBytes, rightOffset, obj2));
+            case SMALLINT:
+                return compareInt(s, getOrDeserializeSmallInt(rightBytes, rightOffset, obj2));
+            case INTEGER:
+                return compareInt(s, getOrDeserializeInt(rightBytes, rightOffset, obj2));
+            case BIGINT:
+                return compareLong(s, getOrDeserializeBigInt(rightBytes, rightOffset, obj2));
+            case FLOAT:
+                return compareFloat(s, getOrDeserializeFloat(rightBytes, rightOffset, obj2));
+            case DOUBLE:
+                return compareDouble(s, getOrDeserializeDouble(rightBytes, rightOffset, obj2));
             default:
                 throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_INT32_TYPE_TAG,
                         typeTag2.serialize());
         }
     }
 
-    private int compareInt16WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
+    private int compareInt16WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2, Number obj1, Number obj2)
+            throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftOffset = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
         int rightOffset = arg2.getStartOffset();
 
-        short s = AInt16SerializerDeserializer.getShort(leftBytes, leftOffset);
+        short s = getOrDeserializeSmallInt(leftBytes, leftOffset, obj1);
         switch (typeTag2) {
-            case TINYINT: {
-                byte v2 = AInt8SerializerDeserializer.getByte(rightBytes, rightOffset);
-                return compareShort(s, v2);
-            }
-            case SMALLINT: {
-                short v2 = AInt16SerializerDeserializer.getShort(rightBytes, rightOffset);
-                return compareShort(s, v2);
-            }
-            case INTEGER: {
-                int v2 = AInt32SerializerDeserializer.getInt(rightBytes, rightOffset);
-                return compareInt(s, v2);
-            }
-            case BIGINT: {
-                long v2 = AInt64SerializerDeserializer.getLong(rightBytes, rightOffset);
-                return compareLong(s, v2);
-            }
-            case FLOAT: {
-                float v2 = AFloatSerializerDeserializer.getFloat(rightBytes, rightOffset);
-                return compareFloat(s, v2);
-            }
-            case DOUBLE: {
-                double v2 = ADoubleSerializerDeserializer.getDouble(rightBytes, rightOffset);
-                return compareDouble(s, v2);
-            }
-            default: {
+            case TINYINT:
+                return compareShort(s, getOrDeserializeTinyInt(rightBytes, rightOffset, obj2));
+            case SMALLINT:
+                return compareShort(s, getOrDeserializeSmallInt(rightBytes, rightOffset, obj2));
+            case INTEGER:
+                return compareInt(s, getOrDeserializeInt(rightBytes, rightOffset, obj2));
+            case BIGINT:
+                return compareLong(s, getOrDeserializeBigInt(rightBytes, rightOffset, obj2));
+            case FLOAT:
+                return compareFloat(s, getOrDeserializeFloat(rightBytes, rightOffset, obj2));
+            case DOUBLE:
+                return compareDouble(s, getOrDeserializeDouble(rightBytes, rightOffset, obj2));
+            default:
                 throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_INT16_TYPE_TAG,
                         typeTag2.serialize());
-            }
         }
     }
 
-    private int compareInt8WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2) throws HyracksDataException {
+    private int compareInt8WithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2, Number obj1, Number obj2)
+            throws HyracksDataException {
         byte[] leftBytes = arg1.getByteArray();
         int leftStart = arg1.getStartOffset();
         byte[] rightBytes = arg2.getByteArray();
         int rightStart = arg2.getStartOffset();
 
-        byte s = AInt8SerializerDeserializer.getByte(leftBytes, leftStart);
+        byte s = getOrDeserializeTinyInt(leftBytes, leftStart, obj1);
         switch (typeTag2) {
             case TINYINT:
-                return compareByte(s, AInt8SerializerDeserializer.getByte(rightBytes, rightStart));
+                return compareByte(s, getOrDeserializeTinyInt(rightBytes, rightStart, obj2));
             case SMALLINT:
-                return compareShort(s, AInt16SerializerDeserializer.getShort(rightBytes, rightStart));
+                return compareShort(s, getOrDeserializeSmallInt(rightBytes, rightStart, obj2));
             case INTEGER:
-                return compareInt(s, AInt32SerializerDeserializer.getInt(rightBytes, rightStart));
+                return compareInt(s, getOrDeserializeInt(rightBytes, rightStart, obj2));
             case BIGINT:
-                return compareLong(s, AInt64SerializerDeserializer.getLong(rightBytes, rightStart));
+                return compareLong(s, getOrDeserializeBigInt(rightBytes, rightStart, obj2));
             case FLOAT:
-                return compareFloat(s, AFloatSerializerDeserializer.getFloat(rightBytes, rightStart));
+                return compareFloat(s, getOrDeserializeFloat(rightBytes, rightStart, obj2));
             case DOUBLE:
-                return compareDouble(s, ADoubleSerializerDeserializer.getDouble(rightBytes, rightStart));
+                return compareDouble(s, getOrDeserializeDouble(rightBytes, rightStart, obj2));
             default:
                 throw new IncompatibleTypeException(sourceLoc, COMPARISON, ATypeTag.SERIALIZED_INT8_TYPE_TAG,
                         typeTag2.serialize());
         }
+    }
+
+    private final byte getOrDeserializeTinyInt(byte[] bytes, int offset, Number obj) {
+        return obj == null ? AInt8SerializerDeserializer.getByte(bytes, offset) : obj.byteValue();
+    }
+
+    private final short getOrDeserializeSmallInt(byte[] bytes, int offset, Number obj) {
+        return obj == null ? AInt16SerializerDeserializer.getShort(bytes, offset) : obj.shortValue();
+    }
+
+    private final int getOrDeserializeInt(byte[] bytes, int offset, Number obj) {
+        return obj == null ? AInt32SerializerDeserializer.getInt(bytes, offset) : obj.intValue();
+    }
+
+    private final long getOrDeserializeBigInt(byte[] bytes, int offset, Number obj) {
+        return obj == null ? AInt64SerializerDeserializer.getLong(bytes, offset) : obj.longValue();
+    }
+
+    private final float getOrDeserializeFloat(byte[] bytes, int offset, Number obj) {
+        return obj == null ? AFloatSerializerDeserializer.getFloat(bytes, offset) : obj.floatValue();
+    }
+
+    private final double getOrDeserializeDouble(byte[] bytes, int offset, Number obj) {
+        return obj == null ? ADoubleSerializerDeserializer.getDouble(bytes, offset) : obj.doubleValue();
     }
 
     private final int compareByte(int v1, int v2) {
@@ -415,23 +427,41 @@ public class ComparisonHelper implements Serializable {
     }
 
     private final int compareFloat(float v1, float v2) {
-        if (v1 == v2) {
-            return 0;
-        } else if (v1 < v2) {
-            return -1;
-        } else {
-            return 1;
-        }
+        return Float.compare(v1, v2);
     }
 
     private final int compareDouble(double v1, double v2) {
-        if (v1 == v2) {
-            return 0;
-        } else if (v1 < v2) {
-            return -1;
-        } else {
-            return 1;
-        }
+        return Double.compare(v1, v2);
     }
 
+    /**
+     * When field value falls into the primitive type groups, we consider to cache its value instead of deserialize it
+     * every time.
+     *
+     * @param bytes
+     * @return primitive value as Number
+     */
+    public Number getNumberValue(byte[] bytes) {
+        ATypeTag aTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[0]);
+        int offset = 1;
+        if (aTypeTag == null) {
+            return null;
+        }
+        switch (aTypeTag) {
+            case TINYINT:
+                return AInt8SerializerDeserializer.getByte(bytes, offset);
+            case SMALLINT:
+                return AInt16SerializerDeserializer.getShort(bytes, offset);
+            case INTEGER:
+                return AInt32SerializerDeserializer.getInt(bytes, offset);
+            case BIGINT:
+                return AInt64SerializerDeserializer.getLong(bytes, offset);
+            case FLOAT:
+                return AFloatSerializerDeserializer.getFloat(bytes, offset);
+            case DOUBLE:
+                return ADoubleSerializerDeserializer.getDouble(bytes, offset);
+            default:
+                return null;
+        }
+    }
 }

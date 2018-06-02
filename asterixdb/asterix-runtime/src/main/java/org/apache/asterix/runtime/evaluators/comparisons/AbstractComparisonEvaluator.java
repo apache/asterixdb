@@ -24,6 +24,9 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.ConstantEvalFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -46,13 +49,25 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     protected final IScalarEvaluator evalRight;
     protected final SourceLocation sourceLoc;
     private final ComparisonHelper ch;
+    private Number leftValue;
+    private Number rightValue;
 
-    public AbstractComparisonEvaluator(IScalarEvaluator evalLeft, IScalarEvaluator evalRight,
-            SourceLocation sourceLoc) {
-        this.evalLeft = evalLeft;
-        this.evalRight = evalRight;
+    public AbstractComparisonEvaluator(IScalarEvaluatorFactory evalLeftFactory,
+            IScalarEvaluatorFactory evalRightFactory, IHyracksTaskContext ctx, SourceLocation sourceLoc)
+            throws HyracksDataException {
+        this.evalLeft = evalLeftFactory.createScalarEvaluator(ctx);
+        this.evalRight = evalRightFactory.createScalarEvaluator(ctx);
         this.sourceLoc = sourceLoc;
         ch = new ComparisonHelper(sourceLoc);
+        leftValue = getValueOfConstantEval(evalLeftFactory);
+        rightValue = getValueOfConstantEval(evalRightFactory);
+    }
+
+    private Number getValueOfConstantEval(IScalarEvaluatorFactory factory) throws HyracksDataException {
+        if (factory instanceof ConstantEvalFactory) {
+            return ch.getNumberValue(((ConstantEvalFactory) factory).getValue());
+        }
+        return null;
     }
 
     @Override
@@ -79,7 +94,8 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
     }
 
     int compare() throws HyracksDataException {
-        return ch.compare(EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag()),
-                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argRight.getTag()), outLeft, outRight);
+        ATypeTag leftTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argLeft.getTag());
+        ATypeTag rightTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(argRight.getTag());
+        return ch.compare(leftTypeTag, rightTypeTag, outLeft, outRight, leftValue, rightValue);
     }
 }

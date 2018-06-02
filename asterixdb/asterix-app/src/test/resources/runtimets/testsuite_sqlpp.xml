@@ -1006,6 +1006,11 @@
   </test-group>
   <test-group name="comparison">
     <test-case FilePath="comparison">
+      <compilation-unit name="secondary_idx_lookup">
+        <output-dir compare="Text">secondary_idx_lookup</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="year_month_duration_order">
         <output-dir compare="Text">year_month_duration_order</output-dir>
       </compilation-unit>

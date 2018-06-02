@@ -67,9 +67,9 @@ public class ExceptionIT {
         while (argEvalFactoryIterator.hasNext()) {
             IScalarEvaluatorFactory evalFactory = funcDesc.createEvaluatorFactory(argEvalFactoryIterator.next());
             IHyracksTaskContext ctx = mock(IHyracksTaskContext.class);
-            IScalarEvaluator evaluator = evalFactory.createScalarEvaluator(ctx);
-            IPointable resultPointable = new VoidPointable();
             try {
+                IScalarEvaluator evaluator = evalFactory.createScalarEvaluator(ctx);
+                IPointable resultPointable = new VoidPointable();
                 evaluator.evaluate(null, resultPointable);
             } catch (Throwable e) {
                 String msg = e.getMessage();

@@ -55,8 +55,7 @@ public class NegInfIfEqualsDescriptor extends AbstractScalarFunctionDynamicDescr
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractIfEqualsEvaluator(args[0].createScalarEvaluator(ctx),
-                        args[1].createScalarEvaluator(ctx), sourceLoc) {
+                return new AbstractIfEqualsEvaluator(args[0], args[1], ctx, sourceLoc) {
 
                     final AMutableDouble equalsResult = new AMutableDouble(Double.NEGATIVE_INFINITY);
 

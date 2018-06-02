@@ -34,6 +34,10 @@ public class ConstantEvalFactory implements IScalarEvaluatorFactory {
         this.value = value;
     }
 
+    public byte[] getValue() {
+        return value;
+    }
+
     @Override
     public String toString() {
         return "Constant";
