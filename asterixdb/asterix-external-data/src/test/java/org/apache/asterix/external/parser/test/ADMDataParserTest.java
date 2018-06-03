@@ -24,10 +24,13 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.external.parser.ADMDataParser;
+import org.apache.asterix.external.parser.AbstractDataParser;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AGeometry;
 import org.apache.asterix.om.base.AInt32;
@@ -45,12 +48,10 @@ import org.junit.Test;
 
 import com.esri.core.geometry.ogc.OGCPoint;
 
-import junit.extensions.PA;
-
 public class ADMDataParserTest {
 
     @Test
-    public void test() throws IOException {
+    public void test() throws IOException, NoSuchMethodException, SecurityException, NoSuchFieldException {
         char[][] dates = toChars(
                 new String[] { "-9537-08-04", "9656-06-03", "-9537-04-04", "9656-06-04", "-9537-10-04", "9626-09-05" });
         AMutableDate[] parsedDates =
@@ -71,6 +72,27 @@ public class ADMDataParserTest {
                         new AMutableDateTime(-45286270768513L), new AMutableDateTime(151729886421653L),
                         new AMutableDateTime(5047449515758L), new AMutableDateTime(210721439419691L) };
 
+        Method parseDateMethod = AbstractDataParser.class.getDeclaredMethod("parseDate", char[].class, int.class,
+                int.class, DataOutput.class);
+        parseDateMethod.setAccessible(true);
+
+        Field aDateField = AbstractDataParser.class.getDeclaredField("aDate");
+        aDateField.setAccessible(true);
+
+        Method parseTimeMethod = AbstractDataParser.class.getDeclaredMethod("parseTime", char[].class, int.class,
+                int.class, DataOutput.class);
+        parseTimeMethod.setAccessible(true);
+
+        Field aTimeField = AbstractDataParser.class.getDeclaredField("aTime");
+        aTimeField.setAccessible(true);
+
+        Method parseDateTimeMethod = AbstractDataParser.class.getDeclaredMethod("parseDateTime", char[].class,
+                int.class, int.class, DataOutput.class);
+        parseDateTimeMethod.setAccessible(true);
+
+        Field aDateTimeField = AbstractDataParser.class.getDeclaredField("aDateTime");
+        aDateTimeField.setAccessible(true);
+
         Thread[] threads = new Thread[16];
         AtomicInteger errorCount = new AtomicInteger(0);
         for (int i = 0; i < threads.length; ++i) {
@@ -86,25 +108,22 @@ public class ADMDataParserTest {
                         while (round++ < 10000) {
                             // Test parseDate.
                             for (int index = 0; index < dates.length; ++index) {
-                                PA.invokeMethod(parser, "parseDate(char[], int, int, java.io.DataOutput)", dates[index],
-                                        0, dates[index].length, dos);
-                                AMutableDate aDate = (AMutableDate) PA.getValue(parser, "aDate");
+                                parseDateMethod.invoke(parser, dates[index], 0, dates[index].length, dos);
+                                AMutableDate aDate = (AMutableDate) aDateField.get(parser);
                                 Assert.assertTrue(aDate.equals(parsedDates[index]));
                             }
 
                             // Tests parseTime.
                             for (int index = 0; index < times.length; ++index) {
-                                PA.invokeMethod(parser, "parseTime(char[], int, int, java.io.DataOutput)", times[index],
-                                        0, times[index].length, dos);
-                                AMutableTime aTime = (AMutableTime) PA.getValue(parser, "aTime");
+                                parseTimeMethod.invoke(parser, times[index], 0, times[index].length, dos);
+                                AMutableTime aTime = (AMutableTime) aTimeField.get(parser);
                                 Assert.assertTrue(aTime.equals(parsedTimes[index]));
                             }
 
                             // Tests parseDateTime.
                             for (int index = 0; index < dateTimes.length; ++index) {
-                                PA.invokeMethod(parser, "parseDateTime(char[], int, int, java.io.DataOutput)",
-                                        dateTimes[index], 0, dateTimes[index].length, dos);
-                                AMutableDateTime aDateTime = (AMutableDateTime) PA.getValue(parser, "aDateTime");
+                                parseDateTimeMethod.invoke(parser, dateTimes[index], 0, dateTimes[index].length, dos);
+                                AMutableDateTime aDateTime = (AMutableDateTime) aDateTimeField.get(parser);
                                 Assert.assertTrue(aDateTime.equals(parsedDateTimes[index]));
                             }
                         }
