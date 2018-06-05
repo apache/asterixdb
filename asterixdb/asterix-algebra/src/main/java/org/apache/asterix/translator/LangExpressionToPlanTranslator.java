@@ -610,18 +610,26 @@ class LangExpressionToPlanTranslator
         }
         SourceLocation sourceLoc = compiledInsert.getSourceLocation();
 
+        //Create an assign operator that makes the variable used by the return expression
+        LogicalVariable insertedVar = context.newVar();
+        AssignOperator insertedVarAssignOperator =
+                new AssignOperator(insertedVar, new MutableObject<>(insertOp.getPayloadExpression().getValue()));
+        insertedVarAssignOperator.getInputs().add(insertOp.getInputs().get(0));
+        insertedVarAssignOperator.setSourceLocation(sourceLoc);
+        insertOp.getInputs().set(0, new MutableObject<>(insertedVarAssignOperator));
+
         // Makes the id of the insert var point to the record variable.
         context.newVarFromExpression(compiledInsert.getVar());
-        context.setVar(compiledInsert.getVar(),
-                ((VariableReferenceExpression) insertOp.getPayloadExpression().getValue()).getVariableReference());
+        context.setVar(compiledInsert.getVar(), insertedVar);
+
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p =
                 langExprToAlgExpression(returnExpression, new MutableObject<>(inputOperator));
 
-        // Adds an assign operator for the returning expression.
+        // Adds an assign operator for the result of the returning expression.
         LogicalVariable resultVar = context.newVar();
-        AssignOperator assignOperator = new AssignOperator(resultVar, new MutableObject<>(p.first));
-        assignOperator.getInputs().add(p.second);
-        assignOperator.setSourceLocation(sourceLoc);
+        AssignOperator createResultAssignOperator = new AssignOperator(resultVar, new MutableObject<>(p.first));
+        createResultAssignOperator.getInputs().add(p.second);
+        createResultAssignOperator.setSourceLocation(sourceLoc);
 
         // Adds a distribute result operator.
         List<Mutable<ILogicalExpression>> expressions = new ArrayList<>();
@@ -629,7 +637,7 @@ class LangExpressionToPlanTranslator
         ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId());
         ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
         DistributeResultOperator distResultOperator = new DistributeResultOperator(expressions, sink);
-        distResultOperator.getInputs().add(new MutableObject<>(assignOperator));
+        distResultOperator.getInputs().add(new MutableObject<>(createResultAssignOperator));
 
         distResultOperator.setSourceLocation(sourceLoc);
         return distResultOperator;

@@ -1953,6 +1953,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="insert-returning-fieldname-qualified">
+        <output-dir compare="Text">insert-returning-fieldname</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="insert-returning-fieldname-implicit">
         <output-dir compare="Text">insert-returning-fieldname</output-dir>
         <expected-error>Need an alias for the enclosed expression</expected-error>
