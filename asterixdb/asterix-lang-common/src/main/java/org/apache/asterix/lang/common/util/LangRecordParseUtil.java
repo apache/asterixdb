@@ -213,6 +213,8 @@ public class LangRecordParseUtil {
                 return aOrderedListToString((AOrderedList) aObj);
             case STRING:
                 return ((AString) aObj).getStringValue();
+            case BOOLEAN:
+                return ((ABoolean) aObj).getBoolean().toString();
             default:
                 throw new AlgebricksException("value of type " + aObj.getType() + " is not supported yet");
         }

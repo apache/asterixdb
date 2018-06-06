@@ -66,11 +66,11 @@ public class EnsureAllCcTasksCompleted implements Runnable {
                 LOGGER.error("{} tasks associated with CC {} failed to complete after {}ms. Giving up",
                         runningTasks.size(), ccId, TIMEOUT);
                 logPendingTasks();
-                ExitUtil.halt(ExitUtil.NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS);
+                ExitUtil.halt(ExitUtil.EC_NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS);
             }
         } catch (Throwable th) {
             LOGGER.error("Failed to abort all previous tasks associated with CC {}", ccId, th);
-            ExitUtil.halt(ExitUtil.NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS);
+            ExitUtil.halt(ExitUtil.EC_NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS);
         }
     }
 

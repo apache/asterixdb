@@ -20,7 +20,7 @@ package org.apache.asterix.active;
 
 public class NoRetryPolicyFactory implements IRetryPolicyFactory {
     public static final NoRetryPolicyFactory INSTANCE = new NoRetryPolicyFactory();
-    private static final IRetryPolicy policy = () -> false;
+    private static final IRetryPolicy policy = failure -> false;
 
     private NoRetryPolicyFactory() {
     }

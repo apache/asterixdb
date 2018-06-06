@@ -93,6 +93,7 @@ public class RecoveryTask {
                 synchronized (listener) {
                     if (!cancelRecovery) {
                         listener.setState(ActivityState.PERMANENTLY_FAILED);
+                        listener.setRunning(metadataProvider, false);
                     }
                 }
             } else {
@@ -112,7 +113,7 @@ public class RecoveryTask {
             return null;
         }
         LOGGER.log(level, "calling the policy");
-        while (policy.retry()) {
+        while (policy.retry(failure)) {
             synchronized (listener) {
                 if (cancelRecovery) {
                     return null;
@@ -170,7 +171,9 @@ public class RecoveryTask {
                     return null;
                 }
                 if (listener.getState() == ActivityState.TEMPORARILY_FAILED) {
+                    LOGGER.warn("Recovery for {} permanently failed", listener.getEntityId());
                     listener.setState(ActivityState.PERMANENTLY_FAILED);
+                    listener.setRunning(metadataProvider, false);
                 }
                 listener.notifyAll();
             }

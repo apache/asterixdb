@@ -27,7 +27,7 @@ public class InfiniteRetryPolicy implements IRetryPolicy {
     }
 
     @Override
-    public boolean retry() {
+    public boolean retry(Throwable failure) {
         synchronized (listener) {
             try {
                 listener.wait(5000); //NOSONAR this method is being called in a while loop

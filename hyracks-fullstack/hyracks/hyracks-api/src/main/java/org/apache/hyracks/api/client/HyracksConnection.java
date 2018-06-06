@@ -84,8 +84,8 @@ public final class HyracksConnection implements IHyracksClientConnection {
 
     private volatile long reqId = 0L;
 
-    private final ExecutorService uninterruptibleExecutor = Executors.newFixedThreadPool(2,
-            r -> new Thread(r, "HyracksConnection Uninterrubtible thread: " + r.getClass().getSimpleName()));
+    private final ExecutorService uninterruptibleExecutor =
+            Executors.newFixedThreadPool(2, r -> new Thread(r, "HyracksConnection Uninterrubtible thread: "));
 
     private final BlockingQueue<UnInterruptibleRequest<?>> uninterruptibles = new ArrayBlockingQueue<>(1);
 
@@ -367,6 +367,11 @@ public final class HyracksConnection implements IHyracksClientConnection {
             return null;
         }
 
+        @Override
+        public String toString() {
+            return "CancelJobRequest: " + jobId.toString();
+        }
+
     }
 
     private class StartDeployedJobRequest extends UnInterruptibleRequest<JobId> {
@@ -407,24 +412,35 @@ public final class HyracksConnection implements IHyracksClientConnection {
             }
         }
 
+        @Override
+        public String toString() {
+            return "StartJobRequest";
+        }
+
     }
 
     private class UninterrubtileRequestHandler implements Runnable {
         @SuppressWarnings({ "squid:S2189", "squid:S2142" })
         @Override
         public void run() {
-            while (true) {
-                try {
-                    UnInterruptibleRequest<?> next = uninterruptibles.take();
-                    reqId++;
-                    running = true;
-                    next.handle();
-                } catch (InterruptedException e) {
-                    LOGGER.log(Level.WARN, "Ignoring interrupt. This thread should never be interrupted.");
-                    continue;
-                } finally {
-                    running = false;
+            String nameBefore = Thread.currentThread().getName();
+            Thread.currentThread().setName(nameBefore + getClass().getSimpleName());
+            try {
+                while (true) {
+                    try {
+                        UnInterruptibleRequest<?> current = uninterruptibles.take();
+                        reqId++;
+                        running = true;
+                        current.handle();
+                    } catch (InterruptedException e) {
+                        LOGGER.log(Level.WARN, "Ignoring interrupt. This thread should never be interrupted.");
+                        continue;
+                    } finally {
+                        running = false;
+                    }
                 }
+            } finally {
+                Thread.currentThread().setName(nameBefore);
             }
         }
     }
@@ -433,25 +449,31 @@ public final class HyracksConnection implements IHyracksClientConnection {
         @Override
         @SuppressWarnings({ "squid:S2189", "squid:S2142" })
         public void run() {
-            long currentReqId = 0L;
-            long currentTime = System.nanoTime();
-            while (true) {
-                try {
-                    TimeUnit.MINUTES.sleep(1);
-                } catch (InterruptedException e) {
-                    LOGGER.log(Level.WARN, "Ignoring interrupt. This thread should never be interrupted.");
-                    continue;
-                }
-                if (running) {
-                    if (reqId == currentReqId) {
-                        if (TimeUnit.NANOSECONDS.toMinutes(System.nanoTime() - currentTime) > 0) {
-                            ExitUtil.halt(ExitUtil.EC_FAILED_TO_PROCESS_UN_INTERRUPTIBLE_REQUEST);
+            String nameBefore = Thread.currentThread().getName();
+            Thread.currentThread().setName(nameBefore + getClass().getSimpleName());
+            try {
+                long currentReqId = 0L;
+                long currentTime = System.nanoTime();
+                while (true) {
+                    try {
+                        TimeUnit.MINUTES.sleep(1);
+                    } catch (InterruptedException e) {
+                        LOGGER.log(Level.WARN, "Ignoring interrupt. This thread should never be interrupted.");
+                        continue;
+                    }
+                    if (running) {
+                        if (reqId == currentReqId) {
+                            if (TimeUnit.NANOSECONDS.toMinutes(System.nanoTime() - currentTime) > 0) {
+                                ExitUtil.halt(ExitUtil.EC_FAILED_TO_PROCESS_UN_INTERRUPTIBLE_REQUEST);
+                            }
+                        } else {
+                            currentReqId = reqId;
+                            currentTime = System.nanoTime();
                         }
-                    } else {
-                        currentReqId = reqId;
-                        currentTime = System.nanoTime();
                     }
                 }
+            } finally {
+                Thread.currentThread().setName(nameBefore);
             }
         }
     }

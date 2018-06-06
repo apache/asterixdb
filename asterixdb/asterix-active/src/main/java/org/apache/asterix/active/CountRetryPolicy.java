@@ -28,7 +28,7 @@ public class CountRetryPolicy implements IRetryPolicy {
     }
 
     @Override
-    public boolean retry() {
+    public boolean retry(Throwable failure) {
         if (attempted < count) {
             attempted++;
             return true;

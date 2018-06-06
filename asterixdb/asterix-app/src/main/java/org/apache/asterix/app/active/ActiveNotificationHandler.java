@@ -207,9 +207,9 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     }
 
     @Override
-    public synchronized void recover() {
+    public void recover() {
         LOGGER.log(level, "Starting active recovery");
-        for (IActiveEntityEventsListener listener : entityEventListeners.values()) {
+        for (IActiveEntityEventsListener listener : getEventListeners()) {
             synchronized (listener) {
                 LOGGER.log(level, "Entity " + listener.getEntityId() + " is " + listener.getStats());
                 listener.notifyAll();

@@ -21,7 +21,9 @@ package org.apache.asterix.active;
 @FunctionalInterface
 public interface IRetryPolicy {
     /**
+     * @param failure
+     *            the cause of the active entity failure
      * @return true if one more attempt should be done
      */
-    boolean retry();
+    boolean retry(Throwable failure);
 }
