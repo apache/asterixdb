@@ -5,20 +5,20 @@
         -- STREAM_PROJECT  |PARTITIONED|
           -- STREAM_SELECT  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- PRE_CLUSTERED_GROUP_BY[$$58]  |PARTITIONED|
+              -- PRE_CLUSTERED_GROUP_BY[$$62]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- STREAM_SELECT  |LOCAL|
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                       }
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- STABLE_SORT [$$58(ASC)]  |PARTITIONED|
+                  -- STABLE_SORT [$$62(ASC)]  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- HYBRID_HASH_JOIN [$$58][$#4]  |PARTITIONED|
+                          -- HYBRID_HASH_JOIN [$$62][$#4]  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- PRE_CLUSTERED_GROUP_BY[$$56]  |PARTITIONED|
+                              -- PRE_CLUSTERED_GROUP_BY[$$60]  |PARTITIONED|
                                       {
                                         -- AGGREGATE  |LOCAL|
                                           -- STREAM_SELECT  |LOCAL|
@@ -27,22 +27,22 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- HYBRID_HASH_JOIN [$$56][$#3]  |PARTITIONED|
+                                      -- HYBRID_HASH_JOIN [$$60][$#3]  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- PRE_CLUSTERED_GROUP_BY[$$54]  |PARTITIONED|
+                                          -- PRE_CLUSTERED_GROUP_BY[$$58]  |PARTITIONED|
                                                   {
                                                     -- AGGREGATE  |LOCAL|
                                                       -- STREAM_SELECT  |LOCAL|
                                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                   }
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- STABLE_SORT [$$54(ASC)]  |PARTITIONED|
+                                              -- STABLE_SORT [$$58(ASC)]  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- HYBRID_HASH_JOIN [$$54][$#2]  |PARTITIONED|
+                                                      -- HYBRID_HASH_JOIN [$$58][$#2]  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          -- PRE_CLUSTERED_GROUP_BY[$$47]  |PARTITIONED|
+                                                          -- PRE_CLUSTERED_GROUP_BY[$$51]  |PARTITIONED|
                                                                   {
                                                                     -- AGGREGATE  |LOCAL|
                                                                       -- STREAM_SELECT  |LOCAL|
@@ -51,7 +51,7 @@
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                               -- STREAM_PROJECT  |PARTITIONED|
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  -- HYBRID_HASH_JOIN [$$47][$#1]  |PARTITIONED|
+                                                                  -- HYBRID_HASH_JOIN [$$51][$#1]  |PARTITIONED|
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -8552,6 +8552,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="function">
+    <test-case FilePath="function">
+      <compilation-unit name="issue-2394">
+        <output-dir compare="Text">issue-2394</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="feeds">
     <test-case FilePath="feeds">
       <compilation-unit name="feeds_07">

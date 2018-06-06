@@ -1,0 +1,58 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use Coffee;
+upsert into Coffee
+([
+{"id":"001", "location":point("-117.523867, 33.85216")},
+{"id":"002", "location":point("-122.37382985, 47.67917392")},
+{"id":"003", "location":point("-122.00795969, 37.40427696")},
+{"id":"004", "location":point("-122.00794969, 37.40427596")}
+]);
+
+upsert into Followers
+([
+{"user_id":"userId@Coffee", "twitter_id": "988455822727393280", "followers":["988455822727393281","988455822727393282", "0004", "0005", "0006", "0007", "0008"]}
+]);
+
+upsert into Tweets([
+{ "id": 999403843673718784, "user":
+{ "id": 988455822727393280, "id_str": "988455822727393280", "screen_name": "TweetUser" },
+"timestamp_ms": "1527111419014",
+ "place": { "country_code": "US", "country": "United States", "full_name": "Riverside, CA",
+ "bounding_box":
+ { "coordinates": [ [ [ -117.523867, 33.85216 ], [ -117.523867, 34.019484 ], [ -117.271365, 34.019484 ], [ -117.271365, 33.85216 ] ] ]
+ } } },
+
+ { "id": 999403845, "user":
+{ "id": 988455822727393281, "id_str": "988455822727393281", "screen_name": "TweetUser" },
+"timestamp_ms": "1527111419014",
+ "place": { "country_code": "US", "country": "United States", "full_name": "Riverside, CA",
+ "bounding_box":
+ { "coordinates": [ [ [ -117.523867, 33.85216 ], [ -117.523867, 34.019484 ], [ -117.271365, 34.019484 ], [ -117.271365, 33.85216 ] ] ]
+ } } },
+
+  { "id": 999403846, "user":
+{ "id": 988455822727393282, "id_str": "988455822727393282", "screen_name": "TweetUser" },
+"timestamp_ms": "1527111419014",
+ "place": { "country_code": "US", "country": "United States", "full_name": "Riverside, CA",
+ "bounding_box":
+ { "coordinates": [ [ [ -117.523867, 33.85216 ], [ -117.523867, 34.019484 ], [ -117.271365, 34.019484 ], [ -117.271365, 33.85216 ] ] ]
+ } } }
+]);

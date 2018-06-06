@@ -77,7 +77,7 @@ class AqlQueryRewriter implements IQueryRewriter {
         }
         inlineDeclaredUdfs();
         rewriteFunctionName();
-        topStatement.setVarCounter(context.getVarCounter());
+        topStatement.setVarCounter(context.getVarCounter().get());
     }
 
     private void wrapInLets() {

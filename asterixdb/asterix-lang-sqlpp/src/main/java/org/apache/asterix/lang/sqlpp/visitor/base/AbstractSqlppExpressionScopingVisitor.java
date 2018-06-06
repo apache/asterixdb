@@ -78,7 +78,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
      */
     public AbstractSqlppExpressionScopingVisitor(LangRewritingContext context, List<VarIdentifier> externalVars) {
         this.context = context;
-        this.scopeChecker.setVarCounter(new Counter(context.getVarCounter()));
+        this.scopeChecker.setVarCounter(context.getVarCounter());
         if (externalVars != null) {
             for (VarIdentifier paramVar : externalVars) {
                 scopeChecker.getCurrentScope().addSymbolToScope(paramVar);
@@ -214,7 +214,6 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     public Expression visit(Query q, ILangExpression arg) throws CompilationException {
         q.setBody(visit(q.getBody(), q));
         q.setVarCounter(scopeChecker.getVarCounter());
-        context.setVarCounter(scopeChecker.getVarCounter());
         return null;
     }
 

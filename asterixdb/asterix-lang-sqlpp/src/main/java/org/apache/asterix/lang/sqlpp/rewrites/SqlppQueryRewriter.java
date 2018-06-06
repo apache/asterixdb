@@ -139,7 +139,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
         rewriteDistinctAggregations();
 
         // Sets the var counter of the query.
-        topStatement.setVarCounter(context.getVarCounter());
+        topStatement.setVarCounter(context.getVarCounter().get());
     }
 
     protected void rewriteGroupByAggregationSugar() throws CompilationException {
