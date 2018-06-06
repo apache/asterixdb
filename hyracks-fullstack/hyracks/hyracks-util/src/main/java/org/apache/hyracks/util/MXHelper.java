@@ -100,4 +100,13 @@ public class MXHelper {
         }
     }
 
+    public static String getBootClassPath() {
+        try {
+            return runtimeMXBean.getBootClassPath();
+        } catch (UnsupportedOperationException e) {
+            // boot classpath is not supported in Java 9 and later
+            LOGGER.debug("ignoring exception calling RuntimeMXBean.getBootClassPath; returning null", e);
+            return null;
+        }
+    }
 }

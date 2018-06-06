@@ -65,7 +65,6 @@ import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.ReplicationProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.utils.Servlets;
@@ -87,6 +86,7 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.config.IConfigManager;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.control.cc.BaseCCApplication;
@@ -118,6 +118,7 @@ public class CCApplication extends BaseCCApplication {
         ccServiceCtx = (ICCServiceContext) serviceCtx;
         ccServiceCtx.setThreadFactory(
                 new AsterixThreadFactory(ccServiceCtx.getThreadFactory(), new LifeCycleComponentManager()));
+        validateEnvironment();
     }
 
     @Override
@@ -336,4 +337,13 @@ public class CCApplication extends BaseCCApplication {
     public IHyracksClientConnection getHcc() {
         return hcc;
     }
+
+    protected void validateEnvironment() throws HyracksDataException {
+        validateJavaVersion();
+    }
+
+    protected void validateJavaVersion() throws HyracksDataException {
+        ApplicationConfigurator.validateJavaRuntime();
+    }
+
 }

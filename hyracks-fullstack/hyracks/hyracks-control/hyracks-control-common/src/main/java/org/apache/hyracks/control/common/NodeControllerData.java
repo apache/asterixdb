@@ -18,16 +18,15 @@
  */
 package org.apache.hyracks.control.common;
 
+import static org.apache.hyracks.control.common.utils.ConfigurationUtil.toPathElements;
 import static org.apache.hyracks.util.JSONUtil.put;
 
-import java.io.File;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
@@ -301,9 +300,9 @@ public class NodeControllerData {
             put(o, "vm-name", vmName);
             put(o, "vm-version", vmVersion);
             put(o, "vm-vendor", vmVendor);
-            put(o, "classpath", StringUtils.split(classpath, File.pathSeparatorChar));
-            put(o, "library-path", StringUtils.split(libraryPath, File.pathSeparatorChar));
-            put(o, "boot-classpath", StringUtils.split(bootClasspath, File.pathSeparatorChar));
+            put(o, "classpath", toPathElements(classpath));
+            put(o, "library-path", toPathElements(libraryPath));
+            put(o, "boot-classpath", toPathElements(bootClasspath));
             put(o, "input-arguments", inputArguments);
             put(o, "input-arguments", inputArguments);
             put(o, "system-properties", systemProperties);

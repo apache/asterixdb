@@ -20,8 +20,6 @@ package org.apache.hyracks.control.nc;
 
 import static org.apache.hyracks.util.MXHelper.gcMXBeans;
 import static org.apache.hyracks.util.MXHelper.memoryMXBean;
-import static org.apache.hyracks.util.MXHelper.osMXBean;
-import static org.apache.hyracks.util.MXHelper.runtimeMXBean;
 
 import java.io.File;
 import java.io.IOException;
@@ -94,7 +92,6 @@ import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
-import org.apache.hyracks.util.PidHelper;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.TraceUtils;
 import org.apache.hyracks.util.trace.Tracer;
@@ -330,12 +327,8 @@ public class NodeControllerService implements IControllerService {
         NetworkAddress netAddress = netManager.getPublicNetworkAddress();
         NetworkAddress messagingAddress =
                 messagingNetManager != null ? messagingNetManager.getPublicNetworkAddress() : null;
-        nodeRegistration = new NodeRegistration(ncAddress, id, ncConfig, netAddress, datasetAddress, osMXBean.getName(),
-                osMXBean.getArch(), osMXBean.getVersion(), osMXBean.getAvailableProcessors(), runtimeMXBean.getVmName(),
-                runtimeMXBean.getVmVersion(), runtimeMXBean.getVmVendor(), runtimeMXBean.getClassPath(),
-                runtimeMXBean.getLibraryPath(), runtimeMXBean.getBootClassPath(), runtimeMXBean.getInputArguments(),
-                runtimeMXBean.getSystemProperties(), hbSchema, messagingAddress, application.getCapacity(),
-                PidHelper.getPid());
+        nodeRegistration = new NodeRegistration(ncAddress, id, ncConfig, netAddress, datasetAddress, hbSchema,
+                messagingAddress, application.getCapacity());
 
         ncData = new NodeControllerData(nodeRegistration);
     }

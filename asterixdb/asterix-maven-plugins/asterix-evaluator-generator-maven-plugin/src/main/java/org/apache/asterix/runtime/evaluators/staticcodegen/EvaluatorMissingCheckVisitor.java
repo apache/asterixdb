@@ -109,7 +109,7 @@ public class EvaluatorMissingCheckVisitor extends ClassVisitor {
             // Duplicate the top operand.
             mv.visitInsn(Opcodes.DUP);
             // Invoke the constructor of TypeChecker.
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, TYPE_CHECKER_CLASS, CONSTRUCTOR, "()V", true);
+            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, TYPE_CHECKER_CLASS, CONSTRUCTOR, "()V", false);
             // Putfield for the field typeChecker.
             mv.visitFieldInsn(Opcodes.PUTFIELD, className, TYPE_CHECKER_NAME, TYPE_CHECKER_DESC);
             // RETURN.

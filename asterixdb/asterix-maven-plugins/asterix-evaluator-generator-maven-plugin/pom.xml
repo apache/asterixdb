@@ -78,8 +78,13 @@
     </dependency>
     <dependency>
       <groupId>org.ow2.asm</groupId>
-      <artifactId>asm-all</artifactId>
-      <version>5.1</version>
+      <artifactId>asm</artifactId>
+      <version>6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ow2.asm</groupId>
+      <artifactId>asm-tree</artifactId>
+      <version>6.2</version>
     </dependency>
   </dependencies>
 </project>

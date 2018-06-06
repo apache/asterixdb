@@ -19,7 +19,8 @@
 
 package org.apache.hyracks.control.cc.work;
 
-import java.io.File;
+import static org.apache.hyracks.control.common.utils.ConfigurationUtil.toPathElements;
+
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -31,19 +32,22 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
-import org.apache.hyracks.util.PidHelper;
 import org.apache.hyracks.control.common.work.IPCResponder;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.hyracks.util.MXHelper;
+import org.apache.hyracks.util.PidHelper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class GetNodeDetailsJSONWork extends SynchronizableWork {
+
     private static final Section[] CC_SECTIONS = { Section.CC, Section.COMMON };
     private static final Section[] NC_SECTIONS = { Section.NC, Section.COMMON };
 
@@ -114,9 +118,9 @@ public class GetNodeDetailsJSONWork extends SynchronizableWork {
             o.put("vm_name", runtimeMXBean.getVmName());
             o.put("vm_version", runtimeMXBean.getVmVersion());
             o.put("vm_vendor", runtimeMXBean.getVmVendor());
-            o.putPOJO("classpath", runtimeMXBean.getClassPath().split(File.pathSeparator));
-            o.putPOJO("library_path", runtimeMXBean.getLibraryPath().split(File.pathSeparator));
-            o.putPOJO("boot_classpath", runtimeMXBean.getBootClassPath().split(File.pathSeparator));
+            o.putPOJO("classpath", toPathElements(runtimeMXBean.getClassPath()));
+            o.putPOJO("library_path", toPathElements(runtimeMXBean.getLibraryPath()));
+            o.putPOJO("boot_classpath", toPathElements(MXHelper.getBootClassPath()));
             o.putPOJO("input_arguments", runtimeMXBean.getInputArguments());
             o.putPOJO("system_properties", runtimeMXBean.getSystemProperties());
             o.put("pid", PidHelper.getPid());
