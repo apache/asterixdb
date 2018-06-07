@@ -28,6 +28,7 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,16 +45,21 @@ public class MXHelper {
     private static Method getMaxFileDescriptorCount;
 
     static {
-        try {
-            getOpenFileDescriptorCount = osMXBean.getClass().getMethod("getOpenFileDescriptorCount");
-            getMaxFileDescriptorCount = osMXBean.getClass().getDeclaredMethod("getMaxFileDescriptorCount");
-            getOpenFileDescriptorCount.setAccessible(true);
-            getMaxFileDescriptorCount.setAccessible(true);
-        } catch (Throwable th) { // NOSONAR: diagnostic code shouldn't cause server failure
-            getOpenFileDescriptorCount = null;
-            getMaxFileDescriptorCount = null;
-            LOGGER.log(Level.WARN, "Failed setting up the methods to get the number of file descriptors through {}",
-                    osMXBean.getClass().getName(), th);
+        if (SystemUtils.IS_OS_WINDOWS) {
+            LOGGER.info("Access to file descriptors (FDs) is not available on Windows; FD info will not be logged");
+        } else {
+            Class<? extends OperatingSystemMXBean> osMXBeanClass = osMXBean.getClass();
+            try {
+                getOpenFileDescriptorCount = osMXBeanClass.getMethod("getOpenFileDescriptorCount");
+                getMaxFileDescriptorCount = osMXBeanClass.getDeclaredMethod("getMaxFileDescriptorCount");
+                getOpenFileDescriptorCount.setAccessible(true);
+                getMaxFileDescriptorCount.setAccessible(true);
+            } catch (Throwable th) { // NOSONAR: diagnostic code shouldn't cause server failure
+                getOpenFileDescriptorCount = null;
+                getMaxFileDescriptorCount = null;
+                LOGGER.warn("Failed setting up the methods to get the number of file descriptors through {}",
+                        osMXBeanClass.getName(), th);
+            }
         }
     }
 
