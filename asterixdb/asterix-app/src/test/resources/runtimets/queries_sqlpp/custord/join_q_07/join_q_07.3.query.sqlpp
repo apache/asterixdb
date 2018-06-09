@@ -29,7 +29,7 @@ WITH customer AS (SELECT ELEMENT c FROM Customers c)
 
 SELECT c.name AS cust_name,
        c.cashBack AS cust_cashBack
-FROM customer c JOIN [coll_min((SELECT ELEMENT c.cashBack FROM c c))] as min_cashBack
+FROM customer c JOIN [strict_min((SELECT ELEMENT c.cashBack FROM c c))] as min_cashBack
      ON c.cashBack = min_cashBack
 ORDER BY c.cid, c.name
 ;

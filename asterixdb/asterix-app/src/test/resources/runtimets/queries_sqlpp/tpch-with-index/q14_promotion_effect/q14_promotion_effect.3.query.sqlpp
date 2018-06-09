@@ -19,13 +19,13 @@
 
 use tpch;
 
-select element (100.0 * tpch.coll_sum((
+select element (100.0 * tpch.strict_sum((
       select element case
                        when i.lp.p_type like 'PROMO%' then i.lp.l_extendedprice * (1 - i.lp.l_discount)
                        else 0.0
                      end
       from  g as i
-  )) / tpch.coll_sum((
+  )) / tpch.strict_sum((
       select element (i.lp.l_extendedprice * (1 - i.lp.l_discount))
       from  g as i
   )))

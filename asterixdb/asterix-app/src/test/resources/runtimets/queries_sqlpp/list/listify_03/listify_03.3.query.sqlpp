@@ -25,10 +25,10 @@
 use test;
 
 
-select element coll_min(y)
+select element strict_min(y)
 from  [1,2] as x
 with  y as (
-      select element coll_min(i)
+      select element strict_min(i)
       from  [[1,2,3],[10,20,30],[-2,-5,0]] as i
   )
 ;

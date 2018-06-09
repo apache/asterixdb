@@ -19,4 +19,4 @@
 
 use test1;
 
-coll_count(test.samptable);
+strict_count(test.samptable);

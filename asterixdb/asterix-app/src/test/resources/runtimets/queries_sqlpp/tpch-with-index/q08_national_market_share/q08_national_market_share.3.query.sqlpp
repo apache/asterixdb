@@ -20,10 +20,10 @@
 use tpch;
 
 
-select element {'year':year,'mkt_share':(COLL_SUM((
+select element {'year':year,'mkt_share':(STRICT_SUM((
           select element case i.s_name = 'BRAZIL' when true then i.revenue when false then 0.0 end
           from  (from g select value t) as i
-      )) / COLL_SUM((
+      )) / STRICT_SUM((
           select element i.revenue
           from  (from g select value t) as i
       )))}

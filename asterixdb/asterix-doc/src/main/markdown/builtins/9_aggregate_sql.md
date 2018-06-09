@@ -168,10 +168,10 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
         3.4
 
 
-### coll_count ###
+### strict_count ###
  * Syntax:
 
-        coll_count(collection)
+        strict_count(collection)
 
  * Gets the number of items in the given collection.
  * Arguments:
@@ -185,16 +185,16 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * Example:
 
-        coll_count( [1, 2, null, missing] );
+        strict_count( [1, 2, null, missing] );
 
  * The expected result is:
 
         4
 
-### coll_avg ###
+### strict_avg ###
  * Syntax:
 
-        coll_avg(num_collection)
+        strict_avg(num_collection)
 
  * Gets the average value of the numeric items in the given collection.
  * Arguments:
@@ -210,16 +210,16 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * Example:
 
-        coll_avg( [100, 200, 300] );
+        strict_avg( [100, 200, 300] );
 
  * The expected result is:
 
         [ 200.0 ]
 
-### coll_sum ###
+### strict_sum ###
  * Syntax:
 
-        coll_sum(num_collection)
+        strict_sum(num_collection)
 
  * Gets the sum of the items in the given collection.
  * Arguments:
@@ -237,7 +237,7 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * Example:
 
-        coll_sum( [100, 200, 300] );
+        strict_sum( [100, 200, 300] );
 
  * The expected result is:
 
@@ -246,7 +246,7 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 ### array_min ###
  * Syntax:
 
-        coll_min(num_collection)
+        strict_min(num_collection)
 
  * Gets the min value of comparable items in the given collection.
  * Arguments:
@@ -265,7 +265,7 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * Example:
 
-        coll_min( [10.2, 100, 5] );
+        strict_min( [10.2, 100, 5] );
 
  * The expected result is:
 
@@ -275,7 +275,7 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 ### array_max ###
  * Syntax:
 
-        coll_max(num_collection)
+        strict_max(num_collection)
 
  * Gets the max value of numeric items in the given collection.
  * Arguments:
@@ -294,7 +294,7 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * Example:
 
-        coll_max( [10.2, 100, 5] );
+        strict_max( [10.2, 100, 5] );
 
  * The expected result is:
 

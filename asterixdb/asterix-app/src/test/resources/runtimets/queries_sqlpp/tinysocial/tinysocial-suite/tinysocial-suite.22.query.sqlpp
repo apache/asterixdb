@@ -23,7 +23,7 @@
 use TinySocial;
 
 
-select element coll_count((
+select element strict_count((
     select element t
     from  TweetMessages as t
     where (t.tweetid = '13')

@@ -28,7 +28,7 @@ USE test;
 
 INSERT INTO ds1
 CASE
-  WHEN coll_count((
+  WHEN strict_count((
       select element x
       from  ds2 as x
       where (x.id = 10)

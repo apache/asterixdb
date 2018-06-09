@@ -1080,11 +1080,11 @@ The following table catalogs the SQL++ built-in aggregation functions and also i
 
 | Function       | NULL         | MISSING      | Empty Collection |
 |----------------|--------------|--------------|------------------|
-| COLL_COUNT     | counted      | counted      | 0                |
-| COLL_SUM       | returns NULL | returns NULL | returns NULL     |
-| COLL_MAX       | returns NULL | returns NULL | returns NULL     |
-| COLL_MIN       | returns NULL | returns NULL | returns NULL     |
-| COLL_AVG       | returns NULL | returns NULL | returns NULL     |
+| STRICT_COUNT   | counted      | counted      | 0                |
+| STRICT_SUM     | returns NULL | returns NULL | returns NULL     |
+| STRICT_MAX     | returns NULL | returns NULL | returns NULL     |
+| STRICT_MIN     | returns NULL | returns NULL | returns NULL     |
+| STRICT_AVG     | returns NULL | returns NULL | returns NULL     |
 | ARRAY_COUNT    | not counted  | not counted  | 0                |
 | ARRAY_SUM      | ignores NULL | ignores NULL | returns NULL     |
 | ARRAY_MAX      | ignores NULL | ignores NULL | returns NULL     |

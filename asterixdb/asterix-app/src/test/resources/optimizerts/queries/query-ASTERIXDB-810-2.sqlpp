@@ -53,8 +53,8 @@ CREATE DATASET LineItem(LineItemType) PRIMARY KEY l_orderkey,l_linenumber;
 
 SELECT l_returnflag AS l_returnflag,
        l_linestatus AS l_linestatus,
-       coll_count(cheap) AS count_cheaps,
-       coll_count(expensive) AS count_expensives
+       strict_count(cheap) AS count_cheaps,
+       strict_count(expensive) AS count_expensives
 FROM LineItem AS l
 /* +hash */
 GROUP BY l.l_returnflag AS l_returnflag,l.l_linestatus AS l_linestatus

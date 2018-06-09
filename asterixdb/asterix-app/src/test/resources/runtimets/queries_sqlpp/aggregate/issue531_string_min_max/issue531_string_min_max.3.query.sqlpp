@@ -27,10 +27,10 @@
 use test;
 
 
-select element {'min':test.coll_min((
+select element {'min':test.strict_min((
         select element l.name
         from  t1 as l
-    )),'max':test.coll_max((
+    )),'max':test.strict_max((
         select element l.name
         from  t1 as l
     ))};

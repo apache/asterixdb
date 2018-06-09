@@ -20,7 +20,7 @@
 use test;
 
 
-select element test.coll_avg((
+select element test.strict_avg((
     select element x
     from  [test.smallint('1'),test.smallint('2'),test.smallint('3')] as x
 ));

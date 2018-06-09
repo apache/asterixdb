@@ -31,5 +31,5 @@ create type TinySocial.FacebookUserType as
 
 create  dataset FacebookUsers(FacebookUserType) primary key id;
 
-SELECT count(`friend-ids`) * avg(coll_count(`friend-ids`)) AS total
+SELECT count(`friend-ids`) * avg(strict_count(`friend-ids`)) AS total
 FROM  FacebookUsers;

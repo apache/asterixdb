@@ -20,10 +20,10 @@
 use twitter;
 
 
-select element {'word':tok,'count':twitter.coll_count(( from g select value token ))}
+select element {'word':tok,'count':twitter.strict_count(( from g select value token ))}
 from  TwitterData as t,
       `word-tokens`(t.text) as token
 group by token as tok
 group as g
-order by coll_count(( from g select value token )) desc,tok
+order by strict_count(( from g select value token )) desc,tok
 ;

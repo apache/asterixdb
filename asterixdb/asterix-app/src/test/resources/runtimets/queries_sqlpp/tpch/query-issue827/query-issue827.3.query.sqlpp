@@ -26,10 +26,10 @@
 use tpch;
 
 
-{'count_cheaps': coll_count((
+{'count_cheaps': strict_count((
     select element l.l_quantity
     from  LineItem as l
-)),'count_expensives': coll_sum((
+)),'count_expensives': strict_sum((
     select element e
     from  (
         select element l.l_extendedprice

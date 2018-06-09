@@ -27,7 +27,7 @@ WITH l AS (SELECT VALUE o.o_orderKey
            FROM OrdersOpen o
            WHERE o.o_custkey >= -1
           )
-SELECT VALUE COLL_COUNT((
+SELECT VALUE STRICT_COUNT((
   SELECT VALUE l
   FROM l
 ));

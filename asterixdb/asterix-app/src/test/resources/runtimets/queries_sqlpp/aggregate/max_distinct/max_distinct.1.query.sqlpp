@@ -17,8 +17,8 @@
  * under the License.
  */
  {
-   't1': coll_max(distinct [10,20,30,10,20,30,10]),
-   't2': coll_max(distinct [null,missing,null,missing]),
-   't3': coll_max(distinct [40,null,missing,50,40,null,missing,50,40]),
-   't4': coll_max(distinct [])
+   't1': strict_max(distinct [10,20,30,10,20,30,10]),
+   't2': strict_max(distinct [null,missing,null,missing]),
+   't3': strict_max(distinct [40,null,missing,50,40,null,missing,50,40]),
+   't4': strict_max(distinct [])
  }

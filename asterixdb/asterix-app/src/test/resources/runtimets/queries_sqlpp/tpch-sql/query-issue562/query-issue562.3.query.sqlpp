@@ -38,7 +38,7 @@ declare function q22_customer_tmp() {
 
 SELECT cntrycode AS cntrycode, count(ct) AS numcust, sum(ct.c_acctbal) AS totacctbal
 FROM  q22_customer_tmp() as ct
-WHERE coll_count((
+WHERE strict_count((
                 SELECT ELEMENT o
                 FROM  Orders AS o
                 WHERE ct.c_custkey = o.o_custkey

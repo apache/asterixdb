@@ -20,11 +20,11 @@
 use tpch;
 
 
-select element {'l_shipmode':l_shipmode,'high_line_count':COLL_SUM((
+select element {'l_shipmode':l_shipmode,'high_line_count':STRICT_SUM((
         select element
             CASE i.o_orderpriority = '1-URGENT' OR i.o_orderpriority = '2-HIGH' WHEN true THEN 1 WHEN false THEN 0 END
         from  (select value o from g) as i
-    )),'low_line_count':COLL_SUM((
+    )),'low_line_count':STRICT_SUM((
         select element case when i.o_orderpriority = '1-URGENT' OR i.o_orderpriority = '2-HIGH' then 0 else 1 end
         from (select value o from g) as i
     ))}

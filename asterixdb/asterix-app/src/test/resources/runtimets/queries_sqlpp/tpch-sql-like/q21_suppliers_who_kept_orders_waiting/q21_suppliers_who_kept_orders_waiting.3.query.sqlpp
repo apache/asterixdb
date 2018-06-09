@@ -22,10 +22,10 @@ use tpch;
 
 declare function tmp1() {
 (
-    select element {'l_orderkey':l_orderkey,'count_suppkey':coll_count((
+    select element {'l_orderkey':l_orderkey,'count_suppkey':strict_count((
             select element i.l_suppkey
             from  (from g1 select value g1.l2) as i
-        )),'max_suppkey': coll_max((
+        )),'max_suppkey': strict_max((
             select element i.l_suppkey
             from  (from g1 select value g1.l2) as i
         ))}
@@ -40,10 +40,10 @@ declare function tmp1() {
 };
 declare function tmp2() {
 (
-    select element {'l_orderkey':l_orderkey,'count_suppkey':coll_count((
+    select element {'l_orderkey':l_orderkey,'count_suppkey':strict_count((
             select element i.l_suppkey
             from  (from g2 select value g2.l2) as i
-        )),'max_suppkey': coll_max((
+        )),'max_suppkey': strict_max((
             select element i.l_suppkey
             from  (from g2 select value g2.l2) as i
         ))}
@@ -78,6 +78,6 @@ from  (
 ) as t4
 group by t4.s_name as s_name
 group as g
-let  numwait = coll_count(( from g select value t4 ))
+let  numwait = strict_count(( from g select value t4 ))
 order by numwait desc,s_name
 ;

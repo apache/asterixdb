@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description      :   Add numeric values with a null value, coll_sum() aggregate function must return null.
+ * Description      :   Add numeric values with a null value, strict_sum() aggregate function must return null.
  * Expected result  :   Success
  * Date             :   July 20th 2012
  */
@@ -25,7 +25,7 @@
 use test;
 
 
-select element test.coll_sum((
+select element test.strict_sum((
     select element l.sal
     from  tdst as l
 ));

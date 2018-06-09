@@ -21,28 +21,28 @@ use tpch;
 
 set hash_merge "true";
 
-select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':COLL_SUM((
+select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':STRICT_SUM((
         select element i.l.l_quantity
         from  g as i
-    )),'sum_base_price':COLL_SUM((
+    )),'sum_base_price':STRICT_SUM((
         select element i.l.l_extendedprice
         from  g as i
-    )),'sum_disc_price':COLL_SUM((
+    )),'sum_disc_price':STRICT_SUM((
         select element (i.l.l_extendedprice * (1 - i.l.l_discount))
         from  g as i
-    )),'sum_charge':COLL_SUM((
+    )),'sum_charge':STRICT_SUM((
         select element (i.l.l_extendedprice * (1 - i.l.l_discount) * (1 + i.l.l_tax))
         from  g as i
-    )),'ave_qty':COLL_AVG((
+    )),'ave_qty':STRICT_AVG((
         select element i.l.l_quantity
         from  g as i
-    )),'ave_price':COLL_AVG((
+    )),'ave_price':STRICT_AVG((
         select element i.l.l_extendedprice
         from g as i
-    )),'ave_disc':COLL_AVG((
+    )),'ave_disc':STRICT_AVG((
         select element i.l.l_discount
         from  g as i
-    )),'count_order':COLL_COUNT(( from g select value l ))}
+    )),'count_order':STRICT_COUNT(( from g select value l ))}
 from  LineItem as l
 where (l.l_shipdate <= '1998-09-02')
 /* +hash */

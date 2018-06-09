@@ -31,7 +31,7 @@ select element {'nation_key':nation_key,'sum_price':(
         from  g as i
         group by i.x.order_date as od
         group as g2
-        let sum = coll_sum((
+        let sum = strict_sum((
               select element g2.i.x.sum_price
               from g2
           ))
@@ -40,7 +40,7 @@ select element {'nation_key':nation_key,'sum_price':(
     )}
 from  (
     select element {'nation_key':nation_key,'order_date':orderdate,
-                    'sum_price': coll_sum((
+                    'sum_price': strict_sum((
                         select value g3.orders.o_totalprice
                         from g3
                     ))}

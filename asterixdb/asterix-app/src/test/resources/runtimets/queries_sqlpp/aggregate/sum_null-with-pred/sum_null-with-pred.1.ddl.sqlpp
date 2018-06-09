@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description      :   coll_sum() aggregate function must return the numeric sum, when non null values are given as input to coll_sum().
+ * Description      :   strict_sum() aggregate function must return the numeric sum, when non null values are given as input to strict_sum().
  *                  :   Get the sum for those tuples which are non null for salary fields.
  * Expected result  :   Success
  * Date             :   July 20th 2012

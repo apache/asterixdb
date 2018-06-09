@@ -28,8 +28,8 @@ USE tpch;
 
 SELECT  l_returnflag,
         l_linestatus,
-        coll_count(cheaps) AS count_cheaps,
-        coll_avg(expensives) AS avg_expensive_discounts,
+        strict_count(cheaps) AS count_cheaps,
+        strict_avg(expensives) AS avg_expensive_discounts,
         sum_disc_prices AS sum_disc_prices,
         total_charges AS total_charges
 FROM  LineItem AS l

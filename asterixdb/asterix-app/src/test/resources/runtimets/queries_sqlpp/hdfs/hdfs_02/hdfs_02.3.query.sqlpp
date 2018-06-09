@@ -26,7 +26,7 @@
 use test;
 
 
-select element {'word':tok,'count':test.coll_count(( from g select value token ))}
+select element {'word':tok,'count':test.strict_count(( from g select value token ))}
 from  TextDataset as line,
       test.`word-tokens`(line.content) as token
 group by token as tok

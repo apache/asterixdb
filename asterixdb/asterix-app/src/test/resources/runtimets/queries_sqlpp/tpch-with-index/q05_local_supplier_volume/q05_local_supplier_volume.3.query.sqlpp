@@ -47,7 +47,7 @@ where ((c.c_nationkey = o1.s_nationkey) and (c.c_custkey = o1.o_custkey))
 /* +hash */
 group by o1.n_name as n_name
 group as g
-let revenue = COLL_SUM((
+let revenue = STRICT_SUM((
       select element (i.l_extendedprice * (1 - i.l_discount))
       from  (from g select value o1) as i
   ))

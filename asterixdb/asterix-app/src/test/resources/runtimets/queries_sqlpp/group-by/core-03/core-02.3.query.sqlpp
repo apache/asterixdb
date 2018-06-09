@@ -26,7 +26,7 @@ GROUP BY e.department_id AS deptId
 GROUP AS eis(e AS e, i AS i, s AS s)
 SELECT ELEMENT {
       'deptId': deptId,
-      'avgpay': coll_avg( (FROM eis AS g SELECT ELEMENT g.e.salary + g.i.bonus) ),
+      'avgpay': strict_avg( (FROM eis AS g SELECT ELEMENT g.e.salary + g.i.bonus) ),
       'topstar_details':
            (
                 FROM eis AS g

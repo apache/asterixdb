@@ -26,5 +26,5 @@ GROUP BY e.department_id AS deptId
 GROUP AS eis(e AS e, i AS i, s AS s)
 SELECT ELEMENT {
       'deptId': deptId,
-      'star_cost': coll_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) )
+      'star_cost': strict_sum( (FROM eis AS p SELECT ELEMENT p.e.salary + p.i.bonus) )
 };

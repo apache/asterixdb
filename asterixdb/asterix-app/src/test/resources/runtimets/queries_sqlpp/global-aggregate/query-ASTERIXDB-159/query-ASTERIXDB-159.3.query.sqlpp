@@ -19,4 +19,4 @@
 
 USE TinySocial;
 
-COLL_COUNT(FacebookUsers);
+STRICT_COUNT(FacebookUsers);

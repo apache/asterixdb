@@ -36,7 +36,7 @@ with tab as
  group by item.i_item_id
 )
 
-select coll_count((
+select strict_count((
  select *
  from tab t1, tab t2
 ));

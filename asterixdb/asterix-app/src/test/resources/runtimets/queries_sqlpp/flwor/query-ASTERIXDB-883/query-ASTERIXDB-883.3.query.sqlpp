@@ -53,9 +53,9 @@ WHERE a.user=b.user AND a.user=c.user AND b.user=c.user
 SELECT VALUE
 {
    "user": a.user,
-   "beth": coll_count(beth),
-   "ts": coll_avg( ( FROM ts AS l SELECT VALUE l.timespent ) ),
-   "rev": coll_sum( ( FROM rev AS k SELECT VALUE k.estimated_revenue ) )
+   "beth": strict_count(beth),
+   "ts": strict_avg( ( FROM ts AS l SELECT VALUE l.timespent ) ),
+   "rev": strict_sum( ( FROM rev AS k SELECT VALUE k.estimated_revenue ) )
 }
 ORDER BY a.user;
 

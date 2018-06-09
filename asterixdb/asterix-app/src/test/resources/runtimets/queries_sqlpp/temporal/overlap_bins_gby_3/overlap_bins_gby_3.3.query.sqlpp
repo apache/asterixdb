@@ -27,10 +27,10 @@ select element {'timebin':bin,'subgroups':(
         group by i.app as subgid
         order by subgid,multitask.count(i)
     )}
-from  multitask.`overlap-bins`(multitask.interval(multitask.coll_min((
+from  multitask.`overlap-bins`(multitask.interval(multitask.strict_min((
     select element i.time
     from  logs as i
-)),multitask.coll_max((
+)),multitask.strict_max((
     select element (i.time + multitask.`duration-from-ms`((i.duration * 1000)))
     from  logs as i
 ))),multitask.time('00:00:00.000'),multitask.`day_time_duration`('PT1M')) as bin

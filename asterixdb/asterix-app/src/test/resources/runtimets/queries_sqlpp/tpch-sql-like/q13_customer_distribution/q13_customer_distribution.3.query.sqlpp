@@ -24,12 +24,12 @@ set `import-private-functions` `true`;
 
 select element {'c_count':c_count,'custdist':custdist}
 from  (
-    select element {'c_custkey':c_custkey,'c_count':COLL_SUM((
+    select element {'c_custkey':c_custkey,'c_count':STRICT_SUM((
             select element i.o_orderkey_count
             from (select value co from g2) as i
         ))}
     from  (
-        select element {'c_custkey':c.c_custkey,'o_orderkey_count':coll_count((
+        select element {'c_custkey':c.c_custkey,'o_orderkey_count':strict_count((
                 select element o.o_orderkey
                 from  Orders as o
                 where c.c_custkey = o.o_custkey and o.o_comment not like '%special%requests%'
@@ -41,6 +41,6 @@ from  (
 ) as gco
 group by gco.c_count as c_count
 group as g
-let  custdist = coll_count(( select value gco from g ))
+let  custdist = strict_count(( select value gco from g ))
 order by custdist desc,c_count desc
 ;

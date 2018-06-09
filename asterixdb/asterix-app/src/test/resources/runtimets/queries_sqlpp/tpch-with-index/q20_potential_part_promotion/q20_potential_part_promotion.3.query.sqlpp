@@ -24,7 +24,7 @@ select element {'s_name':t4.s_name,'s_address':t4.s_address}
 from  (
     select distinct element {'ps_suppkey':pst1.ps_suppkey}
     from  (
-        select element {'l_partkey':l_partkey,'l_suppkey':l_suppkey,'sum_quantity':(0.5 * COLL_SUM((
+        select element {'l_partkey':l_partkey,'l_suppkey':l_suppkey,'sum_quantity':(0.5 * STRICT_SUM((
                   select element i.l_quantity
                   from  (from g select value l) as i
               )))}

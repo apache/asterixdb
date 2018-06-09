@@ -42,7 +42,7 @@ from  (
 ) as t2
 group by t2.p_brand as p_brand,t2.p_type as p_type,t2.p_size as p_size
 group as g
-let  supplier_cnt = COLL_COUNT((
+let  supplier_cnt = STRICT_COUNT((
       select element i.ps_suppkey
       from  (from g select value t2) as i
   ))

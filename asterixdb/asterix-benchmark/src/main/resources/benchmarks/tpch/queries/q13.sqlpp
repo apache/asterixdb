@@ -24,7 +24,7 @@ FROM  (
         SELECT c_custkey, SUM(o_orderkey_count) AS c_count
         FROM  (
                 SELECT c.c_custkey,
-                       COLL_COUNT(
+                       STRICT_COUNT(
                            (
                             select element o.o_orderkey
                             from  Orders o

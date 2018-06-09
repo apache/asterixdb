@@ -39,7 +39,9 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class FunctionMapUtil {
 
     public static final String CONCAT = "concat";
-    private final static String CORE_AGGREGATE_PREFIX = "coll_";
+    private final static String CORE_AGGREGATE_PREFIX = "strict_";
+    // This is a transitional case. The ALT_CORE_AGGREGATE_PREFIX should be removed again.
+    private final static String ALT_CORE_AGGREGATE_PREFIX = "coll_";
     private final static String CORE_SQL_AGGREGATE_PREFIX = "array_";
     private final static String INTERNAL_SQL_AGGREGATE_PREFIX = "sql-";
 
@@ -71,31 +73,6 @@ public class FunctionMapUtil {
     }
 
     /**
-     * Whether a function signature is a SQL++ core aggregate function.
-     *
-     * @param fs,
-     *            the function signature.
-     * @return true if the function signature is a SQL++ core aggregate,
-     *         false otherwise.
-     */
-    public static boolean isCoreAggregateFunction(FunctionSignature fs) {
-        String name = fs.getName().toLowerCase();
-        boolean coreAgg = name.startsWith(CORE_AGGREGATE_PREFIX);
-        boolean coreSqlAgg = name.startsWith(CORE_SQL_AGGREGATE_PREFIX);
-        if (!coreAgg && !coreSqlAgg) {
-            return false;
-        }
-        String internalName = coreAgg ? name.substring(CORE_AGGREGATE_PREFIX.length())
-                : (INTERNAL_SQL_AGGREGATE_PREFIX + name.substring(CORE_SQL_AGGREGATE_PREFIX.length()));
-        IFunctionInfo finfo = FunctionUtil
-                .getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, fs.getArity()));
-        if (finfo == null) {
-            return false;
-        }
-        return BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null;
-    }
-
-    /**
      * Get the corresponding SQL++ core aggregate function from the SQL-92 aggregate function.
      *
      * @param fs,
@@ -114,15 +91,25 @@ public class FunctionMapUtil {
     /**
      * Maps a user invoked function signature to a system internal function signature.
      *
-     * @param fs,
+     * @param fs
      *            the user typed function.
+     * @param checkSql92Aggregate
+     *            enable check if the function is a SQL-92 aggregate function
      * @param sourceLoc
+     *            the source location of the function call
      * @return the system internal function.
+     * @throws CompilationException
+     *             if checkSql92Aggregate is true and the function is a SQL-92 aggregate function
      */
     public static FunctionSignature normalizeBuiltinFunctionSignature(FunctionSignature fs, boolean checkSql92Aggregate,
             SourceLocation sourceLoc) throws CompilationException {
-        if (isCoreAggregateFunction(fs)) {
-            return internalizeCoreAggregateFunctionName(fs);
+        String internalName = getInternalCoreAggregateFunctionName(fs);
+        if (internalName != null) {
+            FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, fs.getArity());
+            IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
+            if (finfo != null && BuiltinFunctions.getAggregateFunction(finfo.getFunctionIdentifier()) != null) {
+                return new FunctionSignature(FunctionConstants.ASTERIX_NS, internalName, fs.getArity());
+            }
         } else if (checkSql92Aggregate && isSql92AggregateFunction(fs)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                     fs.getName() + " is a SQL-92 aggregate function. The SQL++ core aggregate function "
@@ -155,20 +142,22 @@ public class FunctionMapUtil {
     }
 
     /**
-     * Removes the "array_" prefix for user-facing SQL++ core aggregate function names.
+     * Removes the "array_", "strict_", or "coll_" prefix for user-facing SQL++ core aggregate function names.
      *
-     * @param fs,
+     * @param fs
      *            a user-facing SQL++ core aggregate function signature.
-     * @return the AsterixDB internal function signature for the aggregate function.
-     * @throws CompilationException
+     * @return the AsterixDB internal function name for the aggregate function.
      */
-    private static FunctionSignature internalizeCoreAggregateFunctionName(FunctionSignature fs)
-            throws CompilationException {
+    private static String getInternalCoreAggregateFunctionName(FunctionSignature fs) {
         String name = fs.getName().toLowerCase();
-        boolean coreAgg = name.startsWith(CORE_AGGREGATE_PREFIX);
-        String lowerCaseName = coreAgg ? name.substring(CORE_AGGREGATE_PREFIX.length())
-                : (INTERNAL_SQL_AGGREGATE_PREFIX + name.substring(CORE_SQL_AGGREGATE_PREFIX.length()));
-        return new FunctionSignature(FunctionConstants.ASTERIX_NS, lowerCaseName, fs.getArity());
+        if (name.startsWith(CORE_AGGREGATE_PREFIX)) {
+            return name.substring(CORE_AGGREGATE_PREFIX.length());
+        } else if (name.startsWith(ALT_CORE_AGGREGATE_PREFIX)) {
+            return name.substring(ALT_CORE_AGGREGATE_PREFIX.length());
+        } else if (name.startsWith(CORE_SQL_AGGREGATE_PREFIX)) {
+            return INTERNAL_SQL_AGGREGATE_PREFIX + name.substring(CORE_SQL_AGGREGATE_PREFIX.length());
+        } else {
+            return null;
+        }
     }
-
 }

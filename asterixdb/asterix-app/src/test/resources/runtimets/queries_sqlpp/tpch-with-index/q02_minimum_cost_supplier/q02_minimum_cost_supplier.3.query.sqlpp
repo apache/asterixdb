@@ -45,7 +45,7 @@ declare function tmp1() {
 };
 declare function tmp2() {
 (
-    select element {'p_partkey':p_partkey,'ps_min_supplycost':COLL_MIN((
+    select element {'p_partkey':p_partkey,'ps_min_supplycost':STRICT_MIN((
             select element i.pssrn.ps_supplycost
             from  g as i
         ))}

@@ -19,7 +19,7 @@
 
 USE TinySocial;
 
-SELECT ELEMENT coll_avg((
+SELECT ELEMENT strict_avg((
 select element LENGTH(message.message)
 FROM FacebookMessages AS message
 WHERE message.`in-response-to` >= 1 and

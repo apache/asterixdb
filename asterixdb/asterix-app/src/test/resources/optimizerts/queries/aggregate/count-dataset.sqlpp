@@ -31,6 +31,6 @@ create type TinySocial.FacebookUserType as
 
 create  dataset FacebookUsers(FacebookUserType) primary key id;
 
-COLL_COUNT(FacebookUsers);
+STRICT_COUNT(FacebookUsers);
 
 drop dataverse TinySocial;

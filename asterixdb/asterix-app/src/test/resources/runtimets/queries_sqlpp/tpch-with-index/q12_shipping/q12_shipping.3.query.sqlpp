@@ -19,13 +19,13 @@
 
 use tpch;
 
-select element {'l_shipmode':l_shipmode,'high_line_count':tpch.coll_sum((
+select element {'l_shipmode':l_shipmode,'high_line_count':tpch.strict_sum((
         select element case
                         when i.o.o_orderpriority = '1-URGENT' or i.o.o_orderpriority = '2-HIGH' then 1
                         else 0
                         end
         from  g as i
-    )),'low_line_count':tpch.coll_sum((
+    )),'low_line_count':tpch.strict_sum((
         select element case
                          when i.o.o_orderpriority = '1-URGENT' or i.o.o_orderpriority = '2-HIGH' then 0
                          else 1

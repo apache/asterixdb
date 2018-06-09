@@ -40,7 +40,7 @@ with  t as (
       where orders.o_custkey = customer.c_custkey and customer.c_nationkey = n.n_nationkey
       group by orders.o_orderdate as orderdate,n.n_nationkey as nation_key
       group as g2
-      let  sum = coll_sum((
+      let  sum = strict_sum((
             select element g2.orders.o_totalprice
             from g2
       ))

@@ -33,5 +33,5 @@ create  dataset FacebookUsers(FacebookUserType) primary key id;
 
 // The plan uses a group-by operator with the groupAll flag be true.
 WITH t AS 1
-SELECT count(`friend-ids`) * avg(coll_count(`friend-ids`)) AS total, t
+SELECT count(`friend-ids`) * avg(strict_count(`friend-ids`)) AS total, t
 FROM  FacebookUsers;

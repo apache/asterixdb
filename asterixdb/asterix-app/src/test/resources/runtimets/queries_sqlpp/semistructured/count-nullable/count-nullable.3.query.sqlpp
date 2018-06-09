@@ -20,7 +20,7 @@
 use test;
 
 
-select element {'custage':age,'count': coll_count(( from g select value c))}
+select element {'custage':age,'count': strict_count(( from g select value c))}
 from  Customers as c
 group by c.age as age
 group as g

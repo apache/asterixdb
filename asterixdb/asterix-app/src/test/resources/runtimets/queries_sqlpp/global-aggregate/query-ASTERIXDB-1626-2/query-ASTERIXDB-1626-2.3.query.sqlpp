@@ -20,5 +20,5 @@
 USE TinySocial;
 
 WITH t AS 1
-SELECT count(`friend-ids`), avg(coll_count(`friend-ids`)), t
+SELECT count(`friend-ids`), avg(strict_count(`friend-ids`)), t
 FROM  FacebookUsers;

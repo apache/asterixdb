@@ -20,35 +20,35 @@
 use tpch;
 
 
-select element {'t_partkey':l_partkey,'t_count':COLL_COUNT((from g select value l)),
-    't_avg_quantity':(0.2 * COLL_AVG((
+select element {'t_partkey':l_partkey,'t_count':STRICT_COUNT((from g select value l)),
+    't_avg_quantity':(0.2 * STRICT_AVG((
           select element i.l_quantity
           from  (from g select value l) as i
-    ))),'t_max_suppkey':COLL_MAX((
+    ))),'t_max_suppkey':STRICT_MAX((
         select element i.l_suppkey
         from  (from g select value l) as i
-    )),'t_max_linenumber':COLL_MAX((
+    )),'t_max_linenumber':STRICT_MAX((
         select element i.l_linenumber
         from  (from g select value l) as i
-    )),'t_avg_extendedprice':COLL_AVG((
+    )),'t_avg_extendedprice':STRICT_AVG((
         select element i.l_extendedprice
         from  (from g select value l) as i
-    )),'t_avg_discount':COLL_AVG((
+    )),'t_avg_discount':STRICT_AVG((
         select element i.l_discount
         from  (from g select value l) as i
-    )),'t_avg_tax':COLL_AVG((
+    )),'t_avg_tax':STRICT_AVG((
         select element i.l_tax
         from  (from g select value l) as i
-    )),'t_max_shipdate':COLL_MAX((
+    )),'t_max_shipdate':STRICT_MAX((
         select element i.l_shipdate
         from  (from g select value l) as i
-    )),'t_min_commitdate':COLL_MIN((
+    )),'t_min_commitdate':STRICT_MIN((
         select element i.l_commitdate
         from  (from g select value l) as i
-    )),'t_min_receiptdate':COLL_MIN((
+    )),'t_min_receiptdate':STRICT_MIN((
         select element i.l_receiptdate
         from  (from g select value l) as i
-    )),'t_max_comment':COLL_MAX((
+    )),'t_max_comment':STRICT_MAX((
         select element i.l_comment
         from  (from g select value l) as i
     ))}

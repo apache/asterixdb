@@ -20,7 +20,7 @@
 use SocialNetworkData;
 
 
-select element SocialNetworkData.coll_count((
+select element SocialNetworkData.strict_count((
     select element h
     from  HandbookUsers as h
 ));

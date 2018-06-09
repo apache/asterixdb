@@ -17,8 +17,8 @@
  * under the License.
  */
  {
-   't1': to_bigint(coll_avg(distinct [10,20,30,10,20,30,10])),
-   't2': to_bigint(coll_avg(distinct [null,missing,null,missing])),
-   't3': to_bigint(coll_avg(distinct [40,null,missing,50,40,null,missing,50,40])),
-   't4': to_bigint(coll_avg(distinct []))
+   't1': to_bigint(strict_avg(distinct [10,20,30,10,20,30,10])),
+   't2': to_bigint(strict_avg(distinct [null,missing,null,missing])),
+   't3': to_bigint(strict_avg(distinct [40,null,missing,50,40,null,missing,50,40])),
+   't4': to_bigint(strict_avg(distinct []))
  }

@@ -28,7 +28,7 @@ where (((c.c_mktsegment = 'BUILDING') and (c.c_custkey = o.o_custkey)) and ((l.l
 /* +hash */
 group by l.l_orderkey as l_orderkey,o.o_orderdate as o_orderdate,o.o_shippriority as o_shippriority
 group as g
-let  revenue = COLL_SUM((
+let  revenue = STRICT_SUM((
       select element (i.l_extendedprice * (1 - i.l_discount))
       from (from g select value l) as i
   ))

@@ -22,7 +22,7 @@ USE test;
 /** Finds customers whose orders have all possible priorities.*/
 
 WITH priorities AS
-COLL_COUNT((
+STRICT_COUNT((
   SELECT DISTINCT o.o_orderpriority FROM Orders o
 ))
 ,

@@ -20,19 +20,19 @@
 use test;
 
 
-{'m0':test.coll_min((
+{'m0':test.strict_min((
     select element i.time
     from  tsdata as i
-)),'m1':test.coll_min((
+)),'m1':test.strict_min((
     select element i.date
     from  tsdata as i
-)),'m2':test.coll_min((
+)),'m2':test.strict_min((
     select element i.datetime
     from  tsdata as i
-)),'m3':test.coll_min((
+)),'m3':test.strict_min((
     select element i.dtduration
     from  tsdata as i
-)),'m4':test.coll_min((
+)),'m4':test.strict_min((
     select element i.ymduration
     from  tsdata as i
 ))};
