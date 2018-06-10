@@ -19,36 +19,23 @@
 package org.apache.hyracks.http.server.utils;
 
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryPoolMXBean;
-import java.lang.management.MemoryType;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.BaseRequest;
 import org.apache.hyracks.http.server.FormUrlEncodedRequest;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.util.internal.PlatformDependent;
 
 public class HttpUtil {
-
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
-    private static long maxMemUsage = 0L;
 
     private HttpUtil() {
     }
@@ -167,53 +154,4 @@ public class HttpUtil {
         return clusterURL;
     }
 
-    @SuppressWarnings("restriction")
-    public static synchronized void printMemUsage() {
-        StringBuilder report = new StringBuilder();
-        report.append("sun.misc.VM.maxDirectMemory: ");
-        report.append(sun.misc.VM.maxDirectMemory());
-        report.append('\n');
-        report.append("sun.misc.SharedSecrets.getJavaNioAccess().getDirectBufferPool().getMemoryUsed(): ");
-        report.append(sun.misc.SharedSecrets.getJavaNioAccess().getDirectBufferPool().getMemoryUsed());
-        report.append('\n');
-        report.append("sun.misc.SharedSecrets.getJavaNioAccess().getDirectBufferPool().getTotalCapacity(): ");
-        report.append(sun.misc.SharedSecrets.getJavaNioAccess().getDirectBufferPool().getTotalCapacity());
-        report.append('\n');
-        report.append("ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage(): ");
-        report.append(ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage());
-        report.append('\n');
-        report.append("---------------------------- Beans ----------------------------");
-        report.append('\n');
-        List<MemoryPoolMXBean> memPoolBeans = ManagementFactory.getMemoryPoolMXBeans();
-        for (MemoryPoolMXBean bean : memPoolBeans) {
-            if (bean.isValid() && bean.getType() == MemoryType.NON_HEAP) {
-                report.append(bean.getName());
-                report.append(": ");
-                report.append(bean.getUsage());
-                report.append('\n');
-            }
-        }
-        report.append("---------------------------- Netty ----------------------------");
-        report.append('\n');
-        try {
-            Field field = PlatformDependent.class.getDeclaredField("DIRECT_MEMORY_COUNTER");
-            field.setAccessible(true);
-            AtomicLong usedDirectMemory = (AtomicLong) field.get(null);
-            long used = usedDirectMemory.get();
-            report.append("Current PlatformDependent.DIRECT_MEMORY_COUNTER: ");
-            report.append(used);
-            report.append('\n');
-            report.append("Maximum PlatformDependent.DIRECT_MEMORY_COUNTER: ");
-            maxMemUsage = Math.max(maxMemUsage, used);
-            report.append(maxMemUsage);
-            report.append('\n');
-            report.append('\n');
-        } catch (Throwable th) { // NOSONAR
-            LOGGER.log(Level.WARN, "Failed to access PlatformDependent.DIRECT_MEMORY_COUNTER", th);
-            return;
-        }
-        report.append("--------------- PooledByteBufAllocator.DEFAULT ----------------");
-        report.append(PooledByteBufAllocator.DEFAULT.dumpStats());
-        LOGGER.log(Level.INFO, report.toString());
-    }
 }
