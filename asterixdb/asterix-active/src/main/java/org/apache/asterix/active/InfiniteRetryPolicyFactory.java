@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.active;
 
+import org.apache.hyracks.util.IRetryPolicy;
+
 public class InfiniteRetryPolicyFactory implements IRetryPolicyFactory {
 
     @Override

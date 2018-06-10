@@ -16,24 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.hyracks.util;
 
-public class CountRetryPolicy implements IRetryPolicy {
-
-    private final int count;
-    private int attempted = 0;
-
-    public CountRetryPolicy(int count) {
-        this.count = count;
-    }
-
-    @Override
-    public boolean retry(Throwable failure) {
-        if (attempted < count) {
-            attempted++;
-            return true;
-        }
-        return false;
-    }
-
+@FunctionalInterface
+public interface IRetryPolicy {
+    /**
+     * @param failure
+     *            the cause of the failure
+     * @return true if one more attempt should be done
+     */
+    boolean retry(Throwable failure);
 }

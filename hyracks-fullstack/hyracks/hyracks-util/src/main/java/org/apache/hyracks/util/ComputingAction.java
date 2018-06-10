@@ -16,14 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.hyracks.util;
 
-@FunctionalInterface
-public interface IRetryPolicy {
-    /**
-     * @param failure
-     *            the cause of the active entity failure
-     * @return true if one more attempt should be done
-     */
-    boolean retry(Throwable failure);
+public interface ComputingAction<T> {
+    @SuppressWarnings("squid:S00112")
+    T compute() throws Throwable;
 }

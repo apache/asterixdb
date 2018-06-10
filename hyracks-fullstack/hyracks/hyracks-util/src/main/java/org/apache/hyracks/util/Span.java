@@ -41,12 +41,25 @@ public class Span {
         return unit.convert(System.nanoTime() - startNanos, TimeUnit.NANOSECONDS);
     }
 
+    /**
+     * Sleep for the minimum of the duration or the remaining of this span
+     *
+     * @param sleep
+     *            the amount to sleep
+     * @param unit
+     *            the unit of the amount
+     * @throws InterruptedException
+     */
     public void sleep(long sleep, TimeUnit unit) throws InterruptedException {
-        TimeUnit.NANOSECONDS.sleep(Math.min(elapsed(TimeUnit.NANOSECONDS), unit.toNanos(sleep)));
+        TimeUnit.NANOSECONDS.sleep(Math.min(remaining(TimeUnit.NANOSECONDS), unit.toNanos(sleep)));
     }
 
     public long remaining(TimeUnit unit) {
         return unit.convert(Long.max(spanNanos - elapsed(TimeUnit.NANOSECONDS), 0L), TimeUnit.NANOSECONDS);
+    }
+
+    public void wait(Object monitor) throws InterruptedException {
+        TimeUnit.NANOSECONDS.timedWait(monitor, remaining(TimeUnit.NANOSECONDS));
     }
 
     public void loopUntilExhausted(ThrowingAction action) throws Exception {
@@ -59,7 +72,41 @@ public class Span {
             if (elapsed(delayUnit) < delay) {
                 break;
             }
-            delayUnit.sleep(delay);
+            sleep(delay, delayUnit);
         }
+    }
+
+    @Override
+    public String toString() {
+        long nanos = spanNanos % 1000;
+        long micros = TimeUnit.MICROSECONDS.convert(spanNanos, TimeUnit.NANOSECONDS) % 1000;
+        long millis = TimeUnit.MILLISECONDS.convert(spanNanos, TimeUnit.NANOSECONDS) % 1000;
+        long seconds = TimeUnit.SECONDS.convert(spanNanos, TimeUnit.NANOSECONDS) % 60;
+        long minutes = TimeUnit.MINUTES.convert(spanNanos, TimeUnit.NANOSECONDS) % 60;
+        long hours = TimeUnit.HOURS.convert(spanNanos, TimeUnit.NANOSECONDS) % 24;
+        long days = TimeUnit.DAYS.convert(spanNanos, TimeUnit.NANOSECONDS);
+        StringBuilder builder = new StringBuilder();
+        if (days > 0) {
+            builder.append(days).append("d");
+        }
+        if (hours > 0) {
+            builder.append(hours).append("hr");
+        }
+        if (minutes > 0) {
+            builder.append(minutes).append("m");
+        }
+        if (seconds > 0) {
+            builder.append(seconds).append("s");
+        }
+        if (millis > 0) {
+            builder.append(millis).append("ms");
+        }
+        if (micros > 0) {
+            builder.append(micros).append("us");
+        }
+        if (nanos > 0 || builder.length() == 0) {
+            builder.append(nanos).append("ns");
+        }
+        return builder.toString();
     }
 }

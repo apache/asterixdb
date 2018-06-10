@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.active;
 
+import org.apache.hyracks.util.IRetryPolicy;
+
 public class InfiniteRetryPolicy implements IRetryPolicy {
 
     private final IActiveEntityEventsListener listener;

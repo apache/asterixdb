@@ -26,8 +26,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.ComputingAction;
+import org.apache.hyracks.util.IDelay;
 import org.apache.hyracks.util.IOInterruptibleAction;
+import org.apache.hyracks.util.IRetryPolicy;
 import org.apache.hyracks.util.InterruptibleAction;
+import org.apache.hyracks.util.Span;
 import org.apache.hyracks.util.ThrowingAction;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -217,7 +221,7 @@ public class InvokeUtil {
     }
 
     /**
-     * Runs the supplied action, after suspending any pending interruption.  An error will be logged if
+     * Runs the supplied action, after suspending any pending interruption. An error will be logged if
      * the action is itself interrupted.
      */
     public static void runUninterruptible(ThrowingAction action) throws Exception {
@@ -250,5 +254,31 @@ public class InvokeUtil {
                 throw new TimeoutException("Stop condition was not met after " + unit.toSeconds(timeout) + " seconds.");
             }
         }
+    }
+
+    public static <T> T retryUntilSuccessOrExhausted(Span span, ComputingAction<T> action, IRetryPolicy policy,
+            IDelay delay) throws HyracksDataException {
+        Throwable failure;
+        int attempt = 0;
+        do {
+            attempt++;
+            try {
+                return action.compute();
+            } catch (Throwable th) {
+                failure = th;
+                if (!policy.retry(th)) {
+                    break;
+                }
+                try {
+                    LOGGER.log(Level.WARN, "Failure executing action {} for the {} time", action, attempt, failure);
+                    span.sleep(delay.calculate(attempt), TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
+                }
+            }
+        } while (!span.elapsed());
+        LOGGER.log(Level.WARN, "Final Failure executing action {} after {} attempts", action, attempt, failure);
+        throw HyracksDataException.create(failure);
     }
 }

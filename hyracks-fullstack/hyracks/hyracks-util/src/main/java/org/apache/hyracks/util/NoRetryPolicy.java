@@ -16,22 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.active;
+package org.apache.hyracks.util;
 
-import org.apache.hyracks.util.CountRetryPolicy;
-import org.apache.hyracks.util.IRetryPolicy;
+public class NoRetryPolicy implements IRetryPolicy {
+    public static final NoRetryPolicy INSTANCE = new NoRetryPolicy();
 
-public class CountRetryPolicyFactory implements IRetryPolicyFactory {
-
-    private final int count;
-
-    public CountRetryPolicyFactory(int count) {
-        this.count = count;
+    private NoRetryPolicy() {
     }
 
     @Override
-    public IRetryPolicy create(IActiveEntityEventsListener listener) {
-        return new CountRetryPolicy(count);
+    public boolean retry(Throwable failure) {
+        return false;
     }
 
 }

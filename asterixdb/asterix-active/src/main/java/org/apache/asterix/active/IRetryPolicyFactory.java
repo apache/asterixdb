@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.active;
 
+import org.apache.hyracks.util.IRetryPolicy;
+
 @FunctionalInterface
 public interface IRetryPolicyFactory {
     /**
