@@ -20,6 +20,7 @@ package org.apache.hyracks.http.servlet;
 
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.hyracks.http.HttpTestUtil;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
@@ -58,6 +59,6 @@ public class ChattyServlet extends AbstractServlet {
         for (int i = 0; i < 100; i++) {
             response.outputStream().write(bytes);
         }
-        HttpUtil.printMemUsage();
+        HttpTestUtil.printMemUsage();
     }
 }

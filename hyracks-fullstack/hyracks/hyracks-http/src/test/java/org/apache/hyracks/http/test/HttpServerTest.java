@@ -32,10 +32,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.hyracks.http.HttpTestUtil;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.InterruptOnCloseHandler;
 import org.apache.hyracks.http.server.WebManager;
-import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.http.servlet.ChattyServlet;
 import org.apache.hyracks.http.servlet.SleepyServlet;
 import org.apache.logging.log4j.Level;
@@ -147,7 +147,7 @@ public class HttpServerTest {
         try {
             try {
                 for (int i = 0; i < numPatches; i++) {
-                    HttpUtil.printMemUsage();
+                    HttpTestUtil.printMemUsage();
                     request(numRequests);
                     for (Future<Void> f : FUTURES) {
                         f.get();
@@ -155,7 +155,7 @@ public class HttpServerTest {
                     FUTURES.clear();
                 }
             } finally {
-                HttpUtil.printMemUsage();
+                HttpTestUtil.printMemUsage();
                 servlet.wakeUp();
                 for (Future<Void> f : stuck) {
                     f.get();
@@ -165,7 +165,7 @@ public class HttpServerTest {
             System.err.println("Number of rejections: " + UNAVAILABLE_COUNT.get());
             System.err.println("Number of exceptions: " + EXCEPTION_COUNT.get());
             webMgr.stop();
-            HttpUtil.printMemUsage();
+            HttpTestUtil.printMemUsage();
         }
     }
 
@@ -180,7 +180,7 @@ public class HttpServerTest {
         int numRequests = 48;
         int numExecutors = 24;
         int serverQueueSize = 24;
-        HttpUtil.printMemUsage();
+        HttpTestUtil.printMemUsage();
         WebManager webMgr = new WebManager();
         HttpServer server =
                 new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, numExecutors, serverQueueSize);
@@ -197,9 +197,9 @@ public class HttpServerTest {
             Assert.assertEquals(0, UNAVAILABLE_COUNT.get());
             Assert.assertEquals(0, OTHER_COUNT.get());
         } finally {
-            HttpUtil.printMemUsage();
+            HttpTestUtil.printMemUsage();
             webMgr.stop();
-            HttpUtil.printMemUsage();
+            HttpTestUtil.printMemUsage();
         }
     }
 
