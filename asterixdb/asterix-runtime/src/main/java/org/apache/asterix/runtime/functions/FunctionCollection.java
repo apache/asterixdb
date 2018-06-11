@@ -283,6 +283,7 @@ import org.apache.asterix.runtime.evaluators.functions.records.RecordNamesDescri
 import org.apache.asterix.runtime.evaluators.functions.records.RecordPairsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveFieldsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordRenameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CalendarDuartionFromDateDescriptor;
@@ -646,6 +647,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(RecordLengthDescriptor.FACTORY);
         fc.addGenerated(RecordNamesDescriptor.FACTORY);
         fc.addGenerated(RecordRemoveDescriptor.FACTORY);
+        fc.addGenerated(RecordRenameDescriptor.FACTORY);
 
         // Spatial and temporal type accessors
         fc.addGenerated(TemporalYearAccessor.FACTORY);

@@ -319,3 +319,39 @@
           "id": "1",
           "project": "AsterixDB",
         }
+
+### object_rename ###
+ * Syntax:
+
+        object_name(input_object, old_field, new_field)
+
+ * Returns a new object that has the same fields as `input_object` with field `old_field` replaced by `new_field`
+ * Arguments:
+    * `input_object` : an object value.
+    * `old_field` : a string representing the old (original) field name inside the object `input_object`.
+    * `new_field` : a string representing the new field name to replace `old_field` inside the object `input_object`.
+ * Return Value:
+    * A new object that has the same fields as `input_object` with field `old_field` replaced by `new_field`,
+    * `missing` if any argument is a `missing` value,
+    * `null` if any argument is `null` or `input_object` is non-object value, or `old_field` is non-string value, or
+      `new_field` is any non-string value.
+
+ * Example:
+
+        object_rename(
+                       {
+                         "id": 1,
+                         "project": "AsterixDB",
+                         "address": {"city": "Irvine", "state": "CA"}
+                       }
+                       , "address"
+                       , "location"
+                     );
+
+ * The expected result is:
+
+        {
+          "id": "1",
+          "project": "AsterixDB",
+          "location": {"city": "Irvine", "state": "CA"}
+        }

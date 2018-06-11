@@ -68,9 +68,9 @@ import org.apache.asterix.om.typecomputer.impl.FieldAccessByNameResultType;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessNestedResultType;
 import org.apache.asterix.om.typecomputer.impl.FullTextContainsResultTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.GetOverlappingInvervalTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.IfNanOrInfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfMissingOrNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfMissingTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.IfNanOrInfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.IfNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalAvgTypeComputer;
@@ -222,6 +222,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-geom-from-geojson", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier RECORD_REMOVE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-remove", 2);
+    public static final FunctionIdentifier RECORD_RENAME =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-rename", 3);
 
     // numeric
     public static final FunctionIdentifier NUMERIC_UNARY_MINUS =
@@ -1463,6 +1465,7 @@ public class BuiltinFunctions {
         addFunction(RECORD_PAIRS, RecordPairsTypeComputer.INSTANCE, true);
         addFunction(GEOMETRY_CONSTRUCTOR, AGeometryTypeComputer.INSTANCE, true);
         addFunction(RECORD_REMOVE, OpenARecordTypeComputer.INSTANCE, true);
+        addFunction(RECORD_RENAME, OpenARecordTypeComputer.INSTANCE, true);
 
         // temporal type accessors
         addFunction(ACCESSOR_TEMPORAL_YEAR, AInt64TypeComputer.INSTANCE, true);
