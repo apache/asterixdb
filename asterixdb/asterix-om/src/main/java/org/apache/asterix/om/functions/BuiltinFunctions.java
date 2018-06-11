@@ -220,6 +220,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-pairs", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier GEOMETRY_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-geom-from-geojson", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier RECORD_REMOVE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-remove", 2);
 
     // numeric
     public static final FunctionIdentifier NUMERIC_UNARY_MINUS =
@@ -1460,6 +1462,7 @@ public class BuiltinFunctions {
         addFunction(RECORD_NAMES, OrderedListOfAStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(RECORD_PAIRS, RecordPairsTypeComputer.INSTANCE, true);
         addFunction(GEOMETRY_CONSTRUCTOR, AGeometryTypeComputer.INSTANCE, true);
+        addFunction(RECORD_REMOVE, OpenARecordTypeComputer.INSTANCE, true);
 
         // temporal type accessors
         addFunction(ACCESSOR_TEMPORAL_YEAR, AInt64TypeComputer.INSTANCE, true);

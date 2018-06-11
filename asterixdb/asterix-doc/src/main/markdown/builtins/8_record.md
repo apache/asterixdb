@@ -287,3 +287,35 @@
 
         [ "id", "project", "address" ]
 
+### object_remove ###
+ * Syntax:
+
+        object_remove(input_object, field_name)
+
+ * Returns a new object that has the same fields as the input object except the field to be removed
+ * Arguments:
+    * `input_object` : an object value.
+    * `field_name` : a string field name.
+ * Return Value:
+    * A new object that has the same fields as `input_object` except the field `field_name`,
+    * `missing` if the argument `input_object` or `field_name` is missing,
+    * `null` if the argument `input_object` is `null` or any other non-object value, or the argument `field_name`
+       is `null` or any other non-string value.
+
+ * Example:
+
+        object_remove(
+                       {
+                         "id": 1,
+                         "project": "AsterixDB",
+                         "address": {"city": "Irvine", "state": "CA"}
+                       }
+                       , "address"
+                     );
+
+ * The expected result is:
+
+        {
+          "id": "1",
+          "project": "AsterixDB",
+        }

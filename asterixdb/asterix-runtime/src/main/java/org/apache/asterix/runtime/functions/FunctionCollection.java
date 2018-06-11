@@ -281,6 +281,7 @@ import org.apache.asterix.runtime.evaluators.functions.records.RecordLengthDescr
 import org.apache.asterix.runtime.evaluators.functions.records.RecordMergeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordNamesDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordPairsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
@@ -644,6 +645,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(RecordRemoveFieldsDescriptor.FACTORY);
         fc.addGenerated(RecordLengthDescriptor.FACTORY);
         fc.addGenerated(RecordNamesDescriptor.FACTORY);
+        fc.addGenerated(RecordRemoveDescriptor.FACTORY);
 
         // Spatial and temporal type accessors
         fc.addGenerated(TemporalYearAccessor.FACTORY);
