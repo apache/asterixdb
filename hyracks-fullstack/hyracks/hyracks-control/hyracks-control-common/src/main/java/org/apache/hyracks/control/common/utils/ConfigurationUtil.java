@@ -18,10 +18,18 @@
  */
 package org.apache.hyracks.control.common.utils;
 
+import java.io.File;
+
+import org.apache.commons.lang3.StringUtils;
+
 public class ConfigurationUtil {
     public static final String JAVA_IO_TMPDIR = "java.io.tmpdir";
+    private static final String[] EMPTY_STRING_ARR = new String[0];
 
     private ConfigurationUtil() {
     }
 
+    public static String[] toPathElements(String path) {
+        return path == null ? EMPTY_STRING_ARR : StringUtils.split(path, File.pathSeparatorChar);
+    }
 }

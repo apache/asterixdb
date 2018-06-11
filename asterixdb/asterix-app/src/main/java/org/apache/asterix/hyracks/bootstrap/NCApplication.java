@@ -93,6 +93,7 @@ public class NCApplication extends BaseNCApplication {
         ((NodeControllerService) serviceCtx.getControllerService()).setNodeStatus(NodeStatus.IDLE);
         ncServiceCtx.setThreadFactory(
                 new AsterixThreadFactory(ncServiceCtx.getThreadFactory(), ncServiceCtx.getLifeCycleComponentManager()));
+        validateEnvironment();
     }
 
     @Override
@@ -269,4 +270,13 @@ public class NCApplication extends BaseNCApplication {
         }
         return state;
     }
+
+    protected void validateEnvironment() throws HyracksDataException {
+        validateJavaRuntime();
+    }
+
+    protected void validateJavaRuntime() throws HyracksDataException {
+        ApplicationConfigurator.validateJavaRuntime();
+    }
+
 }

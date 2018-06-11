@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
+import static org.apache.hyracks.util.MXHelper.osMXBean;
+import static org.apache.hyracks.util.MXHelper.runtimeMXBean;
+
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -26,6 +29,8 @@ import java.util.Map;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.job.resource.NodeCapacity;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
+import org.apache.hyracks.util.MXHelper;
+import org.apache.hyracks.util.PidHelper;
 
 public final class NodeRegistration implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -73,31 +78,28 @@ public final class NodeRegistration implements Serializable {
     private final NodeCapacity capacity;
 
     public NodeRegistration(InetSocketAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
-            NetworkAddress datasetPort, String osName, String arch, String osVersion, int nProcessors, String vmName,
-            String vmVersion, String vmVendor, String classpath, String libraryPath, String bootClasspath,
-            List<String> inputArguments, Map<String, String> systemProperties, HeartbeatSchema hbSchema,
-            NetworkAddress messagingPort, NodeCapacity capacity, int pid) {
+            NetworkAddress datasetPort, HeartbeatSchema hbSchema, NetworkAddress messagingPort, NodeCapacity capacity) {
         this.ncAddress = ncAddress;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
         this.dataPort = dataPort;
         this.datasetPort = datasetPort;
-        this.osName = osName;
-        this.arch = arch;
-        this.osVersion = osVersion;
-        this.nProcessors = nProcessors;
-        this.vmName = vmName;
-        this.vmVersion = vmVersion;
-        this.vmVendor = vmVendor;
-        this.classpath = classpath;
-        this.libraryPath = libraryPath;
-        this.bootClasspath = bootClasspath;
-        this.inputArguments = inputArguments;
-        this.systemProperties = systemProperties;
         this.hbSchema = hbSchema;
         this.messagingPort = messagingPort;
         this.capacity = capacity;
-        this.pid = pid;
+        this.osName = osMXBean.getName();
+        this.arch = osMXBean.getArch();
+        this.osVersion = osMXBean.getVersion();
+        this.nProcessors = osMXBean.getAvailableProcessors();
+        this.vmName = runtimeMXBean.getVmName();
+        this.vmVersion = runtimeMXBean.getVmVersion();
+        this.vmVendor = runtimeMXBean.getVmVendor();
+        this.classpath = runtimeMXBean.getClassPath();
+        this.libraryPath = runtimeMXBean.getLibraryPath();
+        this.bootClasspath = MXHelper.getBootClassPath();
+        this.inputArguments = runtimeMXBean.getInputArguments();
+        this.systemProperties = runtimeMXBean.getSystemProperties();
+        this.pid = PidHelper.getPid();
     }
 
     public InetSocketAddress getNodeControllerAddress() {

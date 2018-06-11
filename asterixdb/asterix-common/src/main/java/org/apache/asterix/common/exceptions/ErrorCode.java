@@ -76,7 +76,7 @@ public class ErrorCode {
     public static final int REJECT_NODE_UNREGISTERED = 33;
     public static final int DIVISION_BY_ZERO = 34;
 
-    public static final int INSTANTIATION_ERROR = 100;
+    public static final int UNSUPPORTED_JRE = 100;
 
     public static final int EXTERNAL_UDF_RESULT_TYPE_ERROR = 200;
 
