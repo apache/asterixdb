@@ -562,8 +562,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         // Update the variable mappings
         List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varTriples = op.getVariableMappings();
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple : varTriples) {
-            updateInputToOutputVarMapping(triple.third, triple.first, false);
-            updateInputToOutputVarMapping(triple.second, triple.first, false);
+            updateInputToOutputVarMapping(triple.first, triple.third, false);
+            updateInputToOutputVarMapping(triple.second, triple.third, false);
         }
         return op;
     }
