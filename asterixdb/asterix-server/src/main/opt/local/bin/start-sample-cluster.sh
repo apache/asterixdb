@@ -39,15 +39,15 @@ if [ -z "$JAVA_HOME" -a -x /usr/libexec/java_home ]; then
   export JAVA_HOME
 fi
 
-[ -z "$JAVA_HOME" ] && {
-  echo "JAVA_HOME not set"
-  exit 1
-}
-"$JAVA_HOME/bin/java" -version 2>&1 | grep -q '1\.[89]' || {
-  echo "JAVA_HOME must be at version 1.8 or later:"
-  "$JAVA_HOME/bin/java" -version
+export JAVA_VERSION=$(java -version 2>&1 | head -1 | awk '{ print $NF }' | tr -d '"')
+case $JAVA_VERSION in
+  1.8*|1.9*|10*|11*)
+    ;;
+  *)
+  echo JAVA_HOME must be at version 1.8 or later, but is: $JAVA_VERSION
   exit 2
-}
+esac
+
 DIRNAME=$(dirname "$0")
 [ $(echo $DIRNAME | wc -l) -ne 1 ] && {
   echo "Paths with spaces are not supported"
