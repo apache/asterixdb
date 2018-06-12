@@ -409,7 +409,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     public NetworkAddress getDatasetDirectoryServiceInfo() {
-        return new NetworkAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort());
+        return new NetworkAddress(ccConfig.getClientPublicAddress(), ccConfig.getClientPublicPort());
     }
 
     public JobIdFactory getJobIdFactory() {
