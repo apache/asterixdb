@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.lang.sqlpp.visitor.base;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -76,7 +76,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
      * @param externalVars
      *            pre-defined (external) variables that must be added to the initial scope
      */
-    public AbstractSqlppExpressionScopingVisitor(LangRewritingContext context, List<VarIdentifier> externalVars) {
+    public AbstractSqlppExpressionScopingVisitor(LangRewritingContext context, Collection<VarIdentifier> externalVars) {
         this.context = context;
         this.scopeChecker.setVarCounter(context.getVarCounter());
         if (externalVars != null) {

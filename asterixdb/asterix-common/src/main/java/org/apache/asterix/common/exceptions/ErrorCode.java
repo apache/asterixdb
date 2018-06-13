@@ -166,6 +166,7 @@ public class ErrorCode {
     public static final int UNKNOWN_INDEX = 1083;
     public static final int INDEX_EXISTS = 1084;
     public static final int TYPE_EXISTS = 1085;
+    public static final int PARAMETER_NO_VALUE = 1086;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

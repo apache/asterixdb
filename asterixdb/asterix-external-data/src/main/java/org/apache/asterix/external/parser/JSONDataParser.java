@@ -50,6 +50,8 @@ import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 
 /**
  * JSON format parser using Jakson parser.
@@ -102,7 +104,15 @@ public class JSONDataParser extends AbstractNestedDataParser<ADMToken>
 
     @Override
     public void setInputStream(InputStream in) throws IOException {
-        jsonParser = jsonFactory.createParser(in);
+        setInput(jsonFactory.createParser(in));
+    }
+
+    public void setInputNode(JsonNode node) {
+        setInput(new TreeTraversingParser(node));
+    }
+
+    private void setInput(JsonParser parser) {
+        jsonParser = parser;
         geometryCoParser.reset(jsonParser);
     }
 

@@ -209,6 +209,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
     // error configuration
     protected static final boolean REPORT_EXPECTED_TOKENS = false;
 
+    private int externalVarCounter;
+
     private static class IndexParams {
       public IndexType type;
       public int gramLength;
@@ -2325,9 +2327,6 @@ IndexAccessor IndexAccessor(Expression inputExpr) throws ParseException:
             }
         }
     }
-
-  | <QUES> // ANY
-
   )
 
   <RIGHTBRACKET>
@@ -2347,6 +2346,7 @@ Expression PrimaryExpr() throws ParseException:
   | expr = CaseExpr()
   | expr = Literal()
   | expr = VariableRef()
+  | expr = ExternalVariableRef()
   | expr = ListConstructor()
   | expr = RecordConstructor()
   | expr = ParenthesizedExpression()
@@ -2456,6 +2456,33 @@ VariableExpr Variable() throws ParseException:
      var.setValue(id);
      return addSourceLocation(varExp, token);
     }
+}
+
+VariableExpr ExternalVariableRef() throws ParseException:
+{
+  String name = null;
+}
+{
+  (
+    (
+      <DOLLAR>
+      (
+        <INTEGER_LITERAL> { name = token.image; } |
+        <IDENTIFIER> { name = token.image; } |
+        name = QuotedString()
+      )
+    )
+    |
+    (
+      <QUES> { name = String.valueOf(++externalVarCounter); }
+    )
+  )
+  {
+     String idName = SqlppVariableUtil.toExternalVariableName(name);
+     VarIdentifier id = new VarIdentifier(idName);
+     VariableExpr varExp = new VariableExpr(id);
+     return addSourceLocation(varExp, token);
+  }
 }
 
 Expression ListConstructor() throws ParseException:
@@ -3410,6 +3437,7 @@ TOKEN :
   | <ATT : "@">
   | <COLON : ":">
   | <COMMA : ",">
+  | <DOLLAR: "$">
   | <DOT : ".">
   | <PERCENT: "%">
   | <QUES : "?">
@@ -3459,8 +3487,8 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN [IGNORE_CASE]:
 {
-  <MISSING : "missing">
-  |  <NULL : "null">
+    <MISSING : "missing">
+  | <NULL : "null">
   | <TRUE : "true">
   | <FALSE : "false">
 }

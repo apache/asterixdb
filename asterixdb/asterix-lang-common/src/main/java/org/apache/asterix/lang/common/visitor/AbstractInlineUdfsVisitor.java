@@ -337,7 +337,6 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         wrappedQuery.setSourceLocation(sourceLoc);
         wrappedQuery.setBody(fnDecl.getFuncBody());
         wrappedQuery.setTopLevel(false);
-        wrappedQuery.setExternalVars(fnDecl.getParamList());
 
         String fnNamespace = fnDecl.getSignature().getNamespace();
         Dataverse defaultDataverse = metadataProvider.getDefaultDataverse();
@@ -356,7 +355,8 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         metadataProvider.setDefaultDataverse(fnDataverse);
         try {
             IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
-            queryRewriter.rewrite(declaredFunctions, wrappedQuery, metadataProvider, context, true);
+            queryRewriter.rewrite(declaredFunctions, wrappedQuery, metadataProvider, context, true,
+                    fnDecl.getParamList());
             return wrappedQuery.getBody();
         } finally {
             metadataProvider.setDefaultDataverse(defaultDataverse);

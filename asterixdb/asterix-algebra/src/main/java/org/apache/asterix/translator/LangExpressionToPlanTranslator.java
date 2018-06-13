@@ -679,10 +679,9 @@ class LangExpressionToPlanTranslator
         Expression bindingExpr = lc.getBindingExpr();
         SourceLocation sourceLoc = bindingExpr.getSourceLocation();
         if (bindingExpr.getKind() == Kind.VARIABLE_EXPRESSION) {
+            VariableExpr bindingVarExpr = (VariableExpr) bindingExpr;
+            ILogicalExpression prevVarRef = translateVariableRef(bindingVarExpr);
             v = context.newVarFromExpression(lc.getVarExpr());
-            LogicalVariable prevVar = context.getVar(((VariableExpr) bindingExpr).getVar().getId());
-            VariableReferenceExpression prevVarRef = new VariableReferenceExpression(prevVar);
-            prevVarRef.setSourceLocation(sourceLoc);
             returnedOp = new AssignOperator(v, new MutableObject<>(prevVarRef));
             returnedOp.getInputs().add(tupSource);
             returnedOp.setSourceLocation(sourceLoc);
@@ -753,10 +752,8 @@ class LangExpressionToPlanTranslator
             switch (expr.getKind()) {
                 case VARIABLE_EXPRESSION:
                     VariableExpr varExpr = (VariableExpr) expr;
-                    LogicalVariable var = context.getVar(varExpr.getVar().getId());
-                    VariableReferenceExpression varRef = new VariableReferenceExpression(var);
-                    varRef.setSourceLocation(varExpr.getSourceLocation());
-                    args.add(new MutableObject<>(varRef));
+                    ILogicalExpression varRefExpr = translateVariableRef(varExpr);
+                    args.add(new MutableObject<>(varRefExpr));
                     break;
                 case LITERAL_EXPRESSION:
                     LiteralExpr val = (LiteralExpr) expr;
@@ -799,6 +796,17 @@ class LangExpressionToPlanTranslator
         op.setSourceLocation(sourceLoc);
 
         return new Pair<>(op, v);
+    }
+
+    protected ILogicalExpression translateVariableRef(VariableExpr varExpr) throws CompilationException {
+        LogicalVariable var = context.getVar(varExpr.getVar().getId());
+        if (var == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, varExpr.getSourceLocation(),
+                    varExpr.toString());
+        }
+        VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+        varRef.setSourceLocation(varExpr.getSourceLocation());
+        return varRef;
     }
 
     private AbstractFunctionCallExpression lookupUserDefinedFunction(FunctionSignature signature,
@@ -1326,16 +1334,14 @@ class LangExpressionToPlanTranslator
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visit(VariableExpr v, Mutable<ILogicalOperator> tupSource) {
-        SourceLocation sourceLoc = v.getSourceLocation();
+    public Pair<ILogicalOperator, LogicalVariable> visit(VariableExpr v, Mutable<ILogicalOperator> tupSource)
+            throws CompilationException {
         // Should we ever get to this method?
+        ILogicalExpression oldVRef = translateVariableRef(v);
         LogicalVariable var = context.newVar();
-        LogicalVariable oldV = context.getVar(v.getVar().getId());
-        VariableReferenceExpression oldVRef = new VariableReferenceExpression(oldV);
-        oldVRef.setSourceLocation(sourceLoc);
         AssignOperator a = new AssignOperator(var, new MutableObject<>(oldVRef));
         a.getInputs().add(tupSource);
-        a.setSourceLocation(sourceLoc);
+        a.setSourceLocation(v.getSourceLocation());
         return new Pair<>(a, var);
     }
 
@@ -1452,13 +1458,9 @@ class LangExpressionToPlanTranslator
         SourceLocation sourceLoc = expr.getSourceLocation();
         switch (expr.getKind()) {
             case VARIABLE_EXPRESSION:
-                LogicalVariable var = context.getVar(((VariableExpr) expr).getVar().getId());
-                if (var == null) {
-                    throw new IllegalStateException(String.valueOf(expr));
-                }
-                VariableReferenceExpression ve = new VariableReferenceExpression(var);
-                ve.setSourceLocation(sourceLoc);
-                return new Pair<>(ve, topOpRef);
+                VariableExpr varExpr = (VariableExpr) expr;
+                ILogicalExpression varRefExpr = translateVariableRef(varExpr);
+                return new Pair<>(varRefExpr, topOpRef);
             case LITERAL_EXPRESSION:
                 LiteralExpr val = (LiteralExpr) expr;
                 return new Pair<>(new ConstantExpression(

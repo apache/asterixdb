@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.rewrites;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppDeleteRewriteVisitor;
 
 class SqlppStatementRewriter implements IStatementRewriter {
@@ -35,5 +36,10 @@ class SqlppStatementRewriter implements IStatementRewriter {
             SqlppDeleteRewriteVisitor visitor = new SqlppDeleteRewriteVisitor();
             stmt.accept(visitor, null);
         }
+    }
+
+    @Override
+    public String toExternalVariableName(String statementParameterName) {
+        return SqlppVariableUtil.toExternalVariableName(statementParameterName);
     }
 }

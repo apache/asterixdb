@@ -188,8 +188,8 @@ public class ParserTestExecutor extends TestExecutor {
         PA.invokeMethod(rewriter,
                 "setup(java.util.List, org.apache.asterix.lang.common.base.IReturningStatement, "
                         + "org.apache.asterix.metadata.declared.MetadataProvider, "
-                        + "org.apache.asterix.lang.common.rewrites.LangRewritingContext)",
-                declaredFunctions, topExpr, metadataProvider, context);
+                        + "org.apache.asterix.lang.common.rewrites.LangRewritingContext, " + "java.util.Collection)",
+                declaredFunctions, topExpr, metadataProvider, context, null);
         PA.invokeMethod(rewriter, "inlineColumnAlias()");
         PA.invokeMethod(rewriter, "generateColumnNames()");
         PA.invokeMethod(rewriter, "substituteGroupbyKeyExpression()");

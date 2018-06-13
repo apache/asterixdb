@@ -21,6 +21,7 @@ package org.apache.asterix.api.java;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.api.common.APIFramework;
 import org.apache.asterix.app.translator.RequestParameters;
@@ -32,6 +33,7 @@ import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutorFactory;
@@ -57,6 +59,7 @@ public class AsterixJavaClient {
     private final IStatementExecutorFactory statementExecutorFactory;
     private final IStorageComponentProvider storageComponentProvider;
     private ICcApplicationContext appCtx;
+    private Map<String, IAObject> statementParams;
 
     public AsterixJavaClient(ICcApplicationContext appCtx, IHyracksClientConnection hcc, Reader queryText,
             PrintWriter writer, ILangCompilationProvider compilationProvider,
@@ -79,6 +82,10 @@ public class AsterixJavaClient {
                 // This is a commandline client and so System.out is appropriate
                 new PrintWriter(System.out, true), // NOSONAR
                 compilationProvider, statementExecutorFactory, storageComponentProvider);
+    }
+
+    public void setStatementParameters(Map<String, IAObject> statementParams) {
+        this.statementParams = statementParams;
     }
 
     public void compile() throws Exception {
@@ -121,7 +128,7 @@ public class AsterixJavaClient {
                 storageComponentProvider);
         final IRequestParameters requestParameters =
                 new RequestParameters(null, new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
-                        new IStatementExecutor.Stats(), null, null, null);
+                        new IStatementExecutor.Stats(), null, null, null, statementParams);
         translator.compileAndExecute(hcc, null, requestParameters);
         writer.flush();
     }

@@ -6050,6 +6050,56 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="statement-params">
+    <test-case FilePath="statement-params">
+      <compilation-unit name="mixed_01">
+        <output-dir compare="Text">mixed_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="named_01">
+        <output-dir compare="Text">named_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="named_02">
+        <output-dir compare="Text">named_01</output-dir>
+        <expected-error>ASX1086: No value for parameter: $p2</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="named_03">
+        <output-dir compare="Text">named_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="positional_01">
+        <output-dir compare="Text">positional_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="positional_02">
+        <output-dir compare="Text">positional_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="positional_03">
+        <output-dir compare="Text">positional_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="positional_04">
+        <output-dir compare="Text">positional_02</output-dir>
+        <expected-error>ASX1086: No value for parameter: $2</expected-error>
+        <expected-error>ASX1086: No value for parameter: $3</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="positional_05">
+        <output-dir compare="Text">positional_05</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="string">
     <test-case FilePath="string">
       <compilation-unit name="codepoint-to-string1">

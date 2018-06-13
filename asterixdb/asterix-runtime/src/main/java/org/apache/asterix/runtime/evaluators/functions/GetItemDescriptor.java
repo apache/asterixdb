@@ -22,6 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -44,6 +45,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
+
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -66,9 +68,6 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
         private static final long serialVersionUID = 1L;
         private IScalarEvaluatorFactory listEvalFactory;
         private IScalarEvaluatorFactory indexEvalFactory;
-        private byte serItemTypeTag;
-        private ATypeTag itemTag;
-        private boolean selfDescList = false;
 
         public GetItemEvalFactory(IScalarEvaluatorFactory[] args) {
             this.listEvalFactory = args[0];
@@ -86,9 +85,6 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                 private IScalarEvaluator evalList = listEvalFactory.createScalarEvaluator(ctx);
                 private IScalarEvaluator evalIdx = indexEvalFactory.createScalarEvaluator(ctx);
                 private byte[] missingBytes = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
-                private int itemIndex;
-                private int itemOffset;
-                private int itemLength;
 
                 @Override
                 public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -96,48 +92,51 @@ public class GetItemDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         evalList.evaluate(tuple, inputArgList);
                         evalIdx.evaluate(tuple, inputArgIdx);
 
-                        byte[] serOrderedList = inputArgList.getByteArray();
+                        byte[] serList = inputArgList.getByteArray();
                         int offset = inputArgList.getStartOffset();
                         byte[] indexBytes = inputArgIdx.getByteArray();
                         int indexOffset = inputArgIdx.getStartOffset();
 
-                        if (serOrderedList[offset] == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
-                            itemIndex = ATypeHierarchy.getIntegerValue(BuiltinFunctions.GET_ITEM.getName(), 0,
-                                    indexBytes, indexOffset);
+                        int itemCount;
+                        byte serListTypeTag = serList[offset];
+                        if (serListTypeTag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                            itemCount = AOrderedListSerializerDeserializer.getNumberOfItems(serList, offset);
+                        } else if (serListTypeTag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                            itemCount = AUnorderedListSerializerDeserializer.getNumberOfItems(serList, offset);
                         } else {
-                            throw new TypeMismatchException(sourceLoc, BuiltinFunctions.GET_ITEM, 0,
-                                    serOrderedList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
+                            throw new TypeMismatchException(sourceLoc, BuiltinFunctions.GET_ITEM, 0, serListTypeTag,
+                                    ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
+                                    ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                         }
 
-                        if (itemIndex < 0 || itemIndex >= AOrderedListSerializerDeserializer
-                                .getNumberOfItems(serOrderedList, offset)) {
+                        int itemIndex = ATypeHierarchy.getIntegerValue(BuiltinFunctions.GET_ITEM.getName(), 0,
+                                indexBytes, indexOffset);
+
+                        if (itemIndex < 0 || itemIndex >= itemCount) {
                             // Out-of-bound index access should return MISSING.
                             result.set(missingBytes, 0, 1);
                             return;
                         }
 
-                        itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[offset + 1]);
-                        if (itemTag == ATypeTag.ANY) {
-                            selfDescList = true;
-                        } else {
-                            serItemTypeTag = serOrderedList[offset + 1];
-                        }
+                        byte serItemTypeTag = serList[offset + 1];
+                        ATypeTag itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serItemTypeTag);
+                        boolean selfDescList = itemTag == ATypeTag.ANY;
 
-                        itemOffset =
-                                AOrderedListSerializerDeserializer.getItemOffset(serOrderedList, offset, itemIndex);
+                        int itemOffset = serListTypeTag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                                ? AOrderedListSerializerDeserializer.getItemOffset(serList, offset, itemIndex)
+                                : AUnorderedListSerializerDeserializer.getItemOffset(serList, offset, 0);
 
                         if (selfDescList) {
-                            itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serOrderedList[itemOffset]);
-                            itemLength =
-                                    NonTaggedFormatUtil.getFieldValueLength(serOrderedList, itemOffset, itemTag, true)
-                                            + 1;
-                            result.set(serOrderedList, itemOffset, itemLength);
+                            itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serList[itemOffset]);
+                            int itemLength =
+                                    NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, true) + 1;
+                            result.set(serList, itemOffset, itemLength);
                         } else {
-                            itemLength =
-                                    NonTaggedFormatUtil.getFieldValueLength(serOrderedList, itemOffset, itemTag, false);
+                            int itemLength =
+                                    NonTaggedFormatUtil.getFieldValueLength(serList, itemOffset, itemTag, false);
                             resultStorage.reset();
                             output.writeByte(serItemTypeTag);
-                            output.write(serOrderedList, itemOffset, itemLength);
+                            output.write(serList, itemOffset, itemLength);
                             result.set(resultStorage);
                         }
                     } catch (IOException e) {

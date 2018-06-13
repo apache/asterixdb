@@ -20,6 +20,7 @@ package org.apache.asterix.translator;
 
 import java.util.Map;
 
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
 
@@ -56,4 +57,9 @@ public interface IRequestParameters {
      * @return Optional request parameters. Otherwise null.
      */
     Map<String, String> getOptionalParameters();
+
+    /**
+     * @return Statement parameters
+     */
+    Map<String, IAObject> getStatementParameters();
 }

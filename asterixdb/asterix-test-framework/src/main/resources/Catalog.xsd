@@ -141,6 +141,7 @@
                      <xs:complexType>
                         <xs:attribute name="name" type="xs:string" />
                         <xs:attribute name="value" type="xs:string" />
+                        <xs:attribute name="type" type="test:parameter-type-enum" />
                      </xs:complexType>
                   </xs:element>
                   <xs:element name="output-dir" minOccurs="0">
@@ -266,6 +267,22 @@
 
       <xs:restriction base="xs:string">
          <xs:pattern value="\*|([A-Z]{4}[0-9]{4})"/>
+      </xs:restriction>
+   </xs:simpleType>
+
+   <!-- parameter-type-enum type                                              -->
+   <!--    Identify the type of a parameter value                             -->
+
+   <xs:simpleType name="parameter-type-enum">
+      <xs:annotation>
+         <xs:documentation>
+            Identify the type of a parameter value
+         </xs:documentation>
+      </xs:annotation>
+
+      <xs:restriction base="xs:string">
+         <xs:enumeration value="string"/>
+         <xs:enumeration value="json"/>
       </xs:restriction>
    </xs:simpleType>
 

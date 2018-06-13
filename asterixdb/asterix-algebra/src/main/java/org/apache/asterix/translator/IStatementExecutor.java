@@ -22,11 +22,14 @@ import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.commons.lang3.tuple.Triple;
@@ -123,6 +126,9 @@ public interface IStatementExecutor {
      *            The query to be compiled
      * @param dmlStatement
      *            The data modification statement when the query results in a modification to a dataset
+     * @param statementParameters
+     *            Statement parameters
+     * @param statementRewriter
      * @return the compiled {@code JobSpecification}
      * @throws AsterixException
      * @throws RemoteException
@@ -130,7 +136,8 @@ public interface IStatementExecutor {
      * @throws ACIDException
      */
     JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
-            Query query, ICompiledDmlStatement dmlStatement) throws RemoteException, AlgebricksException, ACIDException;
+            Query query, ICompiledDmlStatement dmlStatement, Map<String, IAObject> statementParameters,
+            IStatementRewriter statementRewriter) throws RemoteException, AlgebricksException, ACIDException;
 
     /**
      * returns the active dataverse for an entity or a statement
@@ -148,5 +155,4 @@ public interface IStatementExecutor {
      * @return the executions plans
      */
     ExecutionPlans getExecutionPlans();
-
 }

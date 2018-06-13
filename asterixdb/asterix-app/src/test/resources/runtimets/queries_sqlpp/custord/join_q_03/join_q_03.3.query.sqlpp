@@ -20,7 +20,7 @@
 use test;
 
 
-select element {'cust_name':c.name,'order_total':o.total,'orderedlist':ol,'unorderedlist':ul,'ol_item1':ol[0],'ol_item2':ol[1],'ol_item5':ol[4],'ul_item1':ul[?]}
+select element {'cust_name':c.name,'order_total':o.total,'orderedlist':ol,'unorderedlist':ul,'ol_item1':ol[0],'ol_item2':ol[1],'ol_item5':ol[4],'ul_item1':ul[0]}
 from  Customers as c,
       Orders as o
 with  rec as c.lastorder,

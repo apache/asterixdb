@@ -19,12 +19,12 @@
 
 package org.apache.asterix.om.typecomputer.base;
 
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.om.exceptions.IncompatibleTypeException;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class TypeCastUtils {
@@ -33,7 +33,7 @@ public class TypeCastUtils {
     }
 
     public static boolean setRequiredAndInputTypes(AbstractFunctionCallExpression expr, IAType requiredType,
-            IAType inputType) throws AlgebricksException {
+            IAType inputType) throws CompilationException {
         boolean changed = false;
         Object[] opaqueParameters = expr.getOpaqueParameters();
         if (opaqueParameters == null) {

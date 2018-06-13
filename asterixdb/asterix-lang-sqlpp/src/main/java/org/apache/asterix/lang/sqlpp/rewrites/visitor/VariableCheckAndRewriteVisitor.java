@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -56,7 +57,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
      * @param context, manages ids of variables and guarantees uniqueness of variables.
      */
     public VariableCheckAndRewriteVisitor(LangRewritingContext context, MetadataProvider metadataProvider,
-            List<VarIdentifier> externalVars) {
+            Collection<VarIdentifier> externalVars) {
         super(context, externalVars);
         this.metadataProvider = metadataProvider;
     }
@@ -96,15 +97,20 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     private Expression resolve(VariableExpr varExpr, String dataverseName, String datasetName,
             Expression originalExprWithUndefinedIdentifier, ILangExpression parent) throws CompilationException {
 
+        VarIdentifier varId = varExpr.getVar();
+        String varName = varId.getValue();
         SourceLocation sourceLoc = varExpr.getSourceLocation();
-
-        String varName = varExpr.getVar().getValue();
         VarIdentifier var = lookupVariable(varName, sourceLoc);
         if (var != null) {
             // Exists such an identifier
             varExpr.setIsNewVar(false);
             varExpr.setVar(var);
             return varExpr;
+        }
+
+        if (SqlppVariableUtil.isExternalVariableIdentifier(varId)) {
+            throw new CompilationException(ErrorCode.PARAMETER_NO_VALUE, sourceLoc,
+                    SqlppVariableUtil.variableNameToDisplayedFieldName(varId.getValue()));
         }
 
         boolean resolveToDatasetOnly = resolveToDatasetOnly(originalExprWithUndefinedIdentifier, parent);

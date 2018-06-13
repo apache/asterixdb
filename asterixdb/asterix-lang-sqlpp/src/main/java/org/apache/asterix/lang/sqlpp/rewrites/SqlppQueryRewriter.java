@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.sqlpp.rewrites;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +32,7 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -76,25 +78,27 @@ class SqlppQueryRewriter implements IQueryRewriter {
     private List<FunctionDecl> declaredFunctions;
     private LangRewritingContext context;
     private MetadataProvider metadataProvider;
+    private Collection<VarIdentifier> externalVars;
 
     protected void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr,
-            MetadataProvider metadataProvider, LangRewritingContext context) {
+            MetadataProvider metadataProvider, LangRewritingContext context, Collection<VarIdentifier> externalVars) {
         this.topExpr = topExpr;
         this.context = context;
         this.declaredFunctions = declaredFunctions;
         this.metadataProvider = metadataProvider;
+        this.externalVars = externalVars;
     }
 
     @Override
     public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
-            MetadataProvider metadataProvider, LangRewritingContext context, boolean inlineUdfs)
-            throws CompilationException {
+            MetadataProvider metadataProvider, LangRewritingContext context, boolean inlineUdfs,
+            Collection<VarIdentifier> externalVars) throws CompilationException {
         if (topStatement == null) {
             return;
         }
 
         // Sets up parameters.
-        setup(declaredFunctions, topStatement, metadataProvider, context);
+        setup(declaredFunctions, topStatement, metadataProvider, context, externalVars);
 
         // Inlines column aliases.
         inlineColumnAlias();
@@ -206,7 +210,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
 
     protected void variableCheckAndRewrite() throws CompilationException {
         VariableCheckAndRewriteVisitor variableCheckAndRewriteVisitor =
-                new VariableCheckAndRewriteVisitor(context, metadataProvider, topExpr.getExternalVars());
+                new VariableCheckAndRewriteVisitor(context, metadataProvider, externalVars);
         topExpr.accept(variableCheckAndRewriteVisitor, null);
     }
 

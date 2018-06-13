@@ -6,5 +6,5 @@ IndexAccessor [
     LiteralExpr [LONG] [1]
     LiteralExpr [LONG] [1]
   ]
-  Index: ANY
+  Index:   LiteralExpr [LONG] [0]
 ]

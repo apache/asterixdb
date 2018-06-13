@@ -24,5 +24,5 @@ select element {'customerid':c.name,'orderedlist':n}
 from  Customers as c
 with  rec as c.lastorder,
       m as [c.cid,rec.oid],
-      n as [m[?],m[1],m[4]]
+      n as [m[0],m[1],m[4]]
 ;

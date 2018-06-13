@@ -24,9 +24,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.Reader;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
@@ -41,11 +43,13 @@ import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.file.StorageComponentProvider;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.SessionConfig.PlanFormat;
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -173,31 +177,28 @@ public class JsonLogicalPlanTest {
             Assume.assumeTrue(!skipped);
 
             LOGGER.info("RUN TEST: \"" + queryFile.getPath() + "\"");
-            Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
+            String query = FileUtils.readFileToString(queryFile, StandardCharsets.UTF_8);
+            Map<String, IAObject> queryParams = TestHelper.readStatementParameters(query);
 
             // Forces the creation of actualFile.
             actualFile.getParentFile().mkdirs();
 
-            PrintWriter plan = new PrintWriter(actualFile);
             ILangCompilationProvider provider =
                     queryFile.getName().endsWith("aql") ? aqlCompilationProvider : sqlppCompilationProvider;
             if (extensionLangCompilationProvider != null) {
                 provider = extensionLangCompilationProvider;
             }
             IHyracksClientConnection hcc = integrationUtil.getHyracksClientConnection();
-            AsterixJavaClient asterix =
-                    new AsterixJavaClient((ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc,
-                            query, plan, provider, statementExecutorFactory, storageComponentProvider);
-            try {
-                asterix.compile(true, false, !optimized, optimized, false, false, false, PlanFormat.JSON);
 
+            try (PrintWriter plan = new PrintWriter(actualFile)) {
+                AsterixJavaClient asterix = new AsterixJavaClient(
+                        (ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc,
+                        new StringReader(query), plan, provider, statementExecutorFactory, storageComponentProvider);
+                asterix.setStatementParameters(queryParams);
+                asterix.compile(true, false, !optimized, optimized, false, false, false, PlanFormat.JSON);
             } catch (AsterixException e) {
-                plan.close();
-                query.close();
                 throw new Exception("Compile ERROR for " + queryFile + ": " + e.getMessage(), e);
             }
-            plan.close();
-            query.close();
 
             BufferedReader readerActual =
                     new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));

@@ -26,6 +26,7 @@ public interface IStatementRewriter {
      * @param statement,
      *            a non-query statement.
      */
-    public void rewrite(Statement statement) throws CompilationException;
+    void rewrite(Statement statement) throws CompilationException;
 
+    String toExternalVariableName(String statementParameterName);
 }

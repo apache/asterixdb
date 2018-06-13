@@ -40,7 +40,8 @@ public class ExpressionToVariableUtil {
     private static String getGeneratedIdentifier(Expression expr) throws ParseException {
         if (expr.getKind() == Kind.VARIABLE_EXPRESSION) {
             VariableExpr bindingVarExpr = (VariableExpr) expr;
-            return bindingVarExpr.getVar().getValue();
+            VarIdentifier var = bindingVarExpr.getVar();
+            return SqlppVariableUtil.isExternalVariableIdentifier(var) ? null : var.getValue();
         } else if (expr.getKind() == Kind.FIELD_ACCESSOR_EXPRESSION) {
             FieldAccessor fa = (FieldAccessor) expr;
             return SqlppVariableUtil.toInternalVariableName(fa.getIdent().getValue());

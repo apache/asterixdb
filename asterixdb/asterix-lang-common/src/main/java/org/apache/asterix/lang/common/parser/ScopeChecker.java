@@ -303,7 +303,8 @@ public class ScopeChecker {
     }
 
     protected String getLine(int line) {
-        return inputLines[line - 1];
+        int idx = line - 1;
+        return idx >= 0 && idx < inputLines.length ? inputLines[idx] : "";
     }
 
     protected String extractFragment(int beginLine, int beginColumn, int endLine, int endColumn) {

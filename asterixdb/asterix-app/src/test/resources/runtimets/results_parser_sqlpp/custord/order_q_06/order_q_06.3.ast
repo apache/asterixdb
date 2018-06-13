@@ -7,7 +7,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=$c3 ]
-      Index: ANY
+      Index:       LiteralExpr [LONG] [0]
     ]
   )
 ]

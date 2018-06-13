@@ -19,8 +19,6 @@
 
 package org.apache.asterix.lang.common.base;
 
-import org.apache.asterix.lang.common.struct.VarIdentifier;
-
 import java.util.List;
 
 /**
@@ -66,16 +64,4 @@ public interface IReturningStatement extends Statement {
      *            the main body expression.
      */
     void setBody(Expression expr);
-
-    /**
-     * @return external (pre-defined) variables for the statement
-     */
-    List<VarIdentifier> getExternalVars();
-
-    /**
-     * Sets external (pre-defined) variables for the statement
-     *
-     * @param externalVars external variables
-     */
-    void setExternalVars(List<VarIdentifier> externalVars);
 }

@@ -36,4 +36,9 @@ class AqlStatementRewriter implements IStatementRewriter {
             stmt.accept(visitor, null);
         }
     }
+
+    @Override
+    public String toExternalVariableName(String statementParameterName) {
+        return null;
+    }
 }

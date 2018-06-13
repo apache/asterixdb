@@ -256,8 +256,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public Query visit(Query q, Void arg) throws CompilationException {
-        Query copy = new Query(q.isExplain(), q.isTopLevel(), (Expression) q.getBody().accept(this, arg),
-                q.getVarCounter(), q.getExternalVars());
+        Query copy =
+                new Query(q.isExplain(), q.isTopLevel(), (Expression) q.getBody().accept(this, arg), q.getVarCounter());
         copy.setSourceLocation(q.getSourceLocation());
         return copy;
     }

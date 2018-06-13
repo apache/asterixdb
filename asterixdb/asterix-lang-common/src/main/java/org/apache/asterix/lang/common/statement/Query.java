@@ -27,14 +27,12 @@ import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class Query extends AbstractStatement implements IReturningStatement {
     private final boolean explain;
     private boolean topLevel = true;
     private Expression body;
-    private List<VarIdentifier> externalVars;
     private int varCounter;
 
     public Query(boolean explain) {
@@ -42,15 +40,10 @@ public class Query extends AbstractStatement implements IReturningStatement {
     }
 
     public Query(boolean explain, boolean topLevel, Expression body, int varCounter) {
-        this(explain, topLevel, body, varCounter, null);
-    }
-
-    public Query(boolean explain, boolean topLevel, Expression body, int varCounter, List<VarIdentifier> externalVars) {
         this.explain = explain;
         this.topLevel = topLevel;
         this.body = body;
         this.varCounter = varCounter;
-        this.externalVars = externalVars;
     }
 
     @Override
@@ -85,16 +78,6 @@ public class Query extends AbstractStatement implements IReturningStatement {
     @Override
     public boolean isTopLevel() {
         return topLevel;
-    }
-
-    @Override
-    public List<VarIdentifier> getExternalVars() {
-        return externalVars;
-    }
-
-    @Override
-    public void setExternalVars(List<VarIdentifier> externalVars) {
-        this.externalVars = externalVars;
     }
 
     public boolean isExplain() {

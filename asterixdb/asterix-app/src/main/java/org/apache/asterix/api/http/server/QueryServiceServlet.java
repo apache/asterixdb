@@ -27,9 +27,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.asterix.algebra.base.ILangExtension;
@@ -45,6 +48,7 @@ import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.ExecutionPlansJsonPrintUtil;
 import org.apache.asterix.translator.IRequestParameters;
@@ -75,7 +79,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 public class QueryServiceServlet extends AbstractQueryApiServlet {
@@ -137,6 +140,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     public enum Parameter {
+        ARGS("args"),
         STATEMENT("statement"),
         FORMAT("format"),
         CLIENT_ID("client_context_id"),
@@ -208,6 +212,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         String mode;
         String maxResultReads;
         String planFormat;
+        Map<String, JsonNode> statementParams;
         boolean expressionTree;
         boolean rewrittenExpressionTree;
         boolean logicalPlan;
@@ -236,6 +241,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 on.put("optimizedLogicalPlan", optimizedLogicalPlan);
                 on.put("job", job);
                 on.put("signature", signature);
+                if (statementParams != null) {
+                    for (Map.Entry<String, JsonNode> statementParam : statementParams.entrySet()) {
+                        on.set('$' + statementParam.getKey(), statementParam.getValue());
+                    }
+                }
                 return om.writer(new MinimalPrettyPrinter()).writeValueAsString(on);
             } catch (JsonProcessingException e) { // NOSONAR
                 LOGGER.debug("unexpected exception marshalling {} instance to json", getClass(), e);
@@ -412,6 +422,41 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return value != null ? value.asBoolean() : defaultValue;
     }
 
+    @FunctionalInterface
+    interface CheckedFunction<I, O> {
+        O apply(I requestParamValue) throws IOException;
+    }
+
+    private <R, P> Map<String, JsonNode> getOptStatementParameters(R request, Iterator<String> paramNameIter,
+            BiFunction<R, String, P> paramValueAccessor, CheckedFunction<P, JsonNode> paramValueParser)
+            throws IOException {
+        Map<String, JsonNode> result = null;
+        while (paramNameIter.hasNext()) {
+            String paramName = paramNameIter.next();
+            String stmtParamName = extractStatementParameterName(paramName);
+            if (stmtParamName != null) {
+                if (result == null) {
+                    result = new HashMap<>();
+                }
+                P paramValue = paramValueAccessor.apply(request, paramName);
+                JsonNode stmtParamValue = paramValueParser.apply(paramValue);
+                result.put(stmtParamName, stmtParamValue);
+            } else if (Parameter.ARGS.str().equals(paramName)) {
+                if (result == null) {
+                    result = new HashMap<>();
+                }
+                P paramValue = paramValueAccessor.apply(request, paramName);
+                JsonNode stmtParamValue = paramValueParser.apply(paramValue);
+                if (stmtParamValue.isArray()) {
+                    for (int i = 0, ln = stmtParamValue.size(); i < ln; i++) {
+                        result.put(String.valueOf(i + 1), stmtParamValue.get(i));
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
     private RequestParameters getRequestParameters(IServletRequest request) throws IOException {
         final String contentType = HttpUtil.getContentTypeOnly(request);
         RequestParameters param = new RequestParameters();
@@ -435,6 +480,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 param.optimizedLogicalPlan = getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN.str(), false);
                 param.job = getOptBoolean(jsonRequest, Parameter.JOB.str(), false);
                 param.signature = getOptBoolean(jsonRequest, Parameter.SIGNATURE.str(), true);
+                param.statementParams =
+                        getOptStatementParameters(jsonRequest, jsonRequest.fieldNames(), JsonNode::get, v -> v);
             } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
                 GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
@@ -451,6 +498,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             param.timeout = request.getParameter(Parameter.TIMEOUT.str());
             param.maxResultReads = request.getParameter(Parameter.MAX_RESULT_READS.str());
             param.planFormat = request.getParameter(Parameter.PLAN_FORMAT.str());
+            try {
+                param.statementParams = getOptStatementParameters(request, request.getParameterNames().iterator(),
+                        IServletRequest::getParameter, OBJECT_MAPPER::readTree);
+            } catch (JsonParseException | JsonMappingException e) {
+                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
+            }
         }
         return param;
     }
@@ -530,12 +583,15 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (optionalParamProvider != null) {
                 optionalParams = optionalParamProvider.apply(request);
             }
+            Map<String, byte[]> statementParams =
+                    org.apache.asterix.app.translator.RequestParameters.serializeParameterValues(param.statementParams);
             // CORS
             response.setHeader("Access-Control-Allow-Origin",
                     "http://" + hostName + ":" + appCtx.getExternalProperties().getQueryWebInterfacePort());
             response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
             response.setStatus(execution.getHttpStatus());
-            executeStatement(statementsText, sessionOutput, resultProperties, stats, param, execution, optionalParams);
+            executeStatement(statementsText, sessionOutput, resultProperties, stats, param, execution, optionalParams,
+                    statementParams);
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
                 ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
             }
@@ -560,8 +616,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     protected void executeStatement(String statementsText, SessionOutput sessionOutput,
-            ResultProperties resultProperties, IStatementExecutor.Stats stats, RequestParameters param,
-            RequestExecutionState execution, Map<String, String> optionalParameters) throws Exception {
+            ResultProperties resultProperties, Stats stats, RequestParameters param, RequestExecutionState execution,
+            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters) throws Exception {
         IClusterManagementWork.ClusterState clusterState =
                 ((ICcApplicationContext) appCtx).getClusterStateManager().getState();
         if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
@@ -574,8 +630,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         IStatementExecutor translator = statementExecutorFactory.create((ICcApplicationContext) appCtx, statements,
                 sessionOutput, compilationProvider, componentProvider);
         execution.start();
-        final IRequestParameters requestParameters = new org.apache.asterix.app.translator.RequestParameters(
-                getHyracksDataset(), resultProperties, stats, null, param.clientContextID, optionalParameters);
+        Map<String, IAObject> stmtParams =
+                org.apache.asterix.app.translator.RequestParameters.deserializeParameterValues(statementParameters);
+        IRequestParameters requestParameters =
+                new org.apache.asterix.app.translator.RequestParameters(getHyracksDataset(), resultProperties, stats,
+                        null, param.clientContextID, optionalParameters, stmtParams);
         translator.compileAndExecute(getHyracksClientConnection(), queryCtx, requestParameters);
         execution.end();
         printExecutionPlans(sessionOutput, translator.getExecutionPlans());
@@ -637,5 +696,27 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     private static boolean isJsonFormat(String format) {
         return format.startsWith(HttpUtil.ContentType.APPLICATION_JSON)
                 || format.equalsIgnoreCase(HttpUtil.ContentType.JSON);
+    }
+
+    public static String extractStatementParameterName(String name) {
+        int ln = name.length();
+        if (ln > 1 && name.charAt(0) == '$' && Character.isLetter(name.charAt(1))) {
+            if (ln == 2 || isStatementParameterNameRest(name, 2)) {
+                return name.substring(1);
+            }
+        }
+        return null;
+    }
+
+    private static boolean isStatementParameterNameRest(CharSequence input, int startIndex) {
+        int i = startIndex;
+        for (int ln = input.length(); i < ln; i++) {
+            char c = input.charAt(i);
+            boolean ok = c == '_' || Character.isLetterOrDigit(c);
+            if (!ok) {
+                return false;
+            }
+        }
+        return i > startIndex;
     }
 }

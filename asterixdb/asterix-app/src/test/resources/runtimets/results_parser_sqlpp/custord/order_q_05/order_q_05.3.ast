@@ -49,7 +49,7 @@ RecordConstructor [
     :
     IndexAccessor [
       Variable [ Name=$c2 ]
-      Index: ANY
+      Index:       LiteralExpr [LONG] [0]
     ]
   )
 ]

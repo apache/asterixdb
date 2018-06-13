@@ -71,7 +71,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     @Override
     protected void executeStatement(String statementsText, SessionOutput sessionOutput,
             ResultProperties resultProperties, IStatementExecutor.Stats stats, RequestParameters param,
-            RequestExecutionState execution, Map<String, String> optionalParameters) throws Exception {
+            RequestExecutionState execution, Map<String, String> optionalParameters,
+            Map<String, byte[]> statementParameters) throws Exception {
         // Running on NC -> send 'execute' message to CC
         INCServiceContext ncCtx = (INCServiceContext) serviceCtx;
         INCMessageBroker ncMb = (INCMessageBroker) ncCtx.getMessageBroker();
@@ -87,9 +88,10 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             if (param.timeout != null && !param.timeout.trim().isEmpty()) {
                 timeout = TimeUnit.NANOSECONDS.toMillis(Duration.parseDurationStringToNanos(param.timeout));
             }
-            ExecuteStatementRequestMessage requestMsg = new ExecuteStatementRequestMessage(ncCtx.getNodeId(),
-                    responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(),
-                    resultProperties.getNcToCcResultProperties(), param.clientContextID, handleUrl, optionalParameters);
+            ExecuteStatementRequestMessage requestMsg =
+                    new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
+                            statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
+                            param.clientContextID, handleUrl, optionalParameters, statementParameters);
             execution.start();
             ncMb.sendMessageToPrimaryCC(requestMsg);
             try {

@@ -18,13 +18,26 @@
  */
 package org.apache.asterix.app.translator;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.asterix.external.library.java.base.ByteArrayAccessibleInputStream;
+import org.apache.asterix.external.parser.JSONDataParser;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.ResultProperties;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataset.IHyracksDataset;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class RequestParameters implements IRequestParameters {
 
@@ -34,16 +47,18 @@ public class RequestParameters implements IRequestParameters {
     private final Map<String, String> optionalParameters;
     private final IStatementExecutor.ResultMetadata outMetadata;
     private final String clientContextId;
+    private final Map<String, IAObject> statementParameters;
 
     public RequestParameters(IHyracksDataset hdc, ResultProperties resultProperties, Stats stats,
             IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
-            Map<String, String> optionalParameters) {
+            Map<String, String> optionalParameters, Map<String, IAObject> statementParameters) {
         this.hdc = hdc;
         this.resultProperties = resultProperties;
         this.stats = stats;
         this.outMetadata = outMetadata;
         this.clientContextId = clientContextId;
         this.optionalParameters = optionalParameters;
+        this.statementParameters = statementParameters;
     }
 
     @Override
@@ -74,5 +89,51 @@ public class RequestParameters implements IRequestParameters {
     @Override
     public String getClientContextId() {
         return clientContextId;
+    }
+
+    @Override
+    public Map<String, IAObject> getStatementParameters() {
+        return statementParameters;
+    }
+
+    public static Map<String, byte[]> serializeParameterValues(Map<String, JsonNode> inParams)
+            throws HyracksDataException {
+        if (inParams == null || inParams.isEmpty()) {
+            return null;
+        }
+        JSONDataParser parser = new JSONDataParser(null, null);
+        ByteArrayAccessibleOutputStream buffer = new ByteArrayAccessibleOutputStream();
+        DataOutputStream bufferDataOutput = new DataOutputStream(buffer);
+        Map<String, byte[]> m = new HashMap<>();
+        for (Map.Entry<String, JsonNode> me : inParams.entrySet()) {
+            String name = me.getKey();
+            JsonNode jsonValue = me.getValue();
+            parser.setInputNode(jsonValue);
+            buffer.reset();
+            parser.parseAnyValue(bufferDataOutput);
+            byte[] byteValue = buffer.toByteArray();
+            m.put(name, byteValue);
+        }
+        return m;
+    }
+
+    public static Map<String, IAObject> deserializeParameterValues(Map<String, byte[]> inParams)
+            throws HyracksDataException {
+        if (inParams == null || inParams.isEmpty()) {
+            return null;
+        }
+        Map<String, IAObject> m = new HashMap<>();
+        ByteArrayAccessibleInputStream buffer = new ByteArrayAccessibleInputStream(new byte[0], 0, 0);
+        DataInputStream bufferDataInput = new DataInputStream(buffer);
+        ISerializerDeserializer serDe =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANY);
+        for (Map.Entry<String, byte[]> me : inParams.entrySet()) {
+            String name = me.getKey();
+            byte[] value = me.getValue();
+            buffer.setContent(value, 0, value.length);
+            IAObject iaValue = (IAObject) serDe.deserialize(bufferDataInput);
+            m.put(name, iaValue);
+        }
+        return m;
     }
 }

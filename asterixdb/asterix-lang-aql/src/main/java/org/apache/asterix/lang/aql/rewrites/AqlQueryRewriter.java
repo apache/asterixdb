@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.aql.rewrites;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -69,8 +70,8 @@ class AqlQueryRewriter implements IQueryRewriter {
 
     @Override
     public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
-            MetadataProvider metadataProvider, LangRewritingContext context, boolean inlineUdfs)
-            throws CompilationException {
+            MetadataProvider metadataProvider, LangRewritingContext context, boolean inlineUdfs,
+            Collection<VarIdentifier> externalVars) throws CompilationException {
         setup(declaredFunctions, topStatement, metadataProvider, context);
         if (topStatement.isTopLevel()) {
             wrapInLets();

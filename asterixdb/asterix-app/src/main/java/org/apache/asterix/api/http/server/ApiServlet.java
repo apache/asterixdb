@@ -164,7 +164,7 @@ public class ApiServlet extends AbstractServlet {
             long startTime = System.currentTimeMillis();
             final IRequestParameters requestParameters =
                     new RequestParameters(hds, new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
-                            new IStatementExecutor.Stats(), null, null, null);
+                            new IStatementExecutor.Stats(), null, null, null, null);
             translator.compileAndExecute(hcc, null, requestParameters);
             long endTime = System.currentTimeMillis();
             duration = (endTime - startTime) / 1000.00;

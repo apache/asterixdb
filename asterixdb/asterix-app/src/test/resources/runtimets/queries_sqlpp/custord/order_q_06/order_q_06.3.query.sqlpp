@@ -20,7 +20,7 @@
 use test;
 
 
-select element {'item1':c3[?]}
+select element {'item1':c3[0]}
 from  Orders as o
 with  c3 as {{o.heList,o.openlist}}
 ;

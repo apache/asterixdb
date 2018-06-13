@@ -50,7 +50,7 @@ Where
             Variable [ Name=$mv ]
             Field=movie
           ]
-          Index: ANY
+          Index:           LiteralExpr [LONG] [0]
         ]
       ]
     ]

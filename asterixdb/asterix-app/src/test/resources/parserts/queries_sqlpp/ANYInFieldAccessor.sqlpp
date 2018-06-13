@@ -20,5 +20,5 @@
 select element {'name':user.name,'movie':mv.movie}
 from  User as user,
       Movie as mv
-where some i in user.interests satisfies (i.movie = mv.movie[?])
+where some i in user.interests satisfies (i.movie = mv.movie[0])
 ;

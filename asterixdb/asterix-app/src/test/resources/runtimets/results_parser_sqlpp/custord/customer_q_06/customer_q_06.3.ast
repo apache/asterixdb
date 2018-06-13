@@ -45,7 +45,7 @@ Let Variable [ Name=$n ]
   OrderedListConstructor [
     IndexAccessor [
       Variable [ Name=$m ]
-      Index: ANY
+      Index:       LiteralExpr [LONG] [0]
     ]
     IndexAccessor [
       Variable [ Name=$m ]

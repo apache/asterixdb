@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -62,8 +63,10 @@ import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.optimizer.base.FuzzyUtils;
 import org.apache.asterix.optimizer.rules.am.AbstractIntroduceAccessMethodRule;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
@@ -170,8 +173,8 @@ public class APIFramework {
     }
 
     public Pair<IReturningStatement, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
-            MetadataProvider metadataProvider, IReturningStatement q, SessionOutput output, boolean inlineUdfs)
-            throws CompilationException {
+            MetadataProvider metadataProvider, IReturningStatement q, SessionOutput output, boolean inlineUdfs,
+            Collection<VarIdentifier> externalVars) throws CompilationException {
         if (q == null) {
             return null;
         }
@@ -180,13 +183,15 @@ public class APIFramework {
             generateExpressionTree(q);
         }
         IQueryRewriter rw = rewriterFactory.createQueryRewriter();
-        rw.rewrite(declaredFunctions, q, metadataProvider, new LangRewritingContext(q.getVarCounter()), inlineUdfs);
+        rw.rewrite(declaredFunctions, q, metadataProvider, new LangRewritingContext(q.getVarCounter()), inlineUdfs,
+                externalVars);
         return new Pair<>(q, q.getVarCounter());
     }
 
     public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
             Query query, int varCounter, String outputDatasetName, SessionOutput output,
-            ICompiledDmlStatement statement) throws AlgebricksException, ACIDException {
+            ICompiledDmlStatement statement, Map<VarIdentifier, IAObject> externalVars)
+            throws AlgebricksException, ACIDException {
 
         // establish facts
         final boolean isQuery = query != null;
@@ -203,7 +208,7 @@ public class APIFramework {
         final TxnId txnId = metadataProvider.getTxnIdFactory().create();
         metadataProvider.setTxnId(txnId);
         ILangExpressionToPlanTranslator t =
-                translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter);
+                translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter, externalVars);
 
         ILogicalPlan plan = isLoad ? t.translateLoad(statement) : t.translate(query, outputDatasetName, statement);
 

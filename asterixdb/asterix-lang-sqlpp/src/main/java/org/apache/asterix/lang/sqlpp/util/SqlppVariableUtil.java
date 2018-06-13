@@ -40,6 +40,8 @@ public class SqlppVariableUtil {
 
     private static final String USER_VAR_PREFIX = "$";
 
+    private static final String EXTERNAL_VAR_PREFIX = "?";
+
     private SqlppVariableUtil() {
     }
 
@@ -79,7 +81,15 @@ public class SqlppVariableUtil {
     }
 
     public static VarIdentifier toInternalVariableIdentifier(String idName) {
-        return new VarIdentifier(USER_VAR_PREFIX + idName);
+        return new VarIdentifier(toInternalVariableName(idName));
+    }
+
+    public static String toExternalVariableName(String varName) {
+        return EXTERNAL_VAR_PREFIX + varName;
+    }
+
+    public static boolean isExternalVariableIdentifier(VarIdentifier varId) {
+        return varId.getValue().startsWith(EXTERNAL_VAR_PREFIX);
     }
 
     public static Collection<VariableExpr> getFreeVariables(ILangExpression langExpr) throws CompilationException {

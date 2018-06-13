@@ -1,0 +1,1 @@
+{ "t1": { "p_null": null, "p_bool": true, "p_int": 42, "p_dec": 42.5, "p_dbl": 4250.0, "p_str": "hello", "p_arr": [ "99", 100, { "a": null }, null, true ], "p_obj": { "a": [ 1, 2, 3 ] } } }

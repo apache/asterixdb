@@ -28,7 +28,7 @@ Let Variable [ Name=$m ]
             Variable [ Name=$e ]
             Field=interests
           ]
-          Index: ANY
+          Index:           LiteralExpr [LONG] [0]
         ]
       )
       (
@@ -39,7 +39,7 @@ Let Variable [ Name=$m ]
             Variable [ Name=$e ]
             Field=children
           ]
-          Index: ANY
+          Index:           LiteralExpr [LONG] [0]
         ]
       )
       (

@@ -18,7 +18,11 @@
  */
 package org.apache.asterix.algebra.base;
 
+import java.util.Map;
+
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public interface ILangExpressionToPlanTranslatorFactory {
@@ -28,10 +32,11 @@ public interface ILangExpressionToPlanTranslatorFactory {
      *            providing the definition of created (i.e., stored) user-defined functions.
      * @param currentVarCounter,
      *            the current minimum available variable id.
+     * @param externalVars
      * @return a logical query plan.
      * @throws AlgebricksException
      */
     ILangExpressionToPlanTranslator createExpressionToPlanTranslator(MetadataProvider metadataProvider,
-            int currentVarCountert) throws AlgebricksException;
+            int currentVarCounter, Map<VarIdentifier, IAObject> externalVars) throws AlgebricksException;
 
 }

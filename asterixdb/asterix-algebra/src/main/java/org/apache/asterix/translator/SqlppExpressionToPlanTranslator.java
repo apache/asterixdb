@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -42,6 +43,7 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -67,10 +69,14 @@ import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -113,10 +119,12 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         ISqlppVisitor<Pair<ILogicalOperator, LogicalVariable>, Mutable<ILogicalOperator>> {
     private static final String ERR_MSG = "Translator should never enter this method!";
     private Deque<Mutable<ILogicalOperator>> uncorrelatedLeftBranchStack = new ArrayDeque<>();
+    private final Map<VarIdentifier, IAObject> externalVars;
 
-    public SqlppExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounter)
-            throws AlgebricksException {
+    public SqlppExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounter,
+            Map<VarIdentifier, IAObject> externalVars) throws AlgebricksException {
         super(metadataProvider, currentVarCounter);
+        this.externalVars = externalVars != null ? externalVars : Collections.emptyMap();
     }
 
     @Override
@@ -619,6 +627,38 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         finalAssignOp.getInputs().add(new MutableObject<>(unnestOp));
         finalAssignOp.setSourceLocation(caseExpression.getSourceLocation());
         return new Pair<>(finalAssignOp, resultVar);
+    }
+
+    @Override
+    protected ILogicalExpression translateVariableRef(VariableExpr varExpr) throws CompilationException {
+        VarIdentifier varId = varExpr.getVar();
+        if (SqlppVariableUtil.isExternalVariableIdentifier(varId)) {
+            IAObject value = externalVars.get(varId);
+            SourceLocation sourceLoc = varExpr.getSourceLocation();
+            if (value == null) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, varId.toString());
+            }
+
+            ILogicalExpression resultExpr;
+            ConstantExpression constExpr = new ConstantExpression(new AsterixConstantValue(value));
+            constExpr.setSourceLocation(sourceLoc);
+            resultExpr = constExpr;
+
+            IAType valueType = value.getType();
+            if (valueType.getTypeTag().isDerivedType()) {
+                ScalarFunctionCallExpression castExpr =
+                        new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE));
+                castExpr.setSourceLocation(sourceLoc);
+                // The first argument is the field
+                castExpr.getArguments().add(new MutableObject<>(resultExpr));
+                TypeCastUtils.setRequiredAndInputTypes(castExpr, BuiltinType.ANY, valueType);
+                resultExpr = castExpr;
+            }
+
+            return resultExpr;
+        }
+
+        return super.translateVariableRef(varExpr);
     }
 
     private Pair<ILogicalOperator, LogicalVariable> produceSelectPlan(boolean isSubquery,

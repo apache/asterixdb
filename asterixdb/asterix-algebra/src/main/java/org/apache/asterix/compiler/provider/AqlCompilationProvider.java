@@ -19,6 +19,7 @@
 package org.apache.asterix.compiler.provider;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
+import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.lang.aql.parser.AQLParserFactory;
 import org.apache.asterix.lang.aql.rewrites.AQLRewriterFactory;
 import org.apache.asterix.lang.aql.visitor.AQLAstPrintVisitorFactory;
@@ -28,6 +29,11 @@ import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.translator.AqlExpressionToPlanTranslatorFactory;
 
 public class AqlCompilationProvider implements ILangCompilationProvider {
+
+    @Override
+    public ILangExtension.Language getLanguage() {
+        return ILangExtension.Language.AQL;
+    }
 
     @Override
     public IParserFactory getParserFactory() {
@@ -53,5 +59,4 @@ public class AqlCompilationProvider implements ILangCompilationProvider {
     public IRuleSetFactory getRuleSetFactory() {
         return new DefaultRuleSetFactory();
     }
-
 }

@@ -19,7 +19,7 @@
 
 SQL++ is a highly composable expression language. Each SQL++ expression returns zero or more data model instances.
 There are three major kinds of expressions in SQL++. At the topmost level, a SQL++ expression can be an
-OperatorExpression (similar to a mathematical expression), or a QuantifiedExpression (which yields a boolean value). 
+OperatorExpression (similar to a mathematical expression), or a QuantifiedExpression (which yields a boolean value).
 Each will be detailed as we explore the full SQL++ grammar.
 
     Expression ::= OperatorExpression | QuantifiedExpression
@@ -201,13 +201,14 @@ A type error will be raised if the first expression in a quantified expression d
 
     PathExpression  ::= PrimaryExpression ( Field | Index )*
     Field           ::= "." Identifier
-    Index           ::= "[" ( Expression | "?" ) "]"
+    Index           ::= "[" Expression "]"
 
 Components of complex types in the data model are accessed via path expressions. Path access can be applied to the result
 of a SQL++ expression that yields an instance of  a complex type, for example, a object or array instance. For objects,
-path access is based on field names. For arrays, path access is based on (zero-based) array-style indexing.
-SQL++ also supports an "I'm feeling lucky" style index accessor, [?], for selecting an arbitrary element from an array.
+path access is based on field names. For arrays path access is based on (zero-based) array-style indexing.
 Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`.
+For multisets path access is also zero-based and returns an arbitrary multiset element if the index
+is within the size of the multiset or `MISSING` otherwise.
 Type errors will be raised for inappropriate use of a path expression, such as applying a field
 accessor to a numeric value.
 
@@ -227,15 +228,16 @@ composition thereof.
 
     PrimaryExpr ::= Literal
                   | VariableReference
+                  | ParameterReference
                   | ParenthesizedExpression
                   | FunctionCallExpression
                   | CaseExpression
                   | Constructor
 
 The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant)
-value, a reference to a query variable that is in scope, a parenthesized expression, a function call, a conditional 
-(case) expression, or a newly constructed instance of the data model (such as a newly constructed object, array, 
-or multiset of data model instances).
+value, a reference to a query variable that is in scope, a statement parameter, a parenthesized expression,
+a function call, a conditional (case) expression, or a newly constructed instance of the data model
+(such as a newly constructed object, array, or multiset of data model instances).
 
 ## <a id="Literals">Literals</a>
 
@@ -301,7 +303,7 @@ Different from standard SQL, double quotes play the same role as single quotes a
 
 ### <a id="Variable_references">Variable References</a>
 
-    VariableReference     ::= <IDENTIFIER>|<DelimitedIdentifier>
+    VariableReference     ::= <IDENTIFIER> | <DelimitedIdentifier>
     <IDENTIFIER>          ::= (<LETTER> | "_") (<LETTER> | <DIGIT> | "_" | "$")*
     <LETTER>              ::= ["A" - "Z", "a" - "z"]
     DelimitedIdentifier   ::= "`" (<EscapeQuot>
@@ -326,6 +328,22 @@ a variable's desired name clashes with a SQL++ keyword or includes characters no
     id
     `SELECT`
     `my-function`
+
+### <a id="Parameter_references">Parameter References</a>
+
+    ParameterReference              ::= NamedParameterReference | PositionalParameterReference
+    NamedParameterReference         ::= "$" (<IDENTIFIER> | <DelimitedIdentifier>)
+    PositionalParameterReference    ::= ("$" <DIGITS>) | "?"
+
+A statement parameter is an external variable which value is provided through the [statement execution API](../api.html#queryservice).
+An error will be raised if the parameter is not bound at the query execution time. Positional parameter numbering starts at 1.
+"?" parameters are interpreted as $1, .. $N in the order in which they appear in the statement.
+
+##### Examples
+
+    $id
+    $1
+    ?
 
 ### <a id="Parenthesized_expressions">Parenthesized Expressions</a>
 

@@ -19,35 +19,39 @@
 package org.apache.asterix.compiler.provider;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
+import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 
 public interface ILangCompilationProvider {
+    /**
+     * @return language kind
+     */
+    ILangExtension.Language getLanguage();
 
     /**
      * @return the parser factory of a language implementation.
      */
-    public IParserFactory getParserFactory();
+    IParserFactory getParserFactory();
 
     /**
      * @return the rewriter factory of a language implementation.
      */
-    public IRewriterFactory getRewriterFactory();
+    IRewriterFactory getRewriterFactory();
 
     /**
      * @return the AST printer factory of a language implementation.
      */
-    public IAstPrintVisitorFactory getAstPrintVisitorFactory();
+    IAstPrintVisitorFactory getAstPrintVisitorFactory();
 
     /**
      * @return the language expression to logical query plan translator factory of a language implementation.
      */
-    public ILangExpressionToPlanTranslatorFactory getExpressionToPlanTranslatorFactory();
+    ILangExpressionToPlanTranslatorFactory getExpressionToPlanTranslatorFactory();
 
     /**
      * @return the rule set factory of a language implementation
      */
-    public IRuleSetFactory getRuleSetFactory();
-
+    IRuleSetFactory getRuleSetFactory();
 }

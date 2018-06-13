@@ -75,7 +75,8 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
             laccessorToCaster.put(accessor, caster);
         }
         if (arg.second.getTypeTag().equals(ATypeTag.ANY)) {
-            arg.second = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
+            arg.second = accessor.ordered() ? DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE
+                    : DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
         }
         caster.castList(accessor, arg.first, (AbstractCollectionType) arg.second, this);
         return null;

@@ -18,16 +18,20 @@
  */
 package org.apache.asterix.translator;
 
+import java.util.Map;
+
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class AqlExpressionToPlanTranslatorFactory implements ILangExpressionToPlanTranslatorFactory {
 
     @Override
     public ILangExpressionToPlanTranslator createExpressionToPlanTranslator(MetadataProvider metadataProvider,
-            int currentVarCounter) throws AlgebricksException {
+            int currentVarCounter, Map<VarIdentifier, IAObject> externalVars) throws AlgebricksException {
         return new AqlExpressionToPlanTranslator(metadataProvider, currentVarCounter);
     }
 

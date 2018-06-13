@@ -23,14 +23,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.Reader;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.api.java.AsterixJavaClient;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
-import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
@@ -39,10 +41,12 @@ import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.IdentitiyResolverFactory;
 import org.apache.asterix.file.StorageComponentProvider;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.test.runtime.HDFSCluster;
 import org.apache.asterix.translator.IStatementExecutorFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.logging.log4j.LogManager;
@@ -113,7 +117,9 @@ public class OptimizerTest {
 
     private static void suiteBuildPerFile(File file, Collection<Object[]> testArgs, String path) {
         if (file.isDirectory() && !file.getName().startsWith(".")) {
-            for (File innerfile : file.listFiles()) {
+            File[] files = file.listFiles();
+            Arrays.sort(files);
+            for (File innerfile : files) {
                 String subdir = innerfile.isDirectory() ? path + innerfile.getName() + SEPARATOR : path;
                 suiteBuildPerFile(innerfile, testArgs, subdir);
             }
@@ -170,32 +176,29 @@ public class OptimizerTest {
             Assume.assumeTrue(!skipped);
 
             LOGGER.info("RUN TEST: \"" + queryFile.getPath() + "\"");
-            Reader query = new BufferedReader(new InputStreamReader(new FileInputStream(queryFile), "UTF-8"));
+            String query = FileUtils.readFileToString(queryFile, StandardCharsets.UTF_8);
+            Map<String, IAObject> queryParams = TestHelper.readStatementParameters(query);
 
             LOGGER.info("ACTUAL RESULT FILE: " + actualFile.getAbsolutePath());
 
             // Forces the creation of actualFile.
             actualFile.getParentFile().mkdirs();
 
-            PrintWriter plan = new PrintWriter(actualFile);
             ILangCompilationProvider provider =
                     queryFile.getName().endsWith("aql") ? aqlCompilationProvider : sqlppCompilationProvider;
             if (extensionLangCompilationProvider != null) {
                 provider = extensionLangCompilationProvider;
             }
             IHyracksClientConnection hcc = integrationUtil.getHyracksClientConnection();
-            AsterixJavaClient asterix =
-                    new AsterixJavaClient((ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc,
-                            query, plan, provider, statementExecutorFactory, storageComponentProvider);
-            try {
+            try (PrintWriter plan = new PrintWriter(actualFile)) {
+                AsterixJavaClient asterix = new AsterixJavaClient(
+                        (ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc,
+                        new StringReader(query), plan, provider, statementExecutorFactory, storageComponentProvider);
+                asterix.setStatementParameters(queryParams);
                 asterix.compile(true, false, false, true, true, false, false);
             } catch (AlgebricksException e) {
-                plan.close();
-                query.close();
                 throw new Exception("Compile ERROR for " + queryFile + ": " + e.getMessage(), e);
             }
-            plan.close();
-            query.close();
 
             BufferedReader readerExpected =
                     new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), "UTF-8"));

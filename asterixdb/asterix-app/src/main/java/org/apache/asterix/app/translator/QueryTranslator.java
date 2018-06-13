@@ -115,7 +115,6 @@ import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -145,6 +144,7 @@ import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.MetadataLockUtil;
 import org.apache.asterix.metadata.utils.MetadataUtil;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -221,6 +221,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final SessionConfig sessionConfig;
     protected Dataverse activeDataverse;
     protected final List<FunctionDecl> declaredFunctions;
+    protected final ILangCompilationProvider compilationProvider;
     protected final APIFramework apiFramework;
     protected final IRewriterFactory rewriterFactory;
     protected final ExecutorService executorService;
@@ -228,15 +229,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final IMetadataLockManager lockManager;
 
     public QueryTranslator(ICcApplicationContext appCtx, List<Statement> statements, SessionOutput output,
-            ILangCompilationProvider compliationProvider, ExecutorService executorService) {
+            ILangCompilationProvider compilationProvider, ExecutorService executorService) {
         this.appCtx = appCtx;
         this.lockManager = appCtx.getMetadataLockManager();
         this.statements = statements;
         this.sessionOutput = output;
         this.sessionConfig = output.config();
+        this.compilationProvider = compilationProvider;
         declaredFunctions = getDeclaredFunctions(statements);
-        apiFramework = new APIFramework(compliationProvider);
-        rewriterFactory = compliationProvider.getRewriterFactory();
+        apiFramework = new APIFramework(compilationProvider);
+        rewriterFactory = compilationProvider.getRewriterFactory();
         activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
         this.executorService = executorService;
         if (appCtx.getServiceContext().getAppConfig().getBoolean(CCConfig.Option.ENFORCE_FRAME_WRITER_PROTOCOL)) {
@@ -280,13 +282,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final Stats stats = requestParameters.getStats();
         final ResultMetadata outMetadata = requestParameters.getOutMetadata();
         final String clientContextId = requestParameters.getClientContextId();
+        final Map<String, IAObject> stmtParams = requestParameters.getStatementParameters();
         try {
             for (Statement stmt : statements) {
                 if (sessionConfig.is(SessionConfig.FORMAT_HTML)) {
                     sessionOutput.out().println(ApiServlet.HTML_STATEMENT_SEPARATOR);
                 }
                 validateOperation(appCtx, activeDataverse, stmt);
-                rewriteStatement(stmt); // Rewrite the statement's AST.
+                IStatementRewriter stmtRewriter = rewriterFactory.createStatementRewriter();
+                rewriteStatement(stmt, stmtRewriter); // Rewrite the statement's AST.
                 MetadataProvider metadataProvider = new MetadataProvider(appCtx, activeDataverse);
                 metadataProvider.getConfig().putAll(config);
                 metadataProvider.setWriterFactory(writerFactory);
@@ -347,10 +351,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             metadataProvider.setMaxResultReads(maxResultReads);
                         }
                         handleInsertUpsertStatement(metadataProvider, stmt, hcc, hdc, resultDelivery, outMetadata,
-                                stats, false, clientContextId);
+                                stats, false, clientContextId, stmtParams, stmtRewriter);
                         break;
                     case DELETE:
-                        handleDeleteStatement(metadataProvider, stmt, hcc, false);
+                        handleDeleteStatement(metadataProvider, stmt, hcc, false, stmtParams, stmtRewriter);
                         break;
                     case CREATE_FEED:
                         handleCreateFeedStatement(metadataProvider, stmt);
@@ -382,7 +386,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED);
                         metadataProvider.setMaxResultReads(maxResultReads);
                         handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery, outMetadata, stats,
-                                clientContextId, ctx);
+                                clientContextId, ctx, stmtParams, stmtRewriter);
                         break;
                     case COMPACT:
                         handleCompactStatement(metadataProvider, stmt, hcc);
@@ -1721,20 +1725,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             wrappedQuery.setSourceLocation(sourceLoc);
             wrappedQuery.setBody(cfs.getFunctionBodyExpression());
             wrappedQuery.setTopLevel(false);
-            List<VarIdentifier> varIds = new ArrayList<>();
+            List<VarIdentifier> paramVars = new ArrayList<>();
             for (String v : cfs.getParamList()) {
-                varIds.add(new VarIdentifier(v));
+                paramVars.add(new VarIdentifier(v));
             }
-            wrappedQuery.setExternalVars(varIds);
-            apiFramework.reWriteQuery(declaredFunctions, metadataProvider, wrappedQuery, sessionOutput, false);
+            apiFramework.reWriteQuery(declaredFunctions, metadataProvider, wrappedQuery, sessionOutput, false,
+                    paramVars);
 
             List<List<List<String>>> dependencies = FunctionUtil.getFunctionDependencies(
                     rewriterFactory.createQueryRewriter(), cfs.getFunctionBodyExpression(), metadataProvider);
 
-            final String language =
-                    rewriterFactory instanceof SqlppRewriterFactory ? Function.LANGUAGE_SQLPP : Function.LANGUAGE_AQL;
             Function function = new Function(signature, cfs.getParamList(), Function.RETURNTYPE_VOID,
-                    cfs.getFunctionBody(), language, FunctionKind.SCALAR.toString(), dependencies);
+                    cfs.getFunctionBody(), getFunctionLanguage(), FunctionKind.SCALAR.toString(), dependencies);
             MetadataManager.INSTANCE.addFunction(mdTxnCtx, function);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1744,6 +1746,17 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } finally {
             metadataProvider.getLocks().unlock();
             metadataProvider.setDefaultDataverse(activeDataverse);
+        }
+    }
+
+    private String getFunctionLanguage() {
+        switch (compilationProvider.getLanguage()) {
+            case SQLPP:
+                return Function.LANGUAGE_SQLPP;
+            case AQL:
+                return Function.LANGUAGE_AQL;
+            default:
+                throw new IllegalStateException(String.valueOf(compilationProvider.getLanguage()));
         }
     }
 
@@ -1810,7 +1823,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     new CompiledLoadFromFileStatement(dataverseName, loadStmt.getDatasetName().getValue(),
                             loadStmt.getAdapter(), loadStmt.getProperties(), loadStmt.dataIsAlreadySorted());
             cls.setSourceLocation(stmt.getSourceLocation());
-            JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls);
+            JobSpecification spec =
+                    apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls, null);
             afterCompile();
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -1829,7 +1843,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     public JobSpecification handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
-            ResultMetadata outMetadata, Stats stats, boolean compileOnly, String clientContextId) throws Exception {
+            ResultMetadata outMetadata, Stats stats, boolean compileOnly, String clientContextId,
+            Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter) throws Exception {
         InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
         String dataverseName = getActiveDataverse(stmtInsertUpsert.getDataverseName());
         final IMetadataLocker locker = new IMetadataLocker() {
@@ -1850,7 +1865,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             try {
                 metadataProvider.setWriteTransaction(true);
-                final JobSpecification jobSpec = rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert);
+                final JobSpecification jobSpec =
+                        rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert, stmtParams, stmtRewriter);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
                 return jobSpec;
@@ -1889,7 +1905,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public JobSpecification handleDeleteStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, boolean compileOnly) throws Exception {
+            IHyracksClientConnection hcc, boolean compileOnly, Map<String, IAObject> stmtParams,
+            IStatementRewriter stmtRewriter) throws Exception {
         DeleteStatement stmtDelete = (DeleteStatement) stmt;
         String dataverseName = getActiveDataverse(stmtDelete.getDataverseName());
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1903,7 +1920,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     stmtDelete.getDatasetName().getValue(), stmtDelete.getCondition(), stmtDelete.getVarCounter(),
                     stmtDelete.getQuery());
             clfrqs.setSourceLocation(stmt.getSourceLocation());
-            JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs);
+            JobSpecification jobSpec =
+                    rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs, stmtParams, stmtRewriter);
             afterCompile();
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -1925,27 +1943,31 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     @Override
     public JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector,
-            MetadataProvider metadataProvider, Query query, ICompiledDmlStatement stmt)
-            throws RemoteException, AlgebricksException, ACIDException {
+            MetadataProvider metadataProvider, Query query, ICompiledDmlStatement stmt,
+            Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter)
+            throws AlgebricksException, ACIDException {
+
+        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(stmtParams, stmtRewriter);
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
-        Pair<IReturningStatement, Integer> rewrittenResult =
-                apiFramework.reWriteQuery(declaredFunctions, metadataProvider, query, sessionOutput, true);
+        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
+                metadataProvider, query, sessionOutput, true, externalVars.keySet());
 
         // Query Compilation (happens under the same ongoing metadata transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, (Query) rewrittenResult.first,
-                rewrittenResult.second, stmt == null ? null : stmt.getDatasetName(), sessionOutput, stmt);
+                rewrittenResult.second, stmt == null ? null : stmt.getDatasetName(), sessionOutput, stmt, externalVars);
     }
 
     private JobSpecification rewriteCompileInsertUpsert(IClusterInfoCollector clusterInfoCollector,
-            MetadataProvider metadataProvider, InsertStatement insertUpsert)
-            throws RemoteException, AlgebricksException, ACIDException {
+            MetadataProvider metadataProvider, InsertStatement insertUpsert, Map<String, IAObject> stmtParams,
+            IStatementRewriter stmtRewriter) throws AlgebricksException, ACIDException {
         SourceLocation sourceLoc = insertUpsert.getSourceLocation();
 
-        // Insert/upsert statement rewriting (happens under the same ongoing metadata
-        // transaction)
-        Pair<IReturningStatement, Integer> rewrittenResult =
-                apiFramework.reWriteQuery(declaredFunctions, metadataProvider, insertUpsert, sessionOutput, true);
+        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(stmtParams, stmtRewriter);
+
+        // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
+        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
+                metadataProvider, insertUpsert, sessionOutput, true, externalVars.keySet());
 
         InsertStatement rewrittenInsertUpsert = (InsertStatement) rewrittenResult.first;
         String dataverseName = getActiveDataverse(rewrittenInsertUpsert.getDataverseName());
@@ -1971,7 +1993,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // Insert/upsert statement compilation (happens under the same ongoing metadata
         // transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, rewrittenInsertUpsert.getQuery(),
-                rewrittenResult.second, datasetName, sessionOutput, clfrqs);
+                rewrittenResult.second, datasetName, sessionOutput, clfrqs, externalVars);
     }
 
     protected void handleCreateFeedStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
@@ -2419,7 +2441,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleQuery(MetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
             IHyracksDataset hdc, ResultDelivery resultDelivery, ResultMetadata outMetadata, Stats stats,
-            String clientContextId, IStatementExecutorContext ctx) throws Exception {
+            String clientContextId, IStatementExecutorContext ctx, Map<String, IAObject> stmtParams,
+            IStatementRewriter stmtRewriter) throws Exception {
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() {
@@ -2437,7 +2460,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             boolean bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             try {
-                final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null);
+                final JobSpecification jobSpec =
+                        rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams, stmtRewriter);
                 afterCompile();
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
@@ -2885,8 +2909,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void rewriteStatement(Statement stmt) throws CompilationException {
-        IStatementRewriter rewriter = rewriterFactory.createStatementRewriter();
+    protected void rewriteStatement(Statement stmt, IStatementRewriter rewriter) throws CompilationException {
         rewriter.rewrite(stmt);
     }
 
@@ -2901,5 +2924,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (sessionOutput.config().is(SessionConfig.FORMAT_HTML)) {
             ExecutionPlansHtmlPrintUtil.print(sessionOutput.out(), getExecutionPlans());
         }
+    }
+
+    private Map<VarIdentifier, IAObject> createExternalVariables(Map<String, IAObject> stmtParams,
+            IStatementRewriter stmtRewriter) {
+        if (stmtParams == null || stmtParams.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<VarIdentifier, IAObject> m = new HashMap<>();
+        for (Map.Entry<String, IAObject> me : stmtParams.entrySet()) {
+            String paramName = me.getKey();
+            String extVarName = stmtRewriter.toExternalVariableName(paramName);
+            if (extVarName != null) {
+                m.put(new VarIdentifier(extVarName), me.getValue());
+            }
+        }
+        return m;
     }
 }
