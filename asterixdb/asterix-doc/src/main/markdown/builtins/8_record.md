@@ -316,7 +316,7 @@
  * The expected result is:
 
         {
-          "id": "1",
+          "id": 1,
           "project": "AsterixDB",
         }
 
@@ -351,7 +351,36 @@
  * The expected result is:
 
         {
-          "id": "1",
+          "id": 1,
           "project": "AsterixDB",
           "location": {"city": "Irvine", "state": "CA"}
         }
+
+### object_wrap ###
+ * Syntax:
+
+        object_wrap(input_object)
+
+ * Returns the value of the single name-value pair that appears in `input_object`.
+ * Arguments:
+    * `input_object` : an object value that consists of exactly one name-value pair.
+ * Return Value:
+    * The value of the single name-value pair that appears in `input_object`,
+    * `missing` if `input_object` is `missing`,
+    * `null` if `input_object` is null, or an empty object, or there is more than one name-value pair in `input_object`,
+      or any non-object value.
+
+ * Example:
+
+        object_wrap(
+                     {
+                       "id": 1
+                     }
+                   );
+
+ * The expected result is:
+
+        {
+          1
+        }
+
