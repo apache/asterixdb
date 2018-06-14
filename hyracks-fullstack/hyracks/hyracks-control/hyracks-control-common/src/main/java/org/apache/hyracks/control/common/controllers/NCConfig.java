@@ -21,7 +21,6 @@ package org.apache.hyracks.control.common.controllers;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
-import static org.apache.hyracks.control.common.config.OptionTypes.SHORT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING_ARRAY;
 
@@ -34,7 +33,6 @@ import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
-import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.util.file.FileUtil;
 
@@ -65,10 +63,10 @@ public class NCConfig extends ControllerConfig {
         MESSAGING_LISTEN_PORT(INTEGER, 0),
         MESSAGING_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
         MESSAGING_PUBLIC_PORT(INTEGER, MESSAGING_LISTEN_PORT),
-        REPLICATION_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
-        REPLICATION_PUBLIC_PORT(INTEGER, 2000),
         REPLICATION_LISTEN_ADDRESS(STRING, ADDRESS),
         REPLICATION_LISTEN_PORT(INTEGER, 2000),
+        REPLICATION_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
+        REPLICATION_PUBLIC_PORT(INTEGER, REPLICATION_LISTEN_PORT),
         CLUSTER_CONNECT_RETRIES(INTEGER, 5),
         IODEVICES(
                 STRING_ARRAY,

@@ -215,8 +215,8 @@ public class ClusterControllerService implements IControllerService {
         clusterIPC.start();
         clientIPC.start();
         webServer.start();
-        info = new ClusterControllerInfo(ccId, ccConfig.getClientListenAddress(), ccConfig.getClientListenPort(),
-                webServer.getListeningPort());
+        info = new ClusterControllerInfo(ccId, ccConfig.getClientPublicAddress(), ccConfig.getClientPublicPort(),
+                ccConfig.getConsolePublicPort());
         timer.schedule(sweeper, 0, ccConfig.getHeartbeatPeriodMillis());
         jobLog.open();
         startApplication();
@@ -409,7 +409,7 @@ public class ClusterControllerService implements IControllerService {
     }
 
     public NetworkAddress getDatasetDirectoryServiceInfo() {
-        return new NetworkAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort());
+        return new NetworkAddress(ccConfig.getClientPublicAddress(), ccConfig.getClientPublicPort());
     }
 
     public JobIdFactory getJobIdFactory() {

@@ -45,14 +45,19 @@ public class CCConfig extends ControllerConfig {
     public enum Option implements IOption {
         APP_CLASS(STRING, (String) null),
         ADDRESS(STRING, InetAddress.getLoopbackAddress().getHostAddress()),
+        PUBLIC_ADDRESS(STRING, ADDRESS),
         CLUSTER_LISTEN_ADDRESS(STRING, ADDRESS),
         CLUSTER_LISTEN_PORT(INTEGER, 1099),
-        CLUSTER_PUBLIC_ADDRESS(STRING, CLUSTER_LISTEN_ADDRESS),
+        CLUSTER_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
         CLUSTER_PUBLIC_PORT(INTEGER, CLUSTER_LISTEN_PORT),
         CLIENT_LISTEN_ADDRESS(STRING, ADDRESS),
         CLIENT_LISTEN_PORT(INTEGER, 1098),
+        CLIENT_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
+        CLIENT_PUBLIC_PORT(INTEGER, CLIENT_LISTEN_PORT),
         CONSOLE_LISTEN_ADDRESS(STRING, ADDRESS),
         CONSOLE_LISTEN_PORT(INTEGER, 16001),
+        CONSOLE_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
+        CONSOLE_PUBLIC_PORT(INTEGER, CONSOLE_LISTEN_PORT),
         HEARTBEAT_PERIOD(LONG, 10000L), // TODO (mblow): add time unit
         HEARTBEAT_MAX_MISSES(INTEGER, 5),
         PROFILE_DUMP_PERIOD(INTEGER, 0),
@@ -118,6 +123,10 @@ public class CCConfig extends ControllerConfig {
                     return "Application CC main class";
                 case ADDRESS:
                     return "Default bind address for all services on this cluster controller";
+                case PUBLIC_ADDRESS:
+                    return "Default public address that other processes should use to contact this cluster controller. "
+                            + "All services will advertise this address unless a service-specific public address is "
+                            + "supplied.";
                 case CLUSTER_LISTEN_ADDRESS:
                     return "Sets the IP Address to listen for connections from NCs";
                 case CLUSTER_LISTEN_PORT:
@@ -130,10 +139,18 @@ public class CCConfig extends ControllerConfig {
                     return "Sets the IP Address to listen for connections from clients";
                 case CLIENT_LISTEN_PORT:
                     return "Sets the port to listen for connections from clients";
+                case CLIENT_PUBLIC_ADDRESS:
+                    return "The IP Address which clients should use to connect";
+                case CLIENT_PUBLIC_PORT:
+                    return "The port which clients should use to connect";
                 case CONSOLE_LISTEN_ADDRESS:
                     return "Sets the listen address for the Cluster Controller";
                 case CONSOLE_LISTEN_PORT:
                     return "Sets the http port for the Cluster Controller)";
+                case CONSOLE_PUBLIC_ADDRESS:
+                    return "Sets the address on which to contact the http console for the Cluster Controller";
+                case CONSOLE_PUBLIC_PORT:
+                    return "Sets the port on which to contact the http console for the Cluster Controller)";
                 case HEARTBEAT_PERIOD:
                     return "Sets the time duration between two heartbeats from each node controller in milliseconds";
                 case HEARTBEAT_MAX_MISSES:
@@ -261,12 +278,36 @@ public class CCConfig extends ControllerConfig {
         configManager.set(Option.CLIENT_LISTEN_PORT, clientListenPort);
     }
 
+    public String getClientPublicAddress() {
+        return getAppConfig().getString(Option.CLIENT_PUBLIC_ADDRESS);
+    }
+
+    public void setClientPublicAddress(String clientPublicAddress) {
+        configManager.set(Option.CLIENT_PUBLIC_ADDRESS, clientPublicAddress);
+    }
+
+    public int getClientPublicPort() {
+        return getAppConfig().getInt(Option.CLIENT_PUBLIC_PORT);
+    }
+
+    public void setClientPublicPort(int clientPublicPort) {
+        configManager.set(Option.CLIENT_PUBLIC_PORT, clientPublicPort);
+    }
+
     public int getConsoleListenPort() {
         return getAppConfig().getInt(Option.CONSOLE_LISTEN_PORT);
     }
 
     public void setConsoleListenPort(int consoleListenPort) {
         configManager.set(Option.CONSOLE_LISTEN_PORT, consoleListenPort);
+    }
+
+    public int getConsolePublicPort() {
+        return getAppConfig().getInt(Option.CONSOLE_PUBLIC_PORT);
+    }
+
+    public void setConsolePublicPort(int consolePublicPort) {
+        configManager.set(Option.CONSOLE_PUBLIC_PORT, consolePublicPort);
     }
 
     public long getHeartbeatPeriodMillis() {
