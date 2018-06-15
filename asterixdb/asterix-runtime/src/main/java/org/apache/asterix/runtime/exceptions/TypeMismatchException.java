@@ -57,4 +57,11 @@ public class TypeMismatchException extends RuntimeDataException {
                 toExpectedTypeString(expectedTypeTags),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
+
+    // Parameter type mistmatch.
+    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, byte actualTypeTag,
+            String expectedType) {
+        super(ErrorCode.TYPE_MISMATCH, sourceLoc, fid.getName(), indexToPosition(i), expectedType,
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
+    }
 }

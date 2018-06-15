@@ -384,3 +384,42 @@
           1
         }
 
+### object_replace ###
+ * Syntax:
+
+        object_replace(input_object, old_value, new_value)
+
+ * Returns a new object that has the same fields as `input_object` with all occurrences of value `old_value` replaced by
+   `new_value`
+ * Arguments:
+    * `input_object` : an object value.
+    * `old_value` : a primitive type value to be replaced by `new_value`.
+    * `new_value` : a value to replace `old_value`.
+ * Return Value:
+    * A new object that has the same fields as `input_object` with all occurrences of value `old_value` replaced by
+      `new_value`,
+    * `missing` if any argument is a `missing` value,
+    * `null` if `input_object`  or `old_value` is null,
+    * a type error will be raised if:
+        * `old_value` is not a primitive type value.
+
+ * Example:
+
+        object_replace(
+                       {
+                         "id": 1,
+                         "project": "AsterixDB",
+                         "address": {"city": "Irvine", "state": "CA"}
+                       }
+                       , "AsterixDB"
+                       , "Apache AsterixDB"
+                     );
+
+ * The expected result is:
+
+        {
+          "id": 1,
+          "project": "Apache AsterixDB",
+          "location": {"city": "Irvine", "state": "CA"}
+        }
+

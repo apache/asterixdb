@@ -295,4 +295,20 @@ public final class FunctionTypeInferers {
             fd.setImmutableStates((Object[]) argRecordTypes);
         }
     }
+
+    public static final class ArgsTypeInferer implements IFunctionTypeInferer {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
+            final AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
+            final List<Mutable<ILogicalExpression>> args = f.getArguments();
+            final IAType[] types = new IAType[f.getArguments().size()];
+            for (int i = 0; i < types.length; i++) {
+                final IAType argType = (IAType) context.getType(args.get(i).getValue());
+                final IAType actualType = TypeComputeUtils.getActualType(argType);
+                types[i] = actualType;
+            }
+            fd.setImmutableStates((Object[]) types);
+        }
+    }
 }

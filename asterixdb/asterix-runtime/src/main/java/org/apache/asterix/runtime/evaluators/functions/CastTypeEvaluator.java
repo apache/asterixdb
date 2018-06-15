@@ -33,7 +33,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-class CastTypeEvaluator implements IScalarEvaluator {
+public class CastTypeEvaluator implements IScalarEvaluator {
 
     private final IScalarEvaluator argEvaluator;
     private final IPointable argPointable = new VoidPointable();

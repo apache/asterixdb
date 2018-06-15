@@ -226,6 +226,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-rename", 3);
     public static final FunctionIdentifier RECORD_UNWRAP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-unwrap", 1);
+    public static final FunctionIdentifier RECORD_REPLACE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-replace", 3);
 
     // numeric
     public static final FunctionIdentifier NUMERIC_UNARY_MINUS =
@@ -1469,6 +1471,7 @@ public class BuiltinFunctions {
         addFunction(RECORD_REMOVE, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(RECORD_RENAME, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(RECORD_UNWRAP, AnyTypeComputer.INSTANCE, true);
+        addFunction(RECORD_REPLACE, OpenARecordTypeComputer.INSTANCE, true);
 
         // temporal type accessors
         addFunction(ACCESSOR_TEMPORAL_YEAR, AInt64TypeComputer.INSTANCE, true);
