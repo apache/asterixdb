@@ -1113,7 +1113,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
-        <artifactId>hyracks-hdfs-core</artifactId>
+        <artifactId>hyracks-hdfs</artifactId>
         <version>${hyracks.version}</version>
       </dependency>
       <dependency>
@@ -1129,7 +1129,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
-        <artifactId>hyracks-hdfs-2.x</artifactId>
+        <artifactId>hyracks-hdfs</artifactId>
         <version>${hyracks.version}</version>
         <type>test-jar</type>
       </dependency>

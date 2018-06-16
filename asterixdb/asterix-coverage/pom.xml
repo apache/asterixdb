@@ -83,7 +83,6 @@
                           <classfiles>
                             <fileset dir="${asterix.dir}">
                               <include name="**/target/classes/**/*.class" />
-                              <exclude name="**/hyracks-hdfs/hyracks-hdfs-1.x/**" />
                             </fileset>
                           </classfiles>
                           <sourcefiles encoding="UTF-8">
