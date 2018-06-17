@@ -41,7 +41,7 @@ public class RecordReplaceDescriptor extends AbstractScalarFunctionDynamicDescri
 
         @Override
         public IFunctionTypeInferer createFunctionTypeInferer() {
-            return new FunctionTypeInferers.ArgsTypeInferer();
+            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
         }
     };
 

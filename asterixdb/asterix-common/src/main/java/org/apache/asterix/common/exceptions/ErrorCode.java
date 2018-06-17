@@ -167,6 +167,7 @@ public class ErrorCode {
     public static final int INDEX_EXISTS = 1084;
     public static final int TYPE_EXISTS = 1085;
     public static final int PARAMETER_NO_VALUE = 1086;
+    public static final int COMPILATION_INVALID_NUM_OF_ARGS = 1087;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

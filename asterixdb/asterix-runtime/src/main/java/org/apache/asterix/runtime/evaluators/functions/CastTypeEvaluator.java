@@ -35,12 +35,12 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class CastTypeEvaluator implements IScalarEvaluator {
 
-    private final IScalarEvaluator argEvaluator;
+    private IScalarEvaluator argEvaluator;
     private final IPointable argPointable = new VoidPointable();
 
     private final PointableAllocator allocator = new PointableAllocator();
-    private final IVisitablePointable inputPointable;
-    private final IVisitablePointable resultPointable;
+    private IVisitablePointable inputPointable;
+    private IVisitablePointable resultPointable;
 
     private final ACastVisitor castVisitor;
     private final Triple<IVisitablePointable, IAType, Boolean> arg;
@@ -51,6 +51,14 @@ public class CastTypeEvaluator implements IScalarEvaluator {
         this.resultPointable = allocatePointable(reqType, inputType);
         this.arg = new Triple<>(resultPointable, reqType, Boolean.FALSE);
         this.castVisitor = createCastVisitor();
+    }
+
+    public void reset(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
+        this.argEvaluator = argEvaluator;
+        this.inputPointable = allocatePointable(inputType, reqType);
+        this.resultPointable = allocatePointable(reqType, inputType);
+        this.arg.first = resultPointable;
+        this.arg.second = reqType;
     }
 
     protected ACastVisitor createCastVisitor() {
@@ -70,7 +78,7 @@ public class CastTypeEvaluator implements IScalarEvaluator {
     }
 
     // Allocates the result pointable.
-    private final IVisitablePointable allocatePointable(IAType typeForPointable, IAType typeForOtherSide) {
+    private IVisitablePointable allocatePointable(IAType typeForPointable, IAType typeForOtherSide) {
         if (!typeForPointable.equals(BuiltinType.ANY)) {
             return allocator.allocateFieldValue(typeForPointable);
         }

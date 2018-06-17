@@ -982,6 +982,13 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="array_fun">
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_append">
+        <output-dir compare="Text">array_append</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="boolean">
     <test-case FilePath="boolean">
       <compilation-unit name="and_01">

@@ -50,7 +50,9 @@ public class NullMissingTest {
             String className = func.getClass().getName();
             // We test all generated functions except
             // record and cast functions, which requires type settings (we test them in runtime tests).
-            if (className.contains("Gen") && !className.contains("record") && !className.contains("Cast")) {
+            String[] splits = className.split("\\.");
+            if (className.contains("Gen") && !className.contains("record") && !className.contains("Cast")
+                    && !splits[splits.length - 1].startsWith("Array")) {
                 testFunction(func);
                 ++testedFunctions;
             }

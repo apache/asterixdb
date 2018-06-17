@@ -53,6 +53,7 @@ import org.apache.asterix.om.typecomputer.impl.ATimeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AUUIDTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AYearMonthDurationTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AnyTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ArrayAppendTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOrMissingTypeComputer;
@@ -135,15 +136,12 @@ public class BuiltinFunctions {
     }
 
     private static final FunctionInfoRepository registeredFunctions = new FunctionInfoRepository();
-
     private static final Map<IFunctionInfo, ATypeHierarchy.Domain> registeredFunctionsDomain = new HashMap<>();
 
     // it is supposed to be an identity mapping
     private static final Map<IFunctionInfo, IFunctionInfo> builtinPublicFunctionsSet = new HashMap<>();
     private static final Map<IFunctionInfo, IFunctionInfo> builtinPrivateFunctionsSet = new HashMap<>();
-
     private static final Map<IFunctionInfo, IResultTypeComputer> funTypeComputer = new HashMap<>();
-
     private static final Set<IFunctionInfo> builtinAggregateFunctions = new HashSet<>();
     private static final Map<IFunctionInfo, IFunctionToDataSourceRewriter> datasourceFunctions = new HashMap<>();
     private static final Set<IFunctionInfo> similarityFunctions = new HashSet<>();
@@ -164,14 +162,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-handle", 2);
     public static final FunctionIdentifier GET_DATA =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-data", 2);
-
     public static final FunctionIdentifier GET_ITEM =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-item", 2);
     public static final FunctionIdentifier ANY_COLLECTION_MEMBER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "any-collection-member", 1);
     public static final FunctionIdentifier LISTIFY = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "listify", 1);
     public static final FunctionIdentifier LEN = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "len", 1);
-
     public static final FunctionIdentifier CONCAT_NON_NULL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "concat-non-null", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier EMPTY_STREAM =
@@ -185,6 +181,10 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier DEEP_EQUAL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "deep-equal", 2);
+
+    // array functions
+    public static final FunctionIdentifier ARRAY_APPEND =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-append", FunctionIdentifier.VARARGS);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -300,7 +300,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "find-binary", 2);
     public static final FunctionIdentifier FIND_BINARY_FROM =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "find-binary", 3);
-    // String funcitons
+
+    // String functions
     public static final FunctionIdentifier STRING_EQUAL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-equal", 2);
     public static final FunctionIdentifier STRING_MATCHES =
@@ -392,6 +393,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier MAKE_FIELD_NAME_HANDLE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "make-field-name-handle", 1);
 
+    // aggregate functions
     public static final FunctionIdentifier AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-avg", 1);
     public static final FunctionIdentifier COUNT = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count", 1);
     public static final FunctionIdentifier SUM = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sum", 1);
@@ -444,7 +446,6 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-avg-serial", 1);
 
     // distinct aggregate functions
-
     public static final FunctionIdentifier COUNT_DISTINCT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-count-distinct", 1);
     public static final FunctionIdentifier SCALAR_COUNT_DISTINCT =
@@ -543,6 +544,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SCALAR_SQL_MIN_DISTINCT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-min-distinct", 1);
 
+    // unnesting functions
     public static final FunctionIdentifier SCAN_COLLECTION =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "scan-collection", 1);
     public static final FunctionIdentifier SUBSET_COLLECTION =
@@ -550,7 +552,7 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier RANGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2);
 
-    // fuzzy functions:
+    // fuzzy functions
     public static final FunctionIdentifier FUZZY_EQ =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "fuzzy-eq", 2);
 
@@ -1093,7 +1095,7 @@ public class BuiltinFunctions {
         addPrivateFunction(OR, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(NUMERIC_ADD, NumericAddSubMulDivTypeComputer.INSTANCE, true);
 
-        // Deep equality
+        // deep equality
         addFunction(DEEP_EQUAL, BooleanFunctionTypeComputer.INSTANCE, true);
 
         // and then, Asterix builtin functions
@@ -1450,6 +1452,9 @@ public class BuiltinFunctions {
         addPrivateFunction(TYPE_OF, null, true);
         addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(WORD_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
+
+        // array functions
+        addFunction(ARRAY_APPEND, ArrayAppendTypeComputer.INSTANCE, true);
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);

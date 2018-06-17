@@ -68,7 +68,8 @@ public abstract class AbstractResultTypeComputer implements IResultTypeComputer 
      * @param expr
      *            the expression under consideration.
      * @param strippedInputTypes,
-     *            the stripped input types.
+     *            the stripped input types. When the function propagates null & missing, they can be any type except
+     *            null, missing, and union.
      * @return the result type without considering optional types.
      * @throws AlgebricksException
      */
