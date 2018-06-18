@@ -221,7 +221,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-hdfs-core</artifactId>
+      <artifactId>hyracks-hdfs</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>
