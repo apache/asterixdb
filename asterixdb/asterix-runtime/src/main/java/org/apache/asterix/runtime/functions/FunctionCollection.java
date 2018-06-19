@@ -186,11 +186,10 @@ import org.apache.asterix.runtime.evaluators.functions.NumericATan2Descriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericATanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericAbsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericAddDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.NumericDivDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.NumericPowerDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericCeilingDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericCosDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericDegreesDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.NumericDivDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericDivideDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericExpDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericFloorDescriptor;
@@ -198,6 +197,7 @@ import org.apache.asterix.runtime.evaluators.functions.NumericLnDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericLogDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericModuloDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericMultiplyDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.NumericPowerDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRadiansDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRoundDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2Descriptor;
@@ -275,6 +275,7 @@ import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByName
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessNestedDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.GetRecordFieldValueDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.GetRecordFieldsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordAddDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordAddFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordConcatStrictDescriptor;
@@ -282,6 +283,7 @@ import org.apache.asterix.runtime.evaluators.functions.records.RecordLengthDescr
 import org.apache.asterix.runtime.evaluators.functions.records.RecordMergeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordNamesDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordPairsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordPutDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRenameDescriptor;
@@ -656,6 +658,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(RecordRenameDescriptor.FACTORY);
         fc.addGenerated(RecordUnwrapDescriptor.FACTORY);
         fc.add(RecordReplaceDescriptor.FACTORY);
+        fc.add(RecordAddDescriptor.FACTORY);
+        fc.add(RecordPutDescriptor.FACTORY);
 
         // Spatial and temporal type accessors
         fc.addGenerated(TemporalYearAccessor.FACTORY);

@@ -228,6 +228,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-unwrap", 1);
     public static final FunctionIdentifier RECORD_REPLACE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-replace", 3);
+    public static final FunctionIdentifier RECORD_ADD =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-add", 3);
+    public static final FunctionIdentifier RECORD_PUT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-put", 3);
 
     // numeric
     public static final FunctionIdentifier NUMERIC_UNARY_MINUS =
@@ -1477,6 +1481,8 @@ public class BuiltinFunctions {
         addFunction(RECORD_RENAME, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(RECORD_UNWRAP, AnyTypeComputer.INSTANCE, true);
         addFunction(RECORD_REPLACE, OpenARecordTypeComputer.INSTANCE, true);
+        addFunction(RECORD_ADD, OpenARecordTypeComputer.INSTANCE, true);
+        addFunction(RECORD_PUT, OpenARecordTypeComputer.INSTANCE, true);
 
         // temporal type accessors
         addFunction(ACCESSOR_TEMPORAL_YEAR, AInt64TypeComputer.INSTANCE, true);

@@ -423,3 +423,78 @@
           "location": {"city": "Irvine", "state": "CA"}
         }
 
+### object_add ###
+ * Syntax:
+
+        object_add(input_object, field_name, field_value)
+
+ * Returns a new object that has the same fields as `input_object` as well as the new field `field_name`.
+ * Arguments:
+    * `input_object` : an object value.
+    * `field_name` : a string representing a field name to be added.
+    * `field_value` : a value to be assigned to the new field `field_name`.
+ * Return Value:
+    * A new object that has the same fields as `input_object` as well as the new field `field_name`,
+    * `missing` if `input_object` or `field_name` is `missing`,
+    * `null` if `input_object` or `field_name` is `null`, or `input_object` is not an object, or `field_name` is not
+      a string,
+    * `input_object` if `field_name`already exists in `input_object` or `field_value` is missing.
+
+ * Example:
+
+        object_add(
+                       {
+                         "id": 1,
+                         "project": "AsterixDB",
+                         "address": {"city": "Irvine", "state": "CA"}
+                       }
+                       , "company"
+                       , "Apache"
+                     );
+
+ * The expected result is:
+
+        {
+          "id": 1,
+          "project": "AsterixDB",
+          "location": {"city": "Irvine", "state": "CA"},
+          "company": "Apache"
+        }
+
+### object_put ###
+ * Syntax:
+
+        object_put(input_object, field_name, field_value)
+
+ * Adds, modifies, or removes a field of an object.
+ * Arguments:
+    * `input_object` : an object value.
+    * `field_name` : a string representing a field name to be added.
+    * `field_value` : a value to be assigned to the new field `field_name`.
+ * Return Value:
+    * a new object that has the same fields as `input_object` as well as the new field `field_name`, or with updated
+      `field_name` value to `field_value` if `field_name` already exists in `input_object`, or with `field_name`removed
+      if `field_name` already exists in `input_object` and `field_value` is `missing`,
+    * `missing` if `input_object` or `field_name` is `missing`,
+    * `null` if `input_object` or `field_name` is `null`, or `input_object` is not an object, or `field_name` is not
+      not a string.
+
+ * Example:
+
+        object_put(
+                       {
+                         "id": 1,
+                         "project": "AsterixDB",
+                         "address": {"city": "Irvine", "state": "CA"}
+                       }
+                       , "project"
+                       , "Apache AsterixDB"
+                     );
+
+ * The expected result is:
+
+        {
+          "id": 1,
+          "project": "Apache AsterixDB",
+          "location": {"city": "Irvine", "state": "CA"}
+        }

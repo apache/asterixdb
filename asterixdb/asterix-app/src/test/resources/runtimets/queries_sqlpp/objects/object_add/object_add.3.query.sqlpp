@@ -1,0 +1,58 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description  : Testing object_add under different queries.
+ * Expected Res : Success
+ */
+
+use TinySocial;
+
+{
+  "t1": [
+    object_add(missing, missing, "value") is missing,
+    object_add(null, missing, "value") is missing,
+    object_add(missing, null, missing) is missing,
+    object_add(null, null, null) is null,
+    object_add("a", null, null) is null,
+    object_add("non-object", "field",  "value") is null,
+    object_add({"a":1}, 1,  "value") is null
+  ],
+  "t2": object_add({"a":1}, "field", "value"),
+  "t3": object_add({"a":1}, "field", null),
+  "t4": object_add({"a":1}, "field", {"x":["y", "z"]}),
+  "t5": object_add({"a":1}, "a", 5),
+  "t6": object_add({"a":1}, "field", missing),
+
+  /* open type */
+  "t7": (
+    select value object_add(u, "field", "value")
+    from TwitterUsers as u
+    order by u.screen-name
+    limit 1
+  ),
+
+  /* closed type */
+  "t8": (
+    select value object_add(m, "field", {"a":1})
+    from TweetMessages as m
+    order by m.tweetid
+    limit 1
+  )
+};

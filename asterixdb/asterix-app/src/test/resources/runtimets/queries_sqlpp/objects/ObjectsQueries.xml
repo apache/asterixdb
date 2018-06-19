@@ -140,6 +140,16 @@
       <source-location>false</source-location>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="objects">>
+    <compilation-unit name="object_add">
+      <output-dir compare="Text">object_add</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects">
+    <compilation-unit name="object_put">
+      <output-dir compare="Text">object_put</output-dir>
+    </compilation-unit>
+  </test-case>
   <test-case FilePath="objects">
     <compilation-unit name="object_pairs">
       <output-dir compare="Text">object_pairs</output-dir>
