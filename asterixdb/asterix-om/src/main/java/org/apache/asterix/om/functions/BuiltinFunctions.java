@@ -232,6 +232,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-add", 3);
     public static final FunctionIdentifier RECORD_PUT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-put", 3);
+    public static final FunctionIdentifier RECORD_VALUES =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-values", 1);
 
     // numeric
     public static final FunctionIdentifier NUMERIC_UNARY_MINUS =
@@ -1483,6 +1485,7 @@ public class BuiltinFunctions {
         addFunction(RECORD_REPLACE, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(RECORD_ADD, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(RECORD_PUT, OpenARecordTypeComputer.INSTANCE, true);
+        addFunction(RECORD_VALUES, OrderedListOfAnyTypeComputer.INSTANCE, true);
 
         // temporal type accessors
         addFunction(ACCESSOR_TEMPORAL_YEAR, AInt64TypeComputer.INSTANCE, true);

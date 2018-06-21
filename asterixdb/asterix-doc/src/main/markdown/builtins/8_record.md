@@ -498,3 +498,35 @@
           "project": "Apache AsterixDB",
           "location": {"city": "Irvine", "state": "CA"}
         }
+
+### object_values ###
+ * Syntax:
+
+        object_values(input_object)
+
+ * Returns an array of the values of the fields in `input_object`.
+ * Arguments:
+    * `input_object` : an object value.
+ * Return Value:
+    * An array of the values of the fields in `input_object`,
+    * `missing` if `input_object` is `missing`,
+    * `null` if `input_object` is null or any non-object value.
+
+ * Example:
+
+        object_values(
+                       {
+                         "id": 1,
+                         "project": "AsterixDB",
+                         "address": {"city": "Irvine", "state": "CA"}
+                       }
+                     );
+
+ * The expected result is:
+
+        [
+          1,
+          "AsterixDB",
+          {"city": "Irvine", "state": "CA"}
+        ]
+

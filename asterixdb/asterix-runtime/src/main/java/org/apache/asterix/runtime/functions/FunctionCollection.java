@@ -287,8 +287,9 @@ import org.apache.asterix.runtime.evaluators.functions.records.RecordPutDescript
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRemoveFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordRenameDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.records.RecordUnwrapDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordReplaceDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordUnwrapDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.RecordValuesDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustDateTimeForTimeZoneDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTimeZoneDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CalendarDuartionFromDateDescriptor;
@@ -660,6 +661,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(RecordReplaceDescriptor.FACTORY);
         fc.add(RecordAddDescriptor.FACTORY);
         fc.add(RecordPutDescriptor.FACTORY);
+        fc.addGenerated(RecordValuesDescriptor.FACTORY);
 
         // Spatial and temporal type accessors
         fc.addGenerated(TemporalYearAccessor.FACTORY);
