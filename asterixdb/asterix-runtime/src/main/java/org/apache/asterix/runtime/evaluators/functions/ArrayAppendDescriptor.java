@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
+
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -29,7 +31,6 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
-import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
@@ -144,8 +145,7 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
                 }
             }
 
-            if (listArgType != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                    && listArgType != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+            if (!ATYPETAGDESERIALIZER.deserialize(listArgType).isListType()) {
                 PointableHelper.setNull(result);
                 return;
             }

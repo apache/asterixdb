@@ -135,6 +135,10 @@ public enum ATypeTag implements IEnumSerializer {
         return this == ATypeTag.OBJECT || this == ATypeTag.ARRAY || this == ATypeTag.MULTISET || this == ATypeTag.UNION;
     }
 
+    public final boolean isListType() {
+        return this == ATypeTag.ARRAY || this == ATypeTag.MULTISET;
+    }
+
     @Override
     public String toString() {
         return this.name().toLowerCase();

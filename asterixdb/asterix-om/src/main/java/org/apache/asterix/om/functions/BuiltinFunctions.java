@@ -185,6 +185,8 @@ public class BuiltinFunctions {
     // array functions
     public static final FunctionIdentifier ARRAY_APPEND =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-append", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_POSITION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-position", 2);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -1461,6 +1463,7 @@ public class BuiltinFunctions {
 
         // array functions
         addFunction(ARRAY_APPEND, ArrayAppendTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_POSITION, AInt32TypeComputer.INSTANCE, true);
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);
