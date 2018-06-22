@@ -70,15 +70,20 @@ public class JoinUtils {
                         setHashJoinOp(op, JoinPartitioningType.BROADCAST, sideLeft, sideRight, context);
                         break;
                     case LEFT:
-                        Mutable<ILogicalOperator> opRef0 = op.getInputs().get(0);
-                        Mutable<ILogicalOperator> opRef1 = op.getInputs().get(1);
-                        ILogicalOperator tmp = opRef0.getValue();
-                        opRef0.setValue(opRef1.getValue());
-                        opRef1.setValue(tmp);
-                        setHashJoinOp(op, JoinPartitioningType.BROADCAST, sideRight, sideLeft, context);
+                        if (op.getJoinKind() == AbstractBinaryJoinOperator.JoinKind.INNER) {
+                            Mutable<ILogicalOperator> opRef0 = op.getInputs().get(0);
+                            Mutable<ILogicalOperator> opRef1 = op.getInputs().get(1);
+                            ILogicalOperator tmp = opRef0.getValue();
+                            opRef0.setValue(opRef1.getValue());
+                            opRef1.setValue(tmp);
+                            setHashJoinOp(op, JoinPartitioningType.BROADCAST, sideRight, sideLeft, context);
+                        } else {
+                            setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideLeft, sideRight, context);
+                        }
                         break;
                     default:
-                        setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideLeft, sideRight, context);
+                        // This should never happen
+                        throw new IllegalStateException(side.toString());
                 }
             }
         } else {
