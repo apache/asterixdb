@@ -83,7 +83,7 @@ public class HyracksException extends IOException implements IFormattedException
      */
     @Deprecated
     protected HyracksException(Throwable cause) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, String.valueOf(cause), cause, (Serializable[]) null);
+        this(ErrorMessageUtil.NONE, UNKNOWN, ErrorMessageUtil.getCauseMessage(cause), cause, (Serializable[]) null);
     }
 
     /**
@@ -99,7 +99,7 @@ public class HyracksException extends IOException implements IFormattedException
     }
 
     public HyracksException(Throwable cause, int errorCode, Serializable... params) {
-        this(ErrorMessageUtil.NONE, errorCode, String.valueOf(cause), cause, null, params);
+        this(ErrorMessageUtil.NONE, errorCode, ErrorMessageUtil.getCauseMessage(cause), cause, null, params);
     }
 
     public HyracksException(String component, int errorCode, String message, Serializable... params) {
@@ -107,7 +107,7 @@ public class HyracksException extends IOException implements IFormattedException
     }
 
     public HyracksException(String component, int errorCode, Throwable cause, Serializable... params) {
-        this(component, errorCode, String.valueOf(cause), cause, null, params);
+        this(component, errorCode, ErrorMessageUtil.getCauseMessage(cause), cause, null, params);
     }
 
     public HyracksException(String component, int errorCode, String message, Throwable cause, Serializable... params) {

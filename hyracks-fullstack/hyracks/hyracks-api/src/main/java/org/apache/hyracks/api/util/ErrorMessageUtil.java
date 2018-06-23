@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -112,5 +113,12 @@ public class ErrorMessageUtil {
             LOGGER.log(Level.WARN, e.getLocalizedMessage(), e);
             return e.getMessage();
         }
+    }
+
+    public static String getCauseMessage(Throwable t) {
+        if (t instanceof IFormattedException) {
+            return t.getMessage();
+        }
+        return String.valueOf(t);
     }
 }
