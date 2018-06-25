@@ -43,6 +43,7 @@ import org.apache.asterix.om.typecomputer.impl.AInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AInt8TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AIntervalTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ALineTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.AListTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APoint3DTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APointTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APolygonTypeComputer;
@@ -187,6 +188,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-append", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier ARRAY_POSITION =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-position", 2);
+    public static final FunctionIdentifier ARRAY_REVERSE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-reverse", 1);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -1464,6 +1467,7 @@ public class BuiltinFunctions {
         // array functions
         addFunction(ARRAY_APPEND, ArrayAppendTypeComputer.INSTANCE, true);
         addFunction(ARRAY_POSITION, AInt32TypeComputer.INSTANCE, true);
+        addFunction(ARRAY_REVERSE, AListTypeComputer.INSTANCE, true);
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);

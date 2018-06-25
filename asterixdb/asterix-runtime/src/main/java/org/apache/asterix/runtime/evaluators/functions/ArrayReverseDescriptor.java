@@ -1,0 +1,140 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.asterix.runtime.evaluators.functions;
+
+import java.io.IOException;
+
+import org.apache.asterix.builders.IAsterixListBuilder;
+import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.builders.UnorderedListBuilder;
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.common.ListAccessor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+
+/**
+ * array_reverse(list) returns a new list with the entries of the original input list in reverse order. If the input is
+ * not a list, it returns "null".
+ */
+public class ArrayReverseDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = 1L;
+    private IAType inputListType;
+
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new ArrayReverseDescriptor();
+        }
+
+        @Override
+        public IFunctionTypeInferer createFunctionTypeInferer() {
+            // the type of the input list is needed in order to use the same type for the new returned list
+            return FunctionTypeInferers.SET_ARGUMENT_TYPE;
+        }
+
+    };
+
+    @Override
+    public FunctionIdentifier getIdentifier() {
+        return BuiltinFunctions.ARRAY_REVERSE;
+    }
+
+    @Override
+    public void setImmutableStates(Object... states) {
+        inputListType = (IAType) states[0];
+    }
+
+    @Override
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+                return new ArrayReverseFunction(args, ctx);
+            }
+        };
+    }
+
+    public class ArrayReverseFunction implements IScalarEvaluator {
+        private final ArrayBackedValueStorage storage;
+        private final IScalarEvaluator listArgEval;
+        private final ListAccessor listAccessor;
+        private final IPointable listArg;
+
+        public ArrayReverseFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
+                throws HyracksDataException {
+            storage = new ArrayBackedValueStorage();
+            listArg = new VoidPointable();
+            listArgEval = args[0].createScalarEvaluator(ctx);
+            listAccessor = new ListAccessor();
+        }
+
+        @Override
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+            // get the list argument and make sure it's a list
+            listArgEval.evaluate(tuple, listArg);
+            byte listArgType = listArg.getByteArray()[listArg.getStartOffset()];
+
+            // create the new list with the same type as the input list
+            IAsterixListBuilder listBuilder;
+            if (listArgType == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                listBuilder = new OrderedListBuilder();
+            } else if (listArgType == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                listBuilder = new UnorderedListBuilder();
+            } else {
+                PointableHelper.setNull(result);
+                return;
+            }
+
+            listBuilder.reset((AbstractCollectionType) inputListType);
+            listAccessor.reset(listArg.getByteArray(), listArg.getStartOffset());
+            try {
+                // get the list items in reverse and append to the new list
+                for (int i = listAccessor.size() - 1; i >= 0; i--) {
+                    storage.reset();
+                    listAccessor.writeItem(i, storage.getDataOutput());
+                    listBuilder.addItem(storage);
+                }
+                storage.reset();
+                listBuilder.write(storage.getDataOutput(), true);
+                result.set(storage);
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
+            }
+        }
+    }
+}

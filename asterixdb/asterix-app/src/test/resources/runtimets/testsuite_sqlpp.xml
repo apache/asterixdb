@@ -995,6 +995,11 @@
         <expected-error>HYR0115: Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_reverse">
+        <output-dir compare="Text">array_reverse</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="boolean">
     <test-case FilePath="boolean">
