@@ -130,6 +130,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = qe.getSatisfiesExpr().accept(this, newSubs);
         QuantifiedExpression qe2 = new QuantifiedExpression(qe.getQuantifier(), newPairs, (Expression) p2.first);
         qe2.setSourceLocation(qe.getSourceLocation());
+        qe2.addHints(qe.getHints());
         return new Pair<>(qe2, newSubs);
     }
 
@@ -148,6 +149,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         List<Expression> exprList = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(pf.getExprList(), env, this);
         CallExpr f = new CallExpr(pf.getFunctionSignature(), exprList);
         f.setSourceLocation(pf.getSourceLocation());
+        f.addHints(pf.getHints());
         return new Pair<>(f, env);
     }
 
@@ -183,6 +185,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         Pair<ILangExpression, VariableSubstitutionEnvironment> p3 = ifexpr.getElseExpr().accept(this, env);
         IfExpr i = new IfExpr((Expression) p1.first, (Expression) p2.first, (Expression) p3.first);
         i.setSourceLocation(ifexpr.getSourceLocation());
+        i.addHints(ifexpr.getHints());
         return new Pair<>(i, env);
     }
 
@@ -209,6 +212,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         List<Expression> exprs = VariableCloneAndSubstitutionUtil.visitAndCloneExprList(oldExprList, env, this);
         ListConstructor c = new ListConstructor(lc.getType(), exprs);
         c.setSourceLocation(lc.getSourceLocation());
+        c.addHints(lc.getHints());
         return new Pair<>(c, env);
     }
 
@@ -229,6 +233,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         }
         OperatorExpr oe = new OperatorExpr(exprs, op.getExprBroadcastIdx(), op.getOpList(), op.isCurrentop());
         oe.setSourceLocation(op.getSourceLocation());
+        oe.addHints(op.getHints());
         return new Pair<>(oe, env);
     }
 
@@ -268,6 +273,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         }
         RecordConstructor newRc = new RecordConstructor(newFbs);
         newRc.setSourceLocation(rc.getSourceLocation());
+        newRc.addHints(rc.getHints());
         return new Pair<>(newRc, env);
     }
 
@@ -277,6 +283,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = u.getExpr().accept(this, env);
         UnaryExpr newU = new UnaryExpr(u.getExprType(), (Expression) p1.first);
         newU.setSourceLocation(u.getSourceLocation());
+        newU.addHints(u.getHints());
         return new Pair<>(newU, env);
     }
 
@@ -292,6 +299,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         IndexAccessor i = new IndexAccessor((Expression) p1.first, indexExpr);
         i.setAny(ia.isAny());
         i.setSourceLocation(ia.getSourceLocation());
+        i.addHints(ia.getHints());
         return new Pair<>(i, env);
     }
 
@@ -301,6 +309,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         Pair<ILangExpression, VariableSubstitutionEnvironment> p = fa.getExpr().accept(this, env);
         FieldAccessor newF = new FieldAccessor((Expression) p.first, fa.getIdent());
         newF.setSourceLocation(fa.getSourceLocation());
+        newF.addHints(fa.getHints());
         return new Pair<>(newF, p.second);
     }
 
@@ -321,6 +330,7 @@ public class CloneAndSubstituteVariablesVisitor extends
             if (var != null) {
                 VariableExpr newVarExpr = new VariableExpr(var);
                 newVarExpr.setSourceLocation(expr.getSourceLocation());
+                newVarExpr.addHints(expr.getHints());
                 return newVarExpr;
             }
         }

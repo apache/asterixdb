@@ -23,15 +23,32 @@ import java.util.List;
 
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
+/**
+ * All subclasses need to make sure the hints are copied over in the DeepCopyVisitor and
+ * CloneAndSubstituteVariablesVisitor
+ */
 public abstract class AbstractExpression extends AbstractLangExpression implements Expression {
 
     protected List<IExpressionAnnotation> hints;
 
     public void addHint(IExpressionAnnotation hint) {
+        if (hint == null) {
+            return;
+        }
         if (hints == null) {
             hints = new ArrayList<>();
         }
         hints.add(hint);
+    }
+
+    public void addHints(List<IExpressionAnnotation> newHints) {
+        if (newHints == null) {
+            return;
+        }
+        if (hints == null) {
+            hints = new ArrayList<>();
+        }
+        hints.addAll(newHints);
     }
 
     public boolean hasHints() {

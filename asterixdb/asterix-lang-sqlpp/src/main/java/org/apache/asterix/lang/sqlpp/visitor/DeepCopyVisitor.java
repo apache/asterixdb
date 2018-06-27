@@ -364,7 +364,11 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         if (selectExpression.hasLimit()) {
             limit = (LimitClause) selectExpression.getLimitClause().accept(this, arg);
         }
-        return new SelectExpression(lets, select, orderby, limit, selectExpression.isSubquery());
+
+        SelectExpression copy = new SelectExpression(lets, select, orderby, limit, selectExpression.isSubquery());
+        copy.addHints(selectExpression.getHints());
+
+        return copy;
     }
 
     @Override
@@ -376,6 +380,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     public ListConstructor visit(ListConstructor lc, Void arg) throws CompilationException {
         ListConstructor copy = new ListConstructor(lc.getType(), copyExprList(lc.getExprList(), arg));
         copy.setSourceLocation(lc.getSourceLocation());
+        copy.addHints(lc.getHints());
         return copy;
     }
 
@@ -389,6 +394,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         }
         RecordConstructor copy = new RecordConstructor(bindings);
         copy.setSourceLocation(rc.getSourceLocation());
+        copy.addHints(rc.getHints());
         return copy;
     }
 
@@ -397,6 +403,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         OperatorExpr copy = new OperatorExpr(copyExprList(operatorExpr.getExprList(), arg),
                 operatorExpr.getExprBroadcastIdx(), operatorExpr.getOpList(), operatorExpr.isCurrentop());
         copy.setSourceLocation(operatorExpr.getSourceLocation());
+        copy.addHints(operatorExpr.getHints());
         return copy;
     }
 
@@ -407,6 +414,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         Expression elseExpr = (Expression) ifExpr.getElseExpr().accept(this, arg);
         IfExpr copy = new IfExpr(conditionExpr, thenExpr, elseExpr);
         copy.setSourceLocation(ifExpr.getSourceLocation());
+        copy.addHints(ifExpr.getHints());
         return copy;
     }
 
@@ -421,6 +429,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         Expression condition = (Expression) qe.getSatisfiesExpr().accept(this, arg);
         QuantifiedExpression copy = new QuantifiedExpression(qe.getQuantifier(), quantifiedPairs, condition);
         copy.setSourceLocation(qe.getSourceLocation());
+        copy.addHints(qe.getHints());
         return copy;
     }
 
@@ -432,6 +441,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         }
         CallExpr copy = new CallExpr(callExpr.getFunctionSignature(), newExprList);
         copy.setSourceLocation(callExpr.getSourceLocation());
+        copy.addHints(callExpr.getHints());
         return copy;
     }
 
@@ -440,6 +450,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr clonedVar = new VariableExpr(new VarIdentifier(varExpr.getVar()));
         clonedVar.setSourceLocation(varExpr.getSourceLocation());
         clonedVar.setIsNewVar(varExpr.getIsNewVar());
+        clonedVar.addHints(varExpr.getHints());
         return clonedVar;
     }
 
@@ -447,6 +458,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     public UnaryExpr visit(UnaryExpr u, Void arg) throws CompilationException {
         UnaryExpr copy = new UnaryExpr(u.getExprType(), (Expression) u.getExpr().accept(this, arg));
         copy.setSourceLocation(u.getSourceLocation());
+        copy.addHints(u.getHints());
         return copy;
     }
 
@@ -454,6 +466,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
     public FieldAccessor visit(FieldAccessor fa, Void arg) throws CompilationException {
         FieldAccessor copy = new FieldAccessor((Expression) fa.getExpr().accept(this, arg), fa.getIdent());
         copy.setSourceLocation(fa.getSourceLocation());
+        copy.addHints(fa.getHints());
         return copy;
     }
 
@@ -466,6 +479,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         }
         IndexAccessor copy = new IndexAccessor(expr, indexExpr);
         copy.setSourceLocation(ia.getSourceLocation());
+        copy.addHints(ia.getHints());
         return copy;
     }
 
@@ -477,6 +491,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         Expression elseExpr = (Expression) caseExpr.getElseExpr().accept(this, arg);
         CaseExpression copy = new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
         copy.setSourceLocation(caseExpr.getSourceLocation());
+        copy.addHints(caseExpr.getHints());
         return copy;
     }
 
