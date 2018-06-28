@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -34,19 +35,19 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
-public class ArrayPositionDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class ArrayContainsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayPositionDescriptor();
+            return new ArrayContainsDescriptor();
         }
     };
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ARRAY_POSITION;
+        return BuiltinFunctions.ARRAY_CONTAINS;
     }
 
     @Override
@@ -57,24 +58,25 @@ public class ArrayPositionDescriptor extends AbstractScalarFunctionDynamicDescri
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayPositionFunction(args, ctx);
+                return new ArrayContainsFunction(args, ctx);
             }
         };
     }
 
-    public class ArrayPositionFunction extends AbstractArraySearchEval {
-        private final ISerializerDeserializer intSerde;
+    public class ArrayContainsFunction extends AbstractArraySearchEval {
+        private final ISerializerDeserializer booleanSerde;
 
-        public ArrayPositionFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
+        public ArrayContainsFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
                 throws HyracksDataException {
             super(args, ctx, sourceLoc);
-            intSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+            // TODO(ali): should we get the nontagged serde?
+            booleanSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
         }
 
         @Override
         public void processResult(AMutableInt32 intValue, IPointable result) throws HyracksDataException {
             storage.reset();
-            intSerde.serialize(intValue, storage.getDataOutput());
+            booleanSerde.serialize(ABoolean.valueOf(intValue.getIntegerValue() != -1), storage.getDataOutput());
             result.set(storage);
         }
     }

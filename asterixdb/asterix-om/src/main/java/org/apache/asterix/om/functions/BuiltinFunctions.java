@@ -190,6 +190,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-position", 2);
     public static final FunctionIdentifier ARRAY_REVERSE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-reverse", 1);
+    public static final FunctionIdentifier ARRAY_CONTAINS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-contains", 2);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -1468,6 +1470,7 @@ public class BuiltinFunctions {
         addFunction(ARRAY_APPEND, ArrayAppendTypeComputer.INSTANCE, true);
         addFunction(ARRAY_POSITION, AInt32TypeComputer.INSTANCE, true);
         addFunction(ARRAY_REVERSE, AListTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);

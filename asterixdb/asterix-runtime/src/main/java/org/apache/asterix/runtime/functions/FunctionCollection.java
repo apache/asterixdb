@@ -144,6 +144,7 @@ import org.apache.asterix.runtime.evaluators.constructors.UnorderedListConstruct
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayAppendDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayPositionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayReverseDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
@@ -376,6 +377,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(ArrayAppendDescriptor.FACTORY);
         fc.addGenerated(ArrayPositionDescriptor.FACTORY);
         fc.addGenerated(ArrayReverseDescriptor.FACTORY);
+        fc.addGenerated(ArrayContainsDescriptor.FACTORY);
 
         // unnesting functions
         fc.add(TidRunningAggregateDescriptor.FACTORY);
