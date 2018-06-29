@@ -137,25 +137,21 @@ public class ARecordType extends AbstractComplexType {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(typeName + ": ");
-        if (isOpen) {
-            sb.append("open ");
-        } else {
-            sb.append("closed ");
+        return append(new StringBuilder()).toString();
+    }
+
+    private StringBuilder append(StringBuilder sb) {
+        if (typeName != null) {
+            sb.append(typeName).append(": ");
         }
-        sb.append("{\n");
+        sb.append(isOpen ? "open" : "closed");
+        sb.append(" {\n");
         int n = fieldNames.length;
         for (int i = 0; i < n; i++) {
-            sb.append("  " + fieldNames[i] + ": " + fieldTypes[i].toString());
-            if (i < (n - 1)) {
-                sb.append(",\n");
-            } else {
-                sb.append("\n");
-            }
+            sb.append("  ").append(fieldNames[i]).append(": ").append(fieldTypes[i]);
+            sb.append(i < (n - 1) ? ",\n" : "\n");
         }
-        sb.append("}\n");
-        return sb.toString();
+        return sb.append("}\n");
     }
 
     @Override

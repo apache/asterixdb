@@ -47,26 +47,21 @@ public abstract class ListConstructorTypeComputer implements IResultTypeComputer
         if (reqType != null) {
             return reqType;
         }
-        return computeTypeFromItems(env, f);
+        final IAType currentType = computeContentType(env, f);
+        return getListType(currentType == null ? BuiltinType.ANY : currentType);
     }
 
-    private IAType computeTypeFromItems(IVariableTypeEnvironment env, AbstractFunctionCallExpression f)
+    private IAType computeContentType(IVariableTypeEnvironment env, AbstractFunctionCallExpression f)
             throws AlgebricksException {
         IAType currentType = null;
-        boolean any = false;
         for (int k = 0; k < f.getArguments().size(); k++) {
             IAType type = (IAType) env.getType(f.getArguments().get(k).getValue());
             if (type.getTypeTag() == ATypeTag.UNION || (currentType != null && !currentType.equals(type))) {
-                any = true;
-                break;
+                return null;
             }
             currentType = type;
         }
-        if (any || currentType == null) {
-            return getListType(BuiltinType.ANY);
-        } else {
-            return getListType(currentType);
-        }
+        return currentType;
     }
 
     protected abstract IAType getListType(IAType itemType);

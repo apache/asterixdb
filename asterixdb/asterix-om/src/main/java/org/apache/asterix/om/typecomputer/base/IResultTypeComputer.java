@@ -24,7 +24,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
+@FunctionalInterface
 public interface IResultTypeComputer {
-    public IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
+    IAType computeType(ILogicalExpression expression, IVariableTypeEnvironment env,
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException;
 }
