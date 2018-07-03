@@ -88,7 +88,7 @@ public class NetworkUtil {
     }
 
     public static InetSocketAddress toInetSocketAddress(String maybeLiteralHost, int port) {
-        return InetSocketAddress.createUnresolved(decodeIPv6LiteralHost(maybeLiteralHost), port);
+        return new InetSocketAddress(decodeIPv6LiteralHost(maybeLiteralHost), port);
     }
 
     public static List<InetSocketAddress> parseInetSocketAddresses(String... hostPortStrings) {

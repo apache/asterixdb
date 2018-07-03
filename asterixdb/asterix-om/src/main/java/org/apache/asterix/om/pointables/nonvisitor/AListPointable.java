@@ -22,7 +22,6 @@ package org.apache.asterix.om.pointables.nonvisitor;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
@@ -40,6 +39,7 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
  * This class interprets the binary data representation of a list.
  *
  * List {
+ *   byte tag;
  *   byte type;
  *   int length;
  *   int numberOfItems;
@@ -62,11 +62,16 @@ public class AListPointable extends AbstractPointable {
         }
     };
 
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
+    public static final AListPointableFactory FACTORY = new AListPointableFactory();
+
+    public static class AListPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
 
+        private AListPointableFactory() {
+        }
+
         @Override
-        public IPointable createPointable() {
+        public AListPointable createPointable() {
             return new AListPointable();
         }
 
@@ -169,7 +174,7 @@ public class AListPointable extends AbstractPointable {
             return getItemCountOffset() + getItemCountSize() + index * getFixedLength(inputType);
         } else {
             int offset = getItemCountOffset() + getItemCountSize() + index * ITEM_OFFSET_SIZE;
-            return IntegerPointable.getInteger(bytes, offset);
+            return start + IntegerPointable.getInteger(bytes, offset);
         }
     }
 
@@ -195,5 +200,4 @@ public class AListPointable extends AbstractPointable {
         }
         dOut.write(bytes, getItemOffset(inputType, index), getItemSize(inputType, index));
     }
-
 }

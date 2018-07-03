@@ -294,6 +294,11 @@ public class UTF8StringUtil {
         return hash(bytes, start, length, true, false, 31, Integer.MAX_VALUE);
     }
 
+    public static String toString(byte[] bytes, int start) {
+        StringBuilder builder = new StringBuilder();
+        return toString(builder, bytes, start).toString();
+    }
+
     public static StringBuilder toString(StringBuilder builder, byte[] bytes, int start) {
         int utfLen = getUTFLength(bytes, start);
         int offset = getNumBytesToStoreLength(utfLen);
@@ -650,10 +655,10 @@ public class UTF8StringUtil {
         if (writer == null) {
             tempBytes = new byte[utflen + 5];
         } else {
-            if (writer.tempBytes == null || writer.tempBytes.length < utflen + 5) {
-                writer.tempBytes = new byte[utflen + 5];
+            if (writer.getTempBytes() == null || writer.getTempBytes().length < utflen + 5) {
+                writer.setTempBytes(new byte[utflen + 5]);
             }
-            tempBytes = writer.tempBytes;
+            tempBytes = writer.getTempBytes();
         }
         return tempBytes;
     }

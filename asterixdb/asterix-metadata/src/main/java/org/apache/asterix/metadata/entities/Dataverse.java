@@ -65,4 +65,19 @@ public class Dataverse implements IMetadataEntity<Dataverse> {
     public String toString() {
         return getClass().getSimpleName() + ":" + dataverseName;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Dataverse)) {
+            return false;
+        }
+        Dataverse other = (Dataverse) o;
+        return dataverseName.equals(other.getDataverseName());
+    }
+
+    @Override
+    public int hashCode() {
+        return dataverseName.hashCode();
+    }
+
 }

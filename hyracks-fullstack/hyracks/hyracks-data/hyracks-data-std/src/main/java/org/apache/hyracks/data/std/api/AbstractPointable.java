@@ -19,6 +19,7 @@
 package org.apache.hyracks.data.std.api;
 
 public abstract class AbstractPointable implements IPointable {
+
     protected byte[] bytes;
 
     protected int start;

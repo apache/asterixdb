@@ -22,7 +22,6 @@ package org.apache.asterix.om.pointables.nonvisitor;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -230,6 +229,21 @@ public class ARecordPointable extends AbstractPointable {
         }
     }
 
+    /**
+     * This is always untagged
+     *
+     * @param recordType
+     * @param fieldId
+     * @param pointable
+     * @throws IOException
+     */
+    public void getClosedFieldValue(ARecordType recordType, int fieldId, IPointable pointable) throws IOException {
+        if (isClosedFieldNull(recordType, fieldId) || isClosedFieldMissing(recordType, fieldId)) {
+            throw new IllegalStateException("Can't read a null or missing field");
+        }
+        pointable.set(bytes, getClosedFieldOffset(recordType, fieldId), getClosedFieldSize(recordType, fieldId));
+    }
+
     public String getClosedFieldName(ARecordType recordType, int fieldId) {
         return recordType.getFieldNames()[fieldId];
     }
@@ -304,6 +318,14 @@ public class ARecordPointable extends AbstractPointable {
         dOut.write(bytes, getOpenFieldNameOffset(recordType, fieldId), getOpenFieldNameSize(recordType, fieldId));
     }
 
+    public String getOpenFieldName(ARecordType recordType, int fieldId) throws IOException {
+        StringBuilder str = new StringBuilder();
+        int offset = getOpenFieldNameOffset(recordType, fieldId);
+        UTF8StringUtil.toString(str, bytes, offset);
+        String fieldName = str.toString();
+        return fieldName;
+    }
+
     public int getOpenFieldNameSize(ARecordType recordType, int fieldId) {
         int utfleng = UTF8StringUtil.getUTFLength(bytes, getOpenFieldNameOffset(recordType, fieldId));
         return utfleng + UTF8StringUtil.getNumBytesToStoreLength(utfleng);
@@ -340,5 +362,4 @@ public class ARecordPointable extends AbstractPointable {
     public int getOpenFieldOffsetSize(ARecordType recordType, int fieldId) {
         return OPEN_FIELD_HASH_SIZE;
     }
-
 }

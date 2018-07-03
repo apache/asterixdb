@@ -32,6 +32,7 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
  * But it works for single-byte character languages.
  */
 public final class RawUTF8StringPointable extends AbstractPointable implements IHashable, IComparable {
+
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
 

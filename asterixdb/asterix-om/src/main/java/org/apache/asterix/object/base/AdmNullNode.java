@@ -18,10 +18,14 @@
  */
 package org.apache.asterix.object.base;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.om.types.ATypeTag;
 
 public class AdmNullNode implements IAdmNode {
 
+    private static final long serialVersionUID = 1L;
     public static final AdmNullNode INSTANCE = new AdmNullNode();
 
     private AdmNullNode() {
@@ -40,5 +44,10 @@ public class AdmNullNode implements IAdmNode {
     @Override
     public String toString() {
         return "null";
+    }
+
+    @Override
+    public void serializeValue(DataOutput dataOutput) throws IOException {
+        // Nothing to write
     }
 }

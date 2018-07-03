@@ -18,9 +18,14 @@
  */
 package org.apache.asterix.object.base;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.om.types.ATypeTag;
 
 public class AdmBigIntNode implements IAdmNode {
+
+    private static final long serialVersionUID = 1L;
     private long value;
 
     public AdmBigIntNode() {
@@ -51,5 +56,10 @@ public class AdmBigIntNode implements IAdmNode {
     @Override
     public String toString() {
         return Long.toString(value);
+    }
+
+    @Override
+    public void serializeValue(DataOutput dataOutput) throws IOException {
+        dataOutput.writeLong(value);
     }
 }

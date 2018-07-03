@@ -99,6 +99,7 @@ public class AIntervalPointable extends AbstractPointable {
         start.set(bytes, getStartOffset(), getStartSize());
     }
 
+    @Override
     public int getStartOffset() {
         return getTypeOffset() + getTypeSize();
     }

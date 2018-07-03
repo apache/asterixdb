@@ -81,8 +81,7 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
     // Can't be shared among threads <Stateful>
     @SuppressWarnings("rawtypes")
     public ISerializerDeserializer getAStringSerializerDeserializer() {
-        return addTag(new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader()),
-                ATypeTag.STRING);
+        return addTag(new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader()));
     }
 
     @SuppressWarnings("rawtypes")
@@ -98,7 +97,7 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
                 // we could do smth better for nullable fields
                 return AObjectSerializerDeserializer.INSTANCE;
             default:
-                return addTag(getNonTaggedSerializerDeserializer(aqlType), aqlType.getTypeTag());
+                return addTag(getNonTaggedSerializerDeserializer(aqlType));
         }
     }
 
@@ -172,7 +171,7 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
     }
 
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer addTag(final ISerializerDeserializer nonTaggedSerde, final ATypeTag typeTag) {
+    private ISerializerDeserializer addTag(final ISerializerDeserializer nonTaggedSerde) {
         return new ISerializerDeserializer<IAObject>() {
 
             private static final long serialVersionUID = 1L;

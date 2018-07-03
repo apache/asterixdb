@@ -30,18 +30,15 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
-import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
-import org.apache.asterix.common.transactions.ImmutableDatasetId;
 import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -124,10 +121,13 @@ import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.util.ExitUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
-
+    private static final Logger LOGGER = LogManager.getLogger();
     // shared between core and extension
     private IDatasetLifecycleManager datasetLifecycleManager;
     private ITransactionSubsystem transactionSubsystem;
@@ -172,14 +172,28 @@ public class MetadataNode implements IMetadataNode {
         transactionSubsystem.getTransactionManager().beginTransaction(transactionId, options);
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
     public void commitTransaction(TxnId txnId) throws RemoteException, ACIDException {
-        transactionSubsystem.getTransactionManager().commitTransaction(txnId);
+        try {
+            transactionSubsystem.getTransactionManager().commitTransaction(txnId);
+        } catch (Throwable th) {
+            // Metadata node should abort all Metadata transactions on re-start
+            LOGGER.fatal("Failure committing a metadata transaction", th);
+            ExitUtil.halt(ExitUtil.EC_FAILED_TO_COMMIT_METADATA_TXN);
+        }
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
     public void abortTransaction(TxnId txnId) throws RemoteException, ACIDException {
-        transactionSubsystem.getTransactionManager().abortTransaction(txnId);
+        try {
+            transactionSubsystem.getTransactionManager().abortTransaction(txnId);
+        } catch (Throwable th) {
+            // Metadata node should abort all uncommitted transactions on re-start
+            LOGGER.fatal("Failure committing a metadata transaction", th);
+            ExitUtil.halt(ExitUtil.EC_FAILED_TO_ABORT_METADATA_TXN);
+        }
     }
 
     // TODO(amoudi): make all metadata operations go through the generic methods

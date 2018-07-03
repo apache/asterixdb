@@ -25,8 +25,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -60,6 +58,9 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.ExitUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Provides access to Asterix metadata via remote methods to the metadata node.
@@ -94,6 +95,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * with transaction ids of regular jobs or other metadata transactions.
  */
 public abstract class MetadataManager implements IMetadataManager {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final MetadataCache cache = new MetadataCache();
     protected final Collection<IAsterixStateProxy> proxies;
     protected IMetadataNode metadataNode;
@@ -132,15 +134,29 @@ public abstract class MetadataManager implements IMetadataManager {
         return new MetadataTransactionContext(txnId);
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
-    public void commitTransaction(MetadataTransactionContext ctx) throws RemoteException, ACIDException {
-        metadataNode.commitTransaction(ctx.getTxnId());
-        cache.commit(ctx);
+    public void commitTransaction(MetadataTransactionContext ctx) {
+        try {
+            metadataNode.commitTransaction(ctx.getTxnId());
+            cache.commit(ctx);
+        } catch (Throwable th) {
+            // Metadata node should abort all transactions on re-joining the new CC
+            LOGGER.fatal("Failure committing a metadata transaction", th);
+            ExitUtil.halt(ExitUtil.EC_FAILED_TO_COMMIT_METADATA_TXN);
+        }
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
-    public void abortTransaction(MetadataTransactionContext ctx) throws RemoteException, ACIDException {
-        metadataNode.abortTransaction(ctx.getTxnId());
+    public void abortTransaction(MetadataTransactionContext ctx) {
+        try {
+            metadataNode.abortTransaction(ctx.getTxnId());
+        } catch (Throwable th) {
+            // Metadata node should abort all transactions on re-joining the new CC
+            LOGGER.fatal("Failure aborting a metadata transaction", th);
+            ExitUtil.halt(ExitUtil.EC_FAILED_TO_ABORT_METADATA_TXN);
+        }
     }
 
     @Override

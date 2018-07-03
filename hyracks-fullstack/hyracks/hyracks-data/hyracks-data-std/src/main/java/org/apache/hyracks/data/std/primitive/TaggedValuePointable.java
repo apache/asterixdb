@@ -20,23 +20,9 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
-import org.apache.hyracks.data.std.primitive.BytePointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
 
 public class TaggedValuePointable extends AbstractPointable {
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public ITypeTraits getTypeTraits() {
-            return VoidPointable.TYPE_TRAITS;
-        }
-
-        @Override
-        public IPointable createPointable() {
-            return new TaggedValuePointable();
-        }
-    };
+    public static final TaggedValuePointableFactory FACTORY = new TaggedValuePointableFactory();
 
     public byte getTag() {
         return BytePointable.getByte(bytes, start);
@@ -44,5 +30,23 @@ public class TaggedValuePointable extends AbstractPointable {
 
     public void getValue(IPointable value) {
         value.set(bytes, start + 1, length - 1);
+    }
+
+    public static final class TaggedValuePointableFactory implements IPointableFactory {
+        private static final long serialVersionUID = 1L;
+
+        private TaggedValuePointableFactory() {
+        }
+
+        @Override
+        public ITypeTraits getTypeTraits() {
+            return VoidPointable.TYPE_TRAITS;
+        }
+
+        @Override
+        public TaggedValuePointable createPointable() {
+            return new TaggedValuePointable();
+        }
+
     }
 }

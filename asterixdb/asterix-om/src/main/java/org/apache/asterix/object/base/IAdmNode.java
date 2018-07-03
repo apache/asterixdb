@@ -18,12 +18,16 @@
  */
 package org.apache.asterix.object.base;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
+
 import org.apache.asterix.om.types.ATypeTag;
 
 /**
  * An interface representing an adm node
  */
-public interface IAdmNode {
+public interface IAdmNode extends Serializable {
 
     /**
      * @return true if the object is a value, false if the object is a container
@@ -62,4 +66,23 @@ public interface IAdmNode {
      * reset the node
      */
     void reset();
+
+    /**
+     * Serialize the field with a type tag
+     *
+     * @param dataOutput
+     * @throws IOException
+     */
+    default void serialize(DataOutput dataOutput) throws IOException {
+        dataOutput.writeByte(getType().serialize());
+        serializeValue(dataOutput);
+    }
+
+    /**
+     * Serialize the value without a type tag
+     *
+     * @param dataOutput
+     * @throws IOException
+     */
+    void serializeValue(DataOutput dataOutput) throws IOException;
 }

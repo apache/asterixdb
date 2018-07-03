@@ -18,12 +18,19 @@
  */
 package org.apache.asterix.object.base;
 
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-public class AdmArrayNode implements IAdmNode {
+public class AdmArrayNode implements IAdmNode, Iterable<IAdmNode> {
+    private static final long serialVersionUID = 1L;
     private final List<IAdmNode> children;
 
     public AdmArrayNode() {
@@ -40,6 +47,10 @@ public class AdmArrayNode implements IAdmNode {
 
     public void add(boolean value) {
         add(AdmBooleanNode.get(value));
+    }
+
+    public int size() {
+        return children.size();
     }
 
     public void add(IAdmNode value) {
@@ -73,5 +84,24 @@ public class AdmArrayNode implements IAdmNode {
     @Override
     public String toString() {
         return children.toString();
+    }
+
+    @Override
+    public void serializeValue(DataOutput dataOutput) throws IOException {
+        OrderedListBuilder listBuilder = new OrderedListBuilder();
+        listBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+        ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
+        for (int i = 0; i < children.size(); i++) {
+            itemValue.reset();
+            IAdmNode next = children.get(i);
+            next.serialize(itemValue.getDataOutput());
+            listBuilder.addItem(itemValue);
+        }
+        listBuilder.write(dataOutput, false);
+    }
+
+    @Override
+    public Iterator<IAdmNode> iterator() {
+        return children.iterator();
     }
 }

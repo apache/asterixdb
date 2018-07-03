@@ -27,14 +27,15 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 
 public final class DoublePointable extends AbstractPointable implements IHashable, IComparable, INumeric {
-    private final static double machineEpsilon;
-    static {
-        float epsilon = 1.0f;
 
+    private static final double MACHINE_EPSILON = getMachineEpsilon();
+
+    private static double getMachineEpsilon() {
+        float epsilon = 1.0f;
         do {
             epsilon /= 2.0f;
         } while ((float) (1.0 + (epsilon / 2.0)) != 1.0);
-        machineEpsilon = epsilon;
+        return epsilon;
     }
 
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
@@ -150,6 +151,6 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
     }
 
     public static double getEpsilon() {
-        return machineEpsilon;
+        return MACHINE_EPSILON;
     }
 }

@@ -26,7 +26,6 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 
 public final class BooleanPointable extends AbstractPointable implements IHashable, IComparable {
-
     public static final BooleanPointableFactory FACTORY = new BooleanPointableFactory();
 
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
@@ -47,11 +46,11 @@ public final class BooleanPointable extends AbstractPointable implements IHashab
         private static final long serialVersionUID = 1L;
 
         @Override
-        public IPointable createPointable() {
+        public BooleanPointable createPointable() {
             return new BooleanPointable();
         }
 
-        public IPointable createPointable(boolean value) {
+        public BooleanPointable createPointable(boolean value) {
             BooleanPointable pointable = new BooleanPointable();
             pointable.setBoolean(value);
             return pointable;

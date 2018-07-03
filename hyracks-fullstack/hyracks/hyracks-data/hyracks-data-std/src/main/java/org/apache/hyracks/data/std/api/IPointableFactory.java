@@ -23,7 +23,7 @@ import java.io.Serializable;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 
 public interface IPointableFactory extends Serializable {
-    public IPointable createPointable();
+    IPointable createPointable();
 
-    public ITypeTraits getTypeTraits();
+    ITypeTraits getTypeTraits();
 }

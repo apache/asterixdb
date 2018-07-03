@@ -18,21 +18,41 @@
  */
 package org.apache.asterix.object.base;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
  * An adm object instance
  */
 public class AdmObjectNode implements IAdmNode {
+
+    private static final long serialVersionUID = 1L;
+    public static final AdmObjectNode EMPTY = new AdmObjectNode(Collections.emptyMap());
     private final Map<String, IAdmNode> children;
 
     public AdmObjectNode() {
         children = new HashMap<>();
+    }
+
+    public AdmObjectNode(Map<String, IAdmNode> children) {
+        this.children = children;
     }
 
     @Override
@@ -56,9 +76,12 @@ public class AdmObjectNode implements IAdmNode {
         return children.entrySet();
     }
 
-    public AdmObjectNode set(String fieldName, IAdmNode value) {
+    public AdmObjectNode set(String fieldName, IAdmNode value) throws CompilationException {
         if (value == null) {
             value = AdmNullNode.INSTANCE; // NOSONAR
+        }
+        if (children.containsKey(fieldName)) {
+            throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, fieldName);
         }
         children.put(fieldName, value);
         return this;
@@ -91,5 +114,52 @@ public class AdmObjectNode implements IAdmNode {
         }
         sb.append("}");
         return sb.toString();
+    }
+
+    public static AdmObjectNode from(Map<String, IAdmNode> fields) {
+        return fields.isEmpty() ? EMPTY : new AdmObjectNode(fields);
+    }
+
+    public boolean isEmpty() {
+        return children.isEmpty();
+    }
+
+    @Override
+    public void serializeValue(DataOutput dataOutput) throws IOException {
+        ISerializerDeserializer<AString> stringSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+        RecordBuilder confRecordBuilder = new RecordBuilder();
+        confRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
+        confRecordBuilder.init();
+        ArrayBackedValueStorage fieldNameBytes = new ArrayBackedValueStorage();
+        ArrayBackedValueStorage fieldValueBytes = new ArrayBackedValueStorage();
+        for (Entry<String, IAdmNode> field : getFields()) {
+            String fieldName = field.getKey();
+            fieldValueBytes.reset();
+            fieldNameBytes.reset();
+            stringSerde.serialize(new AString(fieldName), fieldNameBytes.getDataOutput());
+            IAdmNode value = field.getValue();
+            value.serialize(fieldValueBytes.getDataOutput());
+            confRecordBuilder.addField(fieldNameBytes, fieldValueBytes);
+        }
+        confRecordBuilder.write(dataOutput, false);
+    }
+
+    public boolean contains(String fieldName) {
+        return children.containsKey(fieldName);
+    }
+
+    public String getString(String field) throws HyracksDataException {
+        return getString(this, field);
+    }
+
+    public static String getString(AdmObjectNode openFields, String field) throws HyracksDataException {
+        IAdmNode node = openFields.get(field);
+        if (node == null) {
+            throw HyracksDataException.create(ErrorCode.FIELD_NOT_FOUND, field);
+        } else if (node.getType() != ATypeTag.STRING) {
+            throw HyracksDataException.create(ErrorCode.FIELD_NOT_OF_TYPE, field, ATypeTag.STRING, node.getType());
+        }
+        return ((AdmStringNode) node).get();
     }
 }

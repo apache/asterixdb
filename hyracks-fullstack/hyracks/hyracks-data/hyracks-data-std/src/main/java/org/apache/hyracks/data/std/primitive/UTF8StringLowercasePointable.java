@@ -27,6 +27,7 @@ import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public final class UTF8StringLowercasePointable extends AbstractPointable implements IHashable, IComparable {
+
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
 

@@ -127,9 +127,6 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      */
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
-    //TODO: Remove Singletons
-    private static final BTreeResourceFactoryProvider bTreeResourceFactoryProvider =
-            BTreeResourceFactoryProvider.INSTANCE;
     private static final RTreeResourceFactoryProvider rTreeResourceFactoryProvider =
             RTreeResourceFactoryProvider.INSTANCE;
     private static final InvertedIndexResourceFactoryProvider invertedIndexResourceFactoryProvider =
@@ -152,10 +149,6 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     private final String metaTypeName;
     private final long rebalanceCount;
     private int pendingOp;
-
-    /*
-     * Transient (For caching)
-     */
 
     public Dataset(String dataverseName, String datasetName, String recordTypeDataverseName, String recordTypeName,
             String nodeGroupName, String compactionPolicy, Map<String, String> compactionPolicyProperties,
@@ -473,8 +466,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         IResourceFactory resourceFactory;
         switch (index.getIndexType()) {
             case BTREE:
-                resourceFactory = bTreeResourceFactoryProvider.getResourceFactory(mdProvider, this, index, recordType,
-                        metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits, filterCmpFactories);
+                resourceFactory = BTreeResourceFactoryProvider.INSTANCE.getResourceFactory(mdProvider, this, index,
+                        recordType, metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits,
+                        filterCmpFactories);
                 break;
             case RTREE:
                 resourceFactory = rTreeResourceFactoryProvider.getResourceFactory(mdProvider, this, index, recordType,
@@ -852,5 +846,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             partitions[i] = StoragePathUtil.getPartitionNumFromRelativePath(splitsForDataset[i].getPath());
         }
         return partitions;
+    }
+
+    public String getFullyQualifiedName() {
+        return dataverseName + '.' + datasetName;
     }
 }

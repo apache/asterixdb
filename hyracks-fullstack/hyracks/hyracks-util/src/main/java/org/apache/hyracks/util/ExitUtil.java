@@ -35,6 +35,9 @@ public class ExitUtil {
     public static final int EC_FAILED_TO_RECOVER = 3;
     public static final int EC_NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS = 4;
     public static final int EC_FAILED_TO_PROCESS_UN_INTERRUPTIBLE_REQUEST = 5;
+    public static final int EC_FAILED_TO_COMMIT_METADATA_TXN = 6;
+    public static final int EC_FAILED_TO_ABORT_METADATA_TXN = 7;
+    public static final int EC_INCONSISTENT_METADATA = 8;
     public static final int EC_UNHANDLED_EXCEPTION = 11;
     public static final int EC_IMMEDIATE_HALT = 33;
     public static final int EC_HALT_ABNORMAL_RESERVED_44 = 44;

@@ -36,7 +36,7 @@ public class TypeTraitProvider implements ITypeTraitProvider {
     private static final ITypeTraits THIRTYTWOBYTETYPETRAIT = new TypeTrait(32 + 1);
     private static final ITypeTraits TWENTYFOURBYTETYPETRAIT = new TypeTrait(24 + 1);
 
-    private static final ITypeTraits VARLENTYPETRAIT = new TypeTrait(false, -1);
+    public static final ITypeTraits VARLENTYPETRAIT = new TypeTrait(false, -1);
 
     public static final TypeTraitProvider INSTANCE = new TypeTraitProvider();
 

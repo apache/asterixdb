@@ -18,9 +18,15 @@
  */
 package org.apache.asterix.object.base;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class AdmStringNode implements IAdmNode {
+
+    private static final long serialVersionUID = 1L;
     private String value;
 
     public AdmStringNode() {
@@ -47,6 +53,11 @@ public class AdmStringNode implements IAdmNode {
     @Override
     public String toString() {
         return "\"" + value + "\"";
+    }
+
+    @Override
+    public void serializeValue(DataOutput dataOutput) throws IOException {
+        UTF8StringUtil.writeUTF8(value, dataOutput, null);
     }
 
 }

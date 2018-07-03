@@ -70,11 +70,16 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         }
     };
 
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
+    public static final UTF8StringPointableFactory FACTORY = new UTF8StringPointableFactory();
+
+    public static class UTF8StringPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
 
+        private UTF8StringPointableFactory() {
+        }
+
         @Override
-        public IPointable createPointable() {
+        public UTF8StringPointable createPointable() {
             return new UTF8StringPointable();
         }
 

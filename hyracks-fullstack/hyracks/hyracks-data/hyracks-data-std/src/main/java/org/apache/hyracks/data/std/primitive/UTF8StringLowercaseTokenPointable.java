@@ -29,6 +29,7 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
  * Instead, the length of this string is provided as a parameter.
  */
 public final class UTF8StringLowercaseTokenPointable extends AbstractPointable implements IHashable, IComparable {
+
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
 

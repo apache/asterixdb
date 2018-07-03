@@ -18,9 +18,13 @@
  */
 package org.apache.asterix.object.base;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.apache.asterix.om.types.ATypeTag;
 
 public class AdmDoubleNode implements IAdmNode {
+    private static final long serialVersionUID = 1L;
     private double value;
 
     public AdmDoubleNode() {
@@ -52,5 +56,10 @@ public class AdmDoubleNode implements IAdmNode {
     @Override
     public String toString() {
         return Double.toString(value);
+    }
+
+    @Override
+    public void serializeValue(DataOutput dataOutput) throws IOException {
+        dataOutput.writeDouble(value);
     }
 }

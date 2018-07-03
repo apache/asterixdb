@@ -459,32 +459,39 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleCreateDataverseStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
-
         CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
         String dvName = stmtCreateDataverse.getDataverseName().getValue();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-
         lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), dvName);
         try {
-            Dataverse dv = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dvName);
-            if (dv != null) {
-                if (stmtCreateDataverse.getIfNotExists()) {
-                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    return;
-                } else {
-                    throw new CompilationException(ErrorCode.DATAVERSE_EXISTS, stmt.getSourceLocation(), dvName);
-                }
-            }
-            MetadataManager.INSTANCE.addDataverse(metadataProvider.getMetadataTxnContext(),
-                    new Dataverse(dvName, stmtCreateDataverse.getFormat(), MetadataUtil.PENDING_NO_OP));
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            doCreateDataverseStatement(mdTxnCtx, metadataProvider, stmtCreateDataverse);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
         } finally {
             metadataProvider.getLocks().unlock();
         }
+    }
+
+    @SuppressWarnings("squid:S00112")
+    protected boolean doCreateDataverseStatement(MetadataTransactionContext mdTxnCtx, MetadataProvider metadataProvider,
+            CreateDataverseStatement stmtCreateDataverse) throws Exception {
+        String dvName = stmtCreateDataverse.getDataverseName().getValue();
+        Dataverse dv = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dvName);
+        if (dv != null) {
+            if (stmtCreateDataverse.getIfNotExists()) {
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                return false;
+            } else {
+                throw new CompilationException(ErrorCode.DATAVERSE_EXISTS, stmtCreateDataverse.getSourceLocation(),
+                        dvName);
+            }
+        }
+        MetadataManager.INSTANCE.addDataverse(metadataProvider.getMetadataTxnContext(),
+                new Dataverse(dvName, stmtCreateDataverse.getFormat(), MetadataUtil.PENDING_NO_OP));
+        MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        return true;
     }
 
     protected static void validateCompactionPolicy(String compactionPolicy,
@@ -1220,19 +1227,29 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                     MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME + " dataverse can't be dropped");
         }
+        lockManager.acquireDataverseWriteLock(metadataProvider.getLocks(), dataverseName);
+        try {
+            doDropDataverse(stmtDelete, sourceLoc, metadataProvider, hcc);
+        } finally {
+            metadataProvider.getLocks().unlock();
+            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
+        }
+    }
 
+    protected boolean doDropDataverse(DataverseDropStatement stmtDelete, SourceLocation sourceLoc,
+            MetadataProvider metadataProvider, IHyracksClientConnection hcc) throws Exception {
+        String dataverseName = stmtDelete.getDataverseName().getValue();
         ProgressState progress = ProgressState.NO_PROGRESS;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         List<JobSpecification> jobsToExecute = new ArrayList<>();
-        lockManager.acquireDataverseWriteLock(metadataProvider.getLocks(), dataverseName);
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
             if (dv == null) {
                 if (stmtDelete.getIfExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    return;
+                    return false;
                 } else {
                     throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
                 }
@@ -1336,6 +1353,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 activeDataverse = null;
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return true;
         } catch (Exception e) {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
@@ -1369,11 +1387,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             + ") couldn't be removed from the metadata", e);
                 }
             }
-
             throw e;
-        } finally {
-            metadataProvider.getLocks().unlock();
-            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
         }
     }
 
@@ -2871,7 +2885,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     @Override
     public String getActiveDataverseName(String dataverse) {
-        return (dataverse != null) ? dataverse : activeDataverse.getDataverseName();
+        return (dataverse != null && !dataverse.isEmpty()) ? dataverse : activeDataverse.getDataverseName();
     }
 
     @Override
