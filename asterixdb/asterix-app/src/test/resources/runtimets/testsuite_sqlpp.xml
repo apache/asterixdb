@@ -996,6 +996,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
+      <compilation-unit name="array_repeat">
+        <output-dir compare="Text">array_repeat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
       <compilation-unit name="array_reverse">
         <output-dir compare="Text">array_reverse</output-dir>
       </compilation-unit>

@@ -55,6 +55,7 @@ import org.apache.asterix.om.typecomputer.impl.AUUIDTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AYearMonthDurationTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AnyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ArrayAppendTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ArrayRepeatTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOrMissingTypeComputer;
@@ -188,6 +189,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-append", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier ARRAY_POSITION =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-position", 2);
+    public static final FunctionIdentifier ARRAY_REPEAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-repeat", 2);
     public static final FunctionIdentifier ARRAY_REVERSE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-reverse", 1);
     public static final FunctionIdentifier ARRAY_CONTAINS =
@@ -1469,6 +1472,7 @@ public class BuiltinFunctions {
         // array functions
         addFunction(ARRAY_APPEND, ArrayAppendTypeComputer.INSTANCE, true);
         addFunction(ARRAY_POSITION, AInt32TypeComputer.INSTANCE, true);
+        addFunction(ARRAY_REPEAT, ArrayRepeatTypeComputer.INSTANCE, true);
         addFunction(ARRAY_REVERSE, AListTypeComputer.INSTANCE, true);
         addFunction(ARRAY_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
 

@@ -146,6 +146,7 @@ import org.apache.asterix.runtime.evaluators.functions.AnyCollectionMemberDescri
 import org.apache.asterix.runtime.evaluators.functions.ArrayAppendDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayPositionDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayRepeatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayReverseDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeLaxDescriptor;
@@ -376,6 +377,7 @@ public final class FunctionCollection implements IFunctionCollection {
         // array functions
         fc.addGenerated(ArrayAppendDescriptor.FACTORY);
         fc.addGenerated(ArrayPositionDescriptor.FACTORY);
+        fc.addGenerated(ArrayRepeatDescriptor.FACTORY);
         fc.addGenerated(ArrayReverseDescriptor.FACTORY);
         fc.addGenerated(ArrayContainsDescriptor.FACTORY);
 
