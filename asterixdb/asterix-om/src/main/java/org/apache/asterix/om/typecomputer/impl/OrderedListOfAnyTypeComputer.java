@@ -20,20 +20,26 @@ package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
-import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class OrderedListOfAnyTypeComputer extends AbstractResultTypeComputer {
 
-    public static final OrderedListOfAnyTypeComputer INSTANCE = new OrderedListOfAnyTypeComputer();
+    public static final OrderedListOfAnyTypeComputer INSTANCE = new OrderedListOfAnyTypeComputer(false);
 
-    private OrderedListOfAnyTypeComputer() {
+    public static final OrderedListOfAnyTypeComputer INSTANCE_NULLABLE = new OrderedListOfAnyTypeComputer(true);
+
+    private final IAType type;
+
+    private OrderedListOfAnyTypeComputer(boolean nullable) {
+        IAType t = AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
+        type = nullable ? AUnionType.createNullableType(t) : t;
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return new AOrderedListType(BuiltinType.ANY, null);
+        return type;
     }
 }

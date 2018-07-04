@@ -101,7 +101,6 @@ import org.apache.asterix.om.typecomputer.impl.OrderedListOfAnyTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.PropagateTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordAddFieldsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.RecordPairsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordRemoveFieldsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ScalarVersionOfAggregateResultType;
 import org.apache.asterix.om.typecomputer.impl.SleepTypeComputer;
@@ -244,6 +243,7 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-put", 3);
     public static final FunctionIdentifier RECORD_VALUES =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "object-values", 1);
+    public static final FunctionIdentifier PAIRS = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "pairs", 1);
 
     // numeric
     public static final FunctionIdentifier NUMERIC_UNARY_MINUS =
@@ -1491,7 +1491,8 @@ public class BuiltinFunctions {
         addFunction(GET_RECORD_FIELD_VALUE, FieldAccessNestedResultType.INSTANCE, true);
         addFunction(RECORD_LENGTH, AInt64TypeComputer.INSTANCE_NULLABLE, true);
         addFunction(RECORD_NAMES, OrderedListOfAStringTypeComputer.INSTANCE_NULLABLE, true);
-        addFunction(RECORD_PAIRS, RecordPairsTypeComputer.INSTANCE, true);
+        addFunction(RECORD_PAIRS, OrderedListOfAnyTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(PAIRS, OrderedListOfAnyTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(GEOMETRY_CONSTRUCTOR, AGeometryTypeComputer.INSTANCE, true);
         addFunction(RECORD_REMOVE, OpenARecordTypeComputer.INSTANCE, true);
         addFunction(RECORD_RENAME, OpenARecordTypeComputer.INSTANCE, true);

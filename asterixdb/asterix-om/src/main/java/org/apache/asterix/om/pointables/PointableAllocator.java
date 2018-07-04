@@ -37,21 +37,21 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class PointableAllocator {
 
-    private IObjectPool<IVisitablePointable, IAType> flatValueAllocator =
-            new ListObjectPool<IVisitablePointable, IAType>(AFlatValuePointable.FACTORY);
-    private IObjectPool<IVisitablePointable, IAType> recordValueAllocator =
-            new ListObjectPool<IVisitablePointable, IAType>(ARecordVisitablePointable.FACTORY);
-    private IObjectPool<IVisitablePointable, IAType> listValueAllocator =
-            new ListObjectPool<IVisitablePointable, IAType>(AListVisitablePointable.FACTORY);
+    private IObjectPool<AFlatValuePointable, IAType> flatValueAllocator =
+            new ListObjectPool<>(AFlatValuePointable.FACTORY);
+    private IObjectPool<ARecordVisitablePointable, IAType> recordValueAllocator =
+            new ListObjectPool<>(ARecordVisitablePointable.FACTORY);
+    private IObjectPool<AListVisitablePointable, IAType> listValueAllocator =
+            new ListObjectPool<>(AListVisitablePointable.FACTORY);
     private IObjectPool<AOrderedListType, IAType> orederedListTypeAllocator =
-            new ListObjectPool<AOrderedListType, IAType>(new IObjectFactory<AOrderedListType, IAType>() {
+            new ListObjectPool<>(new IObjectFactory<AOrderedListType, IAType>() {
                 @Override
                 public AOrderedListType create(IAType type) {
                     return new AOrderedListType(type, type.getTypeName() + "OrderedList");
                 }
             });
     private IObjectPool<AOrderedListType, IAType> unorederedListTypeAllocator =
-            new ListObjectPool<AOrderedListType, IAType>(new IObjectFactory<AOrderedListType, IAType>() {
+            new ListObjectPool<>(new IObjectFactory<AOrderedListType, IAType>() {
                 @Override
                 public AOrderedListType create(IAType type) {
                     return new AOrderedListType(type, type.getTypeName() + "UnorderedList");
@@ -126,11 +126,11 @@ public class PointableAllocator {
             return flatValueAllocator.allocate(null);
     }
 
-    public IVisitablePointable allocateListValue(IAType type) {
+    public AListVisitablePointable allocateListValue(IAType type) {
         return listValueAllocator.allocate(type);
     }
 
-    public IVisitablePointable allocateRecordValue(IAType type) {
+    public ARecordVisitablePointable allocateRecordValue(IAType type) {
         return recordValueAllocator.allocate(type);
     }
 

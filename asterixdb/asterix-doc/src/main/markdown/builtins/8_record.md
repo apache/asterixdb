@@ -323,7 +323,7 @@
 ### object_rename ###
  * Syntax:
 
-        object_name(input_object, old_field, new_field)
+        object_rename(input_object, old_field, new_field)
 
  * Returns a new object that has the same fields as `input_object` with field `old_field` replaced by `new_field`
  * Arguments:
@@ -528,5 +528,78 @@
           1,
           "AsterixDB",
           {"city": "Irvine", "state": "CA"}
+        ]
+
+### object_pairs ###
+ * Syntax:
+
+        object_pairs(input_object)
+
+ * Returns an array of objects describing fields of `input_object`.
+   For each field of the `input_object` the returned array contains an object with two fields `name` and `value`
+   which are set to the `input_object`'s field name and value.
+
+ * Arguments:
+    * `input_object` : an object value.
+ * Return Value:
+    * An array of the `name`/`value` pairs of the fields in `input_object`,
+    * `missing` if `input_object` is `missing`,
+    * `null` if `input_object` is null or any non-object value.
+
+ * Example:
+
+        object_pairs(
+                      {
+                        "id": 1,
+                        "project": "AsterixDB",
+                        "address": {"city": "Irvine", "state": "CA"}
+                      }
+                    );
+
+ * The expected result is:
+
+        [
+          { "name": "id", "value": 1 },
+          { "name": "project", "value": "AsterixDB" },
+          { "name": "address", "value": {"city": "Irvine", "state": "CA"} }
+        ]
+
+### pairs ###
+ * Syntax:
+
+        pairs(input_object)
+
+ * Returns an array of arrays describing fields of `input_object`, including nested fields.
+   For each field of the `input_object` the returned array contains an array with two elements.
+   The first element is the name and the second one is the value of the `input_object`'s field.
+   The input object is introspected recursively, so all fields of its nested objects are returned.
+   Nested objects contained in arrays and multisets are also processed by this function.
+
+ * Arguments:
+    * `input_object` : an object value (or an array or a multiset)
+ * Return Value:
+    * An array of arrays with name, value pairs of the fields in `input_object`, including nested fields.
+      Each inner array has exactly two items: name and value of the `input_object`'s field.
+    * `missing` if `input_object` is `missing`,
+    * `null` if `input_object` is null or a value of a primitive data type.
+
+ * Example:
+
+        pairs(
+               {
+                 "id": 1,
+                 "project": "AsterixDB",
+                 "address": {"city": "Irvine", "state": "CA"}
+               }
+             );
+
+ * The expected result is:
+
+        [
+          [ "id", 1 ],
+          [ "project", "AsterixDB" ],
+          [ "address", { "city": "Irvine", "state": "CA" } ],
+          [ "city", "Irvine" ],
+          [ "state", "CA" ]
         ]
 

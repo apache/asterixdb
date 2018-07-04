@@ -19,7 +19,6 @@
 
 package org.apache.asterix.om.pointables;
 
-import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.pointables.visitor.IVisitablePointableVisitor;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectFactory;
@@ -37,11 +36,7 @@ public class AFlatValuePointable extends AbstractVisitablePointable {
      * use object pool based allocator. The factory is not public so that it
      * cannot called in other places than PointableAllocator.
      */
-    static IObjectFactory<IVisitablePointable, IAType> FACTORY = new IObjectFactory<IVisitablePointable, IAType>() {
-        public AFlatValuePointable create(IAType type) {
-            return new AFlatValuePointable();
-        }
-    };
+    static IObjectFactory<AFlatValuePointable, IAType> FACTORY = type -> new AFlatValuePointable();
 
     /**
      * private constructor, to prevent arbitrary creation

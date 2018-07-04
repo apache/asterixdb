@@ -49,12 +49,8 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
      * DO NOT allow to create ARecordPointable object arbitrarily, force to use
      * object pool based allocator, in order to have object reuse
      */
-    static IObjectFactory<IVisitablePointable, IAType> FACTORY = new IObjectFactory<IVisitablePointable, IAType>() {
-        @Override
-        public IVisitablePointable create(IAType type) {
-            return new ARecordVisitablePointable((ARecordType) type);
-        }
-    };
+    static IObjectFactory<ARecordVisitablePointable, IAType> FACTORY =
+            type -> new ARecordVisitablePointable((ARecordType) type);
 
     // access results: field names, field types, and field values
     private final List<IVisitablePointable> fieldNames = new ArrayList<>();

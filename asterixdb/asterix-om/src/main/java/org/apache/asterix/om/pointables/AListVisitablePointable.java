@@ -47,11 +47,8 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
      * DO NOT allow to create AListPointable object arbitrarily, force to use
      * object pool based allocator, in order to have object reuse.
      */
-    static IObjectFactory<IVisitablePointable, IAType> FACTORY = new IObjectFactory<IVisitablePointable, IAType>() {
-        public IVisitablePointable create(IAType type) {
-            return new AListVisitablePointable((AbstractCollectionType) type);
-        }
-    };
+    static IObjectFactory<AListVisitablePointable, IAType> FACTORY =
+            type -> new AListVisitablePointable((AbstractCollectionType) type);
 
     private final List<IVisitablePointable> items = new ArrayList<IVisitablePointable>();
     private final List<IVisitablePointable> itemTags = new ArrayList<IVisitablePointable>();

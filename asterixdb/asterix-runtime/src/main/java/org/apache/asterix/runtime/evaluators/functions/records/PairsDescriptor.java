@@ -16,13 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.runtime.evaluators.functions.records;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -31,31 +32,25 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
+public class PairsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new RecordPairsDescriptor();
+            return new PairsDescriptor();
         }
 
         @Override
         public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.RecordAccessorTypeInferer.INSTANCE_LAX;
+            return FunctionTypeInferers.SET_ARGUMENT_TYPE;
         }
     };
 
     private static final long serialVersionUID = 1L;
-    private ARecordType recType;
+    private IAType inputType;
 
     @Override
     public void setImmutableStates(Object... states) {
-        this.recType = (ARecordType) states[0];
-    }
-
-    @Override
-    public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.RECORD_PAIRS;
+        inputType = (IAType) states[0];
     }
 
     @Override
@@ -65,8 +60,13 @@ public class RecordPairsDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new RecordPairsEvaluator(args[0].createScalarEvaluator(ctx), recType);
+                return new PairsEvaluator(args[0].createScalarEvaluator(ctx), inputType);
             }
         };
+    }
+
+    @Override
+    public FunctionIdentifier getIdentifier() {
+        return BuiltinFunctions.PAIRS;
     }
 }

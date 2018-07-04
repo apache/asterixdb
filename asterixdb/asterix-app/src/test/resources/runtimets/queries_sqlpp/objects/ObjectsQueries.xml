@@ -196,4 +196,9 @@
       <source-location>false</source-location>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="objects">
+    <compilation-unit name="pairs">
+      <output-dir compare="Text">pairs</output-dir>
+    </compilation-unit>
+  </test-case>
 </test-group>

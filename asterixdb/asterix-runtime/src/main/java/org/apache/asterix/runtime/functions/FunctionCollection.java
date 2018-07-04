@@ -279,6 +279,7 @@ import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByName
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessNestedDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.GetRecordFieldValueDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.GetRecordFieldsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.PairsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordAddDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordAddFieldsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.RecordConcatDescriptor;
@@ -670,6 +671,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(RecordAddDescriptor.FACTORY);
         fc.add(RecordPutDescriptor.FACTORY);
         fc.addGenerated(RecordValuesDescriptor.FACTORY);
+        fc.addGenerated(PairsDescriptor.FACTORY);
 
         // Spatial and temporal type accessors
         fc.addGenerated(TemporalYearAccessor.FACTORY);
