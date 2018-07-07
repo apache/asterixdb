@@ -1786,13 +1786,14 @@ public class TestExecutor {
                 LOGGER.info("Last test left some garbage. Dropping dataverses: " + StringUtils.join(toBeDropped, ','));
                 StringBuilder dropStatement = new StringBuilder();
                 for (String dv : toBeDropped) {
+                    dropStatement.setLength(0);
                     dropStatement.append("drop dataverse ");
                     dropStatement.append(dv);
                     dropStatement.append(";\n");
+                    resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE),
+                            OutputFormat.CLEAN_JSON);
+                    ResultExtractor.extract(resultStream);
                 }
-                resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE),
-                        OutputFormat.CLEAN_JSON);
-                ResultExtractor.extract(resultStream);
             }
         } catch (Throwable th) {
             th.printStackTrace();

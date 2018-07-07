@@ -70,7 +70,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
 
     @Override
     protected void executeStatement(String statementsText, SessionOutput sessionOutput,
-            ResultProperties resultProperties, IStatementExecutor.Stats stats, RequestParameters param,
+            ResultProperties resultProperties, IStatementExecutor.Stats stats, QueryServiceRequestParameters param,
             RequestExecutionState execution, Map<String, String> optionalParameters,
             Map<String, byte[]> statementParameters) throws Exception {
         // Running on NC -> send 'execute' message to CC
@@ -79,31 +79,31 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         final IStatementExecutor.ResultDelivery delivery = resultProperties.getDelivery();
         ExecuteStatementResponseMessage responseMsg;
         MessageFuture responseFuture = ncMb.registerMessageFuture();
-        final String handleUrl = getHandleUrl(param.host, param.path, delivery);
+        final String handleUrl = getHandleUrl(param.getHost(), param.getPath(), delivery);
         try {
-            if (param.clientContextID == null) {
-                param.clientContextID = UUID.randomUUID().toString();
+            if (param.getClientContextID() == null) {
+                param.setClientContextID(UUID.randomUUID().toString());
             }
             long timeout = ExecuteStatementRequestMessage.DEFAULT_NC_TIMEOUT_MILLIS;
-            if (param.timeout != null && !param.timeout.trim().isEmpty()) {
-                timeout = TimeUnit.NANOSECONDS.toMillis(Duration.parseDurationStringToNanos(param.timeout));
+            if (param.getTimeout() != null && !param.getTimeout().trim().isEmpty()) {
+                timeout = TimeUnit.NANOSECONDS.toMillis(Duration.parseDurationStringToNanos(param.getTimeout()));
             }
-            ExecuteStatementRequestMessage requestMsg =
-                    new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
-                            statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
-                            param.clientContextID, handleUrl, optionalParameters, statementParameters);
+            ExecuteStatementRequestMessage requestMsg = new ExecuteStatementRequestMessage(ncCtx.getNodeId(),
+                    responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(),
+                    resultProperties.getNcToCcResultProperties(), param.getClientContextID(), handleUrl,
+                    optionalParameters, statementParameters, param.isMultiStatement());
             execution.start();
             ncMb.sendMessageToPrimaryCC(requestMsg);
             try {
                 responseMsg = (ExecuteStatementResponseMessage) responseFuture.get(timeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
-                cancelQuery(ncMb, ncCtx.getNodeId(), param.clientContextID, e, false);
+                cancelQuery(ncMb, ncCtx.getNodeId(), param.getClientContextID(), e, false);
                 throw e;
             } catch (TimeoutException exception) {
                 RuntimeDataException hde = new RuntimeDataException(ErrorCode.QUERY_TIMEOUT);
                 hde.addSuppressed(exception);
                 // cancel query
-                cancelQuery(ncMb, ncCtx.getNodeId(), param.clientContextID, hde, true);
+                cancelQuery(ncMb, ncCtx.getNodeId(), param.getClientContextID(), hde, true);
                 throw hde;
             }
             execution.end();
@@ -157,7 +157,8 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     }
 
     @Override
-    protected void handleExecuteStatementException(Throwable t, RequestExecutionState state, RequestParameters param) {
+    protected void handleExecuteStatementException(Throwable t, RequestExecutionState state,
+            QueryServiceRequestParameters param) {
         if (t instanceof TimeoutException // TODO(mblow): I don't think t can ever been an instance of TimeoutException
                 || ExceptionUtils.matchingCause(t, candidate -> candidate instanceof IPCException)) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, t.toString(), t);

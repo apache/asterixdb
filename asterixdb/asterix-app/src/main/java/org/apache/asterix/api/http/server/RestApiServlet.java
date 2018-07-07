@@ -210,7 +210,7 @@ public abstract class RestApiServlet extends AbstractServlet {
             IStatementExecutor translator = statementExecutorFactory.create(appCtx, aqlStatements, sessionOutput,
                     compilationProvider, componentProvider);
             final IRequestParameters requestParameters = new RequestParameters(hds,
-                    new ResultProperties(resultDelivery), new IStatementExecutor.Stats(), null, null, null, null);
+                    new ResultProperties(resultDelivery), new IStatementExecutor.Stats(), null, null, null, null, true);
             translator.compileAndExecute(hcc, null, requestParameters);
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);

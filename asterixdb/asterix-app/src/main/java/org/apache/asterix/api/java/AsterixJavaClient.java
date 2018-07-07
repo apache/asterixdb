@@ -128,7 +128,7 @@ public class AsterixJavaClient {
                 storageComponentProvider);
         final IRequestParameters requestParameters =
                 new RequestParameters(null, new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
-                        new IStatementExecutor.Stats(), null, null, null, statementParams);
+                        new IStatementExecutor.Stats(), null, null, null, statementParams, true);
         translator.compileAndExecute(hcc, null, requestParameters);
         writer.flush();
     }

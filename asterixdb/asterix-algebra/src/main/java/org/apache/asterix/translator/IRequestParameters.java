@@ -62,4 +62,9 @@ public interface IRequestParameters {
      * @return Statement parameters
      */
     Map<String, IAObject> getStatementParameters();
+
+    /**
+     * @return true if the request accepts multiple statements. Otherwise, false.
+     */
+    boolean isMultiStatement();
 }

@@ -48,10 +48,11 @@ public class RequestParameters implements IRequestParameters {
     private final IStatementExecutor.ResultMetadata outMetadata;
     private final String clientContextId;
     private final Map<String, IAObject> statementParameters;
+    private final boolean multiStatement;
 
     public RequestParameters(IHyracksDataset hdc, ResultProperties resultProperties, Stats stats,
             IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
-            Map<String, String> optionalParameters, Map<String, IAObject> statementParameters) {
+            Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement) {
         this.hdc = hdc;
         this.resultProperties = resultProperties;
         this.stats = stats;
@@ -59,6 +60,7 @@ public class RequestParameters implements IRequestParameters {
         this.clientContextId = clientContextId;
         this.optionalParameters = optionalParameters;
         this.statementParameters = statementParameters;
+        this.multiStatement = multiStatement;
     }
 
     @Override
@@ -89,6 +91,11 @@ public class RequestParameters implements IRequestParameters {
     @Override
     public String getClientContextId() {
         return clientContextId;
+    }
+
+    @Override
+    public boolean isMultiStatement() {
+        return multiStatement;
     }
 
     @Override

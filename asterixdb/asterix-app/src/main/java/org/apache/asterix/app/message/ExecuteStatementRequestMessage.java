@@ -78,11 +78,12 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     private final String handleUrl;
     private final Map<String, String> optionalParameters;
     private final Map<String, byte[]> statementParameters;
+    private final boolean multiStatement;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
             String clientContextID, String handleUrl, Map<String, String> optionalParameters,
-            Map<String, byte[]> statementParameters) {
+            Map<String, byte[]> statementParameters, boolean multiStatement) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
@@ -93,6 +94,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         this.handleUrl = handleUrl;
         this.optionalParameters = optionalParameters;
         this.statementParameters = statementParameters;
+        this.multiStatement = multiStatement;
     }
 
     @Override
@@ -130,7 +132,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
             final IRequestParameters requestParameters = new RequestParameters(null, resultProperties, stats,
-                    outMetadata, clientContextID, optionalParameters, stmtParams);
+                    outMetadata, clientContextID, optionalParameters, stmtParams, multiStatement);
             translator.compileAndExecute(ccApp.getHcc(), statementExecutorContext, requestParameters);
             outPrinter.close();
             responseMsg.setResult(outWriter.toString());

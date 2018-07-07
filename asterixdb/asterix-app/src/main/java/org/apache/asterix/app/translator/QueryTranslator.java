@@ -65,6 +65,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
@@ -263,6 +264,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     @Override
     public void compileAndExecute(IHyracksClientConnection hcc, IStatementExecutorContext ctx,
             IRequestParameters requestParameters) throws Exception {
+        if (!requestParameters.isMultiStatement()) {
+            validateStatements(statements);
+        }
         int resultSetIdCounter = 0;
         FileSplit outputFile = null;
         IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
@@ -2937,6 +2941,24 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void afterCompile() {
         if (sessionOutput.config().is(SessionConfig.FORMAT_HTML)) {
             ExecutionPlansHtmlPrintUtil.print(sessionOutput.out(), getExecutionPlans());
+        }
+    }
+
+    protected void validateStatements(List<Statement> statements) throws RuntimeDataException {
+        if (statements.stream().filter(this::isNotAllowedMultiStatement).count() > 1) {
+            throw new RuntimeDataException(ErrorCode.UNSUPPORTED_MULTIPLE_STATEMENTS);
+        }
+    }
+
+    protected boolean isNotAllowedMultiStatement(Statement statement) {
+        switch (statement.getKind()) {
+            case DATAVERSE_DECL:
+            case FUNCTION_DECL:
+            case SET:
+            case WRITE:
+                return false;
+            default:
+                return true;
         }
     }
 
