@@ -69,7 +69,7 @@ public class InlineColumnAliasVisitor extends AbstractSqlppExpressionScopingVisi
         }
 
         // Creates a substitution visitor.
-        SqlppSubstituteExpressionVisitor visitor = new SqlppSubstituteExpressionVisitor(context, map);
+        SqlppSubstituteExpressionVisitor visitor = new SubstituteColumnAliasVisitor(context, map);
 
         SelectExpression selectExpression = (SelectExpression) arg;
 
@@ -138,5 +138,25 @@ public class InlineColumnAliasVisitor extends AbstractSqlppExpressionScopingVisi
             }
         }
         return exprMap;
+    }
+
+    /**
+     * Dataset access functions have not yet been introduced at this point, so we need to perform substitution
+     * on postVisit() to avoid infinite recursion in case of SELECT (SELECT ... FROM dataset_name) AS dataset_name.
+     */
+    private class SubstituteColumnAliasVisitor extends SqlppSubstituteExpressionVisitor {
+        private SubstituteColumnAliasVisitor(LangRewritingContext context, Map<Expression, Expression> exprMap) {
+            super(context, exprMap);
+        }
+
+        @Override
+        protected Expression preVisit(Expression expr) {
+            return expr;
+        }
+
+        @Override
+        protected Expression postVisit(Expression expr) throws CompilationException {
+            return substitute(expr);
+        }
     }
 }

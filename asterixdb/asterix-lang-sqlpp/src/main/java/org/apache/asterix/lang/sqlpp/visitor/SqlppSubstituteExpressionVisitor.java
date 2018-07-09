@@ -50,6 +50,10 @@ public class SqlppSubstituteExpressionVisitor extends AbstractSqlppExpressionSco
     // asterixdb/asterix-app/src/test/resources/runtimets/queries_sqlpp/group-by/gby-expr-3/gby-expr-3.3.query.sqlpp
     @Override
     protected Expression preVisit(Expression expr) throws CompilationException {
+        return substitute(expr);
+    }
+
+    protected Expression substitute(Expression expr) throws CompilationException {
         Expression mappedExpr = exprMap.get(expr);
         if (mappedExpr == null) {
             return expr;
