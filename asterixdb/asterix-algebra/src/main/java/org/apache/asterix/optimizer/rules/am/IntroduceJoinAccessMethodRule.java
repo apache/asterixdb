@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -41,7 +40,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
@@ -124,11 +122,6 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         if (op.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT
                 && op.getOperatorTag() != LogicalOperatorTag.SINK
                 && op.getOperatorTag() != LogicalOperatorTag.DELEGATE_OPERATOR) {
-            return false;
-        }
-
-        if (op.getOperatorTag() == LogicalOperatorTag.DELEGATE_OPERATOR
-                && !(((DelegateOperator) op).getDelegate() instanceof CommitOperator)) {
             return false;
         }
 
