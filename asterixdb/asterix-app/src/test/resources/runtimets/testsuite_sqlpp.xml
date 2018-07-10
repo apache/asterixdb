@@ -2834,6 +2834,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="fulltext">
+      <compilation-unit name="fulltext-index-09">
+        <output-dir compare="Text">fulltext-index-09</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fulltext">
       <compilation-unit name="fulltext-index-large-data">
         <output-dir compare="Text">fulltext-index-large-data</output-dir>
       </compilation-unit>

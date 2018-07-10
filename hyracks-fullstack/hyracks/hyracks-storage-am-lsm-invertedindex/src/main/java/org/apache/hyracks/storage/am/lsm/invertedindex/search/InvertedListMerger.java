@@ -165,7 +165,7 @@ public class InvertedListMerger {
             // Needs to return the calculation result for the final list only.
             // Otherwise, the process needs to be continued until this method traverses the final inverted list
             // and either generates some output in the output buffer or finishes traversing it.
-            if (isFinalList && doneMerge) {
+            if (isFinalList) {
                 return doneMerge;
             }
         }
