@@ -19,11 +19,10 @@
 package org.apache.asterix.test.active;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Semaphore;
 
+import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IRetryPolicyFactory;
@@ -31,17 +30,19 @@ import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.LockList;
-import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.util.ExitUtil;
 
 public class TestEventsListener extends ActiveEntityEventsListener {
 
@@ -50,6 +51,9 @@ public class TestEventsListener extends ActiveEntityEventsListener {
         RUNNING_JOB_FAIL,
         FAIL_COMPILE,
         FAIL_RUNTIME,
+        FAIL_START_TIMEOUT_OP_SUCCEED,
+        FAIL_START_TIMEOUT_STUCK,
+        FAIL_STOP_TIMEOUT,
         STEP_SUCCEED,
         STEP_FAIL_COMPILE,
         STEP_FAIL_RUNTIME
@@ -103,9 +107,8 @@ public class TestEventsListener extends ActiveEntityEventsListener {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    protected void doStart(MetadataProvider metadataProvider) throws HyracksDataException {
+    protected JobId compileAndStartJob(MetadataProvider metadataProvider) throws HyracksDataException {
         step(onStart);
         try {
             metadataProvider.getApplicationContext().getMetadataLockManager()
@@ -119,60 +122,72 @@ public class TestEventsListener extends ActiveEntityEventsListener {
         try {
             startJob.sync();
         } catch (InterruptedException e) {
-            throw HyracksDataException.create(e);
+            ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
         }
-        WaitForStateSubscriber subscriber = new WaitForStateSubscriber(this,
-                EnumSet.of(ActivityState.RUNNING, ActivityState.TEMPORARILY_FAILED, ActivityState.PERMANENTLY_FAILED));
         if (onStart == Behavior.FAIL_RUNTIME || onStart == Behavior.STEP_FAIL_RUNTIME) {
             clusterController.jobFinish(jobId, JobStatus.FAILURE,
                     Collections.singletonList(new HyracksDataException("RuntimeFailure")));
-        } else {
+        } else if (onStart != Behavior.FAIL_START_TIMEOUT_OP_SUCCEED && onStart != Behavior.FAIL_START_TIMEOUT_STUCK) {
             for (int i = 0; i < nodeControllers.length; i++) {
                 TestNodeControllerActor nodeController = nodeControllers[i];
                 nodeController.registerRuntime(jobId, entityId, i);
             }
         }
-        try {
-            subscriber.sync();
-            if (subscriber.getFailure() != null) {
-                throw subscriber.getFailure();
+        if (onStart == Behavior.FAIL_START_TIMEOUT_OP_SUCCEED) {
+            for (int i = 0; i < nodeControllers.length; i++) {
+                TestNodeControllerActor nodeController = nodeControllers[i];
+                try {
+                    nodeController.registerRuntime(jobId, entityId, i).sync();
+                } catch (InterruptedException e) {
+                    ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
+                }
             }
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+            // At this point, the job has started and both nodes reported that they started.
+            // but since we're holding the lock on the listener (this is a synchronized method), the state
+            // didn't change yet
+            while (state != ActivityState.RUNNING) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
+                }
+            }
+            Thread.currentThread().interrupt();
+        } else if (onStart == Behavior.FAIL_START_TIMEOUT_STUCK) {
+            TestNodeControllerActor nodeController = nodeControllers[0];
+            try {
+                nodeController.registerRuntime(jobId, entityId, 0).sync();
+            } catch (InterruptedException e) {
+                ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
+            }
+            Thread.currentThread().interrupt();
         }
+        return jobId;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    protected Void doStop(MetadataProvider metadataProvider) throws HyracksDataException {
-        ActivityState intention = state;
+    protected void cancelJobSafely(MetadataProvider metadataProvider, Throwable th) {
+        clusterController.jobFinish(jobId, JobStatus.FAILURE,
+                Collections.singletonList(HyracksException.create(ErrorCode.JOB_CANCELED, jobId)));
+    }
+
+    @Override
+    protected void sendStopMessages(MetadataProvider metadataProvider) throws Exception {
         step(onStop);
         failCompile(onStop);
-        try {
-            Set<ActivityState> waitFor;
-            if (intention == ActivityState.STOPPING) {
-                waitFor = EnumSet.of(ActivityState.STOPPED, ActivityState.PERMANENTLY_FAILED);
-            } else if (intention == ActivityState.SUSPENDING) {
-                waitFor = EnumSet.of(ActivityState.SUSPENDED, ActivityState.TEMPORARILY_FAILED);
-            } else {
-                throw new IllegalStateException("stop with what intention??");
+        if (onStop == Behavior.RUNNING_JOB_FAIL) {
+            clusterController.jobFinish(jobId, JobStatus.FAILURE,
+                    Collections.singletonList(new HyracksDataException("RuntimeFailure")));
+        } else if (onStop == Behavior.FAIL_STOP_TIMEOUT) {
+            // Nothing happens.
+            Thread.currentThread().interrupt();
+        } else {
+            for (int i = 0; i < nodeControllers.length; i++) {
+                TestNodeControllerActor nodeController = nodeControllers[0];
+                nodeController.deRegisterRuntime(jobId, entityId, i).sync();
             }
-            WaitForStateSubscriber subscriber = new WaitForStateSubscriber(this, waitFor);
-            if (onStop == Behavior.RUNNING_JOB_FAIL) {
-                clusterController.jobFinish(jobId, JobStatus.FAILURE,
-                        Collections.singletonList(new HyracksDataException("RuntimeFailure")));
-            } else {
-                for (int i = 0; i < nodeControllers.length; i++) {
-                    TestNodeControllerActor nodeController = nodeControllers[0];
-                    nodeController.deRegisterRuntime(jobId, entityId, i).sync();
-                }
-                clusterController.jobFinish(jobId, JobStatus.TERMINATED, Collections.emptyList());
-            }
-            subscriber.sync();
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+            clusterController.jobFinish(jobId, JobStatus.TERMINATED, Collections.emptyList());
         }
-        return null;
     }
 
     public void onStart(Behavior behavior) {
@@ -184,25 +199,31 @@ public class TestEventsListener extends ActiveEntityEventsListener {
     }
 
     @Override
-    protected void setRunning(MetadataProvider metadataProvider, boolean running) throws HyracksDataException {
+    protected void setRunning(MetadataProvider metadataProvider, boolean running) {
         try {
             IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
             LockList locks = metadataProvider.getLocks();
             lockManager.acquireDataverseReadLock(locks, entityId.getDataverse());
             lockManager.acquireActiveEntityWriteLock(locks, entityId.getDataverse() + '.' + entityId.getEntityName());
             // persist entity
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+        } catch (Throwable th) {
+            // This failure puts the system in a bad state.
+            throw new IllegalStateException(th);
         }
     }
 
     @Override
-    protected Void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException {
-        return doStop(metadataProvider);
+    protected void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException {
+        doStop(metadataProvider);
     }
 
     @Override
     protected void doResume(MetadataProvider metadataProvider) throws HyracksDataException {
         doStart(metadataProvider);
+    }
+
+    @Override
+    protected ActiveRuntimeId getActiveRuntimeId(int partition) {
+        throw new UnsupportedOperationException();
     }
 }

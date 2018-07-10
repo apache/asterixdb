@@ -31,7 +31,7 @@ public interface IActiveEntityEventSubscriber {
      * @param event
      * @throws HyracksDataException
      */
-    void notify(ActiveEvent event) throws HyracksDataException;
+    void notify(ActiveEvent event);
 
     /**
      * Checkcs whether the subscriber is done receiving events
@@ -53,5 +53,5 @@ public interface IActiveEntityEventSubscriber {
      * @param eventsListener
      * @throws HyracksDataException
      */
-    void subscribed(IActiveEntityEventsListener eventsListener) throws HyracksDataException;
+    void subscribed(IActiveEntityEventsListener eventsListener);
 }

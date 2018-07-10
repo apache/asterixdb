@@ -21,7 +21,6 @@ package org.apache.asterix.external.feed.watch;
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IActiveEntityEventsListener;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * An event subscriber that does not listen to any events
@@ -49,7 +48,7 @@ public class NoOpSubscriber implements IActiveEntityEventSubscriber {
     }
 
     @Override
-    public void subscribed(IActiveEntityEventsListener eventsListener) throws HyracksDataException {
+    public void subscribed(IActiveEntityEventsListener eventsListener) {
         // no op
     }
 }

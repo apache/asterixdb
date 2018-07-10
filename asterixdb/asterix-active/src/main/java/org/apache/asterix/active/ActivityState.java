@@ -24,11 +24,6 @@ public enum ActivityState {
      */
     STOPPED,
     /**
-     * Failure to recover from a temporary faliure caused the activity to fail permanantly.
-     * No further recovery attempts will be made.
-     */
-    PERMANENTLY_FAILED,
-    /**
      * An unexpected failure caused the activity to fail but recovery attempts will start taking place
      */
     TEMPORARILY_FAILED,
@@ -40,6 +35,10 @@ public enum ActivityState {
      * During an attempt to start the activity
      */
     STARTING,
+    /**
+     * The activity was started but is being cancelled. Waiting for the job cancellation to complete
+     */
+    CANCELLING,
     /**
      * The activity has been started successfully and is running
      */

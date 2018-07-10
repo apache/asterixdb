@@ -23,39 +23,28 @@ import java.util.Set;
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.IActiveEntityEventsListener;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class WaitForStateSubscriber extends AbstractSubscriber {
 
     private final Set<ActivityState> targetStates;
 
-    public WaitForStateSubscriber(IActiveEntityEventsListener listener, Set<ActivityState> targetStates)
-            throws HyracksDataException {
+    public WaitForStateSubscriber(IActiveEntityEventsListener listener, Set<ActivityState> targetStates) {
         super(listener);
         this.targetStates = targetStates;
         listener.subscribe(this);
     }
 
     @Override
-    public void notify(ActiveEvent event) throws HyracksDataException {
+    public void notify(ActiveEvent event) {
         if (targetStates.contains(listener.getState())) {
-            if (listener.getState() == ActivityState.PERMANENTLY_FAILED
-                    || listener.getState() == ActivityState.TEMPORARILY_FAILED) {
-                complete(listener.getJobFailure());
-            } else {
-                complete(null);
-            }
+            complete(listener.getJobFailure());
         } else if (event != null && event.getEventKind() == ActiveEvent.Kind.FAILURE) {
-            try {
-                complete((Exception) event.getEventObject());
-            } catch (Exception e) {
-                throw HyracksDataException.create(e);
-            }
+            complete((Exception) event.getEventObject());
         }
     }
 
     @Override
-    public void subscribed(IActiveEntityEventsListener eventsListener) throws HyracksDataException {
+    public void subscribed(IActiveEntityEventsListener eventsListener) {
         if (targetStates.contains(listener.getState())) {
             complete(null);
         }

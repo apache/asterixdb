@@ -19,7 +19,6 @@
 package org.apache.asterix.test.active;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.asterix.active.ActivityState;
@@ -35,7 +34,6 @@ import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -64,14 +62,13 @@ public class DummyFeedEventsListener extends FeedEventsListener {
     }
 
     @Override
-    protected Void doStop(MetadataProvider metadataProvider) throws HyracksDataException {
+    protected void doStop(MetadataProvider metadataProvider) throws HyracksDataException {
         IActiveEntityEventSubscriber eventSubscriber =
-                new WaitForStateSubscriber(this, EnumSet.of(ActivityState.RUNNING, ActivityState.PERMANENTLY_FAILED));
+                new WaitForStateSubscriber(this, Collections.singleton(ActivityState.STOPPED));
         try {
             eventSubscriber.sync();
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
-        return null;
     }
 }

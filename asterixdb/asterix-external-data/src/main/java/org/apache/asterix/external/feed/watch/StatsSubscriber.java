@@ -30,24 +30,16 @@ public class StatsSubscriber extends AbstractSubscriber {
     }
 
     @Override
-    public void notify(ActiveEvent event) throws HyracksDataException {
+    public void notify(ActiveEvent event) {
         if (event.getEventKind() == ActiveEvent.Kind.STATS_UPDATED) {
-            try {
-                complete(null);
-            } catch (Exception e) {
-                throw HyracksDataException.create(e);
-            }
+            complete(null);
         } else if (event.getEventKind() == ActiveEvent.Kind.FAILURE) {
-            try {
-                complete((Exception) event.getEventObject());
-            } catch (Exception e) {
-                throw HyracksDataException.create(e);
-            }
+            complete((Exception) event.getEventObject());
         }
     }
 
     @Override
-    public void subscribed(IActiveEntityEventsListener eventsListener) throws HyracksDataException {
+    public void subscribed(IActiveEntityEventsListener eventsListener) {
         //Does nothing upon subscription
     }
 }

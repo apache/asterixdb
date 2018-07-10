@@ -92,7 +92,7 @@ public class RecoveryTask {
             if (retryPolicyFactory == NoRetryPolicyFactory.INSTANCE) {
                 synchronized (listener) {
                     if (!cancelRecovery) {
-                        listener.setState(ActivityState.PERMANENTLY_FAILED);
+                        listener.setState(ActivityState.STOPPED);
                         listener.setRunning(metadataProvider, false);
                     }
                 }
@@ -172,7 +172,7 @@ public class RecoveryTask {
                 }
                 if (listener.getState() == ActivityState.TEMPORARILY_FAILED) {
                     LOGGER.warn("Recovery for {} permanently failed", listener.getEntityId());
-                    listener.setState(ActivityState.PERMANENTLY_FAILED);
+                    listener.setState(ActivityState.STOPPED);
                     listener.setRunning(metadataProvider, false);
                 }
                 listener.notifyAll();

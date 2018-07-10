@@ -180,7 +180,7 @@ public class ActiveEventsListenerTest {
         Action action = users[0].startActivity(listener);
         action.sync();
         assertFailure(action, 0);
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
     @Test
@@ -190,7 +190,42 @@ public class ActiveEventsListenerTest {
         Action action = users[0].startActivity(listener);
         action.sync();
         assertFailure(action, 0);
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+    }
+
+    @Test
+    public void testStartWhenStartSucceedButTimesout() throws Exception {
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+        listener.onStart(Behavior.FAIL_START_TIMEOUT_OP_SUCCEED);
+        Action action = users[0].startActivity(listener);
+        action.sync();
+        assertSuccess(action);
+        Assert.assertEquals(ActivityState.RUNNING, listener.getState());
+    }
+
+    @Test
+    public void testStartWhenStartStuckTimesout() throws Exception {
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+        listener.onStart(Behavior.FAIL_START_TIMEOUT_STUCK);
+        Action action = users[0].startActivity(listener);
+        action.sync();
+        assertFailure(action, 0);
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+    }
+
+    @Test
+    public void testStopWhenStopTimesout() throws Exception {
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
+        listener.onStart(Behavior.SUCCEED);
+        Action action = users[0].startActivity(listener);
+        action.sync();
+        assertSuccess(action);
+        Assert.assertEquals(ActivityState.RUNNING, listener.getState());
+        listener.onStop(Behavior.FAIL_STOP_TIMEOUT);
+        action = users[0].stopActivity(listener);
+        action.sync();
+        assertSuccess(action);
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
     @Test
@@ -336,14 +371,18 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
-    public void testSuspendFromRunningAndStopFail() throws Exception {
+    public void testSuspendFromRunningAndStopFailThenResumeSucceeds() throws Exception {
         testStartWhenStartSucceed();
         // suspend
         Assert.assertEquals(ActivityState.RUNNING, listener.getState());
         listener.onStop(Behavior.FAIL_COMPILE);
         Action suspension = users[1].suspendActivity(listener);
         suspension.sync();
-        Assert.assertTrue(suspension.hasFailed());
+        Assert.assertFalse(suspension.hasFailed());
+        Assert.assertEquals(ActivityState.TEMPORARILY_FAILED, listener.getState());
+        Action resumption = users[1].resumeActivity(listener);
+        resumption.sync();
+        assertSuccess(resumption);
         Assert.assertEquals(ActivityState.RUNNING, listener.getState());
     }
 
@@ -492,19 +531,19 @@ public class ActiveEventsListenerTest {
         WaitForStateSubscriber tempFailSubscriber =
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.TEMPORARILY_FAILED));
         WaitForStateSubscriber permFailSubscriber =
-                new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.PERMANENTLY_FAILED));
+                new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.STOPPED));
         listener.onStart(Behavior.FAIL_COMPILE);
         clusterController.jobFinish(listener.getJobId(), JobStatus.FAILURE,
                 Collections.singletonList(new HyracksDataException("Compilation Failure")));
         tempFailSubscriber.sync();
         permFailSubscriber.sync();
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
     @Test
     public void testStartAfterPermenantFailure() throws Exception {
         testRecoveryFailureAfterOneAttemptCompilationFailure();
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         listener.onStart(Behavior.SUCCEED);
         WaitForStateSubscriber subscriber = new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.RUNNING));
         users[1].startActivity(listener);
@@ -536,13 +575,13 @@ public class ActiveEventsListenerTest {
         WaitForStateSubscriber tempFailSubscriber =
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.TEMPORARILY_FAILED));
         WaitForStateSubscriber permFailSubscriber =
-                new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.PERMANENTLY_FAILED));
+                new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.STOPPED));
         listener.onStart(Behavior.FAIL_RUNTIME);
         clusterController.jobFinish(listener.getJobId(), JobStatus.FAILURE,
                 Collections.singletonList(new HyracksDataException("Runtime Failure")));
         tempFailSubscriber.sync();
         permFailSubscriber.sync();
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
     @SuppressWarnings("deprecation")
@@ -555,12 +594,12 @@ public class ActiveEventsListenerTest {
         WaitForStateSubscriber tempFailSubscriber =
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.TEMPORARILY_FAILED));
         WaitForStateSubscriber permFailSubscriber =
-                new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.PERMANENTLY_FAILED));
+                new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.STOPPED));
         clusterController.jobFinish(listener.getJobId(), JobStatus.FAILURE,
                 Collections.singletonList(new HyracksDataException("Runtime Failure")));
         tempFailSubscriber.sync();
         permFailSubscriber.sync();
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
     @SuppressWarnings("deprecation")
@@ -925,7 +964,7 @@ public class ActiveEventsListenerTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    public void testCreateNewShadowDuringRecoveryAttemptThatSucceeds() throws Exception {
+    public void testCreateNewDatasetDuringRecoveryAttemptThatSucceeds() throws Exception {
         testStartWhenStartSucceed();
         listener.onStart(Behavior.FAIL_COMPILE);
         WaitForStateSubscriber tempFailSubscriber =
@@ -953,7 +992,7 @@ public class ActiveEventsListenerTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    public void testCreateNewShadowDuringRecoveryAttemptThatFailsCompile() throws Exception {
+    public void testCreateNewDatasetDuringRecoveryAttemptThatFailsCompile() throws Exception {
         testStartWhenStartSucceed();
         listener.onStart(Behavior.FAIL_COMPILE);
         WaitForStateSubscriber tempFailSubscriber =
@@ -980,7 +1019,7 @@ public class ActiveEventsListenerTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    public void testCreateNewShadowDuringRecoveryAttemptThatFailsRuntime() throws Exception {
+    public void testCreateNewDatasetDuringRecoveryAttemptThatFailsRuntime() throws Exception {
         testStartWhenStartSucceed();
         listener.onStart(Behavior.FAIL_COMPILE);
         WaitForStateSubscriber tempFailSubscriber =
@@ -1006,7 +1045,7 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
-    public void testCreateNewShadowWhileStarting() throws Exception {
+    public void testCreateNewDatasetWhileStarting() throws Exception {
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         listener.onStart(Behavior.STEP_SUCCEED);
         Action startAction = users[0].startActivity(listener);
@@ -1027,7 +1066,7 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
-    public void testCreateNewShadowWhileRunning() throws Exception {
+    public void testCreateNewDatasetWhileRunning() throws Exception {
         testStartWhenStartSucceed();
         Dataset newDataset =
                 new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
@@ -1040,7 +1079,7 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
-    public void testCreateNewShadowWhileSuspended() throws Exception {
+    public void testCreateNewDatasetWhileSuspended() throws Exception {
         testStartWhenStartSucceed();
         // suspend
         Assert.assertEquals(ActivityState.RUNNING, listener.getState());
@@ -1065,22 +1104,22 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
-    public void testCreateNewShadowWhilePermanentFailure() throws Exception {
+    public void testCreateNewDatasetWhilePermanentFailure() throws Exception {
         testRecoveryFailureAfterOneAttemptCompilationFailure();
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         Dataset newDataset =
                 new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
         Action createDatasetAction = users[0].addDataset(newDataset, listener);
         createDatasetAction.sync();
         assertSuccess(createDatasetAction);
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         Assert.assertEquals(3, listener.getDatasets().size());
         Assert.assertEquals(clusterController.getAllDatasets().size(), listener.getDatasets().size());
     }
 
     @SuppressWarnings("deprecation")
     @Test
-    public void testDeleteShadowDuringRecoveryAttemptThatSucceeds() throws Exception {
+    public void testDeleteDatasetDuringRecoveryAttemptThatSucceeds() throws Exception {
         testStartWhenStartSucceed();
         listener.onStart(Behavior.FAIL_COMPILE);
         WaitForStateSubscriber tempFailSubscriber =
@@ -1106,7 +1145,7 @@ public class ActiveEventsListenerTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    public void testDeleteShadowDuringRecoveryAttemptThatFailsCompile() throws Exception {
+    public void testDeleteDatasetDuringRecoveryAttemptThatFailsCompile() throws Exception {
         testStartWhenStartSucceed();
         listener.onStart(Behavior.FAIL_COMPILE);
         WaitForStateSubscriber tempFailSubscriber =
@@ -1131,7 +1170,7 @@ public class ActiveEventsListenerTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    public void testDeleteShadowDuringRecoveryAttemptThatFailsRuntime() throws Exception {
+    public void testDeleteDatasetDuringRecoveryAttemptThatFailsRuntime() throws Exception {
         testStartWhenStartSucceed();
         listener.onStart(Behavior.FAIL_COMPILE);
         WaitForStateSubscriber tempFailSubscriber =
@@ -1155,7 +1194,7 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
-    public void testDeleteShadowWhileStarting() throws Exception {
+    public void testDeleteDatasetWhileStarting() throws Exception {
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         listener.onStart(Behavior.STEP_SUCCEED);
         Action startAction = users[0].startActivity(listener);
@@ -1174,7 +1213,7 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
-    public void testDeleteShadowWhileRunning() throws Exception {
+    public void testDeleteDatasetWhileRunning() throws Exception {
         testStartWhenStartSucceed();
         Action dropDatasetAction = users[1].dropDataset(firstDataset, listener);
         dropDatasetAction.sync();
@@ -1185,19 +1224,19 @@ public class ActiveEventsListenerTest {
     }
 
     @Test
-    public void testDeleteShadowWhilePermanentFailure() throws Exception {
+    public void testDeleteDatasetWhilePermanentFailure() throws Exception {
         testRecoveryFailureAfterOneAttemptCompilationFailure();
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         Action dropDatasetAction = users[0].dropDataset(secondDataset, listener);
         dropDatasetAction.sync();
         assertSuccess(dropDatasetAction);
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         Assert.assertEquals(1, listener.getDatasets().size());
         Assert.assertEquals(clusterController.getAllDatasets().size(), listener.getDatasets().size());
     }
 
     @Test
-    public void testDeleteShadowWhileSuspended() throws Exception {
+    public void testDeleteDatasetWhileSuspended() throws Exception {
         testStartWhenStartSucceed();
         // suspend
         Assert.assertEquals(ActivityState.RUNNING, listener.getState());
@@ -1317,7 +1356,7 @@ public class ActiveEventsListenerTest {
     @Test
     public void testCreateNewIndexWhilePermanentFailure() throws Exception {
         testRecoveryFailureAfterOneAttemptCompilationFailure();
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         Action add = users[1].addIndex(firstDataset, listener);
         add.sync();
         assertSuccess(add);
@@ -1442,7 +1481,7 @@ public class ActiveEventsListenerTest {
     @Test
     public void testDeleteIndexWhilePermanentFailure() throws Exception {
         testRecoveryFailureAfterOneAttemptCompilationFailure();
-        Assert.assertEquals(ActivityState.PERMANENTLY_FAILED, listener.getState());
+        Assert.assertEquals(ActivityState.STOPPED, listener.getState());
         Action drop = users[1].dropIndex(firstDataset, listener);
         drop.sync();
         assertSuccess(drop);

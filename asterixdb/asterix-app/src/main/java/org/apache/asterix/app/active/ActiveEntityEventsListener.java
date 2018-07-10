@@ -23,8 +23,10 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveEvent.Kind;
@@ -34,6 +36,7 @@ import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IRetryPolicyFactory;
 import org.apache.asterix.active.NoRetryPolicyFactory;
+import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.active.message.ActivePartitionMessage.Event;
 import org.apache.asterix.active.message.ActiveStatsRequestMessage;
@@ -55,6 +58,9 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.util.InvokeUtil;
+import org.apache.hyracks.util.ExitUtil;
+import org.apache.hyracks.util.Span;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -65,7 +71,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     private static final Level level = Level.INFO;
     private static final ActiveEvent STATE_CHANGED = new ActiveEvent(null, Kind.STATE_CHANGED, null, null);
     private static final EnumSet<ActivityState> TRANSITION_STATES = EnumSet.of(ActivityState.RESUMING,
-            ActivityState.STARTING, ActivityState.STOPPING, ActivityState.RECOVERING);
+            ActivityState.STARTING, ActivityState.STOPPING, ActivityState.RECOVERING, ActivityState.CANCELLING);
     private static final String DEFAULT_ACTIVE_STATS = "{\"Stats\":\"N/A\"}";
     // finals
     protected final IClusterStateManager clusterStateManager;
@@ -129,7 +135,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         LOGGER.log(level, "State of " + getEntityId() + "is being set to " + newState + " from " + state);
         this.prevState = state;
         this.state = newState;
-        if (newState == ActivityState.SUSPENDED) {
+        if (newState == ActivityState.STARTING || newState == ActivityState.RECOVERING
+                || newState == ActivityState.RESUMING) {
+            jobFailure = null;
+        } else if (newState == ActivityState.SUSPENDED) {
             suspended = true;
         }
         notifySubscribers(STATE_CHANGED);
@@ -142,10 +151,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             ActiveEvent.Kind eventKind = event.getEventKind();
             switch (eventKind) {
                 case JOB_CREATED:
-                    jobCreated(event);
-                    break;
                 case JOB_STARTED:
-                    start(event);
                     break;
                 case JOB_FINISHED:
                     finish(event);
@@ -163,19 +169,19 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         }
     }
 
-    protected void jobCreated(ActiveEvent event) {
-        // Do nothing
-    }
-
     protected synchronized void handle(ActivePartitionMessage message) {
         if (message.getEvent() == Event.RUNTIME_REGISTERED) {
             numRegistered++;
-            if (numRegistered == locations.getLocations().length) {
+            if (allPartitionsRegisteredAndNotCancelling()) {
                 setState(ActivityState.RUNNING);
             }
         } else if (message.getEvent() == Event.RUNTIME_DEREGISTERED) {
             numDeRegistered++;
         }
+    }
+
+    private boolean allPartitionsRegisteredAndNotCancelling() {
+        return numRegistered == locations.getLocations().length && state != ActivityState.CANCELLING;
     }
 
     @SuppressWarnings("unchecked")
@@ -191,10 +197,11 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         JobStatus jobStatus = status.getLeft();
         List<Exception> exceptions = status.getRight();
         LOGGER.log(level, "The job finished with status: " + jobStatus);
-        if (jobStatus.equals(JobStatus.FAILURE)) {
+        if (!jobSuccessfullyTerminated(jobStatus)) {
             jobFailure = exceptions.isEmpty() ? new RuntimeDataException(ErrorCode.UNREPORTED_TASK_FAILURE_EXCEPTION)
                     : exceptions.get(0);
-            setState((state == ActivityState.STOPPING) ? ActivityState.STOPPED : ActivityState.TEMPORARILY_FAILED);
+            setState((state == ActivityState.STOPPING || state == ActivityState.CANCELLING) ? ActivityState.STOPPED
+                    : ActivityState.TEMPORARILY_FAILED);
             if (prevState == ActivityState.RUNNING) {
                 recover();
             }
@@ -203,14 +210,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         }
     }
 
-    protected void start(ActiveEvent event) {
-        jobId = event.getJobId();
-        numRegistered = 0;
-        numDeRegistered = 0;
+    private boolean jobSuccessfullyTerminated(JobStatus jobStatus) {
+        return jobStatus.equals(JobStatus.TERMINATED);
     }
 
     @Override
-    public synchronized void subscribe(IActiveEntityEventSubscriber subscriber) throws HyracksDataException {
+    public synchronized void subscribe(IActiveEntityEventSubscriber subscriber) {
         subscriber.subscribed(this);
         if (!subscriber.isDone()) {
             subscribers.add(subscriber);
@@ -315,11 +320,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             if (subscriber.isDone()) {
                 it.remove();
             } else {
-                try {
-                    subscriber.notify(event);
-                } catch (HyracksDataException e) {
-                    LOGGER.log(Level.WARN, "Failed to notify subscriber", e);
-                }
+                subscriber.notify(event);
                 if (subscriber.isDone()) {
                     it.remove();
                 }
@@ -342,22 +343,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         }
     }
 
-    /**
-     * this method is called before an action call is returned. It ensures that the request didn't fail
-     *
-     */
-    protected synchronized void checkNoFailure() throws HyracksDataException {
-        if (state == ActivityState.PERMANENTLY_FAILED) {
-            throw HyracksDataException.create(jobFailure);
-        }
-    }
-
     @Override
     public synchronized void recover() {
         LOGGER.log(level, "Recover is called on " + entityId);
         if (retryPolicyFactory == NoRetryPolicyFactory.INSTANCE) {
             LOGGER.log(level, "But it has no recovery policy, so it is set to permanent failure");
-            setState(ActivityState.PERMANENTLY_FAILED);
+            setState(ActivityState.STOPPED);
         } else {
             ExecutorService executor = appCtx.getServiceContext().getControllerService().getExecutor();
             setState(ActivityState.TEMPORARILY_FAILED);
@@ -371,7 +362,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     public synchronized void start(MetadataProvider metadataProvider)
             throws HyracksDataException, InterruptedException {
         waitForNonTransitionState();
-        if (state != ActivityState.PERMANENTLY_FAILED && state != ActivityState.STOPPED) {
+        if (state != ActivityState.STOPPED) {
             throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_ALREADY_STARTED, entityId, state);
         }
         try {
@@ -379,30 +370,131 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             doStart(metadataProvider);
             setRunning(metadataProvider, true);
         } catch (Exception e) {
-            setState(ActivityState.PERMANENTLY_FAILED);
+            setState(ActivityState.STOPPED);
             LOGGER.log(Level.ERROR, "Failed to start the entity " + entityId, e);
             throw HyracksDataException.create(e);
         }
     }
 
-    protected abstract void doStart(MetadataProvider metadataProvider) throws HyracksDataException;
+    @SuppressWarnings("squid:S1181")
+    protected synchronized void doStart(MetadataProvider metadataProvider) throws HyracksDataException {
+        WaitForStateSubscriber subscriber = new WaitForStateSubscriber(this,
+                EnumSet.of(ActivityState.RUNNING, ActivityState.TEMPORARILY_FAILED, ActivityState.STOPPED));
+        jobId = compileAndStartJob(metadataProvider);
+        numRegistered = 0;
+        numDeRegistered = 0;
+        try {
+            subscriber.sync();
+            if (subscriber.getFailure() != null) {
+                throw subscriber.getFailure();
+            }
+        } catch (InterruptedException ie) {
+            // interrupted.. check if the subscriber is done
+            if (subscriber.isDone()) {
+                if (subscriber.getFailure() != null) {
+                    throw HyracksDataException.create(subscriber.getFailure());
+                }
+                Thread.currentThread().interrupt();
+            } else {
+                // Subscriber is not done yet. so, we need to cancel, we have the jobId
+                setState(ActivityState.CANCELLING);
+                cancelJob(ie);
+                throw HyracksDataException.create(ie);
+            }
+        } catch (Throwable e) {
+            throw HyracksDataException.create(e);
+        }
+    }
 
-    protected abstract Void doStop(MetadataProvider metadataProvider) throws HyracksDataException;
+    private void cancelJob(Throwable th) {
+        cancelJobSafely(metadataProvider, th);
+        final WaitForStateSubscriber cancelSubscriber =
+                new WaitForStateSubscriber(this, EnumSet.of(ActivityState.STOPPED));
+        final Span span = Span.start(2, TimeUnit.MINUTES);
+        InvokeUtil.doUninterruptibly(() -> {
+            if (!cancelSubscriber.sync(span)) {
+                ExitUtil.halt(ExitUtil.EC_FAILED_TO_CANCEL_ACTIVE_START_STOP);
+            }
+        });
+    }
 
-    protected abstract Void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException;
+    @SuppressWarnings("squid:S1181")
+    protected void cancelJobSafely(MetadataProvider metadataProvider, Throwable e) {
+        try {
+            metadataProvider.getApplicationContext().getHcc().cancelJob(jobId);
+        } catch (Throwable th) {
+            LOGGER.warn("Failed to cancel active job", th);
+            e.addSuppressed(th);
+        }
+    }
+
+    protected abstract JobId compileAndStartJob(MetadataProvider metadataProvider) throws HyracksDataException;
+
+    @SuppressWarnings("squid:S1181")
+    protected synchronized void doStop(MetadataProvider metadataProvider) throws HyracksDataException {
+        ActivityState intention = state;
+        Set<ActivityState> waitFor;
+        if (intention == ActivityState.STOPPING) {
+            waitFor = EnumSet.of(ActivityState.STOPPED);
+        } else if (intention == ActivityState.SUSPENDING) {
+            waitFor = EnumSet.of(ActivityState.SUSPENDED, ActivityState.TEMPORARILY_FAILED);
+        } else {
+            throw new IllegalStateException("stop with what intention?? Current state is " + intention);
+        }
+        WaitForStateSubscriber subscriber = new WaitForStateSubscriber(this, waitFor);
+        // Note: once we start sending stop messages, we can't go back until the entity is stopped
+        try {
+            sendStopMessages(metadataProvider);
+            LOGGER.log(Level.DEBUG, "Waiting for its state to become " + waitFor);
+            subscriber.sync();
+            LOGGER.log(Level.DEBUG, "Disconnect has been completed " + waitFor);
+        } catch (InterruptedException ie) {
+            forceStop(subscriber, ie);
+            Thread.currentThread().interrupt();
+        } catch (Throwable e) {
+            forceStop(subscriber, e);
+        }
+    }
+
+    private void forceStop(WaitForStateSubscriber subscriber, Throwable e) {
+        if (!subscriber.isDone()) {
+            cancelJob(e);
+        }
+        // Stop should not through an exception if the entity was stopped..
+        // Simply log
+        LOGGER.warn("Failure encountered while stopping {}", this, e);
+    }
+
+    protected void sendStopMessages(MetadataProvider metadataProvider) throws Exception {
+        ICcApplicationContext applicationCtx = metadataProvider.getApplicationContext();
+        ICCMessageBroker messageBroker = (ICCMessageBroker) applicationCtx.getServiceContext().getMessageBroker();
+        AlgebricksAbsolutePartitionConstraint runtimeLocations = getLocations();
+        int partition = 0;
+        LOGGER.log(Level.INFO, "Sending stop messages to " + runtimeLocations);
+        for (String location : runtimeLocations.getLocations()) {
+            LOGGER.log(Level.INFO, "Sending to " + location);
+            messageBroker.sendApplicationMessageToNC(
+                    new ActiveManagerMessage(ActiveManagerMessage.Kind.STOP_ACTIVITY, getActiveRuntimeId(partition++)),
+                    location);
+        }
+    }
+
+    protected abstract ActiveRuntimeId getActiveRuntimeId(int partition);
+
+    protected abstract void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException;
 
     protected abstract void doResume(MetadataProvider metadataProvider) throws HyracksDataException;
 
-    protected abstract void setRunning(MetadataProvider metadataProvider, boolean running) throws HyracksDataException;
+    protected abstract void setRunning(MetadataProvider metadataProvider, boolean running);
 
     @Override
-    public synchronized void stop(MetadataProvider metadataProvider) throws HyracksDataException, InterruptedException {
+    public final synchronized void stop(MetadataProvider metadataProvider)
+            throws HyracksDataException, InterruptedException {
         waitForNonTransitionState();
-        if (state != ActivityState.RUNNING && state != ActivityState.PERMANENTLY_FAILED
-                && state != ActivityState.TEMPORARILY_FAILED) {
+        if (state != ActivityState.RUNNING && state != ActivityState.TEMPORARILY_FAILED) {
             throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_CANNOT_BE_STOPPED, entityId, state);
         }
-        if (state == ActivityState.TEMPORARILY_FAILED || state == ActivityState.PERMANENTLY_FAILED) {
+        if (state == ActivityState.TEMPORARILY_FAILED) {
             if (rt != null) {
                 setState(ActivityState.STOPPING);
                 rt.cancel();
@@ -419,11 +511,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             setState(ActivityState.STOPPING);
             try {
                 doStop(metadataProvider);
-                setRunning(metadataProvider, false);
             } catch (Exception e) {
-                setState(ActivityState.PERMANENTLY_FAILED);
+                setState(ActivityState.STOPPED);
                 LOGGER.log(Level.ERROR, "Failed to stop the entity " + entityId, e);
                 throw HyracksDataException.create(e);
+            } finally {
+                setRunning(metadataProvider, false);
             }
         } else {
             throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_CANNOT_BE_STOPPED, entityId, state);
@@ -445,7 +538,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             LOGGER.log(level, "Waiting for ongoing activities");
             waitForNonTransitionState();
             LOGGER.log(level, "Proceeding with suspension. Current state is " + state);
-            if (state == ActivityState.STOPPED || state == ActivityState.PERMANENTLY_FAILED) {
+            if (state == ActivityState.STOPPED) {
                 suspended = true;
                 return;
             }
@@ -461,7 +554,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             subscriber = new WaitForStateSubscriber(this,
                     EnumSet.of(ActivityState.SUSPENDED, ActivityState.TEMPORARILY_FAILED));
             suspendTask = metadataProvider.getApplicationContext().getServiceContext().getControllerService()
-                    .getExecutor().submit(() -> doSuspend(metadataProvider));
+                    .getExecutor().submit(() -> {
+                        doSuspend(metadataProvider);
+                        return null;
+                    });
             LOGGER.log(level, "Suspension task has been submitted");
         }
         try {
@@ -479,7 +575,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                         // restore state
                         setState(prevState);
                     } else {
-                        setState(ActivityState.PERMANENTLY_FAILED);
+                        setState(ActivityState.STOPPED);
                     }
                 }
                 throw HyracksDataException.create(e);
@@ -489,7 +585,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @Override
     public synchronized void resume(MetadataProvider metadataProvider) throws HyracksDataException {
-        if (state == ActivityState.STOPPED || state == ActivityState.PERMANENTLY_FAILED) {
+        if (state == ActivityState.STOPPED) {
             suspended = false;
             notifyAll();
             return;
@@ -517,7 +613,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @Override
     public boolean isActive() {
-        return state != ActivityState.STOPPED && state != ActivityState.PERMANENTLY_FAILED;
+        return state != ActivityState.STOPPED && state != ActivityState.CANCELLING;
     }
 
     @Override

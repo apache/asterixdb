@@ -56,9 +56,8 @@ public interface IActiveEntityEventsListener {
      * subscribe to events. subscription ends when subscriber.done() returns true
      *
      * @param subscriber
-     * @throws HyracksDataException
      */
-    void subscribe(IActiveEntityEventSubscriber subscriber) throws HyracksDataException;
+    void subscribe(IActiveEntityEventSubscriber subscriber);
 
     /**
      * The most recent acquired stats for the active entity
@@ -99,6 +98,7 @@ public interface IActiveEntityEventsListener {
 
     /**
      * Get the stats name that's used to form the stats JSON for the active entity
+     *
      * @return the customized stats name for current active entity
      */
     String getDisplayName() throws HyracksDataException;

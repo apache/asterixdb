@@ -20,6 +20,7 @@ package org.apache.asterix.external.feed.watch;
 
 import org.apache.asterix.active.IActiveEntityEventSubscriber;
 import org.apache.asterix.active.IActiveEntityEventsListener;
+import org.apache.hyracks.util.Span;
 
 public abstract class AbstractSubscriber implements IActiveEntityEventSubscriber {
 
@@ -52,6 +53,18 @@ public abstract class AbstractSubscriber implements IActiveEntityEventSubscriber
             while (!done) {
                 listener.wait();
             }
+        }
+    }
+
+    public boolean sync(Span span) throws InterruptedException {
+        synchronized (listener) {
+            while (!done) {
+                span.wait(listener);
+                if (done || span.elapsed()) {
+                    return done;
+                }
+            }
+            return done;
         }
     }
 
