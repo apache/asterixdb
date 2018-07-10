@@ -293,8 +293,8 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
                     faOuter.setSourceLocation(usedVar.getSourceLocation());
                     varExprMap.put(usedVar, faOuter);
                 } else {
-                    throw new CompilationException(ErrorCode.UNDEFINED_IDENTIFIER, usedVar.getSourceLocation(),
-                            usedVar.getVar().getValue(), String.valueOf(fieldVars));
+                    throw new CompilationException(ErrorCode.AMBIGUOUS_IDENTIFIER, usedVar.getSourceLocation(),
+                            SqlppVariableUtil.toUserDefinedVariableName(usedVar.getVar().getValue()).getValue());
                 }
             }
 

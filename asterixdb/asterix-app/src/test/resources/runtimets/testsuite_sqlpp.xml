@@ -1591,7 +1591,7 @@
     <test-case FilePath="custord">
       <compilation-unit name="join_q_09">
         <output-dir compare="Text">join_q_01</output-dir>
-        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier age</expected-error>
+        <expected-error>Cannot resolve ambiguous alias reference for identifier age</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="custord">
@@ -1660,7 +1660,7 @@
     <test-case FilePath="dapd">
       <compilation-unit name="q2-3">
         <output-dir compare="Text">q2</output-dir>
-        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier sig_id</expected-error>
+        <expected-error>Cannot resolve ambiguous alias reference for identifier sig_id</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dapd">
@@ -3011,13 +3011,13 @@
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-02">
         <output-dir compare="Text">core-02</output-dir>
-        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier deptId</expected-error>
+        <expected-error>Cannot resolve ambiguous alias reference for identifier deptId</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-02-2">
         <output-dir compare="Text">core-02</output-dir>
-        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier deptId</expected-error>
+        <expected-error>Cannot resolve ambiguous alias reference for identifier deptId</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -3053,6 +3053,12 @@
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-06-distinct">
         <output-dir compare="Text">sugar-06-distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="sugar-07-negative">
+        <output-dir compare="Text">core-01</output-dir>
+        <expected-error>Cannot resolve ambiguous alias reference for identifier IDENT</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -5704,7 +5710,7 @@
     <test-case FilePath="resolution">
       <compilation-unit name="conflict-fields-dataset">
         <output-dir compare="Text">conflict-field-dataset</output-dir>
-        <expected-error>Cannot resolve ambiguous alias reference for undefined identifier samptable</expected-error>
+        <expected-error>Cannot resolve ambiguous alias reference for identifier samptable</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="resolution">

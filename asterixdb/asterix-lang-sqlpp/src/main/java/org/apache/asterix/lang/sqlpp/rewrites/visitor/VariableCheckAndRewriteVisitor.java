@@ -128,7 +128,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             default:
                 // More than one possibilities.
                 throw new CompilationException(ErrorCode.AMBIGUOUS_IDENTIFIER, sourceLoc,
-                        SqlppVariableUtil.toUserDefinedVariableName(varName).getValue(), String.valueOf(localVars));
+                        SqlppVariableUtil.toUserDefinedVariableName(varName).getValue());
         }
     }
 
