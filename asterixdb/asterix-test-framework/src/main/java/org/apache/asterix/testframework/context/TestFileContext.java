@@ -67,6 +67,13 @@ public class TestFileContext implements Comparable<TestFileContext> {
         return 0;
     }
 
+    public TestFileContext copy() {
+        TestFileContext copy = new TestFileContext(file);
+        copy.setSeqNum(Integer.toString(seqNum));
+        copy.setType(type);
+        return copy;
+    }
+
     @Override
     public String toString() {
         return String.valueOf(seqNum) + ":" + type + ":" + file;

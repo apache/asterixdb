@@ -30,7 +30,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.math.BigDecimal;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -97,8 +96,6 @@ import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.fasterxml.jackson.databind.util.RawValue;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -107,6 +104,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.util.RawValue;
 
 public class TestExecutor {
 
@@ -1909,8 +1907,9 @@ public class TestExecutor {
         }
     }
 
-    abstract static class TestLoop extends Exception {
+    public abstract static class TestLoop extends Exception {
 
+        private static final long serialVersionUID = 1L;
         private final String target;
 
         TestLoop(String target) {
@@ -1920,6 +1919,7 @@ public class TestExecutor {
         static TestLoop createLoop(String target, final int count) {
             LOGGER.info("Starting loop '" + count + " times back to '" + target + "'...");
             return new TestLoop(target) {
+                private static final long serialVersionUID = 1L;
                 int remainingLoops = count;
 
                 @Override
@@ -1935,6 +1935,7 @@ public class TestExecutor {
         static TestLoop createLoop(String target, long duration, TimeUnit unit) {
             LOGGER.info("Starting loop for " + unit.toSeconds(duration) + "s back to '" + target + "'...");
             return new TestLoop(target) {
+                private static final long serialVersionUID = 1L;
                 long endTime = unit.toMillis(duration) + System.currentTimeMillis();
 
                 @Override

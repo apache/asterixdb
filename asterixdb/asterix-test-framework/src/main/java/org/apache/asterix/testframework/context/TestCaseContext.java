@@ -22,7 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.asterix.testframework.template.TemplateHelper;
@@ -105,6 +107,7 @@ public class TestCaseContext {
     private TestGroup[] testGroups;
 
     private TestCase testCase;
+    private Map<String, Object> kv;
 
     public TestCaseContext(File tsRoot, TestSuite testSuite, TestGroup[] testGroups, TestCase testCase) {
         this.tsRoot = tsRoot;
@@ -131,6 +134,18 @@ public class TestCaseContext {
 
     public int getRepeat() {
         return testCase.getRepeat().intValue();
+    }
+
+    public void put(String key, Object object) {
+        if (kv == null) {
+            kv = new HashMap<>();
+        }
+        kv.put(key, object);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T get(String key) {
+        return (T) kv.get(key);
     }
 
     public List<TestFileContext> getFilesInDir(String basePath, String dirName, boolean withType) {
