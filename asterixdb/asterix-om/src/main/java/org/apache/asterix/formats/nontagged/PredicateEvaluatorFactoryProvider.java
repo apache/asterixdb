@@ -48,36 +48,25 @@ public class PredicateEvaluatorFactoryProvider implements IPredicateEvaluatorFac
                     @Override
                     public boolean evaluate(IFrameTupleAccessor fta0, int tupId0, IFrameTupleAccessor fta1,
                             int tupId1) {
-
-                        int tStart0 = fta0.getTupleStartOffset(tupId0);
-                        int fStartOffset0 = fta0.getFieldSlotsLength() + tStart0;
-
-                        for (int k0 : keys0) {
-                            int fieldStartIx = fta0.getFieldStartOffset(tupId0, k0);
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(fta0.getBuffer().array()[fieldStartIx + fStartOffset0]);
-                            if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
-                                return false;
-                            }
-                        }
-
-                        int tStart1 = fta1.getTupleStartOffset(tupId1);
-                        int fStartOffset1 = fta1.getFieldSlotsLength() + tStart1;
-
-                        for (int k1 : keys1) {
-                            int fieldStartIx = fta1.getFieldStartOffset(tupId1, k1);
-                            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                                    .deserialize(fta1.getBuffer().array()[fieldStartIx + fStartOffset1]);
-                            if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
-                                return false;
-                            }
-                        }
-
-                        return true; //none of the fields (from both sides) is NULL
+                        return noNullOrMissingInKeys(fta0, tupId0, keys0) && noNullOrMissingInKeys(fta1, tupId1, keys1);
                     }
                 };
             }
         };
     }
 
+    private static boolean noNullOrMissingInKeys(IFrameTupleAccessor fta, int tupId, int[] keys) {
+        int tStart = fta.getTupleStartOffset(tupId);
+        int fStartOffset = fta.getFieldSlotsLength() + tStart;
+        for (int i = 0; i < keys.length; ++i) {
+            int key = keys[i];
+            int fieldStartIx = fta.getFieldStartOffset(tupId, key);
+            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                    .deserialize(fta.getBuffer().array()[fieldStartIx + fStartOffset]);
+            if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
