@@ -1,0 +1,36 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+WITH commons AS (SELECT m1c AS first_country, m2c AS second_country,
+                        m1.name AS mountain, s1.name AS sea
+                 FROM mountain AS m1, sea AS s1, mountain AS m2, sea AS s2,
+                      split(m1.`-country`, " ") AS m1c, split(s1.`-country`, " ") AS s1c,
+                      split(m2.`-country`, " ") AS m2c, split(s2.`-country`, " ") AS s2c
+                 WHERE m1c = s1c AND m2c = s2c AND m1c != m2c AND m1.name = m2.name AND
+                       s1.name = s2.name AND m1c > m2c)
+
+SELECT DISTINCT c.first_country, c.second_country,
+       (SELECT VALUE object_remove(c2, "id")
+        FROM commons AS c2
+        WHERE c2.first_country = c.first_country AND c2.second_country = c.second_country
+        ORDER BY c2.first_country, c2.second_country, c2.mountain, c2.sea) AS mountains
+FROM commons AS c
+ORDER BY c.first_country;

@@ -1,0 +1,2990 @@
+{
+  "-id": "mount-Hvannadalshnukur",
+  "-country": "IS",
+  "-type": "volcanic",
+  "-island": "island-Iceland",
+  "name": "Hvannadalshnukur",
+  "height": "2110",
+  "longitude": "-16.7",
+  "latitude": "64.1"
+}
+{
+  "-id": "mount-Snaefell",
+  "-country": "IS",
+  "-type": "volcanic",
+  "-island": "island-Iceland",
+  "name": "Snaefell",
+  "height": "1833",
+  "longitude": "-15.2",
+  "latitude": "64.5"
+}
+{
+  "-id": "mount-Hekla",
+  "-country": "IS",
+  "-type": "volcano",
+  "-island": "island-Iceland",
+  "name": "Hekla",
+  "height": "1491",
+  "longitude": "-19.7",
+  "latitude": "64"
+}
+{
+  "-id": "mount-Katla",
+  "-country": "IS",
+  "-type": "volcano",
+  "-island": "island-Iceland",
+  "name": "Katla",
+  "height": "1450",
+  "longitude": "-19.0",
+  "latitude": "63.6"
+}
+{
+  "-id": "mount-Haltiatunturi",
+  "-country": "SF",
+  "name": "Haltiatunturi",
+  "located": {
+    "-country": "SF",
+    "-province": "lteil-LAP-SF"
+  },
+  "height": "1328",
+  "longitude": "21.4",
+  "latitude": "67"
+}
+{
+  "-id": "mount-Kebnekaise",
+  "-country": "S",
+  "name": "Kebnekaise",
+  "located": {
+    "-country": "S",
+    "-province": "prov-cid-cia-Sweden-15"
+  },
+  "height": "2114",
+  "longitude": "18.3",
+  "latitude": "67.5"
+}
+{
+  "-id": "mount-Sarektjokko",
+  "-country": "S",
+  "name": "Sarektjokko",
+  "located": {
+    "-country": "S",
+    "-province": "prov-cid-cia-Sweden-15"
+  },
+  "height": "2090",
+  "longitude": "17.4",
+  "latitude": "67.3"
+}
+{
+  "-id": "mount-Portefjaellen",
+  "-country": "S",
+  "name": "Portefjaellen",
+  "located": {
+    "-country": "S",
+    "-province": "prov-cid-cia-Sweden-15"
+  },
+  "height": "2021",
+  "longitude": "17.4",
+  "latitude": "67.1"
+}
+{
+  "-id": "mount-Tarrekaise",
+  "-country": "S",
+  "name": "Tarrekaise",
+  "located": {
+    "-country": "S",
+    "-province": "prov-cid-cia-Sweden-15"
+  },
+  "height": "1850",
+  "longitude": "17.3",
+  "latitude": "67"
+}
+{
+  "-id": "mount-Sulitjelma",
+  "-country": "N S",
+  "name": "Sulitjelma",
+  "located": [
+    {
+      "-country": "N",
+      "-province": "lteil-NO-N"
+    },
+    {
+      "-country": "S",
+      "-province": "prov-cid-cia-Sweden-15"
+    }
+  ],
+  "height": "1914",
+  "longitude": "16.2",
+  "latitude": "67.1"
+}
+{
+  "-id": "mount-Galdhoeppig",
+  "-country": "N",
+  "name": "Galdhoeppig",
+  "located": {
+    "-country": "N",
+    "-province": "lteil-OP-N"
+  },
+  "height": "2469",
+  "longitude": "8",
+  "latitude": "61.4"
+}
+{
+  "-id": "mount-Jostedalsbre",
+  "-country": "N",
+  "name": "Jostedalsbre",
+  "located": {
+    "-country": "N",
+    "-province": "lteil-SF-N"
+  },
+  "height": "2083",
+  "longitude": "5.5",
+  "latitude": "61.4"
+}
+{
+  "-id": "mount-Glittertind",
+  "-country": "N",
+  "name": "Glittertind",
+  "located": {
+    "-country": "N",
+    "-province": "lteil-OP-N"
+  },
+  "height": "2452",
+  "longitude": "8.1",
+  "latitude": "61.4"
+}
+{
+  "-id": "mount-Joekul",
+  "-country": "N",
+  "name": "Joekul",
+  "located": {
+    "-country": "N",
+    "-province": "lteil-HO-N"
+  },
+  "height": "1876",
+  "longitude": "7.2",
+  "latitude": "60.3"
+}
+{
+  "-id": "mount-Snoehetta",
+  "-country": "N",
+  "name": "Snoehetta",
+  "located": {
+    "-country": "N",
+    "-province": "lteil-OP-N"
+  },
+  "height": "2286",
+  "longitude": "9",
+  "latitude": "62.1"
+}
+{
+  "-id": "mount-BenNevis",
+  "-country": "GB",
+  "-island": "island-GreatBritain",
+  "name": "Ben Nevis",
+  "mountains": "Grampians",
+  "located": {
+    "-country": "GB",
+    "-province": "prov-cid-cia-United-Kingdom-55"
+  },
+  "height": "1344",
+  "longitude": "-5.0",
+  "latitude": "56.8"
+}
+{
+  "-id": "mount-Feldberg",
+  "-country": "D",
+  "name": "Feldberg",
+  "mountains": "Schwarzwald",
+  "located": {
+    "-country": "D",
+    "-province": "prov-cid-cia-Germany-2"
+  },
+  "height": "1493",
+  "longitude": "7.5",
+  "latitude": "47.5"
+}
+{
+  "-id": "mount-Brocken",
+  "-country": "D",
+  "name": "Brocken",
+  "mountains": "Harz",
+  "located": {
+    "-country": "D",
+    "-province": "prov-cid-cia-Germany-15"
+  },
+  "height": "1141",
+  "longitude": "10.6",
+  "latitude": "51.8"
+}
+{
+  "-id": "mount-Grosser_Arber",
+  "-country": "D",
+  "name": "Grosser Arber",
+  "mountains": "Bayrischer Wald",
+  "located": {
+    "-country": "D",
+    "-province": "prov-cid-cia-Germany-3"
+  },
+  "height": "1456",
+  "longitude": "13",
+  "latitude": "49.1"
+}
+{
+  "-id": "mount-Zugspitze",
+  "-country": "D A",
+  "name": "Zugspitze",
+  "mountains": "Alps",
+  "located": [
+    {
+      "-country": "D",
+      "-province": "prov-cid-cia-Germany-3"
+    },
+    {
+      "-country": "A",
+      "-province": "prov-cid-cia-Austria-7"
+    }
+  ],
+  "height": "2963",
+  "longitude": "11.1",
+  "latitude": "47.3"
+}
+{
+  "-id": "mount-MontBlanc",
+  "-country": "F I",
+  "name": "Mont Blanc",
+  "mountains": "Alps",
+  "located": [
+    {
+      "-country": "F",
+      "-province": "prov-cid-cia-France-111"
+    },
+    {
+      "-country": "I",
+      "-province": "prov-cid-cia-Italy-9"
+    }
+  ],
+  "height": "4808",
+  "longitude": "6.8",
+  "latitude": "45.8"
+}
+{
+  "-id": "mount-Ecrins",
+  "-country": "F",
+  "name": "Barre des Ecrins",
+  "mountains": "Alps",
+  "located": {
+    "-country": "F",
+    "-province": "prov-cid-cia-France-111"
+  },
+  "height": "4101",
+  "longitude": "6.3",
+  "latitude": "44.9"
+}
+{
+  "-id": "mount-GrandCombin",
+  "-country": "CH",
+  "name": "GrandCombin",
+  "mountains": "Alps",
+  "located": {
+    "-country": "CH",
+    "-province": "prov-cid-cia-Switzerland-24"
+  },
+  "height": "4314",
+  "longitude": "7.3",
+  "latitude": "45.9"
+}
+{
+  "-id": "mount-Matterhorn",
+  "-country": "CH I",
+  "name": "Matterhorn",
+  "mountains": "Alps",
+  "located": [
+    {
+      "-country": "CH",
+      "-province": "prov-cid-cia-Switzerland-24"
+    },
+    {
+      "-country": "I",
+      "-province": "prov-cid-cia-Italy-9"
+    }
+  ],
+  "height": "4478",
+  "longitude": "7.56",
+  "latitude": "46"
+}
+{
+  "-id": "mount-MonteRosa",
+  "-country": "CH I",
+  "name": "Monte Rosa",
+  "mountains": "Alps",
+  "located": [
+    {
+      "-country": "CH",
+      "-province": "prov-cid-cia-Switzerland-24"
+    },
+    {
+      "-country": "I",
+      "-province": "prov-cid-cia-Italy-9 prov-cid-cia-Italy-10"
+    }
+  ],
+  "height": "4634",
+  "longitude": "7.9",
+  "latitude": "45.9"
+}
+{
+  "-id": "mount-Finsteraarhorn",
+  "-country": "CH",
+  "name": "Finsteraarhorn",
+  "mountains": "Alps",
+  "located": {
+    "-country": "CH",
+    "-province": "prov-cid-cia-Switzerland-5 prov-cid-cia-Switzerland-24"
+  },
+  "height": "4274",
+  "longitude": "8.1",
+  "latitude": "46.5"
+}
+{
+  "-id": "mount-GranParadiso",
+  "-country": "I",
+  "name": "GranParadiso",
+  "mountains": "Alps",
+  "located": {
+    "-country": "I",
+    "-province": "prov-cid-cia-Italy-9 prov-cid-cia-Italy-2"
+  },
+  "height": "4061",
+  "longitude": "7.25",
+  "latitude": "45.5"
+}
+{
+  "-id": "mount-PizBernina",
+  "-country": "CH I",
+  "name": "Piz Bernina",
+  "mountains": "Alps",
+  "located": [
+    {
+      "-country": "CH",
+      "-province": "prov-cid-cia-Switzerland-11"
+    },
+    {
+      "-country": "I",
+      "-province": "prov-cid-cia-Italy-10"
+    }
+  ],
+  "height": "4048",
+  "longitude": "9.9",
+  "latitude": "46.4"
+}
+{
+  "-id": "mount-Crap_Sogn_Gion",
+  "-country": "CH",
+  "name": "Crap_Sogn_Gion",
+  "mountains": "Alps",
+  "located": {
+    "-country": "CH",
+    "-province": "prov-cid-cia-Switzerland-11"
+  },
+  "height": "2228",
+  "longitude": "9.2",
+  "latitude": "46.85"
+}
+{
+  "-id": "mount-Marmolata",
+  "-country": "I",
+  "name": "Marmolata",
+  "mountains": "Alps",
+  "located": {
+    "-country": "I",
+    "-province": "prov-cid-cia-Italy-20 prov-cid-cia-Italy-23"
+  },
+  "height": "3343",
+  "longitude": "11.85",
+  "latitude": "46.4"
+}
+{
+  "-id": "mount-Grossglockner",
+  "-country": "A",
+  "name": "Grossglockner",
+  "mountains": "Alps",
+  "located": {
+    "-country": "A",
+    "-province": "prov-cid-cia-Austria-3"
+  },
+  "height": "3797",
+  "longitude": "12.5",
+  "latitude": "47"
+}
+{
+  "-id": "mount-Hochgolling",
+  "-country": "A",
+  "name": "Hochgolling",
+  "mountains": "Alps",
+  "located": {
+    "-country": "A",
+    "-province": "prov-cid-cia-Austria-8 prov-cid-cia-Austria-9"
+  },
+  "height": "2862",
+  "longitude": "13.75",
+  "latitude": "47.3"
+}
+{
+  "-id": "mount-GrandBallon",
+  "-country": "F",
+  "name": "Grand Ballon",
+  "mountains": "Vosges",
+  "located": {
+    "-country": "F",
+    "-province": "prov-cid-cia-France-2 prov-cid-cia-France-72"
+  },
+  "height": "1424",
+  "longitude": "7.1",
+  "latitude": "47.9"
+}
+{
+  "-id": "mount-PuyDeDome",
+  "-country": "F",
+  "-type": "volcanic",
+  "name": "Puy De Dome",
+  "mountains": "Cevennes",
+  "located": {
+    "-country": "F",
+    "-province": "prov-cid-cia-France-11"
+  },
+  "height": "1465",
+  "longitude": "3",
+  "latitude": "45.8"
+}
+{
+  "-id": "mount-PuydeSancy",
+  "-country": "F",
+  "-type": "volcanic",
+  "name": "Puy de Sancy",
+  "mountains": "Cevennes",
+  "located": {
+    "-country": "F",
+    "-province": "prov-cid-cia-France-11"
+  },
+  "height": "1885",
+  "longitude": "2.8",
+  "latitude": "45.5"
+}
+{
+  "-id": "mount-Vignemale",
+  "-country": "E F",
+  "name": "Vignemale",
+  "mountains": "Pyrenees",
+  "located": [
+    {
+      "-country": "E",
+      "-province": "prov-cid-cia-Spain-3"
+    },
+    {
+      "-country": "F",
+      "-province": "prov-cid-cia-France-77"
+    }
+  ],
+  "height": "3298",
+  "longitude": "0.15",
+  "latitude": "42.8"
+}
+{
+  "-id": "mount-Aneto",
+  "-country": "E",
+  "name": "Pico de Aneto",
+  "mountains": "Pyrenees",
+  "located": {
+    "-country": "E",
+    "-province": "prov-cid-cia-Spain-3"
+  },
+  "height": "3404",
+  "longitude": "0.65",
+  "latitude": "42.6"
+}
+{
+  "-id": "mount-TorredeCerredo",
+  "-country": "E",
+  "name": "Torre de Cerredo",
+  "mountains": "Cordillera Cantabrica",
+  "located": {
+    "-country": "E",
+    "-province": "prov-cid-cia-Spain-4 prov-cid-cia-Spain-9"
+  },
+  "height": "2648",
+  "longitude": "4.85",
+  "latitude": "43.2"
+}
+{
+  "-id": "mount-PicoAlmanzor",
+  "-country": "E",
+  "name": "Pico de Almanzor",
+  "mountains": "Cordillera Central",
+  "located": {
+    "-country": "E",
+    "-province": "prov-cid-cia-Spain-9"
+  },
+  "height": "2648",
+  "longitude": "-5.3",
+  "latitude": "40.25"
+}
+{
+  "-id": "mount-Moncayo",
+  "-country": "E",
+  "name": "Moncayo",
+  "mountains": "Cordillera Iberica",
+  "located": {
+    "-country": "E",
+    "-province": "prov-cid-cia-Spain-3 prov-cid-cia-Spain-9"
+  },
+  "height": "2313",
+  "longitude": "1.85",
+  "latitude": "41.8"
+}
+{
+  "-id": "mount-Mulhacen",
+  "-country": "E",
+  "name": "Mulhacen",
+  "mountains": "Cordillera Betica",
+  "located": {
+    "-country": "E",
+    "-province": "prov-cid-cia-Spain-2"
+  },
+  "height": "3482",
+  "longitude": "3.3",
+  "latitude": "37"
+}
+{
+  "-id": "mount-TorreEstrela",
+  "-country": "P",
+  "name": "Torre de Estrela",
+  "mountains": "Cordillera Central",
+  "located": {
+    "-country": "P",
+    "-province": "prov-cid-cia-Portugal-10"
+  },
+  "height": "1993",
+  "longitude": "-7.6",
+  "latitude": "40.3"
+}
+{
+  "-id": "mount-Cinto",
+  "-country": "F",
+  "-island": "island-Corse",
+  "name": "Monte Cinto",
+  "mountains": "Corse",
+  "located": {
+    "-country": "F",
+    "-province": "prov-cid-cia-France-42"
+  },
+  "height": "2706",
+  "longitude": "8.9",
+  "latitude": "42.4"
+}
+{
+  "-id": "mount-GranSasso",
+  "-country": "I",
+  "name": "Gran Sasso",
+  "mountains": "Apennin",
+  "located": {
+    "-country": "I",
+    "-province": "prov-cid-cia-Italy-74"
+  },
+  "height": "2912",
+  "longitude": "13.55",
+  "latitude": "42.5"
+}
+{
+  "-id": "mount-Falterona",
+  "-country": "I",
+  "name": "Monte Falterona",
+  "mountains": "Apennin",
+  "located": {
+    "-country": "I",
+    "-province": "prov-cid-cia-Italy-50 prov-cid-cia-Italy-41"
+  },
+  "height": "1654",
+  "longitude": "11.7",
+  "latitude": "43.9"
+}
+{
+  "-id": "mount-Vesuv",
+  "-country": "I",
+  "-type": "volcano",
+  "name": "Vesuv",
+  "located": {
+    "-country": "I",
+    "-province": "prov-cid-cia-Italy-82"
+  },
+  "height": "1281",
+  "longitude": "14.4",
+  "latitude": "40.8"
+}
+{
+  "-id": "mount-Etna",
+  "-country": "I",
+  "-type": "volcano",
+  "-island": "island-Sicilia",
+  "name": "Etna",
+  "located": {
+    "-country": "I",
+    "-province": "prov-cid-cia-Italy-101"
+  },
+  "height": "3323",
+  "longitude": "15.0",
+  "latitude": "37.7"
+}
+{
+  "-id": "mount-Schneekoppe",
+  "-country": "CZ PL",
+  "name": "Schneekoppe",
+  "mountains": "Sudety Mountains",
+  "located": [
+    {
+      "-country": "CZ",
+      "-province": "prov-cid-cia-Czech-Republic-7"
+    },
+    {
+      "-country": "PL",
+      "-province": "prov-cid-cia-Poland-46"
+    }
+  ],
+  "height": "1602",
+  "longitude": "15.7",
+  "latitude": "50.7"
+}
+{
+  "-id": "mount-GerlachovskyStit",
+  "-country": "SK",
+  "name": "GerlachovskyStit",
+  "mountains": "Beskides",
+  "height": "2655",
+  "longitude": "20.1",
+  "latitude": "49.2"
+}
+{
+  "-id": "mount-Moldoveanu",
+  "-country": "RO",
+  "name": "Moldoveanu",
+  "mountains": "Karpaten",
+  "located": {
+    "-country": "RO",
+    "-province": "prov-cid-cia-Romania-4 prov-cid-cia-Romania-10 prov-cid-cia-Romania-35"
+  },
+  "height": "2544",
+  "longitude": "24.7",
+  "latitude": "45.6"
+}
+{
+  "-id": "mount-Musala",
+  "-country": "BG",
+  "name": "Musala",
+  "mountains": "Balkan",
+  "height": "2925",
+  "longitude": "23.6",
+  "latitude": "42.2"
+}
+{
+  "-id": "mount-Jezerce",
+  "-country": "AL",
+  "name": "Jezerce",
+  "mountains": "Balkan",
+  "height": "2694",
+  "longitude": "19.4",
+  "latitude": "42.3"
+}
+{
+  "-id": "mount-Korab",
+  "-country": "AL MK",
+  "name": "Korab",
+  "mountains": "Balkan",
+  "height": "2751",
+  "longitude": "20.3",
+  "latitude": "41.4"
+}
+{
+  "-id": "mount-Olymp",
+  "-country": "GR",
+  "name": "Olymp",
+  "located": {
+    "-country": "GR",
+    "-province": "prov-cid-cia-Greece-13 prov-cid-cia-Greece-8"
+  },
+  "height": "2917",
+  "longitude": "22.35",
+  "latitude": "40.1"
+}
+{
+  "-id": "mount-Psiloritis",
+  "-country": "GR",
+  "-island": "island-Crete",
+  "name": "Psiloritis",
+  "mountains": "Crete",
+  "located": {
+    "-country": "GR",
+    "-province": "prov-cid-cia-Greece-9"
+  },
+  "height": "2456",
+  "longitude": "24.7",
+  "latitude": "35.2"
+}
+{
+  "-id": "mount-Olympos",
+  "-country": "CY",
+  "-island": "island-Cyprus",
+  "name": "Olympos",
+  "mountains": "Troodos",
+  "height": "1952",
+  "longitude": "32.85",
+  "latitude": "34.9"
+}
+{
+  "-id": "mount-Teide",
+  "-country": "E",
+  "-type": "volcano",
+  "-island": "island-Teneriffa",
+  "name": "Pico de Teide",
+  "mountains": "Canary Islands",
+  "located": {
+    "-country": "E",
+    "-province": "prov-cid-cia-Spain-7"
+  },
+  "height": "3718",
+  "longitude": "-16.6",
+  "latitude": "28.3"
+}
+{
+  "-id": "mount-PicoNieves",
+  "-country": "E",
+  "-type": "volcano",
+  "-island": "island-Gran_Canaria",
+  "name": "Pico de los Nieves",
+  "mountains": "Canary Islands",
+  "located": {
+    "-country": "E",
+    "-province": "prov-cid-cia-Spain-7"
+  },
+  "height": "1949",
+  "longitude": "-15.6",
+  "latitude": "25.95"
+}
+{
+  "-id": "mount-RoqueMuchachos",
+  "-country": "E",
+  "-type": "volcano",
+  "-island": "island-La_Palma",
+  "name": "Roque de los Muchachos",
+  "mountains": "Canary Islands",
+  "located": {
+    "-country": "E",
+    "-province": "prov-cid-cia-Spain-7"
+  },
+  "height": "2426",
+  "longitude": "-17.9",
+  "latitude": "28.75"
+}
+{
+  "-id": "mountain-PicoRuivo",
+  "-country": "P",
+  "-island": "island-Madeira",
+  "-type": "volcanic",
+  "name": "Pico Ruivo",
+  "mountains": "Madeira",
+  "located": {
+    "-country": "P",
+    "-province": "prov-cid-cia-Portugal-22"
+  },
+  "height": "1861",
+  "longitude": "-16",
+  "latitude": "31"
+}
+{
+  "-id": "mountain-Pico",
+  "-country": "P",
+  "-type": "volcano",
+  "-island": "island-Pico",
+  "name": "Pico",
+  "mountains": "Azores",
+  "located": {
+    "-country": "P",
+    "-province": "prov-cid-cia-Portugal-21"
+  },
+  "height": "2351",
+  "longitude": "-28.4",
+  "latitude": "38.5"
+}
+{
+  "-id": "mountain-Fogo",
+  "-country": "CV",
+  "-type": "volcano",
+  "-island": "island-Fogo",
+  "name": "Fogo",
+  "mountains": "Cape Verdes",
+  "height": "2829",
+  "longitude": "-24.4",
+  "latitude": "14.95"
+}
+{
+  "-id": "mount-Tubkhal",
+  "-country": "MA",
+  "name": "Tubkhal",
+  "mountains": "Atlas",
+  "height": "4165",
+  "longitude": "-8",
+  "latitude": "31"
+}
+{
+  "-id": "mount-Djebel_Aures",
+  "-country": "MA",
+  "name": "Djebel Aures",
+  "mountains": "Rif",
+  "height": "2456",
+  "longitude": "-6.5",
+  "latitude": "35.5"
+}
+{
+  "-id": "mount-Tahat",
+  "-country": "DZ",
+  "-type": "volcanic",
+  "name": "Tahat",
+  "mountains": "Ahaggar",
+  "height": "3003",
+  "longitude": "5.5",
+  "latitude": "23.3"
+}
+{
+  "-id": "mount-Tamgak",
+  "-country": "RN",
+  "-type": "volcanic",
+  "name": "Tamgak",
+  "mountains": "Azbine",
+  "height": "1800",
+  "longitude": "9",
+  "latitude": "19"
+}
+{
+  "-id": "mount-MtGreboun",
+  "-country": "RN",
+  "name": "Mont Greboun",
+  "mountains": "Azbine",
+  "height": "1944",
+  "longitude": "9",
+  "latitude": "20"
+}
+{
+  "-id": "mount-Emi_Kussi",
+  "-country": "TCH",
+  "-type": "volcano",
+  "name": "Emi Kussi",
+  "mountains": "Tibesti",
+  "height": "3415",
+  "longitude": "18.5",
+  "latitude": "20"
+}
+{
+  "-id": "mount-Djebel_Marra",
+  "-country": "SUD",
+  "-type": "volcanic",
+  "name": "Jabal Marra",
+  "mountains": "Darfur",
+  "located": {
+    "-country": "SUD",
+    "-province": "prov-cid-cia-Sudan-4"
+  },
+  "height": "3088",
+  "longitude": "24.6",
+  "latitude": "13"
+}
+{
+  "-id": "mount-DjebelKatrina",
+  "-country": "ET",
+  "name": "Jabal Katrina",
+  "mountains": "Sinai",
+  "located": {
+    "-country": "ET",
+    "-province": "prov-cid-cia-Egypt-5"
+  },
+  "height": "2637",
+  "longitude": "33.95",
+  "latitude": "28.5"
+}
+{
+  "-id": "mount-Fako",
+  "-country": "CAM",
+  "-type": "volcano",
+  "name": "Fako",
+  "located": {
+    "-country": "CAM",
+    "-province": "prov-cid-cia-Cameroon-11"
+  },
+  "height": "4095",
+  "longitude": "9.2",
+  "latitude": "4.2"
+}
+{
+  "-id": "mount-Basile",
+  "-country": "GQ",
+  "-island": "island-Bioko",
+  "-type": "volcano",
+  "name": "Pico Basile",
+  "height": "3011",
+  "longitude": "8.7",
+  "latitude": "3.5"
+}
+{
+  "-id": "mount-PicoSaoTome",
+  "-country": "STP",
+  "-island": "island-Sao_Tome",
+  "-type": "volcanic",
+  "name": "Pico de Sao Tome",
+  "height": "2024",
+  "longitude": "6.6",
+  "latitude": "0.2"
+}
+{
+  "-id": "mount-QueenMarysPeak",
+  "-country": "HELX",
+  "-island": "island-TristanDaCunha",
+  "-type": "volcano",
+  "name": "Queen Marys Peak",
+  "height": "2060",
+  "longitude": "-12.3",
+  "latitude": "-37.1"
+}
+{
+  "-id": "mount-Ras_Daschan",
+  "-country": "ETH",
+  "-type": "volcanic",
+  "name": "Ras Daschan Terara",
+  "mountains": "Amhara",
+  "height": "4533",
+  "longitude": "38.4",
+  "latitude": "13.2"
+}
+{
+  "-id": "mount-Ruwenzori",
+  "-country": "EAU ZRE",
+  "name": "Ruwenzori",
+  "mountains": "East African Rift",
+  "located": {
+    "-country": "ZRE",
+    "-province": "prov-cid-cia-Zaire-8"
+  },
+  "height": "5109",
+  "longitude": "29.9",
+  "latitude": "0.4"
+}
+{
+  "-id": "mount-Elgon",
+  "-country": "EAK EAU",
+  "-type": "volcanic",
+  "name": "Elgon",
+  "mountains": "East African Rift",
+  "located": {
+    "-country": "EAK",
+    "-province": "prov-cid-cia-Kenya-9"
+  },
+  "height": "4321",
+  "longitude": "34.55",
+  "latitude": "1.1"
+}
+{
+  "-id": "mount-Kenia",
+  "-country": "EAK",
+  "-type": "volcanic",
+  "name": "Kenia",
+  "mountains": "East African Rift",
+  "located": {
+    "-country": "EAK",
+    "-province": "prov-cid-cia-Kenya-4"
+  },
+  "height": "5199",
+  "longitude": "37.3",
+  "latitude": "0.15"
+}
+{
+  "-id": "mount-Kilimanscharo",
+  "-country": "EAT",
+  "-type": "volcano",
+  "name": "Kilimanjaro",
+  "mountains": "East African Rift",
+  "located": {
+    "-country": "EAT",
+    "-province": "prov-cid-cia-Tanzania-4"
+  },
+  "height": "5895",
+  "longitude": "37.35",
+  "latitude": "-3.05"
+}
+{
+  "-id": "mount-Mawenzi",
+  "-country": "EAT",
+  "-type": "volcano",
+  "name": "Mawenzi",
+  "mountains": "East African Rift",
+  "located": {
+    "-country": "EAT",
+    "-province": "prov-cid-cia-Tanzania-4"
+  },
+  "height": "5148",
+  "longitude": "37.45",
+  "latitude": "-3.1"
+}
+{
+  "-id": "mount-Meru",
+  "-country": "EAT",
+  "-type": "volcano",
+  "name": "Meru",
+  "mountains": "East African Rift",
+  "located": {
+    "-country": "EAT",
+    "-province": "prov-cid-cia-Tanzania-3"
+  },
+  "height": "4567",
+  "longitude": "36.8",
+  "latitude": "-3.2"
+}
+{
+  "-id": "mount-Karisimbi",
+  "-country": "ZRE RWA",
+  "-type": "volcano",
+  "name": "Karisimbi",
+  "mountains": "East African Rift",
+  "located": {
+    "-country": "ZRE",
+    "-province": "prov-cid-cia-Zaire-8"
+  },
+  "height": "4507",
+  "longitude": "29.45",
+  "latitude": "-1.5"
+}
+{
+  "-id": "mount-ThabanaNtlenyana",
+  "-country": "LS",
+  "name": "Thabana Ntlenyana",
+  "mountains": "Drakensberge",
+  "height": "3482",
+  "longitude": "29.3",
+  "latitude": "-29.5"
+}
+{
+  "-id": "mount-Cathkin-Peak",
+  "-country": "RSA",
+  "name": "Cathkin Peak",
+  "mountains": "Drakensberge",
+  "located": {
+    "-country": "RSA",
+    "-province": "prov-cid-cia-South-Africa-5"
+  },
+  "height": "3181",
+  "longitude": "29.35",
+  "latitude": "-29.1"
+}
+{
+  "-id": "mount-Tsaratanana",
+  "-country": "RM",
+  "-type": "volcanic",
+  "-island": "island-Madagaskar",
+  "name": "Tsaratanana",
+  "located": {
+    "-country": "RM",
+    "-province": "prov-cid-cia-Madagascar-2"
+  },
+  "height": "2876",
+  "longitude": "48.5",
+  "latitude": "-14"
+}
+{
+  "-id": "mount-Tsiafajavona",
+  "-country": "RM",
+  "-type": "volcanic",
+  "-island": "island-Madagaskar",
+  "name": "Tsiafajavona",
+  "located": {
+    "-country": "RM",
+    "-province": "prov-cid-cia-Madagascar-3"
+  },
+  "height": "2642",
+  "longitude": "47.2",
+  "latitude": "-19.3"
+}
+{
+  "-id": "mount-Andringitra",
+  "-country": "RM",
+  "-type": "volcanic",
+  "-island": "island-Madagaskar",
+  "name": "Andringitra",
+  "located": {
+    "-country": "RM",
+    "-province": "prov-cid-cia-Madagascar-4"
+  },
+  "height": "2658",
+  "longitude": "47",
+  "latitude": "-22.5"
+}
+{
+  "-id": "mount-PitonDeNeiges",
+  "-country": "REUN",
+  "-type": "volcanic",
+  "-island": "island-Reunion",
+  "name": "Piton des Neiges",
+  "height": "3069",
+  "longitude": "55.5",
+  "latitude": "-21.1"
+}
+{
+  "-id": "mount-PitonDeLaFournaise",
+  "-country": "REUN",
+  "-type": "volcano",
+  "-island": "island-Reunion",
+  "name": "Piton de la Fournaise",
+  "height": "2631",
+  "longitude": "55.7",
+  "latitude": "-21.2"
+}
+{
+  "-id": "mount-Narodnaja",
+  "-country": "R",
+  "name": "Narodnaja",
+  "mountains": "Ural",
+  "located": {
+    "-country": "R",
+    "-province": "prov-cid-cia-Russia-4"
+  },
+  "height": "1895",
+  "longitude": "60.1",
+  "latitude": "65.0"
+}
+{
+  "-id": "mount-Demirkazik",
+  "-country": "TR",
+  "name": "Demirkazik",
+  "mountains": "Taurus",
+  "located": {
+    "-country": "TR",
+    "-province": "prov-cid-cia-Turkey-57"
+  },
+  "height": "3756",
+  "longitude": "35.2",
+  "latitude": "37.8"
+}
+{
+  "-id": "mount-Ararat",
+  "-country": "TR",
+  "-type": "volcanic",
+  "name": "Ararat",
+  "mountains": "Kurdistan",
+  "located": {
+    "-country": "TR",
+    "-province": "prov-cid-cia-Turkey-5"
+  },
+  "height": "5165",
+  "longitude": "44.3",
+  "latitude": "39.7"
+}
+{
+  "-id": "mount-JabalLubnan",
+  "-country": "RL",
+  "name": "Jabal Lubnan",
+  "mountains": "Lebanon",
+  "height": "3088",
+  "longitude": "36.1",
+  "latitude": "34.3"
+}
+{
+  "-id": "mount-Elbrus",
+  "-country": "R",
+  "-type": "volcanic",
+  "name": "Elbrus",
+  "mountains": "Kaukasus",
+  "located": {
+    "-country": "R",
+    "-province": "prov-cid-cia-Russia-55"
+  },
+  "height": "5642",
+  "longitude": "42.26",
+  "latitude": "43.21"
+}
+{
+  "-id": "mount-Kasbek",
+  "-country": "R GE",
+  "-type": "volcanic",
+  "name": "Kasbek",
+  "mountains": "Kaukasus",
+  "located": {
+    "-country": "R",
+    "-province": "prov-cid-cia-Russia-57"
+  },
+  "height": "5033",
+  "longitude": "44.31",
+  "latitude": "42.42"
+}
+{
+  "-id": "mount-Damavand",
+  "-country": "IR",
+  "-type": "volcano",
+  "name": "Damavand",
+  "mountains": "Elburs",
+  "located": {
+    "-country": "IR",
+    "-province": "prov-cid-cia-Iran-20"
+  },
+  "height": "5610",
+  "longitude": "52.1",
+  "latitude": "35.95"
+}
+{
+  "-id": "mount-Sabalan",
+  "-country": "IR",
+  "-type": "volcanic",
+  "name": "Sabalan",
+  "mountains": "Kurdistan",
+  "located": {
+    "-country": "IR",
+    "-province": "prov-cid-cia-Iran-3"
+  },
+  "height": "4811",
+  "longitude": "47.8",
+  "latitude": "38.3"
+}
+{
+  "-id": "mount-ZardKuh",
+  "-country": "IR",
+  "name": "Zard Kuh",
+  "mountains": "Zagros",
+  "located": {
+    "-country": "IR",
+    "-province": "prov-cid-cia-Iran-7"
+  },
+  "height": "4550",
+  "longitude": "50.1",
+  "latitude": "32.35"
+}
+{
+  "-id": "mount-JabalShuayb",
+  "-country": "YE",
+  "name": "Jabal Shuayb",
+  "height": "3760",
+  "longitude": "44",
+  "latitude": "15.5"
+}
+{
+  "-id": "mount-Dodabetta",
+  "-country": "IND",
+  "name": "Dodabetta",
+  "mountains": "West Ghats",
+  "located": {
+    "-country": "IND",
+    "-province": "prov-cid-cia-India-23"
+  },
+  "height": "2636",
+  "longitude": "76.7",
+  "latitude": "11.4"
+}
+{
+  "-id": "mount-Pidurutalagala",
+  "-country": "CL",
+  "name": "Pidurutalagala",
+  "height": "2524",
+  "longitude": "80.8",
+  "latitude": "7"
+}
+{
+  "-id": "mount-Zhima",
+  "-country": "R",
+  "-island": "island-Olkhon",
+  "name": "Zhima",
+  "located": {
+    "-country": "R",
+    "-province": "prov-cid-cia-Russia-72"
+  },
+  "height": "1276",
+  "longitude": "107.4",
+  "latitude": "53.15"
+}
+{
+  "-id": "mount-Bjelucha",
+  "-country": "R KAZ",
+  "name": "Bjelucha",
+  "mountains": "Altai",
+  "located": [
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-64"
+    },
+    {
+      "-country": "KAZ",
+      "-province": "prov-cid-cia-Kazakstan-15"
+    }
+  ],
+  "height": "4506",
+  "longitude": "86.4",
+  "latitude": "49.48"
+}
+{
+  "-id": "mount-Pik_Chan-Tengri",
+  "-country": "KGZ",
+  "name": "Pik Chan-Tengri",
+  "mountains": "Tien Shan",
+  "height": "6995",
+  "longitude": "80",
+  "latitude": "43"
+}
+{
+  "-id": "mount-Pik_Pobeda",
+  "-country": "TJ KGZ",
+  "name": "Pik Pobeda",
+  "mountains": "Tien Shan",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-28"
+  },
+  "height": "7439",
+  "longitude": "80.1",
+  "latitude": "42"
+}
+{
+  "-id": "mount-Pik_Kommunismus",
+  "-country": "TAD",
+  "name": "Pik Kommunizma",
+  "mountains": "Pamir",
+  "located": {
+    "-country": "TAD",
+    "-province": "prov-cid-cia-Tajikistan-6"
+  },
+  "height": "7494",
+  "longitude": "72",
+  "latitude": "39"
+}
+{
+  "-id": "mount-Pik_Lenin",
+  "-country": "TAD KGZ",
+  "name": "Pik Lenina",
+  "mountains": "Pamir",
+  "located": {
+    "-country": "TAD",
+    "-province": "prov-cid-cia-Tajikistan-6"
+  },
+  "height": "7134",
+  "longitude": "72.55",
+  "latitude": "39.2"
+}
+{
+  "-id": "mount-Pik_Revoluzija",
+  "-country": "TAD",
+  "name": "Pik Revoluzija",
+  "mountains": "Pamir",
+  "located": {
+    "-country": "TAD",
+    "-province": "prov-cid-cia-Tajikistan-6"
+  },
+  "height": "6974",
+  "longitude": "72.2",
+  "latitude": "38.3"
+}
+{
+  "-id": "mount-Pik_Moskwa",
+  "-country": "TAD",
+  "name": "Pik Moskva",
+  "mountains": "Pamir",
+  "located": {
+    "-country": "TAD",
+    "-province": "prov-cid-cia-Tajikistan-6"
+  },
+  "height": "6785",
+  "longitude": "71.5",
+  "latitude": "39"
+}
+{
+  "-id": "mount-Pik_Karl-Marx",
+  "-country": "TAD",
+  "name": "Pik Karl-Marx",
+  "mountains": "Pamir",
+  "located": {
+    "-country": "TAD",
+    "-province": "prov-cid-cia-Tajikistan-6"
+  },
+  "height": "6726",
+  "longitude": "71.3",
+  "latitude": "38"
+}
+{
+  "-id": "mount-TirichMir",
+  "-country": "AFG",
+  "name": "Tirich Mir",
+  "mountains": "Hindukusch",
+  "height": "7690",
+  "longitude": "71.8",
+  "latitude": "36.25"
+}
+{
+  "-id": "mount-K2",
+  "-country": "PK TJ",
+  "name": "K2",
+  "mountains": "Karakorum",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-28"
+  },
+  "height": "8611",
+  "longitude": "76.5",
+  "latitude": "35.9"
+}
+{
+  "-id": "mount-GasherbrumII",
+  "-country": "PK TJ",
+  "name": "Gasherbrum II",
+  "mountains": "Karakorum",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-28"
+  },
+  "height": "8034",
+  "longitude": "76.65",
+  "latitude": "35.75"
+}
+{
+  "-id": "mount-GasherbrumI",
+  "-country": "PK TJ",
+  "name": "Gasherbrum I",
+  "mountains": "Karakorum",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-28"
+  },
+  "height": "8080",
+  "longitude": "76.7",
+  "latitude": "35.6"
+}
+{
+  "-id": "mount-BroadPeak",
+  "-country": "PK TJ",
+  "name": "Broad Peak",
+  "mountains": "Karakorum",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-28"
+  },
+  "height": "8051",
+  "longitude": "76.6",
+  "latitude": "35.8"
+}
+{
+  "-id": "mount-NangaParbat",
+  "-country": "PK",
+  "name": "Nanga Parbat",
+  "mountains": "Karakorum",
+  "height": "8125",
+  "longitude": "74.6",
+  "latitude": "35.2"
+}
+{
+  "-id": "mount-NandaDevi",
+  "-country": "IND",
+  "name": "Nanda Devi",
+  "mountains": "Himalaya",
+  "located": {
+    "-country": "IND",
+    "-province": "prov-cid-cia-India-25"
+  },
+  "height": "7816",
+  "longitude": "80",
+  "latitude": "30.4"
+}
+{
+  "-id": "mount-Dhaulagiri",
+  "-country": "NEP",
+  "name": "Dhaulagiri",
+  "mountains": "Himalaya",
+  "height": "8167",
+  "longitude": "83.5",
+  "latitude": "28.7"
+}
+{
+  "-id": "mount-Annapurna",
+  "-country": "NEP",
+  "name": "Annapurna",
+  "mountains": "Himalaya",
+  "height": "8091",
+  "longitude": "83.8",
+  "latitude": "28.6"
+}
+{
+  "-id": "mount-Manaslu",
+  "-country": "NEP",
+  "name": "Manaslu",
+  "mountains": "Himalaya",
+  "height": "8163",
+  "longitude": "84.6",
+  "latitude": "28.55"
+}
+{
+  "-id": "mount-Shishapangma",
+  "-country": "TJ",
+  "name": "Shishapangma",
+  "mountains": "Himalaya",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-29"
+  },
+  "height": "8027",
+  "longitude": "85.8",
+  "latitude": "28.55"
+}
+{
+  "-id": "mount-Kailash",
+  "-country": "TJ",
+  "name": "Kailash",
+  "mountains": "Transhimalaya",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-29"
+  },
+  "height": "6714",
+  "longitude": "81.3",
+  "latitude": "31.05"
+}
+{
+  "-id": "mount-ChoOyu",
+  "-country": "TJ NEP",
+  "name": "Cho Oyu",
+  "mountains": "Himalaya",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-29"
+  },
+  "height": "8188",
+  "longitude": "86.65",
+  "latitude": "28.35"
+}
+{
+  "-id": "mount-Mount_Everest",
+  "-country": "TJ NEP",
+  "name": "Mount Everest",
+  "mountains": "Himalaya",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-29"
+  },
+  "height": "8848",
+  "longitude": "86.9",
+  "latitude": "28"
+}
+{
+  "-id": "mount-Lhotse",
+  "-country": "TJ NEP",
+  "name": "Lhotse",
+  "mountains": "Himalaya",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-29"
+  },
+  "height": "8516",
+  "longitude": "86.9",
+  "latitude": "28"
+}
+{
+  "-id": "mount-Makalu",
+  "-country": "TJ NEP",
+  "name": "Makalu",
+  "mountains": "Himalaya",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-29"
+  },
+  "height": "8485",
+  "longitude": "87.1",
+  "latitude": "27.9"
+}
+{
+  "-id": "mount-Kangchendzonga",
+  "-country": "NEP IND",
+  "name": "Kangchendzonga",
+  "mountains": "Himalaya",
+  "located": {
+    "-country": "IND",
+    "-province": "prov-cid-cia-India-22"
+  },
+  "height": "8586",
+  "longitude": "88.1",
+  "latitude": "27.7"
+}
+{
+  "-id": "mount-KljutschewskajaSopka",
+  "-country": "R",
+  "-type": "volcano",
+  "name": "Kljutschewskaja Sopka",
+  "mountains": "Kamchatka",
+  "located": {
+    "-country": "R",
+    "-province": "prov-cid-cia-Russia-87"
+  },
+  "height": "4750",
+  "longitude": "160.6",
+  "latitude": "56.1"
+}
+{
+  "-id": "mount-ChanbaiShan",
+  "-country": "TJ NOK",
+  "name": "Changbai Shan",
+  "mountains": "Changbai",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-15"
+  },
+  "height": "2744",
+  "longitude": "128.1",
+  "latitude": "42"
+}
+{
+  "-id": "mount-AsahiDake",
+  "-country": "J",
+  "-type": "volcanic",
+  "-island": "island-Hokkaido",
+  "name": "Asahi-Dake",
+  "located": {
+    "-country": "J",
+    "-province": "prov-cid-cia-Japan-3"
+  },
+  "height": "2290",
+  "longitude": "142.85",
+  "latitude": "43.65"
+}
+{
+  "-id": "mount-Fuji",
+  "-country": "J",
+  "-type": "volcano",
+  "name": "Fujisan",
+  "located": {
+    "-country": "J",
+    "-province": "prov-cid-cia-Japan-24 prov-cid-cia-Japan-27"
+  },
+  "height": "3776",
+  "longitude": "139",
+  "latitude": "35"
+}
+{
+  "-id": "mount-Hotaka-Dake",
+  "-country": "J",
+  "-type": "volcano",
+  "name": "Hotaka-Dake",
+  "located": {
+    "-country": "J",
+    "-province": "prov-cid-cia-Japan-25 prov-cid-cia-Japan-26"
+  },
+  "height": "3190",
+  "longitude": "138",
+  "latitude": "36"
+}
+{
+  "-id": "mount-YuShan",
+  "-country": "RC",
+  "-island": "island-Taiwan",
+  "name": "Yu Shan",
+  "height": "3950",
+  "longitude": "121",
+  "latitude": "23.5"
+}
+{
+  "-id": "mount-Pulog",
+  "-country": "RP",
+  "-type": "volcanic",
+  "-island": "island-Luzon",
+  "name": "Pulog",
+  "height": "2928",
+  "longitude": "121",
+  "latitude": "17"
+}
+{
+  "-id": "mount-Pinatubo",
+  "-country": "RP",
+  "-type": "volcano",
+  "-island": "island-Luzon",
+  "name": "Pinatubo",
+  "height": "1486",
+  "longitude": "120.3",
+  "latitude": "15.1"
+}
+{
+  "-id": "mount-Apo",
+  "-country": "RP",
+  "-type": "volcanic",
+  "-island": "island-Mindanao",
+  "name": "Mount Apo",
+  "height": "2954",
+  "longitude": "125.45",
+  "latitude": "7"
+}
+{
+  "-id": "mount-Kanlaon",
+  "-country": "RP",
+  "-type": "volcano",
+  "-island": "island-Negros",
+  "name": "Kanlaon",
+  "height": "2435",
+  "longitude": "123.1",
+  "latitude": "10.4"
+}
+{
+  "-id": "mount-Mantalingajan",
+  "-country": "RP",
+  "-type": "volcanic",
+  "-island": "island-Palawan",
+  "name": "Mantalingajan",
+  "height": "2085",
+  "longitude": "118.4",
+  "latitude": "9.7"
+}
+{
+  "-id": "mount-Kinabalu",
+  "-country": "MAL",
+  "-island": "island-Borneo",
+  "-type": "granite",
+  "name": "Kinabalu",
+  "located": {
+    "-country": "MAL",
+    "-province": "prov-cid-cia-Malaysia-11"
+  },
+  "height": "4101",
+  "longitude": "116.5",
+  "latitude": "6.1"
+}
+{
+  "-id": "mount-Tahan",
+  "-country": "MAL",
+  "name": "Tahan",
+  "located": {
+    "-country": "MAL",
+    "-province": "prov-cid-cia-Malaysia-4 prov-cid-cia-Malaysia-7"
+  },
+  "height": "2190",
+  "longitude": "108",
+  "latitude": "4"
+}
+{
+  "-id": "mount-Leuser",
+  "-country": "RI",
+  "-type": "volcanic",
+  "-island": "island-Sumatra",
+  "name": "Leuser",
+  "height": "3466",
+  "longitude": "98",
+  "latitude": "3"
+}
+{
+  "-id": "mount-Kerinci",
+  "-country": "RI",
+  "-type": "volcano",
+  "-island": "island-Sumatra",
+  "name": "Kerinci",
+  "height": "3805",
+  "longitude": "101.45",
+  "latitude": "-1.7"
+}
+{
+  "-id": "mount-Krakatau",
+  "-country": "RI",
+  "-type": "volcano",
+  "-island": "island-Krakatau",
+  "name": "Krakatau",
+  "height": "813",
+  "longitude": "105.4",
+  "latitude": "-6.1"
+}
+{
+  "-id": "mount-Merapi",
+  "-country": "RI",
+  "-type": "volcano",
+  "-island": "island-Java",
+  "name": "Merapi",
+  "height": "2914",
+  "longitude": "110.4",
+  "latitude": "-7.5"
+}
+{
+  "-id": "mount-Semeru",
+  "-country": "RI",
+  "-type": "volcano",
+  "-island": "island-Java",
+  "name": "Semeru",
+  "height": "3676",
+  "longitude": "112.9",
+  "latitude": "-8.1"
+}
+{
+  "-id": "mount-GunungAgung",
+  "-country": "RI",
+  "-type": "volcano",
+  "-island": "island-Bali",
+  "name": "Gunung Agung",
+  "height": "3142",
+  "longitude": "115.5",
+  "latitude": "-8.3"
+}
+{
+  "-id": "mount-Rinjani",
+  "-country": "RI",
+  "-type": "volcano",
+  "-island": "island-Lombok",
+  "name": "Rinjani",
+  "height": "3726",
+  "longitude": "116.5",
+  "latitude": "-8.4"
+}
+{
+  "-id": "mount-Tambora",
+  "-country": "RI",
+  "-type": "volcano",
+  "-island": "island-Sumbawa",
+  "name": "Tambora",
+  "height": "2850",
+  "longitude": "118",
+  "latitude": "-8.2"
+}
+{
+  "-id": "mount-Rantekombola",
+  "-country": "RI",
+  "-type": "volcanic",
+  "-island": "island-Sulawesi",
+  "name": "Rantekombola",
+  "height": "3455",
+  "longitude": "120",
+  "latitude": "-3.6"
+}
+{
+  "-id": "mount-Tatamailau",
+  "-country": "TL",
+  "-island": "island-Timor",
+  "name": "Tatamailau",
+  "height": "2963",
+  "longitude": "125.5",
+  "latitude": "-8.9"
+}
+{
+  "-id": "mount-GunungBinaiya",
+  "-country": "RI",
+  "-island": "island-Ceram",
+  "name": "Gunung Binaiya",
+  "height": "3027",
+  "longitude": "129.3",
+  "latitude": "-3.1"
+}
+{
+  "-id": "mount-PuncakJaya",
+  "-country": "RI",
+  "-island": "island-New-Guinea",
+  "name": "Puncak Jaya",
+  "mountains": "Sudirman Range",
+  "height": "4884",
+  "longitude": "137.11",
+  "latitude": "-4.1"
+}
+{
+  "-id": "mount-MtWilhelm",
+  "-country": "PNG",
+  "-island": "island-New-Guinea",
+  "name": "Mt. Wilhelm",
+  "height": "4509",
+  "longitude": "145",
+  "latitude": "-5.8"
+}
+{
+  "-id": "mount-Giluwe",
+  "-country": "PNG",
+  "-type": "volcano",
+  "-island": "island-New-Guinea",
+  "name": "Mt. Giluwe",
+  "height": "4368",
+  "longitude": "143.9",
+  "latitude": "-6.05"
+}
+{
+  "-id": "mount-Balbi",
+  "-country": "PNG",
+  "-type": "volcanic",
+  "-island": "island-Bougainville",
+  "name": "Mt. Balbi",
+  "height": "2715",
+  "longitude": "155",
+  "latitude": "-5.9"
+}
+{
+  "-id": "mount-Victoria",
+  "-country": "FJI",
+  "-type": "volcanic",
+  "-island": "island-VitiLevu",
+  "name": "Mt.Victoria",
+  "height": "1323",
+  "longitude": "178",
+  "latitude": "-17.8"
+}
+{
+  "-id": "mount-Silisili",
+  "-country": "WS",
+  "-type": "volcanic",
+  "-island": "island-Savaii",
+  "name": "Silisili",
+  "height": "1858",
+  "longitude": "-172.4",
+  "latitude": "-13.6"
+}
+{
+  "-id": "mount-Orohena",
+  "-country": "FPOL",
+  "-type": "volcanic",
+  "-island": "island-Tahiti",
+  "name": "Mont Orohena",
+  "height": "2241",
+  "longitude": "-149.5",
+  "latitude": "-17.6"
+}
+{
+  "-id": "mount-Popomanaseu",
+  "-country": "SLB",
+  "-type": "volcanic",
+  "-island": "island-Guadalcanal",
+  "name": "Popomanaseu",
+  "height": "2335",
+  "longitude": "160.1",
+  "latitude": "-9.7"
+}
+{
+  "-id": "mount-Mauna_Kea",
+  "-country": "USA",
+  "-type": "volcano",
+  "-island": "island-Hawaii",
+  "name": "Mauna Kea",
+  "mountains": "Hawaii",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-12"
+  },
+  "height": "4214",
+  "longitude": "-155.45",
+  "latitude": "19.6"
+}
+{
+  "-id": "mount-Mauna_Loa",
+  "-country": "USA",
+  "-type": "volcano",
+  "-island": "island-Hawaii",
+  "name": "Mauna Loa",
+  "mountains": "Hawaii",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-12"
+  },
+  "height": "4170",
+  "longitude": "-155.6",
+  "latitude": "19.5"
+}
+{
+  "-id": "mount-Haleakala",
+  "-country": "USA",
+  "-type": "volcano",
+  "-island": "island-Maui",
+  "name": "Haleakala",
+  "mountains": "Hawaii",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-12"
+  },
+  "height": "3055",
+  "longitude": "-156.25",
+  "latitude": "20.7"
+}
+{
+  "-id": "mount-Mt-Kosciuszko",
+  "-country": "AUS",
+  "name": "Mt. Kosciuszko",
+  "mountains": "Snowy Mountains",
+  "located": {
+    "-country": "AUS",
+    "-province": "prov-cid-cia-Australia-2"
+  },
+  "height": "2228",
+  "longitude": "148",
+  "latitude": "-36.5"
+}
+{
+  "-id": "mount-Mt-Bogong",
+  "-country": "AUS",
+  "name": "Mt. Bogong",
+  "mountains": "Snowy Mountains",
+  "located": {
+    "-country": "AUS",
+    "-province": "prov-cid-cia-Australia-7"
+  },
+  "height": "1986",
+  "longitude": "147.5",
+  "latitude": "-37"
+}
+{
+  "-id": "mount-Uluru",
+  "-country": "AUS",
+  "-type": "monolith",
+  "name": "Uluru",
+  "located": {
+    "-country": "AUS",
+    "-province": "prov-cid-cia-Australia-3"
+  },
+  "height": "869",
+  "longitude": "131",
+  "latitude": "-25.3"
+}
+{
+  "-id": "mount-MtCook",
+  "-country": "NZ",
+  "-island": "island-TeWakaAMaui",
+  "name": "Mt. Cook",
+  "mountains": "New Zealand Alps",
+  "height": "3754",
+  "longitude": "170.2",
+  "latitude": "-43.6"
+}
+{
+  "-id": "mount-Ruapehu",
+  "-country": "NZ",
+  "-type": "volcano",
+  "-island": "island-TeIkaAMaui",
+  "name": "Ruapehu",
+  "height": "2797",
+  "longitude": "175.6",
+  "latitude": "-39.3"
+}
+{
+  "-id": "mount-Mt_Redoubt",
+  "-country": "USA",
+  "-type": "volcano",
+  "name": "Mt Redoubt",
+  "mountains": "Aleutian Range",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-3"
+  },
+  "height": "3108",
+  "longitude": "-152.75",
+  "latitude": "60.5"
+}
+{
+  "-id": "mount-Mt_McKinley",
+  "-country": "USA",
+  "name": "Mt McKinley",
+  "mountains": "Alaska Range",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-3"
+  },
+  "height": "6193",
+  "longitude": "-151",
+  "latitude": "63.1"
+}
+{
+  "-id": "mount-MtBlackburn",
+  "-type": "volcano",
+  "-country": "USA",
+  "name": "Mt Blackburn",
+  "mountains": "Wrangell Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-3"
+  },
+  "height": "4996",
+  "longitude": "-143.4",
+  "latitude": "61.7"
+}
+{
+  "-id": "mount-MtBona",
+  "-country": "USA CDN",
+  "name": "Mt Bona",
+  "mountains": "Elias Range",
+  "located": [
+    {
+      "-country": "USA",
+      "-province": "prov-cid-cia-United-States-3"
+    },
+    {
+      "-country": "CDN",
+      "-province": "prov-cid-cia-Canada-12"
+    }
+  ],
+  "height": "5005",
+  "longitude": "-141.75",
+  "latitude": "61.4"
+}
+{
+  "-id": "mount-StElias",
+  "-country": "USA CDN",
+  "name": "Mt St.Elias",
+  "mountains": "Elias Range",
+  "located": [
+    {
+      "-country": "USA",
+      "-province": "prov-cid-cia-United-States-3"
+    },
+    {
+      "-country": "CDN",
+      "-province": "prov-cid-cia-Canada-13"
+    }
+  ],
+  "height": "5489",
+  "longitude": "-140.9",
+  "latitude": "60.3"
+}
+{
+  "-id": "mount-Logan",
+  "-country": "CDN",
+  "name": "Mt Logan",
+  "mountains": "Elias Range",
+  "located": {
+    "-country": "CDN",
+    "-province": "prov-cid-cia-Canada-13"
+  },
+  "height": "5959",
+  "longitude": "-140.4",
+  "latitude": "60.6"
+}
+{
+  "-id": "mount-Fairweather",
+  "-country": "CDN USA",
+  "name": "Mt Fairweather",
+  "mountains": "Elias Range",
+  "located": [
+    {
+      "-country": "USA",
+      "-province": "prov-cid-cia-United-States-3"
+    },
+    {
+      "-country": "CDN",
+      "-province": "prov-cid-cia-Canada-3"
+    }
+  ],
+  "height": "4663",
+  "longitude": "-137.5",
+  "latitude": "58.9"
+}
+{
+  "-id": "mount-Waddington",
+  "-country": "CDN",
+  "name": "Mt Waddington",
+  "mountains": "Coast Mountains",
+  "located": {
+    "-country": "CDN",
+    "-province": "prov-cid-cia-Canada-3"
+  },
+  "height": "4019",
+  "longitude": "-125.26",
+  "latitude": "51.4"
+}
+{
+  "-id": "mount-Robson",
+  "-country": "CDN",
+  "name": "Mt Robson",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "CDN",
+    "-province": "prov-cid-cia-Canada-3"
+  },
+  "height": "3954",
+  "longitude": "-119.1",
+  "latitude": "52.3"
+}
+{
+  "-id": "mount-Columbia",
+  "-country": "CDN",
+  "name": "Mt Columbia",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "CDN",
+    "-province": "prov-cid-cia-Canada-3 prov-cid-cia-Canada-2"
+  },
+  "height": "3747",
+  "longitude": "-117.44",
+  "latitude": "52.15"
+}
+{
+  "-id": "mount-Barbeau",
+  "-country": "CDN",
+  "-island": "island-Ellesmere_Island",
+  "name": "Barbeau Peak",
+  "mountains": "British Empire Range",
+  "located": {
+    "-country": "CDN",
+    "-province": "prov-cid-cia-Canada-7"
+  },
+  "height": "2616",
+  "longitude": "-75.0",
+  "latitude": "81.9"
+}
+{
+  "-id": "mount-Odin",
+  "-country": "CDN",
+  "-island": "island-Baffin_Island",
+  "name": "Mt. Odin",
+  "mountains": "Penny Highlands",
+  "located": {
+    "-country": "CDN",
+    "-province": "prov-cid-cia-Canada-7"
+  },
+  "height": "2147",
+  "longitude": "-65.6",
+  "latitude": "66.55"
+}
+{
+  "-id": "mount-Babel",
+  "-country": "CDN",
+  "-island": "island-ReneLevasseur",
+  "name": "Mt. Babel",
+  "located": {
+    "-country": "CDN",
+    "-province": "prov-cid-cia-Canada-11"
+  },
+  "height": "952",
+  "longitude": "-68.7",
+  "latitude": "51.45"
+}
+{
+  "-id": "mount-Granite_Peak",
+  "-country": "USA",
+  "name": "Granite Peak",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-27"
+  },
+  "height": "3901",
+  "longitude": "-109.5",
+  "latitude": "45"
+}
+{
+  "-id": "mount-Borah_Peak",
+  "-country": "USA",
+  "name": "Borah Peak",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-13"
+  },
+  "height": "3859",
+  "longitude": "-113.8",
+  "latitude": "44.1"
+}
+{
+  "-id": "mount-Harney_Peak",
+  "-country": "USA",
+  "name": "Harney Peak",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-42"
+  },
+  "height": "2207",
+  "longitude": "-103.4",
+  "latitude": "44"
+}
+{
+  "-id": "mount-Gannett_Peak",
+  "-country": "USA",
+  "name": "Gannett Peak",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-51"
+  },
+  "height": "4207",
+  "longitude": "-110",
+  "latitude": "43.2"
+}
+{
+  "-id": "mount-Kings_Peak",
+  "-country": "USA",
+  "name": "Kings Peak",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-45"
+  },
+  "height": "4123",
+  "longitude": "-110.4",
+  "latitude": "40.5"
+}
+{
+  "-id": "mount-Mt_Elbert",
+  "-country": "USA",
+  "name": "Mt Elbert",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-7"
+  },
+  "height": "4401",
+  "longitude": "-106.4",
+  "latitude": "39.1"
+}
+{
+  "-id": "mount-PikesPeak",
+  "-country": "USA",
+  "name": "Pikes Peak",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-7"
+  },
+  "height": "4302",
+  "longitude": "-105",
+  "latitude": "38.8"
+}
+{
+  "-id": "mount-Wheeler",
+  "-country": "USA",
+  "name": "Wheeler Peak",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-32"
+  },
+  "height": "4011",
+  "longitude": "-105.4",
+  "latitude": "36.55"
+}
+{
+  "-id": "mount-Humphreys_Peak",
+  "-country": "USA",
+  "-type": "volcanic",
+  "name": "Humphreys Peak",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-4"
+  },
+  "height": "3850",
+  "longitude": "-111.65",
+  "latitude": "35.3"
+}
+{
+  "-id": "mount-Guadalupe_Peak",
+  "-country": "USA",
+  "name": "Guadalupe Peak",
+  "mountains": "Rocky Mountains",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-44"
+  },
+  "height": "2667",
+  "longitude": "-105",
+  "latitude": "32"
+}
+{
+  "-id": "mount-Mt_Rainier",
+  "-country": "USA",
+  "-type": "volcano",
+  "name": "Mt Rainier",
+  "mountains": "Cascade Range",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-48"
+  },
+  "height": "4392",
+  "longitude": "-121.75",
+  "latitude": "46.5"
+}
+{
+  "-id": "mount-Adams",
+  "-country": "USA",
+  "-type": "volcano",
+  "name": "Mt Adams",
+  "mountains": "Cascade Range",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-48"
+  },
+  "height": "3743",
+  "longitude": "-121.5",
+  "latitude": "46.2"
+}
+{
+  "-id": "mount-Mt_Hood",
+  "-country": "USA",
+  "-type": "volcano",
+  "name": "Mt Hood",
+  "mountains": "Cascade Range",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-38"
+  },
+  "height": "3424",
+  "longitude": "-121.5",
+  "latitude": "45.2"
+}
+{
+  "-id": "mount-Mt_Whitney",
+  "-country": "USA",
+  "name": "Mt Whitney",
+  "mountains": "Sierra Nevada California",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-6"
+  },
+  "height": "4418",
+  "longitude": "-118.2",
+  "latitude": "36.6"
+}
+{
+  "-id": "mount-Boundary_Peak",
+  "-country": "USA",
+  "name": "Boundary Peak",
+  "mountains": "Sierra Nevada California",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-29 prov-cid-cia-United-States-6"
+  },
+  "height": "4006",
+  "longitude": "-118.3",
+  "latitude": "37.9"
+}
+{
+  "-id": "mount-Mt_Washington",
+  "-country": "USA",
+  "name": "Mt Washington",
+  "mountains": "Appalachen",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-30"
+  },
+  "height": "1917",
+  "longitude": "-71.3",
+  "latitude": "44.3"
+}
+{
+  "-id": "mount-Mt_Marcy",
+  "-country": "USA",
+  "name": "Mt Marcy",
+  "mountains": "Adirondacks",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-33"
+  },
+  "height": "1629",
+  "longitude": "-73.9",
+  "latitude": "44.1"
+}
+{
+  "-id": "mount-Mt_Mitchell",
+  "-country": "USA",
+  "name": "Mt Mitchell",
+  "mountains": "Appalachen",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-34"
+  },
+  "height": "2037",
+  "longitude": "-82.1",
+  "latitude": "35.4"
+}
+{
+  "-id": "mount-Clingmans_Dome",
+  "-country": "USA",
+  "name": "Clingmans Dome",
+  "mountains": "Appalachen",
+  "located": {
+    "-country": "USA",
+    "-province": "prov-cid-cia-United-States-43"
+  },
+  "height": "2025",
+  "longitude": "-83.2",
+  "latitude": "35.3"
+}
+{
+  "-id": "mount-Citlaltepetl",
+  "-country": "MEX",
+  "-type": "volcano",
+  "name": "Citlaltepetl (Pico de Orizaba)",
+  "mountains": "Cordillera Volcanica",
+  "located": {
+    "-country": "MEX",
+    "-province": "prov-cid-cia-Mexico-21 prov-cid-cia-Mexico-30"
+  },
+  "height": "5700",
+  "longitude": "-97",
+  "latitude": "19"
+}
+{
+  "-id": "mount-Popocatepetl",
+  "-country": "MEX",
+  "-type": "volcano",
+  "name": "Popocatepetl",
+  "mountains": "Cordillera Volcanica",
+  "located": {
+    "-country": "MEX",
+    "-province": "prov-cid-cia-Mexico-15 prov-cid-cia-Mexico-17 prov-cid-cia-Mexico-21"
+  },
+  "height": "5450",
+  "longitude": "-98",
+  "latitude": "19"
+}
+{
+  "-id": "mount-Iztaccihuatl",
+  "-country": "MEX",
+  "-type": "volcanic",
+  "name": "Iztaccihuatl",
+  "mountains": "Cordillera Volcanica",
+  "located": {
+    "-country": "MEX",
+    "-province": "prov-cid-cia-Mexico-21"
+  },
+  "height": "5286",
+  "longitude": "-98.6",
+  "latitude": "19.2"
+}
+{
+  "-id": "mount-Nevado_de_Toluca",
+  "-country": "MEX",
+  "-type": "volcano",
+  "name": "Nevado de Toluca",
+  "mountains": "Cordillera Volcanica",
+  "located": {
+    "-country": "MEX",
+    "-province": "prov-cid-cia-Mexico-15"
+  },
+  "height": "4558",
+  "longitude": "-99",
+  "latitude": "19"
+}
+{
+  "-id": "mount-Nevado_de_Colima",
+  "-country": "MEX",
+  "-type": "volcano",
+  "name": "Nevado de Colima",
+  "mountains": "Cordillera Volcanica",
+  "located": {
+    "-country": "MEX",
+    "-province": "prov-cid-cia-Mexico-14"
+  },
+  "height": "4330",
+  "longitude": "-104",
+  "latitude": "20"
+}
+{
+  "-id": "mount-Tajumulco",
+  "-country": "GCA",
+  "-type": "volcanic",
+  "name": "Tajumulco",
+  "mountains": "Sierra Madre",
+  "height": "4220",
+  "longitude": "-91.9",
+  "latitude": "15"
+}
+{
+  "-id": "mount-Concepcion",
+  "-country": "NIC",
+  "-type": "volcano",
+  "-island": "island-Ometepe",
+  "name": "Concepcion",
+  "height": "1700",
+  "longitude": "-85.6",
+  "latitude": "11.5"
+}
+{
+  "-id": "mount-Irazu",
+  "-country": "CR",
+  "-type": "volcano",
+  "name": "Irazu",
+  "mountains": "Cordillera de Talamanca",
+  "located": {
+    "-country": "CR",
+    "-province": "prov-cid-cia-Costa-Rica-4"
+  },
+  "height": "3432",
+  "longitude": "-83.9",
+  "latitude": "10"
+}
+{
+  "-id": "mount-CerroChirripo",
+  "-country": "CR",
+  "-type": "volcanic",
+  "name": "Cerro Chirripo",
+  "mountains": "Cordillera de Talamanca",
+  "located": {
+    "-country": "CR",
+    "-province": "prov-cid-cia-Costa-Rica-8 prov-cid-cia-Costa-Rica-4"
+  },
+  "height": "3819",
+  "longitude": "-83.5",
+  "latitude": "9.5"
+}
+{
+  "-id": "mount-PicoTurquino",
+  "-country": "C",
+  "-island": "island-Cuba",
+  "name": "Pico Turquino",
+  "mountains": "Sierra Maestra",
+  "located": {
+    "-country": "C",
+    "-province": "prov-cid-cia-Cuba-6 prov-cid-cia-Cuba-14"
+  },
+  "height": "1974",
+  "longitude": "-76.8",
+  "latitude": "20"
+}
+{
+  "-id": "mount-Blue_Mountain_Peak",
+  "-country": "JA",
+  "-island": "island-Jamaica",
+  "name": "Blue Mountain Peak",
+  "height": "2256",
+  "longitude": "-76.4",
+  "latitude": "18.1"
+}
+{
+  "-id": "mount-Pico_Duarte",
+  "-country": "DOM",
+  "-island": "island-Hispaniola",
+  "name": "Pico Duarte",
+  "height": "3098",
+  "longitude": "-71.3",
+  "latitude": "18.3"
+}
+{
+  "-id": "mount-CerroPunta",
+  "-country": "PR",
+  "-island": "island-PuertoRico",
+  "name": "Cerro de Punta",
+  "height": "1338",
+  "longitude": "-66.6",
+  "latitude": "18.2"
+}
+{
+  "-id": "mount-LaSoufriere",
+  "-country": "GUAD",
+  "-type": "volcano",
+  "-island": "island-Basse-Terre",
+  "name": "La Soufriere",
+  "height": "1467",
+  "longitude": "-61.65",
+  "latitude": "16.05"
+}
+{
+  "-id": "mount-SoufriereHills",
+  "-country": "MNTS",
+  "-type": "volcano",
+  "-island": "island-Montserrat",
+  "name": "Soufriere Hills",
+  "height": "1050",
+  "longitude": "-62.2",
+  "latitude": "16.7"
+}
+{
+  "-id": "mount-Soufriere",
+  "-country": "WV",
+  "-type": "volcano",
+  "-island": "island-Saint_Vincent",
+  "name": "Soufriere",
+  "height": "1220",
+  "longitude": "-61.2",
+  "latitude": "13.35"
+}
+{
+  "-id": "mount-MorneDiablotins",
+  "-country": "WD",
+  "-type": "volcano",
+  "-island": "island-Dominica",
+  "name": "Morne Diablotins",
+  "height": "1447",
+  "longitude": "-61.4",
+  "latitude": "15.5"
+}
+{
+  "-id": "mount-Pelee",
+  "-country": "MART",
+  "-type": "volcano",
+  "-island": "island-Martinique",
+  "name": "Pelee",
+  "height": "1397",
+  "longitude": "-61.15",
+  "latitude": "14.8"
+}
+{
+  "-id": "mount-PicoCristobalColon",
+  "-country": "CO",
+  "name": "Pico Cristobal Colon",
+  "mountains": "Sierra Nevada de Santa Marta",
+  "located": {
+    "-country": "CO",
+    "-province": "prov-cid-cia-Colombia-20"
+  },
+  "height": "5775",
+  "longitude": "-73.7",
+  "latitude": "10.85"
+}
+{
+  "-id": "mount-PicoBolivar",
+  "-country": "YV",
+  "name": "Pico Bolivar",
+  "mountains": "Andes",
+  "located": {
+    "-country": "YV",
+    "-province": "prov-cid-cia-Venezuela-14"
+  },
+  "height": "4981",
+  "longitude": "-71.0",
+  "latitude": "8.6"
+}
+{
+  "-id": "mount-NevadoDelRuiz",
+  "-country": "CO",
+  "-type": "volcano",
+  "name": "Nevado del Ruiz",
+  "mountains": "Andes",
+  "located": {
+    "-country": "CO",
+    "-province": "prov-cid-cia-Colombia-26 prov-cid-cia-Colombia-13"
+  },
+  "height": "5389",
+  "longitude": "-75.3",
+  "latitude": "4.9"
+}
+{
+  "-id": "mount-NevadoDelHuila",
+  "-country": "CO",
+  "-type": "volcano",
+  "name": "Nevado del Huila",
+  "mountains": "Andes",
+  "located": {
+    "-country": "CO",
+    "-province": "prov-cid-cia-Colombia-19"
+  },
+  "height": "5750",
+  "longitude": "-76.0",
+  "latitude": "2.9"
+}
+{
+  "-id": "mount-Cayambe",
+  "-country": "EC",
+  "-type": "volcano",
+  "name": "Cayambe",
+  "mountains": "Andes",
+  "height": "5796",
+  "longitude": "-78",
+  "latitude": "0.1"
+}
+{
+  "-id": "mount-Cotopaxi",
+  "-country": "EC",
+  "-type": "volcano",
+  "name": "Cotopaxi",
+  "mountains": "Andes",
+  "height": "5897",
+  "longitude": "-78.4",
+  "latitude": "-0.7"
+}
+{
+  "-id": "mount-Chimborazo",
+  "-country": "EC",
+  "-type": "volcano",
+  "name": "Chimborazo",
+  "mountains": "Andes",
+  "height": "6287",
+  "longitude": "-78.5",
+  "latitude": "-1.2"
+}
+{
+  "-id": "mount-Huascaran",
+  "-country": "PE",
+  "name": "Huascaran",
+  "mountains": "Cordillera Blanca",
+  "located": {
+    "-country": "PE",
+    "-province": "prov-cid-cia-Peru-3"
+  },
+  "height": "6768",
+  "longitude": "-77.3",
+  "latitude": "-9"
+}
+{
+  "-id": "mount-Alpamayo",
+  "-country": "PE",
+  "name": "Alpamayo",
+  "mountains": "Cordillera Blanca",
+  "located": {
+    "-country": "PE",
+    "-province": "prov-cid-cia-Peru-3"
+  },
+  "height": "5947",
+  "longitude": "-77.7",
+  "latitude": "-8.9"
+}
+{
+  "-id": "mount-Rocarre",
+  "-country": "PE",
+  "name": "Pico Rocarre",
+  "mountains": "Cordillera Negra",
+  "located": {
+    "-country": "PE",
+    "-province": "prov-cid-cia-Peru-3"
+  },
+  "height": "5187",
+  "longitude": "-78",
+  "latitude": "-8.8"
+}
+{
+  "-id": "mount-Ausangate",
+  "-country": "PE",
+  "name": "Ausangate",
+  "mountains": "Cordillera Vilcanota",
+  "located": {
+    "-country": "PE",
+    "-province": "prov-cid-cia-Peru-9"
+  },
+  "height": "6336",
+  "longitude": "-71.2",
+  "latitude": "-13.8"
+}
+{
+  "-id": "mount-Coropuna",
+  "-country": "PE",
+  "-type": "volcano",
+  "name": "Coropuna",
+  "mountains": "Cordillera Volcanica",
+  "located": {
+    "-country": "PE",
+    "-province": "prov-cid-cia-Peru-5"
+  },
+  "height": "6425",
+  "longitude": "-72.65",
+  "latitude": "-15.5"
+}
+{
+  "-id": "mount-Ampato",
+  "-country": "PE",
+  "-type": "volcano",
+  "name": "Ampato",
+  "mountains": "Andes",
+  "located": {
+    "-country": "PE",
+    "-province": "prov-cid-cia-Peru-5"
+  },
+  "height": "6288",
+  "longitude": "-71.9",
+  "latitude": "-15.8"
+}
+{
+  "-id": "mount-Illampu",
+  "-country": "BOL",
+  "-type": "granite",
+  "name": "Illampu",
+  "mountains": "Cordillera Real",
+  "height": "6368",
+  "longitude": "-68.5",
+  "latitude": "-15.8"
+}
+{
+  "-id": "mount-Illimani",
+  "-country": "BOL",
+  "-type": "granite",
+  "name": "Illimani",
+  "mountains": "Cordillera Real",
+  "height": "6439",
+  "longitude": "-67.8",
+  "latitude": "-16.65"
+}
+{
+  "-id": "mount-Sajama",
+  "-country": "BOL",
+  "-type": "volcano",
+  "name": "Sajama",
+  "mountains": "Andes",
+  "height": "6542",
+  "longitude": "-68.9",
+  "latitude": "-18.1"
+}
+{
+  "-id": "mount-Licancabur",
+  "-country": "BOL RCH",
+  "-type": "volcano",
+  "name": "Licancabur",
+  "mountains": "Andes",
+  "height": "5920",
+  "longitude": "-67.9",
+  "latitude": "-22.8"
+}
+{
+  "-id": "mount-Llullaillaco",
+  "-country": "RA RCH",
+  "-type": "volcano",
+  "name": "Llullaillaco",
+  "mountains": "Andes",
+  "located": {
+    "-country": "RA",
+    "-province": "prov-cid-cia-Argentina-24"
+  },
+  "height": "6739",
+  "longitude": "-68.5",
+  "latitude": "-24.7"
+}
+{
+  "-id": "mount-OjosdelSalado",
+  "-country": "RA RCH",
+  "-type": "volcano",
+  "name": "Ojos del Salado",
+  "mountains": "Andes",
+  "located": {
+    "-country": "RA",
+    "-province": "prov-cid-cia-Argentina-24"
+  },
+  "height": "6893",
+  "longitude": "-68.5",
+  "latitude": "-27.1"
+}
+{
+  "-id": "mount-MontePissis",
+  "-country": "RA",
+  "-type": "volcanic",
+  "name": "Monte Pissis",
+  "mountains": "Andes",
+  "located": {
+    "-country": "RA",
+    "-province": "prov-cid-cia-Argentina-12 prov-cid-cia-Argentina-24"
+  },
+  "height": "6795",
+  "longitude": "-68.85",
+  "latitude": "-27.8"
+}
+{
+  "-id": "mount-Aconcagua",
+  "-country": "RA",
+  "name": "Aconcagua",
+  "mountains": "Andes",
+  "located": {
+    "-country": "RA",
+    "-province": "prov-cid-cia-Argentina-13"
+  },
+  "height": "6962",
+  "longitude": "-70.0",
+  "latitude": "-32.65"
+}
+{
+  "-id": "mount-Tupungato",
+  "-country": "RA",
+  "-type": "volcano",
+  "name": "Tupungato",
+  "mountains": "Andes",
+  "located": {
+    "-country": "RA",
+    "-province": "prov-cid-cia-Argentina-13"
+  },
+  "height": "6550",
+  "longitude": "-69.870",
+  "latitude": "-33.35"
+}
+{
+  "-id": "mount-AgulhasNegras",
+  "-country": "BR",
+  "name": "Pico de Agulhas Negras",
+  "mountains": "Brazilian Highlands",
+  "located": {
+    "-country": "BR",
+    "-province": "prov-cid-cia-Brazil-13 prov-cid-cia-Brazil-19"
+  },
+  "height": "2791",
+  "longitude": "-44.65",
+  "latitude": "-22.4"
+}

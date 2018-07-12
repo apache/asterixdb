@@ -504,7 +504,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
                 columnsArg.set(i, leftVar);
             }
         }
-        return VariableUtilities.varListEqualUnordered(columns, columnsArg);
+        return columns.equals(columnsArg);
     }
 
     @Override

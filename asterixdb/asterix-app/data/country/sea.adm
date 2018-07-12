@@ -1,0 +1,716 @@
+{
+  "-id": "sea-Skagerrak",
+  "-country": "N S DK",
+  "-bordering": "sea-Nordsee sea-Kattegat",
+  "name": "Skagerrak",
+  "located": [
+    {
+      "-country": "N",
+      "-province": "lteil-OS-N lteil-AK-N lteil-OES-N lteil-BU-N lteil-VE-N lteil-AA-N lteil-VA-N"
+    },
+    {
+      "-country": "S",
+      "-province": "prov-cid-cia-Sweden-5"
+    }
+  ],
+  "depth": "725"
+}
+{
+  "-id": "sea-Kattegat",
+  "-country": "S DK",
+  "-bordering": "sea-Skagerrak sea-Ostsee",
+  "name": "Kattegat",
+  "located": {
+    "-country": "S",
+    "-province": "prov-cid-cia-Sweden-5 prov-cid-cia-Sweden-7 prov-cid-cia-Sweden-12 prov-cid-cia-Sweden-14"
+  },
+  "depth": "94"
+}
+{
+  "-id": "sea-Nordsee",
+  "-country": "NL B F DK N GB D",
+  "-bordering": "sea-Atlantic sea-Europaeisches_Nordmeer sea-Channel sea-Skagerrak",
+  "name": "North Sea",
+  "located": [
+    {
+      "-country": "D",
+      "-province": "prov-cid-cia-Germany-6 prov-cid-cia-Germany-10 prov-cid-cia-Germany-16"
+    },
+    {
+      "-country": "NL",
+      "-province": "prov-cid-cia-Netherlands-2 prov-cid-cia-Netherlands-3 prov-cid-cia-Netherlands-6 prov-cid-cia-Netherlands-9 prov-cid-cia-Netherlands-10 prov-cid-cia-Netherlands-11"
+    },
+    {
+      "-country": "B",
+      "-province": "prov-cid-cia-Belgium-10"
+    },
+    {
+      "-country": "F",
+      "-province": "prov-cid-cia-France-86"
+    },
+    {
+      "-country": "N",
+      "-province": "lteil-TE-N lteil-VA-N lteil-RO-N lteil-HO-N lteil-SF-N"
+    },
+    {
+      "-country": "GB",
+      "-province": "prov-cid-cia-United-Kingdom-18 prov-cid-cia-United-Kingdom-16 prov-cid-cia-United-Kingdom-23 prov-cid-cia-United-Kingdom-25 prov-cid-cia-United-Kingdom-30 prov-cid-cia-United-Kingdom-32 prov-cid-cia-United-Kingdom-33 prov-cid-cia-United-Kingdom-40 prov-cid-cia-United-Kingdom-42 prov-cid-cia-United-Kingdom-54 prov-cid-cia-United-Kingdom-55 prov-cid-cia-United-Kingdom-86  prov-cid-cia-United-Kingdom-88"
+    }
+  ],
+  "depth": "200"
+}
+{
+  "-id": "sea-Channel",
+  "-country": "F GB GBG GBJ",
+  "-bordering": "sea-Atlantic sea-Nordsee",
+  "name": "The Channel",
+  "located": [
+    {
+      "-country": "F",
+      "-province": "prov-cid-cia-France-16 prov-cid-cia-France-50 prov-cid-cia-France-86 prov-cid-cia-France-95"
+    },
+    {
+      "-country": "GB",
+      "-province": "prov-cid-cia-United-Kingdom-9 prov-cid-cia-United-Kingdom-12 prov-cid-cia-United-Kingdom-13 prov-cid-cia-United-Kingdom-15 prov-cid-cia-United-Kingdom-20 prov-cid-cia-United-Kingdom-25 prov-cid-cia-United-Kingdom-45"
+    }
+  ],
+  "depth": "175"
+}
+{
+  "-id": "sea-Schwarzes_Meer",
+  "-country": "UA R BG RO TR GE",
+  "-bordering": "sea-Mittelmeer sea-Asowsches_Meer",
+  "name": "Black Sea",
+  "located": [
+    {
+      "-country": "UA",
+      "-province": "prov-cid-cia-Ukraine-9 prov-cid-cia-Ukraine-15 prov-cid-cia-Ukraine-16 prov-cid-cia-Ukraine-27"
+    },
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-59"
+    },
+    {
+      "-country": "RO",
+      "-province": "prov-cid-cia-Romania-16 prov-cid-cia-Romania-39"
+    },
+    {
+      "-country": "TR",
+      "-province": "prov-cid-cia-Turkey-10 prov-cid-cia-Turkey-18 prov-cid-cia-Turkey-32 prov-cid-cia-Turkey-38 prov-cid-cia-Turkey-43 prov-cid-cia-Turkey-46 prov-cid-cia-Turkey-48 prov-cid-cia-Turkey-58 prov-cid-cia-Turkey-59 prov-cid-cia-Turkey-60 prov-cid-cia-Turkey-61 prov-cid-cia-Turkey-64 prov-cid-cia-Turkey-69 prov-cid-cia-Turkey-74"
+    }
+  ],
+  "depth": "2211"
+}
+{
+  "-id": "sea-Asowsches_Meer",
+  "-country": "UA R",
+  "-bordering": "sea-Schwarzes_Meer",
+  "name": "Sea of Azov",
+  "located": [
+    {
+      "-country": "UA",
+      "-province": "prov-cid-cia-Ukraine-6 prov-cid-cia-Ukraine-9 prov-cid-cia-Ukraine-24 prov-cid-cia-Ukraine-27"
+    },
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-45 prov-cid-cia-Russia-59"
+    }
+  ],
+  "depth": "100"
+}
+{
+  "-id": "sea-Ostsee",
+  "-country": "D LV LT PL R DK EW SF S",
+  "-bordering": "sea-Nordsee",
+  "name": "Baltic Sea",
+  "located": [
+    {
+      "-country": "D",
+      "-province": "prov-cid-cia-Germany-16 prov-cid-cia-Germany-9"
+    },
+    {
+      "-country": "PL",
+      "-province": "prov-cid-cia-Poland-10 prov-cid-cia-Poland-11 prov-cid-cia-Poland-18 prov-cid-cia-Poland-40 prov-cid-cia-Poland-42"
+    },
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-11 prov-cid-cia-Russia-10 prov-cid-cia-Russia-9"
+    },
+    {
+      "-country": "SF",
+      "-province": "lteil-ALA-SF lteil-KYM-SF lteil-LAP-SF lteil-OUL-SF lteil-TUP-SF lteil-UUS-SF lteil-VAA-SF"
+    },
+    {
+      "-country": "S",
+      "-province": "prov-cid-cia-Sweden-3 prov-cid-cia-Sweden-4 prov-cid-cia-Sweden-6 prov-cid-cia-Sweden-10 prov-cid-cia-Sweden-12 prov-cid-cia-Sweden-14 prov-cid-cia-Sweden-15 prov-cid-cia-Sweden-17 prov-cid-cia-Sweden-19 prov-cid-cia-Sweden-20 prov-cid-cia-Sweden-21 prov-cid-cia-Sweden-23 prov-cid-cia-Sweden-24"
+    }
+  ],
+  "depth": "459"
+}
+{
+  "-id": "sea-Atlantic",
+  "-country": "F E GBZ IS IRL GB P AG BS BDS CDN USA C WD DOM RH WG KN WL WV TT RA BR RCH ROU FGU GUY SME YV RIM MA WSA ANG RCB NAM ZRE BEN WAN RT RSA CI GH CAM GQ G CV RG LB WAG SN GNB WAL NA SMAR STP PR AXA GUAD MART BVIR MNTS VIRG HELX FALK SPMI BERM TUCA SVAX GROX FARX",
+  "-bordering": "sea-Nordsee sea-Channel sea-Mittelmeer sea-Golf_von_Mexiko sea-Nordpolarmeer sea-Indic sea-Europaeisches_Nordmeer sea-Pacific sea-Irische_See sea-Caribbean",
+  "name": "Atlantic Ocean",
+  "located": [
+    {
+      "-country": "F",
+      "-province": "prov-cid-cia-France-5 prov-cid-cia-France-20 prov-cid-cia-France-89 prov-cid-cia-France-99"
+    },
+    {
+      "-country": "E",
+      "-province": "prov-cid-cia-Spain-2 prov-cid-cia-Spain-13  prov-cid-cia-Spain-8  prov-cid-cia-Spain-7 prov-cid-cia-Spain-6  prov-cid-cia-Spain-4"
+    },
+    {
+      "-country": "P",
+      "-province": "prov-cid-cia-Portugal-2 prov-cid-cia-Portugal-3 prov-cid-cia-Portugal-4 prov-cid-cia-Portugal-7 prov-cid-cia-Portugal-9 prov-cid-cia-Portugal-11 prov-cid-cia-Portugal-12 prov-cid-cia-Portugal-14 prov-cid-cia-Portugal-16 prov-cid-cia-Portugal-17 prov-cid-cia-Portugal-21 prov-cid-cia-Portugal-22"
+    },
+    {
+      "-country": "GB",
+      "-province": "prov-cid-cia-United-Kingdom-9 prov-cid-cia-United-Kingdom-12 prov-cid-cia-United-Kingdom-85 prov-cid-cia-United-Kingdom-87"
+    },
+    {
+      "-country": "CDN",
+      "-province": "prov-cid-cia-Canada-4 prov-cid-cia-Canada-5 prov-cid-cia-Canada-6 prov-cid-cia-Canada-7 prov-cid-cia-Canada-8 prov-cid-cia-Canada-9 prov-cid-cia-Canada-10 prov-cid-cia-Canada-11"
+    },
+    {
+      "-country": "USA",
+      "-province": "prov-cid-cia-United-States-8 prov-cid-cia-United-States-9 prov-cid-cia-United-States-10 prov-cid-cia-United-States-11 prov-cid-cia-United-States-20 prov-cid-cia-United-States-21 prov-cid-cia-United-States-22 prov-cid-cia-United-States-30 prov-cid-cia-United-States-31 prov-cid-cia-United-States-33 prov-cid-cia-United-States-34 prov-cid-cia-United-States-40 prov-cid-cia-United-States-41 prov-cid-cia-United-States-47"
+    },
+    {
+      "-country": "C",
+      "-province": "prov-cid-cia-Cuba-3 prov-cid-cia-Cuba-7 prov-cid-cia-Cuba-8 prov-cid-cia-Cuba-9 prov-cid-cia-Cuba-10 prov-cid-cia-Cuba-11 prov-cid-cia-Cuba-13 prov-cid-cia-Cuba-15"
+    },
+    {
+      "-country": "RA",
+      "-province": "prov-cid-cia-Argentina-2 prov-cid-cia-Argentina-5 prov-cid-cia-Argentina-16 prov-cid-cia-Argentina-20 prov-cid-cia-Argentina-23"
+    },
+    {
+      "-country": "BR",
+      "-province": "prov-cid-cia-Brazil-3 prov-cid-cia-Brazil-4 prov-cid-cia-Brazil-6 prov-cid-cia-Brazil-7 prov-cid-cia-Brazil-8 prov-cid-cia-Brazil-10 prov-cid-cia-Brazil-14 prov-cid-cia-Brazil-15 prov-cid-cia-Brazil-16 prov-cid-cia-Brazil-17 prov-cid-cia-Brazil-19 prov-cid-cia-Brazil-20 prov-cid-cia-Brazil-21 prov-cid-cia-Brazil-24 prov-cid-cia-Brazil-25 prov-cid-cia-Brazil-26"
+    },
+    {
+      "-country": "YV",
+      "-province": "prov-cid-cia-Venezuela-10"
+    },
+    {
+      "-country": "ANG",
+      "-province": "prov-cid-cia-Angola-2 prov-cid-cia-Angola-3 prov-cid-cia-Angola-5 prov-cid-cia-Angola-7 prov-cid-cia-Angola-11 prov-cid-cia-Angola-16 prov-cid-cia-Angola-18"
+    },
+    {
+      "-country": "ZRE",
+      "-province": "prov-cid-cia-Zaire-3"
+    },
+    {
+      "-country": "RSA",
+      "-province": "prov-cid-cia-South-Africa-10"
+    },
+    {
+      "-country": "CAM",
+      "-province": "prov-cid-cia-Cameroon-3 prov-cid-cia-Cameroon-6 prov-cid-cia-Cameroon-11"
+    },
+    {
+      "-country": "SN",
+      "-province": "prov-cid-cia-Senegal-2 prov-cid-cia-Senegal-4 prov-cid-cia-Senegal-7 prov-cid-cia-Senegal-8 prov-cid-cia-Senegal-10 prov-cid-cia-Senegal-11"
+    }
+  ],
+  "depth": "9219"
+}
+{
+  "-id": "sea-Mittelmeer",
+  "-country": "AL GR MNE HR BIH SLO F E I TR MC M CY IL GAZA ET SYR RL DZ LAR MA TN GBZ",
+  "-bordering": "sea-Schwarzes_Meer sea-Atlantic",
+  "name": "Mediterranean Sea",
+  "located": [
+    {
+      "-country": "F",
+      "-province": "prov-cid-cia-France-42 prov-cid-cia-France-62 prov-cid-cia-France-104"
+    },
+    {
+      "-country": "E",
+      "-province": "prov-cid-cia-Spain-2 prov-cid-cia-Spain-5 prov-cid-cia-Spain-11 prov-cid-cia-Spain-15 prov-cid-cia-Spain-18"
+    },
+    {
+      "-country": "I",
+      "-province": "prov-cid-cia-Italy-23 prov-cid-cia-Italy-31 prov-cid-cia-Italy-36 prov-cid-cia-Italy-41 prov-cid-cia-Italy-50 prov-cid-cia-Italy-63 prov-cid-cia-Italy-68 prov-cid-cia-Italy-74 prov-cid-cia-Italy-82 prov-cid-cia-Italy-88 prov-cid-cia-Italy-97 prov-cid-cia-Italy-101 prov-cid-cia-Italy-111"
+    },
+    {
+      "-country": "GR",
+      "-province": "prov-cid-cia-Greece-2 prov-cid-cia-Greece-3 prov-cid-cia-Greece-4 prov-cid-cia-Greece-6 prov-cid-cia-Greece-7 prov-cid-cia-Greece-8 prov-cid-cia-Greece-9 prov-cid-cia-Greece-10 prov-cid-cia-Greece-11 prov-cid-cia-Greece-12 prov-cid-cia-Greece-13 prov-cid-cia-Greece-14"
+    },
+    {
+      "-country": "TR",
+      "-province": "prov-cid-cia-Turkey-2 prov-cid-cia-Turkey-9 prov-cid-cia-Turkey-11 prov-cid-cia-Turkey-12 prov-cid-cia-Turkey-21 prov-cid-cia-Turkey-35 prov-cid-cia-Turkey-36 prov-cid-cia-Turkey-39 prov-cid-cia-Turkey-54"
+    },
+    {
+      "-country": "IL",
+      "-province": "prov-cid-cia-Israel-2 prov-cid-cia-Israel-3 prov-cid-cia-Israel-5 prov-cid-cia-Israel-6 prov-cid-cia-Israel-7"
+    },
+    {
+      "-country": "ET",
+      "-province": "prov-cid-cia-Egypt-4 prov-cid-cia-Egypt-9 prov-cid-cia-Egypt-29 prov-cid-cia-Egypt-14 prov-cid-cia-Egypt-10 prov-cid-cia-Egypt-11 prov-cid-cia-Egypt-17 prov-cid-cia-Egypt-13 prov-cid-cia-Egypt-28 prov-cid-cia-Egypt-6"
+    }
+  ],
+  "depth": "5121"
+}
+{
+  "-id": "sea-Golf_von_Mexiko",
+  "-country": "MEX USA C",
+  "-bordering": "sea-Atlantic sea-Caribbean",
+  "name": "Gulf of Mexico",
+  "located": [
+    {
+      "-country": "MEX",
+      "-province": "prov-cid-cia-Mexico-5 prov-cid-cia-Mexico-27 prov-cid-cia-Mexico-28 prov-cid-cia-Mexico-30 prov-cid-cia-Mexico-31"
+    },
+    {
+      "-country": "USA",
+      "-province": "prov-cid-cia-United-States-2 prov-cid-cia-United-States-10 prov-cid-cia-United-States-19 prov-cid-cia-United-States-25 prov-cid-cia-United-States-44"
+    },
+    {
+      "-country": "C",
+      "-province": "prov-cid-cia-Cuba-5 prov-cid-cia-Cuba-9 prov-cid-cia-Cuba-12"
+    }
+  ],
+  "depth": "4375"
+}
+{
+  "-id": "sea-Europaeisches_Nordmeer",
+  "-country": "N IS FARX SVAX GROX GB",
+  "-bordering": "sea-Nordsee sea-Atlantic sea-Nordpolarmeer",
+  "name": "Norwegian Sea",
+  "located": [
+    {
+      "-country": "N",
+      "-province": "lteil-SF-N lteil-MR-N lteil-ST-N lteil-NT-N lteil-NO-N lteil-TR-N lteil-FI-N"
+    },
+    {
+      "-country": "GB",
+      "-province": "prov-cid-cia-United-Kingdom-88"
+    }
+  ],
+  "depth": "3860"
+}
+{
+  "-id": "sea-Barentssee",
+  "-country": "N R",
+  "-bordering": "sea-Atlantic sea-Europaeisches_Nordmeer sea-Nordpolarmeer sea-SibirianSea",
+  "name": "Barents Sea",
+  "located": [
+    {
+      "-country": "N",
+      "-province": "lteil-FI-N"
+    },
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-8 prov-cid-cia-Russia-5 prov-cid-cia-Russia-3"
+    }
+  ],
+  "depth": "32"
+}
+{
+  "-id": "sea-SibirianSea",
+  "-country": "R",
+  "-bordering": "sea-Nordpolarmeer sea-Barentssee",
+  "name": "Sibirian Sea",
+  "located": {
+    "-country": "R",
+    "-province": "prov-cid-cia-Russia-5 prov-cid-cia-Russia-70 prov-cid-cia-Russia-75 prov-cid-cia-Russia-81 prov-cid-cia-Russia-89"
+  },
+  "depth": "540"
+}
+{
+  "-id": "sea-Nordpolarmeer",
+  "-country": "R CDN USA SVAX GROX",
+  "-bordering": "sea-Atlantic sea-Europaeisches_Nordmeer sea-BeringSea sea-Barentssee sea-SibirianSea",
+  "name": "Arctic Ocean",
+  "located": [
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-89"
+    },
+    {
+      "-country": "CDN",
+      "-province": "prov-cid-cia-Canada-7 prov-cid-cia-Canada-13"
+    },
+    {
+      "-country": "USA",
+      "-province": "prov-cid-cia-United-States-3"
+    }
+  ],
+  "depth": "5608"
+}
+{
+  "-id": "sea-BeringSea",
+  "-country": "R USA",
+  "-bordering": "sea-Nordpolarmeer sea-Pacific",
+  "name": "Bering Sea",
+  "located": [
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-89 prov-cid-cia-Russia-87"
+    },
+    {
+      "-country": "USA",
+      "-province": "prov-cid-cia-United-States-3"
+    }
+  ],
+  "depth": "4096"
+}
+{
+  "-id": "sea-Pacific",
+  "-country": "R J MV RP RC GCA MEX CDN USA CR NIC PA ES HCA CO AUS FJI KIR MH FSM NAU NZ PAL SLB TO TUV VU WS RCH PE EC RI PNG NCA NIUE NMIS PITC WAFU AMSA COOK FPOL GUAM NORF",
+  "-bordering": "sea-Atlantic sea-BeringSea sea-OchotskSea sea-EastChinaSea sea-SouthChinaSea sea-Japanisches_Meer sea-Sundasee sea-Celebessee sea-Indic",
+  "name": "Pacific Ocean",
+  "located": [
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-89 prov-cid-cia-Russia-87 prov-cid-cia-Russia-85 prov-cid-cia-Russia-90"
+    },
+    {
+      "-country": "J",
+      "-province": "prov-cid-cia-Japan-3 prov-cid-cia-Japan-5 prov-cid-cia-Japan-6 prov-cid-cia-Japan-7 prov-cid-cia-Japan-10 prov-cid-cia-Japan-12 prov-cid-cia-Japan-16 prov-cid-cia-Japan-18 prov-cid-cia-Japan-27 prov-cid-cia-Japan-28 prov-cid-cia-Japan-30 prov-cid-cia-Japan-36 prov-cid-cia-Japan-44 prov-cid-cia-Japan-47 prov-cid-cia-Japan-54 prov-cid-cia-Japan-55 prov-cid-cia-Japan-56"
+    },
+    {
+      "-country": "MEX",
+      "-province": "prov-cid-cia-Mexico-3 prov-cid-cia-Mexico-4 prov-cid-cia-Mexico-6 prov-cid-cia-Mexico-9 prov-cid-cia-Mexico-12 prov-cid-cia-Mexico-14 prov-cid-cia-Mexico-16 prov-cid-cia-Mexico-18 prov-cid-cia-Mexico-20 prov-cid-cia-Mexico-25 prov-cid-cia-Mexico-26"
+    },
+    {
+      "-country": "CDN",
+      "-province": "prov-cid-cia-Canada-3 prov-cid-cia-Canada-13"
+    },
+    {
+      "-country": "USA",
+      "-province": "prov-cid-cia-United-States-3 prov-cid-cia-United-States-6 prov-cid-cia-United-States-12 prov-cid-cia-United-States-38 prov-cid-cia-United-States-48"
+    },
+    {
+      "-country": "CR",
+      "-province": "prov-cid-cia-Costa-Rica-6 prov-cid-cia-Costa-Rica-7"
+    },
+    {
+      "-country": "PA",
+      "-province": "prov-cid-cia-Panama-3 prov-cid-cia-Panama-6 prov-cid-cia-Panama-7 prov-cid-cia-Panama-8 prov-cid-cia-Panama-9 prov-cid-cia-Panama-10 prov-cid-cia-Panama-11"
+    },
+    {
+      "-country": "HCA",
+      "-province": "prov-cid-cia-Honduras-7 prov-cid-cia-Honduras-18"
+    },
+    {
+      "-country": "CO",
+      "-province": "prov-cid-cia-Colombia-11 prov-cid-cia-Colombia-13 prov-cid-cia-Colombia-22 prov-cid-cia-Colombia-32"
+    },
+    {
+      "-country": "AUS",
+      "-province": "prov-cid-cia-Australia-2 prov-cid-cia-Australia-4 prov-cid-cia-Australia-7  prov-cid-cia-Australia-6"
+    },
+    {
+      "-country": "PE",
+      "-province": "prov-cid-cia-Peru-3 prov-cid-cia-Peru-5 prov-cid-cia-Peru-12 prov-cid-cia-Peru-14 prov-cid-cia-Peru-15 prov-cid-cia-Peru-16 prov-cid-cia-Peru-20 prov-cid-cia-Peru-22 prov-cid-cia-Peru-25 prov-cid-cia-Peru-26"
+    }
+  ],
+  "depth": "11034"
+}
+{
+  "-id": "sea-OchotskSea",
+  "-country": "R J",
+  "-bordering": "sea-Pacific sea-Japanisches_Meer",
+  "name": "Sea of Okhotsk",
+  "located": [
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-89 prov-cid-cia-Russia-87"
+    },
+    {
+      "-country": "J",
+      "-province": "prov-cid-cia-Japan-3"
+    }
+  ],
+  "depth": "3372"
+}
+{
+  "-id": "sea-Japanisches_Meer",
+  "-country": "R J ROK NOK",
+  "-bordering": "sea-Pacific sea-Gelbes_Meer sea-EastChinaSea sea-OchotskSea",
+  "name": "Sea of Japan",
+  "located": [
+    {
+      "-country": "R",
+      "-province": "prov-cid-cia-Russia-84 prov-cid-cia-Russia-85 prov-cid-cia-Russia-90"
+    },
+    {
+      "-country": "J",
+      "-province": "prov-cid-cia-Japan-3 prov-cid-cia-Japan-5 prov-cid-cia-Japan-8 prov-cid-cia-Japan-9 prov-cid-cia-Japan-20 prov-cid-cia-Japan-21 prov-cid-cia-Japan-22 prov-cid-cia-Japan-23 prov-cid-cia-Japan-32 prov-cid-cia-Japan-34 prov-cid-cia-Japan-38 prov-cid-cia-Japan-39 prov-cid-cia-Japan-42 prov-cid-cia-Japan-49 prov-cid-cia-Japan-50"
+    }
+  ],
+  "depth": "4036"
+}
+{
+  "-id": "sea-Gelbes_Meer",
+  "-country": "TJ ROK NOK",
+  "-bordering": "sea-EastChinaSea sea-Japanisches_Meer",
+  "name": "Yellow Sea",
+  "located": {
+    "-country": "TJ",
+    "-province": "prov-cid-cia-China-8 prov-cid-cia-China-13 prov-cid-cia-China-16 prov-cid-cia-China-19"
+  },
+  "depth": "200"
+}
+{
+  "-id": "sea-EastChinaSea",
+  "-country": "TJ RC ROK J",
+  "-bordering": "sea-Pacific sea-Gelbes_Meer sea-SouthChinaSea sea-Japanisches_Meer",
+  "name": "East China Sea",
+  "located": [
+    {
+      "-country": "TJ",
+      "-province": "prov-cid-cia-China-3 prov-cid-cia-China-13 prov-cid-cia-China-23"
+    },
+    {
+      "-country": "J",
+      "-province": "prov-cid-cia-Japan-50 prov-cid-cia-Japan-51 prov-cid-cia-Japan-52 prov-cid-cia-Japan-55 prov-cid-cia-Japan-56"
+    }
+  ],
+  "depth": "2370"
+}
+{
+  "-id": "sea-SouthChinaSea",
+  "-country": "TJ MAL THA K VN BRU SGP RI RP RC HONX MACX",
+  "-bordering": "sea-Pacific sea-EastChinaSea sea-Sundasee sea-Celebessee sea-MalakkaStrait",
+  "name": "South China Sea",
+  "located": [
+    {
+      "-country": "TJ",
+      "-province": "prov-cid-cia-China-3 prov-cid-cia-China-5 prov-cid-cia-China-25"
+    },
+    {
+      "-country": "MAL",
+      "-province": "prov-cid-cia-Malaysia-2 prov-cid-cia-Malaysia-4 prov-cid-cia-Malaysia-7 prov-cid-cia-Malaysia-11 prov-cid-cia-Malaysia-12 prov-cid-cia-Malaysia-14"
+    }
+  ],
+  "depth": "5420"
+}
+{
+  "-id": "sea-Persischer_Golf",
+  "-country": "IR BRN IRQ KWT SA OM UAE Q",
+  "-bordering": "sea-Arabisches_Meer",
+  "name": "Persian Gulf",
+  "located": [
+    {
+      "-country": "IR",
+      "-province": "prov-cid-cia-Iran-6 prov-cid-cia-Iran-12 prov-cid-cia-Iran-16"
+    },
+    {
+      "-country": "IRQ",
+      "-province": "prov-cid-cia-Iraq-5"
+    },
+    {
+      "-country": "UAE",
+      "-province": "prov-cid-cia-United-Arab-Emirates-2 prov-cid-cia-United-Arab-Emirates-3 prov-cid-cia-United-Arab-Emirates-4 prov-cid-cia-United-Arab-Emirates-6 prov-cid-cia-United-Arab-Emirates-7 prov-cid-cia-United-Arab-Emirates-8"
+    }
+  ],
+  "depth": "102"
+}
+{
+  "-id": "sea-Irische_See",
+  "-country": "IRL GB GBM",
+  "-bordering": "sea-Atlantic",
+  "name": "Irish Sea",
+  "located": {
+    "-country": "GB",
+    "-province": "prov-cid-cia-United-Kingdom-26 prov-cid-cia-United-Kingdom-29 prov-cid-cia-United-Kingdom-63 prov-cid-cia-United-Kingdom-67 prov-cid-cia-United-Kingdom-80 prov-cid-cia-United-Kingdom-85"
+  },
+  "depth": "272"
+}
+{
+  "-id": "sea-Caribbean",
+  "-country": "AG BZ GCA MEX CR NIC PA C WD DOM RH HCA WG JA CO KN WL WV YV PR SMAR AXA GUAD MART BVIR MNTS VIRG TT NA ARU CAYM",
+  "-bordering": "sea-Atlantic sea-Golf_von_Mexiko",
+  "name": "Caribbean Sea",
+  "located": [
+    {
+      "-country": "MEX",
+      "-province": "prov-cid-cia-Mexico-23 prov-cid-cia-Mexico-31"
+    },
+    {
+      "-country": "CR",
+      "-province": "prov-cid-cia-Costa-Rica-8"
+    },
+    {
+      "-country": "PA",
+      "-province": "prov-cid-cia-Panama-2 prov-cid-cia-Panama-4 prov-cid-cia-Panama-5"
+    },
+    {
+      "-country": "C",
+      "-province": "prov-cid-cia-Cuba-3 prov-cid-cia-Cuba-4 prov-cid-cia-Cuba-6 prov-cid-cia-Cuba-7 prov-cid-cia-Cuba-9 prov-cid-cia-Cuba-10 prov-cid-cia-Cuba-11 prov-cid-cia-Cuba-12 prov-cid-cia-Cuba-13 prov-cid-cia-Cuba-14 prov-cid-cia-Cuba-16"
+    },
+    {
+      "-country": "HCA",
+      "-province": "prov-cid-cia-Honduras-2 prov-cid-cia-Honduras-3 prov-cid-cia-Honduras-6 prov-cid-cia-Honduras-10"
+    },
+    {
+      "-country": "CO",
+      "-province": "prov-cid-cia-Colombia-3 prov-cid-cia-Colombia-5 prov-cid-cia-Colombia-13 prov-cid-cia-Colombia-14 prov-cid-cia-Colombia-17 prov-cid-cia-Colombia-20 prov-cid-cia-Colombia-30"
+    },
+    {
+      "-country": "YV",
+      "-province": "prov-cid-cia-Venezuela-3 prov-cid-cia-Venezuela-5 prov-cid-cia-Venezuela-8 prov-cid-cia-Venezuela-10 prov-cid-cia-Venezuela-11 prov-cid-cia-Venezuela-15 prov-cid-cia-Venezuela-16 prov-cid-cia-Venezuela-17 prov-cid-cia-Venezuela-19 prov-cid-cia-Venezuela-23 prov-cid-cia-Venezuela-25"
+    }
+  ],
+  "depth": "7240"
+}
+{
+  "-id": "sea-Indic",
+  "-country": "PK IND RI SGP CL AUS RSA EAT COM YE SP EAK RM MOC MS SY XMAS COCO MV MAYO REUN TL",
+  "-bordering": "sea-Atlantic sea-Pacific sea-Golf_von_Aden sea-Sundasee sea-Arabisches_Meer sea-Bengal sea-AndamanSea",
+  "name": "Indian Ocean",
+  "located": [
+    {
+      "-country": "IND",
+      "-province": "prov-cid-cia-India-12 prov-cid-cia-India-23"
+    },
+    {
+      "-country": "AUS",
+      "-province": "prov-cid-cia-Australia-2 prov-cid-cia-Australia-3 prov-cid-cia-Australia-5 prov-cid-cia-Australia-6 prov-cid-cia-Australia-7 prov-cid-cia-Australia-8"
+    },
+    {
+      "-country": "RSA",
+      "-province": "prov-cid-cia-South-Africa-2 prov-cid-cia-South-Africa-5 prov-cid-cia-South-Africa-10"
+    },
+    {
+      "-country": "EAT",
+      "-province": "prov-cid-cia-Tanzania-5 prov-cid-cia-Tanzania-7 prov-cid-cia-Tanzania-8 prov-cid-cia-Tanzania-9 prov-cid-cia-Tanzania-10"
+    },
+    {
+      "-country": "EAK",
+      "-province": "prov-cid-cia-Kenya-3"
+    },
+    {
+      "-country": "RM",
+      "-province": "prov-cid-cia-Madagascar-2 prov-cid-cia-Madagascar-3 prov-cid-cia-Madagascar-4 prov-cid-cia-Madagascar-5 prov-cid-cia-Madagascar-6 prov-cid-cia-Madagascar-7"
+    },
+    {
+      "-country": "MOC",
+      "-province": "prov-cid-cia-Mozambique-2 prov-cid-cia-Mozambique-3 prov-cid-cia-Mozambique-4 prov-cid-cia-Mozambique-6 prov-cid-cia-Mozambique-7 prov-cid-cia-Mozambique-9 prov-cid-cia-Mozambique-11 prov-cid-cia-Mozambique-13"
+    }
+  ],
+  "depth": "6400"
+}
+{
+  "-id": "sea-Arabisches_Meer",
+  "-country": "PK OM IND",
+  "-bordering": "sea-Indic sea-GulfOman sea-Golf_von_Aden",
+  "name": "Arabian Sea",
+  "located": {
+    "-country": "IND",
+    "-province": "prov-cid-cia-India-6 prov-cid-cia-India-7 prov-cid-cia-India-11 prov-cid-cia-India-12 prov-cid-cia-India-14 prov-cid-cia-India-23 prov-cid-cia-India-33"
+  },
+  "depth": "5203"
+}
+{
+  "-id": "sea-GulfOman",
+  "-country": "IR PK OM UAE",
+  "-bordering": "sea-Indic sea-Persischer_Golf sea-Golf_von_Aden",
+  "name": "Gulf of Oman",
+  "located": [
+    {
+      "-country": "IR",
+      "-province": "prov-cid-cia-Iran-12 prov-cid-cia-Iran-22"
+    },
+    {
+      "-country": "UAE",
+      "-province": "prov-cid-cia-United-Arab-Emirates-5"
+    }
+  ],
+  "depth": "3350"
+}
+{
+  "-id": "sea-Rotes_Meer",
+  "-country": "IL ET JOR SA YE SUD DJI ER",
+  "-bordering": "sea-Golf_von_Aden",
+  "name": "Red Sea",
+  "located": [
+    {
+      "-country": "IL",
+      "-province": "prov-cid-cia-Israel-7"
+    },
+    {
+      "-country": "ET",
+      "-province": "prov-cid-cia-Egypt-3 prov-cid-cia-Egypt-5 prov-cid-cia-Egypt-31"
+    },
+    {
+      "-country": "SUD",
+      "-province": "prov-cid-cia-Sudan-9"
+    }
+  ],
+  "depth": "2635"
+}
+{
+  "-id": "sea-Golf_von_Aden",
+  "-country": "DJI SP YE",
+  "-bordering": "sea-Indic sea-Arabisches_Meer sea-Rotes_Meer",
+  "name": "Gulf of Aden",
+  "depth": "5143"
+}
+{
+  "-id": "sea-Bengal",
+  "-country": "BD MYA IND CL",
+  "-bordering": "sea-Atlantic sea-Pacific sea-Golf_von_Aden sea-Sundasee sea-Arabisches_Meer sea-AndamanSea",
+  "name": "Gulf of Bengal",
+  "located": [
+    {
+      "-country": "MYA",
+      "-province": "prov-cid-cia-Burma-2 prov-cid-cia-Burma-14"
+    },
+    {
+      "-country": "IND",
+      "-province": "prov-cid-cia-India-2 prov-cid-cia-India-19 prov-cid-cia-India-26 prov-cid-cia-India-28"
+    }
+  ],
+  "depth": "4045"
+}
+{
+  "-id": "sea-AndamanSea",
+  "-country": "MYA IND THA RI",
+  "-bordering": "sea-Indic sea-Bengal sea-MalakkaStrait",
+  "name": "Andaman Sea",
+  "located": [
+    {
+      "-country": "MYA",
+      "-province": "prov-cid-cia-Burma-2 prov-cid-cia-Burma-5 prov-cid-cia-Burma-6 prov-cid-cia-Burma-13"
+    },
+    {
+      "-country": "IND",
+      "-province": "prov-cid-cia-India-28"
+    }
+  ],
+  "depth": "3113"
+}
+{
+  "-id": "sea-MalakkaStrait",
+  "-country": "THA RI MAL SGP",
+  "-bordering": "sea-AndamanSea sea-SouthChinaSea",
+  "name": "Malakka Strait",
+  "located": {
+    "-country": "MAL",
+    "-province": "prov-cid-cia-Malaysia-3 prov-cid-cia-Malaysia-9 prov-cid-cia-Malaysia-10 prov-cid-cia-Malaysia-8 prov-cid-cia-Malaysia-13 prov-cid-cia-Malaysia-6 prov-cid-cia-Malaysia-5  prov-cid-cia-Malaysia-2"
+  },
+  "depth": "104"
+}
+{
+  "-id": "sea-Sundasee",
+  "-country": "RI TL",
+  "-bordering": "sea-Indic sea-Pacific sea-Celebessee sea-SouthChinaSea",
+  "name": "Sunda Sea",
+  "depth": "7440"
+}
+{
+  "-id": "sea-Celebessee",
+  "-country": "RI MAL RP",
+  "-bordering": "sea-Sundasee sea-Pacific sea-SouthChinaSea",
+  "name": "Sulawesi Sea",
+  "located": {
+    "-country": "MAL",
+    "-province": "prov-cid-cia-Malaysia-12"
+  },
+  "depth": "6218"
+}
