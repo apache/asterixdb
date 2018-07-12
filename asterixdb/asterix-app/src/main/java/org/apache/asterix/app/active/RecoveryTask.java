@@ -154,7 +154,12 @@ public class RecoveryTask {
         // Recovery task is essntially over now either through failure or through cancellation(stop)
         synchronized (listener) {
             listener.notifyAll();
-            if (listener.getState() != ActivityState.TEMPORARILY_FAILED) {
+            if (listener.getState() != ActivityState.TEMPORARILY_FAILED
+                    // Suspend can happen at the same time, the recovery policy decides to stop... in that case, we
+                    // must still do two things:
+                    // 1. set the state to permanent failure.
+                    // 2. set the entity to not running to avoid auto recovery attempt
+                    && listener.getState() != ActivityState.SUSPENDED) {
                 return null;
             }
         }
