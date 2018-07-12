@@ -50,9 +50,8 @@ public class ExceptionIT {
             String className = func.getClass().getName();
             // We test all generated functions except
             // record and cast functions, which requires type settings.
-            String[] splits = className.split("\\.");
-            if (className.contains("Gen") && !className.contains("record") && !className.contains("Cast")
-                    && !splits[splits.length - 1].startsWith("Array")) {
+            if (className.contains("Gen") && !className.contains("record") && !className.contains("Cast")) {
+                System.out.println("Testing " + className);
                 testFunction(func);
                 ++testedFunctions;
             }
@@ -83,6 +82,10 @@ public class ExceptionIT {
                     int errorCode = Integer.parseInt(msg.substring(3, 7));
                     Assert.assertTrue(errorCode >= 0 && errorCode < 1000);
                     continue;
+                } else if (msg.startsWith("HYR")) {
+                    // Verifies the error code.
+                    int errorCode = Integer.parseInt(msg.substring(3, 7));
+                    Assert.assertTrue(errorCode >= 0 && errorCode < 1000);
                 } else {
                     // Any root-level data exceptions thrown from runtime functions should have an error code.
                     Assert.assertTrue(!(e instanceof HyracksDataException) || (e.getCause() != null));

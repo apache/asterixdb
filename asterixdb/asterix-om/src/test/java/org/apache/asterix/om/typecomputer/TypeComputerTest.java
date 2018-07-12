@@ -22,6 +22,7 @@ package org.apache.asterix.om.typecomputer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -106,16 +107,21 @@ public class TypeComputerTest {
         when(mockExpr.getOpaqueParameters()).thenReturn(opaqueParameters);
 
         // Tests the return type. It should be either ANY or NULLABLE/MISSABLE.
-        IResultTypeComputer instance = (IResultTypeComputer) c.getField("INSTANCE").get(null);
-        IAType resultType = instance.computeType(mockExpr, mockTypeEnv, mockMetadataProvider);
-        ATypeTag typeTag = resultType.getTypeTag();
-        if (typeTag == ATypeTag.ANY) {
-            return true;
+        IResultTypeComputer instance;
+        IAType resultType;
+        Field[] fields = c.getFields();
+        for (Field field : fields) {
+            if (field.getName().startsWith("INSTANCE")) {
+                System.out.println("Test type computer INSTANCE: " + field.getName());
+                instance = (IResultTypeComputer) field.get(null);
+                resultType = instance.computeType(mockExpr, mockTypeEnv, mockMetadataProvider);
+                ATypeTag typeTag = resultType.getTypeTag();
+                if (typeTag != ATypeTag.ANY && !(typeTag == ATypeTag.UNION && ((AUnionType) resultType).isNullableType()
+                        && ((AUnionType) resultType).isMissableType())) {
+                    return false;
+                }
+            }
         }
-        if (typeTag == ATypeTag.UNION) {
-            AUnionType unionType = (AUnionType) resultType;
-            return unionType.isMissableType() && unionType.isNullableType();
-        }
-        return false;
+        return true;
     }
 }

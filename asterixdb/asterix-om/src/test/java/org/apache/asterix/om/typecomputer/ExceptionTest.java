@@ -22,6 +22,7 @@ package org.apache.asterix.om.typecomputer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
@@ -105,8 +106,14 @@ public class ExceptionTest {
                 when(mockExpr.getOpaqueParameters()).thenReturn(opaqueParameters);
 
                 // Invokes a type computer.
-                IResultTypeComputer instance = (IResultTypeComputer) c.getField("INSTANCE").get(null);
-                instance.computeType(mockExpr, mockTypeEnv, mockMetadataProvider);
+                IResultTypeComputer instance;
+                Field[] fields = c.getFields();
+                for (Field field : fields) {
+                    if (field.getName().startsWith("INSTANCE")) {
+                        instance = (IResultTypeComputer) field.get(null);
+                        instance.computeType(mockExpr, mockTypeEnv, mockMetadataProvider);
+                    }
+                }
             } catch (AlgebricksException ae) {
                 String msg = ae.getMessage();
                 if (msg.startsWith("ASX")) {

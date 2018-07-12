@@ -37,20 +37,18 @@ public class CastTypeEvaluator implements IScalarEvaluator {
 
     private IScalarEvaluator argEvaluator;
     private final IPointable argPointable = new VoidPointable();
-
     private final PointableAllocator allocator = new PointableAllocator();
     private IVisitablePointable inputPointable;
     private IVisitablePointable resultPointable;
+    private final ACastVisitor castVisitor = createCastVisitor();
+    private final Triple<IVisitablePointable, IAType, Boolean> arg = new Triple<>(null, null, null);
 
-    private final ACastVisitor castVisitor;
-    private final Triple<IVisitablePointable, IAType, Boolean> arg;
+    public CastTypeEvaluator() {
+        // reset() should be called after using this constructor before calling any method
+    }
 
     public CastTypeEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
-        this.argEvaluator = argEvaluator;
-        this.inputPointable = allocatePointable(inputType, reqType);
-        this.resultPointable = allocatePointable(reqType, inputType);
-        this.arg = new Triple<>(resultPointable, reqType, Boolean.FALSE);
-        this.castVisitor = createCastVisitor();
+        reset(reqType, inputType, argEvaluator);
     }
 
     public void reset(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
@@ -59,6 +57,7 @@ public class CastTypeEvaluator implements IScalarEvaluator {
         this.resultPointable = allocatePointable(reqType, inputType);
         this.arg.first = resultPointable;
         this.arg.second = reqType;
+        this.arg.third = Boolean.FALSE;
     }
 
     protected ACastVisitor createCastVisitor() {

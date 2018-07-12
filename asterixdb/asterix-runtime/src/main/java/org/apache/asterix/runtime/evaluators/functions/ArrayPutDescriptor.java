@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import java.io.IOException;
+
+import org.apache.asterix.builders.IAsterixListBuilder;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -27,24 +31,27 @@ import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class ArrayPutDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayAppendDescriptor();
+            return new ArrayPutDescriptor();
         }
 
         @Override
@@ -55,7 +62,7 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ARRAY_APPEND;
+        return BuiltinFunctions.ARRAY_PUT;
     }
 
     @Override
@@ -66,7 +73,7 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayAppendFunction(args, ctx);
+                return new ArrayPutFunction(args, ctx);
             }
         };
     }
@@ -76,11 +83,14 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
         argTypes = (IAType[]) states;
     }
 
-    public class ArrayAppendFunction extends AbstractArrayAddRemoveEval {
+    public class ArrayPutFunction extends AbstractArrayAddRemoveEval {
+        private final ArrayBackedValueStorage storage;
+        private final IBinaryComparator comp;
 
-        public ArrayAppendFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-                throws HyracksDataException {
-            super(args, ctx, 0, 1, args.length - 1, argTypes, false, sourceLoc, true, true);
+        public ArrayPutFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+            super(args, ctx, 0, 1, args.length - 1, argTypes, true, sourceLoc, true, false);
+            comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+            storage = new ArrayBackedValueStorage();
         }
 
         @Override
@@ -93,6 +103,33 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
                 return AUnorderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
             } else {
                 return RETURN_NULL;
+            }
+        }
+
+        @Override
+        protected void processList(ListAccessor listAccessor, IAsterixListBuilder listBuilder, IPointable[] values,
+                int position) throws IOException {
+            boolean[] dontAdd = new boolean[values.length];
+            // get the list items one by one and append to the new list
+            for (int i = 0; i < listAccessor.size(); i++) {
+                storage.reset();
+                listAccessor.writeItem(i, storage.getDataOutput());
+                listBuilder.addItem(storage);
+                // mark the equal values to skip adding them
+                for (int j = 0; j < values.length; j++) {
+                    if (!dontAdd[j]
+                            && comp.compare(storage.getByteArray(), storage.getStartOffset(), storage.getLength(),
+                                    values[j].getByteArray(), values[j].getStartOffset(), values[j].getLength()) == 0) {
+                        dontAdd[j] = true;
+                    }
+                    // skip comparison if the value is already marked
+                }
+            }
+            // append the values arguments only if they are not already present in the list, i.e. not marked
+            for (int i = 0; i < values.length; i++) {
+                if (!dontAdd[i]) {
+                    listBuilder.addItem(values[i]);
+                }
             }
         }
     }

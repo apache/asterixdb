@@ -20,13 +20,14 @@
 use TinySocial;
 
 {
-  "t1": (select array_append(t.`referred-topics`, "sth", 5) from TweetMessages t order by t.tweetid),
-  "t2": (select array_append([3, "John"], (select value v.compType from d1 v))),
-  "t3": (array_append([3], 7, null, missing)),    // missing
-  "t4": (array_append("non_array", 5)),           // null
-  "t5": (array_append(null, 3, 9)),               // null
-  "t6": (array_append("non_array", 5, missing)),  // missing
-  "t7": (array_append([], 5, 10, 12.0, "sth")),   // OK
-  "t8": (array_append(missing, 3, 9)),            // missing
-  "t9": (array_append([3], 3, [9], null, "sth"))  // OK to add nulls
+  "t1": (select array_put(t.`referred-topics`, "t-mobile", 5) from TweetMessages t order by t.tweetid),
+  "t2": (array_put([3], 7, null, missing)),    // missing
+  "t3": (array_put("non_array", 5)),           // null
+  "t4": (array_put("non_array", 5, missing)),  // missing
+  "t5": (array_put([], 5, 10, 12.0, "sth")),   // OK
+  "t6": (array_put(missing, 3, 9)),            // missing
+  "t7": (array_put(null, 3, 9)),               // null
+  "t8": (array_put([3,2,"sth"], 3, 9, 9, 3, "sth")), // OK
+  "t9": (array_put([3,2,"sth"], 1, 5)),     // OK
+  "t10": (array_put([3,2,"sth"], null, 5))   // null
 };

@@ -19,31 +19,68 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 /**
- * A type computer that returns the same list type as the presumably input list at argument 0. If the argument is not a
- * list, it returns "ANY".
+ * Returns a list that is missable/nullable.
  */
 public class AListTypeComputer extends AbstractResultTypeComputer {
-    public static final AListTypeComputer INSTANCE = new AListTypeComputer();
+    public static final AListTypeComputer INSTANCE_REMOVE = new AListTypeComputer(2, false, false, true);
+    public static final AListTypeComputer INSTANCE_PUT = new AListTypeComputer(2, false, true, true);
+    public static final AListTypeComputer INSTANCE_PREPEND = new AListTypeComputer(2, false, true, false);
+    public static final AListTypeComputer INSTANCE_APPEND = new AListTypeComputer(2, true, true, false);
+    public static final AListTypeComputer INSTANCE_INSERT = new AListTypeComputer(3, false, true, false);
 
-    private AListTypeComputer() {
+    private final int minNumArgs;
+    private final boolean listIsLast;
+    private final boolean makeOpen;
+    private final boolean nullInNullOut;
+
+    private AListTypeComputer(int minNumArgs, boolean listIsLast, boolean makeOpen, boolean nullInNullOut) {
+        this.minNumArgs = minNumArgs;
+        this.listIsLast = listIsLast;
+        this.makeOpen = makeOpen;
+        this.nullInNullOut = nullInNullOut;
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        IAType argType = strippedInputTypes[0];
-        switch (argType.getTypeTag()) {
-            case ARRAY:
-            case MULTISET:
-                return argType;
-            default:
-                return BuiltinType.ANY;
+        if (strippedInputTypes.length < minNumArgs) {
+            String functionName = ((AbstractFunctionCallExpression) expr).getFunctionIdentifier().getName();
+            throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, expr.getSourceLocation(),
+                    minNumArgs, functionName);
         }
+        // output type should be the same as as the type tag at [list index]. The output type is nullable/missable
+        // since the output could be null due to other invalid arguments or the tag at [list index] itself is not list
+        int listIndex = 0;
+        if (listIsLast) {
+            listIndex = strippedInputTypes.length - 1;
+        }
+
+        IAType listType = strippedInputTypes[listIndex];
+        if (listType.getTypeTag() == ATypeTag.ARRAY) {
+            return makeOpen ? AUnionType.createUnknownableType(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE)
+                    : AUnionType.createUnknownableType(listType);
+        } else if (listType.getTypeTag() == ATypeTag.MULTISET) {
+            return makeOpen ? AUnionType.createUnknownableType(DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE)
+                    : AUnionType.createUnknownableType(listType);
+        } else {
+            return BuiltinType.ANY;
+        }
+    }
+
+    @Override
+    protected boolean propagateNullAndMissing() {
+        return nullInNullOut;
     }
 }

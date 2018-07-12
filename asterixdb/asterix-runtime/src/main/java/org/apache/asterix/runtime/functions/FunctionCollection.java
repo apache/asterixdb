@@ -145,7 +145,11 @@ import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayAppendDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayContainsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayInsertDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayPositionDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayPrependDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayPutDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayRemoveDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayRepeatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayReverseDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
@@ -376,7 +380,11 @@ public final class FunctionCollection implements IFunctionCollection {
         FunctionCollection fc = new FunctionCollection();
 
         // array functions
-        fc.addGenerated(ArrayAppendDescriptor.FACTORY);
+        fc.add(ArrayRemoveDescriptor.FACTORY);
+        fc.add(ArrayPutDescriptor.FACTORY);
+        fc.add(ArrayPrependDescriptor.FACTORY);
+        fc.add(ArrayAppendDescriptor.FACTORY);
+        fc.add(ArrayInsertDescriptor.FACTORY);
         fc.addGenerated(ArrayPositionDescriptor.FACTORY);
         fc.addGenerated(ArrayRepeatDescriptor.FACTORY);
         fc.addGenerated(ArrayReverseDescriptor.FACTORY);

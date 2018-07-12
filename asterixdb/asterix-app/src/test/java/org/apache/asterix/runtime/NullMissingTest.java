@@ -41,21 +41,17 @@ import org.junit.Test;
 
 public class NullMissingTest {
 
-    private static final String arrayAppend = "ArrayAppendDescriptor";
-
     @Test
     public void test() throws Exception {
         List<IFunctionDescriptorFactory> functions =
                 FunctionCollection.createDefaultFunctionCollection().getFunctionDescriptorFactories();
         int testedFunctions = 0;
-        String[] splits;
         for (IFunctionDescriptorFactory func : functions) {
             String className = func.getClass().getName();
             // We test all generated functions except
             // record and cast functions, which requires type settings (we test them in runtime tests).
-            splits = className.split("\\.");
-            if (className.contains("Gen") && !className.contains("record") && !className.contains("Cast")
-                    && !splits[splits.length - 1].startsWith(arrayAppend)) {
+            if (className.contains("Gen") && !className.contains("record") && !className.contains("Cast")) {
+                System.out.println("Testing " + className);
                 testFunction(func);
                 ++testedFunctions;
             }

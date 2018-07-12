@@ -17,16 +17,4 @@
  * under the License.
  */
 
-use TinySocial;
-
-{
-  "t1": (select array_append(t.`referred-topics`, "sth", 5) from TweetMessages t order by t.tweetid),
-  "t2": (select array_append([3, "John"], (select value v.compType from d1 v))),
-  "t3": (array_append([3], 7, null, missing)),    // missing
-  "t4": (array_append("non_array", 5)),           // null
-  "t5": (array_append(null, 3, 9)),               // null
-  "t6": (array_append("non_array", 5, missing)),  // missing
-  "t7": (array_append([], 5, 10, 12.0, "sth")),   // OK
-  "t8": (array_append(missing, 3, 9)),            // missing
-  "t9": (array_append([3], 3, [9], null, "sth"))  // OK to add nulls
-};
+drop  dataverse TinySocial;

@@ -43,6 +43,7 @@ import org.apache.asterix.om.typecomputer.impl.AInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AInt8TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AIntervalTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ALineTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.AListFirstTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AListTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APoint3DTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APointTypeComputer;
@@ -54,7 +55,6 @@ import org.apache.asterix.om.typecomputer.impl.ATimeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AUUIDTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AYearMonthDurationTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AnyTypeComputer;
-import org.apache.asterix.om.typecomputer.impl.ArrayAppendTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ArrayRepeatTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
@@ -184,6 +184,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "deep-equal", 2);
 
     // array functions
+    public static final FunctionIdentifier ARRAY_REMOVE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-remove", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_PUT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-put", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_PREPEND =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-prepend", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier ARRAY_APPEND =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-append", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier ARRAY_POSITION =
@@ -194,6 +200,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-reverse", 1);
     public static final FunctionIdentifier ARRAY_CONTAINS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-contains", 2);
+    public static final FunctionIdentifier ARRAY_INSERT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-insert", FunctionIdentifier.VARARGS);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -1470,10 +1478,14 @@ public class BuiltinFunctions {
         addFunction(WORD_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);
 
         // array functions
-        addFunction(ARRAY_APPEND, ArrayAppendTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_REMOVE, AListTypeComputer.INSTANCE_REMOVE, true);
+        addFunction(ARRAY_PUT, AListTypeComputer.INSTANCE_PUT, true);
+        addFunction(ARRAY_PREPEND, AListTypeComputer.INSTANCE_PREPEND, true);
+        addFunction(ARRAY_APPEND, AListTypeComputer.INSTANCE_APPEND, true);
+        addFunction(ARRAY_INSERT, AListTypeComputer.INSTANCE_INSERT, true);
         addFunction(ARRAY_POSITION, AInt32TypeComputer.INSTANCE, true);
         addFunction(ARRAY_REPEAT, ArrayRepeatTypeComputer.INSTANCE, true);
-        addFunction(ARRAY_REVERSE, AListTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_REVERSE, AListFirstTypeComputer.INSTANCE, true);
         addFunction(ARRAY_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
 
         // objects

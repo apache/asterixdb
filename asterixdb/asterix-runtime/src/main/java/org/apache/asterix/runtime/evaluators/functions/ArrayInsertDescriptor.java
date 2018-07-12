@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -26,6 +28,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -35,16 +38,17 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class ArrayInsertDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayAppendDescriptor();
+            return new ArrayInsertDescriptor();
         }
 
         @Override
@@ -55,7 +59,7 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ARRAY_APPEND;
+        return BuiltinFunctions.ARRAY_INSERT;
     }
 
     @Override
@@ -66,7 +70,7 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayAppendFunction(args, ctx);
+                return new ArrayInsertFunction(args, ctx);
             }
         };
     }
@@ -76,23 +80,49 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
         argTypes = (IAType[]) states;
     }
 
-    public class ArrayAppendFunction extends AbstractArrayAddRemoveEval {
+    public class ArrayInsertFunction extends AbstractArrayAddRemoveEval {
+        private final TaggedValuePointable positionArg;
+        private final IScalarEvaluator positionArgEval;
 
-        public ArrayAppendFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
+        public ArrayInsertFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
                 throws HyracksDataException {
-            super(args, ctx, 0, 1, args.length - 1, argTypes, false, sourceLoc, true, true);
+            super(args, ctx, 0, 2, args.length - 2, argTypes, false, sourceLoc, true, true);
+            positionArg = new TaggedValuePointable();
+            positionArgEval = args[1].createScalarEvaluator(ctx);
         }
 
         @Override
         protected int getPosition(IFrameTupleReference tuple, IPointable l, ATypeTag listTag)
                 throws HyracksDataException {
-            // l = list
-            if (listTag == ATypeTag.ARRAY) {
-                return AOrderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
-            } else if (listTag == ATypeTag.MULTISET) {
-                return AUnorderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
-            } else {
+            positionArgEval.evaluate(tuple, positionArg);
+            if (positionArg.getTag() == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+                return RETURN_MISSING;
+            }
+
+            int position;
+            if (!ATypeHierarchy.isCompatible(ATypeTag.INTEGER, ATYPETAGDESERIALIZER.deserialize(positionArg.getTag()))
+                    || !listTag.isListType()) {
                 return RETURN_NULL;
+            } else {
+                String name = getIdentifier().getName();
+                position = ATypeHierarchy.getIntegerValue(name, 1, positionArg.getByteArray(),
+                        positionArg.getStartOffset());
+                // list size
+                int size;
+                if (listTag == ATypeTag.ARRAY) {
+                    size = AOrderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
+                } else {
+                    size = AUnorderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
+                }
+                // adjust position for negative positions
+                if (position < 0) {
+                    position = size + position;
+                }
+                // position should always be positive now and should be within [0-list_size]
+                if (position < 0 || position > size) {
+                    return RETURN_NULL;
+                }
+                return position;
             }
         }
     }

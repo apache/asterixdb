@@ -43,7 +43,7 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 public class PointableHelper {
 
     private static final byte[] NULL_BYTES = new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG };
-
+    private static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
     private final UTF8StringWriter utf8Writer;
 
     public PointableHelper() {
@@ -134,5 +134,9 @@ public class PointableHelper {
 
     public static void setNull(IPointable pointable) {
         pointable.set(NULL_BYTES, 0, NULL_BYTES.length);
+    }
+
+    public static void setMissing(IPointable pointable) {
+        pointable.set(MISSING_BYTES, 0, MISSING_BYTES.length);
     }
 }

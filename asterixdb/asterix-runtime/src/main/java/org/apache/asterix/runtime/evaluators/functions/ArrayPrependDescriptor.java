@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -37,14 +35,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class ArrayPrependDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayAppendDescriptor();
+            return new ArrayPrependDescriptor();
         }
 
         @Override
@@ -55,7 +53,7 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ARRAY_APPEND;
+        return BuiltinFunctions.ARRAY_PREPEND;
     }
 
     @Override
@@ -66,7 +64,7 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayAppendFunction(args, ctx);
+                return new ArrayPrependFunction(args, ctx);
             }
         };
     }
@@ -76,24 +74,17 @@ public class ArrayAppendDescriptor extends AbstractScalarFunctionDynamicDescript
         argTypes = (IAType[]) states;
     }
 
-    public class ArrayAppendFunction extends AbstractArrayAddRemoveEval {
+    public class ArrayPrependFunction extends AbstractArrayAddRemoveEval {
 
-        public ArrayAppendFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
+        public ArrayPrependFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
                 throws HyracksDataException {
-            super(args, ctx, 0, 1, args.length - 1, argTypes, false, sourceLoc, true, true);
+            super(args, ctx, args.length - 1, 0, args.length - 1, argTypes, false, sourceLoc, true, true);
         }
 
         @Override
-        protected int getPosition(IFrameTupleReference tuple, IPointable l, ATypeTag listTag)
+        protected int getPosition(IFrameTupleReference tuple, IPointable listArg, ATypeTag listTag)
                 throws HyracksDataException {
-            // l = list
-            if (listTag == ATypeTag.ARRAY) {
-                return AOrderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
-            } else if (listTag == ATypeTag.MULTISET) {
-                return AUnorderedListSerializerDeserializer.getNumberOfItems(l.getByteArray(), l.getStartOffset());
-            } else {
-                return RETURN_NULL;
-            }
+            return 0;
         }
     }
 }

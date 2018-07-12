@@ -19,36 +19,32 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
-import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
-public class ArrayAppendTypeComputer extends AbstractResultTypeComputer {
+/**
+ * A type computer that returns the same list type as the presumably input list at argument 0. If the argument is not a
+ * list, it returns "ANY".
+ */
+public class AListFirstTypeComputer extends AbstractResultTypeComputer {
+    public static final AListFirstTypeComputer INSTANCE = new AListFirstTypeComputer();
 
-    public static final ArrayAppendTypeComputer INSTANCE = new ArrayAppendTypeComputer();
+    private AListFirstTypeComputer() {
+    }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        if (strippedInputTypes.length < 2) {
-            String functionName = ((AbstractFunctionCallExpression) expr).getFunctionIdentifier().getName();
-            throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, expr.getSourceLocation(), 2,
-                    functionName);
-        }
-        // type tag at [0] should be array or multiset.
-        ATypeTag typeTag = strippedInputTypes[0].getTypeTag();
-        if (typeTag == ATypeTag.ARRAY) {
-            return DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
-        } else if (typeTag == ATypeTag.MULTISET) {
-            return DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
-        } else {
-            return BuiltinType.ANY;
+        IAType argType = strippedInputTypes[0];
+        switch (argType.getTypeTag()) {
+            case ARRAY:
+            case MULTISET:
+                return AUnionType.createNullableType(argType);
+            default:
+                return BuiltinType.ANY;
         }
     }
 }
