@@ -692,6 +692,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="issue2411">
+        <output-dir compare="Text">issue2411</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="avg_double">
         <output-dir compare="Text">avg_double</output-dir>
       </compilation-unit>

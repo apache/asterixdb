@@ -37,6 +37,7 @@ import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
+import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
@@ -139,8 +140,9 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         Expression leftComparison =
                 createLessThanExpression(left, target, operatorExpr.getHints(), operatorExpr.getSourceLocation());
         // Creates the expression target <= right.
+        Expression targetCopy = (Expression) SqlppRewriteUtil.deepCopy(target);
         Expression rightComparison =
-                createLessThanExpression(target, right, operatorExpr.getHints(), operatorExpr.getSourceLocation());
+                createLessThanExpression(targetCopy, right, operatorExpr.getHints(), operatorExpr.getSourceLocation());
         OperatorExpr andExpr = new OperatorExpr();
         andExpr.addOperand(leftComparison);
         andExpr.addOperand(rightComparison);
