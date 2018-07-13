@@ -1,3 +1,5 @@
+
+import {throwError as observableThrowError,  Observable } from 'rxjs';
 /*
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -12,64 +14,58 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import {
-  Http,
-  Headers,
-  RequestOptions
-}                     from '@angular/http';
+import { Http, Headers, RequestOptions } from '@angular/http';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
 
 @Injectable()
 export class ConfigService {
 
-  private config: Object
-  private env: Object
+    private config: Object
+    private env: Object
 
-  constructor(private http: Http) {}
+    constructor(private http: Http) {}
+    /**
+     * Loads the environment config file first. Reads the environment variable from the file
+     * and based on that loads the appropriate configuration file - development or production
+     */
+    load() {
+        return new Promise((resolve, reject) => {
+            let headers = new Headers({ 'Accept': 'application/json', 'Content-Type': 'application/json', 'DataType': 'application/json' });
+            let options = new RequestOptions({ headers: headers });
+            this.http.get('/config/env.json')
+            .map(res => res.json())
+            .subscribe((env_data) => {
+                this.env = env_data;
 
-  /**
-   * Loads the environment config file first. Reads the environment variable from the file
-   * and based on that loads the appropriate configuration file - development or production
-   */
-  load() {
-    return new Promise((resolve, reject) => {
-      let headers = new Headers({ 'Accept': 'application/json', 'Content-Type': 'application/json', 'DataType': 'application/json' });
-      let options = new RequestOptions({ headers: headers });
+                this.http.get('/config/' + env_data.env + '.json')
+                    .map(res => res.json())
+                    .catch((error: any) => {
+                        return observableThrowError(error.json().error || 'Server error');
+                  })
+                  .subscribe((data) => {
+                      this.config = data;
+                      resolve(true);
+                  });
+            });
+        });
+    }
 
-      this.http.get('/config/env.json')
-      .map(res => res.json())
-      .subscribe((env_data) => {
-        this.env = env_data;
+    /**
+     * Returns environment variable based on given key
+     *
+     * @param key
+    */
+    getEnv(key: any) {
+        return this.env[key];
+    }
 
-        this.http.get('/config/' + env_data.env + '.json')
-          .map(res => res.json())
-          .catch((error: any) => {
-            return Observable.throw(error.json().error || 'Server error');
-          })
-          .subscribe((data) => {
-            this.config = data;
-            resolve(true);
-          });
-      });
-
-    });
-  }
-
-  /**
-   * Returns environment variable based on given key
-   *
-   * @param key
-   */
-  getEnv(key: any) {
-    return this.env[key];
-  }
-
-  /**
-   * Returns configuration value based on given key
-   *
-   * @param key
-   */
-  get(key: any) {
-    return this.config[key];
-  }
+    /**
+     * Returns configuration value based on given key
+     *
+     * @param key
+    */
+    get(key: any) {
+        return this.config[key];
+    }
 }

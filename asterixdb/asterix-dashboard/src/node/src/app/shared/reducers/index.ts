@@ -11,39 +11,36 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { ActionReducer } from '@ngrx/store';
 import * as fromDataverse from './dataverse.reducer';
 import * as fromDataset from './dataset.reducer';
 import * as fromDatatype from './datatype.reducer';
 import * as fromIndex from './index.reducer';
 import * as fromQuery from './query.reducer';
 import * as fromQueryMetadata from './query-metadata.reducer';
-import * as fromMetadata from './metadata.reducer';
 import * as fromAppState from './app.reducer';
 
 /*
 ** Global Interfaces store/state
 */
 export interface ModelState {
-  dataverse: fromDataverse.State,
-  dataset: fromDataset.State,
-  datatype: fromDatatype.State,
-  index: fromIndex.State,
-  sqlQuery: fromQuery.State,
-  sqlMetadataQuery: fromQueryMetadata.State,
-  metadata: fromMetadata.State,
-  appState: fromAppState.State,
+    dataverse: fromDataverse.State,
+    dataset: fromDataset.State,
+    datatype: fromDatatype.State,
+    index: fromIndex.State,
+    sqlQuery: fromQuery.State,
+    sqlMetadataQuery: fromQueryMetadata.State,
+    appState: fromAppState.State,
 }
 
 /*
 ** Global Reducers configuration
 */
 export const reducers = {
-  dataverse: fromDataverse.dataverseReducer,
-  dataset: fromDataset.datasetReducer,
-  datatype: fromDatatype.datatypeReducer,
-  index: fromIndex.indexReducer,
-  sqlQuery: fromQuery.sqlReducer,
-  sqlMetadataQuery: fromQueryMetadata.sqlMetadataReducer,
-  metadata: fromMetadata.metadataTreeReducer
+    dataverse: fromDataverse.dataverseReducer,
+    dataset: fromDataset.datasetReducer,
+    datatype: fromDatatype.datatypeReducer,
+    index: fromIndex.indexReducer,
+    sqlQuery: fromQuery.sqlReducer,
+    sqlMetadataQuery: fromQueryMetadata.sqlMetadataReducer,
+    app: fromAppState.appReducer
 };

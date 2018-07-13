@@ -14,12 +14,10 @@ limitations under the License.
 import { Component } from '@angular/core';
 
 @Component({
-	moduleId: module.id,
-	selector: 'awc-bar',
-  templateUrl: 'appbar.component.html',
-	styleUrls: ['appbar.component.scss']
+    moduleId: module.id,
+    selector: 'awc-bar',
+    templateUrl: 'appbar.component.html',
+    styleUrls: ['appbar.component.scss']
 })
 
-export class AppBarComponent {
-	constructor() {}
-}
+export class AppBarComponent {}

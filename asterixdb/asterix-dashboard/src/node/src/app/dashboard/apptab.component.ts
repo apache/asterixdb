@@ -12,14 +12,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Component } from '@angular/core';
-import { Store } from '@ngrx/store';
 
 @Component({
-  selector: 'awc-tab',
-  templateUrl: 'apptab.component.html',
-  styleUrls: ['apptab.component.scss']
+    selector: 'awc-tab',
+    templateUrl: 'apptab.component.html',
+    styleUrls: ['apptab.component.scss']
 })
 
 export class AppTabComponent {
-  constructor(private store: Store<any>) {};
+    constructor() {};
 }

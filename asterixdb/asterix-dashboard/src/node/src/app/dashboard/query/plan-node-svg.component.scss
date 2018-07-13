@@ -1,0 +1,230 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+//vars
+$page-width: 1000px;
+$padding-base: 12px;
+$padding-sm: 5px;
+$padding-lg: 15px;
+$padding-xl: 25px;
+$font-size-base: 12px;
+$font-size-xs: round($font-size-base * 0.7);
+$font-size-sm: round($font-size-base * 0.9);
+$font-size-lg: round($font-size-base * 1.3);
+$font-size-xl: round($font-size-base * 1.7);
+$font-family-sans-serif: 'noto';
+$font-family-mono: 'source code';
+$line-height-base: 1.3;
+$gray-lightest: #f7f7f7;
+$gray-light: darken($gray-lightest, 10%);
+$gray: darken(#f7f7f7, 30%);
+$gray-dark: darken(#f7f7f7, 50%);
+$gray-darkest: darken($gray-lightest, 70%);
+$blue: #00B5E2;
+$dark-blue: #008CAF;
+$light-blue: #65DDFB;
+$red: #AF2F11;
+$dark-red: #7C210C;
+$light-red: #FB8165;
+$green: #279404;
+$yellow: #F8E400;
+$bg-color: $gray-lightest;
+$text-color: #4d525a;
+$text-color-light: lighten($text-color, 30%);
+$line-color: $gray-light;
+$line-color-light: lighten($gray-light, 10%);
+$link-color: $blue;
+$border-radius-base: 3px;
+$border-radius-lg: 6px;
+$main-color: $blue;
+$main-color-dark: $blue;
+$highlight-color: $blue;
+$highlight-color-dark: $dark-blue;
+$alert-color: #FB4418;
+$connector-height: 20px;
+$connector-line-small: 1px solid darken($line-color, 10%);
+$connector-line-big: 2px solid darken($line-color, 10%);
+.plan-nodea {
+    display: table;
+    position: relative;
+    float: left;
+}
+
+.view-icon {
+    font-size: 14px;
+}
+
+.flex-spacer {
+    flex: 1 1 10%;
+}
+
+.dot {
+    display: flex;
+    flex-flow: column;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+}
+
+.plan-node {
+    display: flex;
+    flex-flow: column;
+    justify-content: flex-start;
+    color: $text-color;
+    transition: hidden 0.8s;
+    padding: 0px;
+    font-size: 10px;
+    border: 1px solid $line-color;
+    margin: 0px;
+    border-radius: $border-radius-base;
+    width: 200px;
+    height: 60px;
+    box-shadow: 1px 1px 3px 0px rgba(0, 0, 0, 0.1);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: auto;
+    padding-right: auto;
+    transition: height 0.3s ease-in-out;
+    &:hover {
+        border-color: $highlight-color;
+    }
+}
+
+.plan {
+    list-style: none !important;
+    padding-bottom: $padding-lg * 3;
+    margin-top: 0;
+    padding-top: 0;
+    padding-left: 0;
+
+    .merge {
+        display: flex;
+        flex-flow: column;
+        margin-top: 0 !important;
+        list-style: none;
+        padding-left: 0;
+        color: #00B5E2 !important;
+        border: 1px dashed #00B5E2;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .branch {
+        display: flex;
+        flex-flow: row;
+        margin-top: 0;
+        list-style: none;
+        padding-top: $connector-height;
+        position: relative;
+        transition: all 1s;
+        padding-left: 0;
+        color: black;
+        margin-left: auto;
+        margin-right: auto; // vertical
+        &:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-left: $connector-line-small;
+            height: $connector-height;
+            width: 0;
+            color: black;
+            margin-top: 0;
+        }
+        &:first-child {
+            margin-top: 0;
+            &:before {
+                border: none;
+            }
+        }
+        .branch {
+            display: flex;
+            flex-flow: row;
+            margin-top: 0 !important;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            display: inline;
+            list-style-type: none;
+            position: relative;
+            padding: $connector-height $padding-sm 0 $padding-sm;
+            transition: all 1s;
+            margin-left: auto;
+            margin-right: auto; // connectors
+            &:before,
+            &:after {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 50%;
+                border-top: $connector-line-small;
+                width: 50%;
+                height: $connector-height;
+            }
+            &:after {
+                right: auto;
+                left: 50%;
+                border-left: $connector-line-small;
+            }
+            &:only-child {
+                padding-top: 0;
+                &:after,
+                &:before {
+                display: none;
+                }
+            }
+            &:first-child::before,
+            &:last-child::after {
+                border: 0 none;
+            }
+            &:last-child::before {
+                border-right: $connector-line-small;
+                border-radius: 0 $border-radius-lg 0 0;
+            }
+            &:first-child::after {
+                border-radius: $border-radius-lg 0 0 0;
+            }
+        }
+    }
+}
+
+.sub {
+    .plan-node {
+        background-color: rgb(230, 230, 230);
+    }
+}
+
+.viewMe {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+}
+
+.node-summary {
+    display: block;
+    margin: 10px 0 10px 0;
+    text-align: left;
+}
+
+.node-details {
+    display: block;
+    text-align: left;
+}
+
+.node-subplan {
+    float: right;
+}

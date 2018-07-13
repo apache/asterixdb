@@ -12,7 +12,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Action } from '@ngrx/store';
-import { Index } from '../models/asterixDB.model';
 
 /*
 * Definition of Index Actions
@@ -34,86 +33,86 @@ export const DROP_INDEX_FAIL        = '[Index Collection] Drop Indexes Fail';
 * Select Indexes
 */
 export class SelectIndexes implements Action {
-  readonly type = SELECT_INDEXES;
-  constructor(public payload: string) {}
+    readonly type = SELECT_INDEXES;
+    constructor(public payload: string) {}
 }
 
 export class SelectIndexesSuccess implements Action {
-  readonly type = SELECT_INDEXES_SUCCESS;
-  constructor(public payload: Index[]) {}
+    readonly type = SELECT_INDEXES_SUCCESS;
+    constructor(public payload: any[]) {}
 }
 
 export class SelectIndexesFail implements Action {
-  readonly type = SELECT_INDEXES_FAIL;
-  constructor(public payload: Index[]) {}
+    readonly type = SELECT_INDEXES_FAIL;
+    constructor(public payload: any[]) {}
 }
 
 /*
 * Create Index
 */
 export class CreateIndex implements Action {
-  readonly type = CREATE_INDEX;
-  constructor(public payload: string) {}
+    readonly type = CREATE_INDEX;
+    constructor(public payload: string) {}
 }
 
 export class CreateIndexSuccess implements Action {
-  readonly type = CREATE_INDEX_SUCCESS;
-  constructor(public payload: Index[]) {}
+    readonly type = CREATE_INDEX_SUCCESS;
+    constructor(public payload: any[]) {}
 }
 
 export class CreateIndexFail implements Action {
-  readonly type = CREATE_INDEX_FAIL;
-  constructor(public payload: Index) {}
+    readonly type = CREATE_INDEX_FAIL;
+    constructor(public payload: any) {}
 }
 
 /*
 * Update Index
 */
 export class UpdateIndex implements Action {
-  readonly type = UPDATE_INDEX;
-  constructor(public payload: Index) {}
+    readonly type = UPDATE_INDEX;
+    constructor(public payload: any) {}
 }
 
 export class UpdateIndexSuccess implements Action {
-  readonly type = UPDATE_INDEX_SUCCESS;
-  constructor(public payload: Index[]) {}
+    readonly type = UPDATE_INDEX_SUCCESS;
+    constructor(public payload: any[]) {}
 }
 
 export class UpdateIndexFail implements Action {
-  readonly type = UPDATE_INDEX_FAIL;
-  constructor(public payload: Index) {}
+    readonly type = UPDATE_INDEX_FAIL;
+    constructor(public payload: any) {}
 }
 
 /*
 * Remove Index
 */
 export class DropIndex implements Action {
-  readonly type = DROP_INDEX;
-  constructor(public payload: string) {}
+    readonly type = DROP_INDEX;
+    constructor(public payload: string) {}
 }
 
 export class DropIndexSuccess implements Action {
-  readonly type = DROP_INDEX_SUCCESS;
-  constructor(public payload: Index[]) {}
+    readonly type = DROP_INDEX_SUCCESS;
+    constructor(public payload: any[]) {}
 }
 
 export class DropIndexFail implements Action {
-  readonly type = DROP_INDEX_FAIL;
-  constructor(public payload: Index) {}
+    readonly type = DROP_INDEX_FAIL;
+    constructor(public payload: any) {}
 }
 
 /*
 * Exports of indexes actions
 */
 export type All = SelectIndexes |
-  SelectIndexesSuccess |
-  SelectIndexesFail |
-  CreateIndex |
-  CreateIndexSuccess |
-  CreateIndexFail |
-  UpdateIndex |
-  UpdateIndexSuccess |
-  UpdateIndexFail |
-  DropIndex |
-  DropIndexSuccess |
-  DropIndexFail;
+    SelectIndexesSuccess |
+    SelectIndexesFail |
+    CreateIndex |
+    CreateIndexSuccess |
+    CreateIndexFail |
+    UpdateIndex |
+    UpdateIndexSuccess |
+    UpdateIndexFail |
+    DropIndex |
+    DropIndexSuccess |
+    DropIndexFail;

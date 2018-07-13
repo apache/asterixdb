@@ -12,20 +12,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Component } from '@angular/core';
-import { AppCoreService } from './shared/services/app-core.service'
 
 /*
  * Root component
  * Defines AsterixDB Dashboard application's layout
  */
 @Component({
-  selector: 'awc-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'awc-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
-  title = 'Asterix DB Web Console';
 
-  constructor(private appCoreService: AppCoreService) {
-  }
+export class AppComponent {
+    title = 'Asterix DB Web Console';
+
+    constructor() {}
 }

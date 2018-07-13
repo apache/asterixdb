@@ -11,16 +11,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-.content {
-  width:95%;
-  margin: 0 auto;
+
+.query-tab {
+    display: flex;
+    flex-flow: column;
+    width: 100%;
+    min-height: 900px;
+    margin: 0;
+    margin-bottom: 5px;
+    padding: 0;
+    background-color: gainsboro;
+    color: white;
 }
 
-.menu {    
-  /deep/ .mat-tab-label {
-      font-size: 0.80rem !important;
-      font-weight: 500  !important;
-  }
+.flex-spacer {
+    flex: 1 1 40%;
 }
 
-
+.menu {
+    /deep/ .mat-tab-label {
+        font-size: 0.80rem !important;
+        font-weight: 500 !important;
+        color: white;
+    }
+    background-color: blue;
+}

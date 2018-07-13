@@ -11,87 +11,80 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-$metadata-spacing-unit: 5px;
 
-.metadata-card {
-	display: flex;
-	flex-flow: column;
-	padding: 0;
-	margin: 0 auto; //($metadata-spacing-unit * 2);
-	margin-top: ($metadata-spacing-unit * 2);
-	margin-bottom: ($metadata-spacing-unit * 2);
-	min-height: 150px;
-	box-shadow: none !important;
-	width: 92%;
-	overflow: hidden;
+mat-checkbox .mat-icon {
+    transform: scale(1);
 }
 
-.example-icon {
-	padding: 0 14px 0 0;
-	margin: 0;
+.section {
+    font-size: 0.80rem;
+    font-weight: 500;
+    li {
+        list-style-type: none;
+        color: #3E3E30;
+        cursor: pointer;
+        &:hover {
+            color: blue;
+        }
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        word-break: break-all;
+        white-space: nowrap;
+    }
 }
 
-.spacer {
-  flex: 1 1 auto;
+.wrapper {
+    width: 300px;
+    font-size: 0.80rem;
+    font-weight: 500;
+    text-align: left;
+    padding-left: 5px;
+    padding-right: 10px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    //background-color: gainsboro;
+    background-color: black;
+    margin-bottom: 50px;
+    mat-expansion-panel {
+        border: none !important;
+    }
 }
 
-.metadata-selector {
-	min-height: 42px;
-	max-height: 42px;
-	justify-content: center;
-	//align-items: center;
-	font-size: 0.80rem;
-	font-weight: 500;
-	background-color: white;
-	border: 1px solid rgba(54, 147, 209, 0.87);
+.header {
+    font-size: 0.80rem;
+    font-weight: 500; // color:rgb(145, 152, 158);
+    border-top: 1px solid rgb(145, 152, 158);
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    max-height: 42px;
+    min-height: 42px;
+    color: blue;
 }
 
-.metadata-content-area {
-	padding: ($metadata-spacing-unit * 2);
-	margin: 0;
+.header-dataverse {
+    font-size: 0.80rem;
+    font-weight: 500;
+    max-height: 42px;
+    min-height: 42px;
+    color: blue;
 }
 
-.metadata-tree {
-	min-height: 30px;
-	font-size: 0.80rem;
-	font-weight: 500;
+.title {
+    color:blue;
 }
 
-.metadata-datasets {
-	margin-top: ($metadata-spacing-unit * 2);
-	margin-bottom: ($metadata-spacing-unit * 2);
-}
-
-.metadata-datatypes {
-	margin-top: ($metadata-spacing-unit * 2);
-	margin-bottom: ($metadata-spacing-unit * 2);
-}
-
-.metadata-dataindexes {
-	margin-top: ($metadata-spacing-unit * 2);
-	margin-bottom: ($metadata-spacing-unit * 2);
-}
-
-
-.metadata-tree.ui-tree {
-	//width: 260px !important;
-	font-size: 0.80rem;
-	font-weight: 500;
-	border: none !important;
-	background-color: red;
+.list-icon {
+    font-size: 18px;
 }
 
 .refresh-button {
-	float: left;
-	margin-top: $metadata-spacing-unit;
+    font-size: 12px !important;
 }
 
-.actions {
-	border-top: 1px solid rgba(0, 0, 0, 0.1);
-	color: rgba(54, 147, 209, 0.87);
-	padding: $metadata-spacing-unit;
-	margin: 0;
+.refresh {
+    margin-top: 15px;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
 }
-
-
-

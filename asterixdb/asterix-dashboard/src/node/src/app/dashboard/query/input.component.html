@@ -10,19 +10,48 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-*/ -->
-<mat-card class="input-card">
-	 <mat-toolbar color="primary" class="input-selector">
-			<mat-icon class="toolbar-icon">menu</mat-icon>
-			<span>INPUT: SQL++</span>	
-			<span class="spacer"></span>
-	</mat-toolbar>
-	<mat-card-content class="content-area">
-		<div class="codemirror-container">
-			<codemirror class="code" #host [(ngModel)]="queryString" [config]="codemirrorConfig"></codemirror>
-		</div>
-	</mat-card-content>
-	<mat-card-actions class="actions">
-		<button mat-button class="query-button" (click)="onClick()">RUN</button>
-	</mat-card-actions>
-</mat-card>
+*/-->
+<mat-expansion-panel class="card" hideToggle [expanded]="true">
+    <mat-expansion-panel-header class="header" >
+        <mat-panel-title>
+            <mat-panel-title>SQL++ INPUT ({{currentQuery+1}}/{{preparedQueryCount}})
+            </mat-panel-title>
+            <mat-panel-description></mat-panel-description>
+            <mat-spinner *ngIf="querySpinnerVisible" [color]="blue" [diameter]="15" class="spinner"></mat-spinner>
+        </mat-panel-title>
+    </mat-expansion-panel-header>
+    <mat-panel-description class="content-area">
+        <div class='dataverses'>
+            <div>SELECT DATAVERSE:</div>
+            <mat-form-field>
+                <mat-select [(ngModel)]="selected" (selectionChange)="dataverseSelected()">
+                <!-- <mat-option [value]='none'>None</mat-option> -->
+                <mat-option *ngFor="let dataverse of dataverses" [value]="dataverse.DataverseName">
+                    {{dataverse.DataverseName}}
+                </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="codemirror-container">
+            <textarea class="code" #editor></textarea>
+        </div>
+        <div class="history">
+            <div>HISTORY ({{viewCurrentHistory}}/{{history.length}})</div>
+            <button mat-button class='input-button' (click)="onClickNextHistory()" matTooltip="History: Next"><mat-icon>keyboard_arrow_up</mat-icon></button>
+            <button mat-button class='input-button' (click)="onClickPrevHistory()" matTooltip="History: Prev"><mat-icon>keyboard_arrow_down</mat-icon></button>
+        </div>
+    </mat-panel-description>
+    <mat-action-row>
+        <div class="message">
+            <span *ngIf="querySuccess" class="metrics">{{metricsString}}</span>
+            <span *ngIf="queryError" class="queryErrorMessage">{{queryErrorMessageString}}</span>
+        </div>
+        <div class="space"></div>
+        <button mat-button class='input-button' (click)="onClickNew()" matTooltip="New Query Input">NEW INPUT</button>
+        <button mat-button class='input-button' (click)="onClickClear()" matTooltip="Clear Query Input">CLEAR</button>
+        <button mat-button class='input-button run' (click)="onClickRun()" matTooltip="Execute Query Input">RUN</button>
+        <button mat-button class='input-button' (click)="onClickPrevious()" [disabled]="checkPrevious()" matTooltip="Previous Query Input">PREVIOUS</button>
+        <button mat-button class='input-button' (click)="onClickNext()" [disabled]="checkNext()" matTooltip="Next Query Input">NEXT</button>
+        <button mat-button class='input-button' (click)="onClickMetadata()" [disabled]="" matTooltip="Next Query Input">METADATA</button>
+    </mat-action-row>
+</mat-expansion-panel>
