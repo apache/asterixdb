@@ -179,6 +179,7 @@ public class SqlppGroupByAggregationSugarVisitor extends AbstractSqlppExpression
 
             // Gets the final free variables.
             freeVariables.addAll(freeVariablesInGbyLets);
+            freeVariables.removeIf(SqlppVariableUtil::isExternalVariableReference);
 
             // Gets outer scope variables.
             Collection<VariableExpr> decorVars = scopeChecker.getCurrentScope().getLiveVariables();

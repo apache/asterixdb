@@ -92,6 +92,10 @@ public class SqlppVariableUtil {
         return varId.getValue().startsWith(EXTERNAL_VAR_PREFIX);
     }
 
+    public static boolean isExternalVariableReference(VariableExpr varExpr) {
+        return isExternalVariableIdentifier(varExpr.getVar());
+    }
+
     public static Collection<VariableExpr> getFreeVariables(ILangExpression langExpr) throws CompilationException {
         Collection<VariableExpr> freeVars = new HashSet<>();
         FreeVariableVisitor visitor = new FreeVariableVisitor();

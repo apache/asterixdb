@@ -6180,6 +6180,11 @@
         <output-dir compare="Text">positional_05</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="query-ASTERIXDB-2413">
+        <output-dir compare="Text">query-ASTERIXDB-2413</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="string">
     <test-case FilePath="string">
