@@ -22,6 +22,8 @@ import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
 
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
@@ -29,7 +31,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -76,7 +77,7 @@ public abstract class AbstractArraySearchEval implements IScalarEvaluator {
 
         // for now, we don't support deep equality of object/lists. Throw an error if the value is of these types
         if (ATYPETAGDESERIALIZER.deserialize(valueBytes[valueOffset]).isDerivedType()) {
-            throw HyracksDataException.create(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLocation);
+            throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLocation);
         }
 
         if (!ATYPETAGDESERIALIZER.deserialize(listBytes[listOffset]).isListType()) {

@@ -70,12 +70,13 @@ public class ErrorCode {
     public static final int OPERATION_NOT_SUPPORTED = 27;
     public static final int INVALID_DURATION = 28;
     public static final int UNKNOWN_DURATION_UNIT = 29;
-    public static final int QUERY_TIMEOUT = 30;
+    public static final int REQUEST_TIMEOUT = 30;
     public static final int INVALID_TYPE_CASTING_MATH_FUNCTION = 31;
     public static final int REJECT_BAD_CLUSTER_STATE = 32;
     public static final int REJECT_NODE_UNREGISTERED = 33;
     public static final int DIVISION_BY_ZERO = 34;
     public static final int UNSUPPORTED_MULTIPLE_STATEMENTS = 35;
+    public static final int CANNOT_COMPARE_COMPLEX = 36;
 
     public static final int UNSUPPORTED_JRE = 100;
 

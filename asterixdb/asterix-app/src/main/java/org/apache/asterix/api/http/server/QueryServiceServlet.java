@@ -19,7 +19,7 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.ASTERIX;
-import static org.apache.asterix.common.exceptions.ErrorCode.QUERY_TIMEOUT;
+import static org.apache.asterix.common.exceptions.ErrorCode.REQUEST_TIMEOUT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_BAD_CLUSTER_STATE;
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_NODE_UNREGISTERED;
 
@@ -602,8 +602,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         } else if (t instanceof HyracksException) {
             HyracksException he = (HyracksException) t;
             switch (he.getComponent() + he.getErrorCode()) {
-                case ASTERIX + QUERY_TIMEOUT:
-                    LOGGER.info("handleException: query execution timed out: {}", param);
+                case ASTERIX + REQUEST_TIMEOUT:
+                    LOGGER.info("handleException: request execution timed out: {}", param);
                     state.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
                     break;
                 case ASTERIX + REJECT_BAD_CLUSTER_STATE:

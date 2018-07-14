@@ -25,6 +25,8 @@ import java.io.IOException;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
@@ -33,7 +35,6 @@ import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -148,7 +149,7 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
         }
 
         if (encounteredNonPrimitive) {
-            throw HyracksDataException.create(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLocation);
+            throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLocation);
         }
         // all arguments are valid
         AbstractCollectionType listType = (AbstractCollectionType) argTypes[listOffset];

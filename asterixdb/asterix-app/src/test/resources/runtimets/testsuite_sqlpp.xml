@@ -1001,8 +1001,8 @@
     <test-case FilePath="array_fun">
       <compilation-unit name="array_position">
         <output-dir compare="Text">array_position</output-dir>
-        <expected-error>HYR0115: Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
-        <expected-error>HYR0115: Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
@@ -1018,8 +1018,8 @@
     <test-case FilePath="array_fun">
       <compilation-unit name="array_contains">
         <output-dir compare="Text">array_contains</output-dir>
-        <expected-error>HYR0115: Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
-        <expected-error>HYR0115: Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
@@ -1030,15 +1030,15 @@
     <test-case FilePath="array_fun">
       <compilation-unit name="array_put">
         <output-dir compare="Text">array_put</output-dir>
-        <expected-error>HYR0115: Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
-        <expected-error>HYR0115: Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
       <compilation-unit name="array_remove">
         <output-dir compare="Text">array_remove</output-dir>
-        <expected-error>HYR0115: Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
-        <expected-error>HYR0115: Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 22, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
