@@ -19,6 +19,13 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class UTF8NGramTokenFactory extends AbstractUTF8TokenFactory {
 
     private static final long serialVersionUID = 1L;
@@ -36,4 +43,18 @@ public class UTF8NGramTokenFactory extends AbstractUTF8TokenFactory {
         return new UTF8NGramToken(tokenTypeTag, countTypeTag);
     }
 
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode json = registry.getClassIdentifier(getClass(), serialVersionUID);
+        json.put("tokenTypeTag", tokenTypeTag);
+        json.put("countTypeTag", countTypeTag);
+        return json;
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        final byte tokenTypeTag = (byte) json.get("tokenTypeTag").asInt();
+        final byte countTypeTag = (byte) json.get("countTypeTag").asInt();
+        return new UTF8NGramTokenFactory(tokenTypeTag, countTypeTag);
+    }
 }

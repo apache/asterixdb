@@ -20,10 +20,12 @@ package org.apache.hyracks.api.dataflow.value;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.io.IJsonSerializable;
+
 /**
  * Specify whether a type has fixed length and if so, what is the length
  */
-public interface ITypeTraits extends Serializable {
+public interface ITypeTraits extends Serializable, IJsonSerializable {
     /**
      * @return true if the type has a fixed length, false otherwise
      */

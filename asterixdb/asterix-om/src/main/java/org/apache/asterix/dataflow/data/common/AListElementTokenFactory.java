@@ -18,8 +18,13 @@
  */
 package org.apache.asterix.dataflow.data.common;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class AListElementTokenFactory implements ITokenFactory {
 
@@ -28,5 +33,15 @@ public class AListElementTokenFactory implements ITokenFactory {
     @Override
     public IToken createToken() {
         return new AListElementToken();
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        return registry.getClassIdentifier(getClass(), serialVersionUID);
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        return new AListElementTokenFactory();
     }
 }

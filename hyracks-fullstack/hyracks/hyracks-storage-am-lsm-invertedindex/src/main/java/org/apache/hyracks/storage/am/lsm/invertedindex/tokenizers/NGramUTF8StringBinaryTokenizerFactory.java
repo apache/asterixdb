@@ -19,6 +19,13 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class NGramUTF8StringBinaryTokenizerFactory implements IBinaryTokenizerFactory {
 
     private static final long serialVersionUID = 1L;
@@ -40,6 +47,28 @@ public class NGramUTF8StringBinaryTokenizerFactory implements IBinaryTokenizerFa
     @Override
     public IBinaryTokenizer createTokenizer() {
         return new NGramUTF8StringBinaryTokenizer(gramLength, usePrePost, ignoreTokenCount, sourceHasTypeTag,
+                tokenFactory);
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode json = registry.getClassIdentifier(getClass(), serialVersionUID);
+        json.set("tokenFactory", tokenFactory.toJson(registry));
+        json.put("gramLength", gramLength);
+        json.put("usePrePost", usePrePost);
+        json.put("ignoreTokenCount", ignoreTokenCount);
+        json.put("sourceHasTypeTag", sourceHasTypeTag);
+        return json;
+    }
+
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        final ITokenFactory tokenFactory = (ITokenFactory) registry.deserialize(json.get("tokenFactory"));
+        final int gramLength = json.get("gramLength").asInt();
+        final boolean usePrePost = json.get("usePrePost").asBoolean();
+        final boolean ignoreTokenCount = json.get("ignoreTokenCount").asBoolean();
+        final boolean sourceHasTypeTag = json.get("sourceHasTypeTag").asBoolean();
+        return new NGramUTF8StringBinaryTokenizerFactory(gramLength, usePrePost, ignoreTokenCount, sourceHasTypeTag,
                 tokenFactory);
     }
 

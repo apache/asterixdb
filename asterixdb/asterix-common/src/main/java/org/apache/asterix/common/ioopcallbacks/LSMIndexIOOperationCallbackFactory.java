@@ -25,17 +25,22 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.IResource;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class LSMIndexIOOperationCallbackFactory implements ILSMIOOperationCallbackFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private final ILSMComponentIdGeneratorFactory idGeneratorFactory;
+    protected final ILSMComponentIdGeneratorFactory idGeneratorFactory;
 
     protected final IDatasetInfoProvider datasetInfoProvider;
 
@@ -72,5 +77,23 @@ public class LSMIndexIOOperationCallbackFactory implements ILSMIOOperationCallba
     @Override
     public int getCurrentMemoryComponentIndex() throws HyracksDataException {
         return idGeneratorFactory.getComponentIdGenerator(ncCtx, resource).getCurrentComponentIndex();
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode json = registry.getClassIdentifier(getClass(), serialVersionUID);
+        json.set("idGeneratorFactory", idGeneratorFactory.toJson(registry));
+        json.set("datasetInfoProvider", datasetInfoProvider.toJson(registry));
+        return json;
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        final ILSMComponentIdGeneratorFactory idGeneratorFactory =
+                (ILSMComponentIdGeneratorFactory) registry.deserialize(json.get("idGeneratorFactory"));
+        final IDatasetInfoProvider datasetInfoProvider =
+                (IDatasetInfoProvider) registry.deserialize(json.get("datasetInfoProvider"));
+        return new LSMIndexIOOperationCallbackFactory(idGeneratorFactory, datasetInfoProvider);
     }
 }

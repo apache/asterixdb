@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.api.service.IControllerService;
@@ -55,4 +56,17 @@ public interface IServiceContext {
 
     Object getApplicationContext();
 
+    /**
+     * Sets the IPersistedResourceRegistry that contains the mapping between classes and type ids used
+     * for serialization.
+     *
+     * @param persistedResourceRegistry
+     */
+    default void setPersistedResourceRegistry(IPersistedResourceRegistry persistedResourceRegistry) {
+        throw new UnsupportedOperationException();
+    }
+
+    default IPersistedResourceRegistry getPersistedResourceRegistry() {
+        throw new UnsupportedOperationException();
+    }
 }

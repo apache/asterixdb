@@ -32,14 +32,19 @@ import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.BytePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.data.std.primitive.VarLengthTypeTrait;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.apache.hyracks.util.string.UTF8StringWriter;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /*
  * This class interprets the binary data representation of a record.
@@ -70,24 +75,10 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
  */
 public class ARecordPointable extends AbstractPointable {
 
-    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
     public static final ARecordPointableFactory FACTORY = new ARecordPointableFactory();
+    private final UTF8StringWriter utf8Writer = new UTF8StringWriter();
 
-    public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public boolean isFixedLength() {
-            return false;
-        }
-
-        @Override
-        public int getFixedLength() {
-            return 0;
-        }
-    };
-
-    public static class ARecordPointableFactory implements IPointableFactory {
+    public static final class ARecordPointableFactory implements IPointableFactory {
 
         private static final long serialVersionUID = 1L;
 
@@ -101,7 +92,17 @@ public class ARecordPointable extends AbstractPointable {
 
         @Override
         public ITypeTraits getTypeTraits() {
-            return TYPE_TRAITS;
+            return VarLengthTypeTrait.INSTANCE;
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+            return registry.getClassIdentifier(getClass(), serialVersionUID);
+        }
+
+        @SuppressWarnings("squid:S1172") // unused parameter
+        public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+            return FACTORY;
         }
 
     }

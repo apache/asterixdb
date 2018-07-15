@@ -22,9 +22,10 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.storage.common.IResource;
 
 @FunctionalInterface
-public interface ILSMOperationTrackerFactory extends Serializable {
+public interface ILSMOperationTrackerFactory extends Serializable, IJsonSerializable {
     ILSMOperationTracker getOperationTracker(INCServiceContext ctx, IResource resource) throws HyracksDataException;
 }

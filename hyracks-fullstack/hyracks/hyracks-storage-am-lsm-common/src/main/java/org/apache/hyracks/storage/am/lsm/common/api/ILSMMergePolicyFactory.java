@@ -23,8 +23,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.io.IJsonSerializable;
 
-public interface ILSMMergePolicyFactory extends Serializable {
+public interface ILSMMergePolicyFactory extends Serializable, IJsonSerializable {
     ILSMMergePolicy createMergePolicy(Map<String, String> configuration, INCServiceContext ctx);
 
     String getName();

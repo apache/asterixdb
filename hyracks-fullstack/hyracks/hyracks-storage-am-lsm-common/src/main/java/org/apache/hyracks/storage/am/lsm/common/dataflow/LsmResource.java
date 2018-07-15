@@ -18,10 +18,14 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.dataflow;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
@@ -32,14 +36,19 @@ import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.LocalResource;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 /**
- * TODO(amoudi): Change this class and its subclasses to use json serialization instead of Java serialization
  * The base resource that will be written to disk. it will go in the serializable resource
  * member in {@link LocalResource}
  */
 public abstract class LsmResource implements IResource {
 
     private static final long serialVersionUID = 1L;
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     protected String path;
     protected final IStorageManager storageManager;
     protected final ITypeTraits[] typeTraits;
@@ -78,6 +87,111 @@ public abstract class LsmResource implements IResource {
         this.mergePolicyFactory = mergePolicyFactory;
         this.mergePolicyProperties = mergePolicyProperties;
         this.durable = durable;
+    }
+
+    protected LsmResource(IPersistedResourceRegistry registry, JsonNode json) throws HyracksDataException {
+        path = json.get("path").asText();
+        storageManager = (IStorageManager) registry.deserialize(json.get("storageManager"));
+        final List<ITypeTraits> typeTraitsList = new ArrayList<>();
+        final ArrayNode jsonTypeTraits = (ArrayNode) json.get("typeTraits");
+        for (JsonNode tt : jsonTypeTraits) {
+            typeTraitsList.add((ITypeTraits) registry.deserialize(tt));
+        }
+        typeTraits = typeTraitsList.toArray(new ITypeTraits[0]);
+
+        final List<IBinaryComparatorFactory> cmpFactoriesList = new ArrayList<>();
+        final ArrayNode jsonCmpFactories = (ArrayNode) json.get("cmpFactories");
+        for (JsonNode cf : jsonCmpFactories) {
+            cmpFactoriesList.add((IBinaryComparatorFactory) registry.deserialize(cf));
+        }
+        cmpFactories = cmpFactoriesList.toArray(new IBinaryComparatorFactory[0]);
+
+        if (json.hasNonNull("filterTypeTraits")) {
+            final List<ITypeTraits> filterTypeTraitsList = new ArrayList<>();
+            final ArrayNode jsonFilterTypeTraits = (ArrayNode) json.get("filterTypeTraits");
+            for (JsonNode tt : jsonFilterTypeTraits) {
+                filterTypeTraitsList.add((ITypeTraits) registry.deserialize(tt));
+            }
+            filterTypeTraits = filterTypeTraitsList.toArray(new ITypeTraits[0]);
+        } else {
+            filterTypeTraits = null;
+        }
+
+        if (json.hasNonNull("filterCmpFactories")) {
+            final List<IBinaryComparatorFactory> filterCmpFactoriesList = new ArrayList<>();
+            final ArrayNode jsonFilterCmpFactories = (ArrayNode) json.get("filterCmpFactories");
+            for (JsonNode cf : jsonFilterCmpFactories) {
+                filterCmpFactoriesList.add((IBinaryComparatorFactory) registry.deserialize(cf));
+            }
+            filterCmpFactories = filterCmpFactoriesList.toArray(new IBinaryComparatorFactory[0]);
+        } else {
+            filterCmpFactories = null;
+        }
+
+        filterFields = OBJECT_MAPPER.convertValue(json.get("filterFields"), int[].class);
+        opTrackerProvider = (ILSMOperationTrackerFactory) registry.deserialize(json.get("opTrackerProvider"));
+        ioOpCallbackFactory = (ILSMIOOperationCallbackFactory) registry.deserialize(json.get("ioOpCallbackFactory"));
+
+        metadataPageManagerFactory =
+                (IMetadataPageManagerFactory) registry.deserialize(json.get("metadataPageManagerFactory"));
+        if (json.hasNonNull("vbcProvider")) {
+            vbcProvider = (IVirtualBufferCacheProvider) registry.deserialize(json.get("vbcProvider"));
+        } else {
+            vbcProvider = null;
+        }
+        ioSchedulerProvider = (ILSMIOOperationSchedulerProvider) registry.deserialize(json.get("ioSchedulerProvider"));
+        mergePolicyFactory = (ILSMMergePolicyFactory) registry.deserialize(json.get("mergePolicyFactory"));
+        mergePolicyProperties = OBJECT_MAPPER.convertValue(json.get("mergePolicyProperties"), Map.class);
+        durable = json.get("durable").asBoolean();
+    }
+
+    protected void appendToJson(final ObjectNode json, IPersistedResourceRegistry registry)
+            throws HyracksDataException {
+        json.put("path", path);
+        json.set("storageManager", storageManager.toJson(registry));
+        ArrayNode ttArray = OBJECT_MAPPER.createArrayNode();
+        for (ITypeTraits tt : typeTraits) {
+            ttArray.add(tt.toJson(registry));
+        }
+        json.set("typeTraits", ttArray);
+
+        ArrayNode cmpArray = OBJECT_MAPPER.createArrayNode();
+        for (IBinaryComparatorFactory factory : cmpFactories) {
+            cmpArray.add(factory.toJson(registry));
+        }
+        json.set("cmpFactories", cmpArray);
+
+        if (filterTypeTraits != null) {
+            ArrayNode fttArray = OBJECT_MAPPER.createArrayNode();
+            for (ITypeTraits tt : filterTypeTraits) {
+                fttArray.add(tt.toJson(registry));
+            }
+            json.set("filterTypeTraits", fttArray);
+        } else {
+            json.set("filterTypeTraits", null);
+        }
+
+        if (filterCmpFactories != null) {
+            ArrayNode filterCmpArray = OBJECT_MAPPER.createArrayNode();
+            for (IBinaryComparatorFactory factory : filterCmpFactories) {
+                filterCmpArray.add(factory.toJson(registry));
+            }
+            json.set("filterCmpFactories", filterCmpArray);
+        } else {
+            json.set("filterCmpFactories", null);
+        }
+
+        json.putPOJO("filterFields", filterFields);
+        json.set("opTrackerProvider", opTrackerProvider.toJson(registry));
+        json.set("ioOpCallbackFactory", ioOpCallbackFactory.toJson(registry));
+        json.set("metadataPageManagerFactory", metadataPageManagerFactory.toJson(registry));
+        if (vbcProvider != null) {
+            json.set("vbcProvider", vbcProvider.toJson(registry));
+        }
+        json.set("ioSchedulerProvider", ioSchedulerProvider.toJson(registry));
+        json.set("mergePolicyFactory", mergePolicyFactory.toJson(registry));
+        json.putPOJO("mergePolicyProperties", mergePolicyProperties);
+        json.put("durable", durable);
     }
 
     @Override

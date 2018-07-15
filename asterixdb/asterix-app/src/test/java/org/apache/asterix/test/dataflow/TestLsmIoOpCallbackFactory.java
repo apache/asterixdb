@@ -25,6 +25,8 @@ import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -33,6 +35,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.EmptyComponent;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class TestLsmIoOpCallbackFactory extends LSMIndexIOOperationCallbackFactory {
 
@@ -97,6 +102,24 @@ public class TestLsmIoOpCallbackFactory extends LSMIndexIOOperationCallbackFacto
 
     public static int getFailedMerges() {
         return failedMerges;
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode json = registry.getClassIdentifier(getClass(), serialVersionUID);
+        json.set("idGeneratorFactory", idGeneratorFactory.toJson(registry));
+        json.set("datasetInfoProvider", datasetInfoProvider.toJson(registry));
+        return json;
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        final ILSMComponentIdGeneratorFactory idGeneratorFactory =
+                (ILSMComponentIdGeneratorFactory) registry.deserialize(json.get("idGeneratorFactory"));
+        final IDatasetInfoProvider datasetInfoProvider =
+                (IDatasetInfoProvider) registry.deserialize(json.get("datasetInfoProvider"));
+        return new TestLsmIoOpCallbackFactory(idGeneratorFactory, datasetInfoProvider);
     }
 
     public class TestLsmIoOpCallback extends LSMIOOperationCallback {

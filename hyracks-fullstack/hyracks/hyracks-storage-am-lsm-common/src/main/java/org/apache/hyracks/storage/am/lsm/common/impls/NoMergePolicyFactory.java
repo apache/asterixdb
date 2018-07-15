@@ -25,8 +25,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class NoMergePolicyFactory implements ILSMMergePolicyFactory {
 
@@ -50,5 +55,15 @@ public class NoMergePolicyFactory implements ILSMMergePolicyFactory {
         ILSMMergePolicy policy = new NoMergePolicy();
         policy.configure(configuration);
         return policy;
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        return registry.getClassIdentifier(getClass(), serialVersionUID);
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        return new NoMergePolicyFactory();
     }
 }

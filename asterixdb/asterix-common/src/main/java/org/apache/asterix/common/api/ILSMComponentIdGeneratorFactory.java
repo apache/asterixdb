@@ -22,11 +22,11 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.common.IResource;
 
-@FunctionalInterface
-public interface ILSMComponentIdGeneratorFactory extends Serializable {
+public interface ILSMComponentIdGeneratorFactory extends Serializable, IJsonSerializable {
     /**
      * Get the Id generator for the resource
      *

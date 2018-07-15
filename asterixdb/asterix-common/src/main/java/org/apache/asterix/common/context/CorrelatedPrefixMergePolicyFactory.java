@@ -24,8 +24,13 @@ import java.util.Map;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class CorrelatedPrefixMergePolicyFactory extends PrefixMergePolicyFactory {
 
@@ -46,5 +51,15 @@ public class CorrelatedPrefixMergePolicyFactory extends PrefixMergePolicyFactory
         ILSMMergePolicy policy = new CorrelatedPrefixMergePolicy(dslcManager, datasetId);
         policy.configure(configuration);
         return policy;
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        return registry.getClassIdentifier(getClass(), serialVersionUID);
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        return new CorrelatedPrefixMergePolicyFactory();
     }
 }

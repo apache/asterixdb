@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.StorageApiServlet;
+import org.apache.asterix.app.io.PersistedResourceRegistry;
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.app.nc.RecoveryManager;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
@@ -96,6 +97,7 @@ public class NCApplication extends BaseNCApplication {
         ncServiceCtx.setThreadFactory(
                 new AsterixThreadFactory(ncServiceCtx.getThreadFactory(), ncServiceCtx.getLifeCycleComponentManager()));
         validateEnvironment();
+        configurePersistedResourceRegistry();
     }
 
     @Override
@@ -285,4 +287,7 @@ public class NCApplication extends BaseNCApplication {
         ApplicationConfigurator.validateJavaRuntime();
     }
 
+    protected void configurePersistedResourceRegistry() {
+        ncServiceCtx.setPersistedResourceRegistry(new PersistedResourceRegistry());
+    }
 }

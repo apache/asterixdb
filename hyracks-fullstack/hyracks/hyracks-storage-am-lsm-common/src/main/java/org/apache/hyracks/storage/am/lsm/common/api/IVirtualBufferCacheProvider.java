@@ -24,9 +24,10 @@ import java.util.List;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IJsonSerializable;
 
 @FunctionalInterface
-public interface IVirtualBufferCacheProvider extends Serializable {
+public interface IVirtualBufferCacheProvider extends Serializable, IJsonSerializable {
     List<IVirtualBufferCache> getVirtualBufferCaches(INCServiceContext ctx, FileReference fileRef)
             throws HyracksDataException;
 }

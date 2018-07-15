@@ -20,6 +20,8 @@ package org.apache.hyracks.api.dataflow.value;
 
 import java.io.Serializable;
 
-public interface IBinaryComparatorFactory extends Serializable {
+import org.apache.hyracks.api.io.IJsonSerializable;
+
+public interface IBinaryComparatorFactory extends Serializable, IJsonSerializable {
     public IBinaryComparator createBinaryComparator();
 }

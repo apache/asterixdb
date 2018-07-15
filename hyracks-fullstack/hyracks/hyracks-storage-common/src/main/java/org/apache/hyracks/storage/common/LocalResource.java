@@ -20,7 +20,14 @@ package org.apache.hyracks.storage.common;
 
 import java.io.Serializable;
 
-public class LocalResource implements Serializable {
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+public class LocalResource implements Serializable, IJsonSerializable {
     private static final long serialVersionUID = 2L;
     /*
      * object members
@@ -101,5 +108,24 @@ public class LocalResource implements Serializable {
         return new StringBuilder("{\"").append(LocalResource.class.getSimpleName()).append("\" : ").append("{\"id\" = ")
                 .append(id).append(", \"resource\" : ").append(resource).append(", \"version\" : ").append(version)
                 .append(" } ").toString();
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        ObjectNode json = registry.getClassIdentifier(getClass(), serialVersionUID);
+        json.put("id", id);
+        json.put("version", version);
+        json.put("durable", durable);
+        json.set("resource", resource.toJson(registry));
+        return json;
+    }
+
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        final long id = json.get("id").asLong();
+        final int version = json.get("version").asInt();
+        final boolean durable = json.get("durable").asBoolean();
+        final IResource resource = (IResource) registry.deserialize(json.get("resource"));
+        return new LocalResource(id, version, durable, resource);
     }
 }

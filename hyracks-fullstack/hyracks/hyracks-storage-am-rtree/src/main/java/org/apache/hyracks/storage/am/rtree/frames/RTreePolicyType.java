@@ -19,7 +19,47 @@
 
 package org.apache.hyracks.storage.am.rtree.frames;
 
-public enum RTreePolicyType {
-    RTREE,
-    RSTARTREE
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+public enum RTreePolicyType implements IJsonSerializable {
+    RTREE("RTREE"),
+    RSTARTREE("RSTARTREE");
+
+    private static final Map<String, RTreePolicyType> namesMap = new HashMap<>(2);
+
+    static {
+        namesMap.put("RTREE", RTREE);
+        namesMap.put("RSTARTREE", RSTARTREE);
+    }
+
+    private static final long serialVersionUID = 1L;
+    private final String type;
+
+    RTreePolicyType(String type) {
+        this.type = type;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode json = registry.getClassIdentifier(getDeclaringClass(), serialVersionUID);
+        json.put("type", getType());
+        return json;
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        return namesMap.get(json.get("type").asText());
+    }
 }

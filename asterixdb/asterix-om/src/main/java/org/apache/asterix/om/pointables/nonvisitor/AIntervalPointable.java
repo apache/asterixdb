@@ -24,12 +24,17 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.data.std.primitive.BytePointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.primitive.VarLengthTypeTrait;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /*
  * This class interprets the binary data representation of an interval.
@@ -42,21 +47,9 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
  */
 public class AIntervalPointable extends AbstractPointable {
 
-    public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
-        private static final long serialVersionUID = 1L;
+    public static final AIntervalPointableFactory FACTORY = new AIntervalPointableFactory();
 
-        @Override
-        public boolean isFixedLength() {
-            return false;
-        }
-
-        @Override
-        public int getFixedLength() {
-            return 0;
-        }
-    };
-
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
+    public static final class AIntervalPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
 
         @Override
@@ -66,7 +59,17 @@ public class AIntervalPointable extends AbstractPointable {
 
         @Override
         public ITypeTraits getTypeTraits() {
-            return TYPE_TRAITS;
+            return VarLengthTypeTrait.INSTANCE;
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+            return registry.getClassIdentifier(getClass(), serialVersionUID);
+        }
+
+        @SuppressWarnings("squid:S1172") // unused parameter
+        public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+            return FACTORY;
         }
     };
 

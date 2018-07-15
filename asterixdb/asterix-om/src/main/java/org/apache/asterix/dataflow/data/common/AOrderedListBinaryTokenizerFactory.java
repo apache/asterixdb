@@ -18,9 +18,15 @@
  */
 package org.apache.asterix.dataflow.data.common;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.ITokenFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AOrderedListBinaryTokenizerFactory implements IBinaryTokenizerFactory {
 
@@ -34,5 +40,18 @@ public class AOrderedListBinaryTokenizerFactory implements IBinaryTokenizerFacto
     @Override
     public IBinaryTokenizer createTokenizer() {
         return new AOrderedListBinaryTokenizer(tokenFactory);
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode json = registry.getClassIdentifier(getClass(), serialVersionUID);
+        json.set("tokenFactory", tokenFactory.toJson(registry));
+        return json;
+    }
+
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        final ITokenFactory tokenFactory = (ITokenFactory) registry.deserialize(json.get("tokenFactory"));
+        return new AOrderedListBinaryTokenizerFactory(tokenFactory);
     }
 }

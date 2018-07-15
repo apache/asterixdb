@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.job.JobSerializerDeserializerContainer;
 import org.apache.hyracks.api.messages.IMessageBroker;
@@ -35,6 +36,7 @@ public abstract class ServiceContext implements IServiceContext {
     protected Serializable distributedState;
     protected IMessageBroker messageBroker;
     protected IJobSerializerDeserializerContainer jobSerDeContainer = new JobSerializerDeserializerContainer();
+    protected IPersistedResourceRegistry persistedResourceRegistry;
 
     public ServiceContext(ServerContext serverCtx, IApplicationConfig appConfig, ThreadFactory threadFactory) {
         this.serverCtx = serverCtx;
@@ -75,5 +77,15 @@ public abstract class ServiceContext implements IServiceContext {
     @Override
     public IApplicationConfig getAppConfig() {
         return appConfig;
+    }
+
+    @Override
+    public void setPersistedResourceRegistry(IPersistedResourceRegistry persistedResourceRegistry) {
+        this.persistedResourceRegistry = persistedResourceRegistry;
+    }
+
+    @Override
+    public IPersistedResourceRegistry getPersistedResourceRegistry() {
+        return persistedResourceRegistry;
     }
 }

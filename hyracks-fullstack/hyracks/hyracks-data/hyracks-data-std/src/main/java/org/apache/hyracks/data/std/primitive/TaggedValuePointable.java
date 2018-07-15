@@ -17,9 +17,14 @@
 package org.apache.hyracks.data.std.primitive;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class TaggedValuePointable extends AbstractPointable {
     public static final TaggedValuePointableFactory FACTORY = new TaggedValuePointableFactory();
@@ -48,5 +53,14 @@ public class TaggedValuePointable extends AbstractPointable {
             return new TaggedValuePointable();
         }
 
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+            return registry.getClassIdentifier(getClass(), serialVersionUID);
+        }
+
+        @SuppressWarnings("squid:S1172") // unused parameter
+        public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+            return FACTORY;
+        }
     }
 }

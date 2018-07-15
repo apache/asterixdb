@@ -24,6 +24,9 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.lang3.CharSet;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IComparable;
 import org.apache.hyracks.data.std.api.IHashable;
@@ -33,8 +36,12 @@ import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 public final class UTF8StringPointable extends AbstractPointable implements IHashable, IComparable {
 
+    public static final UTF8StringPointableFactory FACTORY = new UTF8StringPointableFactory();
+    public static final ITypeTraits TYPE_TRAITS = VarLengthTypeTrait.INSTANCE;
     // These values are cached to speed up the length data access.
     // Since we are using the variable-length encoding, we can save the repeated decoding efforts.
     // WARNING: must call the resetConstants() method after each reset().
@@ -56,22 +63,6 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         stringLength = -1;
     }
 
-    public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public boolean isFixedLength() {
-            return false;
-        }
-
-        @Override
-        public int getFixedLength() {
-            return 0;
-        }
-    };
-
-    public static final UTF8StringPointableFactory FACTORY = new UTF8StringPointableFactory();
-
     public static class UTF8StringPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
 
@@ -86,6 +77,16 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         @Override
         public ITypeTraits getTypeTraits() {
             return TYPE_TRAITS;
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+            return registry.getClassIdentifier(getClass(), serialVersionUID);
+        }
+
+        @SuppressWarnings("squid:S1172") // unused parameter
+        public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+            return FACTORY;
         }
     };
 

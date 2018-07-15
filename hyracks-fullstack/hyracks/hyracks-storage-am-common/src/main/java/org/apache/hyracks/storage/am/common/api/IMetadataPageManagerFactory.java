@@ -18,13 +18,14 @@
  */
 package org.apache.hyracks.storage.am.common.api;
 
+import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 /**
  * A factory class for {@link org.apache.hyracks.storage.am.common.api.IMetadataPageManager}
  */
 @FunctionalInterface
-public interface IMetadataPageManagerFactory extends IPageManagerFactory {
+public interface IMetadataPageManagerFactory extends IPageManagerFactory, IJsonSerializable {
 
     @Override
     IMetadataPageManager createPageManager(IBufferCache bufferCache);

@@ -19,6 +19,9 @@
 package org.apache.hyracks.data.std.primitive;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IComparable;
 import org.apache.hyracks.data.std.api.IHashable;
@@ -26,8 +29,18 @@ import org.apache.hyracks.data.std.api.INumeric;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 public final class DoublePointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
+    public static final DoublePointableFactory FACTORY = new DoublePointableFactory();
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(8) {
+        //TODO fix RTREE logic based on class comparision in LSMRTreeUtils#proposeBestLinearizer
+        @Override
+        public boolean isFixedLength() {
+            return super.isFixedLength();
+        }
+    };
     private static final double MACHINE_EPSILON = getMachineEpsilon();
 
     private static double getMachineEpsilon() {
@@ -38,21 +51,7 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
         return epsilon;
     }
 
-    public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public boolean isFixedLength() {
-            return true;
-        }
-
-        @Override
-        public int getFixedLength() {
-            return 8;
-        }
-    };
-
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
+    public static class DoublePointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
 
         @Override
@@ -63,6 +62,16 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
         @Override
         public ITypeTraits getTypeTraits() {
             return TYPE_TRAITS;
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+            return registry.getClassIdentifier(getClass(), serialVersionUID);
+        }
+
+        @SuppressWarnings("squid:S1172") // unused parameter
+        public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+            return FACTORY;
         }
     };
 

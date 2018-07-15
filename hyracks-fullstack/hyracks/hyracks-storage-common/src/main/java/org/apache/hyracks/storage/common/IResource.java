@@ -22,8 +22,9 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
 
-public interface IResource extends Serializable {
+public interface IResource extends Serializable, IJsonSerializable {
 
     IIndex createInstance(INCServiceContext ncServiceCtx) throws HyracksDataException;
 

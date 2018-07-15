@@ -29,8 +29,14 @@ import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.common.IResource;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class TestPrimaryIndexOperationTrackerFactory extends PrimaryIndexOperationTrackerFactory {
 
@@ -79,5 +85,17 @@ public class TestPrimaryIndexOperationTrackerFactory extends PrimaryIndexOperati
         modifiersField.setAccessible(true);
         Map map = (Map) field.get(obj);
         map.put(key, value);
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        ObjectNode json = registry.getClassIdentifier(getClass(), serialVersionUID);
+        json.put("datasetId", datasetId);
+        return json;
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        return new TestPrimaryIndexOperationTrackerFactory(json.get("datasetId").asInt());
     }
 }

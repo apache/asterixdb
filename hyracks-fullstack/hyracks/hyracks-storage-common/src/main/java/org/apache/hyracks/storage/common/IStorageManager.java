@@ -21,13 +21,14 @@ package org.apache.hyracks.storage.common;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 /**
  * Provides storage components during hyracks tasks execution
  */
-public interface IStorageManager extends Serializable {
+public interface IStorageManager extends Serializable, IJsonSerializable {
     /**
      * @param ctx
      *            the nc service context

@@ -18,10 +18,15 @@
  */
 package org.apache.hyracks.storage.am.common.freepage;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.frames.LIFOMetaDataFrameFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class AppendOnlyLinkedMetadataPageManagerFactory implements IMetadataPageManagerFactory {
     private static final long serialVersionUID = 1L;
@@ -36,4 +41,13 @@ public class AppendOnlyLinkedMetadataPageManagerFactory implements IMetadataPage
         return new AppendOnlyLinkedMetadataPageManager(bufferCache, new LIFOMetaDataFrameFactory());
     }
 
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        return registry.getClassIdentifier(getClass(), serialVersionUID);
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        return INSTANCE;
+    }
 }

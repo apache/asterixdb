@@ -48,6 +48,8 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
@@ -57,6 +59,8 @@ import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeDiskComponentScanOperatorDescriptor;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * This class is used to build secondary LSM index for correlated datasets.
@@ -78,7 +82,10 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
      * This descending order ensures older components can be bulk loaded first and get a smaller (older)
      * component file timestamp.
      */
-    protected final static IBinaryComparatorFactory COMPONENT_POS_COMPARATOR_FACTORY = new IBinaryComparatorFactory() {
+    protected static final IBinaryComparatorFactory COMPONENT_POS_COMPARATOR_FACTORY =
+            new ComponentPosComparatorFactory();
+
+    public static final class ComponentPosComparatorFactory implements IBinaryComparatorFactory {
 
         private static final long serialVersionUID = 1L;
 
@@ -93,6 +100,16 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
                     return -comparator.compare(b1, s1, l1, b2, s2, l2);
                 }
             };
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+            return registry.getClassIdentifier(getClass(), serialVersionUID);
+        }
+
+        @SuppressWarnings("squid:S1172") // unused parameter
+        public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+            return COMPONENT_POS_COMPARATOR_FACTORY;
         }
     };
 

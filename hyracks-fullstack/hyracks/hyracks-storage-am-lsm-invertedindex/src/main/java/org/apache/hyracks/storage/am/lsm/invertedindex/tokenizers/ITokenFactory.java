@@ -21,6 +21,8 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
 import java.io.Serializable;
 
-public interface ITokenFactory extends Serializable {
+import org.apache.hyracks.api.io.IJsonSerializable;
+
+public interface ITokenFactory extends Serializable, IJsonSerializable {
     public IToken createToken();
 }

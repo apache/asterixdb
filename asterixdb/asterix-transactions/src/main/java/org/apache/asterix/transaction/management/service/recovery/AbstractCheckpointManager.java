@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.transaction.management.service.recovery;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -41,9 +40,13 @@ import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * An abstract implementation of {@link ICheckpointManager}.
@@ -54,12 +57,14 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CHECKPOINT_FILENAME_PREFIX = "checkpoint_";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final long SHARP_CHECKPOINT_LSN = -1;
     private static final FilenameFilter filter = (File dir, String name) -> name.startsWith(CHECKPOINT_FILENAME_PREFIX);
     private final File checkpointDir;
     private final int historyToKeep;
     private final int lsnThreshold;
     private final int pollFrequency;
+    private final IPersistedResourceRegistry persistedResourceRegistry;
     protected final ITransactionSubsystem txnSubsystem;
     private CheckpointThread checkpointer;
 
@@ -84,6 +89,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         pollFrequency = checkpointProperties.getPollFrequency();
         // We must keep at least the latest checkpoint
         historyToKeep = checkpointProperties.getHistoryToKeep() == 0 ? 1 : checkpointProperties.getHistoryToKeep();
+        persistedResourceRegistry = txnSubsystem.getApplicationContext().getPersistedResourceRegistry();
     }
 
     @Override
@@ -107,8 +113,10 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
                 if (LOGGER.isWarnEnabled()) {
                     LOGGER.log(Level.WARN, "Reading checkpoint file: " + file.getAbsolutePath());
                 }
-                String jsonString = new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
-                checkpointObjectList.add(Checkpoint.fromJson(jsonString));
+                final JsonNode jsonNode =
+                        OBJECT_MAPPER.readValue(Files.readAllBytes(Paths.get(file.getAbsolutePath())), JsonNode.class);
+                Checkpoint cp = (Checkpoint) persistedResourceRegistry.deserialize(jsonNode);
+                checkpointObjectList.add(cp);
             } catch (ClosedByInterruptException e) {
                 Thread.currentThread().interrupt();
                 if (LOGGER.isWarnEnabled()) {
@@ -201,9 +209,9 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
                     + (file.exists() ? "already exists" : "doesn't exist yet"));
         }
         // Write checkpoint file to disk
-        try (BufferedWriter writer = Files.newBufferedWriter(path)) {
-            writer.write(checkpoint.asJson());
-            writer.flush();
+        try {
+            byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(checkpoint.toJson(persistedResourceRegistry));
+            Files.write(path, bytes);
         } catch (IOException e) {
             LOGGER.log(Level.ERROR, "Failed to write checkpoint to disk", e);
             throw HyracksDataException.create(e);

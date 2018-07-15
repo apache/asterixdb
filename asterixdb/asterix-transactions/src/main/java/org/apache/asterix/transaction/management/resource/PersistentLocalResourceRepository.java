@@ -24,11 +24,9 @@ import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFil
 import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_TIMESTAMP_FORMAT;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -67,6 +65,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
@@ -78,12 +77,15 @@ import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 public class PersistentLocalResourceRepository implements ILocalResourceRepository {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final FilenameFilter LSM_INDEX_FILES_FILTER =
             (dir, name) -> !name.startsWith(INDEX_CHECKPOINT_FILE_PREFIX);
     private static final FilenameFilter MASK_FILES_FILTER =
@@ -125,11 +127,14 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private IReplicationManager replicationManager;
     private final Path[] storageRoots;
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
+    private final IPersistedResourceRegistry persistedResourceRegistry;
 
     public PersistentLocalResourceRepository(IIOManager ioManager,
-            IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
+            IIndexCheckpointManagerProvider indexCheckpointManagerProvider,
+            IPersistedResourceRegistry persistedResourceRegistry) {
         this.ioManager = ioManager;
         this.indexCheckpointManagerProvider = indexCheckpointManagerProvider;
+        this.persistedResourceRegistry = persistedResourceRegistry;
         storageRoots = new Path[ioManager.getIODevices().size()];
         final List<IODeviceHandle> ioDevices = ioManager.getIODevices();
         for (int i = 0; i < ioDevices.size(); i++) {
@@ -181,6 +186,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
             oosToFos.writeObject(resource);
             oosToFos.flush();
+            byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(resource.toJson(persistedResourceRegistry));
+            final Path path = Paths.get(resourceFile.getAbsolutePath());
+            Files.write(path, bytes);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -226,7 +234,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             final Collection<File> files = FileUtils.listFiles(root.toFile(), METADATA_FILES_FILTER, ALL_DIR_FILTER);
             try {
                 for (File file : files) {
-                    final LocalResource localResource = PersistentLocalResourceRepository.readLocalResource(file);
+                    final LocalResource localResource = readLocalResource(file);
                     if (filter.test(localResource)) {
                         resourcesMap.put(localResource.getId(), localResource);
                     }
@@ -254,10 +262,11 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 : (path + File.separator + StorageConstants.METADATA_FILE_NAME);
     }
 
-    public static LocalResource readLocalResource(File file) throws HyracksDataException {
-        try (FileInputStream fis = new FileInputStream(file);
-                ObjectInputStream oisFromFis = new ObjectInputStream(fis)) {
-            LocalResource resource = (LocalResource) oisFromFis.readObject();
+    private LocalResource readLocalResource(File file) throws HyracksDataException {
+        final Path path = Paths.get(file.getAbsolutePath());
+        try {
+            final JsonNode jsonNode = OBJECT_MAPPER.readValue(Files.readAllBytes(path), JsonNode.class);
+            LocalResource resource = (LocalResource) persistedResourceRegistry.deserialize(jsonNode);
             if (resource.getVersion() == ITreeIndexFrame.Constants.VERSION) {
                 return resource;
             } else {

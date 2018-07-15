@@ -41,7 +41,7 @@ public class StorageConstants {
     /**
      * The storage version of AsterixDB related artifacts (e.g. log files, checkpoint files, etc..).
      */
-    private static final int LOCAL_STORAGE_VERSION = 3;
+    private static final int LOCAL_STORAGE_VERSION = 4;
 
     /**
      * The storage version of AsterixDB stack.

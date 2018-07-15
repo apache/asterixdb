@@ -22,6 +22,12 @@ import org.apache.asterix.common.api.IDatasetInfoProvider;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DatasetInfoProvider implements IDatasetInfoProvider {
 
@@ -39,4 +45,15 @@ public class DatasetInfoProvider implements IDatasetInfoProvider {
         return dslcManager.getDatasetInfo(datasetId);
     }
 
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode json = registry.getClassIdentifier(getClass(), serialVersionUID);
+        json.put("datasetId", datasetId);
+        return json;
+    }
+
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        return new DatasetInfoProvider(json.get("datasetId").asInt());
+    }
 }

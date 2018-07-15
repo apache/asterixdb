@@ -82,6 +82,7 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -138,6 +139,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final ILibraryManager libraryManager;
     private final NCExtensionManager ncExtensionManager;
     private final IStorageComponentProvider componentProvider;
+    private final IPersistedResourceRegistry persistedResourceRegistry;
     private IHyracksClientConnection hcc;
     private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private IReplicaManager replicaManager;
@@ -166,6 +168,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         ncExtensionManager = new NCExtensionManager(allExtensions);
         componentProvider = new StorageComponentProvider();
         resourceIdFactory = new GlobalResourceIdFactoryProvider(ncServiceContext).createResourceIdFactory();
+        persistedResourceRegistry = ncServiceContext.getPersistedResourceRegistry();
     }
 
     @Override
@@ -181,7 +184,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         metadataMergePolicyFactory = new PrefixMergePolicyFactory();
         indexCheckpointManagerProvider = new IndexCheckpointManagerProvider(ioManager);
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory =
-                new PersistentLocalResourceRepositoryFactory(ioManager, indexCheckpointManagerProvider);
+                new PersistentLocalResourceRepositoryFactory(ioManager, indexCheckpointManagerProvider,
+                        persistedResourceRegistry);
         localResourceRepository =
                 (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory.createRepository();
         txnSubsystem = new TransactionSubsystem(this, recoveryManagerFactory);
@@ -507,5 +511,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
         return Math.max(MetadataManager.INSTANCE == null ? 0 : MetadataManager.INSTANCE.getMaxTxnId(),
                 txnSubsystem.getTransactionManager().getMaxTxnId());
+    }
+
+    @Override
+    public IPersistedResourceRegistry getPersistedResourceRegistry() {
+        return persistedResourceRegistry;
     }
 }

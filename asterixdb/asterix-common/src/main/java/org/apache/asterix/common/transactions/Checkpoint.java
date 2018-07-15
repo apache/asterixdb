@@ -18,17 +18,15 @@
  */
 package org.apache.asterix.common.transactions;
 
-import java.io.IOException;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+public class Checkpoint implements Comparable<Checkpoint>, IJsonSerializable {
 
-public class Checkpoint implements Comparable<Checkpoint> {
-
+    private static final long serialVersionUID = 1L;
     private final long checkpointLsn;
     private final long minMCTFirstLsn;
     private final long maxTxnId;
@@ -36,11 +34,8 @@ public class Checkpoint implements Comparable<Checkpoint> {
     private final boolean sharp;
     private final int storageVersion;
 
-    @JsonCreator
-    public Checkpoint(@JsonProperty("checkpointLsn") long checkpointLsn,
-            @JsonProperty("minMCTFirstLsn") long minMCTFirstLsn, @JsonProperty("maxJobId") long maxTxnId,
-            @JsonProperty("timeStamp") long timeStamp, @JsonProperty("sharp") boolean sharp,
-            @JsonProperty("storageVersion") int storageVersion) {
+    public Checkpoint(long checkpointLsn, long minMCTFirstLsn, long maxTxnId, long timeStamp, boolean sharp,
+            int storageVersion) {
         this.checkpointLsn = checkpointLsn;
         this.minMCTFirstLsn = minMCTFirstLsn;
         this.maxTxnId = maxTxnId;
@@ -116,19 +111,26 @@ public class Checkpoint implements Comparable<Checkpoint> {
         return result;
     }
 
-    public String asJson() throws HyracksDataException {
-        try {
-            return new ObjectMapper().writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            throw HyracksDataException.create(e);
-        }
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode checkpointJson = registry.getClassIdentifier(getClass(), serialVersionUID);
+        checkpointJson.put("checkpointLsn", checkpointLsn);
+        checkpointJson.put("minMCTFirstLsn", minMCTFirstLsn);
+        checkpointJson.put("maxTxnId", maxTxnId);
+        checkpointJson.put("timeStamp", timeStamp);
+        checkpointJson.put("sharp", timeStamp);
+        checkpointJson.put("storageVersion", storageVersion);
+        return checkpointJson;
     }
 
-    public static Checkpoint fromJson(String json) throws HyracksDataException {
-        try {
-            return new ObjectMapper().readValue(json, Checkpoint.class);
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
-        }
+    @SuppressWarnings("squid:S1172") // unused parameter
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        long checkpointLsn = json.get("checkpointLsn").asLong();
+        long minMCTFirstLsn = json.get("minMCTFirstLsn").asLong();
+        long maxTxnId = json.get("maxTxnId").asLong();
+        long timeStamp = json.get("timeStamp").asLong();
+        boolean sharp = json.get("sharp").asBoolean();
+        int storageVersion = json.get("storageVersion").asInt();
+        return new Checkpoint(checkpointLsn, minMCTFirstLsn, maxTxnId, timeStamp, sharp, storageVersion);
     }
 }

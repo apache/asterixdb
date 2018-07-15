@@ -22,9 +22,10 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.storage.common.IResource;
 
-public interface ILSMIOOperationCallbackFactory extends Serializable {
+public interface ILSMIOOperationCallbackFactory extends Serializable, IJsonSerializable {
     /**
      * Initialize the callback factory with the given ncCtx and resource
      *

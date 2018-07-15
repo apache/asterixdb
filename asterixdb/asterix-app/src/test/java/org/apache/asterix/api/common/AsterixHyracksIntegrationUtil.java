@@ -35,6 +35,7 @@ import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
 import org.apache.asterix.app.external.ExternalUDFLibrarian;
+import org.apache.asterix.app.io.PersistedResourceRegistry;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.PropertiesAccessor;
@@ -43,6 +44,8 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
 import org.apache.asterix.hyracks.bootstrap.NCApplication;
+import org.apache.asterix.test.dataflow.TestLsmIoOpCallbackFactory;
+import org.apache.asterix.test.dataflow.TestPrimaryIndexOperationTrackerFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.application.ICCApplication;
@@ -56,6 +59,7 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtreeLocalResource;
 import org.apache.hyracks.test.support.TestUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -173,6 +177,7 @@ public class AsterixHyracksIntegrationUtil {
         ((ICcApplicationContext) cc.getApplicationContext()).getClusterStateManager().waitForState(ClusterState.ACTIVE);
         hcc = new HyracksConnection(cc.getConfig().getClientListenAddress(), cc.getConfig().getClientListenPort());
         this.ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
+        setTestPersistedResourceRegistry();
     }
 
     public void init(boolean deleteOldInstanceData, String externalLibPath, String confDir) throws Exception {
@@ -370,6 +375,14 @@ public class AsterixHyracksIntegrationUtil {
         opts.clear();
     }
 
+    public void setTestPersistedResourceRegistry() {
+        for (NodeControllerService nc : ncs) {
+            INcApplicationContext runtimeCtx = (INcApplicationContext) nc.getApplicationContext();
+            runtimeCtx.getServiceContext()
+                    .setPersistedResourceRegistry(new AsterixHyracksIntegrationUtil.TestPersistedResourceRegistry());
+        }
+    }
+
     /**
      * @return the asterix-app absolute path if found, otherwise the default user path.
      */
@@ -398,6 +411,17 @@ public class AsterixHyracksIntegrationUtil {
         public void stop() throws Exception {
             // ungraceful shutdown
             webManager.stop();
+        }
+    }
+
+    private static class TestPersistedResourceRegistry extends PersistedResourceRegistry {
+        @Override
+        protected void registerClasses() {
+            super.registerClasses();
+            REGISTERED_CLASSES.put("TestLsmBtreeLocalResource", TestLsmBtreeLocalResource.class);
+            REGISTERED_CLASSES.put("TestLsmIoOpCallbackFactory", TestLsmIoOpCallbackFactory.class);
+            REGISTERED_CLASSES.put("TestPrimaryIndexOperationTrackerFactory",
+                    TestPrimaryIndexOperationTrackerFactory.class);
         }
     }
 

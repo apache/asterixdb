@@ -19,6 +19,9 @@
 package org.apache.hyracks.data.std.primitive;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.api.AbstractPointable;
 import org.apache.hyracks.data.std.api.IComparable;
 import org.apache.hyracks.data.std.api.IHashable;
@@ -26,23 +29,14 @@ import org.apache.hyracks.data.std.api.INumeric;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 public final class ShortPointable extends AbstractPointable implements IHashable, IComparable, INumeric {
 
-    public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
-        private static final long serialVersionUID = 1L;
+    public static final ITypeTraits TYPE_TRAITS = new FixedLengthTypeTrait(2);
+    public static final IPointableFactory FACTORY = new ShortPointableFactory();
 
-        @Override
-        public boolean isFixedLength() {
-            return true;
-        }
-
-        @Override
-        public int getFixedLength() {
-            return 2;
-        }
-    };
-
-    public static final IPointableFactory FACTORY = new IPointableFactory() {
+    public static final class ShortPointableFactory implements IPointableFactory {
         private static final long serialVersionUID = 1L;
 
         @Override
@@ -53,6 +47,16 @@ public final class ShortPointable extends AbstractPointable implements IHashable
         @Override
         public ITypeTraits getTypeTraits() {
             return TYPE_TRAITS;
+        }
+
+        @Override
+        public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+            return registry.getClassIdentifier(getClass(), serialVersionUID);
+        }
+
+        @SuppressWarnings("squid:S1172") // unused parameter
+        public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+            return FACTORY;
         }
     };
 

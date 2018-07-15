@@ -27,6 +27,8 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.btree.utils.LSMBTreeUtil;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
@@ -38,6 +40,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LsmResource;
 import org.apache.hyracks.storage.common.IStorageManager;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class LSMBTreeLocalResource extends LsmResource {
 
@@ -65,6 +70,15 @@ public class LSMBTreeLocalResource extends LsmResource {
         this.btreeFields = btreeFields;
     }
 
+    protected LSMBTreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int[] bloomFilterKeyFields,
+            double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields) throws HyracksDataException {
+        super(registry, json);
+        this.bloomFilterKeyFields = bloomFilterKeyFields;
+        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
+        this.isPrimary = isPrimary;
+        this.btreeFields = btreeFields;
+    }
+
     @Override
     public ILSMIndex createInstance(INCServiceContext serviceCtx) throws HyracksDataException {
         IIOManager ioManager = serviceCtx.getIoManager();
@@ -79,5 +93,32 @@ public class LSMBTreeLocalResource extends LsmResource {
                 opTrackerProvider.getOperationTracker(serviceCtx, this), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory, isPrimary, filterTypeTraits, filterCmpFactories, btreeFields, filterFields,
                 durable, metadataPageManagerFactory, updateAware, serviceCtx.getTracer());
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        final ObjectNode jsonObject = registry.getClassIdentifier(getClass(), serialVersionUID);
+        appendToJson(jsonObject, registry);
+        return jsonObject;
+    }
+
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        final int[] bloomFilterKeyFields = OBJECT_MAPPER.convertValue(json.get("bloomFilterKeyFields"), int[].class);
+        final double bloomFilterFalsePositiveRate = json.get("bloomFilterFalsePositiveRate").asDouble();
+        final boolean isPrimary = json.get("isPrimary").asBoolean();
+        final int[] btreeFields = OBJECT_MAPPER.convertValue(json.get("btreeFields"), int[].class);
+        return new LSMBTreeLocalResource(registry, json, bloomFilterKeyFields, bloomFilterFalsePositiveRate, isPrimary,
+                btreeFields);
+    }
+
+    @Override
+    protected void appendToJson(final ObjectNode json, IPersistedResourceRegistry registry)
+            throws HyracksDataException {
+        super.appendToJson(json, registry);
+        json.putPOJO("bloomFilterKeyFields", bloomFilterKeyFields);
+        json.put("bloomFilterFalsePositiveRate", bloomFilterFalsePositiveRate);
+        json.put("isPrimary", isPrimary);
+        json.putPOJO("btreeFields", btreeFields);
     }
 }

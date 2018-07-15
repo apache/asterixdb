@@ -22,9 +22,9 @@ import java.io.Serializable;
 
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.io.IJsonSerializable;
 
-@FunctionalInterface
-public interface IDatasetInfoProvider extends Serializable {
+public interface IDatasetInfoProvider extends Serializable, IJsonSerializable {
     /**
      * Get the dataset info
      *

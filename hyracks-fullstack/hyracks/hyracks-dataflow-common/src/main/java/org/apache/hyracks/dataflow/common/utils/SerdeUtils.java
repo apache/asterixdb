@@ -26,6 +26,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
+import org.apache.hyracks.data.std.primitive.FixedLengthTypeTrait;
 import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
@@ -41,24 +42,6 @@ import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerD
 
 @SuppressWarnings("rawtypes")
 public class SerdeUtils {
-    public static class PayloadTypeTraits implements ITypeTraits {
-        private static final long serialVersionUID = 1L;
-        final int payloadSize;
-
-        public PayloadTypeTraits(int payloadSize) {
-            this.payloadSize = payloadSize;
-        }
-
-        @Override
-        public boolean isFixedLength() {
-            return true;
-        }
-
-        @Override
-        public int getFixedLength() {
-            return payloadSize;
-        }
-    }
 
     public static ITypeTraits[] serdesToTypeTraits(ISerializerDeserializer[] serdes) {
         ITypeTraits[] typeTraits = new ITypeTraits[serdes.length];
@@ -73,7 +56,7 @@ public class SerdeUtils {
         for (int i = 0; i < serdes.length; i++) {
             typeTraits[i] = serdeToTypeTrait(serdes[i]);
         }
-        typeTraits[serdes.length] = new PayloadTypeTraits(payloadSize);
+        typeTraits[serdes.length] = new FixedLengthTypeTrait(payloadSize);
         return typeTraits;
     }
 

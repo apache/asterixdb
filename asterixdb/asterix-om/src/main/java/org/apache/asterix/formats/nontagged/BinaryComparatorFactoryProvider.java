@@ -114,21 +114,7 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
                 return anyBinaryComparatorFactory(ascending);
             case NULL:
             case MISSING:
-                return new IBinaryComparatorFactory() {
-
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public IBinaryComparator createBinaryComparator() {
-                        return new IBinaryComparator() {
-
-                            @Override
-                            public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-                                return 0;
-                            }
-                        };
-                    }
-                };
+                return new AnyBinaryComparatorFactory();
             case BOOLEAN:
                 return addOffset(BooleanBinaryComparatorFactory.INSTANCE, ascending);
             case TINYINT:
@@ -176,33 +162,7 @@ public class BinaryComparatorFactoryProvider implements IBinaryComparatorFactory
     }
 
     private IBinaryComparatorFactory addOffset(final IBinaryComparatorFactory inst, final boolean ascending) {
-        return new IBinaryComparatorFactory() {
-
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public IBinaryComparator createBinaryComparator() {
-                final IBinaryComparator bc = inst.createBinaryComparator();
-                if (ascending) {
-                    return new ABinaryComparator() {
-
-                        @Override
-                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
-                                throws HyracksDataException {
-                            return bc.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
-                        }
-                    };
-                } else {
-                    return new ABinaryComparator() {
-                        @Override
-                        public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2)
-                                throws HyracksDataException {
-                            return -bc.compare(b1, s1 + 1, l1 - 1, b2, s2 + 1, l2 - 1);
-                        }
-                    };
-                }
-            }
-        };
+        return new OrderedBinaryComparatorFactory(inst, ascending);
     }
 
     private IBinaryComparatorFactory anyBinaryComparatorFactory(boolean ascending) {

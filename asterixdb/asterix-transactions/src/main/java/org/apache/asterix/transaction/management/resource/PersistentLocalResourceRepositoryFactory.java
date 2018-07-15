@@ -20,21 +20,26 @@ package org.apache.asterix.transaction.management.resource;
 
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 
 public class PersistentLocalResourceRepositoryFactory implements ILocalResourceRepositoryFactory {
     private final IIOManager ioManager;
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
+    private final IPersistedResourceRegistry persistedResourceRegistry;
 
     public PersistentLocalResourceRepositoryFactory(IIOManager ioManager,
-            IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
+            IIndexCheckpointManagerProvider indexCheckpointManagerProvider,
+            IPersistedResourceRegistry persistedResourceRegistry) {
         this.ioManager = ioManager;
         this.indexCheckpointManagerProvider = indexCheckpointManagerProvider;
+        this.persistedResourceRegistry = persistedResourceRegistry;
     }
 
     @Override
     public ILocalResourceRepository createRepository() {
-        return new PersistentLocalResourceRepository(ioManager, indexCheckpointManagerProvider);
+        return new PersistentLocalResourceRepository(ioManager, indexCheckpointManagerProvider,
+                persistedResourceRegistry);
     }
 }

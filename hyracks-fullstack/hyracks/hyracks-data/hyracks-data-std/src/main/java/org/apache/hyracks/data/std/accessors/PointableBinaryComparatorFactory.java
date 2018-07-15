@@ -20,9 +20,15 @@ package org.apache.hyracks.data.std.accessors;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IJsonSerializable;
+import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.data.std.api.IComparable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class PointableBinaryComparatorFactory implements IBinaryComparatorFactory {
     private static final long serialVersionUID = 1L;
@@ -51,5 +57,19 @@ public class PointableBinaryComparatorFactory implements IBinaryComparatorFactor
                 return ((IComparable) p).compareTo(b2, s2, l2);
             }
         };
+    }
+
+    @Override
+    public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
+        ObjectNode classIdentifier = registry.getClassIdentifier(getClass(), serialVersionUID);
+        classIdentifier.set("pointableFactory", pf.toJson(registry));
+        return classIdentifier;
+    }
+
+    public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
+            throws HyracksDataException {
+        final IPointableFactory pointableFactory =
+                (IPointableFactory) registry.deserialize(json.get("pointableFactory"));
+        return of(pointableFactory);
     }
 }

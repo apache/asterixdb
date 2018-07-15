@@ -21,8 +21,9 @@ package org.apache.hyracks.data.std.api;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.io.IJsonSerializable;
 
-public interface IPointableFactory extends Serializable {
+public interface IPointableFactory extends Serializable, IJsonSerializable {
     IPointable createPointable();
 
     ITypeTraits getTypeTraits();
