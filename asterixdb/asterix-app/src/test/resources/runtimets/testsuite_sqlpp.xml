@@ -3678,6 +3678,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="ping">
+        <output-dir compare="Text">ping</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="case_01">
         <output-dir compare="Text">case_01</output-dir>
       </compilation-unit>

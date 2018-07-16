@@ -21,6 +21,7 @@ package org.apache.asterix.util;
 import org.apache.asterix.app.function.DatasetResourcesRewriter;
 import org.apache.asterix.app.function.DatasetRewriter;
 import org.apache.asterix.app.function.FeedRewriter;
+import org.apache.asterix.app.function.PingRewriter;
 import org.apache.asterix.app.function.StorageComponentsRewriter;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.utils.RecordUtil;
@@ -48,7 +49,11 @@ public class MetadataBuiltinFunctions {
         BuiltinFunctions.addUnnestFun(StorageComponentsRewriter.STORAGE_COMPONENTS, false);
         BuiltinFunctions.addDatasourceFunction(StorageComponentsRewriter.STORAGE_COMPONENTS,
                 StorageComponentsRewriter.INSTANCE);
-
+        // Ping function
+        BuiltinFunctions.addPrivateFunction(PingRewriter.PING,
+                (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
+        BuiltinFunctions.addUnnestFun(PingRewriter.PING, true);
+        BuiltinFunctions.addDatasourceFunction(PingRewriter.PING, PingRewriter.INSTANCE);
     }
 
     private MetadataBuiltinFunctions() {
