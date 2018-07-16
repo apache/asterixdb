@@ -19,15 +19,14 @@
 package org.apache.asterix.transaction.management.resource;
 
 import static org.apache.asterix.common.utils.StorageConstants.INDEX_CHECKPOINT_FILE_PREFIX;
+import static org.apache.asterix.common.utils.StorageConstants.METADATA_FILE_NAME;
 import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_CREATE_FILE;
 import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER;
 import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_TIMESTAMP_FORMAT;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -86,6 +85,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String METADATA_FILE_MASK_NAME =
+            StorageConstants.MASK_FILE_PREFIX + StorageConstants.METADATA_FILE_NAME;
     private static final FilenameFilter LSM_INDEX_FILES_FILTER =
             (dir, name) -> !name.startsWith(INDEX_CHECKPOINT_FILE_PREFIX);
     private static final FilenameFilter MASK_FILES_FILTER =
@@ -95,6 +96,18 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         @Override
         public boolean accept(File file) {
             return file.getName().equals(StorageConstants.METADATA_FILE_NAME);
+        }
+
+        @Override
+        public boolean accept(File dir, String name) {
+            return false;
+        }
+    };
+
+    private static final IOFileFilter METADATA_MASK_FILES_FILTER = new IOFileFilter() {
+        @Override
+        public boolean accept(File file) {
+            return file.getName().equals(METADATA_FILE_MASK_NAME);
         }
 
         @Override
@@ -181,18 +194,15 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         if (!parent.exists() && !parent.mkdirs()) {
             throw HyracksDataException.create(CANNOT_CREATE_FILE, parent.getAbsolutePath());
         }
-
-        try (FileOutputStream fos = new FileOutputStream(resourceFile.getFile());
-                ObjectOutputStream oosToFos = new ObjectOutputStream(fos)) {
-            oosToFos.writeObject(resource);
-            oosToFos.flush();
+        createResourceFileMask(resourceFile);
+        try {
             byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(resource.toJson(persistedResourceRegistry));
             final Path path = Paths.get(resourceFile.getAbsolutePath());
             Files.write(path, bytes);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-
+        deleteResourceFileMask(resourceFile);
         resourceCache.put(resource.getPath(), resource);
         indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(null, 0);
         //if replication enabled, send resource metadata info to remote nodes
@@ -418,6 +428,20 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return resourcesStats;
     }
 
+    public void deleteCorruptedResources() throws HyracksDataException {
+        for (Path root : storageRoots) {
+            final Collection<File> metadataMaskFiles =
+                    FileUtils.listFiles(root.toFile(), METADATA_MASK_FILES_FILTER, ALL_DIR_FILTER);
+            for (File metadataMaskFile : metadataMaskFiles) {
+                final File resourceFile = new File(metadataMaskFile.getParent(), METADATA_FILE_NAME);
+                if (resourceFile.exists()) {
+                    IoUtil.delete(resourceFile);
+                }
+                IoUtil.delete(metadataMaskFile);
+            }
+        }
+    }
+
     private void deleteIndexMaskedFiles(File index) throws IOException {
         File[] masks = index.listFiles(MASK_FILES_FILTER);
         if (masks != null) {
@@ -512,6 +536,24 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             LOGGER.warn("Couldn't get stats for resource {}", resource.getRelativePath(), e);
         }
         return null;
+    }
+
+    private void createResourceFileMask(FileReference resourceFile) throws HyracksDataException {
+        Path maskFile = getResourceMaskFilePath(resourceFile);
+        try {
+            Files.createFile(maskFile);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    private void deleteResourceFileMask(FileReference resourceFile) throws HyracksDataException {
+        Path maskFile = getResourceMaskFilePath(resourceFile);
+        IoUtil.delete(maskFile);
+    }
+
+    private Path getResourceMaskFilePath(FileReference resourceFile) {
+        return Paths.get(resourceFile.getFile().getParentFile().getAbsolutePath(), METADATA_FILE_MASK_NAME);
     }
 
     /**

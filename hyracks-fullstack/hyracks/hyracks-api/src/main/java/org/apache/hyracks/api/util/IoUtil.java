@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -41,6 +42,16 @@ public class IoUtil {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private IoUtil() {
+    }
+
+    /**
+     * Deletes a file
+     *
+     * @param filePath the file path to be deleted
+     * @throws HyracksDataException if the file couldn't be deleted
+     */
+    public static void delete(Path filePath) throws HyracksDataException {
+        delete(filePath.toFile());
     }
 
     /**

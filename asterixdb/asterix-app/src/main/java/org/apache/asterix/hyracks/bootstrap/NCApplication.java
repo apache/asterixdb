@@ -237,6 +237,7 @@ public class NCApplication extends BaseNCApplication {
         final Set<Integer> nodePartitions = runtimeContext.getReplicaManager().getPartitions();
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository();
+        localResourceRepository.deleteCorruptedResources();
         for (Integer partition : nodePartitions) {
             localResourceRepository.cleanup(partition);
         }

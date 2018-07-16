@@ -166,4 +166,26 @@ public class PersistentLocalResourceRepositoryTest {
                 .filter(file -> file.getName().startsWith(validComponentTimestamp.get())).count();
         Assert.assertTrue(validComponentFilesCount > 0);
     }
+
+    @Test
+    public void deleteCorruptedResourcesTest() throws Exception {
+        final INcApplicationContext ncAppCtx = (INcApplicationContext) integrationUtil.ncs[0].getApplicationContext();
+        final String nodeId = ncAppCtx.getServiceContext().getNodeId();
+        final String datasetName = "ds";
+        TestDataUtil.createIdOnlyDataset(datasetName);
+        final Dataset dataset = TestDataUtil.getDataset(integrationUtil, datasetName);
+        final String indexPath = TestDataUtil.getIndexPath(integrationUtil, dataset, nodeId);
+        final FileReference indexDirRef = ncAppCtx.getIoManager().resolve(indexPath);
+        final File indexMetadataFile = new File(indexDirRef.getFile(), StorageConstants.METADATA_FILE_NAME);
+        Assert.assertTrue(indexMetadataFile.exists());
+        // forge a mask file and ensure the metadata file and its mask files will be deleted after restart
+        final File indexMetadataMaskFile = new File(indexDirRef.getFile(),
+                StorageConstants.MASK_FILE_PREFIX + StorageConstants.METADATA_FILE_NAME);
+        Files.createFile(indexMetadataMaskFile.toPath());
+        Assert.assertTrue(indexMetadataMaskFile.exists());
+        integrationUtil.deinit(false);
+        integrationUtil.init(false, TEST_CONFIG_FILE_NAME);
+        Assert.assertFalse(indexMetadataFile.exists());
+        Assert.assertFalse(indexMetadataMaskFile.exists());
+    }
 }
