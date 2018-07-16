@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.active;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 
@@ -31,10 +33,15 @@ public interface IActiveRuntime {
     /**
      * Stops the running activity
      *
+     * @param timeout
+     *            time for graceful stop. interrupt the runtime after that
+     * @param unit
+     *            unit of the timeout
+     *
      * @throws HyracksDataException
      * @throws InterruptedException
      */
-    void stop() throws HyracksDataException, InterruptedException;
+    void stop(long timeout, TimeUnit unit) throws HyracksDataException, InterruptedException;
 
     /**
      * @return the job id associated with this active runtime

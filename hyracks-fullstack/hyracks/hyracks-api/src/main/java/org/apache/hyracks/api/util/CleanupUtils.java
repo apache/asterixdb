@@ -65,7 +65,8 @@ public class CleanupUtils {
                 writer.close();
             } catch (Throwable th) { // NOSONAR Will be suppressed
                 try {
-                    LOGGER.log(Level.WARN, "Failure closing a closeable resource", th);
+                    LOGGER.log(Level.WARN, "Failure closing a closeable resource of class {}",
+                            writer.getClass().getSimpleName(), th);
                 } catch (Throwable loggingFailure) { // NOSONAR: Ignore catching Throwable
                     // NOSONAR: Ignore logging failure
                 }

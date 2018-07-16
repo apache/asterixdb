@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.operators;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.ActiveSourceOperatorNodePushable;
 import org.apache.asterix.active.EntityId;
@@ -44,8 +46,6 @@ import org.apache.logging.log4j.Logger;
  */
 public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePushable {
     private static final Logger LOGGER = LogManager.getLogger();
-    // TODO: Make configurable https://issues.apache.org/jira/browse/ASTERIXDB-2065
-    public static final int DEFAULT_ABORT_TIMEOUT = 60000;
     private final FeedIntakeOperatorDescriptor opDesc;
     private final FeedAdapter adapter;
     private boolean poisoned = false;
@@ -125,12 +125,12 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
     }
 
     @Override
-    protected void abort() throws HyracksDataException, InterruptedException {
+    protected void abort(long timeout, TimeUnit unit) throws HyracksDataException, InterruptedException {
         LOGGER.info(runtimeId + " aborting...");
         synchronized (this) {
             poisoned = true;
             try {
-                if (!adapter.stop(DEFAULT_ABORT_TIMEOUT)) {
+                if (!adapter.stop(unit.toMillis(timeout))) {
                     LOGGER.info(runtimeId + " failed to stop adapter. interrupting the thread...");
                     taskThread.interrupt();
                 }

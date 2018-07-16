@@ -40,6 +40,7 @@ import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.active.message.ActivePartitionMessage.Event;
 import org.apache.asterix.active.message.ActiveStatsRequestMessage;
+import org.apache.asterix.active.message.StopRuntimeParameters;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -73,7 +74,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     private static final EnumSet<ActivityState> TRANSITION_STATES = EnumSet.of(ActivityState.RESUMING,
             ActivityState.STARTING, ActivityState.STOPPING, ActivityState.RECOVERING, ActivityState.CANCELLING);
     private static final String DEFAULT_ACTIVE_STATS = "{\"Stats\":\"N/A\"}";
-    // finals
+    // TODO: Make configurable https://issues.apache.org/jira/browse/ASTERIXDB-2065
+    protected static final long STOP_MESSAGE_TIMEOUT = 2L;
+    protected static final long SUSPEND_MESSAGE_TIMEOUT = 5L;
+    protected static final TimeUnit TIMEOUT_UNIT = TimeUnit.MINUTES;
     protected final IClusterStateManager clusterStateManager;
     protected final ActiveNotificationHandler handler;
     protected final List<IActiveEntityEventSubscriber> subscribers = new ArrayList<>();
@@ -431,7 +435,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     protected abstract JobId compileAndStartJob(MetadataProvider metadataProvider) throws HyracksDataException;
 
     @SuppressWarnings("squid:S1181")
-    protected synchronized void doStop(MetadataProvider metadataProvider) throws HyracksDataException {
+    protected synchronized void doStop(MetadataProvider metadataProvider, long timeout, TimeUnit unit)
+            throws HyracksDataException {
         ActivityState intention = state;
         Set<ActivityState> waitFor;
         if (intention == ActivityState.STOPPING) {
@@ -444,7 +449,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         WaitForStateSubscriber subscriber = new WaitForStateSubscriber(this, waitFor);
         // Note: once we start sending stop messages, we can't go back until the entity is stopped
         try {
-            sendStopMessages(metadataProvider);
+            sendStopMessages(metadataProvider, timeout, unit);
             LOGGER.log(Level.DEBUG, "Waiting for its state to become " + waitFor);
             subscriber.sync();
             LOGGER.log(Level.DEBUG, "Disconnect has been completed " + waitFor);
@@ -465,7 +470,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         LOGGER.warn("Failure encountered while stopping {}", this, e);
     }
 
-    protected void sendStopMessages(MetadataProvider metadataProvider) throws Exception {
+    protected void sendStopMessages(MetadataProvider metadataProvider, long timeout, TimeUnit unit) throws Exception {
         ICcApplicationContext applicationCtx = metadataProvider.getApplicationContext();
         ICCMessageBroker messageBroker = (ICCMessageBroker) applicationCtx.getServiceContext().getMessageBroker();
         AlgebricksAbsolutePartitionConstraint runtimeLocations = getLocations();
@@ -473,9 +478,9 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         LOGGER.log(Level.INFO, "Sending stop messages to " + runtimeLocations);
         for (String location : runtimeLocations.getLocations()) {
             LOGGER.log(Level.INFO, "Sending to " + location);
-            messageBroker.sendApplicationMessageToNC(
-                    new ActiveManagerMessage(ActiveManagerMessage.Kind.STOP_ACTIVITY, getActiveRuntimeId(partition++)),
-                    location);
+            ActiveRuntimeId runtimeId = getActiveRuntimeId(partition++);
+            messageBroker.sendApplicationMessageToNC(new ActiveManagerMessage(ActiveManagerMessage.Kind.STOP_ACTIVITY,
+                    new StopRuntimeParameters(runtimeId, timeout, unit)), location);
         }
     }
 
@@ -510,7 +515,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         } else if (state == ActivityState.RUNNING) {
             setState(ActivityState.STOPPING);
             try {
-                doStop(metadataProvider);
+                doStop(metadataProvider, STOP_MESSAGE_TIMEOUT, TIMEOUT_UNIT);
             } catch (Exception e) {
                 setState(ActivityState.STOPPED);
                 LOGGER.log(Level.ERROR, "Failed to stop the entity " + entityId, e);

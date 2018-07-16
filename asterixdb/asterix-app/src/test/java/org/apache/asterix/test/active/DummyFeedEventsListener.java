@@ -20,6 +20,7 @@ package org.apache.asterix.test.active;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
@@ -62,7 +63,7 @@ public class DummyFeedEventsListener extends FeedEventsListener {
     }
 
     @Override
-    protected void doStop(MetadataProvider metadataProvider) throws HyracksDataException {
+    protected void doStop(MetadataProvider metadataProvider, long timeout, TimeUnit unit) throws HyracksDataException {
         IActiveEntityEventSubscriber eventSubscriber =
                 new WaitForStateSubscriber(this, Collections.singleton(ActivityState.STOPPED));
         try {

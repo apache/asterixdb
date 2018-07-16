@@ -21,6 +21,7 @@ package org.apache.asterix.test.active;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.active.ActiveRuntimeId;
 import org.apache.asterix.active.ActivityState;
@@ -172,7 +173,7 @@ public class TestEventsListener extends ActiveEntityEventsListener {
     }
 
     @Override
-    protected void sendStopMessages(MetadataProvider metadataProvider) throws Exception {
+    protected void sendStopMessages(MetadataProvider metadataProvider, long timeout, TimeUnit unit) throws Exception {
         step(onStop);
         failCompile(onStop);
         if (onStop == Behavior.RUNNING_JOB_FAIL) {
@@ -214,7 +215,7 @@ public class TestEventsListener extends ActiveEntityEventsListener {
 
     @Override
     protected void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException {
-        doStop(metadataProvider);
+        doStop(metadataProvider, SUSPEND_MESSAGE_TIMEOUT, TIMEOUT_UNIT);
     }
 
     @Override

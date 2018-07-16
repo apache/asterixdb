@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.active;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.active.message.ActivePartitionMessage.Event;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -62,10 +64,10 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
     protected abstract void start() throws HyracksDataException, InterruptedException;
 
     @Override
-    public final void stop() throws HyracksDataException, InterruptedException {
+    public final void stop(long timeout, TimeUnit unit) throws HyracksDataException, InterruptedException {
         synchronized (this) {
             if (!done) {
-                abort();
+                abort(timeout, unit);
             }
             while (!done) {
                 wait();
@@ -76,10 +78,13 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
     /**
      * called from a different thread. This method stops the active node and force the start() call to return
      *
+     * @param unit
+     * @param timeout
+     *
      * @throws HyracksDataException
      * @throws InterruptedException
      */
-    protected abstract void abort() throws HyracksDataException, InterruptedException;
+    protected abstract void abort(long timeout, TimeUnit unit) throws HyracksDataException, InterruptedException;
 
     @Override
     public String toString() {

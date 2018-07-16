@@ -33,6 +33,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.active.message.ActiveStatsRequestMessage;
 import org.apache.asterix.active.message.ActiveStatsResponse;
+import org.apache.asterix.active.message.StopRuntimeParameters;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
@@ -40,6 +41,7 @@ import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -139,7 +141,7 @@ public class ActiveManager {
         shutdown = true;
         runtimes.forEach((runtimeId, runtime) -> stopFutures.put(runtimeId, executor.submit(() -> {
             // we may already have been stopped- only stop once
-            stopIfRunning(runtimeId, runtime);
+            stopIfRunning(runtime, SHUTDOWN_TIMEOUT_SECS, TimeUnit.SECONDS);
             return null;
         })));
         stopFutures.entrySet().parallelStream().forEach(entry -> {
@@ -157,8 +159,10 @@ public class ActiveManager {
         LOGGER.warn("Shutdown ActiveManager on node " + nodeId + " complete");
     }
 
+    @SuppressWarnings("squid:S1181") // Catch Error
     private void stopRuntime(ActiveManagerMessage message) {
-        ActiveRuntimeId runtimeId = (ActiveRuntimeId) message.getPayload();
+        StopRuntimeParameters content = (StopRuntimeParameters) message.getPayload();
+        ActiveRuntimeId runtimeId = content.getRuntimeId();
         IActiveRuntime runtime = runtimes.get(runtimeId);
         if (runtime == null) {
             LOGGER.warn("Request to stop runtime: " + runtimeId
@@ -167,21 +171,23 @@ public class ActiveManager {
         } else {
             executor.execute(() -> {
                 try {
-                    stopIfRunning(runtimeId, runtime);
+                    stopIfRunning(runtime, content.getTimeout(), content.getUnit());
                 } catch (Exception e) {
-                    // TODO(till) Figure out a better way to handle failure to stop a runtime
-                    LOGGER.log(Level.WARN, "Failed to stop runtime: " + runtimeId, e);
+                    LOGGER.warn("Failed to stop runtime: {}", runtimeId, e);
+                } catch (Throwable th) {
+                    LOGGER.warn("Failed to stop runtime: {}", runtimeId, th);
+                    ExitUtil.halt(ExitUtil.EC_UNCAUGHT_THROWABLE);
                 }
             });
         }
     }
 
-    private void stopIfRunning(ActiveRuntimeId runtimeId, IActiveRuntime runtime)
+    private void stopIfRunning(IActiveRuntime runtime, long timeout, TimeUnit unit)
             throws HyracksDataException, InterruptedException {
-        if (runtimes.containsKey(runtimeId)) {
-            runtime.stop();
+        if (runtimes.containsKey(runtime.getRuntimeId())) {
+            runtime.stop(timeout, unit);
         } else {
-            LOGGER.info("Not stopping already stopped runtime " + runtimeId);
+            LOGGER.info("Not stopping already stopped runtime {}", runtime.getRuntimeId());
         }
     }
 
