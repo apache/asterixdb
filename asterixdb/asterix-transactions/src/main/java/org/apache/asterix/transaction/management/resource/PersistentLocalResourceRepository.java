@@ -202,9 +202,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+        indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(null, 0);
         deleteResourceFileMask(resourceFile);
         resourceCache.put(resource.getPath(), resource);
-        indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(null, 0);
         //if replication enabled, send resource metadata info to remote nodes
         if (isReplicationEnabled) {
             createReplicationJob(ReplicationOperation.REPLICATE, resourceFile);
