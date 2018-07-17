@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.config.IOption;
@@ -59,9 +60,10 @@ public interface IClusterStateManager {
      *
      * @param nodeId
      * @param active
+     * @param ncLocalCounters
      * @throws HyracksDataException
      */
-    void updateNodePartitions(String nodeId, boolean active) throws HyracksDataException;
+    void updateNodeState(String nodeId, boolean active, NcLocalCounters ncLocalCounters) throws HyracksDataException;
 
     /**
      * Updates the active node and active state of the cluster partition with id {@code partitionNum}

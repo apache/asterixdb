@@ -49,23 +49,11 @@ public class ResourceIdRequestMessage implements ICcAddressedMessage {
                             new Exception("Cannot generate global resource id when cluster is not active."));
                 } else {
                     response.setException(new Exception("One or more nodes has not reported max resource id."));
-                    requestMaxResourceID(clusterStateManager, resourceIdManager, broker);
                 }
             }
             broker.sendApplicationMessageToNC(response, src);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
-        }
-    }
-
-    private void requestMaxResourceID(IClusterStateManager clusterStateManager, IResourceIdManager resourceIdManager,
-            ICCMessageBroker broker) throws Exception {
-        Set<String> getParticipantNodes = clusterStateManager.getParticipantNodes(true);
-        ReportLocalCountersRequestMessage msg = new ReportLocalCountersRequestMessage();
-        for (String nodeId : getParticipantNodes) {
-            if (!resourceIdManager.reported(nodeId)) {
-                broker.sendApplicationMessageToNC(msg, nodeId);
-            }
         }
     }
 

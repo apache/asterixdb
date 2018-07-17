@@ -31,14 +31,19 @@ import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
+import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
+import org.apache.asterix.runtime.utils.BulkTxnIdFactory;
 import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobIdFactory;
+import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
 import org.apache.hyracks.control.common.config.ConfigManager;
@@ -194,8 +199,7 @@ public class ClusterStateManagerTest {
 
     private void notifyNodeStartupCompletion(CcApplicationContext applicationContext, String nodeId)
             throws HyracksDataException {
-        NCLifecycleTaskReportMessage msg = new NCLifecycleTaskReportMessage(nodeId, true);
-        applicationContext.getResourceIdManager().report(nodeId, 0);
+        NCLifecycleTaskReportMessage msg = new NCLifecycleTaskReportMessage(nodeId, true, mockLocalCounters());
         applicationContext.getNcLifecycleCoordinator().process(msg);
     }
 
@@ -204,7 +208,12 @@ public class ClusterStateManagerTest {
         ConfigManager configManager = new ConfigManager(null);
         IApplicationConfig applicationConfig = new ConfigManagerApplicationConfig(configManager);
         ICCServiceContext iccServiceContext = Mockito.mock(CCServiceContext.class);
+        final ClusterControllerService ccs = Mockito.mock(ClusterControllerService.class);
+        JobIdFactory jobIdFactory = new JobIdFactory(CcId.valueOf(0));
+        Mockito.when(ccs.getJobIdFactory()).thenReturn(jobIdFactory);
         Mockito.when(iccServiceContext.getAppConfig()).thenReturn(applicationConfig);
+        Mockito.when(iccServiceContext.getControllerService()).thenReturn(ccs);
+
         Mockito.when(ccApplicationContext.getServiceContext()).thenReturn(iccServiceContext);
 
         NcLifecycleCoordinator coordinator =
@@ -225,6 +234,9 @@ public class ClusterStateManagerTest {
         IGlobalRecoveryManager globalRecoveryManager = Mockito.mock(IGlobalRecoveryManager.class);
         Mockito.when(globalRecoveryManager.isRecoveryCompleted()).thenReturn(true);
         Mockito.when(ccApplicationContext.getGlobalRecoveryManager()).thenReturn(globalRecoveryManager);
+
+        BulkTxnIdFactory bulkTxnIdFactory = new BulkTxnIdFactory();
+        Mockito.when(ccApplicationContext.getTxnIdFactory()).thenReturn(bulkTxnIdFactory);
         return ccApplicationContext;
     }
 
@@ -237,5 +249,13 @@ public class ClusterStateManagerTest {
         Mockito.when(metadataProperties.getClusterPartitions()).thenReturn(clusterPartitions);
         Mockito.when(metadataProperties.getNodePartitions()).thenReturn(nodePartitionsMap);
         return metadataProperties;
+    }
+
+    private NcLocalCounters mockLocalCounters() {
+        final NcLocalCounters localCounters = Mockito.mock(NcLocalCounters.class);
+        Mockito.when(localCounters.getMaxJobId()).thenReturn(1000L);
+        Mockito.when(localCounters.getMaxResourceId()).thenReturn(1000L);
+        Mockito.when(localCounters.getMaxTxnId()).thenReturn(1000L);
+        return localCounters;
     }
 }

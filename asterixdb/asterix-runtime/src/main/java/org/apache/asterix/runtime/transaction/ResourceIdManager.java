@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ResourceIdManager implements IResourceIdManager {
 
@@ -48,11 +47,8 @@ public class ResourceIdManager implements IResourceIdManager {
     }
 
     @Override
-    public void report(String nodeId, long maxResourceId) throws HyracksDataException {
+    public void report(String nodeId, long maxResourceId) {
         globalResourceId.updateAndGet(prev -> Math.max(maxResourceId, prev));
-        if (reportedNodes.add(nodeId)) {
-            csm.refreshState();
-        }
+        reportedNodes.add(nodeId);
     }
-
 }

@@ -36,7 +36,7 @@ public interface ITxnIdFactory {
      * @param id
      *            the value to ensure future created transaction ids are larger than
      */
-    void ensureMinimumId(long id) throws AlgebricksException;
+    void ensureMinimumId(long id);
 
     /**
      * The highest transaction id this factory has created

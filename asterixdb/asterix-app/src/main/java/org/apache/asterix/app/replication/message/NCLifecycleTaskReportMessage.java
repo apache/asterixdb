@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.replication.message;
 
+import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
@@ -29,14 +30,16 @@ public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAdd
     private final String nodeId;
     private final boolean success;
     private Throwable exception;
+    private final NcLocalCounters localCounters;
 
-    public NCLifecycleTaskReportMessage(String nodeId, boolean success) {
+    public NCLifecycleTaskReportMessage(String nodeId, boolean success, NcLocalCounters localCounters) {
         this.nodeId = nodeId;
         this.success = success;
+        this.localCounters = localCounters;
     }
 
     @Override
-    public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
+    public void handle(ICcApplicationContext appCtx) throws HyracksDataException {
         appCtx.getNcLifecycleCoordinator().process(this);
     }
 
@@ -54,6 +57,10 @@ public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAdd
 
     public void setException(Throwable exception) {
         this.exception = exception;
+    }
+
+    public NcLocalCounters getLocalCounters() {
+        return localCounters;
     }
 
     @Override

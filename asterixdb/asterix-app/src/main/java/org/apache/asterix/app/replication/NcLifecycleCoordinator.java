@@ -31,7 +31,6 @@ import org.apache.asterix.app.nc.task.ExportMetadataNodeTask;
 import org.apache.asterix.app.nc.task.ExternalLibrarySetupTask;
 import org.apache.asterix.app.nc.task.LocalRecoveryTask;
 import org.apache.asterix.app.nc.task.MetadataBootstrapTask;
-import org.apache.asterix.app.nc.task.ReportLocalCountersTask;
 import org.apache.asterix.app.nc.task.StartLifecycleComponentsTask;
 import org.apache.asterix.app.nc.task.StartReplicationServiceTask;
 import org.apache.asterix.app.nc.task.UpdateNodeStatusTask;
@@ -79,7 +78,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     @Override
     public void notifyNodeFailure(String nodeId) throws HyracksDataException {
         pendingStartupCompletionNodes.remove(nodeId);
-        clusterManager.updateNodePartitions(nodeId, false);
+        clusterManager.updateNodeState(nodeId, false, null);
         if (nodeId.equals(metadataNodeId)) {
             clusterManager.updateMetadataNode(metadataNodeId, false);
         }
@@ -112,20 +111,18 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     private void process(RegistrationTasksRequestMessage msg) throws HyracksDataException {
         final String nodeId = msg.getNodeId();
         List<INCLifecycleTask> tasks = buildNCRegTasks(msg.getNodeId(), msg.getNodeStatus(), msg.getState());
-        if (!tasks.isEmpty()) {
-            RegistrationTasksResponseMessage response = new RegistrationTasksResponseMessage(nodeId, tasks);
-            try {
-                messageBroker.sendApplicationMessageToNC(response, msg.getNodeId());
-            } catch (Exception e) {
-                throw HyracksDataException.create(e);
-            }
+        RegistrationTasksResponseMessage response = new RegistrationTasksResponseMessage(nodeId, tasks);
+        try {
+            messageBroker.sendApplicationMessageToNC(response, msg.getNodeId());
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
         }
     }
 
     private void process(NCLifecycleTaskReportMessage msg) throws HyracksDataException {
         pendingStartupCompletionNodes.remove(msg.getNodeId());
         if (msg.isSuccess()) {
-            clusterManager.updateNodePartitions(msg.getNodeId(), true);
+            clusterManager.updateNodeState(msg.getNodeId(), true, msg.getLocalCounters());
             if (msg.getNodeId().equals(metadataNodeId)) {
                 clusterManager.updateMetadataNode(metadataNodeId, true);
             }
@@ -156,7 +153,6 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         if (metadataNode) {
             tasks.add(new BindMetadataNodeTask());
         }
-        tasks.add(new ReportLocalCountersTask());
         return tasks;
     }
 
@@ -203,7 +199,6 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             tasks.add(new ExportMetadataNodeTask(true));
             tasks.add(new BindMetadataNodeTask());
         }
-        tasks.add(new ReportLocalCountersTask());
         tasks.add(new UpdateNodeStatusTask(NodeStatus.ACTIVE));
         return tasks;
     }

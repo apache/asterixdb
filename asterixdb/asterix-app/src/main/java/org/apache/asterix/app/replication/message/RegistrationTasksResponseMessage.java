@@ -20,6 +20,7 @@ package org.apache.asterix.app.replication.message;
 
 import java.util.List;
 
+import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.CcIdentifiedMessage;
@@ -28,6 +29,7 @@ import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -68,7 +70,9 @@ public class RegistrationTasksResponseMessage extends CcIdentifiedMessage
                 success = false;
                 exception = e;
             }
-            NCLifecycleTaskReportMessage result = new NCLifecycleTaskReportMessage(nodeId, success);
+            NcLocalCounters localCounter = success ? NcLocalCounters.collect(getCcId(),
+                    (NodeControllerService) appCtx.getServiceContext().getControllerService()) : null;
+            NCLifecycleTaskReportMessage result = new NCLifecycleTaskReportMessage(nodeId, success, localCounter);
             result.setException(exception);
             try {
                 broker.sendMessageToCC(getCcId(), result);

@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.transactions.TxnId;
 
-class BulkTxnIdFactory implements ITxnIdFactory {
+public class BulkTxnIdFactory implements ITxnIdFactory {
 
     private final AtomicLong maxId = new AtomicLong();
 

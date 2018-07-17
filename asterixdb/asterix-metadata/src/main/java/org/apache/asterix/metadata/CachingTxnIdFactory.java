@@ -62,7 +62,7 @@ class CachingTxnIdFactory implements ITxnIdFactory {
     }
 
     @Override
-    public void ensureMinimumId(long id) throws AlgebricksException {
+    public void ensureMinimumId(long id) {
         throw new UnsupportedOperationException();
     }
 

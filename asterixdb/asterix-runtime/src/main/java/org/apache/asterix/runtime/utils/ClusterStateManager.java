@@ -37,12 +37,14 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.transactions.IResourceIdManager;
+import org.apache.asterix.common.utils.NcLocalCounters;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.NCConfig;
@@ -133,8 +135,9 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public synchronized void updateNodePartitions(String nodeId, boolean active) {
+    public synchronized void updateNodeState(String nodeId, boolean active, NcLocalCounters localCounters) {
         if (active) {
+            updateClusterCounters(nodeId, localCounters);
             participantNodes.add(nodeId);
         } else {
             participantNodes.remove(nodeId);
@@ -181,15 +184,6 @@ public class ClusterStateManager implements IClusterStateManager {
         if (clusterPartitions.values().stream().anyMatch(p -> !p.isActive() && !p.isPendingActivation())) {
             setState(ClusterState.UNUSABLE);
             return;
-        }
-
-        IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
-        for (String node : participantNodes) {
-            if (!resourceIdManager.reported(node)) {
-                LOGGER.info("Partitions are ready but {} has not yet registered its max resource id...", node);
-                setState(ClusterState.UNUSABLE);
-                return;
-            }
         }
         // the metadata bootstrap & global recovery must be complete before the cluster can be active
         if (metadataNodeActive) {
@@ -450,6 +444,14 @@ public class ClusterStateManager implements IClusterStateManager {
     @Override
     public synchronized ClusterPartition getMetadataPartition() {
         return metadataPartition;
+    }
+
+    private void updateClusterCounters(String nodeId, NcLocalCounters localCounters) {
+        final IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
+        resourceIdManager.report(nodeId, localCounters.getMaxResourceId());
+        appCtx.getTxnIdFactory().ensureMinimumId(localCounters.getMaxTxnId());
+        ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobIdFactory()
+                .setMaxJobId(localCounters.getMaxJobId());
     }
 
     private void updateNodeConfig(String nodeId, Map<IOption, Object> configuration) {
