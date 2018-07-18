@@ -17,6 +17,11 @@
  * under the License.
  */
 
+/*
+* Description  : Testing an array function that needs to compare elements
+* Expected Res : Error due to comparing non-primitive values, which is coming from a sub-query
+*/
+
 use TinySocial;
 
 select array_put([3, "John"], (select value v.compType from d1 v));

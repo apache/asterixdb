@@ -192,6 +192,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-prepend", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier ARRAY_APPEND =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-append", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_INSERT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-insert", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier ARRAY_POSITION =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-position", 2);
     public static final FunctionIdentifier ARRAY_REPEAT =
@@ -200,8 +202,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-reverse", 1);
     public static final FunctionIdentifier ARRAY_CONTAINS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-contains", 2);
-    public static final FunctionIdentifier ARRAY_INSERT =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-insert", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-distinct", 1);
+    public static final FunctionIdentifier ARRAY_SORT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-sort", 1);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -1487,6 +1491,8 @@ public class BuiltinFunctions {
         addFunction(ARRAY_REPEAT, ArrayRepeatTypeComputer.INSTANCE, true);
         addFunction(ARRAY_REVERSE, AListFirstTypeComputer.INSTANCE, true);
         addFunction(ARRAY_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_SORT, AListFirstTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_DISTINCT, AListFirstTypeComputer.INSTANCE, true);
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);

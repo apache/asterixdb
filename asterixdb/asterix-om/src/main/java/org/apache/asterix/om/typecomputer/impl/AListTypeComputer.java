@@ -37,8 +37,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 public class AListTypeComputer extends AbstractResultTypeComputer {
     public static final AListTypeComputer INSTANCE_REMOVE = new AListTypeComputer(2, false, false, true);
     public static final AListTypeComputer INSTANCE_PUT = new AListTypeComputer(2, false, true, true);
-    public static final AListTypeComputer INSTANCE_PREPEND = new AListTypeComputer(2, false, true, false);
-    public static final AListTypeComputer INSTANCE_APPEND = new AListTypeComputer(2, true, true, false);
+    public static final AListTypeComputer INSTANCE_PREPEND = new AListTypeComputer(2, true, true, false);
+    public static final AListTypeComputer INSTANCE_APPEND = new AListTypeComputer(2, false, true, false);
     public static final AListTypeComputer INSTANCE_INSERT = new AListTypeComputer(3, false, true, false);
 
     private final int minNumArgs;

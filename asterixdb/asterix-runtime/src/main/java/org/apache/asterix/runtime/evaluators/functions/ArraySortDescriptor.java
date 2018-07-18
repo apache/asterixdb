@@ -18,9 +18,16 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
+
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.PriorityQueue;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -34,23 +41,21 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.AbstractPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-/**
- * array_reverse(list) returns a new list with the entries of the original input list in reverse order. If the input is
- * not a list, it returns "null".
- */
-public class ArrayReverseDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class ArraySortDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
+    private static final ArraySortComparator COMP = new ArraySortComparator();
     private IAType inputListType;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new ArrayReverseDescriptor();
+            return new ArraySortDescriptor();
         }
 
         @Override
@@ -62,7 +67,7 @@ public class ArrayReverseDescriptor extends AbstractScalarFunctionDynamicDescrip
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.ARRAY_REVERSE;
+        return BuiltinFunctions.ARRAY_SORT;
     }
 
     @Override
@@ -78,28 +83,57 @@ public class ArrayReverseDescriptor extends AbstractScalarFunctionDynamicDescrip
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayReverseFunction(args, ctx);
+                return new ArraySortFunction(args, ctx, sourceLoc);
             }
         };
     }
 
-    public class ArrayReverseFunction extends AbstractArrayProcessEval {
-        private final ArrayBackedValueStorage storage;
-        private final AbstractPointable item;
+    private static class ArraySortComparator implements Comparator<IPointable> {
+        private final IBinaryComparator comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
-        public ArrayReverseFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
+        @Override
+        public int compare(IPointable val1, IPointable val2) {
+            try {
+                return comp.compare(val1.getByteArray(), val1.getStartOffset(), val1.getLength(), val2.getByteArray(),
+                        val2.getStartOffset(), val2.getLength());
+            } catch (HyracksDataException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    public class ArraySortFunction extends AbstractArrayProcessEval {
+        private final SourceLocation sourceLoc;
+        private final PriorityQueue<IPointable> sortedList;
+        private IPointable item;
+        private ArrayBackedValueStorage storage;
+
+        public ArraySortFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc)
                 throws HyracksDataException {
             super(args, ctx, inputListType);
-            storage = new ArrayBackedValueStorage();
-            item = new VoidPointable();
+            this.sourceLoc = sourceLoc;
+            item = pointableAllocator.allocateEmpty();
+            storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
+            sortedList = new PriorityQueue<>(COMP);
         }
 
         @Override
         protected void processList(ListAccessor listAccessor, IAsterixListBuilder listBuilder) throws IOException {
-            // get the list items in reverse and append to the new list
-            for (int i = listAccessor.size() - 1; i >= 0; i--) {
-                listAccessor.getOrWriteItem(i, item, storage);
-                listBuilder.addItem(item);
+            sortedList.clear();
+            boolean itemInStorage;
+            for (int i = 0; i < listAccessor.size(); i++) {
+                itemInStorage = listAccessor.getOrWriteItem(i, item, storage);
+                if (ATYPETAGDESERIALIZER.deserialize(item.getByteArray()[item.getStartOffset()]).isDerivedType()) {
+                    throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLoc);
+                }
+                sortedList.add(item);
+                if (itemInStorage) {
+                    storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
+                }
+                item = pointableAllocator.allocateEmpty();
+            }
+            while (!sortedList.isEmpty()) {
+                listBuilder.addItem(sortedList.poll());
             }
         }
     }

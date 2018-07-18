@@ -19,9 +19,9 @@
 
 /*
 * Description  : Testing an array function that needs to compare elements
-* Expected Res : Error due to comparing non-primitive values, which is [2,3]
+* Expected Res : Error due to comparing non-primitive values, which is [5]
 */
 
 use TinySocial;
 
-select array_position([5,1,9], [2,3]);
+select array_sort([19, 3, [5]]);

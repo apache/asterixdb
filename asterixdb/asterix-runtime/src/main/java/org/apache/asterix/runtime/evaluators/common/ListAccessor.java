@@ -29,6 +29,8 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
  * Utility class for accessing serialized unordered and ordered lists.
@@ -105,6 +107,30 @@ public class ListAccessor {
             dos.writeByte(itemType.serialize());
         }
         dos.write(listBytes, itemOffset, itemLength);
+    }
+
+    /**
+     * @param itemIndex the index of the item requested
+     * @param pointable a pointable that will be set to point to the item requested
+     * @param storage if list is strongly typed, the item tag will be written followed by the item value to this storage
+     * @return true when the item requested has been written to the storage. false when a pointer to the item was set
+     * @throws IOException
+     */
+    public boolean getOrWriteItem(int itemIndex, IPointable pointable, ArrayBackedValueStorage storage)
+            throws IOException {
+        int itemOffset = getItemOffset(itemIndex);
+        int itemLength = getItemLength(itemOffset);
+        if (itemsAreSelfDescribing()) {
+            // +1 to account for the already included tag
+            pointable.set(listBytes, itemOffset, itemLength + 1);
+            return false;
+        } else {
+            storage.reset();
+            storage.getDataOutput().writeByte(itemType.serialize());
+            storage.getDataOutput().write(listBytes, itemOffset, itemLength);
+            pointable.set(storage);
+            return true;
+        }
     }
 
     public byte[] getByteArray() {

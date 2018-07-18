@@ -17,11 +17,18 @@
  * under the License.
  */
 
-/*
-* Description  : Testing an array function that needs to compare elements
-* Expected Res : Error due to comparing non-primitive values, which is [2,3]
-*/
+package org.apache.asterix.builders;
 
-use TinySocial;
+import java.util.ArrayList;
+import java.util.List;
 
-select array_position([5,1,9], [2,3]);
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.util.container.IObjectFactory;
+
+public class ArrayListFactory<T> implements IObjectFactory<List<T>, ATypeTag> {
+
+    @Override
+    public List<T> create(ATypeTag arg) {
+        return new ArrayList<>();
+    }
+}

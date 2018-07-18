@@ -17,11 +17,17 @@
  * under the License.
  */
 
-/*
-* Description  : Testing an array function that needs to compare elements
-* Expected Res : Error due to comparing non-primitive values, which is [2,3]
-*/
-
 use TinySocial;
 
-select array_position([5,1,9], [2,3]);
+{
+  "t1": (select array_sort(t.`referred-topics`) from TweetMessages t order by t.tweetid),
+  "t2": (array_sort([19, 5, 7, 7, 5, 2])),
+  "t3": (array_sort([19, 5, 7, 7, 5.1, 5.0, 2])),
+  "t4": (array_sort([19, 5, "a", 7.5, "A", "John", "a"])),
+  "t5": (array_sort([19, missing, 7, null, 5, null])),
+  "t6": (array_sort([3])),
+  "t7": (array_sort("non_array")),
+  "t8": (array_sort([])),
+  "t9": (array_sort(missing)),
+  "t10": (array_sort(null))
+};

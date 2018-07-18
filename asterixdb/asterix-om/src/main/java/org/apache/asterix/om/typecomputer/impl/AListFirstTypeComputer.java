@@ -20,7 +20,6 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -42,7 +41,7 @@ public class AListFirstTypeComputer extends AbstractResultTypeComputer {
         switch (argType.getTypeTag()) {
             case ARRAY:
             case MULTISET:
-                return AUnionType.createNullableType(argType);
+                return argType;
             default:
                 return BuiltinType.ANY;
         }

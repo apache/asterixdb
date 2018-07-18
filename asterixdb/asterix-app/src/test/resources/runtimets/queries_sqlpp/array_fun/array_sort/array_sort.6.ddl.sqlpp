@@ -17,11 +17,4 @@
  * under the License.
  */
 
-/*
-* Description  : Testing an array function that needs to compare elements
-* Expected Res : Error due to comparing non-primitive values, which is [2,3]
-*/
-
-use TinySocial;
-
-select array_position([5,1,9], [2,3]);
+drop  dataverse TinySocial;
