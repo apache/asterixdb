@@ -54,7 +54,7 @@ public class BinaryBooleanInspector implements IBinaryBooleanInspector {
         /** check if the runtime type is boolean */
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serializedTypeTag);
         if (typeTag != ATypeTag.BOOLEAN) {
-            throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, NAME, 0, ATypeTag.BOOLEAN, typeTag);
+            throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_FUNCTION, NAME, 0, ATypeTag.BOOLEAN, typeTag);
         }
 
         return bytes[offset + 1] == 1;

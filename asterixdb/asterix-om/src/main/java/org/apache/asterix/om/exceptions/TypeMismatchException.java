@@ -30,30 +30,41 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class TypeMismatchException extends CompilationException {
 
-    // Parameter type mistmatch.
+    // Function parameter type mismatch.
     public TypeMismatchException(FunctionIdentifier fid, Integer i, ATypeTag actualTypeTag,
             ATypeTag... expectedTypeTags) {
-        super(ErrorCode.COMPILATION_TYPE_MISMATCH, fid.getName(), indexToPosition(i),
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, fid.getName(), indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
     }
 
-    // Parameter type mistmatch.
+    // Function parameter type mismatch.
     public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, ATypeTag actualTypeTag,
             ATypeTag... expectedTypeTags) {
-        super(ErrorCode.COMPILATION_TYPE_MISMATCH, sourceLoc, fid.getName(), indexToPosition(i),
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, sourceLoc, fid.getName(), indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
     }
 
-    // Parameter type mistmatch.
+    // Function parameter type mismatch.
     public TypeMismatchException(String functionName, Integer i, ATypeTag actualTypeTag, ATypeTag... expectedTypeTags) {
-        super(ErrorCode.COMPILATION_TYPE_MISMATCH, functionName, indexToPosition(i),
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
     }
 
-    // Parameter type mistmatch.
+    // Function parameter type mismatch.
     public TypeMismatchException(SourceLocation sourceLoc, String functionName, Integer i, ATypeTag actualTypeTag,
             ATypeTag... expectedTypeTags) {
-        super(ErrorCode.COMPILATION_TYPE_MISMATCH, sourceLoc, functionName, indexToPosition(i),
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, sourceLoc, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
+    }
+
+    // Generic type mismatch.
+    public TypeMismatchException(SourceLocation sourceLoc, ATypeTag actualTypeTag, ATypeTag... expectedTypeTags) {
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH_GENERIC, sourceLoc, toExpectedTypeString(expectedTypeTags),
+                actualTypeTag);
+    }
+
+    // Generic type mismatch.
+    public TypeMismatchException(SourceLocation sourceLoc, ATypeTag actualTypeTag, String expectedType) {
+        super(ErrorCode.COMPILATION_TYPE_MISMATCH_GENERIC, sourceLoc, expectedType, actualTypeTag);
     }
 }

@@ -95,9 +95,8 @@ public class AnyCollectionMemberDescriptor extends AbstractScalarFunctionDynamic
 
                     if (serList[offset] != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                             && serList[offset] != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                        throw new TypeMismatchException(sourceLoc, BuiltinFunctions.ANY_COLLECTION_MEMBER, 0,
-                                serList[offset], ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
-                                ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
+                        throw new TypeMismatchException(sourceLoc, serList[offset],
+                                ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                     }
 
                     try {

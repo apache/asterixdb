@@ -39,8 +39,7 @@ public class CollectionMemberResultType extends AbstractResultTypeComputer {
             throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
         if (type.getTypeTag() != ATypeTag.MULTISET && type.getTypeTag() != ATypeTag.ARRAY) {
-            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.MULTISET,
-                    ATypeTag.ARRAY);
+            throw new TypeMismatchException(sourceLoc, actualTypeTag, ATypeTag.MULTISET, ATypeTag.ARRAY);
         }
     }
 

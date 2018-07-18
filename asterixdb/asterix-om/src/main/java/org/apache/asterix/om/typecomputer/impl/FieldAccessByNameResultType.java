@@ -42,10 +42,10 @@ public class FieldAccessByNameResultType extends AbstractResultTypeComputer {
             throws AlgebricksException {
         ATypeTag actualTypeTag = type.getTypeTag();
         if (argIndex == 0 && actualTypeTag != ATypeTag.OBJECT) {
-            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.OBJECT);
+            throw new TypeMismatchException(sourceLoc, actualTypeTag, ATypeTag.OBJECT);
         }
         if (argIndex == 1 && actualTypeTag != ATypeTag.STRING) {
-            throw new TypeMismatchException(sourceLoc, funcName, argIndex, actualTypeTag, ATypeTag.STRING);
+            throw new TypeMismatchException(sourceLoc, actualTypeTag, ATypeTag.STRING);
         }
     }
 

@@ -94,8 +94,8 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                     }
                     if (typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                             && typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                        throw new TypeMismatchException(sourceLoc, BuiltinFunctions.SCAN_COLLECTION, 0, typeTag,
-                                ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG, ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
+                        throw new TypeMismatchException(sourceLoc, typeTag, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
+                                ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
                     }
                     listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                     itemIndex = 0;

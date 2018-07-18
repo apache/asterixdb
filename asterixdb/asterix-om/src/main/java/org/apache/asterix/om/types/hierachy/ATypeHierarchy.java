@@ -315,7 +315,7 @@ public class ATypeHierarchy {
             case DOUBLE:
                 return DoubleToInt32TypeConvertComputer.getInstance(strictDemote).convertType(bytes, offset);
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex,
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_FUNCTION, name, argIndex,
                         Arrays.toString(new Object[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
                                 ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE }),
                         sourceTypeTag);
@@ -354,7 +354,7 @@ public class ATypeHierarchy {
             case DOUBLE:
                 return DoubleToInt64TypeConvertComputer.getInstance(strictDemote).convertType(bytes, offset);
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex,
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_FUNCTION, name, argIndex,
                         Arrays.toString(new Object[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
                                 ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE }),
                         sourceTypeTag);
@@ -385,7 +385,7 @@ public class ATypeHierarchy {
             case BIGINT:
                 return IntegerToDoubleTypeConvertComputer.getInstance().convertType(bytes, offset, sourceTypeTag);
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH, name, argIndex,
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_FUNCTION, name, argIndex,
                         Arrays.toString(new ATypeTag[] { ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER,
                                 ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE }),
                         sourceTypeTag);

@@ -22,7 +22,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
-import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
@@ -78,8 +77,8 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
                     int serRecordLen = inputArg0.getLength();
 
                     if (serRecord[serRecordOffset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new TypeMismatchException(sourceLoc, BuiltinFunctions.FIELD_ACCESS_BY_NAME, 0,
-                                serRecord[serRecordOffset], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
+                        throw new TypeMismatchException(sourceLoc, serRecord[serRecordOffset],
+                                ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
                     }
                     byte[] serFldName = inputArg1.getByteArray();
                     int serFldNameOffset = inputArg1.getStartOffset();

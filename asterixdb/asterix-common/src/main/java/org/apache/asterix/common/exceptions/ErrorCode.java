@@ -42,7 +42,7 @@ public class ErrorCode {
 
     // Runtime errors
     public static final int CASTING_FIELD = 1;
-    public static final int TYPE_MISMATCH = 2;
+    public static final int TYPE_MISMATCH_FUNCTION = 2;
     public static final int TYPE_INCOMPATIBLE = 3;
     public static final int TYPE_UNSUPPORTED = 4;
     public static final int TYPE_ITEM = 5;
@@ -77,6 +77,7 @@ public class ErrorCode {
     public static final int DIVISION_BY_ZERO = 34;
     public static final int UNSUPPORTED_MULTIPLE_STATEMENTS = 35;
     public static final int CANNOT_COMPARE_COMPLEX = 36;
+    public static final int TYPE_MISMATCH_GENERIC = 37;
 
     public static final int UNSUPPORTED_JRE = 100;
 
@@ -84,7 +85,7 @@ public class ErrorCode {
 
     // Compilation errors
     public static final int PARSE_ERROR = 1001;
-    public static final int COMPILATION_TYPE_MISMATCH = 1002;
+    public static final int COMPILATION_TYPE_MISMATCH_FUNCTION = 1002;
     public static final int COMPILATION_TYPE_INCOMPATIBLE = 1003;
     public static final int COMPILATION_TYPE_UNSUPPORTED = 1004;
     public static final int COMPILATION_TYPE_ITEM = 1005;
@@ -173,6 +174,7 @@ public class ErrorCode {
     public static final int FIELD_NOT_FOUND = 1088;
     public static final int FIELD_NOT_OF_TYPE = 1089;
     public static final int ARRAY_FIELD_ELEMENTS_MUST_BE_OF_TYPE = 1090;
+    public static final int COMPILATION_TYPE_MISMATCH_GENERIC = 1091;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

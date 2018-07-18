@@ -30,38 +30,52 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class TypeMismatchException extends RuntimeDataException {
 
-    // Parameter type mistmatch.
+    // Function parameter type mismatch.
     public TypeMismatchException(FunctionIdentifier fid, Integer i, byte actualTypeTag, byte... expectedTypeTags) {
-        super(ErrorCode.TYPE_MISMATCH, fid.getName(), indexToPosition(i), toExpectedTypeString(expectedTypeTags),
-                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
-    }
-
-    // Parameter type mistmatch.
-    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, byte actualTypeTag,
-            byte... expectedTypeTags) {
-        super(ErrorCode.TYPE_MISMATCH, sourceLoc, fid.getName(), indexToPosition(i),
+        super(ErrorCode.TYPE_MISMATCH_FUNCTION, fid.getName(), indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 
-    // Parameter type mistmatch.
-    public TypeMismatchException(String functionName, Integer i, byte actualTypeTag, byte... expectedTypeTags) {
-        super(ErrorCode.TYPE_MISMATCH, functionName, indexToPosition(i), toExpectedTypeString(expectedTypeTags),
+    // Function parameter type mismatch.
+    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, byte actualTypeTag,
+            byte... expectedTypeTags) {
+        super(ErrorCode.TYPE_MISMATCH_FUNCTION, sourceLoc, fid.getName(), indexToPosition(i),
+                toExpectedTypeString(expectedTypeTags),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 
-    // Parameter type mistmatch.
+    // Function parameter type mismatch.
+    public TypeMismatchException(String functionName, Integer i, byte actualTypeTag, byte... expectedTypeTags) {
+        super(ErrorCode.TYPE_MISMATCH_FUNCTION, functionName, indexToPosition(i),
+                toExpectedTypeString(expectedTypeTags),
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
+    }
+
+    // Function parameter type mismatch.
     public TypeMismatchException(SourceLocation sourceLoc, String functionName, Integer i, byte actualTypeTag,
             byte... expectedTypeTags) {
-        super(ErrorCode.TYPE_MISMATCH, sourceLoc, functionName, indexToPosition(i),
+        super(ErrorCode.TYPE_MISMATCH_FUNCTION, sourceLoc, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 
-    // Parameter type mistmatch.
+    // Function parameter type mismatch.
     public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, byte actualTypeTag,
             String expectedType) {
-        super(ErrorCode.TYPE_MISMATCH, sourceLoc, fid.getName(), indexToPosition(i), expectedType,
+        super(ErrorCode.TYPE_MISMATCH_FUNCTION, sourceLoc, fid.getName(), indexToPosition(i), expectedType,
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
+    }
+
+    // Generic type mismatch.
+    public TypeMismatchException(SourceLocation sourceLoc, byte actualTypeTag, byte... expectedTypeTags) {
+        super(ErrorCode.TYPE_MISMATCH_GENERIC, sourceLoc, toExpectedTypeString(expectedTypeTags),
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
+    }
+
+    // Generic type mismatch.
+    public TypeMismatchException(SourceLocation sourceLoc, byte actualTypeTag, String expectedType) {
+        super(ErrorCode.TYPE_MISMATCH_GENERIC, sourceLoc, expectedType,
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 }
