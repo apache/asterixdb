@@ -28,8 +28,10 @@ import static org.mockito.Mockito.when;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.api.http.ctx.StatementExecutorContext;
-import org.apache.asterix.api.http.server.QueryCancellationServlet;
+import org.apache.asterix.api.http.server.CcQueryCancellationServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.translator.ClientJobRequest;
 import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobId;
@@ -46,16 +48,17 @@ public class QueryCancellationServletTest {
 
     @Test
     public void testDelete() throws Exception {
+        ICcApplicationContext appCtx = mock(ICcApplicationContext.class);
         // Creates a query cancellation servlet.
-        QueryCancellationServlet cancellationServlet =
-                new QueryCancellationServlet(new ConcurrentHashMap<>(), new String[] { "/" });
+        CcQueryCancellationServlet cancellationServlet =
+                new CcQueryCancellationServlet(new ConcurrentHashMap<>(), appCtx, new String[] { "/" });
         // Adds mocked Hyracks client connection into the servlet context.
         IHyracksClientConnection mockHcc = mock(IHyracksClientConnection.class);
         cancellationServlet.ctx().put(ServletConstants.HYRACKS_CONNECTION_ATTR, mockHcc);
         // Adds a query context into the servlet context.
         IStatementExecutorContext queryCtx = new StatementExecutorContext();
         cancellationServlet.ctx().put(ServletConstants.RUNNING_QUERIES_ATTR, queryCtx);
-
+        Mockito.when(appCtx.getHcc()).thenReturn(mockHcc);
         // Tests the case that query is not in the map.
         IServletRequest mockRequest = mockRequest("1");
         IServletResponse mockResponse = mock(IServletResponse.class);
@@ -63,7 +66,7 @@ public class QueryCancellationServletTest {
         verify(mockResponse, times(1)).setStatus(HttpResponseStatus.NOT_FOUND);
 
         // Tests the case that query is in the map.
-        queryCtx.put("1", new JobId(1));
+        queryCtx.put("1", new ClientJobRequest(queryCtx, "1", new JobId(1)));
         cancellationServlet.handle(mockRequest, mockResponse);
         verify(mockResponse, times(1)).setStatus(HttpResponseStatus.OK);
 
@@ -73,7 +76,7 @@ public class QueryCancellationServletTest {
         verify(mockResponse, times(1)).setStatus(HttpResponseStatus.BAD_REQUEST);
 
         // Tests the case that the job cancellation hit some exception from Hyracks.
-        queryCtx.put("2", new JobId(2));
+        queryCtx.put("2", new ClientJobRequest(queryCtx, "2", new JobId(2)));
         Mockito.doThrow(new Exception()).when(mockHcc).cancelJob(any());
         mockRequest = mockRequest("2");
         cancellationServlet.handle(mockRequest, mockResponse);

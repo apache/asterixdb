@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,30 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.translator;
+package org.apache.asterix.common.api;
 
-import org.apache.asterix.common.api.IClientRequest;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class NoOpStatementExecutorContext implements IStatementExecutorContext {
+public interface IClientRequest {
 
-    public static final NoOpStatementExecutorContext INSTANCE = new NoOpStatementExecutorContext();
+    /**
+     * Mark the request as complete, non-cancellable anymore
+     */
+    void complete();
 
-    private NoOpStatementExecutorContext() {
-    }
-
-    @Override
-    public IClientRequest get(String clientContextId) {
-        return null;
-    }
-
-    @Override
-    public void put(String clientContextId, IClientRequest req) {
-        // Dummy for when a statement doesn't support cancellation
-    }
-
-    @Override
-    public IClientRequest remove(String clientContextId) {
-        return null;
-    }
-
+    /**
+     * Cancel a request
+     *
+     * @param appCtx
+     * @throws HyracksDataException
+     */
+    void cancel(ICcApplicationContext appCtx) throws HyracksDataException;
 }

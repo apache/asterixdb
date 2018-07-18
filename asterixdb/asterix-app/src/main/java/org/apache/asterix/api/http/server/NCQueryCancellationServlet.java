@@ -32,6 +32,7 @@ import org.apache.asterix.common.utils.RequestStatus;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +42,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 /**
  * The servlet provides a REST API on an NC for cancelling an on-going query.
  */
-public class NCQueryCancellationServlet extends QueryCancellationServlet {
+public class NCQueryCancellationServlet extends AbstractServlet {
     private static final Logger LOGGER = LogManager.getLogger();
     private final INCServiceContext serviceCtx;
     private final INCMessageBroker messageBroker;

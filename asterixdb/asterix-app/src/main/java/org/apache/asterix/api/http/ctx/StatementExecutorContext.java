@@ -16,31 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.api.http.ctx;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.translator.IStatementExecutorContext;
-import org.apache.hyracks.api.job.JobId;
 
 public class StatementExecutorContext implements IStatementExecutorContext {
 
-    private final Map<String, JobId> runningQueries = new ConcurrentHashMap<>();
+    private final Map<String, IClientRequest> runningQueries = new ConcurrentHashMap<>();
 
     @Override
-    public JobId getJobIdFromClientContextId(String clientContextId) {
+    public IClientRequest get(String clientContextId) {
         return runningQueries.get(clientContextId);
     }
 
     @Override
-    public void put(String clientContextId, JobId jobId) {
-        runningQueries.put(clientContextId, jobId);
+    public void put(String clientContextId, IClientRequest req) {
+        runningQueries.put(clientContextId, req);
     }
 
     @Override
-    public JobId removeJobIdFromClientContextId(String clientContextId) {
+    public IClientRequest remove(String clientContextId) {
         return runningQueries.remove(clientContextId);
     }
 }

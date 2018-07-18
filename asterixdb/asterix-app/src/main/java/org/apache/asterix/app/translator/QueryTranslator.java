@@ -152,6 +152,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
+import org.apache.asterix.translator.ClientJobRequest;
 import org.apache.asterix.translator.CompiledStatements.CompiledDeleteStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
@@ -408,7 +409,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case EXTENSION:
                         ((ExtensionStatement) stmt).handle(hcc, this, requestParameters, metadataProvider,
-                                resultSetIdCounter);
+                                resultSetIdCounter, ctx);
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
@@ -2601,6 +2602,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     private static void createAndRunJob(IHyracksClientConnection hcc, EnumSet<JobFlag> jobFlags, Mutable<JobId> jId,
             IStatementCompiler compiler, IMetadataLocker locker, ResultDelivery resultDelivery, IResultPrinter printer,
             String clientContextId, IStatementExecutorContext ctx) throws Exception {
+        ClientJobRequest req = null;
         locker.lock();
         try {
             final JobSpecification jobSpec = compiler.compile();
@@ -2609,7 +2611,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             final JobId jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
             if (ctx != null && clientContextId != null) {
-                ctx.put(clientContextId, jobId); // Adds the running job into the context.
+                req = new ClientJobRequest(ctx, clientContextId, jobId);
+                ctx.put(clientContextId, req); // Adds the running job into the context.
             }
             if (jId != null) {
                 jId.setValue(jobId);
@@ -2624,8 +2627,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } finally {
             locker.unlock();
             // No matter the job succeeds or fails, removes it into the context.
-            if (ctx != null && clientContextId != null) {
-                ctx.removeJobIdFromClientContextId(clientContextId);
+            if (req != null) {
+                req.complete();
             }
         }
     }

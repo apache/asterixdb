@@ -1545,6 +1545,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
     }
 
+    @Override
     public AsterixTupleFilterFactory createTupleFilterFactory(IOperatorSchema[] inputSchemas,
             IVariableTypeEnvironment typeEnv, ILogicalExpression filterExpr, JobGenContext context)
             throws AlgebricksException {

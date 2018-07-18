@@ -18,15 +18,14 @@
  */
 package org.apache.asterix.app.message;
 
+import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.utils.RequestStatus;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.translator.IStatementExecutorContext;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -51,17 +50,16 @@ public class CancelQueryRequest implements ICcAddressedMessage {
         ClusterControllerService ccs = (ClusterControllerService) appCtx.getServiceContext().getControllerService();
         CCApplication application = (CCApplication) ccs.getApplication();
         IStatementExecutorContext executorsCtx = application.getStatementExecutorContext();
-        JobId jobId = executorsCtx.getJobIdFromClientContextId(contextId);
+        IClientRequest req = executorsCtx.get(contextId);
         RequestStatus status;
 
-        if (jobId == null) {
+        if (req == null) {
             LOGGER.log(Level.WARN, "No job found for context id " + contextId);
             status = RequestStatus.NOT_FOUND;
         } else {
             try {
-                IHyracksClientConnection hcc = application.getHcc();
-                hcc.cancelJob(jobId);
-                executorsCtx.removeJobIdFromClientContextId(contextId);
+                req.cancel(appCtx);
+                executorsCtx.remove(contextId);
                 status = RequestStatus.SUCCESS;
             } catch (Exception e) {
                 LOGGER.log(Level.WARN, "unexpected exception thrown from cancel", e);

@@ -19,32 +19,31 @@
 
 package org.apache.asterix.translator;
 
-import org.apache.hyracks.api.job.JobId;
+import org.apache.asterix.common.api.IClientRequest;
 
 /**
- * The context for statement executors, which maintains the meta information of all queries.
- * TODO(yingyi): also maintain the mapping from server generated request ids to jobs.
+ * The context for statement executors. Maintains ongoing user requests.
  */
 public interface IStatementExecutorContext {
 
     /**
-     * Gets the Hyracks JobId from the user-provided client context id.
+     * Gets the client request from the user-provided client context id.
      *
      * @param clientContextId,
      *            a user provided client context id.
-     * @return the Hyracks job id of class {@link org.apache.hyracks.api.job.JobId}.
+     * @return the client request
      */
-    JobId getJobIdFromClientContextId(String clientContextId);
+    IClientRequest get(String clientContextId);
 
     /**
-     * Puts a client context id for a statement and the corresponding Hyracks job id.
+     * Puts a client context id for a statement and the corresponding request.
      *
      * @param clientContextId,
      *            a user provided client context id.
-     * @param jobId,
+     * @param req,
      *            the Hyracks job id of class {@link org.apache.hyracks.api.job.JobId}.
      */
-    void put(String clientContextId, JobId jobId);
+    void put(String clientContextId, IClientRequest req);
 
     /**
      * Removes the information about the query corresponding to a user-provided client context id.
@@ -52,5 +51,5 @@ public interface IStatementExecutorContext {
      * @param clientContextId,
      *            a user provided client context id.
      */
-    JobId removeJobIdFromClientContextId(String clientContextId);
+    IClientRequest remove(String clientContextId);
 }

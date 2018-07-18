@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.api.http.server.QueryServiceServlet.Parameter;
+import org.apache.asterix.common.api.IClientRequest;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutorContext;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
@@ -37,11 +37,14 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 /**
  * The servlet provides a REST API for cancelling an on-going query.
  */
-public class QueryCancellationServlet extends AbstractServlet {
+public class CcQueryCancellationServlet extends AbstractServlet {
     private static final Logger LOGGER = LogManager.getLogger();
+    private final ICcApplicationContext appCtx;
 
-    public QueryCancellationServlet(ConcurrentMap<String, Object> ctx, String... paths) {
+    public CcQueryCancellationServlet(ConcurrentMap<String, Object> ctx, ICcApplicationContext appCtx,
+            String... paths) {
         super(ctx, paths);
+        this.appCtx = appCtx;
     }
 
     @Override
@@ -51,23 +54,17 @@ public class QueryCancellationServlet extends AbstractServlet {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
         }
-
-        // Retrieves the corresponding Hyracks job id.
-        IStatementExecutorContext runningQueries =
+        IStatementExecutorContext executorCtx =
                 (IStatementExecutorContext) ctx.get(ServletConstants.RUNNING_QUERIES_ATTR);
-        IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(ServletConstants.HYRACKS_CONNECTION_ATTR);
-        JobId jobId = runningQueries.getJobIdFromClientContextId(clientContextId);
-
-        if (jobId == null) {
+        IClientRequest req = executorCtx.get(clientContextId);
+        if (req == null) {
             // response: NOT FOUND
             response.setStatus(HttpResponseStatus.NOT_FOUND);
             return;
         }
         try {
             // Cancels the on-going job.
-            hcc.cancelJob(jobId);
-            // Removes the cancelled query from the map activeQueries.
-            runningQueries.removeJobIdFromClientContextId(clientContextId);
+            req.cancel(appCtx);
             // response: OK
             response.setStatus(HttpResponseStatus.OK);
         } catch (Exception e) {
