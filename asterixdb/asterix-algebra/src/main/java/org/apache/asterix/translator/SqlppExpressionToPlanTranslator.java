@@ -84,6 +84,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
@@ -683,7 +684,8 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         LogicalVariable returnVar;
         ILogicalOperator returnOperator;
         SourceLocation sourceLoc = returnExpr.getSourceLocation();
-        if (returnExpr.getKind() == Kind.VARIABLE_EXPRESSION) {
+        if (returnExpr.getKind() == Kind.VARIABLE_EXPRESSION
+                && eo.first.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             VariableExpr varExpr = (VariableExpr) returnExpr;
             returnOperator = eo.second.getValue();
             returnVar = context.getVar(varExpr.getVar().getId());

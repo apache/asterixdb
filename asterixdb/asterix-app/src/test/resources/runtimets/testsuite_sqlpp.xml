@@ -6168,6 +6168,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="statement-params">
+      <compilation-unit name="named_04">
+        <output-dir compare="Text">named_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
       <compilation-unit name="positional_01">
         <output-dir compare="Text">positional_01</output-dir>
       </compilation-unit>
