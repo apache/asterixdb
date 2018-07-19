@@ -89,7 +89,7 @@ public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
     // Injects casts that cast types for different "THEN" and "ELSE" branches.
     private boolean rewriteSwitchCase(ILogicalOperator op, AbstractFunctionCallExpression func,
             IOptimizationContext context) throws AlgebricksException {
-        IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op.getInputs().get(0).getValue());
+        IVariableTypeEnvironment env = op.computeInputTypeEnvironment(context);
         IAType producedType = (IAType) env.getType(func);
         List<Mutable<ILogicalExpression>> argRefs = func.getArguments();
         int argSize = argRefs.size();

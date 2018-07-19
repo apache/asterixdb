@@ -3677,6 +3677,11 @@
   </test-group>
   <test-group name="misc">
     <test-case FilePath="misc">
+      <compilation-unit name="comp-ASTERIXDB-2415">
+        <output-dir compare="Text">query-ASTERIXDB-1671</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="poll-dynamic">
         <output-dir compare="Text">poll-dynamic</output-dir>
       </compilation-unit>
