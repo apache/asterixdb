@@ -23,7 +23,6 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -32,22 +31,26 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 /**
- * Returns a list that is missable/nullable.
+ * Returns a list that is missable/nullable. The list type is taken from one of the input args which is the input list.
  */
 public class AListTypeComputer extends AbstractResultTypeComputer {
-    public static final AListTypeComputer INSTANCE_REMOVE = new AListTypeComputer(2, false, false, true);
-    public static final AListTypeComputer INSTANCE_PUT = new AListTypeComputer(2, false, true, true);
-    public static final AListTypeComputer INSTANCE_PREPEND = new AListTypeComputer(2, true, true, false);
-    public static final AListTypeComputer INSTANCE_APPEND = new AListTypeComputer(2, false, true, false);
-    public static final AListTypeComputer INSTANCE_INSERT = new AListTypeComputer(3, false, true, false);
+    public static final AListTypeComputer INSTANCE_REMOVE = new AListTypeComputer(2, -1, false, false, true);
+    public static final AListTypeComputer INSTANCE_PUT = new AListTypeComputer(2, -1, false, true, true);
+    public static final AListTypeComputer INSTANCE_PREPEND = new AListTypeComputer(2, -1, true, true, false);
+    public static final AListTypeComputer INSTANCE_APPEND = new AListTypeComputer(2, -1, false, true, false);
+    public static final AListTypeComputer INSTANCE_INSERT = new AListTypeComputer(3, -1, false, true, false);
+    public static final AListTypeComputer INSTANCE_REPLACE = new AListTypeComputer(3, 4, false, true, false);
 
     private final int minNumArgs;
+    private final int maxNumArgs;
     private final boolean listIsLast;
     private final boolean makeOpen;
     private final boolean nullInNullOut;
 
-    private AListTypeComputer(int minNumArgs, boolean listIsLast, boolean makeOpen, boolean nullInNullOut) {
+    private AListTypeComputer(int minNumArgs, int maxNumArgs, boolean listIsLast, boolean makeOpen,
+            boolean nullInNullOut) {
         this.minNumArgs = minNumArgs;
+        this.maxNumArgs = maxNumArgs;
         this.listIsLast = listIsLast;
         this.makeOpen = makeOpen;
         this.nullInNullOut = nullInNullOut;
@@ -55,10 +58,10 @@ public class AListTypeComputer extends AbstractResultTypeComputer {
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        if (strippedInputTypes.length < minNumArgs) {
+        if (strippedInputTypes.length < minNumArgs || (maxNumArgs > 0 && strippedInputTypes.length > maxNumArgs)) {
             String functionName = ((AbstractFunctionCallExpression) expr).getFunctionIdentifier().getName();
             throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, expr.getSourceLocation(),
-                    minNumArgs, functionName);
+                    functionName);
         }
         // output type should be the same as as the type tag at [list index]. The output type is nullable/missable
         // since the output could be null due to other invalid arguments or the tag at [list index] itself is not list
@@ -68,12 +71,11 @@ public class AListTypeComputer extends AbstractResultTypeComputer {
         }
 
         IAType listType = strippedInputTypes[listIndex];
-        if (listType.getTypeTag() == ATypeTag.ARRAY) {
-            return makeOpen ? AUnionType.createUnknownableType(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE)
-                    : AUnionType.createUnknownableType(listType);
-        } else if (listType.getTypeTag() == ATypeTag.MULTISET) {
-            return makeOpen ? AUnionType.createUnknownableType(DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE)
-                    : AUnionType.createUnknownableType(listType);
+        if (listType.getTypeTag().isListType()) {
+            if (makeOpen) {
+                listType = DefaultOpenFieldType.getDefaultOpenFieldType(listType.getTypeTag());
+            }
+            return AUnionType.createUnknownableType(listType);
         } else {
             return BuiltinType.ANY;
         }

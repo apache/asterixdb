@@ -35,6 +35,20 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * <pre>
+ * array_prepend(val1, val2, ..., list) returns a new open list with all the values prepended to the input list items.
+ * Values can be null (i.e., one can append nulls)
+ *
+ * It throws an error at compile time if the number of arguments < 2
+ *
+ * It returns in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if the list arg is null or it's not a list.
+ * 3. otherwise, a new open list.
+ *
+ * </pre>
+ */
 public class ArrayPrependDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
@@ -64,7 +78,7 @@ public class ArrayPrependDescriptor extends AbstractScalarFunctionDynamicDescrip
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayPrependFunction(args, ctx);
+                return new ArrayPrependEval(args, ctx);
             }
         };
     }
@@ -74,10 +88,9 @@ public class ArrayPrependDescriptor extends AbstractScalarFunctionDynamicDescrip
         argTypes = (IAType[]) states;
     }
 
-    public class ArrayPrependFunction extends AbstractArrayAddRemoveEval {
+    public class ArrayPrependEval extends AbstractArrayAddRemoveEval {
 
-        public ArrayPrependFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-                throws HyracksDataException {
+        public ArrayPrependEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, args.length - 1, 0, args.length - 1, argTypes, false, sourceLoc, true, true);
         }
 

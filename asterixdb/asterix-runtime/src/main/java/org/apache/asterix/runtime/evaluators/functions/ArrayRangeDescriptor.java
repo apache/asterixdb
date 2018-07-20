@@ -1,0 +1,163 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.asterix.runtime.evaluators.functions;
+
+import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
+
+import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.typecomputer.impl.ArrayRangeTypeComputer;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+
+public class ArrayRangeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = 1L;
+
+    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
+        @Override
+        public IFunctionDescriptor createFunctionDescriptor() {
+            return new ArrayRangeDescriptor();
+        }
+    };
+
+    @Override
+    public FunctionIdentifier getIdentifier() {
+        return BuiltinFunctions.ARRAY_RANGE;
+    }
+
+    @Override
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
+            throws AlgebricksException {
+        return new IScalarEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
+                return new ArrayRangeEval(args, ctx);
+            }
+        };
+    }
+
+    public class ArrayRangeEval implements IScalarEvaluator {
+        private final OrderedListBuilder listBuilder;
+        private final ArrayBackedValueStorage storage;
+        private final IScalarEvaluator startNumEval;
+        private final TaggedValuePointable start;
+        private final IScalarEvaluator endNumEval;
+        private final TaggedValuePointable end;
+        private final AMutableDouble aDouble;
+        private final AMutableInt64 aLong;
+        private IScalarEvaluator stepNumEval;
+        private TaggedValuePointable step;
+
+        public ArrayRangeEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
+            storage = new ArrayBackedValueStorage();
+            start = new TaggedValuePointable();
+            end = new TaggedValuePointable();
+            startNumEval = args[0].createScalarEvaluator(ctx);
+            endNumEval = args[1].createScalarEvaluator(ctx);
+            listBuilder = new OrderedListBuilder();
+            aDouble = new AMutableDouble(0);
+            aLong = new AMutableInt64(0);
+            if (args.length == 3) {
+                stepNumEval = args[2].createScalarEvaluator(ctx);
+                step = new TaggedValuePointable();
+            }
+        }
+
+        @Override
+        public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+            startNumEval.evaluate(tuple, start);
+            endNumEval.evaluate(tuple, end);
+            String n = getIdentifier().getName();
+            ATypeTag startTag = ATYPETAGDESERIALIZER.deserialize(start.getTag());
+            ATypeTag endTag = ATYPETAGDESERIALIZER.deserialize(end.getTag());
+            ATypeTag stepTag = ATypeTag.INTEGER;
+            double stepNum = 1;
+            if (stepNumEval != null) {
+                stepNumEval.evaluate(tuple, step);
+                stepTag = ATYPETAGDESERIALIZER.deserialize(step.getTag());
+                if (!ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, stepTag)) {
+                    PointableHelper.setNull(result);
+                    return;
+                }
+                stepNum = ATypeHierarchy.getDoubleValue(n, 2, step.getByteArray(), step.getStartOffset());
+            }
+
+            if (!ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, startTag)
+                    || !ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, endTag)) {
+                PointableHelper.setNull(result);
+                return;
+            }
+
+            ISerializerDeserializer serde;
+            if (ATypeHierarchy.canPromote(startTag, ATypeTag.BIGINT)
+                    && ATypeHierarchy.canPromote(endTag, ATypeTag.BIGINT)
+                    && ATypeHierarchy.canPromote(stepTag, ATypeTag.BIGINT)) {
+                // all 3 numbers are whole numbers
+                serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
+                long startNum = ATypeHierarchy.getLongValue(n, 0, start.getByteArray(), start.getStartOffset());
+                long endNum = ATypeHierarchy.getLongValue(n, 1, end.getByteArray(), end.getStartOffset());
+                listBuilder.reset(ArrayRangeTypeComputer.LONG_LIST);
+                while ((startNum < endNum && stepNum > 0) || (startNum > endNum && stepNum < 0)) {
+                    aLong.setValue(startNum);
+                    storage.reset();
+                    serde.serialize(aLong, storage.getDataOutput());
+                    listBuilder.addItem(storage);
+                    startNum += stepNum;
+                }
+            } else {
+                // one number is a floating-point number
+                serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
+                double startNum = ATypeHierarchy.getDoubleValue(n, 0, start.getByteArray(), start.getStartOffset());
+                double endNum = ATypeHierarchy.getDoubleValue(n, 1, end.getByteArray(), end.getStartOffset());
+                listBuilder.reset(ArrayRangeTypeComputer.DOUBLE_LIST);
+                while ((startNum < endNum && stepNum > 0) || (startNum > endNum && stepNum < 0)) {
+                    aDouble.setValue(startNum);
+                    storage.reset();
+                    serde.serialize(aDouble, storage.getDataOutput());
+                    listBuilder.addItem(storage);
+                    startNum += stepNum;
+                }
+            }
+
+            storage.reset();
+            listBuilder.write(storage.getDataOutput(), true);
+            result.set(storage);
+        }
+    }
+}

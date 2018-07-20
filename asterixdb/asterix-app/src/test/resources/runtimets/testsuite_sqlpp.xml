@@ -1055,6 +1055,70 @@
         <expected-error>Cannot compare non-primitive values (in line 27, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_concat">
+        <output-dir compare="Text">array_concat</output-dir>
+        <expected-error>Input contains different list types (in line 27, at column 8)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_flatten">
+        <output-dir compare="Text">array_flatten</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_ifnull">
+        <output-dir compare="Text">array_ifnull</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_intersect">
+        <output-dir compare="Text">array_intersect</output-dir>
+        <expected-error>Input contains different list types (in line 27, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 27, at column 8)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_range">
+        <output-dir compare="Text">array_range</output-dir>
+        <expected-error>Invalid number of arguments for function array-range (in line 27, at column 8)</expected-error>
+        <expected-error>Invalid number of arguments for function array-range (in line 27, at column 8)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_replace">
+        <output-dir compare="Text">array_replace</output-dir>
+        <expected-error>Cannot compare non-primitive values (in line 27, at column 8)</expected-error>
+        <expected-error>ASX1087: Invalid number of arguments for function array-replace (in line 27, at column 8)</expected-error>
+        <expected-error>ASX1087: Invalid number of arguments for function array-replace (in line 27, at column 8)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_star">
+        <output-dir compare="Text">array_star</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_symdiff">
+        <output-dir compare="Text">array_symdiff</output-dir>
+        <expected-error>Input contains different list types (in line 27, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 27, at column 8)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_symdiffn">
+        <output-dir compare="Text">array_symdiffn</output-dir>
+        <expected-error>Input contains different list types (in line 27, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 27, at column 8)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_union">
+        <output-dir compare="Text">array_union</output-dir>
+        <expected-error>Input contains different list types (in line 27, at column 8)</expected-error>
+        <expected-error>Cannot compare non-primitive values (in line 27, at column 8)</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="boolean">
     <test-case FilePath="boolean">

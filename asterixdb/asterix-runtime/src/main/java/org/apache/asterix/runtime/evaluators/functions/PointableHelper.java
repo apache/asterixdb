@@ -31,6 +31,7 @@ import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
 /**
@@ -45,6 +46,11 @@ public class PointableHelper {
     private static final byte[] NULL_BYTES = new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG };
     private static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
     private final UTF8StringWriter utf8Writer;
+
+    public static final IPointable NULL_REF = new VoidPointable();
+    static {
+        NULL_REF.set(NULL_BYTES, 0, NULL_BYTES.length);
+    }
 
     public PointableHelper() {
         utf8Writer = new UTF8StringWriter();

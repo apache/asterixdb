@@ -42,6 +42,21 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * <pre>
+ * array_remove(list, val1, val2, ...) returns a new (open or closed) list with all the values removed from the input
+ * list. Values cannot be null (i.e., one cannot remove nulls).
+ *
+ * It throws an error at compile time if the number of arguments < 2
+ *
+ * It returns (or throws an error at runtime) in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if any argument is null.
+ * 4. an error if any value arg is of a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 3. otherwise, a new list that has the same type as the input list.
+ *
+ * </pre>
+ */
 public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
@@ -71,7 +86,7 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayRemoveFunction(args, ctx);
+                return new ArrayRemoveEval(args, ctx);
             }
         };
     }
@@ -81,12 +96,11 @@ public class ArrayRemoveDescriptor extends AbstractScalarFunctionDynamicDescript
         argTypes = (IAType[]) states;
     }
 
-    public class ArrayRemoveFunction extends AbstractArrayAddRemoveEval {
+    public class ArrayRemoveEval extends AbstractArrayAddRemoveEval {
         private final ArrayBackedValueStorage storage;
         private final IBinaryComparator comp;
 
-        public ArrayRemoveFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-                throws HyracksDataException {
+        public ArrayRemoveEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, 0, 1, args.length - 1, argTypes, true, sourceLoc, false, false);
             storage = new ArrayBackedValueStorage();
             comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();

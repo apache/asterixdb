@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use TinySocial;
+
+{
+  "t1": (array_star([{"a":"a_val1", "b": "b_val1"}, {"a":"a_val2", "b":"b_val2"}, {"a":"a_val3", "b":"b_val3"}])),
+  "t2": (array_star((select value v from d1 v))),
+  "t3": (array_star([{"b": "b_val1", "a":"a_val1"}, {"a":"a_val2", "b":"b_val2"}, {"a":"a_val3", "b":"b_val3"}])),
+  "t4": (array_star([{"b": "b_val1", "a":"a_val1"}, {"b":"b_val2"}, {"a":"a_val3", "b":"b_val3"}])),
+  "t5": (array_star([{"b": "b_val1", "a":"a_val1"}, {"a": null, "b":"b_val2"}, {"a":"a_val3", "b":"b_val3"}])),
+  "t6": (array_star([{"b": "b_val1", "a":"a_val1"}, {"a": null, "b":"b_val2"}, {"a":"a_val3", "b":"b_val3", "c":"c_val3"}])),
+  "t7": (array_star([{"b": "b_val1", "a":5}, {"a": 3.2, "b":"b_val2"}, {"a":"a_val3", "b":"b_val3", "c":"c_val3"}])),
+  "t8": (array_star([{"b": "b_val1", "a":"a_val1"}, {}, {"a":"a_val3", "b":"b_val3"}])),
+  "t9": (array_star([{"b": "b_val1", "a":"a_val1"}, 5, {"a":"a_val3", "b":"b_val3"}])),
+  "t10": (array_star([{"b": "b_val1", "a":"a_val1"}, null, {"a":"a_val3", "b":"b_val3"}])),
+  "t11": (array_star([{"b": "b_val1", "a":"a_val1"}, missing, {"a":"a_val3", "b":"b_val3"}])),
+  "t12": (array_star([{"b": "b_val1", "a":"a_val1"}, 5, [3] ])),
+  "t13": (array_star([{}, {}, {}])),
+  "t14": (array_star([1, 2, 3])),
+  "t15": (array_star([1])),
+  "t16": (array_star([])),
+  "t17": (array_star("non_array")),
+  "t18": (array_star(missing)),
+  "t19": (array_star(null))
+};

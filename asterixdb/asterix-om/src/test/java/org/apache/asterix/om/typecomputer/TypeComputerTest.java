@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,6 +52,37 @@ public class TypeComputerTest {
 
     @Test
     public void test() throws Exception {
+        // Mocks the type environment.
+        IVariableTypeEnvironment mockTypeEnv = mock(IVariableTypeEnvironment.class);
+
+        // Mocks the metadata provider.
+        IMetadataProvider<?, ?> mockMetadataProvider = mock(IMetadataProvider.class);
+
+        // Mocks function expression.
+        AbstractFunctionCallExpression mockExpr = mock(AbstractFunctionCallExpression.class);
+        FunctionIdentifier fid = mock(FunctionIdentifier.class);
+        when(mockExpr.getFunctionIdentifier()).thenReturn(fid);
+        when(fid.getName()).thenReturn("testFunction");
+
+        // A function at most has six argument.
+        List<Mutable<ILogicalExpression>> sixArgs = createArgs(6, mockTypeEnv);
+
+        // Sets up arguments for the mocked expression.
+        when(mockExpr.getArguments()).thenReturn(sixArgs);
+
+        // Sets up required/actual types of the mocked expression.
+        Object[] opaqueParameters = new Object[2];
+        opaqueParameters[0] = BuiltinType.ANY;
+        opaqueParameters[1] = BuiltinType.ANY;
+        when(mockExpr.getOpaqueParameters()).thenReturn(opaqueParameters);
+
+        // functions that check the number of args inside the type computer
+        List<Mutable<ILogicalExpression>> replaceArgs = createArgs(4, mockTypeEnv);
+        List<Mutable<ILogicalExpression>> rangeArgs = createArgs(3, mockTypeEnv);
+        HashMap<String, List<Mutable<ILogicalExpression>>> map = new HashMap<>();
+        map.put("INSTANCE_REPLACE", replaceArgs);
+        map.put("ArrayRangeTypeComputer", rangeArgs);
+
         // Several exceptional type computers.
         Set<String> exceptionalTypeComputers = new HashSet<>();
         exceptionalTypeComputers.add("InjectFailureTypeComputer");
@@ -73,46 +105,28 @@ public class TypeComputerTest {
                 continue;
             }
             System.out.println("Test type computer: " + c.getName());
-            Assert.assertTrue(testTypeComputer(c));
+            Assert.assertTrue(testTypeComputer(c, mockTypeEnv, mockMetadataProvider, mockExpr, map, sixArgs));
         }
     }
 
-    private boolean testTypeComputer(Class<? extends IResultTypeComputer> c) throws Exception {
-        // Mocks the type environment.
-        IVariableTypeEnvironment mockTypeEnv = mock(IVariableTypeEnvironment.class);
-        // Mocks the metadata provider.
-        IMetadataProvider<?, ?> mockMetadataProvider = mock(IMetadataProvider.class);
-
-        // Mocks function expression.
-        AbstractFunctionCallExpression mockExpr = mock(AbstractFunctionCallExpression.class);
-        FunctionIdentifier fid = mock(FunctionIdentifier.class);
-        when(mockExpr.getFunctionIdentifier()).thenReturn(fid);
-        when(fid.getName()).thenReturn("testFunction");
-
-        // A function at most has six argument.
-        List<Mutable<ILogicalExpression>> argRefs = new ArrayList<>();
-        for (int argIndex = 0; argIndex < 6; ++argIndex) {
-            ILogicalExpression mockArg = mock(ILogicalExpression.class);
-            argRefs.add(new MutableObject<>(mockArg));
-            when(mockTypeEnv.getType(mockArg)).thenReturn(BuiltinType.ANY);
-        }
-
-        // Sets up arguments for the mocked expression.
-        when(mockExpr.getArguments()).thenReturn(argRefs);
-
-        // Sets up required/actual types of the mocked expression.
-        Object[] opaqueParameters = new Object[2];
-        opaqueParameters[0] = BuiltinType.ANY;
-        opaqueParameters[1] = BuiltinType.ANY;
-        when(mockExpr.getOpaqueParameters()).thenReturn(opaqueParameters);
-
+    private boolean testTypeComputer(Class<? extends IResultTypeComputer> c, IVariableTypeEnvironment mockTypeEnv,
+            IMetadataProvider<?, ?> mockMetadataProvider, AbstractFunctionCallExpression mockExpr,
+            HashMap<String, List<Mutable<ILogicalExpression>>> map, List<Mutable<ILogicalExpression>> sixArgs)
+            throws Exception {
         // Tests the return type. It should be either ANY or NULLABLE/MISSABLE.
         IResultTypeComputer instance;
         IAType resultType;
         Field[] fields = c.getFields();
+        List<Mutable<ILogicalExpression>> args;
         for (Field field : fields) {
             if (field.getName().startsWith("INSTANCE")) {
                 System.out.println("Test type computer INSTANCE: " + field.getName());
+                args = getArgs(field.getName(), c, map);
+                if (args != null) {
+                    when(mockExpr.getArguments()).thenReturn(args);
+                } else {
+                    when(mockExpr.getArguments()).thenReturn(sixArgs);
+                }
                 instance = (IResultTypeComputer) field.get(null);
                 resultType = instance.computeType(mockExpr, mockTypeEnv, mockMetadataProvider);
                 ATypeTag typeTag = resultType.getTypeTag();
@@ -123,5 +137,26 @@ public class TypeComputerTest {
             }
         }
         return true;
+    }
+
+    private List<Mutable<ILogicalExpression>> createArgs(int numArgs, IVariableTypeEnvironment mockTypeEnv)
+            throws Exception {
+        List<Mutable<ILogicalExpression>> argRefs = new ArrayList<>();
+        for (int argIndex = 0; argIndex < numArgs; ++argIndex) {
+            ILogicalExpression mockArg = mock(ILogicalExpression.class);
+            argRefs.add(new MutableObject<>(mockArg));
+            when(mockTypeEnv.getType(mockArg)).thenReturn(BuiltinType.ANY);
+        }
+
+        return argRefs;
+    }
+
+    private List<Mutable<ILogicalExpression>> getArgs(String instanceName, Class<? extends IResultTypeComputer> c,
+            HashMap<String, List<Mutable<ILogicalExpression>>> map) {
+        if (instanceName.equals("INSTANCE")) {
+            return map.get(c.getSimpleName());
+        } else {
+            return map.get(instanceName);
+        }
     }
 }

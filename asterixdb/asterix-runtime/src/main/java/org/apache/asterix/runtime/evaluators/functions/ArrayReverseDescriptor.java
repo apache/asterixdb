@@ -78,17 +78,16 @@ public class ArrayReverseDescriptor extends AbstractScalarFunctionDynamicDescrip
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayReverseFunction(args, ctx);
+                return new ArrayReverseEval(args, ctx);
             }
         };
     }
 
-    public class ArrayReverseFunction extends AbstractArrayProcessEval {
+    public class ArrayReverseEval extends AbstractArrayProcessEval {
         private final ArrayBackedValueStorage storage;
         private final AbstractPointable item;
 
-        public ArrayReverseFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-                throws HyracksDataException {
+        public ArrayReverseEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, inputListType);
             storage = new ArrayBackedValueStorage();
             item = new VoidPointable();

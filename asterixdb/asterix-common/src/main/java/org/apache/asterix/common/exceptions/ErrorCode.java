@@ -78,6 +78,7 @@ public class ErrorCode {
     public static final int UNSUPPORTED_MULTIPLE_STATEMENTS = 35;
     public static final int CANNOT_COMPARE_COMPLEX = 36;
     public static final int TYPE_MISMATCH_GENERIC = 37;
+    public static final int DIFFERENT_LIST_TYPE_ARGS = 38;
 
     public static final int UNSUPPORTED_JRE = 100;
 

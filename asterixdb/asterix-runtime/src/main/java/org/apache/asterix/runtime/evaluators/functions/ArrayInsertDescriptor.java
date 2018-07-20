@@ -41,6 +41,25 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * <pre>
+ * array_insert(list, pos, val1, val2, ...) returns a new open list with all values inserted at the specified position.
+ * Values can be null (i.e., one can insert nulls). Position can be negative where the last position = -1. When position
+ * is positive then the first position = 0. Input list can be empty where the only valid position is 0.
+ * For the list [5,6], the valid positions are 0, 1, 2, -1, -2. If position is floating-point, it's casted to integer.
+ * TODO: should decide on what to do for floating-point positions.
+ *
+ * It throws an error at compile time if the number of arguments < 3
+ *
+ * It returns in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if
+ * - the list arg is null or it's not a list
+ * - the position is not numeric or the position is out of bound.
+ * 3. otherwise, a new open list.
+ *
+ * </pre>
+ */
 public class ArrayInsertDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;
@@ -70,7 +89,7 @@ public class ArrayInsertDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayInsertFunction(args, ctx);
+                return new ArrayInsertEval(args, ctx);
             }
         };
     }
@@ -80,12 +99,11 @@ public class ArrayInsertDescriptor extends AbstractScalarFunctionDynamicDescript
         argTypes = (IAType[]) states;
     }
 
-    public class ArrayInsertFunction extends AbstractArrayAddRemoveEval {
+    public class ArrayInsertEval extends AbstractArrayAddRemoveEval {
         private final TaggedValuePointable positionArg;
         private final IScalarEvaluator positionArgEval;
 
-        public ArrayInsertFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-                throws HyracksDataException {
+        public ArrayInsertEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, 0, 2, args.length - 2, argTypes, false, sourceLoc, true, true);
             positionArg = new TaggedValuePointable();
             positionArgEval = args[1].createScalarEvaluator(ctx);

@@ -19,7 +19,9 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -30,9 +32,15 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
  * list, it returns "ANY".
  */
 public class AListFirstTypeComputer extends AbstractResultTypeComputer {
-    public static final AListFirstTypeComputer INSTANCE = new AListFirstTypeComputer();
+    public static final AListFirstTypeComputer INSTANCE = new AListFirstTypeComputer(false, false);
+    public static final AListFirstTypeComputer INSTANCE_FLATTEN = new AListFirstTypeComputer(true, true);
 
-    private AListFirstTypeComputer() {
+    private final boolean makeOpen;
+    private final boolean makeNullable;
+
+    private AListFirstTypeComputer(boolean makeOpen, boolean makeNullable) {
+        this.makeOpen = makeOpen;
+        this.makeNullable = makeNullable;
     }
 
     @Override
@@ -41,7 +49,14 @@ public class AListFirstTypeComputer extends AbstractResultTypeComputer {
         switch (argType.getTypeTag()) {
             case ARRAY:
             case MULTISET:
-                return argType;
+                if (makeOpen) {
+                    argType = DefaultOpenFieldType.getDefaultOpenFieldType(argType.getTypeTag());
+                }
+                if (makeNullable) {
+                    return AUnionType.createNullableType(argType);
+                } else {
+                    return argType;
+                }
             default:
                 return BuiltinType.ANY;
         }

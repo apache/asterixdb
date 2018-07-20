@@ -34,6 +34,22 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
+/**
+ * <pre>
+ * array_position(list, val) returns the 0-based position (as integer) of the value argument in the input list. If the
+ * value does not exists, it returns -1
+ *
+ * It throws an error at compile time if the number of arguments != 2
+ *
+ * It returns (or throws an error at runtime) in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if any argument is null.
+ * 3. an error if the value is of a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 4. null, if the input list is not a list.
+ * 5. otherwise, returns the position of the value in the list or -1 if not found.
+ *
+ * </pre>
+ */
 public class ArrayPositionDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
@@ -57,16 +73,15 @@ public class ArrayPositionDescriptor extends AbstractScalarFunctionDynamicDescri
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayPositionFunction(args, ctx);
+                return new ArrayPositionEval(args, ctx);
             }
         };
     }
 
-    public class ArrayPositionFunction extends AbstractArraySearchEval {
+    public class ArrayPositionEval extends AbstractArraySearchEval {
         private final ISerializerDeserializer intSerde;
 
-        public ArrayPositionFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-                throws HyracksDataException {
+        public ArrayPositionEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, sourceLoc);
             intSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
         }

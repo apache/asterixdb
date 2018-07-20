@@ -28,7 +28,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
@@ -39,12 +38,12 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
+import org.apache.asterix.runtime.utils.ArrayFunctionsUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -92,7 +91,6 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
     }
 
     public class ArrayDistinctFunction extends AbstractArrayProcessEval {
-        private final IBinaryComparator comp;
         private final SourceLocation sourceLoc;
         private final IBinaryHashFunction binaryHashFunction;
         private final Int2ObjectMap<List<IPointable>> hashes;
@@ -106,7 +104,6 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
             hashes = new Int2ObjectOpenHashMap<>();
             item = pointableAllocator.allocateEmpty();
             storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
-            comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
                     .createBinaryHashFunction();
         }
@@ -141,12 +138,10 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
                         addItem(item, listBuilder, itemInStorage, sameHashes);
                         hashes.put(hash, sameHashes);
                         item = pointableAllocator.allocateEmpty();
-                    } else {
-                        // check if it happens that two hashes are the same but they are for different items
-                        if (isNewItem(item, sameHashes)) {
-                            addItem(item, listBuilder, itemInStorage, sameHashes);
-                            item = pointableAllocator.allocateEmpty();
-                        }
+                    } else if (ArrayFunctionsUtil.findItem(item, sameHashes) == null) {
+                        // new item, it could happen that two hashes are the same but they are for different items
+                        addItem(item, listBuilder, itemInStorage, sameHashes);
+                        item = pointableAllocator.allocateEmpty();
                     }
                 }
             }
@@ -165,17 +160,6 @@ public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescri
                 // create new storage since the added item is using it now
                 storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
             }
-        }
-
-        private boolean isNewItem(IPointable item, List<IPointable> sameHashes) throws HyracksDataException {
-            for (int j = 0; j < sameHashes.size(); j++) {
-                if (comp.compare(item.getByteArray(), item.getStartOffset(), item.getLength(),
-                        sameHashes.get(j).getByteArray(), sameHashes.get(j).getStartOffset(),
-                        sameHashes.get(j).getLength()) == 0) {
-                    return false;
-                }
-            }
-            return true;
         }
     }
 }

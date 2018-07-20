@@ -144,16 +144,26 @@ import org.apache.asterix.runtime.evaluators.constructors.UnorderedListConstruct
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayAppendDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayDistinctDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayFlattenDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayIfNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayInsertDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayIntersectDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayPositionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayPrependDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayPutDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayRangeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayRemoveDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayRepeatDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayReplaceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayReverseDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArraySortDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayStarDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArraySymDiffDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArraySymDiffnDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayUnionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeLaxDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.CheckUnknownDescriptor;
@@ -393,6 +403,16 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(ArrayReverseDescriptor.FACTORY);
         fc.addGenerated(ArraySortDescriptor.FACTORY);
         fc.addGenerated(ArrayDistinctDescriptor.FACTORY);
+        fc.addGenerated(ArrayUnionDescriptor.FACTORY);
+        fc.addGenerated(ArrayIntersectDescriptor.FACTORY);
+        fc.addGenerated(ArrayIfNullDescriptor.FACTORY);
+        fc.addGenerated(ArrayConcatDescriptor.FACTORY);
+        fc.addGenerated(ArrayRangeDescriptor.FACTORY);
+        fc.addGenerated(ArrayFlattenDescriptor.FACTORY);
+        fc.add(ArrayReplaceDescriptor.FACTORY);
+        fc.addGenerated(ArraySymDiffDescriptor.FACTORY);
+        fc.addGenerated(ArraySymDiffnDescriptor.FACTORY);
+        fc.addGenerated(ArrayStarDescriptor.FACTORY);
 
         // unnesting functions
         fc.add(TidRunningAggregateDescriptor.FACTORY);

@@ -35,6 +35,21 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
+/**
+ * <pre>
+ * array_contains(list, val) returns true if the the input list contains the value argument.
+ *
+ * It throws an error at compile time if the number of arguments != 2
+ *
+ * It returns (or throws an error at runtime) in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if any argument is null.
+ * 3. an error if the value is of a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 4. null, if the input list is not a list.
+ * 5. otherwise, returns true or false.
+ *
+ * </pre>
+ */
 public class ArrayContainsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
@@ -58,16 +73,15 @@ public class ArrayContainsDescriptor extends AbstractScalarFunctionDynamicDescri
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayContainsFunction(args, ctx);
+                return new ArrayContainsEval(args, ctx);
             }
         };
     }
 
-    public class ArrayContainsFunction extends AbstractArraySearchEval {
+    public class ArrayContainsEval extends AbstractArraySearchEval {
         private final ISerializerDeserializer booleanSerde;
 
-        public ArrayContainsFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-                throws HyracksDataException {
+        public ArrayContainsEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             super(args, ctx, sourceLoc);
             // TODO(ali): should we get the nontagged serde?
             booleanSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);

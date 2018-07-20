@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
-import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
-
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -80,12 +78,12 @@ public class ArrayRepeatDescriptor extends AbstractScalarFunctionDynamicDescript
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArrayRepeatFunction(args, ctx);
+                return new ArrayRepeatEval(args, ctx);
             }
         };
     }
 
-    public class ArrayRepeatFunction implements IScalarEvaluator {
+    public class ArrayRepeatEval implements IScalarEvaluator {
         private final ArrayBackedValueStorage storage;
         private final IScalarEvaluator repeatedValueEval;
         private final IScalarEvaluator repeatEval;
@@ -94,8 +92,7 @@ public class ArrayRepeatDescriptor extends AbstractScalarFunctionDynamicDescript
         private final TaggedValuePointable repeatArgValue;
         private final IAsterixListBuilder listBuilder;
 
-        public ArrayRepeatFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx)
-                throws HyracksDataException {
+        public ArrayRepeatEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx) throws HyracksDataException {
             storage = new ArrayBackedValueStorage();
             repeatedValueEval = args[0].createScalarEvaluator(ctx);
             repeatEval = args[1].createScalarEvaluator(ctx);

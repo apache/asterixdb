@@ -44,6 +44,7 @@ import org.apache.asterix.om.typecomputer.impl.AInt8TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AIntervalTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ALineTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AListFirstTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.AListMultiListArgsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AListTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APoint3DTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.APointTypeComputer;
@@ -55,6 +56,8 @@ import org.apache.asterix.om.typecomputer.impl.ATimeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AUUIDTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AYearMonthDurationTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.AnyTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ArrayIfNullTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ArrayRangeTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ArrayRepeatTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanFunctionTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.BooleanOnlyTypeComputer;
@@ -206,6 +209,26 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-distinct", 1);
     public static final FunctionIdentifier ARRAY_SORT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-sort", 1);
+    public static final FunctionIdentifier ARRAY_UNION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-union", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_INTERSECT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-intersect", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_IFNULL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-ifnull", 1);
+    public static final FunctionIdentifier ARRAY_CONCAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-concat", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_RANGE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-range", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_FLATTEN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-flatten", 2);
+    public static final FunctionIdentifier ARRAY_REPLACE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-replace", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_SYMDIFF =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-symdiff", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_SYMDIFFN =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-symdiffn", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier ARRAY_STAR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-star", 1);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -1493,6 +1516,16 @@ public class BuiltinFunctions {
         addFunction(ARRAY_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
         addFunction(ARRAY_SORT, AListFirstTypeComputer.INSTANCE, true);
         addFunction(ARRAY_DISTINCT, AListFirstTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_UNION, AListMultiListArgsTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_INTERSECT, AListMultiListArgsTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_IFNULL, ArrayIfNullTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_CONCAT, AListMultiListArgsTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_RANGE, ArrayRangeTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_FLATTEN, AListFirstTypeComputer.INSTANCE_FLATTEN, true);
+        addFunction(ARRAY_REPLACE, AListTypeComputer.INSTANCE_REPLACE, true);
+        addFunction(ARRAY_SYMDIFF, AListMultiListArgsTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_SYMDIFFN, AListMultiListArgsTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_STAR, OpenARecordTypeComputer.INSTANCE, true);
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);

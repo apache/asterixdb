@@ -1,0 +1,32 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use TinySocial;
+
+{
+  "t1": (select array_concat(t.`referred-topics`, {{"sth", 5}}, {{3,2}}) from TweetMessages t order by t.tweetid),
+  "t2": (select array_concat([3, "John"], (select value v.compType from d1 v))),
+  "t3": (array_concat([3,5,1], null, missing)),   // missing
+  "t4": (array_concat([3,1,6], "non_array")),     // null
+  "t5": (array_concat(null, [3, 9])),             // null
+  "t6": (array_concat("non_array", [5], missing)),// missing
+  "t7": (array_concat([], [5, 10], [12.0], [])),  // OK
+  "t8": (array_concat(missing, 3, 9)),            // missing
+  "t9": (array_concat([3, missing], [3, [9], null, missing, null]))  // OK with nulls
+};
