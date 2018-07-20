@@ -20,6 +20,7 @@ package org.apache.hyracks.api.io;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * A device handle and a relative path.
@@ -31,6 +32,7 @@ public final class FileReference implements Serializable {
     private final File file;
     private final IODeviceHandle dev;
     private final String path;
+    private long registrationTime = 0L;
 
     public FileReference(IODeviceHandle dev, String path) {
         file = new File(dev.getMount(), path);
@@ -89,5 +91,24 @@ public final class FileReference implements Serializable {
 
     public FileReference getChild(String name) {
         return new FileReference(dev, path + File.separator + name);
+    }
+
+    public void register() {
+        if (registrationTime != 0) {
+            throw new IllegalStateException(
+                    "File " + toString() + " was already registered at " + new Date(registrationTime));
+        }
+        registrationTime = System.currentTimeMillis();
+    }
+
+    public long registrationTime() {
+        return registrationTime;
+    }
+
+    public void unregister() {
+        if (registrationTime == 0) {
+            throw new IllegalStateException("File " + toString() + " wasn't registered before");
+        }
+        registrationTime = 0;
     }
 }

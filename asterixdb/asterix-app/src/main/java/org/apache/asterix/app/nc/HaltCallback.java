@@ -41,7 +41,7 @@ public class HaltCallback implements IIoOperationFailedCallback {
 
     @Override
     public void operationFailed(ILSMIOOperation operation, Throwable t) {
-        LOGGER.error("Operation {} has failed", t);
+        LOGGER.error("Operation {} has failed", operation, t);
         if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
             ExitUtil.halt(ExitUtil.EC_FLUSH_FAILED);
         }
