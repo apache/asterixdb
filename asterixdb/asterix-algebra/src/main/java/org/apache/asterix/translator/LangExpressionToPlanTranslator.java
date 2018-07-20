@@ -1085,38 +1085,27 @@ class LangExpressionToPlanTranslator
             ILogicalExpression e = p.first;
             // now look at the operator
             if (i < nOps) {
-                if (OperatorExpr.opIsComparison(ops.get(i))) {
-                    AbstractFunctionCallExpression c = createComparisonExpression(ops.get(i), sourceLoc);
+                OperatorType opType = ops.get(i);
+                boolean isCmpOp = OperatorExpr.opIsComparison(opType);
+                AbstractFunctionCallExpression f = createFunctionCallExpressionForBuiltinOperator(opType, sourceLoc);
 
-                    // chain the operators
-                    if (i == 0) {
-                        c.getArguments().add(new MutableObject<>(e));
-                        currExpr = c;
-                        if (op.isBroadcastOperand(i)) {
-                            BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
-                            bcast.setObject(BroadcastSide.LEFT);
-                            c.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
-                        }
-                    } else {
-                        currExpr.getArguments().add(new MutableObject<>(e));
-                        c.getArguments().add(new MutableObject<>(currExpr));
-                        currExpr = c;
-                        if (i == 1 && op.isBroadcastOperand(i)) {
-                            BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
-                            bcast.setObject(BroadcastSide.RIGHT);
-                            c.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
-                        }
+                // chain the operators
+                if (i == 0) {
+                    f.getArguments().add(new MutableObject<>(e));
+                    currExpr = f;
+                    if (isCmpOp && op.isBroadcastOperand(i)) {
+                        BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
+                        bcast.setObject(BroadcastSide.LEFT);
+                        f.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
                     }
                 } else {
-                    AbstractFunctionCallExpression f =
-                            createFunctionCallExpressionForBuiltinOperator(ops.get(i), sourceLoc);
-                    if (i == 0) {
-                        f.getArguments().add(new MutableObject<>(e));
-                        currExpr = f;
-                    } else {
-                        currExpr.getArguments().add(new MutableObject<>(e));
-                        f.getArguments().add(new MutableObject<>(currExpr));
-                        currExpr = f;
+                    currExpr.getArguments().add(new MutableObject<>(e));
+                    f.getArguments().add(new MutableObject<>(currExpr));
+                    currExpr = f;
+                    if (isCmpOp && i == 1 && op.isBroadcastOperand(i)) {
+                        BroadcastExpressionAnnotation bcast = new BroadcastExpressionAnnotation();
+                        bcast.setObject(BroadcastSide.RIGHT);
+                        f.getAnnotations().put(BroadcastExpressionAnnotation.BROADCAST_ANNOTATION_KEY, bcast);
                     }
                 }
             } else { // don't forget the last expression...
@@ -1359,53 +1348,52 @@ class LangExpressionToPlanTranslator
     public Pair<ILogicalOperator, LogicalVariable> visit(LimitClause lc, Mutable<ILogicalOperator> tupSource)
             throws CompilationException {
         SourceLocation sourceLoc = lc.getSourceLocation();
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p1 = langExprToAlgExpression(lc.getLimitExpr(), tupSource);
         LimitOperator opLim;
+
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p1 = langExprToAlgExpression(lc.getLimitExpr(), tupSource);
+        AbstractFunctionCallExpression maxObjectsExpr =
+                createFunctionCallExpression(BuiltinFunctions.TREAT_AS_INTEGER, lc.getLimitExpr().getSourceLocation());
+        maxObjectsExpr.getArguments().add(new MutableObject<>(p1.first));
+
         Expression offset = lc.getOffset();
         if (offset != null) {
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> p2 = langExprToAlgExpression(offset, p1.second);
-            opLim = new LimitOperator(p1.first, p2.first);
+            AbstractFunctionCallExpression offsetExpr =
+                    createFunctionCallExpression(BuiltinFunctions.TREAT_AS_INTEGER, lc.getOffset().getSourceLocation());
+            offsetExpr.getArguments().add(new MutableObject<>(p2.first));
+            opLim = new LimitOperator(maxObjectsExpr, offsetExpr);
             opLim.getInputs().add(p2.second);
             opLim.setSourceLocation(sourceLoc);
         } else {
-            opLim = new LimitOperator(p1.first);
+            opLim = new LimitOperator(maxObjectsExpr);
             opLim.getInputs().add(p1.second);
             opLim.setSourceLocation(sourceLoc);
         }
         return new Pair<>(opLim, null);
     }
 
-    protected AbstractFunctionCallExpression createComparisonExpression(OperatorType t, SourceLocation sourceLoc) {
-        FunctionIdentifier fi = operatorTypeToFunctionIdentifier(t);
-        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
-        ScalarFunctionCallExpression callExpr = new ScalarFunctionCallExpression(finfo);
-        callExpr.setSourceLocation(sourceLoc);
-        return callExpr;
-    }
-
-    private static FunctionIdentifier operatorTypeToFunctionIdentifier(OperatorType t) {
-        switch (t) {
-            case EQ:
-                return AlgebricksBuiltinFunctions.EQ;
-            case NEQ:
-                return AlgebricksBuiltinFunctions.NEQ;
-            case GT:
-                return AlgebricksBuiltinFunctions.GT;
-            case GE:
-                return AlgebricksBuiltinFunctions.GE;
-            case LT:
-                return AlgebricksBuiltinFunctions.LT;
-            case LE:
-                return AlgebricksBuiltinFunctions.LE;
-            default:
-                throw new IllegalStateException();
-        }
-    }
-
-    protected AbstractFunctionCallExpression createFunctionCallExpressionForBuiltinOperator(OperatorType t,
+    private static AbstractFunctionCallExpression createFunctionCallExpressionForBuiltinOperator(OperatorType t,
             SourceLocation sourceLoc) throws CompilationException {
         FunctionIdentifier fid;
         switch (t) {
+            case EQ:
+                fid = AlgebricksBuiltinFunctions.EQ;
+                break;
+            case NEQ:
+                fid = AlgebricksBuiltinFunctions.NEQ;
+                break;
+            case GT:
+                fid = AlgebricksBuiltinFunctions.GT;
+                break;
+            case GE:
+                fid = AlgebricksBuiltinFunctions.GE;
+                break;
+            case LT:
+                fid = AlgebricksBuiltinFunctions.LT;
+                break;
+            case LE:
+                fid = AlgebricksBuiltinFunctions.LE;
+                break;
             case PLUS:
                 fid = AlgebricksBuiltinFunctions.NUMERIC_ADD;
                 break;
@@ -1440,6 +1428,11 @@ class LangExpressionToPlanTranslator
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                         "Operator " + t + " is not yet implemented");
         }
+        return createFunctionCallExpression(fid, sourceLoc);
+    }
+
+    private static AbstractFunctionCallExpression createFunctionCallExpression(FunctionIdentifier fid,
+            SourceLocation sourceLoc) {
         ScalarFunctionCallExpression callExpr = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fid));
         callExpr.setSourceLocation(sourceLoc);
         return callExpr;

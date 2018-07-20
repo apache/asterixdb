@@ -281,6 +281,7 @@ import org.apache.asterix.runtime.evaluators.functions.ToDoubleDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToNumberDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToObjectDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToStringDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.TreatAsIntegerDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.UUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.BinaryConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.binary.BinaryLengthDescriptor;
@@ -789,6 +790,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(ToNumberDescriptor.FACTORY);
         fc.addGenerated(ToObjectDescriptor.FACTORY);
         fc.addGenerated(ToStringDescriptor.FACTORY);
+
+        fc.addGenerated(TreatAsIntegerDescriptor.FACTORY);
 
         // Cast function
         fc.addGenerated(CastTypeDescriptor.FACTORY);

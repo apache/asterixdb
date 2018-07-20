@@ -1,0 +1,20 @@
+distribute result [$$paper]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 5, 5
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$paper])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$12(ASC) ]  |PARTITIONED|
+          limit 10
+          -- STREAM_LIMIT  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              data-scan []<-[$$12, $$paper] <- test.DBLP1 limit 10
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
+                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -10156,11 +10156,28 @@
   </test-group>
   <test-group name="limit">
     <test-case FilePath="limit">
+      <compilation-unit name="limit_type_01">
+        <output-dir compare="Text">limit_type_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
+      <compilation-unit name="limit_type_02">
+        <output-dir compare="Text">limit_type_01</output-dir>
+        <expected-error>ASX0039: Expected integer value, got 2.75 (in line 28, at column 10)</expected-error>
+        <expected-error>ASX0039: Expected integer value, got 1.75 (in line 28, at column 19)</expected-error>
+        <expected-error>ASX1091: Type mismatch: expected value of type integer, but got the value of type string (in line 28, at column 7)</expected-error>
+        <expected-error>ASX1091: Type mismatch: expected value of type integer, but got the value of type boolean (in line 28, at column 16)</expected-error>
+        <expected-error>ASX0021: Source value 9999999999 is out of range that integer can hold - integer.MAX_VALUE: 2147483647, integer.MIN_VALUE: -2147483648</expected-error>
+        <expected-error>ASX0021: Source value 8888888888 is out of range that integer can hold - integer.MAX_VALUE: 2147483647, integer.MIN_VALUE: -2147483648</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
       <compilation-unit name="push-limit-to-primary-scan">
         <output-dir compare="Text">push-limit-to-primary-scan</output-dir>
       </compilation-unit>
     </test-case>
-     <test-case FilePath="limit">
+    <test-case FilePath="limit">
        <compilation-unit name="push-limit-to-primary-scan-select">
          <output-dir compare="Text">push-limit-to-primary-scan-select</output-dir>
        </compilation-unit>

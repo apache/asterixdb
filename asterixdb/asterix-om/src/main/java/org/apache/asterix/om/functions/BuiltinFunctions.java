@@ -121,6 +121,7 @@ import org.apache.asterix.om.typecomputer.impl.ToBigIntTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToDoubleTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToNumberTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToObjectTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.TreatAsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryBinaryInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryMinusTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryStringInt64TypeComputer;
@@ -1102,6 +1103,9 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier TO_STRING =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "to-string", 1);
 
+    public static final FunctionIdentifier TREAT_AS_INTEGER =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "treat-as-integer", 1);
+
     public static final FunctionIdentifier EXTERNAL_LOOKUP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "external-lookup", FunctionIdentifier.VARARGS);
 
@@ -1296,6 +1300,8 @@ public class BuiltinFunctions {
         addFunction(TO_NUMBER, ToNumberTypeComputer.INSTANCE, true);
         addFunction(TO_OBJECT, ToObjectTypeComputer.INSTANCE, true);
         addFunction(TO_STRING, AStringTypeComputer.INSTANCE, true);
+
+        addPrivateFunction(TREAT_AS_INTEGER, TreatAsTypeComputer.INSTANCE_INTEGER, true);
 
         addFunction(IF_INF, IfNanOrInfTypeComputer.INSTANCE, true);
         addFunction(IF_MISSING, IfMissingTypeComputer.INSTANCE, true);

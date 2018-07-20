@@ -25,7 +25,6 @@ import java.util.Set;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
-import org.apache.asterix.optimizer.rules.am.AccessMethodUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -67,7 +66,7 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
         }
         context.addToDontApplySet(this, op);
 
-        Long outputLimit = getOutputLimit((LimitOperator) op);
+        Integer outputLimit = PushLimitIntoOrderByRule.getOutputLimit((LimitOperator) op);
         if (outputLimit == null) {
             // we cannot push if limit is not constant
             return false;
@@ -77,7 +76,7 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
         if (childOp.getValue().getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
             childOp = childOp.getValue().getInputs().get(0);
         }
-        boolean changed = false;
+        boolean changed;
         if (childOp.getValue().getOperatorTag() == LogicalOperatorTag.SELECT) {
             changed = rewriteSelect(childOp, outputLimit);
         } else {
@@ -89,21 +88,7 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
         return changed;
     }
 
-    private Long getOutputLimit(LimitOperator limit) {
-        if (limit.getMaxObjects().getValue().getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-            return null;
-        }
-        long outputLimit = AccessMethodUtils.getInt64Constant(limit.getMaxObjects());
-        if (limit.getOffset() != null && limit.getOffset().getValue() != null) {
-            if (limit.getOffset().getValue().getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                return null;
-            }
-            outputLimit += AccessMethodUtils.getInt64Constant(limit.getOffset());
-        }
-        return outputLimit;
-    }
-
-    private boolean rewriteSelect(Mutable<ILogicalOperator> op, long outputLimit) throws AlgebricksException {
+    private boolean rewriteSelect(Mutable<ILogicalOperator> op, int outputLimit) {
         SelectOperator select = (SelectOperator) op.getValue();
         Set<LogicalVariable> selectedVariables = new HashSet<>();
         select.getCondition().getValue().getUsedVariables(selectedVariables);
@@ -131,7 +116,7 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
         return changed;
     }
 
-    private boolean setLimitForScanOrUnnestMap(ILogicalOperator op, long outputLimit) throws AlgebricksException {
+    private boolean setLimitForScanOrUnnestMap(ILogicalOperator op, int outputLimit) {
         if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             DataSourceScanOperator scan = (DataSourceScanOperator) op;
             if (isScanPushable(scan, Collections.emptySet())) {

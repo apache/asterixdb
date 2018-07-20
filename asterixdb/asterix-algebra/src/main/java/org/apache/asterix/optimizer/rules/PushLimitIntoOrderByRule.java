@@ -18,12 +18,15 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.optimizer.rules.am.AccessMethodUtils;
+import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -89,50 +92,19 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
         PhysicalOptimizationConfig physicalOptimizationConfig = context.getPhysicalOptimizationConfig();
         LimitOperator limitOp = (LimitOperator) opRef.getValue();
         OrderOperator orderOp = (OrderOperator) opRef2.getValue();
-        long topK = -1;
 
         // We don't push-down LIMIT into in-memory sort.
         if (orderOp.getPhysicalOperator().getOperatorTag() != PhysicalOperatorTag.STABLE_SORT) {
             return false;
         }
 
-        // Get the LIMIT constant
-        if (limitOp.getMaxObjects().getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-            // Currently, we support LIMIT with a constant value.
-            topK = AccessMethodUtils.getInt64Constant(limitOp.getMaxObjects());
-            // If topK is huge, there is no reason to use topK sort module
-            // since the original external sort's performance might be better.
-            if (topK > Integer.MAX_VALUE) {
-                return false;
-            }
-            if (topK < 0) {
-                topK = 0;
-            }
-        } else {
+        Integer topK = getOutputLimit(limitOp);
+        if (topK == null) {
             return false;
         }
 
-        // Get the offset constant if there is one. If one presents, then topK = topK + offset.
-        // This is because we can't apply offset to the external sort.
-        // Final topK will be applied through LIMIT.
-        if (limitOp.getOffset().getValue() != null) {
-            if (limitOp.getOffset().getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                long offset = AccessMethodUtils.getInt64Constant(limitOp.getOffset());
-                if (offset < 0) {
-                    offset = 0;
-                }
-                // Check the overflow case.
-                if (offset >= Integer.MAX_VALUE - topK) {
-                    return false;
-                }
-                topK += offset;
-            } else {
-                return false;
-            }
-        }
-
         // Create the new ORDER operator, set the topK value, and replace the current one.
-        OrderOperator newOrderOp = new OrderOperator(orderOp.getOrderExpressions(), (int) topK);
+        OrderOperator newOrderOp = new OrderOperator(orderOp.getOrderExpressions(), topK);
         newOrderOp.setSourceLocation(orderOp.getSourceLocation());
         newOrderOp.setPhysicalOperator(
                 new StableSortPOperator(physicalOptimizationConfig.getMaxFramesExternalSort(), newOrderOp.getTopK()));
@@ -146,4 +118,38 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
         return true;
     }
 
+    static Integer getOutputLimit(LimitOperator limitOp) {
+        // Currently, we support LIMIT with a constant value.
+        ILogicalExpression maxObjectsExpr = limitOp.getMaxObjects().getValue();
+        IAObject maxObjectsValue = ConstantExpressionUtil.getConstantIaObject(maxObjectsExpr, ATypeTag.INTEGER);
+        if (maxObjectsValue == null) {
+            return null;
+        }
+        int topK = ((AInt32) maxObjectsValue).getIntegerValue();
+        if (topK < 0) {
+            topK = 0;
+        }
+
+        // Get the offset constant if there is one. If one presents, then topK = topK + offset.
+        // This is because we can't apply offset to the external sort.
+        // Final topK will be applied through LIMIT.
+        ILogicalExpression offsetExpr = limitOp.getOffset().getValue();
+        if (offsetExpr != null) {
+            IAObject offsetValue = ConstantExpressionUtil.getConstantIaObject(offsetExpr, ATypeTag.INTEGER);
+            if (offsetValue == null) {
+                return null;
+            }
+            int offset = ((AInt32) offsetValue).getIntegerValue();
+            if (offset < 0) {
+                offset = 0;
+            }
+            // Check the overflow case.
+            if (offset >= Integer.MAX_VALUE - topK) {
+                return null;
+            }
+            topK += offset;
+        }
+
+        return topK;
+    }
 }

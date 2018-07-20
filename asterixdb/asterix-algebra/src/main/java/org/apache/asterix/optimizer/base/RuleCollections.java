@@ -182,13 +182,14 @@ public final class RuleCollections {
         normalization.add(new IntroduceDynamicTypeCastRule());
         normalization.add(new IntroduceDynamicTypeCastForExternalFunctionRule());
         normalization.add(new IntroduceEnforcedListTypeRule());
+        // Perform constant folding before common expression extraction
+        normalization.add(new ConstantFoldingRule(appCtx));
         normalization.add(new ExtractCommonExpressionsRule());
 
         // Let PushAggFuncIntoStandaloneAggregateRule run after ExtractCommonExpressionsRule
         // so that PushAggFunc can happen in fewer places.
         normalization.add(new PushAggFuncIntoStandaloneAggregateRule());
         normalization.add(new ListifyUnnestingFunctionRule());
-        normalization.add(new ConstantFoldingRule(appCtx));
         normalization.add(new RemoveRedundantSelectRule());
         normalization.add(new UnnestToDataScanRule());
         normalization.add(new MetaFunctionToMetaVariableRule());
