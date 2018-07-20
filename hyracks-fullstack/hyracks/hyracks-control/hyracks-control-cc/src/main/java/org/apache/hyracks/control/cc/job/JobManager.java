@@ -157,8 +157,8 @@ public class JobManager implements IJobManager {
 
     @Override
     public void prepareComplete(JobRun run, JobStatus status, List<Exception> exceptions) throws HyracksException {
-        ccs.removeJobParameterByteStore(run.getJobId());
         checkJob(run);
+        ccs.removeJobParameterByteStore(run.getJobId());
         if (status == JobStatus.FAILURE_BEFORE_EXECUTION) {
             run.setPendingStatus(JobStatus.FAILURE, exceptions);
             finalComplete(run);

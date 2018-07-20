@@ -43,6 +43,9 @@ public class TaskCompleteWork extends AbstractTaskLifecycleWork {
     protected void performEvent(TaskAttempt ta) {
         IJobManager jobManager = ccs.getJobManager();
         JobRun run = jobManager.get(jobId);
+        if (run == null) {
+            return;
+        }
         if (statistics != null) {
             JobProfile jobProfile = run.getJobProfile();
             Map<String, JobletProfile> jobletProfiles = jobProfile.getJobletProfiles();

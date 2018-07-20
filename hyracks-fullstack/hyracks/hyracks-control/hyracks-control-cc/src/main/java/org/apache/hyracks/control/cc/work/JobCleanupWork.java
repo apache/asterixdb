@@ -52,10 +52,14 @@ public class JobCleanupWork extends AbstractWork {
     @Override
     public void run() {
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Cleanup for JobRun with id: " + jobId);
+            LOGGER.info("Cleanup for job: {}", jobId);
+        }
+        final JobRun jobRun = jobManager.get(jobId);
+        if (jobRun == null) {
+            LOGGER.debug("Ignoring cleanup for unknown job: {}", jobId);
+            return;
         }
         try {
-            JobRun jobRun = jobManager.get(jobId);
             jobManager.prepareComplete(jobRun, status, exceptions);
             callback.setValue(null);
         } catch (HyracksException e) {

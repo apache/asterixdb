@@ -45,6 +45,9 @@ public class TaskFailureWork extends AbstractTaskLifecycleWork {
         LOGGER.log(Level.WARN, "Executing task failure work for " + this, exceptions.get(0));
         IJobManager jobManager = ccs.getJobManager();
         JobRun run = jobManager.get(jobId);
+        if (run == null) {
+            return;
+        }
         ccs.getDatasetDirectoryService().reportJobFailure(jobId, exceptions);
         run.getExecutor().notifyTaskFailure(ta, exceptions);
     }
