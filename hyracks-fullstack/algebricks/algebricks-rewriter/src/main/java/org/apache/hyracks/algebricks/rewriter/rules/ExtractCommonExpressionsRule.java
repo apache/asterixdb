@@ -75,15 +75,6 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * distinct ([$$5])
  * assign [$$5] <- [field-access($$0, 1)]
  * unnest $$0 <- [scan-dataset]
- * Example 3 - Pulling Common Expressions Above Joins (simplified)
- * Before plan:
- * assign [$$9] <- funcZ(funcY($$8))
- * join (funcX(funcY($$8)))
- * After plan:
- * assign [$$9] <- funcZ($$10))
- * select (funcX($$10))
- * assign [$$10] <- [funcY($$8)]
- * join (TRUE)
  */
 public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
 
@@ -305,28 +296,9 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
             SourceLocation sourceLoc = expr.getSourceLocation();
             AbstractLogicalOperator firstOp = (AbstractLogicalOperator) exprEqClass.getFirstOperator();
             Mutable<ILogicalExpression> firstExprRef = exprEqClass.getFirstExpression();
-            if (firstOp.getOperatorTag() == LogicalOperatorTag.INNERJOIN
-                    || firstOp.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
-                // Do not extract common expressions from within the same join operator.
-                if (firstOp == op) {
-                    return false;
-                }
-                AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) firstOp;
-                Mutable<ILogicalExpression> joinCond = joinOp.getCondition();
-                ILogicalExpression enclosingExpr = getEnclosingExpression(joinCond, firstExprRef.getValue());
-                if (enclosingExpr == null) {
-                    // No viable enclosing expression that we can pull out from the join.
-                    return false;
-                }
-                // Place a Select operator beneath op that contains the enclosing expression.
-                SelectOperator selectOp =
-                        new SelectOperator(new MutableObject<ILogicalExpression>(enclosingExpr), false, null);
-                selectOp.setSourceLocation(enclosingExpr.getSourceLocation());
-                selectOp.getInputs().add(new MutableObject<ILogicalOperator>(op.getInputs().get(0).getValue()));
-                op.getInputs().get(0).setValue(selectOp);
-                // Set firstOp to be the select below op, since we want to assign the common subexpr there.
-                firstOp = selectOp;
-            } else if (firstOp.getInputs().size() > 1) {
+            // We don't consider to eliminate common exprs in join operators by doing a cartesian production
+            // and pulling the condition in to a select. This will negatively impact the performance.
+            if (firstOp.getInputs().size() > 1) {
                 // Bail for any non-join operator with multiple inputs.
                 return false;
             }
