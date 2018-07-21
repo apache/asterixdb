@@ -257,7 +257,7 @@ import org.apache.asterix.runtime.evaluators.functions.StringRegExpLikeWithFlagD
 import org.apache.asterix.runtime.evaluators.functions.StringRegExpPositionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringRegExpPositionWithFlagDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringRegExpReplaceDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.StringRegExpReplaceWithFlagsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.StringRegExpReplaceWithFlagDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringRepeatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringReplaceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringReplaceWithLimitDescriptor;
@@ -624,7 +624,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(StringRegExpPositionDescriptor.FACTORY);
         fc.addGenerated(StringRegExpPositionWithFlagDescriptor.FACTORY);
         fc.addGenerated(StringRegExpReplaceDescriptor.FACTORY);
-        fc.addGenerated(StringRegExpReplaceWithFlagsDescriptor.FACTORY);
+        fc.addGenerated(StringRegExpReplaceWithFlagDescriptor.FACTORY);
         fc.addGenerated(StringInitCapDescriptor.FACTORY);
         fc.addGenerated(StringTrimDescriptor.FACTORY);
         fc.addGenerated(StringLTrimDescriptor.FACTORY);

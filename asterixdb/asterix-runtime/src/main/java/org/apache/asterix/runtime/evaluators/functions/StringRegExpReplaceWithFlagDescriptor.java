@@ -23,6 +23,8 @@ import java.io.IOException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.utils.RegExpMatcher;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -30,15 +32,16 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
-public class StringRegExpReplaceWithFlagsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class StringRegExpReplaceWithFlagDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new StringRegExpReplaceWithFlagsDescriptor();
+            return new StringRegExpReplaceWithFlagDescriptor();
         }
     };
 
@@ -50,14 +53,40 @@ public class StringRegExpReplaceWithFlagsDescriptor extends AbstractScalarFuncti
             @Override
             public IScalarEvaluator createScalarEvaluator(IHyracksTaskContext ctx) throws HyracksDataException {
                 return new AbstractQuadStringStringEval(ctx, args[0], args[1], args[2], args[3],
-                        StringRegExpReplaceWithFlagsDescriptor.this.getIdentifier(), sourceLoc) {
+                        StringRegExpReplaceWithFlagDescriptor.this.getIdentifier(), sourceLoc) {
+                    private final UTF8StringPointable emptyFlags = UTF8StringPointable.generateUTF8Pointable("");
                     private final RegExpMatcher matcher = new RegExpMatcher();
+                    private int limit;
+
+                    @Override
+                    protected void processArgument(int argIdx, IPointable argPtr, UTF8StringPointable outStrPtr)
+                            throws HyracksDataException {
+                        if (argIdx == 3) {
+                            byte[] bytes = argPtr.getByteArray();
+                            int start = argPtr.getStartOffset();
+                            ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[bytes[start]];
+                            switch (tt) {
+                                case TINYINT:
+                                case SMALLINT:
+                                case INTEGER:
+                                case BIGINT:
+                                    limit = ATypeHierarchy.getIntegerValue(funcID.getName(), argIdx, bytes, start,
+                                            true);
+                                    outStrPtr.set(emptyFlags);
+                                    return;
+                                default:
+                                    limit = Integer.MAX_VALUE;
+                                    break;
+                            }
+                        }
+                        super.processArgument(argIdx, argPtr, outStrPtr);
+                    }
 
                     @Override
                     protected String compute(UTF8StringPointable srcPtr, UTF8StringPointable patternPtr,
                             UTF8StringPointable replacePtr, UTF8StringPointable flagsPtr) throws IOException {
                         matcher.build(srcPtr, patternPtr, flagsPtr);
-                        return matcher.replace(replacePtr);
+                        return matcher.replace(replacePtr, limit);
                     }
                 };
             }

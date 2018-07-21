@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
@@ -28,40 +31,73 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
-    public static final StringIntToStringTypeComputer INSTANCE = new StringIntToStringTypeComputer(1);
+    public static final StringIntToStringTypeComputer INSTANCE = new StringIntToStringTypeComputer(0, 0, 1, 1);
 
-    public static final StringIntToStringTypeComputer INSTANCE_TRIPLE_STRING = new StringIntToStringTypeComputer(3);
+    public static final StringIntToStringTypeComputer INSTANCE_TRIPLE_STRING =
+            new StringIntToStringTypeComputer(0, 2, 3, 3);
 
-    private final int stringArgCount;
+    public static final StringIntToStringTypeComputer INSTANCE_STRING_REGEXP_REPLACE_WITH_FLAG =
+            new StringIntToStringTypeComputer(0, 3, 3, 3);
 
-    public StringIntToStringTypeComputer(int stringArgCount) {
-        this.stringArgCount = stringArgCount;
+    private final int stringArgIdxMin;
+
+    private final int stringArgIdxMax;
+
+    private final int intArgIdxMin;
+
+    private final int intArgIdxMax;
+
+    public StringIntToStringTypeComputer(int stringArgIdxMin, int stringArgIdxMax, int intArgIdxMin, int intArgIdxMax) {
+        this.stringArgIdxMin = stringArgIdxMin;
+        this.stringArgIdxMax = stringArgIdxMax;
+        this.intArgIdxMin = intArgIdxMin;
+        this.intArgIdxMax = intArgIdxMax;
     }
 
     @Override
     public void checkArgType(String funcName, int argIndex, IAType type, SourceLocation sourceLoc)
             throws AlgebricksException {
         ATypeTag tag = type.getTypeTag();
-        if (argIndex < stringArgCount) {
-            if (tag != ATypeTag.STRING) {
-                throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag, ATypeTag.STRING);
+        boolean expectedStringType = false;
+        if (stringArgIdxMin <= argIndex && argIndex <= stringArgIdxMax) {
+            if (tag == ATypeTag.STRING) {
+                return;
             }
-        } else {
+            expectedStringType = true;
+        }
+
+        boolean expectedIntType = false;
+        if (intArgIdxMin <= argIndex && argIndex <= intArgIdxMax) {
             switch (tag) {
                 case TINYINT:
                 case SMALLINT:
                 case INTEGER:
                 case BIGINT:
-                    break;
-                default:
-                    throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag, ATypeTag.TINYINT,
-                            ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT);
+                    return;
             }
+            expectedIntType = true;
         }
+
+        throw new TypeMismatchException(sourceLoc, funcName, argIndex, tag,
+                getExpectedTypes(expectedStringType, expectedIntType));
     }
 
     @Override
     public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
         return BuiltinType.ASTRING;
+    }
+
+    private ATypeTag[] getExpectedTypes(boolean expectedStringType, boolean expectedIntType) {
+        Set<ATypeTag> expectedTypes = EnumSet.noneOf(ATypeTag.class);
+        if (expectedStringType) {
+            expectedTypes.add(ATypeTag.STRING);
+        }
+        if (expectedIntType) {
+            expectedTypes.add(ATypeTag.TINYINT);
+            expectedTypes.add(ATypeTag.SMALLINT);
+            expectedTypes.add(ATypeTag.INTEGER);
+            expectedTypes.add(ATypeTag.BIGINT);
+        }
+        return expectedTypes.toArray(new ATypeTag[0]);
     }
 }

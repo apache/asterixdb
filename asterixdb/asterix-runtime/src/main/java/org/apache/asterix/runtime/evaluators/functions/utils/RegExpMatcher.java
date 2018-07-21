@@ -166,6 +166,20 @@ public class RegExpMatcher {
      * @return a new string with contained regular expressions replaced.
      */
     public String replace(UTF8StringPointable replaceStrPtr) {
+        return replace(replaceStrPtr, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Replaces the appearances of a regular expression defined pattern in a source string with a given
+     * replacement string.
+     *
+     * @param replaceStrPtr
+     *            , the string for replacing the regular expression.
+     * @param replaceLimit
+     *            , the maximum number of replacements to make
+     * @return a new string with contained regular expressions replaced.
+     */
+    public String replace(UTF8StringPointable replaceStrPtr, int replaceLimit) {
         // Sets up a new replacement string if necessary.
         final boolean newReplace =
                 replaceStrPtr != null && (replaceStr == null || lastReplaceStrPtr.compareTo(replaceStrPtr) != 0);
@@ -176,7 +190,7 @@ public class RegExpMatcher {
 
         // Does the actual replacement.
         resultBuf.setLength(0);
-        while (matcher.find()) {
+        for (int i = 0; i < replaceLimit && matcher.find(); i++) {
             matcher.appendReplacement(resultBuf, replaceStr);
         }
         matcher.appendTail(resultBuf);

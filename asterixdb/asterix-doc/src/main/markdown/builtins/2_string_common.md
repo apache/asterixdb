@@ -329,6 +329,7 @@
  * Syntax:
 
         regexp_replace(string, string_pattern, string_replacement[, string_flags])
+        regexp_replace(string, string_pattern, string_replacement[, replacement_limit])
 
  * Checks whether the string `string` matches the given
    regular expression pattern `string_pattern` (a Java regular expression pattern),
@@ -339,6 +340,7 @@
     * `string_replacement` : a pattern `string` to be used as the replacement,
     * `string_flag` : (Optional) a `string` with flags to be used during replace.
         * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
+    * `replacement_limit`: (Optional) an `integer` specifying the maximum number of replacements to make
  * Return Value:
     * Returns a `string` that is obtained after the replacements,
     * `missing` if any argument is a `missing` value,

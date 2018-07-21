@@ -47,16 +47,16 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
 
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private DataOutput dout = resultStorage.getDataOutput();
-    private IPointable array0 = new VoidPointable();
-    private IPointable array1 = new VoidPointable();
-    private IPointable array2 = new VoidPointable();
-    private IPointable array3 = new VoidPointable();
+    private IPointable ptr0 = new VoidPointable();
+    private IPointable ptr1 = new VoidPointable();
+    private IPointable ptr2 = new VoidPointable();
+    private IPointable ptr3 = new VoidPointable();
     private IScalarEvaluator eval0;
     private IScalarEvaluator eval1;
     private IScalarEvaluator eval2;
     private IScalarEvaluator eval3;
 
-    private final FunctionIdentifier funcID;
+    protected final FunctionIdentifier funcID;
     protected final SourceLocation sourceLoc;
 
     private AMutableString resultBuffer = new AMutableString("");
@@ -64,10 +64,10 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
     private ISerializerDeserializer strSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
 
-    private final UTF8StringPointable strPtr1st = new UTF8StringPointable();
-    private final UTF8StringPointable strPtr2nd = new UTF8StringPointable();
-    private final UTF8StringPointable strPtr3rd = new UTF8StringPointable();
-    private final UTF8StringPointable strPtr4th = new UTF8StringPointable();
+    private final UTF8StringPointable strPtr0 = new UTF8StringPointable();
+    private final UTF8StringPointable strPtr1 = new UTF8StringPointable();
+    private final UTF8StringPointable strPtr2 = new UTF8StringPointable();
+    private final UTF8StringPointable strPtr3 = new UTF8StringPointable();
 
     public AbstractQuadStringStringEval(IHyracksTaskContext context, IScalarEvaluatorFactory eval0,
             IScalarEvaluatorFactory eval1, IScalarEvaluatorFactory eval2, IScalarEvaluatorFactory eval3,
@@ -83,48 +83,19 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
     @SuppressWarnings("unchecked")
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-        eval0.evaluate(tuple, array0);
-        eval1.evaluate(tuple, array1);
-        eval2.evaluate(tuple, array2);
-        eval3.evaluate(tuple, array3);
+        eval0.evaluate(tuple, ptr0);
+        eval1.evaluate(tuple, ptr1);
+        eval2.evaluate(tuple, ptr2);
+        eval3.evaluate(tuple, ptr3);
 
-        byte[] bytes0 = array0.getByteArray();
-        byte[] bytes1 = array1.getByteArray();
-        byte[] bytes2 = array2.getByteArray();
-        byte[] bytes3 = array3.getByteArray();
-
-        int start0 = array0.getStartOffset();
-        int start1 = array1.getStartOffset();
-        int start2 = array2.getStartOffset();
-        int start3 = array3.getStartOffset();
-
-        int len0 = array0.getLength();
-        int len1 = array1.getLength();
-        int len2 = array2.getLength();
-        int len3 = array3.getLength();
+        processArgument(0, ptr0, strPtr0);
+        processArgument(1, ptr1, strPtr1);
+        processArgument(2, ptr2, strPtr2);
+        processArgument(3, ptr3, strPtr3);
 
         resultStorage.reset();
-        // Type check.
-        if (bytes0[start0] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 0, bytes0[start0], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-        }
-        if (bytes1[start1] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 1, bytes1[start1], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-        }
-        if (bytes2[start2] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 2, bytes2[start2], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-        }
-        if (bytes3[start3] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            throw new TypeMismatchException(sourceLoc, funcID, 3, bytes1[start3], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-        }
-
-        strPtr1st.set(bytes0, start0 + 1, len0);
-        strPtr2nd.set(bytes1, start1 + 1, len1);
-        strPtr3rd.set(bytes2, start2 + 1, len2);
-        strPtr4th.set(bytes3, start3 + 1, len3);
-
         try {
-            String res = compute(strPtr1st, strPtr2nd, strPtr3rd, strPtr4th);
+            String res = compute(strPtr0, strPtr1, strPtr2, strPtr3);
             resultBuffer.setValue(res);
             strSerde.serialize(resultBuffer, dout);
         } catch (IOException e) {
@@ -133,7 +104,19 @@ public abstract class AbstractQuadStringStringEval implements IScalarEvaluator {
         result.set(resultStorage);
     }
 
+    protected void processArgument(int argIdx, IPointable argPtr, UTF8StringPointable outStrPtr)
+            throws HyracksDataException {
+        byte[] bytes = argPtr.getByteArray();
+        int start = argPtr.getStartOffset();
+        // Type check.
+        if (bytes[start] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+            throw new TypeMismatchException(sourceLoc, funcID, argIdx, bytes[start],
+                    ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+        }
+        int len = argPtr.getLength();
+        outStrPtr.set(bytes, start + 1, len);
+    }
+
     protected abstract String compute(UTF8StringPointable strPtr1st, UTF8StringPointable strPtr2nd,
             UTF8StringPointable strPtr3rd, UTF8StringPointable strPtr4th) throws IOException;
-
 }
