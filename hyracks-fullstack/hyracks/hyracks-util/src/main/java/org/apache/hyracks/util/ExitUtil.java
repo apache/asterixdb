@@ -40,6 +40,8 @@ public class ExitUtil {
     public static final int EC_INCONSISTENT_METADATA = 8;
     public static final int EC_UNCAUGHT_THROWABLE = 9;
     public static final int EC_UNHANDLED_EXCEPTION = 11;
+    public static final int EC_FAILED_TO_DELETE_CORRUPTED_RESOURCES = 12;
+    public static final int EC_ERROR_CREATING_RESOURCES = 13;
     public static final int EC_FAILED_TO_CANCEL_ACTIVE_START_STOP = 22;
     public static final int EC_IMMEDIATE_HALT = 33;
     public static final int EC_HALT_ABNORMAL_RESERVED_44 = 44;

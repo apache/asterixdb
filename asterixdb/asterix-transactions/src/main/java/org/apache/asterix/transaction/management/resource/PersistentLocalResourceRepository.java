@@ -73,6 +73,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -182,6 +183,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return resource;
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
     public synchronized void insert(LocalResource resource) throws HyracksDataException {
         String relativePath = getFileName(resource.getPath());
@@ -194,20 +196,37 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         if (!parent.exists() && !parent.mkdirs()) {
             throw HyracksDataException.create(CANNOT_CREATE_FILE, parent.getAbsolutePath());
         }
-        createResourceFileMask(resourceFile);
+        // The next block should be all or nothing
         try {
+            createResourceFileMask(resourceFile);
             byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(resource.toJson(persistedResourceRegistry));
             final Path path = Paths.get(resourceFile.getAbsolutePath());
             Files.write(path, bytes);
-        } catch (IOException e) {
+            indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(null, 0);
+            deleteResourceFileMask(resourceFile);
+        } catch (Exception e) {
+            cleanup(resourceFile);
             throw HyracksDataException.create(e);
+        } catch (Throwable th) {
+            LOGGER.error("Error creating resource {}", resourceFile, th);
+            ExitUtil.halt(ExitUtil.EC_ERROR_CREATING_RESOURCES);
         }
-        indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(null, 0);
-        deleteResourceFileMask(resourceFile);
         resourceCache.put(resource.getPath(), resource);
         //if replication enabled, send resource metadata info to remote nodes
         if (isReplicationEnabled) {
             createReplicationJob(ReplicationOperation.REPLICATE, resourceFile);
+        }
+    }
+
+    @SuppressWarnings("squid:S1181")
+    private void cleanup(FileReference resourceFile) {
+        if (resourceFile.getFile().exists()) {
+            try {
+                IoUtil.delete(resourceFile);
+            } catch (Throwable th) {
+                LOGGER.error("Error cleaning up corrupted resource {}", resourceFile, th);
+                ExitUtil.halt(ExitUtil.EC_FAILED_TO_DELETE_CORRUPTED_RESOURCES);
+            }
         }
     }
 
