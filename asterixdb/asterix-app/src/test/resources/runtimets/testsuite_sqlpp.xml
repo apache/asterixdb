@@ -8787,6 +8787,11 @@
         <output-dir compare="Text">issue-2394</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="function">
+      <compilation-unit name="drop_if_exists">
+        <output-dir compare="Text">drop_if_exists</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="feeds">
     <test-case FilePath="feeds">

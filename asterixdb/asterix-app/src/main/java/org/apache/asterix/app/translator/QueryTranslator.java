@@ -1811,12 +1811,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 signature.getNamespace() + "." + signature.getName());
         try {
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
+            // If function == null && stmtDropFunction.getIfExists() == true, commit txn directly.
             if (function == null && !stmtDropFunction.getIfExists()) {
                 throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, signature);
-            } else if (isFunctionUsed(mdTxnCtx, signature, null)) {
-                throw new MetadataException(ErrorCode.METADATA_DROP_FUCTION_IN_USE, sourceLoc, signature);
-            } else {
-                MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
+            } else if (function != null) {
+                if (isFunctionUsed(mdTxnCtx, signature, null)) {
+                    throw new MetadataException(ErrorCode.METADATA_DROP_FUCTION_IN_USE, sourceLoc, signature);
+                } else {
+                    MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
+                }
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
