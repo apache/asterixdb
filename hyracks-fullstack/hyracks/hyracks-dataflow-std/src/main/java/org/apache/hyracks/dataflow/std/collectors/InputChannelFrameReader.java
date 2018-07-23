@@ -27,8 +27,11 @@ import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class InputChannelFrameReader implements IFrameReader, IInputChannelMonitor {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IInputChannel channel;
 
     private int availableFrames;
@@ -59,6 +62,7 @@ public class InputChannelFrameReader implements IFrameReader, IInputChannelMonit
         if (failed) {
             // Do not throw exception here to allow the root cause exception gets propagated to the master first.
             // Return false to allow the nextFrame(...) call to be a non-op.
+            LOGGER.warn("Sender failed.. returning silently");
             return false;
         }
         if (availableFrames <= 0 && eos) {

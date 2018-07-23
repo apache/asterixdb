@@ -64,4 +64,9 @@ public class NotifyTaskFailureWork extends AbstractWork {
             task.getJoblet().removeTask(task);
         }
     }
+
+    @Override
+    public String toString() {
+        return getName() + ": [" + ncs.getId() + "[" + jobId + ":" + taskId + "]";
+    }
 }

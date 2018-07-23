@@ -221,17 +221,17 @@ public class JobManager implements IJobManager {
         JobId jobId = run.getJobId();
         Throwable caughtException = null;
         CCServiceContext serviceCtx = ccs.getContext();
-        if (serviceCtx != null) {
-            try {
-                serviceCtx.notifyJobFinish(jobId, run.getPendingStatus(), run.getPendingExceptions());
-            } catch (Exception e) {
-                LOGGER.error("Exception notifying job finish {}", jobId, e);
-                caughtException = e;
-            }
+        try {
+            serviceCtx.notifyJobFinish(jobId, run.getPendingStatus(), run.getPendingExceptions());
+        } catch (Exception e) {
+            LOGGER.error("Exception notifying job finish {}", jobId, e);
+            caughtException = e;
         }
         run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
         run.setEndTime(System.currentTimeMillis());
-        activeRunMap.remove(jobId);
+        if (activeRunMap.remove(jobId) == null) {
+            LOGGER.warn("Job {} was not found running but is getting archived and capacity released", jobId);
+        }
         runMapArchive.put(jobId, run);
         runMapHistory.put(jobId, run.getExceptions());
 

@@ -290,7 +290,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                     .schedule(new NotifyTaskFailureWork(ncs, this, exceptions, joblet.getJobId(), taskAttemptId));
             return;
         }
-        ct.setName(displayName + ":" + taskAttemptId + ":" + 0);
+        ct.setName(displayName + ":" + joblet.getJobId() + ":" + taskAttemptId + ":" + 0);
         try {
             Throwable operatorException = null;
             try {
@@ -468,5 +468,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     public boolean isCompleted() {
         return completed;
+    }
+
+    @Override
+    public String toString() {
+        return "{ \"class\" : \"" + getClass().getSimpleName() + "\", \"node\" : \"" + ncs.getId() + "\" \"jobId\" : \""
+                + joblet.getJobId() + "\", \"taskId\" : \"" + taskAttemptId + "\" }";
     }
 }

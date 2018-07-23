@@ -51,6 +51,7 @@ public class NotifyTaskCompleteWork extends AbstractWork {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ":" + task.getTaskAttemptId();
+        return getName() + ": [" + ncs.getId() + "[" + task.getJoblet().getJobId() + ":" + task.getTaskAttemptId()
+                + "]";
     }
 }

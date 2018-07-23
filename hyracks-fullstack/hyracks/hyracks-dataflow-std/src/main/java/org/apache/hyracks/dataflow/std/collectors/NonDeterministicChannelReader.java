@@ -106,6 +106,7 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
                 return lastReadSender;
             }
             if (!failSenders.isEmpty()) {
+                LOGGER.warn("Sender failed.. returning silently");
                 // Do not throw exception here to allow the root cause exception gets propagated to the master first.
                 // Return a negative value to allow the nextFrame(...) call to be a non-op.
                 return -1;
@@ -143,10 +144,8 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
     public synchronized void notifyFailure(IInputChannel channel) {
         PartitionId pid = (PartitionId) channel.getAttachment();
         int senderIndex = pid.getSenderIndex();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Failure: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
-                    + pid.getReceiverIndex());
-        }
+        LOGGER.warn("Failure: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
+                + pid.getReceiverIndex());
         failSenders.set(senderIndex);
         eosSenders.set(senderIndex);
         notifyAll();
