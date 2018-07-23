@@ -28,8 +28,14 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrameFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
+/**
+ * @deprecated
+ *             This class must not be used. Instead, use {@link AppendOnlyLinkedMetadataPageManager}
+ */
+@Deprecated
 public class LinkedMetaDataPageManager implements IMetadataPageManager {
     private final IBufferCache bufferCache;
     private int fileId = -1;
@@ -238,7 +244,7 @@ public class LinkedMetaDataPageManager implements IMetadataPageManager {
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void close(IPageWriteFailureCallback callback) throws HyracksDataException {
         if (ready) {
             ICachedPage metaNode =
                     bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()), false);

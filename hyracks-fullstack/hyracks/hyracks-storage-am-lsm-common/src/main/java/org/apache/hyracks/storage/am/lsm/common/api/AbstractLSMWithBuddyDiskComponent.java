@@ -26,6 +26,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.IChainedComponentBulkLoade
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexWithBuddyBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 
 public abstract class AbstractLSMWithBuddyDiskComponent extends AbstractLSMWithBloomFilterDiskComponent {
 
@@ -37,9 +38,9 @@ public abstract class AbstractLSMWithBuddyDiskComponent extends AbstractLSMWithB
     public abstract AbstractTreeIndex getBuddyIndex();
 
     @Override
-    public void markAsValid(boolean persist) throws HyracksDataException {
-        super.markAsValid(persist);
-        ComponentUtils.markAsValid(getBuddyIndex(), persist);
+    public void markAsValid(boolean persist, IPageWriteFailureCallback callback) throws HyracksDataException {
+        super.markAsValid(persist, callback);
+        ComponentUtils.markAsValid(getBuddyIndex(), persist, callback);
     }
 
     @Override

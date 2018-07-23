@@ -15,35 +15,37 @@
 
 package org.apache.hyracks.storage.common.buffercache;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.ExitUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FIFOLocalWriter implements IFIFOPageWriter {
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final FIFOLocalWriter INSTANCE = new FIFOLocalWriter();
-    private static boolean DEBUG = false;
+    private static final boolean DEBUG = false;
 
     private FIFOLocalWriter() {
     }
 
+    @SuppressWarnings("squid:S1181") // System must halt on all IO errors
     @Override
-    public void write(ICachedPage page, BufferCache bufferCache) throws HyracksDataException {
+    public void write(ICachedPage page, BufferCache bufferCache) {
         CachedPage cPage = (CachedPage) page;
         try {
             bufferCache.write(cPage);
-        } catch (HyracksDataException e) {
-            if (e.getErrorCode() != ErrorCode.FILE_DOES_NOT_EXIST) {
-                throw HyracksDataException.create(e);
-            }
+        } catch (Exception e) {
+            page.writeFailed(e);
+            LOGGER.warn("Failed to write page {}", cPage, e);
+        } catch (Throwable th) {
+            // Halt
+            LOGGER.error("FIFOLocalWriter has encountered a fatal error", th);
+            ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
         } finally {
             bufferCache.returnPage(cPage);
             if (DEBUG) {
-                System.out.println("[FIFO] Return page: " + cPage.cpid + "," + cPage.dpid);
+                LOGGER.error("[FIFO] Return page: {}, {}", cPage.cpid, cPage.dpid);
             }
         }
     }
 
-    @Override
-    public void sync(int fileId, BufferCache bufferCache) throws HyracksDataException {
-        bufferCache.force(fileId, true);
-    }
 }

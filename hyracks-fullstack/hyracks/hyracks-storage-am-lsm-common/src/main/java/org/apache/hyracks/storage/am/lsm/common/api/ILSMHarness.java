@@ -150,12 +150,12 @@ public interface ILSMHarness {
     /**
      * Add bulk loaded component
      *
-     * @param index
-     *            the new component
+     * @param ioOperation
+     *            the io operation that added the new component
      * @throws HyracksDataException
      * @throws IndexException
      */
-    void addBulkLoadedComponent(ILSMDiskComponent index) throws HyracksDataException;
+    void addBulkLoadedComponent(ILSMIOOperation ioOperation) throws HyracksDataException;
 
     /**
      * Get index operation tracker

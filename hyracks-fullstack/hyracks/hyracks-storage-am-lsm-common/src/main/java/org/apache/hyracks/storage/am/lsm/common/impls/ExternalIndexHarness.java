@@ -192,9 +192,18 @@ public class ExternalIndexHarness extends LSMHarness {
         }
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
-    public void addBulkLoadedComponent(ILSMDiskComponent c) throws HyracksDataException {
-        c.markAsValid(lsmIndex.isDurable());
+    public void addBulkLoadedComponent(ILSMIOOperation ioOperation) throws HyracksDataException {
+        ILSMDiskComponent c = ioOperation.getNewComponent();
+        try {
+            c.markAsValid(lsmIndex.isDurable(), ioOperation);
+        } catch (Throwable th) {
+            ioOperation.setFailure(th);
+        }
+        if (ioOperation.hasFailed()) {
+            throw HyracksDataException.create(ioOperation.getFailure());
+        }
         synchronized (opTracker) {
             lsmIndex.addDiskComponent(c);
             if (replicationEnabled) {

@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class BloomFilterBulkLoader implements IChainedComponentBulkLoader {
 
@@ -64,5 +65,20 @@ public class BloomFilterBulkLoader implements IChainedComponentBulkLoader {
             bulkLoader.abort();
             endedBloomFilterLoad = true;
         }
+    }
+
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasFailed() {
+        return bulkLoader.hasFailed();
+    }
+
+    @Override
+    public Throwable getFailure() {
+        return bulkLoader.getFailure();
     }
 }

@@ -26,8 +26,9 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 
-public interface ILSMIOOperation extends Callable<LSMIOOperationStatus> {
+public interface ILSMIOOperation extends Callable<LSMIOOperationStatus>, IPageWriteFailureCallback {
 
     /**
      * Represents the io operation type
@@ -94,6 +95,7 @@ public interface ILSMIOOperation extends Callable<LSMIOOperationStatus> {
     /**
      * @return the failure in the io operation if any, null otherwise
      */
+    @Override
     Throwable getFailure();
 
     /**

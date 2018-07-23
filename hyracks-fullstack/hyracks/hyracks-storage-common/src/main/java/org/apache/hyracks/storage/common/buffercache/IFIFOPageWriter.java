@@ -15,10 +15,7 @@
 
 package org.apache.hyracks.storage.common.buffercache;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
+@FunctionalInterface
 public interface IFIFOPageWriter {
-    public void write(ICachedPage page, BufferCache bufferCache) throws HyracksDataException;
-
-    void sync(int fileId, BufferCache bufferCache) throws HyracksDataException;
+    void write(ICachedPage page, BufferCache bufferCache);
 }

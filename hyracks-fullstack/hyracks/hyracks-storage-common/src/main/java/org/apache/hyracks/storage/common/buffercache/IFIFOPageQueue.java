@@ -19,5 +19,20 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @FunctionalInterface
 public interface IFIFOPageQueue {
-    void put(ICachedPage page) throws HyracksDataException;
+
+    /**
+     * Put a page in the write queue
+     *
+     * @param page
+     *            the page to be written
+     * @param callback
+     *            callback in case of a failure
+     * @throws HyracksDataException
+     *             if the callback has already failed. This indicates a failure writing a previous page
+     *             in the same operation.
+     *             Note: having this failure at this place removes the need to check for failures with
+     *             every add() call in the bulk loader and so, we check per page given to disk rather
+     *             than per tuple given to loader. At the same time, it allows the bulk load to fail early.
+     */
+    void put(ICachedPage page, IPageWriteFailureCallback callback) throws HyracksDataException;
 }

@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class VirtualFreePageManager implements IPageManager {
@@ -88,7 +89,7 @@ public class VirtualFreePageManager implements IPageManager {
     }
 
     @Override
-    public void close() {
+    public void close(IPageWriteFailureCallback callback) {
         // Method doesn't make sense for this free page manager.
     }
 

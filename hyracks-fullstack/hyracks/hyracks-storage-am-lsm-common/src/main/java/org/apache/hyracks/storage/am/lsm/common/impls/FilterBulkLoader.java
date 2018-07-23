@@ -26,6 +26,7 @@ import org.apache.hyracks.storage.am.common.tuples.PermutingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilterManager;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class FilterBulkLoader implements IChainedComponentBulkLoader {
 
@@ -78,5 +79,20 @@ public class FilterBulkLoader implements IChainedComponentBulkLoader {
     private void updateFilter(ITupleReference tuple) throws HyracksDataException {
         filterTuple.reset(tuple);
         filter.update(filterTuple, filterCmp, NoOpOperationCallback.INSTANCE);
+    }
+
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasFailed() {
+        return false;
+    }
+
+    @Override
+    public Throwable getFailure() {
+        return null;
     }
 }

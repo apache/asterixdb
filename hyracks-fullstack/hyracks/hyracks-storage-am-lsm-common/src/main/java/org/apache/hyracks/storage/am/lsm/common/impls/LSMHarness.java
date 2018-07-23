@@ -537,7 +537,7 @@ public class LSMHarness implements ILSMHarness {
             operation.setNewComponent(newComponent);
             operation.getCallback().afterOperation(operation);
             if (newComponent != null) {
-                newComponent.markAsValid(lsmIndex.isDurable());
+                newComponent.markAsValid(lsmIndex.isDurable(), operation);
             }
         } catch (Throwable e) { // NOSONAR Must catch all
             operation.setStatus(LSMIOOperationStatus.FAILURE);
@@ -613,9 +613,18 @@ public class LSMHarness implements ILSMHarness {
         return operation;
     }
 
+    @SuppressWarnings("squid:S1181")
     @Override
-    public void addBulkLoadedComponent(ILSMDiskComponent c) throws HyracksDataException {
-        c.markAsValid(lsmIndex.isDurable());
+    public void addBulkLoadedComponent(ILSMIOOperation ioOperation) throws HyracksDataException {
+        ILSMDiskComponent c = ioOperation.getNewComponent();
+        try {
+            c.markAsValid(lsmIndex.isDurable(), ioOperation);
+        } catch (Throwable th) {
+            ioOperation.setFailure(th);
+        }
+        if (ioOperation.hasFailed()) {
+            throw HyracksDataException.create(ioOperation.getFailure());
+        }
         synchronized (opTracker) {
             lsmIndex.addDiskComponent(c);
             if (replicationEnabled) {

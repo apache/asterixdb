@@ -18,40 +18,27 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
-import java.nio.ByteBuffer;
+import org.apache.hyracks.util.ExitUtil;
 
-public interface ICachedPage {
+public class HaltOnFailureCallback implements IPageWriteFailureCallback {
+    public static final HaltOnFailureCallback INSTANCE = new HaltOnFailureCallback();
 
-    ByteBuffer getBuffer();
+    private HaltOnFailureCallback() {
+    }
 
-    void acquireReadLatch();
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
+    }
 
-    void releaseReadLatch();
+    @Override
+    public boolean hasFailed() {
+        return false;
+    }
 
-    void acquireWriteLatch();
+    @Override
+    public Throwable getFailure() {
+        return null;
+    }
 
-    void releaseWriteLatch(boolean markDirty);
-
-    boolean confiscated();
-
-    IQueueInfo getQueueInfo();
-
-    void setQueueInfo(IQueueInfo queueInfo);
-
-    int getPageSize();
-
-    int getFrameSizeMultiplier();
-
-    void setDiskPageId(long dpid);
-
-    void setFailureCallback(IPageWriteFailureCallback callback);
-
-    /**
-     * Check if a page is a large page
-     *
-     * @return true if the page is large, false otherwise
-     */
-    boolean isLargePage();
-
-    void writeFailed(Exception e);
 }

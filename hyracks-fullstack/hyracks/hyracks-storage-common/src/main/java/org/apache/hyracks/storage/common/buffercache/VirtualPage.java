@@ -147,4 +147,14 @@ public class VirtualPage implements ICachedPage {
         str.append("}");
         return str.toString();
     }
+
+    @Override
+    public void setFailureCallback(IPageWriteFailureCallback callback) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void writeFailed(Exception e) {
+        throw new UnsupportedOperationException();
+    }
 }

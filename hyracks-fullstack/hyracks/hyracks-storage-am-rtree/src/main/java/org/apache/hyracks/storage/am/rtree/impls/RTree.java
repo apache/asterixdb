@@ -941,11 +941,10 @@ public class RTree extends AbstractTreeIndex {
                     propagateBulk(1, false, pagesToWrite);
 
                     leafFrontier.pageId = freePageManager.takePage(metaFrame);
-                    queue.put(leafFrontier.page);
+                    queue.put(leafFrontier.page, this);
                     for (ICachedPage c : pagesToWrite) {
-                        queue.put(c);
+                        queue.put(c, this);
                     }
-
                     pagesToWrite.clear();
                     leafFrontier.page = bufferCache
                             .confiscatePage(BufferedFileHandle.getDiskPageId(getFileId(), leafFrontier.pageId));
@@ -975,7 +974,7 @@ public class RTree extends AbstractTreeIndex {
             }
 
             for (ICachedPage c : pagesToWrite) {
-                queue.put(c);
+                queue.put(c, this);
             }
             finish();
             super.end();
@@ -1011,7 +1010,7 @@ public class RTree extends AbstractTreeIndex {
                     ((RTreeNSMFrame) lowerFrame).adjustMBR();
                     interiorFrameTupleWriter.writeTupleFields(((RTreeNSMFrame) lowerFrame).getMBRTuples(), 0, mbr, 0);
                 }
-                queue.put(n.page);
+                queue.put(n.page, this);
                 n.page = null;
                 prevPageId = n.pageId;
             }
@@ -1021,7 +1020,6 @@ public class RTree extends AbstractTreeIndex {
 
         protected void propagateBulk(int level, boolean toRoot, List<ICachedPage> pagesToWrite)
                 throws HyracksDataException {
-            boolean propagated = false;
 
             if (level == 1) {
                 lowerFrame = leafFrame;

@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
 import org.apache.hyracks.util.trace.TraceUtils;
@@ -161,5 +162,15 @@ class TracedIOOperation implements ILSMIOOperation {
     @Override
     public Map<String, Object> getParameters() {
         return ioOp.getParameters();
+    }
+
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        ioOp.writeFailed(page, failure);
+    }
+
+    @Override
+    public boolean hasFailed() {
+        return ioOp.hasFailed();
     }
 }

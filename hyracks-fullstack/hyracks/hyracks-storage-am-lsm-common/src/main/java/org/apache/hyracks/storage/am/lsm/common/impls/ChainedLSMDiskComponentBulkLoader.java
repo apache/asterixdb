@@ -27,6 +27,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.util.annotations.CriticalPath;
 
 /**
@@ -96,8 +97,9 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
     public void cleanupArtifacts() throws HyracksDataException {
         if (!cleanedUpArtifacts) {
             cleanedUpArtifacts = true;
-            for (IChainedComponentBulkLoader lsmOperation : bulkloaderChain) {
-                lsmOperation.cleanupArtifacts();
+            final int bulkloadersCount = bulkloaderChain.size();
+            for (int i = 0; i < bulkloadersCount; i++) {
+                bulkloaderChain.get(i).cleanupArtifacts();;
             }
         }
         diskComponent.deactivateAndDestroy();
@@ -106,8 +108,9 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
     @Override
     public void end() throws HyracksDataException {
         if (!cleanedUpArtifacts) {
-            for (IChainedComponentBulkLoader lsmOperation : bulkloaderChain) {
-                lsmOperation.end();
+            final int bulkloadersCount = bulkloaderChain.size();
+            for (int i = 0; i < bulkloadersCount; i++) {
+                bulkloaderChain.get(i).end();
             }
             if (isEmptyComponent && cleanupEmptyComponent) {
                 cleanupArtifacts();
@@ -118,13 +121,41 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
     @Override
     public void abort() throws HyracksDataException {
         operation.setStatus(LSMIOOperationStatus.FAILURE);
-        for (IChainedComponentBulkLoader lsmOperation : bulkloaderChain) {
-            lsmOperation.abort();
+        final int bulkloadersCount = bulkloaderChain.size();
+        for (int i = 0; i < bulkloadersCount; i++) {
+            bulkloaderChain.get(i).abort();
         }
     }
 
     @Override
     public ILSMIOOperation getOperation() {
         return operation;
+    }
+
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasFailed() {
+        final int bulkloadersCount = bulkloaderChain.size();
+        for (int i = 0; i < bulkloadersCount; i++) {
+            if (bulkloaderChain.get(i).hasFailed()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Throwable getFailure() {
+        final int bulkloadersCount = bulkloaderChain.size();
+        for (int i = 0; i < bulkloadersCount; i++) {
+            if (bulkloaderChain.get(i).hasFailed()) {
+                return bulkloaderChain.get(i).getFailure();
+            }
+        }
+        return null;
     }
 }

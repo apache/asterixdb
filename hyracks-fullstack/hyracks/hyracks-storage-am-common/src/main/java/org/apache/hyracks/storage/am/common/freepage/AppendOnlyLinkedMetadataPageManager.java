@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager {
@@ -207,7 +208,7 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     }
 
     @Override
-    public void close() throws HyracksDataException {
+    public void close(IPageWriteFailureCallback callback) throws HyracksDataException {
         if (ready) {
             IFIFOPageQueue queue = bufferCache.createFIFOQueue();
             ITreeIndexMetadataFrame metaFrame = frameFactory.createFrame();
@@ -220,7 +221,9 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
             }
             int finalMetaPage = getMaxPageId(metaFrame) + 1;
             confiscatedPage.setDiskPageId(BufferedFileHandle.getDiskPageId(fileId, finalMetaPage));
-            queue.put(confiscatedPage);
+            // WARNING: flushing the metadata page should be done after releasing the write latch; otherwise, the page
+            // won't be flushed to disk because it won't be dirty until the write latch has been released.
+            queue.put(confiscatedPage, callback);
             bufferCache.finishQueue();
             metadataPage = getMetadataPageId();
             ready = false;

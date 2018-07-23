@@ -20,8 +20,9 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 
-public interface IChainedComponentBulkLoader {
+public interface IChainedComponentBulkLoader extends IPageWriteFailureCallback {
     /**
      * Adds a tuple to the bulkloaded component
      *

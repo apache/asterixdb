@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -156,8 +157,8 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
      * @throws HyracksDataException
      */
     @Override
-    public void markAsValid(boolean persist) throws HyracksDataException {
-        ComponentUtils.markAsValid(getMetadataHolder(), persist);
+    public void markAsValid(boolean persist, IPageWriteFailureCallback callback) throws HyracksDataException {
+        ComponentUtils.markAsValid(getMetadataHolder(), persist, callback);
         if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Marked as valid component with id: " + getId());
         }

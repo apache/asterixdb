@@ -23,6 +23,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex.AbstractTreeIndexBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMIndexBulkLoader implements IChainedComponentBulkLoader {
     private final IIndexBulkLoader bulkLoader;
@@ -63,5 +64,20 @@ public class LSMIndexBulkLoader implements IChainedComponentBulkLoader {
     @Override
     public void abort() throws HyracksDataException {
         bulkLoader.abort();
+    }
+
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasFailed() {
+        return bulkLoader.hasFailed();
+    }
+
+    @Override
+    public Throwable getFailure() {
+        return bulkLoader.getFailure();
     }
 }

@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class BloomFilter {
@@ -275,7 +276,7 @@ public class BloomFilter {
         return new BloomFilterBuilder(numElements, numHashes, numBitsPerElement);
     }
 
-    public class BloomFilterBuilder implements IIndexBulkLoader {
+    public class BloomFilterBuilder extends PageWriteFailureCallback implements IIndexBulkLoader {
         private final long[] hashes = BloomFilter.createHashArray();
         private final long estimatedNumElements;
         private final int numHashes;
@@ -286,6 +287,7 @@ public class BloomFilter {
         private final ICachedPage[] pages;
         private ICachedPage metaDataPage = null;
 
+        @SuppressWarnings("squid:S1181") // Catch Throwable Must return all confiscated pages
         public BloomFilterBuilder(long estimatedNumElemenets, int numHashes, int numBitsPerElement)
                 throws HyracksDataException {
             if (!isActivated) {
@@ -303,11 +305,22 @@ public class BloomFilter {
             actualNumElements = 0;
             pages = new ICachedPage[numPages];
             int currentPageId = 1;
-            while (currentPageId <= numPages) {
-                ICachedPage page = bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, currentPageId));
-                initPage(page.getBuffer().array());
-                pages[currentPageId - 1] = page;
-                ++currentPageId;
+            try {
+                while (currentPageId <= numPages) {
+                    ICachedPage page =
+                            bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, currentPageId));
+                    initPage(page.getBuffer().array());
+                    pages[currentPageId - 1] = page;
+                    ++currentPageId;
+                }
+            } catch (Throwable th) {
+                // return confiscated pages
+                for (int i = 0; i < currentPageId; i++) {
+                    if (pages[i] != null) {
+                        bufferCache.returnPage(pages[i]);
+                    }
+                }
+                throw th;
             }
         }
 
@@ -364,11 +377,14 @@ public class BloomFilter {
         @Override
         public void end() throws HyracksDataException {
             allocateAndInitMetaDataPage();
-            queue.put(metaDataPage);
+            queue.put(metaDataPage, this);
             for (ICachedPage p : pages) {
-                queue.put(p);
+                queue.put(p, this);
             }
             bufferCache.finishQueue();
+            if (hasFailed()) {
+                throw HyracksDataException.create(getFailure());
+            }
             BloomFilter.this.numBits = numBits;
             BloomFilter.this.numHashes = numHashes;
             BloomFilter.this.numElements = actualNumElements;

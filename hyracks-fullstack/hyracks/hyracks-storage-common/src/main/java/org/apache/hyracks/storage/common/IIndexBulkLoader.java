@@ -20,8 +20,9 @@ package org.apache.hyracks.storage.common;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 
-public interface IIndexBulkLoader {
+public interface IIndexBulkLoader extends IPageWriteFailureCallback {
     /**
      * Append a tuple to the index in the context of a bulk load.
      *
@@ -36,6 +37,7 @@ public interface IIndexBulkLoader {
 
     /**
      * Finalize the bulk loading operation in the given context and release all resources.
+     * After this method is called, caller can't add more tuples nor abort
      *
      * @throws HyracksDataException
      *             If the BufferCache throws while un/pinning or un/latching.

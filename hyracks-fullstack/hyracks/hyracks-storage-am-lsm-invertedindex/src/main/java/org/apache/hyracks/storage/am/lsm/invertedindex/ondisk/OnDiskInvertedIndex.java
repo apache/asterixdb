@@ -61,6 +61,7 @@ import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 /**
@@ -231,7 +232,8 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         listCursor.open(initState, null);
     }
 
-    public abstract class AbstractOnDiskInvertedIndexBulkLoader implements IIndexBulkLoader {
+    public abstract class AbstractOnDiskInvertedIndexBulkLoader extends PageWriteFailureCallback
+            implements IIndexBulkLoader {
         protected final ArrayTupleBuilder btreeTupleBuilder;
         protected final ArrayTupleReference btreeTupleReference;
         protected final IIndexBulkLoader btreeBulkloader;
@@ -272,7 +274,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         }
 
         protected void pinNextPage() throws HyracksDataException {
-            queue.put(currentPage);
+            queue.put(currentPage, this);
             currentPageId++;
             currentPage = bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, currentPageId));
         }
@@ -352,10 +354,13 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
             btreeBulkloader.end();
 
             if (currentPage != null) {
-                queue.put(currentPage);
+                queue.put(currentPage, this);
             }
             invListsMaxPageId = currentPageId;
             bufferCache.finishQueue();
+            if (hasFailed()) {
+                throw HyracksDataException.create(getFailure());
+            }
         }
 
         @Override

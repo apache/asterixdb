@@ -24,15 +24,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.ExitUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AsyncFIFOPageQueueManager implements Runnable {
-    private final static boolean DEBUG = false;
+    private static final boolean DEBUG = false;
+    private static final Logger LOGGER = LogManager.getLogger();
 
-    protected LinkedBlockingQueue<ICachedPage> queue = new LinkedBlockingQueue<ICachedPage>();
+    protected LinkedBlockingQueue<ICachedPage> queue = new LinkedBlockingQueue<>();
     volatile Thread writerThread;
     protected AtomicBoolean poisoned = new AtomicBoolean(false);
     protected BufferCache bufferCache;
-    volatile protected PageQueue pageQueue;
+    protected volatile PageQueue pageQueue;
 
     public AsyncFIFOPageQueueManager(BufferCache bufferCache) {
         this.bufferCache = bufferCache;
@@ -57,17 +61,27 @@ public class AsyncFIFOPageQueueManager implements Runnable {
             return writer;
         }
 
+        @SuppressWarnings("squid:S2142")
         @Override
-        public void put(ICachedPage page) throws HyracksDataException {
+        public void put(ICachedPage page, IPageWriteFailureCallback callback) throws HyracksDataException {
+            failIfPreviousPageFailed(callback);
+            page.setFailureCallback(callback);
             try {
                 if (!poisoned.get()) {
                     queue.put(page);
                 } else {
-                    throw new HyracksDataException("Queue is closing");
+                    LOGGER.error("An attempt to write a page found buffer cache closed");
+                    ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
                 }
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw HyracksDataException.create(e);
+                LOGGER.error("IO Operation interrupted", e);
+                ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
+            }
+        }
+
+        private void failIfPreviousPageFailed(IPageWriteFailureCallback callback) throws HyracksDataException {
+            if (callback.hasFailed()) {
+                throw HyracksDataException.create(callback.getFailure());
             }
         }
     }
@@ -136,18 +150,21 @@ public class AsyncFIFOPageQueueManager implements Runnable {
         }
     }
 
+    @SuppressWarnings("squid:S2142")
     @Override
     public void run() {
-        if (DEBUG)
-            System.out.println("[FIFO] Writer started");
+        if (DEBUG) {
+            LOGGER.info("[FIFO] Writer started");
+        }
         boolean die = false;
         while (!die) {
             ICachedPage entry;
             try {
                 entry = queue.take();
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+                LOGGER.error("BufferCache Write Queue was interrupted", e);
+                ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
+                return; // Keep compiler happy
             }
             if (entry.getQueueInfo() != null && entry.getQueueInfo().hasWaiters()) {
                 synchronized (entry) {
@@ -158,17 +175,11 @@ public class AsyncFIFOPageQueueManager implements Runnable {
                     continue;
                 }
             }
-
-            if (DEBUG)
-                System.out.println("[FIFO] Write " + BufferedFileHandle.getFileId(((CachedPage) entry).dpid) + ","
+            if (DEBUG) {
+                LOGGER.info("[FIFO] Write " + BufferedFileHandle.getFileId(((CachedPage) entry).dpid) + ","
                         + BufferedFileHandle.getPageId(((CachedPage) entry).dpid));
-
-            try {
-                pageQueue.getWriter().write(entry, bufferCache);
-            } catch (HyracksDataException e) {
-                //TODO: What do we do, if we could not write the page?
-                e.printStackTrace();
             }
+            pageQueue.getWriter().write(entry, bufferCache);
         }
     }
 }

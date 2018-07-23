@@ -22,6 +22,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class IndexWithBuddyBulkLoader implements IChainedComponentBulkLoader {
 
@@ -68,5 +69,25 @@ public class IndexWithBuddyBulkLoader implements IChainedComponentBulkLoader {
     public void abort() throws HyracksDataException {
         bulkLoader.abort();
         buddyBTreeBulkLoader.abort();
+    }
+
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasFailed() {
+        return bulkLoader.hasFailed() || buddyBTreeBulkLoader.hasFailed();
+    }
+
+    @Override
+    public Throwable getFailure() {
+        if (bulkLoader.hasFailed()) {
+            return bulkLoader.getFailure();
+        } else if (buddyBTreeBulkLoader.hasFailed()) {
+            return buddyBTreeBulkLoader.getFailure();
+        }
+        return null;
     }
 }

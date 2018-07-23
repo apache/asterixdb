@@ -25,6 +25,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponentBulkLoader;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
     private final AbstractLSMIndex lsmIndex;
@@ -79,7 +80,7 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
             }
             if (opCtx.getIoOperation().getStatus() == LSMIOOperationStatus.SUCCESS
                     && opCtx.getIoOperation().getNewComponent().getComponentSize() > 0) {
-                lsmIndex.getHarness().addBulkLoadedComponent(opCtx.getIoOperation().getNewComponent());
+                lsmIndex.getHarness().addBulkLoadedComponent(opCtx.getIoOperation());
             }
         } finally {
             lsmIndex.getIOOperationCallback().completed(opCtx.getIoOperation());
@@ -98,6 +99,21 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
         } finally {
             lsmIndex.getIOOperationCallback().completed(opCtx.getIoOperation());
         }
+    }
+
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasFailed() {
+        return opCtx.getIoOperation().hasFailed();
+    }
+
+    @Override
+    public Throwable getFailure() {
+        return opCtx.getIoOperation().getFailure();
     }
 
 }

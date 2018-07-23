@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 
 public interface IPageManager {
 
@@ -42,12 +43,14 @@ public interface IPageManager {
      * 3. When we need to have a persisted state.
      *
      * Note: This method will not force indexes to disk driver using fsync
+     *
      * @throws HyracksDataException
      */
-    void close() throws HyracksDataException;
+    void close(IPageWriteFailureCallback callback) throws HyracksDataException;
 
     /**
      * Create a metadata frame to be used for reading and writing to metadata pages
+     *
      * @return a new metadata frame
      */
     ITreeIndexMetadataFrame createMetadataFrame();
@@ -87,6 +90,7 @@ public interface IPageManager {
     /**
      * Get the location of a block of free pages to use for index operations
      * This is used for records that are larger than a normal page
+     *
      * @param frame
      *            A metadata frame to use to wrap metadata pages
      * @return The starting page location, or -1 if a block of free pages could be found or allocated
@@ -107,6 +111,7 @@ public interface IPageManager {
 
     /**
      * Add a page back to the pool of free pages within an index file
+     *
      * @param frame
      *            A metadata frame to use to wrap metadata pages
      * @param page
@@ -129,6 +134,7 @@ public interface IPageManager {
 
     /**
      * Check whether the index is empty or not.
+     *
      * @param frame
      *            interior frame
      * @param rootPage
@@ -140,6 +146,7 @@ public interface IPageManager {
 
     /**
      * Get the root page of the id
+     *
      * @return the root page
      * @throws HyracksDataException
      */
@@ -147,6 +154,7 @@ public interface IPageManager {
 
     /**
      * Get the first page to start the bulk load
+     *
      * @return
      * @throws HyracksDataException
      */
@@ -154,6 +162,7 @@ public interface IPageManager {
 
     /**
      * Set the root page id and finalize the bulk load operation
+     *
      * @param rootPage
      * @throws HyracksDataException
      */

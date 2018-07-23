@@ -33,7 +33,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -41,6 +40,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
+import org.apache.hyracks.storage.common.buffercache.HaltOnFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -96,7 +96,7 @@ public class BufferCacheTest {
             long dpid = BufferedFileHandle.getDiskPageId(fileId, i);
             ICachedPage page = bufferCache.confiscatePage(dpid);
             page.getBuffer().putInt(0, i);
-            bufferCache.createFIFOQueue().put(page);
+            bufferCache.createFIFOQueue().put(page, HaltOnFailureCallback.INSTANCE);
         }
         bufferCache.finishQueue();
         bufferCache.closeFile(fileId);

@@ -18,40 +18,26 @@
  */
 package org.apache.hyracks.storage.common.buffercache;
 
-import java.nio.ByteBuffer;
-
-public interface ICachedPage {
-
-    ByteBuffer getBuffer();
-
-    void acquireReadLatch();
-
-    void releaseReadLatch();
-
-    void acquireWriteLatch();
-
-    void releaseWriteLatch(boolean markDirty);
-
-    boolean confiscated();
-
-    IQueueInfo getQueueInfo();
-
-    void setQueueInfo(IQueueInfo queueInfo);
-
-    int getPageSize();
-
-    int getFrameSizeMultiplier();
-
-    void setDiskPageId(long dpid);
-
-    void setFailureCallback(IPageWriteFailureCallback callback);
+public interface IPageWriteFailureCallback {
 
     /**
-     * Check if a page is a large page
+     * Notify that an async write operation has failed
      *
-     * @return true if the page is large, false otherwise
+     * @param page
+     * @param failure
      */
-    boolean isLargePage();
+    void writeFailed(ICachedPage page, Throwable failure);
 
-    void writeFailed(Exception e);
+    /**
+     * @return true if the callback has received any failure
+     */
+    boolean hasFailed();
+
+    /**
+     * @return a failure writing to disk or null if no failure has been seen
+     *         This doesn't guarantee which failure is returned but that if one or more failures occurred
+     *         while trying to write to disk, one of those failures is returned. All other failures are expected
+     *         to be logged.
+     */
+    Throwable getFailure();
 }

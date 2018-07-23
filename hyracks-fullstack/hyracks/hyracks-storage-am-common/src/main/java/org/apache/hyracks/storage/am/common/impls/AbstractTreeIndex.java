@@ -26,19 +26,19 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexAccessor;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.buffercache.HaltOnFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageQueue;
+import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public abstract class AbstractTreeIndex implements ITreeIndex {
@@ -95,7 +95,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
             freePageManager.open(fileId);
             freePageManager.init(interiorFrameFactory, leafFrameFactory);
             setRootPage();
-            freePageManager.close();
+            freePageManager.close(HaltOnFailureCallback.INSTANCE);
             failed = false;
         } finally {
             bufferCache.closeFile(fileId);
@@ -132,7 +132,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         if (!isActive) {
             throw HyracksDataException.create(ErrorCode.CANNOT_DEACTIVATE_INACTIVE_INDEX);
         }
-        freePageManager.close();
+        freePageManager.close(HaltOnFailureCallback.INSTANCE);
         bufferCache.closeFile(fileId);
         isActive = false;
     }
@@ -227,7 +227,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         return fieldCount;
     }
 
-    public abstract class AbstractTreeIndexBulkLoader implements IIndexBulkLoader {
+    public abstract class AbstractTreeIndexBulkLoader extends PageWriteFailureCallback implements IIndexBulkLoader {
         protected final MultiComparator cmp;
         protected final int slotSize;
         protected final int leafMaxBytes;
@@ -297,6 +297,9 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         @Override
         public void end() throws HyracksDataException {
             bufferCache.finishQueue();
+            if (hasFailed()) {
+                throw HyracksDataException.create(getFailure());
+            }
             freePageManager.setRootPageId(rootPage);
         }
 
@@ -317,31 +320,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         public void setLeafFrame(ITreeIndexFrame leafFrame) {
             this.leafFrame = leafFrame;
         }
-
-    }
-
-    public class TreeIndexInsertBulkLoader implements IIndexBulkLoader {
-        ITreeIndexAccessor accessor;
-
-        public TreeIndexInsertBulkLoader() throws HyracksDataException {
-            accessor = (ITreeIndexAccessor) createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        }
-
-        @Override
-        public void add(ITupleReference tuple) throws HyracksDataException {
-            accessor.insert(tuple);
-        }
-
-        @Override
-        public void end() throws HyracksDataException {
-            // do nothing
-        }
-
-        @Override
-        public void abort() {
-
-        }
-
     }
 
     @Override

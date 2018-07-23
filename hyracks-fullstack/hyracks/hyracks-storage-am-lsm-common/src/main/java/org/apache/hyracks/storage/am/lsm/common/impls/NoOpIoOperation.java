@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class NoOpIoOperation implements ILSMIOOperation {
     public static final NoOpIoOperation INSTANCE = new NoOpIoOperation();
@@ -124,6 +125,16 @@ public class NoOpIoOperation implements ILSMIOOperation {
     @Override
     public Map<String, Object> getParameters() {
         return null;
+    }
+
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean hasFailed() {
+        return false;
     }
 
 }

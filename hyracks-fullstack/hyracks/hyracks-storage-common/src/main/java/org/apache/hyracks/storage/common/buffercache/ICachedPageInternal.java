@@ -19,13 +19,16 @@
 package org.apache.hyracks.storage.common.buffercache;
 
 public interface ICachedPageInternal extends ICachedPage {
-    public int getCachedPageId();
+    int getCachedPageId();
 
-    public long getDiskPageId();
+    long getDiskPageId();
 
-    public Object getReplacementStrategyObject();
+    Object getReplacementStrategyObject();
 
-    public boolean isGoodVictim();
+    /**
+     * @return true if can be evicted, false otherwise
+     */
+    boolean isGoodVictim();
 
     void setFrameSizeMultiplier(int multiplier);
 

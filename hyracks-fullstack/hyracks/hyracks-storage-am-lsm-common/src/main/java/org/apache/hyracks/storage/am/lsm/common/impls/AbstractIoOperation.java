@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class AbstractIoOperation implements ILSMIOOperation {
 
@@ -37,7 +38,7 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     protected final FileReference target;
     protected final ILSMIOOperationCallback callback;
     protected final String indexIdentifier;
-    private Throwable failure;
+    private volatile Throwable failure;
     private LSMIOOperationStatus status = LSMIOOperationStatus.SUCCESS;
     private ILSMDiskComponent newComponent;
     private boolean completed = false;
@@ -145,5 +146,15 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
             }
             completeListeners.add(listener);
         }
+    }
+
+    @Override
+    public void writeFailed(ICachedPage page, Throwable failure) {
+        setFailure(failure);
+    }
+
+    @Override
+    public boolean hasFailed() {
+        return status == LSMIOOperationStatus.FAILURE;
     }
 }

@@ -33,6 +33,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -190,12 +191,14 @@ public class ComponentUtils {
         }
     }
 
-    public static void markAsValid(ITreeIndex treeIndex, boolean forceToDisk) throws HyracksDataException {
+    public static void markAsValid(ITreeIndex treeIndex, boolean forceToDisk, IPageWriteFailureCallback callback)
+            throws HyracksDataException {
         int fileId = treeIndex.getFileId();
         IBufferCache bufferCache = treeIndex.getBufferCache();
-        treeIndex.getPageManager().close();
-        // WARNING: flushing the metadata page should be done after releasing the write latch; otherwise, the page
-        // won't be flushed to disk because it won't be dirty until the write latch has been released.
+        treeIndex.getPageManager().close(callback);
+        if (callback.hasFailed()) {
+            throw HyracksDataException.create(callback.getFailure());
+        }
         // Force modified metadata page to disk.
         // If the index is not durable, then the flush is not necessary.
         if (forceToDisk) {

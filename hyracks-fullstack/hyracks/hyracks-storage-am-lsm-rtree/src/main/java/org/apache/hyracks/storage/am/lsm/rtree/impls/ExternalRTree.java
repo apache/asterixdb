@@ -59,6 +59,7 @@ import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.util.trace.ITracer;
 
 /**
@@ -499,12 +500,15 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
                     if (isTransaction) {
                         // Since this is a transaction component, validate and
                         // deactivate. it could later be added or deleted
-                        component.markAsValid(durable);
-                        ioOpCallback.afterFinalize(loadOp);
+                        try {
+                            component.markAsValid(durable, loadOp);
+                        } finally {
+                            ioOpCallback.afterFinalize(loadOp);
+                        }
                         component.deactivate();
                     } else {
                         ioOpCallback.afterFinalize(loadOp);
-                        getHarness().addBulkLoadedComponent(component);
+                        getHarness().addBulkLoadedComponent(loadOp);
                     }
                 }
             } finally {
@@ -528,6 +532,21 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
             } finally {
                 ioOpCallback.completed(loadOp);
             }
+        }
+
+        @Override
+        public void writeFailed(ICachedPage page, Throwable failure) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean hasFailed() {
+            return loadOp.hasFailed();
+        }
+
+        @Override
+        public Throwable getFailure() {
+            return loadOp.getFailure();
         }
     }
 

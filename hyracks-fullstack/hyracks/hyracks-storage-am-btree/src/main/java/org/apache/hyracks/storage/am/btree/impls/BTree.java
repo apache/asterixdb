@@ -1012,9 +1012,7 @@ public class BTree extends AbstractTreeIndex {
             try {
                 int tupleSize = Math.max(leafFrame.getBytesRequiredToWriteTuple(tuple),
                         interiorFrame.getBytesRequiredToWriteTuple(tuple));
-
                 NodeFrontier leafFrontier = nodeFrontiers.get(0);
-
                 int spaceNeeded = tupleWriter.bytesRequired(tuple) + slotSize;
                 int spaceUsed = leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace();
 
@@ -1045,12 +1043,11 @@ public class BTree extends AbstractTreeIndex {
 
                         ((IBTreeLeafFrame) leafFrame).setNextLeaf(leafFrontier.pageId);
 
-                        queue.put(leafFrontier.page);
+                        queue.put(leafFrontier.page, this);
                         for (ICachedPage c : pagesToWrite) {
-                            queue.put(c);
+                            queue.put(c, this);
                         }
                         pagesToWrite.clear();
-
                         splitKey.setRightPage(leafFrontier.pageId);
                     }
                     if (tupleSize > maxTupleSize) {
@@ -1155,7 +1152,7 @@ public class BTree extends AbstractTreeIndex {
                 ICachedPage lastLeaf = nodeFrontiers.get(level).page;
                 int lastLeafPage = nodeFrontiers.get(level).pageId;
                 lastLeaf.setDiskPageId(BufferedFileHandle.getDiskPageId(getFileId(), nodeFrontiers.get(level).pageId));
-                queue.put(lastLeaf);
+                queue.put(lastLeaf, this);
                 nodeFrontiers.get(level).page = null;
                 persistFrontiers(level + 1, lastLeafPage);
                 return;
@@ -1170,9 +1167,8 @@ public class BTree extends AbstractTreeIndex {
             ((IBTreeInteriorFrame) interiorFrame).setRightmostChildPageId(rightPage);
             int finalPageId = freePageManager.takePage(metaFrame);
             frontier.page.setDiskPageId(BufferedFileHandle.getDiskPageId(getFileId(), finalPageId));
-            queue.put(frontier.page);
+            queue.put(frontier.page, this);
             frontier.pageId = finalPageId;
-
             persistFrontiers(level + 1, finalPageId);
         }
 

@@ -183,6 +183,9 @@ public class DiskBTreeSearchCursorTest extends BTreeSearchCursorTest {
             bulkloader.add(tuple);
         }
         bulkloader.end();
+        if (bulkloader.hasFailed()) {
+            throw HyracksDataException.create(bulkloader.getFailure());
+        }
     }
 
 }
