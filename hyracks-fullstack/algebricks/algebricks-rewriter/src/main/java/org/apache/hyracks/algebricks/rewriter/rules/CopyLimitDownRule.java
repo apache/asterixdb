@@ -67,13 +67,17 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
 
         List<LogicalVariable> candidateProducedVars = new ArrayList<>();
         while (true) {
-            candidateProducedVars.clear();
             ILogicalOperator candidateOp = candidateOpRef.getValue();
             LogicalOperatorTag candidateOpTag = candidateOp.getOperatorTag();
             if (candidateOp.getInputs().size() > 1 || !candidateOp.isMap()
                     || candidateOpTag == LogicalOperatorTag.SELECT || candidateOpTag == LogicalOperatorTag.LIMIT
-                    || candidateOpTag == LogicalOperatorTag.UNNEST_MAP
-                    || !OperatorPropertiesUtil.disjoint(limitUsedVars, candidateProducedVars)) {
+                    || candidateOpTag == LogicalOperatorTag.UNNEST_MAP) {
+                break;
+            }
+
+            candidateProducedVars.clear();
+            VariableUtilities.getProducedVariables(candidateOp, candidateProducedVars);
+            if (!OperatorPropertiesUtil.disjoint(limitUsedVars, candidateProducedVars)) {
                 break;
             }
 

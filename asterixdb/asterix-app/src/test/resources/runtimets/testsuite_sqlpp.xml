@@ -10197,6 +10197,11 @@
          <output-dir compare="Text">push-limit-to-primary-lookup-select</output-dir>
        </compilation-unit>
     </test-case>
+    <test-case FilePath="limit">
+      <compilation-unit name="query-ASTERIXDB-2420">
+        <output-dir compare="Text">query-ASTERIXDB-2420</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   &GeoQueries;
 </test-suite>
