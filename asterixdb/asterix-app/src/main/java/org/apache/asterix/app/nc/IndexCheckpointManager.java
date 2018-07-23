@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -141,6 +142,8 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
             throw HyracksDataException.create(e);
         }
         if (checkpoints.isEmpty()) {
+            LOGGER.warn("Couldn't find any checkpoint file for index {}. Content of dir are {}.", indexPath,
+                    Arrays.toString(indexPath.toFile().listFiles()));
             throw new IllegalStateException("Couldn't find any checkpoints for resource: " + indexPath);
         }
         checkpoints.sort(Comparator.comparingLong(IndexCheckpoint::getId).reversed());
