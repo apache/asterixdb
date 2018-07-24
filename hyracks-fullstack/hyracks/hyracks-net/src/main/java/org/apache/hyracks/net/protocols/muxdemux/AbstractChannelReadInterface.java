@@ -42,10 +42,6 @@ public abstract class AbstractChannelReadInterface implements IChannelReadInterf
         }
     }
 
-    public void reportError(int ecode) {
-        fba.error(ecode);
-    }
-
     @Override
     public void setFullBufferAcceptor(ICloseableBufferAcceptor fullBufferAcceptor) {
         fba = fullBufferAcceptor;

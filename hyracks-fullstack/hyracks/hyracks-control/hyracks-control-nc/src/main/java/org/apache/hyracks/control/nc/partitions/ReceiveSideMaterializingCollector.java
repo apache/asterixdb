@@ -103,7 +103,7 @@ public class ReceiveSideMaterializingCollector implements IPartitionCollector {
         }
 
         @Override
-        public synchronized void notifyFailure(IInputChannel channel) {
+        public synchronized void notifyFailure(IInputChannel channel, int errorCode) {
             failed.set(true);
             notifyAll();
         }

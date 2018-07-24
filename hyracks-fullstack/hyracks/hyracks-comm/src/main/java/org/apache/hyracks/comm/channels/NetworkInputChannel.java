@@ -133,7 +133,7 @@ public class NetworkInputChannel implements IInputChannel {
 
         @Override
         public void error(int ecode) {
-            monitor.notifyFailure(NetworkInputChannel.this);
+            monitor.notifyFailure(NetworkInputChannel.this, ecode);
         }
     }
 

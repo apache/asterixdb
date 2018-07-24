@@ -309,7 +309,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                                 if (!addPendingThread(thread)) {
                                     return;
                                 }
-                                thread.setName(displayName + ":" + taskAttemptId + ":" + cIdx);
+                                thread.setName(
+                                        displayName + ":" + joblet.getJobId() + ":" + taskAttemptId + ":" + cIdx);
                                 thread.setPriority(Thread.MIN_PRIORITY);
                                 try {
                                     pushFrames(collector, inputChannelsFromConnectors.get(cIdx), writer);

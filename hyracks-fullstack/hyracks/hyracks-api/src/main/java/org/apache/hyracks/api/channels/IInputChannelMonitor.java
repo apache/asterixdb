@@ -19,9 +19,9 @@
 package org.apache.hyracks.api.channels;
 
 public interface IInputChannelMonitor {
-    public void notifyFailure(IInputChannel channel);
+    void notifyFailure(IInputChannel channel, int errorCode);
 
-    public void notifyDataAvailability(IInputChannel channel, int nFrames);
+    void notifyDataAvailability(IInputChannel channel, int nFrames);
 
-    public void notifyEndOfStream(IInputChannel channel);
+    void notifyEndOfStream(IInputChannel channel);
 }

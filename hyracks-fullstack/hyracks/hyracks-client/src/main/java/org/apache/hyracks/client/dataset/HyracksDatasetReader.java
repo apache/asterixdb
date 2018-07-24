@@ -199,7 +199,7 @@ public class HyracksDatasetReader implements IHyracksDatasetReader {
         }
 
         @Override
-        public synchronized void notifyFailure(IInputChannel channel) {
+        public synchronized void notifyFailure(IInputChannel channel, int errorCode) {
             failed = true;
             notifyAll();
         }

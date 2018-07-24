@@ -25,8 +25,10 @@ import org.apache.hyracks.api.channels.IInputChannelMonitor;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
+import org.apache.hyracks.net.protocols.muxdemux.AbstractChannelWriteInterface;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,28 +40,35 @@ public class InputChannelFrameReader implements IFrameReader, IInputChannelMonit
 
     private boolean eos;
 
-    private boolean failed;
+    private int errorCode;
 
     public InputChannelFrameReader(IInputChannel channel) {
         this.channel = channel;
         availableFrames = 0;
+        errorCode = AbstractChannelWriteInterface.NO_ERROR_CODE;
         eos = false;
-        failed = false;
     }
 
     @Override
     public void open() throws HyracksDataException {
     }
 
+    private boolean hasFailed() {
+        return errorCode != AbstractChannelWriteInterface.NO_ERROR_CODE;
+    }
+
     private synchronized boolean canGetNextBuffer() throws HyracksDataException {
-        while (!failed && !eos && availableFrames <= 0) {
+        while (!hasFailed() && !eos && availableFrames <= 0) {
             try {
                 wait();
             } catch (InterruptedException e) {
                 throw HyracksDataException.create(e);
             }
         }
-        if (failed) {
+        if (hasFailed()) {
+            if (errorCode == AbstractChannelWriteInterface.LOCAL_ERROR_CODE) {
+                throw HyracksDataException.create(ErrorCode.LOCAL_NETWORK_ERROR);
+            }
             // Do not throw exception here to allow the root cause exception gets propagated to the master first.
             // Return false to allow the nextFrame(...) call to be a non-op.
             LOGGER.warn("Sender failed.. returning silently");
@@ -96,8 +105,7 @@ public class InputChannelFrameReader implements IFrameReader, IInputChannelMonit
 
         for (int i = 1; i < nBlocks; ++i) {
             if (!canGetNextBuffer()) {
-                throw new HyracksDataException(
-                        "InputChannelReader is waiting for the new frames, but the input stream is finished");
+                return false;
             }
             srcFrame = channel.getNextBuffer();
             frame.getBuffer().put(srcFrame);
@@ -116,8 +124,11 @@ public class InputChannelFrameReader implements IFrameReader, IInputChannelMonit
     }
 
     @Override
-    public synchronized void notifyFailure(IInputChannel channel) {
-        failed = true;
+    public synchronized void notifyFailure(IInputChannel channel, int errorCode) {
+        // Note: if a remote failure overwrites the value of localFailure, then we rely on
+        // the fact that the remote task will notify the cc of the failure.
+        // Otherwise, the local task must fail
+        this.errorCode = errorCode;
         notifyAll();
     }
 

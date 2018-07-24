@@ -141,7 +141,7 @@ public class DatasetNetworkInputChannel implements IInputChannel {
 
         @Override
         public void error(int ecode) {
-            monitor.notifyFailure(DatasetNetworkInputChannel.this);
+            monitor.notifyFailure(DatasetNetworkInputChannel.this, ecode);
         }
     }
 
