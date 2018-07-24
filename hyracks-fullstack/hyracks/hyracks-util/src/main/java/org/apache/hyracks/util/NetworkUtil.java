@@ -84,7 +84,7 @@ public class NetworkUtil {
         int lastColon = hostPortString.lastIndexOf(':');
         String host = decodeIPv6LiteralHost(lastColon < 0 ? hostPortString : hostPortString.substring(0, lastColon));
         int port = lastColon < 0 ? 0 : Integer.parseInt(hostPortString.substring(lastColon + 1));
-        return InetSocketAddress.createUnresolved(host, port);
+        return new InetSocketAddress(host, port);
     }
 
     public static InetSocketAddress toInetSocketAddress(String maybeLiteralHost, int port) {
