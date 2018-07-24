@@ -199,7 +199,7 @@ public class ChannelSet {
         synchronized (mConn) {
             for (int i = 0; i < ccbArray.length; ++i) {
                 ChannelControlBlock ccb = ccbArray[i];
-                if (ccb != null && !ccb.getRemoteEOS()) {
+                if (ccb != null) {
                     ccb.reportRemoteError(-1);
                     markEOSAck(i);
                     unmarkPendingCredits(i);
