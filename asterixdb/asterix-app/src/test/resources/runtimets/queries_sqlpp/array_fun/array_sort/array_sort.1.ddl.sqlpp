@@ -43,4 +43,14 @@ create type TinySocial.TweetMessageType as
   `message-text` : string
 };
 
+create type t1 AS {
+
+};
+
+create type t2 AS {
+id: int,
+compType: t1
+};
+
 create  dataset TweetMessages(TweetMessageType) primary key tweetid hints (`CARDINALITY`=`100`);
+create dataset d1(t2) primary key id;

@@ -21,3 +21,14 @@ drop  dataverse TinySocial if exists;
 create  dataverse TinySocial;
 
 use TinySocial;
+
+create type t1 AS {
+
+};
+
+create type t2 AS {
+id: int,
+compType: t1
+};
+
+create dataset d1(t2) primary key id;

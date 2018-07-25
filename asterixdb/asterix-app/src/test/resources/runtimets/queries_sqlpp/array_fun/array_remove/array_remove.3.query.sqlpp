@@ -28,5 +28,6 @@ use TinySocial;
   "t6": (array_remove(missing, 3, 9)),            // missing
   "t7": (array_remove(null, 3, 9)),               // null
   "t8": (array_remove([3,2,"sth"], 3, 9, 9, 3, "sth")), // OK
-  "t9": (array_remove([3,2,"sth"], 1, null))      // null
+  "t9": (array_remove([3,2,"sth"], 1, null)),      // null
+  "t10": (select array_remove(d.followers, "sth1", "John Green") from d1 d)
 };

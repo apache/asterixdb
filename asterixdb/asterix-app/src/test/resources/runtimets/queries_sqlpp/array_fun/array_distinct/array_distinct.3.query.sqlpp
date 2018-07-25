@@ -29,5 +29,6 @@ use TinySocial;
   "t7": (array_distinct("non_array")),
   "t8": (array_distinct([])),
   "t9": (array_distinct(missing)),
-  "t10": (array_distinct(null))
+  "t10": (array_distinct(null)),
+  "t11": (select array_distinct(d.followers) from d1 d)
 };

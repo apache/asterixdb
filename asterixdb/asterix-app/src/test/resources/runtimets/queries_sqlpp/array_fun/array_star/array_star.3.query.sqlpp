@@ -38,5 +38,6 @@ use TinySocial;
   "t16": (array_star([])),
   "t17": (array_star("non_array")),
   "t18": (array_star(missing)),
-  "t19": (array_star(null))
+  "t19": (array_star(null)),
+  "t20": (select array_star(d.followers) from d1 d)
 };

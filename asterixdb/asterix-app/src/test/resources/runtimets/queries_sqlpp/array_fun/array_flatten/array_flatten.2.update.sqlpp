@@ -16,3 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+use TinySocial;
+
+insert into d1([
+{"id":1, "compType":{"sth":33}},
+{"id":2, "compType":{"sth":44}, "followers":["John Green", "Emily Jones", ["sth"]]}
+]);

@@ -143,8 +143,7 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
                 return;
             }
 
-            IAType openListType = DefaultOpenFieldType.getDefaultOpenFieldType(inputListType.getTypeTag());
-            caster.reset(openListType, inputListType, listEval);
+            caster.reset(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE, inputListType, listEval);
             caster.evaluate(tuple, list);
 
             fieldNameToValues.clear();

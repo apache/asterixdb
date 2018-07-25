@@ -152,7 +152,7 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
             throw new RuntimeDataException(ErrorCode.CANNOT_COMPARE_COMPLEX, sourceLocation);
         }
         // all arguments are valid
-        AbstractCollectionType listType = (AbstractCollectionType) argTypes[listOffset];
+        AbstractCollectionType listType;
         IAsterixListBuilder listBuilder;
         // create the new list to be returned. cast the input list and make it open if required
         if (listArgTag == ATypeTag.ARRAY) {
@@ -160,20 +160,24 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
                 orderedListBuilder = new OrderedListBuilder();
             }
             listBuilder = orderedListBuilder;
-            if (makeOpen) {
+            if (makeOpen || argTypes[listOffset].getTypeTag() != ATypeTag.ARRAY) {
                 listType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
                 caster.reset(listType, argTypes[listOffset], listArgEval);
                 caster.evaluate(tuple, listArg);
+            } else {
+                listType = (AbstractCollectionType) argTypes[listOffset];
             }
         } else {
             if (unorderedListBuilder == null) {
                 unorderedListBuilder = new UnorderedListBuilder();
             }
             listBuilder = unorderedListBuilder;
-            if (makeOpen) {
+            if (makeOpen || argTypes[listOffset].getTypeTag() != ATypeTag.MULTISET) {
                 listType = DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
                 caster.reset(listType, argTypes[listOffset], listArgEval);
                 caster.evaluate(tuple, listArg);
+            } else {
+                listType = (AbstractCollectionType) argTypes[listOffset];
             }
         }
 

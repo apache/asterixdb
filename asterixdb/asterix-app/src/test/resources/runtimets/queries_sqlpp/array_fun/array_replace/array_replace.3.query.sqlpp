@@ -43,5 +43,6 @@ use TinySocial;
   "t21": (array_replace([3,2,3], 3, null, 8)),
   "t22": (array_replace([3,2], null, 3, 3)),
   "t23": (array_replace([3,null,2], null, 3, 3)),
-  "t24": (array_replace(missing, null, 3, 3))
+  "t24": (array_replace(missing, null, 3, 3)),
+  "t25": (select array_replace(d.followers, "Emily Jones", "sth") from d1 d)
 };

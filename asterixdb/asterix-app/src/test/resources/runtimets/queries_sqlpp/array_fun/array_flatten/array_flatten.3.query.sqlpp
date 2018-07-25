@@ -35,5 +35,6 @@ use TinySocial;
   "t13": (array_flatten(null, 2)),
   "t14": (array_flatten(null, missing)),
   "t15": (array_flatten("non_array", 2)),
-  "t16": (array_flatten([1,2,3, [5,6,7]], "non-numeric"))
+  "t16": (array_flatten([1,2,3, [5,6,7]], "non-numeric")),
+  "t17": (select array_flatten(d.followers, 1) from d1 d)
 };

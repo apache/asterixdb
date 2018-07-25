@@ -28,5 +28,6 @@ use TinySocial;
   "t6": (array_prepend(5, missing, "non_array")),   // missing
   "t7": (array_prepend(5, 10, 12.0, "sth",[77, "val"])),   // OK
   "t8": (array_prepend(5, 10, null, "sth",[77, "val"])),   // OK to insert nulls
-  "t9": (array_prepend(3, 9, missing))              // missing
+  "t9": (array_prepend(3, 9, missing)),              // missing
+  "t10": (select array_prepend("sth1", "sth2", d.followers) from d1 d)
 };

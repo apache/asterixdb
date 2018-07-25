@@ -33,5 +33,6 @@ use TinySocial;
   "t11": (array_symdiff([3,5,1], "non_array", [2,5,1])),
   "t12": (array_symdiff(missing, "non_array", [2,5,1])),
   "t13": (array_symdiff([], [], [])),
-  "t14": (array_symdiff([2], [3,2], []))
+  "t14": (array_symdiff([2], [3,2], [])),
+  "t15": (select array_symdiff(d.followers, ["Emily Jones", "sth2"], ["sth", "sth2"]) from d1 d)
 };

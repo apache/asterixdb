@@ -39,5 +39,6 @@ use TinySocial;
   "t17": (array_insert([6], 1, null, 9, null)),   // OK to insert nulls
   "t18": (array_insert([6], null, 5, 9, null)),   // null
   "t19": (array_insert([6], 3, null, missing, 9, null)),  // missing
-  "t20": (select array_insert(t.`referred-topics`, 0, 5) from TweetMessages t order by t.tweetid)
+  "t20": (select array_insert(t.`referred-topics`, 0, 5) from TweetMessages t order by t.tweetid),
+  "t21": (select array_insert(d.followers, 0, 5, 3) from d1 d)
 };

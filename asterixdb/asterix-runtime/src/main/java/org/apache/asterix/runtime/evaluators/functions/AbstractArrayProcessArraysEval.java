@@ -87,7 +87,6 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
         boolean returnNull = false;
         AbstractCollectionType outList = null;
         ATypeTag listTag;
-        IAType defaultOpenType;
         for (int i = 0; i < listsEval.length; i++) {
             listsEval[i].evaluate(tuple, listsArgs[i]);
             if (!returnNull) {
@@ -101,8 +100,8 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
                     if (outList == null) {
                         outList = (AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listTag);
                     }
-                    defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(argTypes[i].getTypeTag());
-                    caster.reset(defaultOpenType, argTypes[i], listsEval[i]);
+
+                    caster.reset(outList, argTypes[i], listsEval[i]);
                     caster.evaluate(tuple, listsArgs[i]);
                 }
             }

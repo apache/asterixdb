@@ -29,5 +29,6 @@ use TinySocial;
   "t7": (array_sort("non_array")),
   "t8": (array_sort([])),
   "t9": (array_sort(missing)),
-  "t10": (array_sort(null))
+  "t10": (array_sort(null)),
+  "t11": (select array_sort(d.followers) from d1 d)
 };

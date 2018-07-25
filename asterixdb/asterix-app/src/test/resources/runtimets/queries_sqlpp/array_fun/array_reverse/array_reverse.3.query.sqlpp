@@ -28,5 +28,6 @@ use TinySocial;
   "t6": (select array_reverse("non_array")),
   "t7": (select array_reverse([])),
   "t8": (select array_reverse(missing)),
-  "t9": (select array_reverse(null))
+  "t9": (select array_reverse(null)),
+  "t10": (select array_reverse(d.followers) from d1 d)
 };

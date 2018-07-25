@@ -39,14 +39,17 @@ import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.asterix.runtime.utils.ArrayFunctionsUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -64,11 +67,17 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
+    private IAType[] argTypes;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
             return new ArrayIntersectDescriptor();
+        }
+
+        @Override
+        public IFunctionTypeInferer createFunctionTypeInferer() {
+            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
         }
     };
 
@@ -103,6 +112,11 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
     }
 
     @Override
+    public void setImmutableStates(Object... states) {
+        argTypes = (IAType[]) states;
+    }
+
+    @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args)
             throws AlgebricksException {
         return new IScalarEvaluatorFactory() {
@@ -125,6 +139,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
         private final IObjectPool<IMutableValueStorage, ATypeTag> storageAllocator;
         private final IObjectPool<List<ValueListIndex>, ATypeTag> arrayListAllocator;
         private final ArrayBackedValueStorage finalResult;
+        private final CastTypeEvaluator caster;
         private IAsterixListBuilder orderedListBuilder;
         private IAsterixListBuilder unorderedListBuilder;
 
@@ -137,6 +152,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             hashes = new Int2ObjectOpenHashMap<>();
             finalResult = new ArrayBackedValueStorage();
             listAccessor = new ListAccessor();
+            caster = new CastTypeEvaluator();
             listsArgs = new IPointable[args.length];
             listsEval = new IScalarEvaluator[args.length];
             for (int i = 0; i < args.length; i++) {
@@ -158,6 +174,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             int nextSize;
             IScalarEvaluator listEval;
             IPointable listArg;
+
             // evaluate all the lists first to make sure they're all actually lists and of the same list type
             for (int i = 0; i < listsEval.length; i++) {
                 listEval = listsEval[i];
@@ -175,6 +192,8 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
                             outList = (AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listTag);
                         }
 
+                        caster.reset(outList, argTypes[i], listsEval[i]);
+                        caster.evaluate(tuple, listsArgs[i]);
                         nextSize = getNumItems(outList, listArg.getByteArray(), listArg.getStartOffset());
                         if (nextSize < minSize) {
                             minSize = nextSize;

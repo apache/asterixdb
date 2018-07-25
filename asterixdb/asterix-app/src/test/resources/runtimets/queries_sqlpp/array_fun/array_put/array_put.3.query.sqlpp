@@ -29,5 +29,6 @@ use TinySocial;
   "t7": (array_put(null, 3, 9)),               // null
   "t8": (array_put([3,2,"sth"], 3, 9, 9, 3, "sth")), // OK
   "t9": (array_put([3,2,"sth"], 1, 5)),     // OK
-  "t10": (array_put([3,2,"sth"], null, 5))   // null
+  "t10": (array_put([3,2,"sth"], null, 5)),   // null
+  "t11": (select array_put(d.followers, "sth1", "John Green", "sth2") from d1 d)
 };

@@ -35,5 +35,6 @@ use TinySocial;
   "t13": (array_union([3,5,1], "non_array", [2,5,1])),
   "t14": (array_union(missing, "non_array", [2,5,1])),
   "t15": (array_union([], [], [])),
-  "t16": (array_union([], [3,2], []))
+  "t16": (array_union([], [3,2], [])),
+  "t17": (select array_union(d.followers, ["John Green", "sth"], ["sth", "1"]) from d1 d)
 };
