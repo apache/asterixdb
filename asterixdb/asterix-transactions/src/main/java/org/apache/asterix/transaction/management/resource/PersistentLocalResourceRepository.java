@@ -237,13 +237,13 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             if (isReplicationEnabled) {
                 createReplicationJob(ReplicationOperation.DELETE, resourceFile);
             }
-            // delete all checkpoints
             final LocalResource localResource = readLocalResource(resourceFile.getFile());
-            indexCheckpointManagerProvider.get(DatasetResourceReference.of(localResource)).delete();
             // Invalidate before deleting the file just in case file deletion throws some exception.
             // Since it's just a cache invalidation, it should not affect correctness.
             resourceCache.invalidate(relativePath);
             IoUtil.delete(resourceFile);
+            // delete all checkpoints
+            indexCheckpointManagerProvider.get(DatasetResourceReference.of(localResource)).delete();
         } else {
             throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST,
                     relativePath);
