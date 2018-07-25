@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.transaction.management.service.logging;
 
-import static org.apache.hyracks.util.ExitUtil.EC_IMMEDIATE_HALT;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -705,7 +703,7 @@ class LogFlusher implements Callable<Boolean> {
             }
         } catch (Exception e) {
             LOGGER.log(Level.ERROR, "LogFlusher is terminating abnormally. System is in unusable state; halting", e);
-            ExitUtil.halt(EC_IMMEDIATE_HALT);
+            ExitUtil.halt(ExitUtil.EC_TXN_LOG_FLUSHER_FAILURE);
             throw new AssertionError("not reachable");
         } finally {
             if (interrupted) {

@@ -60,7 +60,7 @@ public class FuzzyUtils {
     }
 
     public static IAObject getSimThreshold(MetadataProvider metadata, String simFuncName) {
-        String simThresholValue = metadata.getPropertyValue(SIM_THRESHOLD_PROP_NAME);
+        String simThresholValue = metadata.getProperty(SIM_THRESHOLD_PROP_NAME);
         IAObject ret = null;
         if (simFuncName.equals(JACCARD_FUNCTION_NAME)) {
             if (simThresholValue != null) {
@@ -103,7 +103,7 @@ public class FuzzyUtils {
 
     public static float getSimThreshold(MetadataProvider metadata) {
         float simThreshold = JACCARD_DEFAULT_SIM_THRESHOLD;
-        String simThresholValue = metadata.getPropertyValue(SIM_THRESHOLD_PROP_NAME);
+        String simThresholValue = metadata.getProperty(SIM_THRESHOLD_PROP_NAME);
         if (simThresholValue != null) {
             simThreshold = Float.parseFloat(simThresholValue);
         }
@@ -112,7 +112,7 @@ public class FuzzyUtils {
 
     // TODO: The default function depend on the input types.
     public static String getSimFunction(MetadataProvider metadata) {
-        String simFunction = metadata.getPropertyValue(SIM_FUNCTION_PROP_NAME);
+        String simFunction = metadata.getProperty(SIM_FUNCTION_PROP_NAME);
         if (simFunction == null) {
             simFunction = DEFAULT_SIM_FUNCTION;
         }

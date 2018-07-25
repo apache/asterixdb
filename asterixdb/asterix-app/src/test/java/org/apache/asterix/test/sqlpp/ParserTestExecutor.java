@@ -127,7 +127,7 @@ public class ParserTestExecutor extends TestExecutor {
             MetadataProvider metadataProvider = mock(MetadataProvider.class);
 
             @SuppressWarnings("unchecked")
-            Map<String, String> config = mock(Map.class);
+            Map<String, Object> config = mock(Map.class);
             when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
             when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");

@@ -580,7 +580,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 }
                 case UNORDERED_PARTITIONED: {
                     List<LogicalVariable> varList = new ArrayList<>(((UnorderedPartitionedProperty) pp).getColumnSet());
-                    String hashMergeHint = context.getMetadataProvider().getConfig().get(HASH_MERGE);
+                    String hashMergeHint = (String) context.getMetadataProvider().getConfig().get(HASH_MERGE);
                     if (hashMergeHint == null || !hashMergeHint.equalsIgnoreCase(TRUE_CONSTANT)) {
                         pop = new HashPartitionExchangePOperator(varList, domain);
                         break;

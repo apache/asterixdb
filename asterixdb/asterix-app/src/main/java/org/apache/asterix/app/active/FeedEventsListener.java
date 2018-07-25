@@ -82,7 +82,8 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
         // Note: The current implementation of the wait for completion flag is problematic due to locking issues:
         // Locks obtained during the start of the feed are not released, and so, the feed can't be stopped
         // and also, read locks over dataverses, datasets, etc, are never released.
-        boolean wait = Boolean.parseBoolean(metadataProvider.getConfig().get(StartFeedStatement.WAIT_FOR_COMPLETION));
+        boolean wait =
+                Boolean.parseBoolean((String) metadataProvider.getConfig().get(StartFeedStatement.WAIT_FOR_COMPLETION));
         if (wait) {
             IActiveEntityEventSubscriber stoppedSubscriber =
                     new WaitForStateSubscriber(this, EnumSet.of(ActivityState.STOPPED));

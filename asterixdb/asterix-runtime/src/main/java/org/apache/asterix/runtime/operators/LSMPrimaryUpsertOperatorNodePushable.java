@@ -256,13 +256,18 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
                 @Override
                 public void frameCompleted() throws HyracksDataException {
-                    callback.frameCompleted();
                     appender.write(writer, true);
+                    callback.frameCompleted();
                 }
 
                 @Override
                 public void close() throws IOException {
                     callback.close();
+                }
+
+                @Override
+                public void fail(Throwable th) {
+                    callback.fail(th);
                 }
             };
         } catch (Throwable e) { // NOSONAR: Re-thrown
@@ -305,7 +310,12 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
         int itemCount = accessor.getTupleCount();
-        lsmAccessor.batchOperate(accessor, tuple, processor, frameOpCallback);
+        try {
+            lsmAccessor.batchOperate(accessor, tuple, processor, frameOpCallback);
+        } catch (Throwable th) {// NOSONAR: Must notify of all failures
+            frameOpCallback.fail(th);
+            throw th;
+        }
         if (itemCount > 0) {
             lastRecordInTimeStamp = System.currentTimeMillis();
         }

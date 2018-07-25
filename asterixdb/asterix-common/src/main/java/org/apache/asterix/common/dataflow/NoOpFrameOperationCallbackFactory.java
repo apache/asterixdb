@@ -50,5 +50,10 @@ public class NoOpFrameOperationCallbackFactory implements IFrameOperationCallbac
         public void close() throws IOException {
             // No Op
         }
+
+        @Override
+        public void fail(Throwable th) {
+            // No Op
+        }
     }
 }

@@ -168,7 +168,7 @@ class SqlppQueryRewriter implements IQueryRewriter {
     }
 
     protected void inlineWithExpressions() throws CompilationException {
-        String inlineWith = metadataProvider.getConfig().get(INLINE_WITH);
+        String inlineWith = (String) metadataProvider.getConfig().get(INLINE_WITH);
         if (inlineWith != null && inlineWith.equalsIgnoreCase(NOT_INLINE_WITH)) {
             return;
         }

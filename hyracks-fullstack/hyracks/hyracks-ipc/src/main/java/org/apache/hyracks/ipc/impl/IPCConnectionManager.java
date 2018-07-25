@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.ipc.impl;
 
-import static org.apache.hyracks.util.ExitUtil.EC_IMMEDIATE_HALT;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -344,7 +342,7 @@ public class IPCConnectionManager {
                 }
             } catch (Exception e) {
                 LOGGER.fatal("Unrecoverable networking failure; Halting...", e);
-                ExitUtil.halt(EC_IMMEDIATE_HALT);
+                ExitUtil.halt(ExitUtil.EC_NETWORK_FAILURE);
             }
             return false;
         }

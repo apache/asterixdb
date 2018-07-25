@@ -212,5 +212,6 @@ public interface IMetadataProvider<S, I> {
             IVariableTypeEnvironment typeEnv, ILogicalExpression filterExpr, JobGenContext context)
             throws AlgebricksException;
 
-    public Map<String, String> getConfig();
+    public Map<String, Object> getConfig();
+
 }

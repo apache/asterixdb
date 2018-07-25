@@ -421,10 +421,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleSetStatement(Statement stmt, Map<String, String> config) {
+    protected void handleSetStatement(Statement stmt, Map<String, String> config) throws CompilationException {
         SetStatement ss = (SetStatement) stmt;
         String pname = ss.getPropName();
         String pvalue = ss.getPropValue();
+        if (pname.startsWith(APIFramework.PREFIX_INTERNAL_PARAMETERS)) {
+            throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, pname);
+        }
         config.put(pname, pvalue);
     }
 

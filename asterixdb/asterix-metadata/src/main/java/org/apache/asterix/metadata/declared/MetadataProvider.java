@@ -148,7 +148,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final StorageProperties storageProperties;
     private final IFunctionManager functionManager;
     private final LockList locks;
-    private final Map<String, String> config;
+    private final Map<String, Object> config;
 
     private Dataverse defaultDataverse;
     private MetadataTransactionContext mdTxnCtx;
@@ -173,8 +173,18 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         config = new HashMap<>();
     }
 
-    public String getPropertyValue(String propertyName) {
-        return config.get(propertyName);
+    @SuppressWarnings("unchecked")
+    public <T> T getProperty(String name) {
+        return (T) config.get(name);
+    }
+
+    public void setProperty(String name, Object value) {
+        config.put(name, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T removeProperty(String name) {
+        return (T) config.remove(name);
     }
 
     public void disableBlockingOperator() {
@@ -186,7 +196,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     @Override
-    public Map<String, String> getConfig() {
+    public Map<String, Object> getConfig() {
         return config;
     }
 
@@ -296,7 +306,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
      */
     public ARecordType findOutputRecordType() throws AlgebricksException {
         return MetadataManagerUtil.findOutputRecordType(mdTxnCtx, getDefaultDataverseName(),
-                getPropertyValue("output-record-type"));
+                getProperty("output-record-type"));
     }
 
     public Dataset findDataset(String dataverse, String dataset) throws AlgebricksException {

@@ -33,4 +33,11 @@ public interface IFrameOperationCallback extends Closeable {
      * @throws HyracksDataException
      */
     void frameCompleted() throws HyracksDataException;
+
+    /**
+     * Called when the task has failed.
+     *
+     * @param th
+     */
+    void fail(Throwable th);
 }

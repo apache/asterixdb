@@ -682,7 +682,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                 datasetPartitions, isSink);
     }
 
-    public IFrameOperationCallbackFactory getFrameOpCallbackFactory() {
+    public IFrameOperationCallbackFactory getFrameOpCallbackFactory(MetadataProvider mdProvider) {
         return NoOpFrameOperationCallbackFactory.INSTANCE;
     }
 

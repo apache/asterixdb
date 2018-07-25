@@ -83,7 +83,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
         String outputType = ConstantExpressionUtil.getStringArgument(f, 5);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         DataSourceId asid = new DataSourceId(dataverse, getTargetFeed);
-        String policyName = metadataProvider.getConfig().get(FeedActivityDetails.FEED_POLICY_NAME);
+        String policyName = (String) metadataProvider.getConfig().get(FeedActivityDetails.FEED_POLICY_NAME);
         FeedPolicyEntity policy = metadataProvider.findFeedPolicy(dataverse, policyName);
         if (policy == null) {
             policy = BuiltinFeedPolicies.getFeedPolicy(policyName);
@@ -93,7 +93,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             }
         }
         ArrayList<LogicalVariable> feedDataScanOutputVariables = new ArrayList<>();
-        String csLocations = metadataProvider.getConfig().get(FeedActivityDetails.COLLECT_LOCATIONS);
+        String csLocations = (String) metadataProvider.getConfig().get(FeedActivityDetails.COLLECT_LOCATIONS);
         List<LogicalVariable> pkVars = new ArrayList<>();
         FeedDataSource ds = createFeedDataSource(asid, targetDataset, sourceFeedName, subscriptionLocation,
                 metadataProvider, policy, outputType, csLocations, unnest.getVariable(), context, pkVars);

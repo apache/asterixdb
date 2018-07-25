@@ -73,7 +73,7 @@ public class CcConnection {
         }
         if (registrationException != null) {
             LOGGER.fatal("Registering with {} failed with exception", this, registrationException);
-            ExitUtil.halt(ExitUtil.EC_IMMEDIATE_HALT);
+            ExitUtil.halt(ExitUtil.EC_NODE_REGISTRATION_FAILURE);
         }
         return getCcId();
     }
