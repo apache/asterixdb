@@ -33,6 +33,7 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
@@ -56,6 +57,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
@@ -140,6 +142,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
         private final IObjectPool<List<ValueListIndex>, ATypeTag> arrayListAllocator;
         private final ArrayBackedValueStorage finalResult;
         private final CastTypeEvaluator caster;
+        private final IBinaryComparator comp;
         private IAsterixListBuilder orderedListBuilder;
         private IAsterixListBuilder unorderedListBuilder;
 
@@ -153,6 +156,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             finalResult = new ArrayBackedValueStorage();
             listAccessor = new ListAccessor();
             caster = new CastTypeEvaluator();
+            comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
             listsArgs = new IPointable[args.length];
             listsEval = new IScalarEvaluator[args.length];
             for (int i = 0; i < args.length; i++) {
@@ -303,7 +307,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
                 newHashes.add(new ValueListIndex(item, -1));
                 hashes.put(hash, newHashes);
                 return true;
-            } else if (ArrayFunctionsUtil.findItem(item, sameHashes) == null) {
+            } else if (ArrayFunctionsUtil.findItem(item, sameHashes, comp) == null) {
                 sameHashes.add(new ValueListIndex(item, -1));
                 return true;
             }
@@ -341,7 +345,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
 
         private void incrementIfExists(List<ValueListIndex> sameHashes, IPointable item, int listIndex,
                 IAsterixListBuilder listBuilder) throws HyracksDataException {
-            ValueListIndex sameValue = ArrayFunctionsUtil.findItem(item, sameHashes);
+            ValueListIndex sameValue = ArrayFunctionsUtil.findItem(item, sameHashes, comp);
             if (sameValue != null && listIndex - sameValue.listIndex == 1) {
                 // found the item, its stamp is OK (stamp saves the last list index that has seen this item)
                 // increment stamp of this item

@@ -20,24 +20,21 @@ package org.apache.asterix.runtime.utils;
 
 import java.util.List;
 
-import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public class ArrayFunctionsUtil {
 
-    private static final IBinaryComparator COMP = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
-
     private ArrayFunctionsUtil() {
     }
 
-    public static <T extends IValueReference> T findItem(IValueReference item, List<T> sameHashes)
-            throws HyracksDataException {
+    public static <T extends IValueReference> T findItem(IValueReference item, List<T> sameHashes,
+            IBinaryComparator comp) throws HyracksDataException {
         T sameItem;
         for (int k = 0; k < sameHashes.size(); k++) {
             sameItem = sameHashes.get(k);
-            if (COMP.compare(item.getByteArray(), item.getStartOffset(), item.getLength(), sameItem.getByteArray(),
+            if (comp.compare(item.getByteArray(), item.getStartOffset(), item.getLength(), sameItem.getByteArray(),
                     sameItem.getStartOffset(), sameItem.getLength()) == 0) {
                 return sameItem;
             }

@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.apache.asterix.builders.ArrayListFactory;
 import org.apache.asterix.builders.IAsterixListBuilder;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AObjectAscBinaryComparatorFactory;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -33,6 +34,7 @@ import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.asterix.runtime.utils.ArrayFunctionsUtil;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -44,6 +46,7 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
     private final Int2ObjectMap<List<ValueCounter>> hashes;
     private final IObjectPool<List<ValueCounter>, ATypeTag> arrayListAllocator;
     private final IObjectPool<ValueCounter, ATypeTag> valueCounterAllocator;
+    private final IBinaryComparator comp;
 
     public ArraySymDiffEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLocation,
             IAType[] argTypes) throws HyracksDataException {
@@ -51,6 +54,7 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
         arrayListAllocator = new ListObjectPool<>(new ArrayListFactory<>());
         valueCounterAllocator = new ListObjectPool<>(new ValueCounterFactory());
         hashes = new Int2ObjectOpenHashMap<>();
+        comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
         binaryHashFunction = BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(null)
                 .createBinaryHashFunction();
     }
@@ -136,7 +140,7 @@ public class ArraySymDiffEval extends AbstractArrayProcessArraysEval {
             return true;
         } else {
             // potentially, item already exists
-            ValueCounter itemListIdxCounter = ArrayFunctionsUtil.findItem(item, sameHashes);
+            ValueCounter itemListIdxCounter = ArrayFunctionsUtil.findItem(item, sameHashes, comp);
             if (itemListIdxCounter == null) {
                 // new item
                 addItem(item, listIndex, sameHashes);

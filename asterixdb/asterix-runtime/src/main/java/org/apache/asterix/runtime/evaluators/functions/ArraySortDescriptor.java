@@ -49,7 +49,6 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class ArraySortDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    private static final ArraySortComparator COMP = new ArraySortComparator();
     private IAType inputListType;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
@@ -83,12 +82,12 @@ public class ArraySortDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new ArraySortFunction(args, ctx, sourceLoc);
+                return new ArraySortEval(args, ctx, sourceLoc);
             }
         };
     }
 
-    private static class ArraySortComparator implements Comparator<IPointable> {
+    protected class ArraySortComparator implements Comparator<IPointable> {
         private final IBinaryComparator comp = AObjectAscBinaryComparatorFactory.INSTANCE.createBinaryComparator();
 
         @Override
@@ -102,19 +101,19 @@ public class ArraySortDescriptor extends AbstractScalarFunctionDynamicDescriptor
         }
     }
 
-    public class ArraySortFunction extends AbstractArrayProcessEval {
+    public class ArraySortEval extends AbstractArrayProcessEval {
         private final SourceLocation sourceLoc;
         private final PriorityQueue<IPointable> sortedList;
         private IPointable item;
         private ArrayBackedValueStorage storage;
 
-        public ArraySortFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc)
+        public ArraySortEval(IScalarEvaluatorFactory[] args, IHyracksTaskContext ctx, SourceLocation sourceLoc)
                 throws HyracksDataException {
             super(args, ctx, inputListType);
             this.sourceLoc = sourceLoc;
             item = pointableAllocator.allocateEmpty();
             storage = (ArrayBackedValueStorage) storageAllocator.allocate(null);
-            sortedList = new PriorityQueue<>(COMP);
+            sortedList = new PriorityQueue<>(new ArraySortComparator());
         }
 
         @Override
