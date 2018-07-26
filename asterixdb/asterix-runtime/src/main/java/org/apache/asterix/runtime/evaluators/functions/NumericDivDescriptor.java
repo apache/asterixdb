@@ -19,8 +19,8 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -46,28 +46,37 @@ public class NumericDivDescriptor extends AbstractNumericArithmeticEval {
     }
 
     @Override
-    protected double evaluateDouble(double lhs, double rhs) {
-        return lhs / rhs;
+    protected boolean evaluateDouble(double lhs, double rhs, AMutableDouble result) {
+        if (rhs == 0) {
+            return false; // result = NULL
+        }
+        double res = lhs / rhs;
+        result.setValue(res);
+        return true;
     }
 
     @Override
-    protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
+    protected boolean evaluateInteger(long lhs, long rhs, AMutableInt64 result) throws HyracksDataException {
         if (rhs == 0) {
-            throw new RuntimeDataException(ErrorCode.DIVISION_BY_ZERO);
+            return false; // result = NULL
         }
         if ((lhs == Long.MIN_VALUE) && (rhs == -1L)) {
             throw new OverflowException(sourceLoc, getIdentifier());
         }
-        return lhs / rhs;
+        long res = lhs / rhs;
+        result.setValue(res);
+        return true;
     }
 
     @Override
-    protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly) {
+    protected boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly,
+            AMutableInt64 result) {
         throw new NotImplementedException("Divide operation is not defined for temporal types");
     }
 
     @Override
-    protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
+    protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result)
+            throws HyracksDataException {
         throw new UnsupportedTypeException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
     }
 }

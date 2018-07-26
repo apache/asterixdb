@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -43,19 +45,27 @@ public class NumericPowerDescriptor extends AbstractNumericArithmeticEval {
      * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateInteger(long, long)
      */
     @Override
-    protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
+    protected boolean evaluateInteger(long lhs, long rhs, AMutableInt64 result) throws HyracksDataException {
         if (rhs > Integer.MAX_VALUE) {
             throw new OverflowException(sourceLoc, getIdentifier());
         }
-        return LongMath.checkedPow(lhs, (int) rhs);
+        try {
+            long res = LongMath.checkedPow(lhs, (int) rhs);
+            result.setValue(res);
+            return true;
+        } catch (ArithmeticException e) {
+            throw new OverflowException(sourceLoc, getIdentifier());
+        }
     }
 
     /* (non-Javadoc)
      * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateDouble(double, double)
      */
     @Override
-    protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException {
-        return Math.pow(lhs, rhs);
+    protected boolean evaluateDouble(double lhs, double rhs, AMutableDouble result) throws HyracksDataException {
+        double res = Math.pow(lhs, rhs);
+        result.setValue(res);
+        return true;
     }
 
     /* (non-Javadoc)
@@ -67,14 +77,14 @@ public class NumericPowerDescriptor extends AbstractNumericArithmeticEval {
     }
 
     @Override
-    protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
-            throws HyracksDataException {
+    protected boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly,
+            AMutableInt64 result) throws HyracksDataException {
         throw new UnsupportedTypeException(sourceLoc, getIdentifier().getName(), ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
     }
 
     @Override
-    protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
+    protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result)
+            throws HyracksDataException {
         throw new UnsupportedTypeException(sourceLoc, getIdentifier().getName(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
     }
-
 }

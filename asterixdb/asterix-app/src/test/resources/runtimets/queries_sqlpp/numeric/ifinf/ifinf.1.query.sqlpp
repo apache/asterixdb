@@ -40,6 +40,7 @@ from [
     [ 18, isnull(ifinf(double("INF"), double("-INF"), [], 2)) ],
     [ 19, ismissing(if_inf(double("INF"), double("-INF"), missing, 2)) ],
     [ 20, tostring(ifinf(float("INF"), float("NaN"), 2)) ],
-    [ 21, if_inf(2, 1/0) ]
+    [ 21, if_inf(2, 1/0) ],
+    [ 22, if_inf(1/0, 2) ]
 ] t
 order by t[0]

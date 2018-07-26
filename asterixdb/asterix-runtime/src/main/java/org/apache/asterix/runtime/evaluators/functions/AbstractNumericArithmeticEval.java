@@ -43,6 +43,7 @@ import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.AMutableTime;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -66,32 +67,50 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 @SuppressWarnings("serial")
 public abstract class AbstractNumericArithmeticEval extends AbstractScalarFunctionDynamicDescriptor {
 
-    abstract protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException;
+    /**
+     * abstract method for arithmetic operation between two integer values
+     *
+     * @param lhs first operand
+     * @param rhs second operand
+     * @param result result holder
+     * @return {@code false} if the result is {@code NULL}, otherwise {@code true}
+     */
+    abstract protected boolean evaluateInteger(long lhs, long rhs, AMutableInt64 result) throws HyracksDataException;
 
-    abstract protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException;
+    /**
+     * abstract method for arithmetic operation between two floating point values
+     *
+     * @param lhs first operand
+     * @param rhs second operand
+     * @param result result holder
+     * @return {@code false} if the result is {@code NULL}, otherwise {@code true}
+     */
+    abstract protected boolean evaluateDouble(double lhs, double rhs, AMutableDouble result)
+            throws HyracksDataException;
 
     /**
      * abstract method for arithmetic operation between a time instance (date/time/datetime)
      * and a duration (duration/year-month-duration/day-time-duration)
      *
-     * @param chronon
-     * @param yearMonth
-     * @param dayTime
-     * @return
-     * @throws HyracksDataException
+     * @param chronon first operand
+     * @param yearMonth year-month component of the second operand
+     * @param dayTime day-time component of the second operand
+     * @param result result holder
+     * @return {@code false} if the result is {@code NULL}, otherwise {@code true}
      */
-    abstract protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime,
-            boolean isTimeOnly) throws HyracksDataException;
+    abstract protected boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime,
+            boolean isTimeOnly, AMutableInt64 result) throws HyracksDataException;
 
     /**
      * abstract method for arithmetic operation between two time instances (date/time/datetime)
      *
-     * @param chronon0
-     * @param chronon1
-     * @return
-     * @throws HyracksDataException
+     * @param chronon0 first operand
+     * @param chronon1 second operand
+     * @param result result holder
+     * @return {@code false} if the result is {@code NULL}, otherwise {@code true}
      */
-    abstract protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException;
+    abstract protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result)
+            throws HyracksDataException;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -153,6 +172,9 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                     @SuppressWarnings("rawtypes")
                     private final ISerializerDeserializer durationSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADURATION);
+                    @SuppressWarnings("rawtypes")
+                    private final ISerializerDeserializer nullSerde =
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
                     @Override
                     @SuppressWarnings("unchecked")
@@ -232,58 +254,78 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                         double dres;
                         switch (resultType) {
                             case TINYINT:
-                                lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
-                                if (lres > Byte.MAX_VALUE) {
-                                    throw new OverflowException(sourceLoc, getIdentifier());
+                                if (evaluateInteger(operandsInteger[0], operandsInteger[1], aInt64)) {
+                                    lres = aInt64.getLongValue();
+                                    if (lres > Byte.MAX_VALUE) {
+                                        throw new OverflowException(sourceLoc, getIdentifier());
+                                    }
+                                    if (lres < Byte.MIN_VALUE) {
+                                        throw new UnderflowException(sourceLoc, getIdentifier());
+                                    }
+                                    aInt8.setValue((byte) lres);
+                                    int8Serde.serialize(aInt8, out);
+                                } else {
+                                    nullSerde.serialize(ANull.NULL, out);
                                 }
-                                if (lres < Byte.MIN_VALUE) {
-                                    throw new UnderflowException(sourceLoc, getIdentifier());
-                                }
-                                aInt8.setValue((byte) lres);
-                                int8Serde.serialize(aInt8, out);
                                 break;
                             case SMALLINT:
-                                lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
-                                if (lres > Short.MAX_VALUE) {
-                                    throw new OverflowException(sourceLoc, getIdentifier());
+                                if (evaluateInteger(operandsInteger[0], operandsInteger[1], aInt64)) {
+                                    lres = aInt64.getLongValue();
+                                    if (lres > Short.MAX_VALUE) {
+                                        throw new OverflowException(sourceLoc, getIdentifier());
+                                    }
+                                    if (lres < Short.MIN_VALUE) {
+                                        throw new UnderflowException(sourceLoc, getIdentifier());
+                                    }
+                                    aInt16.setValue((short) lres);
+                                    int16Serde.serialize(aInt16, out);
+                                } else {
+                                    nullSerde.serialize(ANull.NULL, out);
                                 }
-                                if (lres < Short.MIN_VALUE) {
-                                    throw new UnderflowException(sourceLoc, getIdentifier());
-                                }
-                                aInt16.setValue((short) lres);
-                                int16Serde.serialize(aInt16, out);
                                 break;
                             case INTEGER:
-                                lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
-                                if (lres > Integer.MAX_VALUE) {
-                                    throw new OverflowException(sourceLoc, getIdentifier());
+                                if (evaluateInteger(operandsInteger[0], operandsInteger[1], aInt64)) {
+                                    lres = aInt64.getLongValue();
+                                    if (lres > Integer.MAX_VALUE) {
+                                        throw new OverflowException(sourceLoc, getIdentifier());
+                                    }
+                                    if (lres < Integer.MIN_VALUE) {
+                                        throw new UnderflowException(sourceLoc, getIdentifier());
+                                    }
+                                    aInt32.setValue((int) lres);
+                                    int32Serde.serialize(aInt32, out);
+                                } else {
+                                    nullSerde.serialize(ANull.NULL, out);
                                 }
-                                if (lres < Integer.MIN_VALUE) {
-                                    throw new UnderflowException(sourceLoc, getIdentifier());
-                                }
-                                aInt32.setValue((int) lres);
-                                int32Serde.serialize(aInt32, out);
                                 break;
                             case BIGINT:
-                                lres = evaluateInteger(operandsInteger[0], operandsInteger[1]);
-                                aInt64.setValue(lres);
-                                int64Serde.serialize(aInt64, out);
+                                if (evaluateInteger(operandsInteger[0], operandsInteger[1], aInt64)) {
+                                    int64Serde.serialize(aInt64, out);
+                                } else {
+                                    nullSerde.serialize(ANull.NULL, out);
+                                }
                                 break;
                             case FLOAT:
-                                dres = evaluateDouble(operandsFloating[0], operandsFloating[1]);
-                                if (dres > Float.MAX_VALUE) {
-                                    throw new OverflowException(sourceLoc, getIdentifier());
+                                if (evaluateDouble(operandsFloating[0], operandsFloating[1], aDouble)) {
+                                    dres = aDouble.getDoubleValue();
+                                    if (dres > Float.MAX_VALUE) {
+                                        throw new OverflowException(sourceLoc, getIdentifier());
+                                    }
+                                    if (dres < -Float.MAX_VALUE) {
+                                        throw new UnderflowException(sourceLoc, getIdentifier());
+                                    }
+                                    aFloat.setValue((float) dres);
+                                    floatSerde.serialize(aFloat, out);
+                                } else {
+                                    nullSerde.serialize(ANull.NULL, out);
                                 }
-                                if (dres < -Float.MAX_VALUE) {
-                                    throw new UnderflowException(sourceLoc, getIdentifier());
-                                }
-                                aFloat.setValue((float) dres);
-                                floatSerde.serialize(aFloat, out);
                                 break;
                             case DOUBLE:
-                                dres = evaluateDouble(operandsFloating[0], operandsFloating[1]);
-                                aDouble.setValue(dres);
-                                doubleSerde.serialize(aDouble, out);
+                                if (evaluateDouble(operandsFloating[0], operandsFloating[1], aDouble)) {
+                                    doubleSerde.serialize(aDouble, out);
+                                } else {
+                                    nullSerde.serialize(ANull.NULL, out);
+                                }
                                 break;
                         }
                         result.set(resultStorage);
@@ -298,10 +340,9 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                         int offset0 = argPtr0.getStartOffset();
 
                         if (rightType == leftType) {
-
-                            long leftChronon = 0, rightChronon = 0, dayTime;
-
+                            long leftChronon = 0, rightChronon = 0, dayTime = 0;
                             int yearMonth = 0;
+                            boolean yearMonthIsNull = false, dayTimeIsNull = false;
 
                             switch (leftType) {
                                 case DATE:
@@ -319,9 +360,14 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     rightChronon = ADateTimeSerializerDeserializer.getChronon(bytes1, offset1 + 1);
                                     break;
                                 case YEARMONTHDURATION:
-                                    yearMonth = (int) evaluateTimeInstanceArithmetic(
+                                    if (evaluateTimeInstanceArithmetic(
                                             AYearMonthDurationSerializerDeserializer.getYearMonth(bytes0, offset0 + 1),
-                                            AYearMonthDurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1));
+                                            AYearMonthDurationSerializerDeserializer.getYearMonth(bytes1, offset1 + 1),
+                                            aInt64)) {
+                                        yearMonth = (int) aInt64.getLongValue();
+                                    } else {
+                                        yearMonthIsNull = true;
+                                    }
                                     break;
                                 case DAYTIMEDURATION:
                                     leftChronon =
@@ -333,10 +379,18 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                     throw new UnsupportedTypeException(sourceLoc, getIdentifier(), bytes1[offset1]);
                             }
 
-                            dayTime = evaluateTimeInstanceArithmetic(leftChronon, rightChronon);
+                            if (evaluateTimeInstanceArithmetic(leftChronon, rightChronon, aInt64)) {
+                                dayTime = aInt64.getLongValue();
+                            } else {
+                                dayTimeIsNull = true;
+                            }
 
-                            aDuration.setValue(yearMonth, dayTime);
-                            durationSerde.serialize(aDuration, out);
+                            if (yearMonthIsNull || dayTimeIsNull) {
+                                nullSerde.serialize(ANull.NULL, out);
+                            } else {
+                                aDuration.setValue(yearMonth, dayTime);
+                                durationSerde.serialize(aDuration, out);
+                            }
 
                         } else {
                             long chronon = 0, dayTime = 0;
@@ -455,29 +509,32 @@ public abstract class AbstractNumericArithmeticEval extends AbstractScalarFuncti
                                             bytes1[offset1]);
                             }
 
-                            chronon = evaluateTimeDurationArithmetic(chronon, yearMonth, dayTime, isTimeOnly);
-
-                            switch (resultType) {
-                                case DATE:
-                                    if (chronon < 0 && chronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
-                                        chronon = chronon / GregorianCalendarSystem.CHRONON_OF_DAY - 1;
-                                    } else {
-                                        chronon = chronon / GregorianCalendarSystem.CHRONON_OF_DAY;
-                                    }
-                                    aDate.setValue((int) chronon);
-                                    serde.serialize(aDate, out);
-                                    break;
-                                case TIME:
-                                    aTime.setValue((int) chronon);
-                                    serde.serialize(aTime, out);
-                                    break;
-                                case DATETIME:
-                                    aDatetime.setValue(chronon);
-                                    serde.serialize(aDatetime, out);
-                                    break;
-                                default:
-                                    throw new IncompatibleTypeException(sourceLoc, getIdentifier(), bytes0[offset0],
-                                            bytes1[offset1]);
+                            if (evaluateTimeDurationArithmetic(chronon, yearMonth, dayTime, isTimeOnly, aInt64)) {
+                                chronon = aInt64.getLongValue();
+                                switch (resultType) {
+                                    case DATE:
+                                        if (chronon < 0 && chronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
+                                            chronon = chronon / GregorianCalendarSystem.CHRONON_OF_DAY - 1;
+                                        } else {
+                                            chronon = chronon / GregorianCalendarSystem.CHRONON_OF_DAY;
+                                        }
+                                        aDate.setValue((int) chronon);
+                                        serde.serialize(aDate, out);
+                                        break;
+                                    case TIME:
+                                        aTime.setValue((int) chronon);
+                                        serde.serialize(aTime, out);
+                                        break;
+                                    case DATETIME:
+                                        aDatetime.setValue(chronon);
+                                        serde.serialize(aDatetime, out);
+                                        break;
+                                    default:
+                                        throw new IncompatibleTypeException(sourceLoc, getIdentifier(), bytes0[offset0],
+                                                bytes1[offset1]);
+                                }
+                            } else {
+                                nullSerde.serialize(ANull.NULL, out);
                             }
                         }
                     }

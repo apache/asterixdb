@@ -22,6 +22,7 @@ package org.apache.asterix.om.typecomputer.impl;
 import org.apache.asterix.om.exceptions.IncompatibleTypeException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -232,6 +233,12 @@ public class NumericDivideTypeComputer extends AbstractResultTypeComputer {
             default:
                 throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcName, tag1, tag2);
         }
+
+        if (type.getTypeTag() != ATypeTag.ANY) {
+            // returns NULL if division by 0
+            type = AUnionType.createNullableType(type);
+        }
+
         return type;
     }
 }

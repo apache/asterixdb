@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -43,23 +45,34 @@ public class NumericModuloDescriptor extends AbstractNumericArithmeticEval {
     }
 
     @Override
-    protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
-        return lhs % rhs;
+    protected boolean evaluateInteger(long lhs, long rhs, AMutableInt64 result) throws HyracksDataException {
+        if (rhs == 0) {
+            return false; // result = NULL
+        }
+        long res = lhs % rhs;
+        result.setValue(res);
+        return true;
     }
 
     @Override
-    protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException {
-        return lhs % rhs;
+    protected boolean evaluateDouble(double lhs, double rhs, AMutableDouble result) throws HyracksDataException {
+        if (rhs == 0) {
+            return false; // result = NULL
+        }
+        double res = lhs % rhs;
+        result.setValue(res);
+        return true;
     }
 
     @Override
-    protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
-            throws HyracksDataException {
+    protected boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly,
+            AMutableInt64 result) throws HyracksDataException {
         throw new UnsupportedTypeException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_DURATION_TYPE_TAG);
     }
 
     @Override
-    protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
+    protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result)
+            throws HyracksDataException {
         throw new UnsupportedTypeException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
     }
 }

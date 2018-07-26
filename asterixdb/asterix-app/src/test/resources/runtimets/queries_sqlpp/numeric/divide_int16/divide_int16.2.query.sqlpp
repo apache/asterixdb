@@ -17,4 +17,4 @@
  * under the License.
  */
 
-{'result1':(smallint('2') div tinyint('+1')),'result2':(smallint('2') div smallint('2')),'result3':(smallint('2') div integer('+3')),'result4':(smallint('2') div bigint('-4')),'result5':(smallint('2') div float('-5.5f')),'result6':(smallint('2') div double('-6.5d')),'result7':(double('-6.5d') div null), 'result8':double('-6.5d') div {}.a};
+{'result1':(smallint('2') div tinyint('+1')),'result2':(smallint('2') div smallint('2')),'result3':(smallint('2') div integer('+3')),'result4':(smallint('2') div bigint('-4')),'result5':(smallint('2') div float('-5.5f')),'result6':(smallint('2') div double('-6.5d')),'result7':(smallint('-6') div null), 'result8':smallint('-6') div {}.a, 'result9': smallint('1') div 0 };

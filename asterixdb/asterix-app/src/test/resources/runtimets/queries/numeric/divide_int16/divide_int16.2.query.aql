@@ -24,4 +24,4 @@ let $c4 := int64("-4")
 let $c5 := float("-5.5f")
 let $c6 := double("-6.5d")
 let $c8 := null
-return {"result1": $c2 div $c1,"result2": $c2 div $c2,"result3": $c2 div $c3,"result4": $c2 div $c4,"result5": $c2 div $c5, "result6": $c2 div $c6, "result7": $c6 div $c8, "result8": $c6 div [1][1]}
+return {"result1": $c2 div $c1,"result2": $c2 div $c2,"result3": $c2 div $c3,"result4": $c2 div $c4,"result5": $c2 div $c5, "result6": $c2 div $c6, "result7": $c6 div $c8, "result8": $c6 div [1][1], "result9": $c6/0}

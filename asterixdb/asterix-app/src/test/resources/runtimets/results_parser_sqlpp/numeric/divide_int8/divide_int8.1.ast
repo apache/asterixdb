@@ -82,8 +82,8 @@ RecordConstructor [
     LiteralExpr [STRING] [result7]
     :
     OperatorExpr [
-      FunctionCall null.double@1[
-        LiteralExpr [STRING] [-6.5d]
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [-6]
       ]
       /
       LiteralExpr [NULL]
@@ -93,8 +93,8 @@ RecordConstructor [
     LiteralExpr [STRING] [result8]
     :
     OperatorExpr [
-      FunctionCall null.double@1[
-        LiteralExpr [STRING] [-6.5d]
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [-6]
       ]
       /
       FieldAccessor [
@@ -102,6 +102,17 @@ RecordConstructor [
         ]
         Field=a
       ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [result9]
+    :
+    OperatorExpr [
+      FunctionCall null.int8@1[
+        LiteralExpr [STRING] [1]
+      ]
+      /
+      LiteralExpr [LONG] [0]
     ]
   )
 ]

@@ -18,11 +18,14 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.runtime.exceptions.OverflowException;
 import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -42,23 +45,34 @@ public class NumericAddDescriptor extends AbstractNumericArithmeticEval {
     }
 
     @Override
-    protected long evaluateInteger(long x, long y) throws HyracksDataException {
-        return Math.addExact(x, y);
+    protected boolean evaluateInteger(long x, long y, AMutableInt64 result) throws HyracksDataException {
+        try {
+            long res = Math.addExact(x, y);
+            result.setValue(res);
+            return true;
+        } catch (ArithmeticException e) {
+            throw new OverflowException(sourceLoc, getIdentifier());
+        }
     }
 
     @Override
-    protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException {
-        return lhs + rhs;
+    protected boolean evaluateDouble(double lhs, double rhs, AMutableDouble result) throws HyracksDataException {
+        double res = lhs + rhs;
+        result.setValue(res);
+        return true;
     }
 
     @Override
-    protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
+    protected boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly,
+            AMutableInt64 result) throws HyracksDataException {
+        long res = DurationArithmeticOperations.addDuration(chronon, yearMonth, dayTime, isTimeOnly);
+        result.setValue(res);
+        return true;
+    }
+
+    @Override
+    protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result)
             throws HyracksDataException {
-        return DurationArithmeticOperations.addDuration(chronon, yearMonth, dayTime, isTimeOnly);
-    }
-
-    @Override
-    protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
         throw new UnsupportedTypeException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_TIME_TYPE_TAG);
     }
 }

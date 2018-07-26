@@ -21,6 +21,7 @@ package org.apache.asterix.om.typecomputer.impl;
 import org.apache.asterix.om.exceptions.IncompatibleTypeException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -28,10 +29,20 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer {
+    /**
+     * For those functions that do not return NULL if both arguments are not NULL
+     */
+    public static final NumericAddSubMulDivTypeComputer INSTANCE = new NumericAddSubMulDivTypeComputer(false);
 
-    public static final NumericAddSubMulDivTypeComputer INSTANCE = new NumericAddSubMulDivTypeComputer();
+    /**
+     * For those functions that may return NULL even if both arguments are not NULL (e.g. division by zero)
+     */
+    public static final NumericAddSubMulDivTypeComputer INSTANCE_NULLABLE = new NumericAddSubMulDivTypeComputer(true);
 
-    private NumericAddSubMulDivTypeComputer() {
+    private final boolean nullable;
+
+    private NumericAddSubMulDivTypeComputer(boolean nullable) {
+        this.nullable = nullable;
     }
 
     @Override
@@ -303,6 +314,11 @@ public class NumericAddSubMulDivTypeComputer extends AbstractResultTypeComputer 
             default:
                 throw new IncompatibleTypeException(funcExpr.getSourceLocation(), funcName, tag1, tag2);
         }
+
+        if (nullable && type.getTypeTag() != ATypeTag.ANY) {
+            type = AUnionType.createNullableType(type);
+        }
+
         return type;
     }
 }

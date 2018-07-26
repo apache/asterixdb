@@ -18,10 +18,13 @@
  */
 package org.apache.asterix.runtime.evaluators.functions;
 
+import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.runtime.exceptions.OverflowException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -43,33 +46,43 @@ public class NumericSubDescriptor extends AbstractNumericArithmeticEval {
      * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateInteger(long, long)
      */
     @Override
-    protected long evaluateInteger(long lhs, long rhs) throws HyracksDataException {
-        return Math.subtractExact(lhs, rhs);
+    protected boolean evaluateInteger(long lhs, long rhs, AMutableInt64 result) throws HyracksDataException {
+        try {
+            long res = Math.subtractExact(lhs, rhs);
+            result.setValue(res);
+            return true;
+        } catch (ArithmeticException e) {
+            throw new OverflowException(sourceLoc, getIdentifier());
+        }
     }
 
     /* (non-Javadoc)
      * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateDouble(double, double)
      */
     @Override
-    protected double evaluateDouble(double lhs, double rhs) throws HyracksDataException {
-        return lhs - rhs;
+    protected boolean evaluateDouble(double lhs, double rhs, AMutableDouble result) throws HyracksDataException {
+        double res = lhs - rhs;
+        result.setValue(res);
+        return true;
     }
 
     /* (non-Javadoc)
      * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateTimeDurationArithmetic(long, int, long, boolean)
      */
     @Override
-    protected long evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly)
-            throws HyracksDataException {
-        return DurationArithmeticOperations.addDuration(chronon, -1 * yearMonth, -1 * dayTime, isTimeOnly);
+    protected boolean evaluateTimeDurationArithmetic(long chronon, int yearMonth, long dayTime, boolean isTimeOnly,
+            AMutableInt64 result) throws HyracksDataException {
+        long res = DurationArithmeticOperations.addDuration(chronon, -1 * yearMonth, -1 * dayTime, isTimeOnly);
+        result.setValue(res);
+        return true;
     }
 
     /* (non-Javadoc)
      * @see org.apache.asterix.runtime.evaluators.functions.AbstractNumericArithmeticEval#evaluateTimeInstanceArithmetic(long, long)
      */
     @Override
-    protected long evaluateTimeInstanceArithmetic(long chronon0, long chronon1) throws HyracksDataException {
-        return evaluateInteger(chronon0, chronon1);
+    protected boolean evaluateTimeInstanceArithmetic(long chronon0, long chronon1, AMutableInt64 result)
+            throws HyracksDataException {
+        return evaluateInteger(chronon0, chronon1, result);
     }
-
 }

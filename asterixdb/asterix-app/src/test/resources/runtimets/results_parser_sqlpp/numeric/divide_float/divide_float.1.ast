@@ -104,4 +104,15 @@ RecordConstructor [
       ]
     ]
   )
+  (
+    LiteralExpr [STRING] [result9]
+    :
+    OperatorExpr [
+      FunctionCall null.double@1[
+        LiteralExpr [STRING] [1]
+      ]
+      /
+      LiteralExpr [LONG] [0]
+    ]
+  )
 ]
