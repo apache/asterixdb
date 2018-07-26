@@ -52,7 +52,8 @@ public class AbstractQueryApiServlet extends AbstractServlet {
         HANDLE("handle"),
         ERRORS("errors"),
         METRICS("metrics"),
-        PLANS("plans");
+        PLANS("plans"),
+        WARNINGS("warnings");
 
         private final String str;
 

@@ -54,7 +54,8 @@ public class ResultExtractor {
         STATUS("status"),
         TYPE("type"),
         ERRORS("errors"),
-        PLANS("plans");
+        PLANS("plans"),
+        WARNINGS("warnings");
 
         private static final Map<String, ResultField> fields = new HashMap<>();
 
@@ -164,6 +165,7 @@ public class ResultExtractor {
                 case STATUS:
                 case TYPE:
                 case PLANS:
+                case WARNINGS:
                     resultBuilder.append(OBJECT_MAPPER.writeValueAsString(fieldValue));
                     break;
                 default:

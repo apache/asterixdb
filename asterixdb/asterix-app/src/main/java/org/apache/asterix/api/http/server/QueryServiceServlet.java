@@ -19,14 +19,15 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.ASTERIX;
-import static org.apache.asterix.common.exceptions.ErrorCode.REQUEST_TIMEOUT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_BAD_CLUSTER_STATE;
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_NODE_UNREGISTERED;
+import static org.apache.asterix.common.exceptions.ErrorCode.REQUEST_TIMEOUT;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -53,9 +54,9 @@ import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.ExecutionPlansJsonPrintUtil;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.IStatementExecutor;
-import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
+import org.apache.asterix.translator.IStatementExecutorContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionConfig;
@@ -185,7 +186,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         RESULT_COUNT("resultCount"),
         RESULT_SIZE("resultSize"),
         ERROR_COUNT("errorCount"),
-        PROCESSED_OBJECTS_COUNT("processedObjects");
+        PROCESSED_OBJECTS_COUNT("processedObjects"),
+        WARNING_COUNT("warningCount");
 
         private final String str;
 
@@ -334,8 +336,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     private static void printMetrics(PrintWriter pw, long elapsedTime, long executionTime, long resultCount,
-            long resultSize, long processedObjects, long errorCount) {
+            long resultSize, long processedObjects, long errorCount, long warnCount) {
         boolean hasErrors = errorCount != 0;
+        boolean hasWarnings = warnCount != 0;
         pw.print("\t\"");
         pw.print(ResultFields.METRICS.str());
         pw.print("\": {\n");
@@ -348,7 +351,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         pw.print("\t");
         ResultUtil.printField(pw, Metrics.RESULT_SIZE.str(), resultSize, true);
         pw.print("\t");
-        ResultUtil.printField(pw, Metrics.PROCESSED_OBJECTS_COUNT.str(), processedObjects, hasErrors);
+        ResultUtil.printField(pw, Metrics.PROCESSED_OBJECTS_COUNT.str(), processedObjects, hasWarnings || hasErrors);
+        if (hasWarnings) {
+            pw.print("\t");
+            ResultUtil.printField(pw, Metrics.WARNING_COUNT.str(), warnCount, hasErrors);
+        }
         if (hasErrors) {
             pw.print("\t");
             ResultUtil.printField(pw, Metrics.ERROR_COUNT.str(), errorCount, false);
@@ -522,6 +529,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         printSignature(sessionOutput.out(), param);
         printType(sessionOutput.out(), sessionConfig);
         long errorCount = 1; // so far we just return 1 error
+        List<ExecutionWarning> warnings = Collections.emptyList(); // we don't have any warnings yet
         try {
             if (param.getStatement() == null || param.getStatement().isEmpty()) {
                 throw new AsterixException("Empty request, no statement provided");
@@ -543,6 +551,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (ResultDelivery.IMMEDIATE == delivery || ResultDelivery.DEFERRED == delivery) {
                 ResultUtil.printStatus(sessionOutput, execution.getResultStatus());
             }
+            if (!warnings.isEmpty()) {
+                printWarnings(sessionOutput.out(), warnings);
+            }
             errorCount = 0;
         } catch (Exception | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError e) {
             handleExecuteStatementException(e, execution, param);
@@ -555,7 +566,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             execution.finish();
         }
         printMetrics(sessionOutput.out(), System.nanoTime() - elapsedStart, execution.duration(), stats.getCount(),
-                stats.getSize(), stats.getProcessedObjects(), errorCount);
+                stats.getSize(), stats.getProcessedObjects(), errorCount, warnings.size());
         sessionOutput.out().print("}\n");
         sessionOutput.out().flush();
         if (sessionOutput.out().checkError()) {
@@ -624,6 +635,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     protected void printError(PrintWriter sessionOut, Throwable throwable) {
         ResultUtil.printError(sessionOut, throwable);
+    }
+
+    protected void printWarnings(PrintWriter pw, List<ExecutionWarning> warnings) {
+        ResultUtil.printWarnings(pw, warnings);
     }
 
     protected void printExecutionPlans(SessionOutput output, ExecutionPlans executionPlans) {

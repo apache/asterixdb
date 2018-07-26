@@ -138,6 +138,25 @@ public class ResultUtil {
         pw.print(comma ? "\t}],\n" : "\t}]\n");
     }
 
+    public static void printWarnings(PrintWriter pw, List<ExecutionWarning> warnings) {
+        pw.print("\t\"");
+        pw.print(AbstractQueryApiServlet.ResultFields.WARNINGS.str());
+        pw.print("\": [");
+        for (int i = 0; i < warnings.size(); i++) {
+            final ExecutionWarning warning = warnings.get(i);
+            pw.print("{ \n\t");
+            printField(pw, QueryServiceServlet.ErrorField.CODE.str(), warning.getCode());
+            pw.print("\t");
+            printField(pw, QueryServiceServlet.ErrorField.MSG.str(), JSONUtil.escape(warning.getMessage()), false);
+            pw.print("\t} \n\t");
+            boolean lastWarning = i == warnings.size() - 1;
+            if (!lastWarning) {
+                pw.print(",");
+            }
+        }
+        pw.print("],\n");
+    }
+
     public static void printField(PrintWriter pw, String name, String value) {
         printField(pw, name, value, true);
     }
