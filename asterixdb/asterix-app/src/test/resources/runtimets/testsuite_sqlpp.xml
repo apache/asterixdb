@@ -10161,6 +10161,11 @@
   </test-group>
   <test-group name="limit">
     <test-case FilePath="limit">
+      <compilation-unit name="limit_negative_value">
+        <output-dir compare="Text">limit_negative_value</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
       <compilation-unit name="limit_type_01">
         <output-dir compare="Text">limit_type_01</output-dir>
       </compilation-unit>

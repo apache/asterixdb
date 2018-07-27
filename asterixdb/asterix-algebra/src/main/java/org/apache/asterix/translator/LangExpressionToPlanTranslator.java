@@ -84,8 +84,10 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.FunctionInfo;
@@ -1351,16 +1353,13 @@ class LangExpressionToPlanTranslator
         LimitOperator opLim;
 
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p1 = langExprToAlgExpression(lc.getLimitExpr(), tupSource);
-        AbstractFunctionCallExpression maxObjectsExpr =
-                createFunctionCallExpression(BuiltinFunctions.TREAT_AS_INTEGER, lc.getLimitExpr().getSourceLocation());
-        maxObjectsExpr.getArguments().add(new MutableObject<>(p1.first));
-
+        ILogicalExpression maxObjectsExpr =
+                createLimitOffsetValueExpression(p1.first, lc.getLimitExpr().getSourceLocation());
         Expression offset = lc.getOffset();
         if (offset != null) {
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> p2 = langExprToAlgExpression(offset, p1.second);
-            AbstractFunctionCallExpression offsetExpr =
-                    createFunctionCallExpression(BuiltinFunctions.TREAT_AS_INTEGER, lc.getOffset().getSourceLocation());
-            offsetExpr.getArguments().add(new MutableObject<>(p2.first));
+            ILogicalExpression offsetExpr =
+                    createLimitOffsetValueExpression(p2.first, lc.getOffset().getSourceLocation());
             opLim = new LimitOperator(maxObjectsExpr, offsetExpr);
             opLim.getInputs().add(p2.second);
             opLim.setSourceLocation(sourceLoc);
@@ -1370,6 +1369,37 @@ class LangExpressionToPlanTranslator
             opLim.setSourceLocation(sourceLoc);
         }
         return new Pair<>(opLim, null);
+    }
+
+    private ILogicalExpression createLimitOffsetValueExpression(ILogicalExpression inputExpr, SourceLocation sourceLoc)
+            throws CompilationException {
+        // generates expression for limit and offset value:
+        //
+        // switch-case(treat-as-integer(user_value_expr) > 0, true, treat-as-integer(user_value_expr), 0)
+        //
+        // this guarantees that the value is always an integer and greater or equals to 0,
+        // so CopyLimitDownRule works correctly when computing the total limit,
+        // and other rules which assume integer type
+
+        AInt32 zero = new AInt32(0);
+
+        AbstractFunctionCallExpression valueExpr =
+                createFunctionCallExpression(BuiltinFunctions.TREAT_AS_INTEGER, sourceLoc);
+        valueExpr.getArguments().add(new MutableObject<>(inputExpr));
+
+        AbstractFunctionCallExpression cmpExpr =
+                createFunctionCallExpressionForBuiltinOperator(OperatorType.GT, sourceLoc);
+        cmpExpr.getArguments().add(new MutableObject<>(valueExpr));
+        cmpExpr.getArguments().add(new MutableObject<>(createConstantExpression(zero, sourceLoc)));
+
+        AbstractFunctionCallExpression switchExpr =
+                createFunctionCallExpression(BuiltinFunctions.SWITCH_CASE, sourceLoc);
+        switchExpr.getArguments().add(new MutableObject<>(cmpExpr));
+        switchExpr.getArguments().add(new MutableObject<>(createConstantExpression(ABoolean.TRUE, sourceLoc)));
+        switchExpr.getArguments().add(new MutableObject<>(valueExpr.cloneExpression()));
+        switchExpr.getArguments().add(new MutableObject<>(createConstantExpression(zero, sourceLoc)));
+
+        return switchExpr;
     }
 
     private static AbstractFunctionCallExpression createFunctionCallExpressionForBuiltinOperator(OperatorType t,
@@ -1877,5 +1907,11 @@ class LangExpressionToPlanTranslator
             leftInputVar = topUnionVar;
         }
         return new Pair<>(topUnionAllOp, topUnionVar);
+    }
+
+    private ConstantExpression createConstantExpression(IAObject value, SourceLocation sourceLoc) {
+        ConstantExpression constExpr = new ConstantExpression(new AsterixConstantValue(value));
+        constExpr.setSourceLocation(sourceLoc);
+        return constExpr;
     }
 }
