@@ -104,6 +104,7 @@ import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.config.IOptionType;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobId;
@@ -199,6 +200,7 @@ public class APIFramework {
         final boolean isLoad = statement != null && statement.getKind() == Statement.Kind.LOAD;
         final SourceLocation sourceLoc =
                 query != null ? query.getSourceLocation() : statement != null ? statement.getSourceLocation() : null;
+        final boolean isExplainOnly = isQuery && query.isExplain();
 
         SessionConfig conf = output.config();
         if (isQuery && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
@@ -245,7 +247,7 @@ public class APIFramework {
         ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter());
         if (conf.isOptimize()) {
             compiler.optimize();
-            if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
+            if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
                 if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
                     // For Optimizer tests.
                     AlgebricksAppendable buffer = new AlgebricksAppendable(output.out());
@@ -257,16 +259,12 @@ public class APIFramework {
                 }
             }
         }
-        if (isQuery && query.isExplain()) {
-            try {
-                LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
-                PlanPrettyPrinter.printPlan(plan, pvisitor, 0);
-                ResultUtil.printResults(metadataProvider.getApplicationContext(), pvisitor.get().toString(), output,
-                        new Stats(), null);
-                return null;
-            } catch (IOException e) {
-                throw new AlgebricksException(e);
+        if (isExplainOnly) {
+            printPlanAsResult(metadataProvider, output);
+            if (!conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
+                executionPlans.setOptimizedLogicalPlan(null);
             }
+            return null;
         }
 
         if (!conf.isGenerateJobSpec()) {
@@ -306,6 +304,18 @@ public class APIFramework {
             generateJob(spec);
         }
         return spec;
+    }
+
+    private void printPlanAsResult(MetadataProvider metadataProvider, SessionOutput output) throws AlgebricksException {
+        final SessionConfig conf = output.config();
+        boolean quoteResult = output.config().getPlanFormat() == SessionConfig.PlanFormat.STRING;
+        conf.set(SessionConfig.FORMAT_QUOTE_RECORD, quoteResult);
+        try {
+            ResultUtil.printResults(metadataProvider.getApplicationContext(), executionPlans.getOptimizedLogicalPlan(),
+                    output, new Stats(), null);
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
     }
 
     protected PhysicalOptimizationConfig getPhysicalOptimizationConfig(CompilerProperties compilerProperties,

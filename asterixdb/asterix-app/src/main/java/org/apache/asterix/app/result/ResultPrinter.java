@@ -192,8 +192,6 @@ public class ResultPrinter {
 
     public void print(String record) throws HyracksDataException {
         printPrefix();
-        // TODO(tillw) evil hack
-        quoteRecord = true;
         displayRecord(record);
         printPostfix();
     }
