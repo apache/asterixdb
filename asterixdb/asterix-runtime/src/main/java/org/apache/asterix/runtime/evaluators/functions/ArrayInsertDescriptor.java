@@ -43,11 +43,10 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * <pre>
- * array_insert(list, pos, val1, val2, ...) returns a new open list with all values inserted at the specified position.
+ * array_insert(list, pos, val1, val2, ...) returns a new list with all values inserted at the specified position.
  * Values can be null (i.e., one can insert nulls). Position can be negative where the last position = -1. When position
  * is positive then the first position = 0. Input list can be empty where the only valid position is 0.
  * For the list [5,6], the valid positions are 0, 1, 2, -1, -2. If position is floating-point, it's casted to integer.
- * TODO: should decide on what to do for floating-point positions.
  *
  * It throws an error at compile time if the number of arguments < 3
  *
@@ -55,8 +54,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * 1. missing, if any argument is missing.
  * 2. null, if
  * - the list arg is null or it's not a list
- * - the position is not numeric or the position is out of bound.
- * 3. otherwise, a new open list.
+ * - the position is not numeric or the position is out of bound or it's a floating-point with decimals or NaN or +-INF.
+ * 3. otherwise, a new list.
  *
  * </pre>
  */
@@ -117,14 +116,17 @@ public class ArrayInsertDescriptor extends AbstractScalarFunctionDynamicDescript
                 return RETURN_MISSING;
             }
 
-            int position;
-            if (!ATypeHierarchy.isCompatible(ATypeTag.INTEGER, ATYPETAGDESERIALIZER.deserialize(positionArg.getTag()))
+            double position;
+            if (!ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, ATYPETAGDESERIALIZER.deserialize(positionArg.getTag()))
                     || !listTag.isListType()) {
                 return RETURN_NULL;
             } else {
                 String name = getIdentifier().getName();
-                position = ATypeHierarchy.getIntegerValue(name, 1, positionArg.getByteArray(),
+                position = ATypeHierarchy.getDoubleValue(name, 1, positionArg.getByteArray(),
                         positionArg.getStartOffset());
+                if (Double.isNaN(position) || Double.isInfinite(position) || Math.floor(position) < position) {
+                    return RETURN_NULL;
+                }
                 // list size
                 int size;
                 if (listTag == ATypeTag.ARRAY) {
@@ -140,7 +142,7 @@ public class ArrayInsertDescriptor extends AbstractScalarFunctionDynamicDescript
                 if (position < 0 || position > size) {
                     return RETURN_NULL;
                 }
-                return position;
+                return (int) position;
             }
         }
     }

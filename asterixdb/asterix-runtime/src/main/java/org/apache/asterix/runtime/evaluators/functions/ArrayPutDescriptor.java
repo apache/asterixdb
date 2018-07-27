@@ -46,7 +46,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * <pre>
- * array_put(list, val1, val2, ...) returns a new open list with all the values appended to the input list items only if
+ * array_put(list, val1, val2, ...) returns a new list with all the values appended to the input list items only if
  * the list does not already have the value. Values cannot be null (i.e., one cannot append nulls).
  * array_put([2, 3], 2, 2, 9, 9) will result in [2, 3, 9, 9].
  *
@@ -56,7 +56,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * 1. missing, if any argument is missing.
  * 2. null, if any argument is null.
  * 3. an error if any value arg is of a list/object type (i.e. derived type) since deep equality is not yet supported.
- * 4. otherwise, a new open list.
+ * 4. otherwise, a new list.
  *
  * </pre>
  */

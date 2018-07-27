@@ -44,6 +44,22 @@ import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * <pre>
+ * array_range(start_num, end_num, step_num?) returns a new ordered list, list of long items or double items
+ * depending on the supplied arguments. One floating-point arg will make it a list of double items. step_num is optional
+ * where the default is 1. It returns an empty list for arguments like:
+ * array_range(2, 20, -2), array_range(10, 3, 4) and array_range(1,6,0) where it cannot determine a proper sequence.
+ *
+ * It throws an error at compile time if the number of arguments < 2 or > 3
+ *
+ * It returns in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if any argument is null or they are not numeric or they are NaN +-INF.
+ * 3. otherwise, a new list.
+ *
+ * </pre>
+ */
 public class ArrayRangeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
@@ -118,8 +134,8 @@ public class ArrayRangeDescriptor extends AbstractScalarFunctionDynamicDescripto
                 stepNum = ATypeHierarchy.getDoubleValue(n, 2, step.getByteArray(), step.getStartOffset());
             }
 
-            if (!ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, startTag)
-                    || !ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, endTag)) {
+            if (!ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, startTag) || Double.isNaN(stepNum)
+                    || !ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, endTag) || Double.isInfinite(stepNum)) {
                 PointableHelper.setNull(result);
                 return;
             }
@@ -145,6 +161,11 @@ public class ArrayRangeDescriptor extends AbstractScalarFunctionDynamicDescripto
                 serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
                 double startNum = ATypeHierarchy.getDoubleValue(n, 0, start.getByteArray(), start.getStartOffset());
                 double endNum = ATypeHierarchy.getDoubleValue(n, 1, end.getByteArray(), end.getStartOffset());
+                if (Double.isNaN(startNum) || Double.isInfinite(startNum) || Double.isNaN(endNum)
+                        || Double.isInfinite(endNum)) {
+                    PointableHelper.setNull(result);
+                    return;
+                }
                 listBuilder.reset(ArrayRangeTypeComputer.DOUBLE_LIST);
                 while ((startNum < endNum && stepNum > 0) || (startNum > endNum && stepNum < 0)) {
                     aDouble.setValue(startNum);

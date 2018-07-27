@@ -36,7 +36,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 
 /**
  * <pre>
- * array_concat(list1, list2, ...) returns a new open list with all the values of all lists appended in order into the
+ * array_concat(list1, list2, ...) returns a new list with all the values of all lists appended in order into the
  * new list. Items of the lists can be null or missing (both are added as a null value).
  *
  * It throws an error at compile time if the number of arguments < 2
@@ -45,7 +45,7 @@ import org.apache.hyracks.data.std.api.IPointable;
  * 1. missing, if any argument is missing.
  * 2. an error if the input lists are not of the same type (one is an ordered list while the other is unordered).
  * 3. null, if any input list is null or is not a list.
- * 4. otherwise, a new open list.
+ * 4. otherwise, a new list.
  *
  * </pre>
  */

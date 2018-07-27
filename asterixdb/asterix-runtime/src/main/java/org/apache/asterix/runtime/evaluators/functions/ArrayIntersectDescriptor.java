@@ -67,6 +67,24 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * <pre>
+ * array_intersect(list1, list2, ...) returns a new list containing items that are present in all of the input
+ * lists. Null and missing items are ignored. It's case-sensitive to string items.
+ *
+ * array_intersect([null, 2, missing], [3,missing,2,null]) will result in [2].
+ *
+ * It throws an error at compile time if the number of arguments < 2
+ *
+ * It returns (or throws an error at runtime) in order:
+ * 1. missing, if any argument is missing.
+ * 2. an error if the input lists are not of the same type (one is an ordered list while the other is unordered).
+ * 3. null, if any input list is null or is not a list.
+ * 4. an error if any list item is a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 5. otherwise, a new list.
+ *
+ * </pre>
+ */
 public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;

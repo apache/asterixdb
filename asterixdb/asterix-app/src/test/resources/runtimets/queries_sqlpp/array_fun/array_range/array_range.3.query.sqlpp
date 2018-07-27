@@ -36,5 +36,8 @@ use TinySocial;
   "t14": (array_range(2, missing)),
   "t15": (array_range(2, 7, "a")),
   "t16": (array_range(2, "a", 1)),
-  "t17": (array_range("a", 7, 1))
+  "t17": (array_range("a", 7, 1)),
+  "t18": (array_range(5, 10, float("NaN"))),
+  "t19": (array_range(5, float("INF"), 1)),
+  "t20": (array_range(5, float("-INF"), -2))
 };

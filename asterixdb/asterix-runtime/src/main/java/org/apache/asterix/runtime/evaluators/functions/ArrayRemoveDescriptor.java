@@ -44,16 +44,16 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * <pre>
- * array_remove(list, val1, val2, ...) returns a new (open or closed) list with all the values removed from the input
- * list. Values cannot be null (i.e., one cannot remove nulls).
+ * array_remove(list, val1, val2, ...) returns a new list with all the values removed from the input
+ * list. Values cannot be null (i.e., one cannot remove nulls). It's case-sensitive to string value arguments.
  *
  * It throws an error at compile time if the number of arguments < 2
  *
  * It returns (or throws an error at runtime) in order:
  * 1. missing, if any argument is missing.
  * 2. null, if any argument is null.
- * 4. an error if any value arg is of a list/object type (i.e. derived type) since deep equality is not yet supported.
- * 3. otherwise, a new list that has the same type as the input list.
+ * 3. an error if any value arg is of a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 4. otherwise, a new list that has the same type as the input list.
  *
  * </pre>
  */

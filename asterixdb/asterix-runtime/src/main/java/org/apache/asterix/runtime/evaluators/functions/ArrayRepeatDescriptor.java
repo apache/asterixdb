@@ -43,10 +43,25 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * <pre>
+ * array_repeat(val, num_times) returns a new ordered list with the same item type as the input value.
+ *
+ * It throws an error at compile time if the number of arguments != 2
+ *
+ * It returns in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if:
+ * - any argument is null
+ * - num_times is not numeric or it's a floating-point with decimals (3.2) or it's NaN/+-INF or it's negative.
+ * 3. otherwise, a new ordered list.
+ *
+ * </pre>
+ */
 public class ArrayRepeatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
-    AbstractCollectionType repeatedValueListType;
+    private AbstractCollectionType repeatedValueListType;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
@@ -110,14 +125,19 @@ public class ArrayRepeatDescriptor extends AbstractScalarFunctionDynamicDescript
             // 2nd arg: number of repetitions
             repeatEval.evaluate(tuple, repeatArg);
             repeatArgValue.set(repeatArg);
-            if (!ATypeHierarchy.isCompatible(ATypeTag.INTEGER, ATypeTag.VALUE_TYPE_MAPPING[repeatArgValue.getTag()])) {
+            if (!ATypeHierarchy.isCompatible(ATypeTag.DOUBLE, ATypeTag.VALUE_TYPE_MAPPING[repeatArgValue.getTag()])) {
                 PointableHelper.setNull(result);
                 return;
             }
             final String name = getIdentifier().getName();
-            final int repetitions =
-                    ATypeHierarchy.getIntegerValue(name, 1, repeatArg.getByteArray(), repeatArg.getStartOffset());
+            final double repetitions =
+                    ATypeHierarchy.getDoubleValue(name, 1, repeatArg.getByteArray(), repeatArg.getStartOffset());
 
+            if (Double.isNaN(repetitions) || Double.isInfinite(repetitions) || Math.floor(repetitions) < repetitions
+                    || repetitions < 0) {
+                PointableHelper.setNull(result);
+                return;
+            }
             // create list
             listBuilder.reset(repeatedValueListType);
             for (int i = 0; i < repetitions; ++i) {

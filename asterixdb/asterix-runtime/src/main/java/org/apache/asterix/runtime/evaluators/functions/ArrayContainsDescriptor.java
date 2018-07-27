@@ -37,14 +37,15 @@ import org.apache.hyracks.data.std.api.IPointable;
 
 /**
  * <pre>
- * array_contains(list, val) returns true if the the input list contains the value argument.
+ * array_contains(list, val) returns true if the the input list contains the value argument. It's case-sensitive to
+ * string value argument.
  *
  * It throws an error at compile time if the number of arguments != 2
  *
  * It returns (or throws an error at runtime) in order:
  * 1. missing, if any argument is missing.
  * 2. null, if any argument is null.
- * 3. an error if the value is of a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 3. an error if the value is a list/object type (i.e. derived type) since deep equality is not yet supported.
  * 4. null, if the input list is not a list.
  * 5. otherwise, returns true or false.
  *

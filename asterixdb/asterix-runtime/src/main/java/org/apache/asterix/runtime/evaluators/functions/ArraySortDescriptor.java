@@ -47,6 +47,22 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
+/**
+ * <pre>
+ * array_sort(list) returns a new list with the items sorted in ascending order. The returned list has the same type as
+ * the input list. The list can contain null and missing items, and both are preserved. It's case-sensitive to string
+ * items.
+ *
+ * It throws an error at compile time if the number of arguments != 1
+ *
+ * It returns (or throws an error at runtime) in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if the list arg is null or it's not a list.
+ * 3. an error if any list item is a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 4. otherwise, a new list.
+ *
+ * </pre>
+ */
 public class ArraySortDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType inputListType;

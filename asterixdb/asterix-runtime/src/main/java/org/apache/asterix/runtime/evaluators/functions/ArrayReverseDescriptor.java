@@ -40,8 +40,18 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
- * array_reverse(list) returns a new list with the entries of the original input list in reverse order. If the input is
- * not a list, it returns "null".
+ * <pre>
+ * array_reverse(list) returns a new list with the entries of the original input list in reverse order.
+ * The returned list has the same type as the input list. The list can contain null/missing items. Both are preserved.
+ *
+ * It throws an error at compile time if the number of arguments != 1
+ *
+ * It returns in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if the list arg is null or it's not a list.
+ * 3. otherwise, a new list.
+ *
+ * </pre>
  */
 public class ArrayReverseDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;

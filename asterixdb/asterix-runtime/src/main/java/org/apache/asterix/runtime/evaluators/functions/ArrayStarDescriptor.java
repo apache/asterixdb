@@ -54,6 +54,35 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * <pre>
+ * array_star(ordered_list) returns a new object. The input ordered list is supposed to be a list of objects:
+ * [{"id":1, "dept":"CS"}, {"id":2, "dept":"FIN"}, {"id":3, "dept":"CS"}]
+ * For the returned object, each field has a value = list of values of that specific field taken from each object in the
+ * input list.
+ *
+ * Ex1: array_star([{"a":1, "b":2}, {"a":9, "b":4}]) will produce: {"a":[1, 9], "b":[2, 4]}
+ * Ex2: array_star([{"a":1}, {"a":9, "b":4}]) will produce: {"a":[1, 9], "b":[null, 4]}
+ * Ex3: array_star([{"a":1, "c":5}, {"a":9, "b":4}]) will produce: {"a":[1, 9], "b":[null, 4], "c":[5,null]}
+ * Ex4: array_star([{"c":5, "a":1}, "non_object"]) will produce: {"a":[1, null], "c":[5,null]}
+ * Ex5: array_star(["non_object1", "non_object2"]) will produce: {} (i.e., missing)
+ *
+ * Note that in the final object result, the fields are ordered by their names regardless of their original order in the
+ * object items in the input list. "a" comes before "c". However, for every field, all the items in each list must not
+ * be ordered. They should appear in the sequence they appear in the input list.
+ * For Ex1, "a":[1,9] in the final result, item at index 0 comes from object at index 0 (which is 1).
+ *
+ * It throws an error at compile time if the number of arguments != 1
+ *
+ * It returns in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if the list arg is null or it's not an ordered list.
+ * 3. missing, if input list is missing the notion of fields.
+ *    E.g., the input list contains no object items (e.g., list of int), or all objects have no fields.
+ * 4. otherwise, a new object.
+ *
+ * </pre>
+ */
 public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 

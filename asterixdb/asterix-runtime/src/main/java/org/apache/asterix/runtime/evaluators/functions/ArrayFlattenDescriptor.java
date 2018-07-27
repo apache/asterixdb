@@ -57,7 +57,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * <pre>
- * array_flatten(list, depth) returns a new open list with any nested list (all types) flattened up to the specified
+ * array_flatten(list, depth) returns a new list with any nested list (all types) flattened up to the specified
  * depth. The returned list type is the same as the input list type. Null and missing items are preserved.
  * If the depth < 0, then it flattens the input list all the way deep.
  *
@@ -73,7 +73,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * - the input list is not a list.
  * - the depth arg is not numeric or
  * - it's a floating-point number with decimals (e.g. 1.2 will produce null, 1.0 is OK).
- * 3. otherwise, a new open list.
+ * 3. otherwise, a new list.
  *
  * </pre>
  */

@@ -37,7 +37,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 /**
  * <pre>
  * array_position(list, val) returns the 0-based position (as integer) of the value argument in the input list. If the
- * value does not exists, it returns -1
+ * value does not exists, it returns -1. It's case-sensitive to string value argument.
  *
  * It throws an error at compile time if the number of arguments != 2
  *

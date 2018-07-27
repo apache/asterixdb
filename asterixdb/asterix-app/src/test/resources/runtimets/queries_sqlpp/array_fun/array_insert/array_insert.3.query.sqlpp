@@ -33,12 +33,15 @@ use TinySocial;
   "t11": (array_insert([], 0, 10, 12.0, "sth")),  // OK
   "t12": (array_insert([6], "a", 9)),             // null, position non-numeric
   "t13": (array_insert([6], 1.0, 9)),             // OK
-  "t14": (array_insert([6], 1.5, 9)),             // OK
+  "t14": (array_insert([6], 1.5, 9)),             // null, position with decimals
   "t15": (array_insert(null, 3, 9)),              // null
   "t16": (array_insert(missing, 3, 9)),           // missing
   "t17": (array_insert([6], 1, null, 9, null)),   // OK to insert nulls
   "t18": (array_insert([6], null, 5, 9, null)),   // null
   "t19": (array_insert([6], 3, null, missing, 9, null)),  // missing
   "t20": (select array_insert(t.`referred-topics`, 0, 5) from TweetMessages t order by t.tweetid),
-  "t21": (select array_insert(d.followers, 0, 5, 3) from d1 d)
+  "t21": (select array_insert(d.followers, 0, 5, 3) from d1 d),
+  "t22": (array_insert([1,2,3], float("NaN"), "a", "b")),
+  "t23": (array_insert([1,2,3], float("INF"), "a", "b")),
+  "t24": (array_insert([1,2,3], float("-INF"), "a", "b"))
 };

@@ -32,6 +32,24 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+/**
+ * <pre>
+ * array_symdiff(list1, list2, ...) returns a new list based on the set symmetric difference, or disjunctive union,
+ * of the input. The new list contains only those items that appear in exactly one of the input lists.
+ * array_symdiff([null, 2,3], [missing, 3]) will result in [2, null, null] where one null is for the missing item
+ * and the second null for the null item.
+ *
+ * It throws an error at compile time if the number of arguments < 2
+ *
+ * It returns (or throws an error at runtime) in order:
+ * 1. missing, if any argument is missing.
+ * 2. an error if the input lists are not of the same type (one is an ordered list while the other is unordered).
+ * 3. null, if any input list is null or is not a list.
+ * 4. an error if any list item is a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 5. otherwise, a new list.
+ *
+ * </pre>
+ */
 public class ArraySymDiffDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType[] argTypes;

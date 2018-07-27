@@ -52,6 +52,24 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
+/**
+ * <pre>
+ * array_distinct(list) returns a new list with distinct items of the input list. The returned list has the same type as
+ * the input list. The list can contain null and missing items. Null and missing are considered to be the same.
+ * It's case-sensitive to string items.
+ *
+ * array_distinct([1,2,null,4,missing,2,1]) will output [1,2,null,4]
+ *
+ * It throws an error at compile time if the number of arguments != 1
+ *
+ * It returns (or throws an error at runtime) in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if the list arg is null or it's not a list.
+ * 3. an error if any list item is a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 4. otherwise, a new list.
+ *
+ * </pre>
+ */
 public class ArrayDistinctDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType inputListType;

@@ -54,6 +54,27 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * <pre>
+ * array_replace(list, val1, val2, max_num_times?) returns a new list with the occurrences of val1 replaced with
+ * val2. max_num_times arg is optional. If supplied, it replaces val1 as many as max_num_times. Any negative number for
+ * max_num_times means "replace all occurrences". val2 can be null meaning you can replace existing items with nulls.
+ *
+ * array_replace([2,3,3,3,1], 3, 8, 0) will do nothing and result in [2,3,3,3,1].
+ *
+ * It throws an error at compile time if the number of arguments < 3 or > 4
+ *
+ * It returns (or throws an error at runtime) in order:
+ * 1. missing, if any argument is missing.
+ * 2. null, if:
+ * - any argument is null (except for val2).
+ * - input list is not a list.
+ * - num_times is not numeric or it's a floating-point number with decimals, e.g, 3.2 (3.0 is OK).
+ * 3. an error if val1 is a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 4. otherwise, a new list.
+ *
+ * </pre>
+ */
 public class ArrayReplaceDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     private IAType inputListType;

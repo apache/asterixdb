@@ -39,7 +39,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 /**
  * <pre>
- * array_append(list, val1, val2, ...) returns a new open list with all the values appended to the input list items.
+ * array_append(list, val1, val2, ...) returns a new list with all the values appended to the input list items.
  * Values can be null (i.e., one can append nulls)
  *
  * It throws an error at compile time if the number of arguments < 2
@@ -47,7 +47,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  * It returns in order:
  * 1. missing, if any argument is missing.
  * 2. null, if the list arg is null or it's not a list.
- * 3. otherwise, a new open list.
+ * 3. otherwise, a new list.
  *
  * </pre>
  */

@@ -49,7 +49,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 
 /**
  * <pre>
- * array_union(list1, list2, ...) returns a new open list with the set union of the input lists (no duplicates).
+ * array_union(list1, list2, ...) returns a new list with the set union of the input lists (no duplicates).
  * Items of the lists can be null or missing (both are added as a null value).
  * array_union([null, 2], [missing, 3, null]) will result in [null, 2, null, 3] where one null is for the missing item
  * and the second null for the null item.
@@ -60,8 +60,8 @@ import org.apache.hyracks.data.std.api.IPointable;
  * 1. missing, if any argument is missing.
  * 2. an error if the input lists are not of the same type (one is an ordered list while the other is unordered).
  * 3. null, if any input list is null or is not a list.
- * 4. an error if any list item is of a list/object type (i.e. derived type) since deep equality is not yet supported.
- * 5. otherwise, a new open list.
+ * 4. an error if any list item is a list/object type (i.e. derived type) since deep equality is not yet supported.
+ * 5. otherwise, a new list.
  *
  * </pre>
  */
