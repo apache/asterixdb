@@ -93,7 +93,7 @@ it processes does not satisfy the type requirement.
 Since function `abs` can only process numeric input values,
 we will get a type error as follows:
 
-    Error: Type mismatch: function abs expects its 1st input parameter to be type tinyint, smallint, integer, bigint, float or double, but the actual input type is string
+    Error: Type mismatch: function abs expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string
 
 
 ## <a id="Resource_errors">Resource Errors</a>
