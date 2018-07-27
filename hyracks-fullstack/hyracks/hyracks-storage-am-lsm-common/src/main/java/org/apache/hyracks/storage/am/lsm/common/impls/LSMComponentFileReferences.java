@@ -53,4 +53,10 @@ public final class LSMComponentFileReferences {
     public FileReference[] getFileReferences() {
         return new FileReference[] { insertIndexFileReference, deleteIndexFileReference, bloomFilterFileReference };
     }
+
+    @Override
+    public String toString() {
+        return "{ \"insert\" : \"" + insertIndexFileReference + "\", \"delete\" : \"" + deleteIndexFileReference
+                + "\", \"bloom\" : \"" + bloomFilterFileReference + "\"}";
+    }
 }

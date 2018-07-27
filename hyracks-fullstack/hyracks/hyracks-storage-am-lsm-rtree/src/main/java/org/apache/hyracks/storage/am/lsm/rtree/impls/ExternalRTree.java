@@ -559,8 +559,8 @@ public class ExternalRTree extends LSMRTree implements ITwoPCIndex {
         List<ILSMComponent> mergingComponents = ctx.getComponentHolder();
         LSMRTreeSortedCursor cursor = new LSMRTreeSortedCursor(rctx, linearizer, buddyBTreeFields);
         LSMComponentFileReferences relMergeFileRefs =
-                getMergeFileReferences((ILSMDiskComponent) mergingComponents.get(0),
-                        (ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1));
+                getMergeFileReferences((ILSMDiskComponent) mergingComponents.get(mergingComponents.size() - 1),
+                        (ILSMDiskComponent) mergingComponents.get(0));
         ILSMIndexAccessor accessor = new LSMRTreeAccessor(getHarness(), rctx, buddyBTreeFields);
         // create the merge operation.
         LSMRTreeMergeOperation mergeOp =

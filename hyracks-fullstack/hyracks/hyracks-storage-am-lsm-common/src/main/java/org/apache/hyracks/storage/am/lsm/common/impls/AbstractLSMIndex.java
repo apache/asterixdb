@@ -400,8 +400,8 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         mergeCtx.getComponentHolder().addAll(mergingComponents);
         propagateMap(ctx, mergeCtx);
         mergingComponents.stream().forEach(mergeCtx.getComponentsToBeMerged()::add);
-        ILSMDiskComponent firstComponent = mergingComponents.get(0);
-        ILSMDiskComponent lastComponent = mergingComponents.get(mergingComponents.size() - 1);
+        ILSMDiskComponent lastComponent = mergingComponents.get(0);
+        ILSMDiskComponent firstComponent = mergingComponents.get(mergingComponents.size() - 1);
         LSMComponentFileReferences mergeFileRefs = getMergeFileReferences(firstComponent, lastComponent);
         ILSMIOOperation mergeOp =
                 TracedIOOperation.wrap(createMergeOperation(mergeCtx, mergeFileRefs, ioOpCallback), tracer);

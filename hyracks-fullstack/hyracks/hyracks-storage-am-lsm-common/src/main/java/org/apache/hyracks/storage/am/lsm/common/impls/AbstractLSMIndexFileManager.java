@@ -208,9 +208,14 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             throws HyracksDataException {
         String[] firstTimestampRange = firstFileName.split(DELIMITER);
         String[] lastTimestampRange = lastFileName.split(DELIMITER);
+        String start = firstTimestampRange[0];
+        String end = lastTimestampRange[1];
+        if (end.compareTo(start) <= 0) {
+            throw new IllegalArgumentException(
+                    "A Merge file must have end greater than start. Found end: " + end + " and start: " + start);
+        }
         // Get the range of timestamps by taking the earliest and the latest timestamps
-        return new LSMComponentFileReferences(
-                baseDir.getChild(firstTimestampRange[0] + DELIMITER + lastTimestampRange[1]), null, null);
+        return new LSMComponentFileReferences(baseDir.getChild(start + DELIMITER + end), null, null);
     }
 
     @Override
@@ -326,6 +331,12 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
                 return startCmp;
             }
             return b.interval[1].compareTo(interval[1]);
+        }
+
+        @Override
+        public String toString() {
+            return "{\"type\" : \"" + (interval[0].equals(interval[1]) ? "flush" : "merge") + "\", \"start\" : \""
+                    + interval[0] + "\", \"end\" : \"" + interval[1] + "\"}";
         }
     }
 

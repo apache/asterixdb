@@ -188,8 +188,8 @@ public class ExternalBTree extends LSMBTree implements ITwoPCIndex {
             }
         }
         LSMBTreeRangeSearchCursor cursor = new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples);
-        BTree firstBTree = ((LSMBTreeDiskComponent) mergingComponents.get(0)).getIndex();
-        BTree lastBTree = ((LSMBTreeDiskComponent) mergingComponents.get(mergingComponents.size() - 1)).getIndex();
+        BTree lastBTree = ((LSMBTreeDiskComponent) mergingComponents.get(0)).getIndex();
+        BTree firstBTree = ((LSMBTreeDiskComponent) mergingComponents.get(mergingComponents.size() - 1)).getIndex();
         FileReference firstFile = firstBTree.getFileReference();
         FileReference lastFile = lastBTree.getFileReference();
         LSMComponentFileReferences relMergeFileRefs =
