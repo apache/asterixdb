@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
-import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
+import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.IWorkspaceFileFactory;
@@ -43,7 +43,7 @@ public interface IHyracksTaskContext
 
     ExecutorService getExecutorService();
 
-    IDatasetPartitionManager getDatasetPartitionManager();
+    IResultPartitionManager getResultPartitionManager();
 
     void sendApplicationMessageToCC(Serializable message, DeploymentId deploymentId) throws Exception;
 

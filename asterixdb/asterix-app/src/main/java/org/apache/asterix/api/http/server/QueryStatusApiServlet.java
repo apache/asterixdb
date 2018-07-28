@@ -28,8 +28,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.hyracks.api.dataset.DatasetJobRecord;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.api.result.ResultJobRecord;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -55,10 +55,9 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
             return;
         }
 
-        IHyracksDataset hds = getHyracksDataset();
-        ResultReader resultReader = new ResultReader(hds, handle.getJobId(), handle.getResultSetId());
+        ResultReader resultReader = new ResultReader(getResultSet(), handle.getJobId(), handle.getResultSetId());
 
-        final DatasetJobRecord.Status resultReaderStatus = resultReader.getStatus();
+        final ResultJobRecord.Status resultReaderStatus = resultReader.getStatus();
         if (resultReaderStatus == null) {
             LOGGER.log(Level.INFO, "No results for: \"" + strHandle + "\"");
             response.setStatus(HttpResponseStatus.NOT_FOUND);
@@ -96,7 +95,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
     }
 
-    ResultStatus resultStatus(DatasetJobRecord.Status status) {
+    ResultStatus resultStatus(ResultJobRecord.Status status) {
         switch (status.getState()) {
             case IDLE:
             case RUNNING:
@@ -110,7 +109,7 @@ public class QueryStatusApiServlet extends AbstractQueryApiServlet {
         }
     }
 
-    Exception extractException(DatasetJobRecord.Status status) {
+    Exception extractException(ResultJobRecord.Status status) {
         switch (status.getState()) {
             case FAILED:
                 List<Exception> exceptions = status.getExceptions();

@@ -26,8 +26,8 @@ import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.SessionOutput;
-import org.apache.hyracks.api.dataset.DatasetJobRecord;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
+import org.apache.hyracks.api.result.ResultJobRecord;
+import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.api.IServletRequest;
@@ -59,11 +59,11 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             return;
         }
 
-        IHyracksDataset hds = getHyracksDataset();
-        ResultReader resultReader = new ResultReader(hds, handle.getJobId(), handle.getResultSetId());
+        IResultSet resultSet = getResultSet();
+        ResultReader resultReader = new ResultReader(resultSet, handle.getJobId(), handle.getResultSetId());
 
         try {
-            DatasetJobRecord.Status status = resultReader.getStatus();
+            ResultJobRecord.Status status = resultReader.getStatus();
 
             final HttpResponseStatus httpStatus;
             if (status == null) {

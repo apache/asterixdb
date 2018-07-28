@@ -19,19 +19,16 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
-import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_DATASET_ATTR;
 
 import java.io.PrintWriter;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
-import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.logging.log4j.Level;
@@ -105,29 +102,14 @@ public class AbstractQueryApiServlet extends AbstractServlet {
         this.appCtx = appCtx;
     }
 
-    protected IHyracksDataset getHyracksDataset() throws Exception { // NOSONAR
+    protected IResultSet getResultSet() throws Exception { // NOSONAR
         try {
-            return doGetHyracksDataset();
+            return ServletUtil.getResultSet(getHyracksClientConnection(), appCtx, ctx);
         } catch (IPCException e) {
             LOGGER.log(Level.WARN, "Failed getting hyracks dataset connection. Resetting hyracks connection.", e);
             ctx.put(HYRACKS_CONNECTION_ATTR, appCtx.getHcc());
-            return doGetHyracksDataset();
+            return ServletUtil.getResultSet(getHyracksClientConnection(), appCtx, ctx);
         }
-    }
-
-    protected IHyracksDataset doGetHyracksDataset() throws Exception {
-        IHyracksDataset hds = (IHyracksDataset) ctx.get(HYRACKS_DATASET_ATTR);
-        if (hds == null) {
-            synchronized (ctx) {
-                hds = (IHyracksDataset) ctx.get(HYRACKS_DATASET_ATTR);
-                if (hds == null) {
-                    hds = new HyracksDataset(getHyracksClientConnection(),
-                            appCtx.getCompilerProperties().getFrameSize(), ResultReader.NUM_READERS);
-                    ctx.put(HYRACKS_DATASET_ATTR, hds);
-                }
-            }
-        }
-        return hds;
     }
 
     protected IHyracksClientConnection getHyracksClientConnection() throws Exception { // NOSONAR

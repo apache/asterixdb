@@ -49,7 +49,7 @@ public interface IHyracksClientInterface {
 
     public void undeployJobSpec(DeployedJobSpecId deployedJobSpecId) throws Exception;
 
-    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
+    public NetworkAddress getResultDirectoryAddress() throws Exception;
 
     public void waitForCompletion(JobId jobId) throws Exception;
 

@@ -20,12 +20,12 @@ package org.apache.hyracks.control.cc.work;
 
 import java.util.Arrays;
 
-import org.apache.hyracks.api.dataset.DatasetDirectoryRecord;
-import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.result.ResultDirectoryRecord;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.dataset.IDatasetDirectoryService;
+import org.apache.hyracks.control.cc.result.IResultDirectoryService;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 
@@ -36,12 +36,12 @@ public class GetResultPartitionLocationsWork extends SynchronizableWork {
 
     private final ResultSetId rsId;
 
-    private final DatasetDirectoryRecord[] knownRecords;
+    private final ResultDirectoryRecord[] knownRecords;
 
-    private final IResultCallback<DatasetDirectoryRecord[]> callback;
+    private final IResultCallback<ResultDirectoryRecord[]> callback;
 
     public GetResultPartitionLocationsWork(ClusterControllerService ccs, JobId jobId, ResultSetId rsId,
-            DatasetDirectoryRecord[] knownRecords, IResultCallback<DatasetDirectoryRecord[]> callback) {
+            ResultDirectoryRecord[] knownRecords, IResultCallback<ResultDirectoryRecord[]> callback) {
         this.ccs = ccs;
         this.jobId = jobId;
         this.rsId = rsId;
@@ -51,7 +51,7 @@ public class GetResultPartitionLocationsWork extends SynchronizableWork {
 
     @Override
     public void doRun() {
-        final IDatasetDirectoryService dds = ccs.getDatasetDirectoryService();
+        final IResultDirectoryService dds = ccs.getResultDirectoryService();
         ccs.getExecutor().execute(new Runnable() {
             @Override
             public void run() {

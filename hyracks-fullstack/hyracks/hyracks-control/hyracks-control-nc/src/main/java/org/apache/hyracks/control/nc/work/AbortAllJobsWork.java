@@ -23,9 +23,9 @@ import java.util.Collection;
 import java.util.Deque;
 
 import org.apache.hyracks.api.control.CcId;
-import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -48,9 +48,9 @@ public class AbortAllJobsWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         LOGGER.info("Aborting all tasks for controller {}", ccId);
-        IDatasetPartitionManager dpm = ncs.getDatasetPartitionManager();
-        if (dpm == null) {
-            LOGGER.log(Level.WARN, "DatasetPartitionManager is null on " + ncs.getId());
+        IResultPartitionManager resultPartitionManager = ncs.getResultPartitionManager();
+        if (resultPartitionManager == null) {
+            LOGGER.log(Level.WARN, "ResultPartitionManager is null on " + ncs.getId());
         }
         Deque<Task> abortedTasks = new ArrayDeque<>();
         Collection<Joblet> joblets = ncs.getJobletMap().values();
@@ -61,9 +61,9 @@ public class AbortAllJobsWork extends SynchronizableWork {
                 abortedTasks.add(task);
             });
             final JobId jobId = joblet.getJobId();
-            if (dpm != null) {
-                dpm.abortReader(jobId);
-                dpm.sweep(jobId);
+            if (resultPartitionManager != null) {
+                resultPartitionManager.abortReader(jobId);
+                resultPartitionManager.sweep(jobId);
             }
             ncs.getWorkQueue().schedule(new CleanupJobletWork(ncs, jobId, JobStatus.FAILURE));
         });

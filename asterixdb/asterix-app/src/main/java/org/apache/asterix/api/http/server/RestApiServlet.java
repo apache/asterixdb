@@ -19,13 +19,11 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
-import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_DATASET_ATTR;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.translator.QueryTranslator;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -48,8 +46,7 @@ import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
-import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
@@ -192,24 +189,14 @@ public abstract class RestApiServlet extends AbstractServlet {
         try {
             response.setStatus(HttpResponseStatus.OK);
             IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
-            IHyracksDataset hds = (IHyracksDataset) ctx.get(HYRACKS_DATASET_ATTR);
-            if (hds == null) {
-                synchronized (ctx) {
-                    hds = (IHyracksDataset) ctx.get(HYRACKS_DATASET_ATTR);
-                    if (hds == null) {
-                        hds = new HyracksDataset(hcc, appCtx.getCompilerProperties().getFrameSize(),
-                                ResultReader.NUM_READERS);
-                        ctx.put(HYRACKS_DATASET_ATTR, hds);
-                    }
-                }
-            }
             IParser parser = parserFactory.createParser(query);
             List<Statement> aqlStatements = parser.parse();
             validate(aqlStatements);
             MetadataManager.INSTANCE.init();
             IStatementExecutor translator = statementExecutorFactory.create(appCtx, aqlStatements, sessionOutput,
                     compilationProvider, componentProvider);
-            final IRequestParameters requestParameters = new RequestParameters(hds,
+            final IResultSet resultSet = ServletUtil.getResultSet(hcc, appCtx, ctx);
+            final IRequestParameters requestParameters = new RequestParameters(resultSet,
                     new ResultProperties(resultDelivery), new IStatementExecutor.Stats(), null, null, null, null, true);
             translator.compileAndExecute(hcc, null, requestParameters);
         } catch (AsterixException | TokenMgrError | org.apache.asterix.aqlplus.parser.TokenMgrError pe) {

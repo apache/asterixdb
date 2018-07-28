@@ -33,15 +33,15 @@ import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.ResultProperties;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class RequestParameters implements IRequestParameters {
 
-    private final IHyracksDataset hdc;
+    private final IResultSet resultSet;
     private final ResultProperties resultProperties;
     private final Stats stats;
     private final Map<String, String> optionalParameters;
@@ -50,10 +50,10 @@ public class RequestParameters implements IRequestParameters {
     private final Map<String, IAObject> statementParameters;
     private final boolean multiStatement;
 
-    public RequestParameters(IHyracksDataset hdc, ResultProperties resultProperties, Stats stats,
+    public RequestParameters(IResultSet resultSet, ResultProperties resultProperties, Stats stats,
             IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
             Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement) {
-        this.hdc = hdc;
+        this.resultSet = resultSet;
         this.resultProperties = resultProperties;
         this.stats = stats;
         this.outMetadata = outMetadata;
@@ -64,8 +64,8 @@ public class RequestParameters implements IRequestParameters {
     }
 
     @Override
-    public IHyracksDataset getHyracksDataset() {
-        return hdc;
+    public IResultSet getResultSet() {
+        return resultSet;
     }
 
     @Override

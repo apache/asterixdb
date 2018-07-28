@@ -19,7 +19,6 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
-import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_DATASET_ATTR;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -33,7 +32,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.imageio.ImageIO;
 
-import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -54,8 +52,7 @@ import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
-import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
@@ -137,17 +134,7 @@ public class ApiServlet extends AbstractServlet {
         }
         try {
             IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
-            IHyracksDataset hds = (IHyracksDataset) ctx.get(HYRACKS_DATASET_ATTR);
-            if (hds == null) {
-                synchronized (ctx) {
-                    hds = (IHyracksDataset) ctx.get(HYRACKS_DATASET_ATTR);
-                    if (hds == null) {
-                        hds = new HyracksDataset(hcc, appCtx.getCompilerProperties().getFrameSize(),
-                                ResultReader.NUM_READERS);
-                        ctx.put(HYRACKS_DATASET_ATTR, hds);
-                    }
-                }
-            }
+            IResultSet resultSet = ServletUtil.getResultSet(hcc, appCtx, ctx);
             IParser parser = parserFactory.createParser(query);
             List<Statement> aqlStatements = parser.parse();
             SessionConfig sessionConfig = new SessionConfig(format, true, isSet(executeQuery), true, planFormat);
@@ -163,7 +150,7 @@ public class ApiServlet extends AbstractServlet {
             double duration;
             long startTime = System.currentTimeMillis();
             final IRequestParameters requestParameters =
-                    new RequestParameters(hds, new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
+                    new RequestParameters(resultSet, new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE),
                             new IStatementExecutor.Stats(), null, null, null, null, true);
             translator.compileAndExecute(hcc, null, requestParameters);
             long endTime = System.currentTimeMillis();

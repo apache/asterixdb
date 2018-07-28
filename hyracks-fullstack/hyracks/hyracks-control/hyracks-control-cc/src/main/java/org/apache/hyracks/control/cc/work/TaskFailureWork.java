@@ -48,7 +48,7 @@ public class TaskFailureWork extends AbstractTaskLifecycleWork {
         if (run == null) {
             return;
         }
-        ccs.getDatasetDirectoryService().reportJobFailure(jobId, exceptions);
+        ccs.getResultDirectoryService().reportJobFailure(jobId, exceptions);
         run.getExecutor().notifyTaskFailure(ta, exceptions);
     }
 

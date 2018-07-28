@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
-import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -52,9 +52,9 @@ public class AbortTasksWork extends AbstractWork {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Aborting Tasks: " + jobId + ":" + tasks);
         }
-        IDatasetPartitionManager dpm = ncs.getDatasetPartitionManager();
-        if (dpm != null) {
-            ncs.getDatasetPartitionManager().abortReader(jobId);
+        IResultPartitionManager resultPartitionManager = ncs.getResultPartitionManager();
+        if (resultPartitionManager != null) {
+            ncs.getResultPartitionManager().abortReader(jobId);
         }
         Joblet ji = ncs.getJobletMap().get(jobId);
         if (ji != null) {

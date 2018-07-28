@@ -46,7 +46,6 @@ import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.control.CcId;
-import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -57,6 +56,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobParameterByteStore;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
+import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.InvokeUtil;
@@ -74,15 +74,15 @@ import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.work.FutureValue;
 import org.apache.hyracks.control.common.work.WorkQueue;
 import org.apache.hyracks.control.nc.application.NCServiceContext;
-import org.apache.hyracks.control.nc.dataset.DatasetPartitionManager;
 import org.apache.hyracks.control.nc.heartbeat.HeartbeatComputeTask;
 import org.apache.hyracks.control.nc.heartbeat.HeartbeatTask;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.control.nc.net.DatasetNetworkManager;
 import org.apache.hyracks.control.nc.net.MessagingNetworkManager;
 import org.apache.hyracks.control.nc.net.NetworkManager;
+import org.apache.hyracks.control.nc.net.ResultNetworkManager;
 import org.apache.hyracks.control.nc.partitions.PartitionManager;
 import org.apache.hyracks.control.nc.resources.memory.MemoryManager;
+import org.apache.hyracks.control.nc.result.ResultPartitionManager;
 import org.apache.hyracks.control.nc.work.AbortAllJobsWork;
 import org.apache.hyracks.control.nc.work.BuildJobProfilesWork;
 import org.apache.hyracks.ipc.api.IIPCEventListener;
@@ -118,9 +118,9 @@ public class NodeControllerService implements IControllerService {
 
     private NetworkManager netManager;
 
-    private IDatasetPartitionManager datasetPartitionManager;
+    private IResultPartitionManager resultPartitionManager;
 
-    private DatasetNetworkManager datasetNetworkManager;
+    private ResultNetworkManager resultNetworkManager;
 
     private final WorkQueue workQueue;
 
@@ -262,10 +262,10 @@ public class NodeControllerService implements IControllerService {
     }
 
     private void init() {
-        datasetPartitionManager = new DatasetPartitionManager(this, executor, ncConfig.getResultManagerMemory(),
+        resultPartitionManager = new ResultPartitionManager(this, executor, ncConfig.getResultManagerMemory(),
                 ncConfig.getResultTTL(), ncConfig.getResultSweepThreshold());
-        datasetNetworkManager = new DatasetNetworkManager(ncConfig.getResultListenAddress(),
-                ncConfig.getResultListenPort(), datasetPartitionManager, ncConfig.getNetThreadCount(),
+        resultNetworkManager = new ResultNetworkManager(ncConfig.getResultListenAddress(),
+                ncConfig.getResultListenPort(), resultPartitionManager, ncConfig.getNetThreadCount(),
                 ncConfig.getNetBufferCount(), ncConfig.getResultPublicAddress(), ncConfig.getResultPublicPort(),
                 FullFrameChannelInterfaceFactory.INSTANCE);
         if (ncConfig.getMessagingListenAddress() != null && serviceCtx.getMessagingChannelInterfaceFactory() != null) {
@@ -289,7 +289,7 @@ public class NodeControllerService implements IControllerService {
         netManager.start();
         startApplication();
         init();
-        datasetNetworkManager.start();
+        resultNetworkManager.start();
         if (messagingNetManager != null) {
             messagingNetManager.start();
         }
@@ -323,11 +323,11 @@ public class NodeControllerService implements IControllerService {
         }
         HeartbeatSchema hbSchema = new HeartbeatSchema(gcInfos);
 
-        NetworkAddress datasetAddress = datasetNetworkManager.getPublicNetworkAddress();
+        NetworkAddress resultAddress = resultNetworkManager.getPublicNetworkAddress();
         NetworkAddress netAddress = netManager.getPublicNetworkAddress();
         NetworkAddress messagingAddress =
                 messagingNetManager != null ? messagingNetManager.getPublicNetworkAddress() : null;
-        nodeRegistration = new NodeRegistration(ncAddress, id, ncConfig, netAddress, datasetAddress, hbSchema,
+        nodeRegistration = new NodeRegistration(ncAddress, id, ncConfig, netAddress, resultAddress, hbSchema,
                 messagingAddress, application.getCapacity());
 
         ncData = new NodeControllerData(nodeRegistration);
@@ -494,9 +494,9 @@ public class NodeControllerService implements IControllerService {
                 LOGGER.log(Level.ERROR, "Some jobs failed to exit, continuing with abnormal shutdown");
             }
             partitionManager.close();
-            datasetPartitionManager.close();
+            resultPartitionManager.close();
             netManager.stop();
-            datasetNetworkManager.stop();
+            resultNetworkManager.stop();
             if (messagingNetManager != null) {
                 messagingNetManager.stop();
             }
@@ -582,8 +582,8 @@ public class NodeControllerService implements IControllerService {
         return netManager;
     }
 
-    public DatasetNetworkManager getDatasetNetworkManager() {
-        return datasetNetworkManager;
+    public ResultNetworkManager getResultNetworkManager() {
+        return resultNetworkManager;
     }
 
     public PartitionManager getPartitionManager() {
@@ -645,8 +645,8 @@ public class NodeControllerService implements IControllerService {
         getClusterController(ccId).sendApplicationMessageToCC(data, deploymentId, id);
     }
 
-    public IDatasetPartitionManager getDatasetPartitionManager() {
-        return datasetPartitionManager;
+    public IResultPartitionManager getResultPartitionManager() {
+        return resultPartitionManager;
     }
 
     public MessagingNetworkManager getMessagingNetworkManager() {

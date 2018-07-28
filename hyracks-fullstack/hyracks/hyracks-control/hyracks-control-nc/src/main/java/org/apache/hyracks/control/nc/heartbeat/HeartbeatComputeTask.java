@@ -85,11 +85,11 @@ public class HeartbeatComputeTask extends TimerTask {
             hbData.netSignalingBytesRead = netPC.getSignalingBytesRead();
             hbData.netSignalingBytesWritten = netPC.getSignalingBytesWritten();
 
-            MuxDemuxPerformanceCounters datasetNetPC = ncs.getDatasetNetworkManager().getPerformanceCounters();
-            hbData.datasetNetPayloadBytesRead = datasetNetPC.getPayloadBytesRead();
-            hbData.datasetNetPayloadBytesWritten = datasetNetPC.getPayloadBytesWritten();
-            hbData.datasetNetSignalingBytesRead = datasetNetPC.getSignalingBytesRead();
-            hbData.datasetNetSignalingBytesWritten = datasetNetPC.getSignalingBytesWritten();
+            MuxDemuxPerformanceCounters resultNetPC = ncs.getResultNetworkManager().getPerformanceCounters();
+            hbData.resultNetPayloadBytesRead = resultNetPC.getPayloadBytesRead();
+            hbData.resultNetPayloadBytesWritten = resultNetPC.getPayloadBytesWritten();
+            hbData.resultNetSignalingBytesRead = resultNetPC.getSignalingBytesRead();
+            hbData.resultNetSignalingBytesWritten = resultNetPC.getSignalingBytesWritten();
 
             IPCPerformanceCounters ipcPC = ncs.getIpcSystem().getPerformanceCounters();
             hbData.ipcMessagesSent = ipcPC.getMessageSentCount();

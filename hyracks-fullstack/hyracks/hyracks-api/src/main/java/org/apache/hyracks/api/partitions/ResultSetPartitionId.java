@@ -20,7 +20,7 @@ package org.apache.hyracks.api.partitions;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
 
 public final class ResultSetPartitionId implements Serializable {

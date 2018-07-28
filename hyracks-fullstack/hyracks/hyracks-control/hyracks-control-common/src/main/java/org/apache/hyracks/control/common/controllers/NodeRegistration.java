@@ -43,7 +43,7 @@ public final class NodeRegistration implements Serializable {
 
     private final NetworkAddress dataPort;
 
-    private final NetworkAddress datasetPort;
+    private final NetworkAddress resultPort;
 
     private final String osName;
 
@@ -78,12 +78,12 @@ public final class NodeRegistration implements Serializable {
     private final NodeCapacity capacity;
 
     public NodeRegistration(InetSocketAddress ncAddress, String nodeId, NCConfig ncConfig, NetworkAddress dataPort,
-            NetworkAddress datasetPort, HeartbeatSchema hbSchema, NetworkAddress messagingPort, NodeCapacity capacity) {
+            NetworkAddress resultPort, HeartbeatSchema hbSchema, NetworkAddress messagingPort, NodeCapacity capacity) {
         this.ncAddress = ncAddress;
         this.nodeId = nodeId;
         this.ncConfig = ncConfig;
         this.dataPort = dataPort;
-        this.datasetPort = datasetPort;
+        this.resultPort = resultPort;
         this.hbSchema = hbSchema;
         this.messagingPort = messagingPort;
         this.capacity = capacity;
@@ -122,8 +122,8 @@ public final class NodeRegistration implements Serializable {
         return dataPort;
     }
 
-    public NetworkAddress getDatasetPort() {
-        return datasetPort;
+    public NetworkAddress getResultPort() {
+        return resultPort;
     }
 
     public String getOSName() {

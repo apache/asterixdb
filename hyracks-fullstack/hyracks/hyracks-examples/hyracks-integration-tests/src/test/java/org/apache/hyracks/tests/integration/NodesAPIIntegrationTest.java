@@ -45,8 +45,8 @@ public class NodesAPIIntegrationTest extends AbstractIntegrationTest {
             "nonheap-committed-sizes", "nonheap-max-sizes", "application-memory-budget", "application-cpu-core-budget",
             "thread-counts", "peak-thread-counts", "system-load-averages", "gc-names", "gc-collection-counts",
             "gc-collection-times", "net-payload-bytes-read", "net-payload-bytes-written", "net-signaling-bytes-read",
-            "net-signaling-bytes-written", "dataset-net-payload-bytes-read", "dataset-net-payload-bytes-written",
-            "dataset-net-signaling-bytes-read", "dataset-net-signaling-bytes-written", "ipc-messages-sent",
+            "net-signaling-bytes-written", "result-net-payload-bytes-read", "result-net-payload-bytes-written",
+            "result-net-signaling-bytes-read", "result-net-signaling-bytes-written", "ipc-messages-sent",
             "ipc-message-bytes-sent", "ipc-messages-received", "ipc-message-bytes-received", "disk-reads",
             "disk-writes", "config" };
 

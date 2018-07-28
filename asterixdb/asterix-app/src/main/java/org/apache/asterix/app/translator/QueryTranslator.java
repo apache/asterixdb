@@ -186,8 +186,6 @@ import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
-import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileSplit;
@@ -196,6 +194,8 @@ import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
@@ -281,7 +281,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String threadName = Thread.currentThread().getName();
         Thread.currentThread().setName(QueryTranslator.class.getSimpleName());
         Map<String, String> config = new HashMap<>();
-        final IHyracksDataset hdc = requestParameters.getHyracksDataset();
+        final IResultSet resultSet = requestParameters.getResultSet();
         final ResultDelivery resultDelivery = requestParameters.getResultProperties().getDelivery();
         final long maxResultReads = requestParameters.getResultProperties().getMaxReads();
         final Stats stats = requestParameters.getStats();
@@ -355,7 +355,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                     || resultDelivery == ResultDelivery.DEFERRED);
                             metadataProvider.setMaxResultReads(maxResultReads);
                         }
-                        handleInsertUpsertStatement(metadataProvider, stmt, hcc, hdc, resultDelivery, outMetadata,
+                        handleInsertUpsertStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery, outMetadata,
                                 stats, false, clientContextId, stmtParams, stmtRewriter);
                         break;
                     case DELETE:
@@ -390,7 +390,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         metadataProvider.setResultAsyncMode(
                                 resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED);
                         metadataProvider.setMaxResultReads(maxResultReads);
-                        handleQuery(metadataProvider, (Query) stmt, hcc, hdc, resultDelivery, outMetadata, stats,
+                        handleQuery(metadataProvider, (Query) stmt, hcc, resultSet, resultDelivery, outMetadata, stats,
                                 clientContextId, ctx, stmtParams, stmtRewriter);
                         break;
                     case COMPACT:
@@ -1867,7 +1867,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public JobSpecification handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, IHyracksDataset hdc, ResultDelivery resultDelivery,
+            IHyracksClientConnection hcc, IResultSet resultSet, ResultDelivery resultDelivery,
             ResultMetadata outMetadata, Stats stats, boolean compileOnly, String clientContextId,
             Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter) throws Exception {
         InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
@@ -1912,7 +1912,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
 
         if (stmtInsertUpsert.getReturnExpression() != null) {
-            deliverResult(hcc, hdc, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
+            deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
                     clientContextId, NoOpStatementExecutorContext.INSTANCE);
         } else {
             locker.lock();
@@ -2465,7 +2465,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleQuery(MetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,
-            IHyracksDataset hdc, ResultDelivery resultDelivery, ResultMetadata outMetadata, Stats stats,
+            IResultSet resultSet, ResultDelivery resultDelivery, ResultMetadata outMetadata, Stats stats,
             String clientContextId, IStatementExecutorContext ctx, Map<String, IAObject> stmtParams,
             IStatementRewriter stmtRewriter) throws Exception {
         final IMetadataLocker locker = new IMetadataLocker() {
@@ -2499,11 +2499,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw e;
             }
         };
-        deliverResult(hcc, hdc, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats, clientContextId,
-                ctx);
+        deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
+                clientContextId, ctx);
     }
 
-    private void deliverResult(IHyracksClientConnection hcc, IHyracksDataset hdc, IStatementCompiler compiler,
+    private void deliverResult(IHyracksClientConnection hcc, IResultSet resultSet, IStatementCompiler compiler,
             MetadataProvider metadataProvider, IMetadataLocker locker, ResultDelivery resultDelivery,
             ResultMetadata outMetadata, Stats stats, String clientContextId, IStatementExecutorContext ctx)
             throws Exception {
@@ -2521,7 +2521,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 break;
             case IMMEDIATE:
                 createAndRunJob(hcc, jobFlags, null, compiler, locker, resultDelivery, id -> {
-                    final ResultReader resultReader = new ResultReader(hdc, id, resultSetId);
+                    final ResultReader resultReader = new ResultReader(resultSet, id, resultSetId);
                     updateJobStats(id, stats);
                     // stop buffering and allow for streaming result delivery
                     sessionOutput.release();

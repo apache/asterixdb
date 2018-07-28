@@ -29,8 +29,6 @@ import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.comm.VSizeFrame;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
-import org.apache.hyracks.api.dataset.IHyracksDatasetReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobFlag;
@@ -38,7 +36,9 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
-import org.apache.hyracks.client.dataset.HyracksDataset;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.api.result.IResultSetReader;
+import org.apache.hyracks.client.result.ResultSet;
 import org.apache.hyracks.control.cc.BaseCCApplication;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.application.CCServiceContext;
@@ -160,8 +160,8 @@ public abstract class AbstractMultiNCIntegrationTest {
         IFrameTupleAccessor frameTupleAccessor = new ResultFrameTupleAccessor();
 
         if (!spec.getResultSetIds().isEmpty()) {
-            IHyracksDataset hyracksDataset = new HyracksDataset(hcc, spec.getFrameSize(), nReaders);
-            IHyracksDatasetReader reader = hyracksDataset.createReader(jobId, spec.getResultSetIds().get(0));
+            IResultSet resultSet = new ResultSet(hcc, spec.getFrameSize(), nReaders);
+            IResultSetReader reader = resultSet.createReader(jobId, spec.getResultSetIds().get(0));
 
             ObjectMapper om = new ObjectMapper();
             ArrayNode resultRecords = om.createArrayNode();

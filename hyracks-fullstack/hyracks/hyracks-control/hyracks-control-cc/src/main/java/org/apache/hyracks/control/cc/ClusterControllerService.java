@@ -55,10 +55,10 @@ import org.apache.hyracks.api.topology.TopologyDefinitionParser;
 import org.apache.hyracks.control.cc.application.CCServiceContext;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.cc.cluster.NodeManager;
-import org.apache.hyracks.control.cc.dataset.DatasetDirectoryService;
-import org.apache.hyracks.control.cc.dataset.IDatasetDirectoryService;
 import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobManager;
+import org.apache.hyracks.control.cc.result.IResultDirectoryService;
+import org.apache.hyracks.control.cc.result.ResultDirectoryService;
 import org.apache.hyracks.control.cc.scheduler.IResourceManager;
 import org.apache.hyracks.control.cc.scheduler.ResourceManager;
 import org.apache.hyracks.control.cc.web.WebServer;
@@ -122,7 +122,7 @@ public class ClusterControllerService implements IControllerService {
 
     private final DeadNodeSweeper sweeper;
 
-    private final IDatasetDirectoryService datasetDirectoryService;
+    private final IResultDirectoryService resultDirectoryService;
 
     private final Map<DeploymentId, DeploymentRun> deploymentRunMap;
 
@@ -171,8 +171,8 @@ public class ClusterControllerService implements IControllerService {
         final ClusterTopology topology = computeClusterTopology(ccConfig);
         ccContext = new ClusterControllerContext(topology);
         sweeper = new DeadNodeSweeper();
-        datasetDirectoryService =
-                new DatasetDirectoryService(ccConfig.getResultTTL(), ccConfig.getResultSweepThreshold());
+        resultDirectoryService =
+                new ResultDirectoryService(ccConfig.getResultTTL(), ccConfig.getResultSweepThreshold());
 
         deploymentRunMap = new HashMap<>();
         stateDumpRunMap = new HashMap<>();
@@ -221,7 +221,7 @@ public class ClusterControllerService implements IControllerService {
         jobLog.open();
         startApplication();
 
-        datasetDirectoryService.init(executor);
+        resultDirectoryService.init(executor);
         workQueue.start();
         connectNCs();
         LOGGER.log(Level.INFO, "Started ClusterControllerService");
@@ -230,7 +230,7 @@ public class ClusterControllerService implements IControllerService {
 
     private void startApplication() throws Exception {
         serviceCtx = new CCServiceContext(this, serverCtx, ccContext, ccConfig.getAppConfig());
-        serviceCtx.addJobLifecycleListener(datasetDirectoryService);
+        serviceCtx.addJobLifecycleListener(resultDirectoryService);
         application.init(serviceCtx);
         executor = MaintainedThreadNameExecutorService.newCachedThreadPool(serviceCtx.getThreadFactory());
         application.start(ccConfig.getAppArgsArray());
@@ -408,7 +408,7 @@ public class ClusterControllerService implements IControllerService {
         return clusterIPC;
     }
 
-    public NetworkAddress getDatasetDirectoryServiceInfo() {
+    public NetworkAddress getResultDirectoryAddress() {
         return new NetworkAddress(ccConfig.getClientPublicAddress(), ccConfig.getClientPublicPort());
     }
 
@@ -461,8 +461,8 @@ public class ClusterControllerService implements IControllerService {
         }
     }
 
-    public IDatasetDirectoryService getDatasetDirectoryService() {
-        return datasetDirectoryService;
+    public IResultDirectoryService getResultDirectoryService() {
+        return resultDirectoryService;
     }
 
     public synchronized void addStateDumpRun(String id, StateDumpRun sdr) {

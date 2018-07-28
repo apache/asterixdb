@@ -141,12 +141,12 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
     JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags) throws Exception;
 
     /**
-     * Gets the IP Address and port for the DatasetDirectoryService wrapped in NetworkAddress
+     * Gets the IP Address and port for the ResultDirectoryService wrapped in NetworkAddress
      *
      * @return {@link NetworkAddress}
      * @throws Exception
      */
-    NetworkAddress getDatasetDirectoryServiceInfo() throws Exception;
+    NetworkAddress getResultDirectoryAddress() throws Exception;
 
     /**
      * Waits until the specified job has completed, either successfully or has

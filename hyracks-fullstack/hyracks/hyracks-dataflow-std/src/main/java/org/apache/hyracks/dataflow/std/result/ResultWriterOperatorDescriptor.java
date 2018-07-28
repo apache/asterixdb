@@ -31,11 +31,11 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.IResultSerializer;
 import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
-import org.apache.hyracks.api.dataset.IDatasetPartitionManager;
-import org.apache.hyracks.api.dataset.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.api.result.IResultPartitionManager;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.dataflow.common.comm.io.FrameOutputStream;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -67,7 +67,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {
-        final IDatasetPartitionManager dpm = ctx.getDatasetPartitionManager();
+        final IResultPartitionManager resultPartitionManager = ctx.getResultPartitionManager();
 
         final IFrame frame = new VSizeFrame(ctx);
 
@@ -82,15 +82,15 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
         final FrameTupleAccessor frameTupleAccessor = new FrameTupleAccessor(outRecordDesc);
 
         return new AbstractUnaryInputSinkOperatorNodePushable() {
-            private IFrameWriter datasetPartitionWriter;
+            private IFrameWriter resultPartitionWriter;
             private boolean failed = false;
 
             @Override
             public void open() throws HyracksDataException {
                 try {
-                    datasetPartitionWriter = dpm.createDatasetPartitionWriter(ctx, rsId, ordered, asyncMode, partition,
-                            nPartitions, maxReads);
-                    datasetPartitionWriter.open();
+                    resultPartitionWriter = resultPartitionManager.createResultPartitionWriter(ctx, rsId, ordered,
+                            asyncMode, partition, nPartitions, maxReads);
+                    resultPartitionWriter.open();
                     resultSerializer.init();
                 } catch (HyracksException e) {
                     throw HyracksDataException.create(e);
@@ -103,7 +103,7 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                 for (int tIndex = 0; tIndex < frameTupleAccessor.getTupleCount(); tIndex++) {
                     resultSerializer.appendTuple(frameTupleAccessor, tIndex);
                     if (!frameOutputStream.appendTuple()) {
-                        frameOutputStream.flush(datasetPartitionWriter);
+                        frameOutputStream.flush(resultPartitionWriter);
 
                         resultSerializer.appendTuple(frameTupleAccessor, tIndex);
                         frameOutputStream.appendTuple();
@@ -114,23 +114,23 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
             @Override
             public void fail() throws HyracksDataException {
                 failed = true;
-                if (datasetPartitionWriter != null) {
-                    datasetPartitionWriter.fail();
+                if (resultPartitionWriter != null) {
+                    resultPartitionWriter.fail();
                 }
             }
 
             @Override
             public void close() throws HyracksDataException {
-                if (datasetPartitionWriter != null) {
+                if (resultPartitionWriter != null) {
                     try {
                         if (!failed && frameOutputStream.getTupleCount() > 0) {
-                            frameOutputStream.flush(datasetPartitionWriter);
+                            frameOutputStream.flush(resultPartitionWriter);
                         }
                     } catch (Exception e) {
-                        datasetPartitionWriter.fail();
+                        resultPartitionWriter.fail();
                         throw e;
                     } finally {
-                        datasetPartitionWriter.close();
+                        resultPartitionWriter.close();
                     }
                 }
             }

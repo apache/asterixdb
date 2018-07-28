@@ -112,9 +112,9 @@ public class HyracksClientInterfaceRemoteProxy implements IHyracksClientInterfac
     }
 
     @Override
-    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
-        HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction gddsf =
-                new HyracksClientInterfaceFunctions.GetDatasetDirectoryServiceInfoFunction();
+    public NetworkAddress getResultDirectoryAddress() throws Exception {
+        HyracksClientInterfaceFunctions.GetResultDirectoryAddressFunction gddsf =
+                new HyracksClientInterfaceFunctions.GetResultDirectoryAddressFunction();
         return (NetworkAddress) rpci.call(ipcHandle, gddsf);
     }
 

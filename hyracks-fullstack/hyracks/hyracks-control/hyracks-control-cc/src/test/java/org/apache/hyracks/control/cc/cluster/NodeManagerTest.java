@@ -172,7 +172,7 @@ public class NodeManagerTest {
         NetworkAddress msgAddr = new NetworkAddress(ipAddr, 1003);
         when(ncState.getCapacity()).thenReturn(new NodeCapacity(NODE_MEMORY_SIZE, NODE_CORES));
         when(ncState.getDataPort()).thenReturn(dataAddr);
-        when(ncState.getDatasetPort()).thenReturn(resultAddr);
+        when(ncState.getResultPort()).thenReturn(resultAddr);
         when(ncState.getMessagingPort()).thenReturn(msgAddr);
         NCConfig ncConfig = new NCConfig(nodeId);
         ncConfig.setDataPublicAddress(ipAddr);

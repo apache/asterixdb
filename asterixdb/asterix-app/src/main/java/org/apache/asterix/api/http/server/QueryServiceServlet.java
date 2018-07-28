@@ -593,8 +593,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         Map<String, IAObject> stmtParams =
                 org.apache.asterix.app.translator.RequestParameters.deserializeParameterValues(statementParameters);
         IRequestParameters requestParameters =
-                new org.apache.asterix.app.translator.RequestParameters(getHyracksDataset(), resultProperties, stats,
-                        null, param.getClientContextID(), optionalParameters, stmtParams, param.isMultiStatement());
+                new org.apache.asterix.app.translator.RequestParameters(getResultSet(), resultProperties, stats, null,
+                        param.getClientContextID(), optionalParameters, stmtParams, param.isMultiStatement());
         translator.compileAndExecute(getHyracksClientConnection(), queryCtx, requestParameters);
         execution.end();
         printExecutionPlans(sessionOutput, translator.getExecutionPlans());

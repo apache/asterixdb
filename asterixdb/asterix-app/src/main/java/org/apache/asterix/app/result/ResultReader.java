@@ -20,24 +20,24 @@ package org.apache.asterix.app.result;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
-import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
-import org.apache.hyracks.api.dataset.IHyracksDataset;
-import org.apache.hyracks.api.dataset.IHyracksDatasetReader;
-import org.apache.hyracks.api.dataset.ResultSetId;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.api.result.ResultJobRecord.Status;
+import org.apache.hyracks.api.result.IResultSetReader;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 
 public class ResultReader {
-    private IHyracksDatasetReader reader;
+    private IResultSetReader reader;
 
     private IFrameTupleAccessor frameTupleAccessor;
 
     // Number of parallel result reader buffers
     public static final int NUM_READERS = 1;
 
-    public ResultReader(IHyracksDataset hdc, JobId jobId, ResultSetId resultSetId) throws HyracksDataException {
-        reader = hdc.createReader(jobId, resultSetId);
+    public ResultReader(IResultSet resultSet, JobId jobId, ResultSetId resultSetId) throws HyracksDataException {
+        reader = resultSet.createReader(jobId, resultSetId);
         frameTupleAccessor = new ResultFrameTupleAccessor();
     }
 

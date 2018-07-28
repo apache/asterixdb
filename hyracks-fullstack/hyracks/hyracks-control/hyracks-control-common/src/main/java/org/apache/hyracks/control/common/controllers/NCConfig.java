@@ -157,13 +157,13 @@ public class NCConfig extends ControllerConfig {
                 case DATA_PUBLIC_PORT:
                     return "Public IP port to announce data listener";
                 case RESULT_LISTEN_ADDRESS:
-                    return "IP Address to bind dataset result distribution listener";
+                    return "IP Address to bind result distribution listener";
                 case RESULT_LISTEN_PORT:
-                    return "IP port to bind dataset result distribution listener";
+                    return "IP port to bind result distribution listener";
                 case RESULT_PUBLIC_ADDRESS:
-                    return "Public IP Address to announce dataset result distribution listener";
+                    return "Public IP Address to announce result distribution listener";
                 case RESULT_PUBLIC_PORT:
-                    return "Public IP port to announce dataset result distribution listener";
+                    return "Public IP port to announce result distribution listener";
                 case MESSAGING_LISTEN_ADDRESS:
                     return "IP Address to bind messaging listener";
                 case MESSAGING_LISTEN_PORT:

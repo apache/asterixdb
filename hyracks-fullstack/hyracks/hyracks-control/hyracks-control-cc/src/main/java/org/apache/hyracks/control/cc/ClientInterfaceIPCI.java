@@ -20,21 +20,21 @@ package org.apache.hyracks.control.cc;
 
 import org.apache.hyracks.api.client.HyracksClientInterfaceFunctions;
 import org.apache.hyracks.api.comm.NetworkAddress;
-import org.apache.hyracks.api.dataset.DatasetJobRecord.Status;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.DeployedJobSpecIdFactory;
 import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.job.JobInfo;
+import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.control.cc.work.CancelJobWork;
 import org.apache.hyracks.control.cc.work.CliDeployBinaryWork;
 import org.apache.hyracks.control.cc.work.CliUnDeployBinaryWork;
 import org.apache.hyracks.control.cc.work.ClusterShutdownWork;
 import org.apache.hyracks.control.cc.work.DeployJobSpecWork;
-import org.apache.hyracks.control.cc.work.GetDatasetDirectoryServiceInfoWork;
 import org.apache.hyracks.control.cc.work.GetJobInfoWork;
 import org.apache.hyracks.control.cc.work.GetJobStatusWork;
 import org.apache.hyracks.control.cc.work.GetNodeControllersInfoWork;
 import org.apache.hyracks.control.cc.work.GetNodeDetailsJSONWork;
+import org.apache.hyracks.control.cc.work.GetResultDirectoryAddressWork;
 import org.apache.hyracks.control.cc.work.GetResultPartitionLocationsWork;
 import org.apache.hyracks.control.cc.work.GetResultStatusWork;
 import org.apache.hyracks.control.cc.work.GetThreadDumpWork;
@@ -121,19 +121,19 @@ class ClientInterfaceIPCI implements IIPCI {
                 ccs.getWorkQueue().schedule(new JobStartWork(ccs, sjf.getDeploymentId(), acggfBytes, sjf.getJobFlags(),
                         jobIdFactory, sjf.getJobParameters(), new IPCResponder<>(handle, mid), id));
                 break;
-            case GET_DATASET_DIRECTORY_SERIVICE_INFO:
+            case GET_RESULT_DIRECTORY_ADDRESS:
                 ccs.getWorkQueue().schedule(
-                        new GetDatasetDirectoryServiceInfoWork(ccs, new IPCResponder<NetworkAddress>(handle, mid)));
+                        new GetResultDirectoryAddressWork(ccs, new IPCResponder<NetworkAddress>(handle, mid)));
                 break;
-            case GET_DATASET_RESULT_STATUS:
-                HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction gdrsf =
-                        (HyracksClientInterfaceFunctions.GetDatasetResultStatusFunction) fn;
+            case GET_RESULT_STATUS:
+                HyracksClientInterfaceFunctions.GetResultStatusFunction gdrsf =
+                        (HyracksClientInterfaceFunctions.GetResultStatusFunction) fn;
                 ccs.getWorkQueue().schedule(new GetResultStatusWork(ccs, gdrsf.getJobId(), gdrsf.getResultSetId(),
                         new IPCResponder<Status>(handle, mid)));
                 break;
-            case GET_DATASET_RESULT_LOCATIONS:
-                HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction gdrlf =
-                        (HyracksClientInterfaceFunctions.GetDatasetResultLocationsFunction) fn;
+            case GET_RESULT_LOCATIONS:
+                HyracksClientInterfaceFunctions.GetResultLocationsFunction gdrlf =
+                        (HyracksClientInterfaceFunctions.GetResultLocationsFunction) fn;
                 ccs.getWorkQueue().schedule(new GetResultPartitionLocationsWork(ccs, gdrlf.getJobId(),
                         gdrlf.getResultSetId(), gdrlf.getKnownRecords(), new IPCResponder<>(handle, mid)));
                 break;

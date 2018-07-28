@@ -171,8 +171,8 @@ public final class HyracksConnection implements IHyracksClientConnection {
     }
 
     @Override
-    public NetworkAddress getDatasetDirectoryServiceInfo() throws Exception {
-        return hci.getDatasetDirectoryServiceInfo();
+    public NetworkAddress getResultDirectoryAddress() throws Exception {
+        return hci.getResultDirectoryAddress();
     }
 
     @Override
