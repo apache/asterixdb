@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
-import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +30,6 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
@@ -88,7 +86,8 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<>();
 
         // Gather files.
-        cleanupAndGetValidFilesInternal(deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles);
+        cleanupAndGetValidFilesInternal(deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles,
+                btreeFactory.getBufferCache());
         HashSet<String> deletedKeysBTreeFilesSet = new HashSet<>();
         for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
             int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
@@ -96,9 +95,11 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         }
 
         // TODO: do we really need to validate the inverted lists files or is validating the dict. BTrees is enough?
-        validateFiles(deletedKeysBTreeFilesSet, allInvListsFiles, invListFilter, null);
-        validateFiles(deletedKeysBTreeFilesSet, allDictBTreeFiles, dictBTreeFilter, btreeFactory);
-        validateFiles(deletedKeysBTreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null);
+        validateFiles(deletedKeysBTreeFilesSet, allInvListsFiles, invListFilter, null, btreeFactory.getBufferCache());
+        validateFiles(deletedKeysBTreeFilesSet, allDictBTreeFiles, dictBTreeFilter, btreeFactory,
+                btreeFactory.getBufferCache());
+        validateFiles(deletedKeysBTreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null,
+                btreeFactory.getBufferCache());
 
         // Sanity check.
         if (allDictBTreeFiles.size() != allInvListsFiles.size()
@@ -158,9 +159,9 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
                     && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
                     && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0) {
                 // Invalid files are completely contained in last interval.
-                IoUtil.delete(new File(currentDeletedKeysBTree.fullPath));
-                IoUtil.delete(new File(currentDictBTree.fullPath));
-                IoUtil.delete(new File(currentBloomFilter.fullPath));
+                delete(treeFactory.getBufferCache(), currentDeletedKeysBTree.fullPath);
+                delete(treeFactory.getBufferCache(), currentDictBTree.fullPath);
+                delete(treeFactory.getBufferCache(), currentBloomFilter.fullPath);
             } else {
                 // This scenario should not be possible.
                 throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);

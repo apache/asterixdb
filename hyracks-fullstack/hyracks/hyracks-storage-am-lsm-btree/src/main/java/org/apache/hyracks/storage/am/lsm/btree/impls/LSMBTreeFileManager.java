@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
-import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -81,7 +80,8 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         // create transaction filter <to hide transaction files>
         FilenameFilter transactionFilter = getTransactionFileFilter(false);
         // List of valid BTree files.
-        cleanupAndGetValidFilesInternal(getCompoundFilter(transactionFilter, btreeFilter), btreeFactory, allBTreeFiles);
+        cleanupAndGetValidFilesInternal(getCompoundFilter(transactionFilter, btreeFilter), btreeFactory, allBTreeFiles,
+                btreeFactory.getBufferCache());
         HashSet<String> btreeFilesSet = new HashSet<>();
         for (ComparableFileName cmpFileName : allBTreeFiles) {
             int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
@@ -90,7 +90,7 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
 
         if (hasBloomFilter) {
             validateFiles(btreeFilesSet, allBloomFilterFiles, getCompoundFilter(transactionFilter, bloomFilterFilter),
-                    null);
+                    null, btreeFactory.getBufferCache());
             // Sanity check.
             if (allBTreeFiles.size() != allBloomFilterFiles.size()) {
                 throw HyracksDataException.create(ErrorCode.UNEQUAL_NUM_FILTERS_TREES, baseDir);
@@ -148,9 +148,9 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
                     && (!hasBloomFilter || (currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
                             && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0))) {
                 // Invalid files are completely contained in last interval.
-                IoUtil.delete(new File(currentBTree.fullPath));
+                delete(btreeFactory.getBufferCache(), currentBTree.fullPath);
                 if (hasBloomFilter) {
-                    IoUtil.delete(new File(currentBloomFilter.fullPath));
+                    delete(btreeFactory.getBufferCache(), currentBloomFilter.fullPath);
                 }
             } else {
                 // This scenario should not be possible.

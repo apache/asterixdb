@@ -26,6 +26,7 @@ import java.util.concurrent.ThreadFactory;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -88,11 +89,8 @@ public class TestStorageManagerComponentHolder {
 
     public synchronized static IBufferCache getBufferCache(INCServiceContext ctx) {
         if (bufferCache == null) {
-            ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-            IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, pageSize, numPages);
-            IFileMapProvider fileMapProvider = getFileMapProvider();
-            bufferCache = new BufferCache(ctx.getIoManager(), prs, new DelayPageCleanerPolicy(1000),
-                    (IFileMapManager) fileMapProvider, maxOpenFiles, threadFactory);
+            IIOManager ioManager = ctx.getIoManager();
+            return getBufferCache(ioManager);
         }
         return bufferCache;
     }
@@ -144,5 +142,17 @@ public class TestStorageManagerComponentHolder {
             }
         }
         return resourceIdFactory;
+    }
+
+    public static IBufferCache getBufferCache(IIOManager ioManager) {
+        if (bufferCache != null) {
+            return bufferCache;
+        }
+        ICacheMemoryAllocator allocator = new HeapBufferAllocator();
+        IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, pageSize, numPages);
+        IFileMapProvider fileMapProvider = getFileMapProvider();
+        bufferCache = new BufferCache(ioManager, prs, new DelayPageCleanerPolicy(1000),
+                (IFileMapManager) fileMapProvider, maxOpenFiles, threadFactory);
+        return bufferCache;
     }
 }

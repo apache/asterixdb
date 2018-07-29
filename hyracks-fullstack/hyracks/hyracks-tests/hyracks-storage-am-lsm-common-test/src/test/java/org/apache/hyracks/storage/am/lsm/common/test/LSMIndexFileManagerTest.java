@@ -38,13 +38,17 @@ import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.DefaultDeviceResolver;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.component.TestLsmIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class LSMIndexFileManagerTest {
     private static final int DEFAULT_PAGE_SIZE = 256;
@@ -54,6 +58,7 @@ public class LSMIndexFileManagerTest {
     protected final static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("ddMMyy-hhmmssSS");
     protected final static String sep = System.getProperty("file.separator");
     protected IOManager ioManager;
+    protected IBufferCache bufferCache;
     protected String baseDir;
     protected FileReference file;
 
@@ -61,6 +66,7 @@ public class LSMIndexFileManagerTest {
     public void setUp() throws HyracksDataException {
         TestStorageManagerComponentHolder.init(DEFAULT_PAGE_SIZE, DEFAULT_NUM_PAGES, DEFAULT_MAX_OPEN_FILES);
         ioManager = TestStorageManagerComponentHolder.getIOManager();
+        bufferCache = TestStorageManagerComponentHolder.getBufferCache(ioManager);
         baseDir = ioManager.getIODevices().get(DEFAULT_IO_DEVICE_ID).getMount() + sep + "lsm_tree"
                 + simpleDateFormat.format(new Date()) + sep;
         File f = new File(baseDir);
@@ -75,7 +81,9 @@ public class LSMIndexFileManagerTest {
     }
 
     public void sortOrderTest(boolean testFlushFileName) throws InterruptedException, HyracksDataException {
-        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, file);
+        TreeIndexFactory<? extends ITreeIndex> treeIndexFactory = Mockito.mock(TreeIndexFactory.class);
+        Mockito.when(treeIndexFactory.getBufferCache()).thenReturn(bufferCache);
+        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, file, treeIndexFactory);
         LinkedList<String> fileNames = new LinkedList<>();
 
         int numFileNames = 100;
@@ -122,7 +130,9 @@ public class LSMIndexFileManagerTest {
             IoUtil.delete(f);
         }
         FileReference file = ioManager.resolveAbsolutePath(f.getAbsolutePath());
-        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, file);
+        TreeIndexFactory<? extends ITreeIndex> treeIndexFactory = Mockito.mock(TreeIndexFactory.class);
+        Mockito.when(treeIndexFactory.getBufferCache()).thenReturn(bufferCache);
+        ILSMIndexFileManager fileManager = new TestLsmIndexFileManager(ioManager, file, treeIndexFactory);
         fileManager.createDirs();
 
         List<FileReference> flushFiles = new ArrayList<>();

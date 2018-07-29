@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
-import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -91,16 +90,16 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
         FilenameFilter transactionFilefilter = getTransactionFileFilter(false);
         // Gather files.
         cleanupAndGetValidFilesInternal(getCompoundFilter(btreeFilter, transactionFilefilter), btreeFactory,
-                allBTreeFiles);
+                allBTreeFiles, btreeFactory.getBufferCache());
         HashSet<String> btreeFilesSet = new HashSet<>();
         for (ComparableFileName cmpFileName : allBTreeFiles) {
             int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
             btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
         }
         validateFiles(btreeFilesSet, allBuddyBTreeFiles, getCompoundFilter(buddyBtreeFilter, transactionFilefilter),
-                buddyBtreeFactory);
+                buddyBtreeFactory, btreeFactory.getBufferCache());
         validateFiles(btreeFilesSet, allBloomFilterFiles, getCompoundFilter(bloomFilterFilter, transactionFilefilter),
-                null);
+                null, btreeFactory.getBufferCache());
         // Sanity check.
         if (allBTreeFiles.size() != allBuddyBTreeFiles.size() || allBTreeFiles.size() != allBloomFilterFiles.size()) {
             throw HyracksDataException.create(ErrorCode.UNEQUAL_NUM_FILTERS_TREES, baseDir);
@@ -153,9 +152,9 @@ public class LSMBTreeWithBuddyFileManager extends AbstractLSMIndexFileManager {
                     && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
                     && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0) {
                 // Invalid files are completely contained in last interval.
-                IoUtil.delete(new File(currentBTree.fullPath));
-                IoUtil.delete(new File(currentBuddyBTree.fullPath));
-                IoUtil.delete(new File(currentBloomFilter.fullPath));
+                delete(treeFactory.getBufferCache(), currentBTree.fullPath);
+                delete(treeFactory.getBufferCache(), currentBuddyBTree.fullPath);
+                delete(treeFactory.getBufferCache(), currentBloomFilter.fullPath);
             } else {
                 // This scenario should not be possible.
                 throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);
