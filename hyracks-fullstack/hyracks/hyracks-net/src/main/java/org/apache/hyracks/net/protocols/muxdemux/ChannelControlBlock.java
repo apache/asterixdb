@@ -122,7 +122,7 @@ public class ChannelControlBlock implements IChannelControlBlock {
         localCloseAck.set(true);
     }
 
-    synchronized void reportRemoteError(int ecode) {
+    void reportRemoteError(int ecode) {
         ri.flush();
         ri.getFullBufferAcceptor().error(ecode);
         remoteClose.set(true);
