@@ -1182,6 +1182,7 @@ public class TestExecutor {
                 if (testFile.getName().startsWith(DIAGNOSE)) {
                     LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, StandardCharsets.UTF_8));
                 } else {
+                    LOGGER.info("Unexpected output: {}", IOUtils.toString(resultStream, StandardCharsets.UTF_8));
                     Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
                             + ", filectxs.size: " + numResultFiles);
                 }
