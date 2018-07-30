@@ -37,6 +37,7 @@ import org.apache.hyracks.storage.am.lsm.btree.impl.ITestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.NoOpTestCallback;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
+import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -47,7 +48,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
-import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -292,7 +292,7 @@ public class LSMBTreeComponentLifecycleTest {
         ILSMIndexOperationContext opCtx = accessor.getOpContext();
         assertCorrectSearchComponents(opCtx, index, 0);
         // Allow one flush at a time and ensure that inserter didn't succeed
-        for (int i = 0; i < numFlushes - 1; i++) {
+        for (int i = 0; i < numFlushes - index.getNumberOfAllMemoryComponents(); i++) {
             flushSemaphore.release();
             firstUser.step();
             flushRequest.await(2 + i);
@@ -300,21 +300,21 @@ public class LSMBTreeComponentLifecycleTest {
             // also ensure that you get the correct components when searching
             assertCorrectSearchComponents(opCtx, index, i + 1);
         }
-        // Allow last flush to proceed
         flushSemaphore.release();
+        firstUser.step();
         // wait for the insert to complete
         insertRequest.await();
+        // Allow last flush to proceed
+        flushSemaphore.release();
         firstUser.step();
         firstUser.step();
         flushRequest.await();
         firstUser.stop();
         secondUser.stop();
-
         int expectedMemoryComponent = numFlushes % numMemoryComponents;
         Assert.assertEquals(getExpectedMemoryComponentIndex(expectedMemoryComponent),
                 index.getCurrentMemoryComponentIndex());
         Assert.assertEquals(0, index.getDiskComponents().size());
-
         EncapsulatingIoCallback encapsulating = (EncapsulatingIoCallback) index.getIOOperationCallback();
         CountingIoOperationCallback ioCallback = (CountingIoOperationCallback) encapsulating.getEncapsulated();
         // assert equal before, after, finalize were called
