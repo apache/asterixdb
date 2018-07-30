@@ -68,6 +68,8 @@ import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.BaseNCApplication;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.http.server.HttpServer;
+import org.apache.hyracks.http.server.HttpServerConfig;
+import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.util.LoggingConfigUtil;
 import org.apache.logging.log4j.Level;
@@ -160,8 +162,11 @@ public class NCApplication extends BaseNCApplication {
     }
 
     protected void configureServers() throws Exception {
+        final ExternalProperties externalProperties = getApplicationContext().getExternalProperties();
+        final HttpServerConfig config =
+                HttpServerConfigBuilder.custom().setMaxRequestSize(externalProperties.getMaxWebRequestSize()).build();
         HttpServer apiServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
-                getApplicationContext().getExternalProperties().getNcApiPort());
+                externalProperties.getNcApiPort(), config);
         apiServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ncServiceCtx);
         apiServer.addServlet(new StorageApiServlet(apiServer.ctx(), getApplicationContext(), Servlets.STORAGE));
         webManager.add(apiServer);

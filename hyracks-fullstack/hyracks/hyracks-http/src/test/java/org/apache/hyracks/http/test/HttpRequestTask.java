@@ -41,8 +41,8 @@ public class HttpRequestTask implements Callable<Void> {
 
     protected final HttpUriRequest request;
 
-    protected HttpRequestTask() throws URISyntaxException {
-        request = post(null);
+    protected HttpRequestTask(int size) throws URISyntaxException {
+        request = post(null, size);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class HttpRequestTask implements Callable<Void> {
         return builder.build();
     }
 
-    protected HttpUriRequest post(String query) throws URISyntaxException {
+    protected HttpUriRequest post(String query, int size) throws URISyntaxException {
         URI uri = new URI(HttpServerTest.PROTOCOL, null, HttpServerTest.HOST, HttpServerTest.PORT, HttpServerTest.PATH,
                 query, null);
         RequestBuilder builder = RequestBuilder.post(uri);
@@ -102,7 +102,11 @@ public class HttpRequestTask implements Callable<Void> {
         String statement = str.toString();
         builder.setHeader("Content-type", "application/x-www-form-urlencoded");
         builder.addParameter("statement", statement);
-        builder.setEntity(new StringEntity(statement, StandardCharsets.UTF_8));
+        for (int i = 0; i < size; i++) {
+            str.append("This is a string statement that will be ignored");
+            str.append('\n');
+        }
+        builder.setEntity(new StringEntity(str.toString(), StandardCharsets.UTF_8));
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
     }

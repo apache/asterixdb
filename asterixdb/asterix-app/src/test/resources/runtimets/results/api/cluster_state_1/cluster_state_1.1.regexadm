@@ -15,6 +15,7 @@
     "default\.dir" : "target/io/dir/asterixdb",
     "log\.level" : "INFO",
     "max\.wait\.active\.cluster" : 60,
+    "max.web.request.size" : 52428800,
     "messaging\.frame\.count" : 512,
     "messaging\.frame\.size" : 4096,
     "metadata\.callback\.port" : 0,

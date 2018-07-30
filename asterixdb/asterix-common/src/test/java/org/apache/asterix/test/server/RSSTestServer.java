@@ -19,6 +19,7 @@
 package org.apache.asterix.test.server;
 
 import org.apache.hyracks.http.server.HttpServer;
+import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 import org.apache.hyracks.http.server.WebManager;
 
 public class RSSTestServer implements ITestServer {
@@ -27,7 +28,8 @@ public class RSSTestServer implements ITestServer {
 
     public RSSTestServer(int port) {
         webManager = new WebManager();
-        HttpServer rssServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), port);
+        HttpServer rssServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), port,
+                HttpServerConfigBuilder.createDefault());
         rssServer.addServlet(new RSSFeedServlet(null, new String[] { "/" }));
         webManager.add(rssServer);
     }

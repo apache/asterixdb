@@ -25,6 +25,7 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.web.util.IJSONOutputFunction;
 import org.apache.hyracks.control.cc.web.util.JSONOutputRequestHandler;
 import org.apache.hyracks.http.server.HttpServer;
+import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 import org.apache.hyracks.http.server.StaticResourceServlet;
 import org.apache.hyracks.http.server.WebManager;
 
@@ -40,7 +41,8 @@ public class WebServer {
         listeningPort = port;
         ctx = new ConcurrentHashMap<>();
         webMgr = new WebManager();
-        server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), listeningPort);
+        server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), listeningPort,
+                HttpServerConfigBuilder.createDefault());
         addHandlers();
         webMgr.add(server);
     }

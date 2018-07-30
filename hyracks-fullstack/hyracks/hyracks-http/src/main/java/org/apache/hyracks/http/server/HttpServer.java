@@ -57,8 +57,6 @@ public class HttpServer {
     protected static final WriteBufferWaterMark WRITE_BUFFER_WATER_MARK =
             new WriteBufferWaterMark(LOW_WRITE_BUFFER_WATER_MARK, HIGH_WRITE_BUFFER_WATER_MARK);
     protected static final int RECEIVE_BUFFER_SIZE = 4096;
-    protected static final int DEFAULT_NUM_EXECUTOR_THREADS = 16;
-    protected static final int DEFAULT_REQUEST_QUEUE_SIZE = 256;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int FAILED = -1;
     private static final int STOPPED = 0;
@@ -81,37 +79,30 @@ public class HttpServer {
     private volatile Thread recoveryThread;
     private volatile Channel channel;
     private Throwable cause;
+    private HttpServerConfig config;
 
-    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port) {
-        this(bossGroup, workerGroup, port, DEFAULT_NUM_EXECUTOR_THREADS, DEFAULT_REQUEST_QUEUE_SIZE, null);
+    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port, HttpServerConfig config) {
+        this(bossGroup, workerGroup, port, config, null);
     }
 
-    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port,
+    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port, HttpServerConfig config,
             IChannelClosedHandler closeHandler) {
-        this(bossGroup, workerGroup, port, DEFAULT_NUM_EXECUTOR_THREADS, DEFAULT_REQUEST_QUEUE_SIZE, closeHandler);
-    }
-
-    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port, int numExecutorThreads,
-            int requestQueueSize) {
-        this(bossGroup, workerGroup, port, numExecutorThreads, requestQueueSize, null);
-    }
-
-    public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port, int numExecutorThreads,
-            int requestQueueSize, IChannelClosedHandler closeHandler) {
         this.bossGroup = bossGroup;
         this.workerGroup = workerGroup;
         this.port = port;
         this.closedHandler = closeHandler;
+        this.config = config;
         ctx = new ConcurrentHashMap<>();
         servlets = new ArrayList<>();
-        workQueue = new LinkedBlockingQueue<>(requestQueueSize);
+        workQueue = new LinkedBlockingQueue<>(config.getRequestQueueSize());
+        int numExecutorThreads = config.getThreadCount();
         executor = new ThreadPoolExecutor(numExecutorThreads, numExecutorThreads, 0L, TimeUnit.MILLISECONDS, workQueue,
                 runnable -> new Thread(runnable, "HttpExecutor(port:" + port + ")-" + threadId.getAndIncrement()));
         long directMemoryBudget = numExecutorThreads * (long) HIGH_WRITE_BUFFER_WATER_MARK
-                + numExecutorThreads * HttpServerInitializer.RESPONSE_CHUNK_SIZE;
+                + numExecutorThreads * config.getMaxResponseChunkSize();
         LOGGER.log(Level.INFO, "The output direct memory budget for this server is " + directMemoryBudget + " bytes");
         long inputBudgetEstimate =
-                (long) HttpServerInitializer.MAX_REQUEST_INITIAL_LINE_LENGTH * (requestQueueSize + numExecutorThreads);
+                (long) config.getMaxRequestInitialLineLength() * (config.getRequestQueueSize() + numExecutorThreads);
         inputBudgetEstimate = inputBudgetEstimate * 2;
         LOGGER.log(Level.INFO,
                 "The \"estimated\" input direct memory budget for this server is " + inputBudgetEstimate + " bytes");
@@ -407,5 +398,9 @@ public class HttpServer {
     public String toString() {
         return "{\"class\":\"" + getClass().getSimpleName() + "\",\"port\":" + port + ",\"state\":\"" + getState()
                 + "\"}";
+    }
+
+    public HttpServerConfig getConfig() {
+        return config;
     }
 }

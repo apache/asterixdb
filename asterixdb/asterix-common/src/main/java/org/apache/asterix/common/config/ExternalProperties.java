@@ -25,6 +25,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
 
 public class ExternalProperties extends AbstractProperties {
@@ -42,7 +43,11 @@ public class ExternalProperties extends AbstractProperties {
                 "The max pending time (in seconds) for cluster startup. After the "
                         + "threshold, if the cluster still is not up and running, it is considered unavailable"),
         CC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the cluster controller process by managix"),
-        NC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the node controller process(es) by managix");
+        NC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the node controller process(es) by managix"),
+        MAX_WEB_REQUEST_SIZE(
+                INTEGER,
+                StorageUtil.getIntSizeInBytes(50, StorageUtil.StorageUnit.MEGABYTE),
+                "The maximum accepted web request size in bytes");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -66,6 +71,7 @@ public class ExternalProperties extends AbstractProperties {
                     return Section.NC;
                 case LOG_LEVEL:
                 case MAX_WAIT_ACTIVE_CLUSTER:
+                case MAX_WEB_REQUEST_SIZE:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -129,5 +135,9 @@ public class ExternalProperties extends AbstractProperties {
 
     public int getNcApiPort() {
         return accessor.getInt(Option.NC_API_PORT);
+    }
+
+    public int getMaxWebRequestSize() {
+        return accessor.getInt(Option.MAX_WEB_REQUEST_SIZE);
     }
 }

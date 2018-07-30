@@ -21,30 +21,35 @@ package org.apache.hyracks.http.server;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 
 public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
 
-    public static final int MAX_REQUEST_CHUNK_SIZE = 262144;
-    public static final int MAX_REQUEST_HEADER_SIZE = 262144;
-    public static final int MAX_REQUEST_INITIAL_LINE_LENGTH = 131072;
-    public static final int RESPONSE_CHUNK_SIZE = 4096;
     private final HttpServer server;
+    private final int maxRequestSize;
+    private final int maxRequestInitialLineLength;
+    private final int maxRequestHeaderSize;
+    private final int maxRequestChunkSize;
+    private final int maxResponseChunkSize;
 
     public HttpServerInitializer(HttpServer server) {
         this.server = server;
+        final HttpServerConfig config = server.getConfig();
+        maxRequestSize = config.getMaxRequestSize();
+        maxRequestInitialLineLength = config.getMaxRequestInitialLineLength();
+        maxRequestHeaderSize = config.getMaxRequestHeaderSize();
+        maxRequestChunkSize = config.getMaxRequestChunkSize();
+        maxResponseChunkSize = config.getMaxResponseChunkSize();
     }
 
     @Override
     public void initChannel(SocketChannel ch) {
         ChannelPipeline p = ch.pipeline();
         p.addLast(new HttpRequestCapacityController(server));
-        p.addLast(new HttpRequestDecoder(MAX_REQUEST_INITIAL_LINE_LENGTH, MAX_REQUEST_HEADER_SIZE,
-                MAX_REQUEST_CHUNK_SIZE));
+        p.addLast(new HttpRequestDecoder(maxRequestInitialLineLength, maxRequestHeaderSize, maxRequestChunkSize));
         p.addLast(new HttpResponseEncoder());
-        p.addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
-        p.addLast(server.createHttpHandler(RESPONSE_CHUNK_SIZE));
+        p.addLast(new HttpRequestAggregator(maxRequestSize));
+        p.addLast(server.createHttpHandler(maxResponseChunkSize));
     }
 }

@@ -94,6 +94,8 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.server.HttpServer;
+import org.apache.hyracks.http.server.HttpServerConfig;
+import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.util.LoggingConfigUtil;
 import org.apache.logging.log4j.Level;
@@ -217,8 +219,10 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected HttpServer setupWebServer(ExternalProperties externalProperties) throws Exception {
+        final HttpServerConfig config =
+                HttpServerConfigBuilder.custom().setMaxRequestSize(externalProperties.getMaxWebRequestSize()).build();
         HttpServer webServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
-                externalProperties.getWebInterfacePort());
+                externalProperties.getWebInterfacePort(), config);
         webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         webServer.addServlet(new ApiServlet(webServer.ctx(), new String[] { "/*" }, appCtx,
                 ccExtensionManager.getCompilationProvider(AQL), ccExtensionManager.getCompilationProvider(SQLPP),
@@ -227,8 +231,10 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected HttpServer setupJSONAPIServer(ExternalProperties externalProperties) throws Exception {
-        HttpServer jsonAPIServer =
-                new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getAPIServerPort());
+        final HttpServerConfig config =
+                HttpServerConfigBuilder.custom().setMaxRequestSize(externalProperties.getMaxWebRequestSize()).build();
+        HttpServer jsonAPIServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
+                externalProperties.getAPIServerPort(), config);
         jsonAPIServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         jsonAPIServer.setAttribute(ASTERIX_APP_CONTEXT_INFO_ATTR, appCtx);
         jsonAPIServer.setAttribute(ServletConstants.EXECUTOR_SERVICE_ATTR,
@@ -259,8 +265,10 @@ public class CCApplication extends BaseCCApplication {
     }
 
     protected HttpServer setupQueryWebServer(ExternalProperties externalProperties) throws Exception {
+        final HttpServerConfig config =
+                HttpServerConfigBuilder.custom().setMaxRequestSize(externalProperties.getMaxWebRequestSize()).build();
         HttpServer queryWebServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
-                externalProperties.getQueryWebInterfacePort());
+                externalProperties.getQueryWebInterfacePort(), config);
         queryWebServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         ServiceLoader.load(IQueryWebServerRegistrant.class).iterator()
                 .forEachRemaining(c -> c.register(appCtx, queryWebServer));
