@@ -421,6 +421,9 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
                 e.getValue().getUsedVariables(usedVariables);
             }
         }
+        if (op.getUpsertIndicatorExpr() != null) {
+            op.getUpsertIndicatorExpr().getValue().getUsedVariables(usedVariables);
+        }
         return null;
     }
 

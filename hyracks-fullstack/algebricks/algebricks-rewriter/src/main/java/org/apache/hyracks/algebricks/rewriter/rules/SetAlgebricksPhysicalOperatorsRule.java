@@ -356,9 +356,11 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                                 new IndexBulkloadPOperator(primaryKeys, secondaryKeys, additionalFilteringKeys,
                                         opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex()));
                     } else {
+                        LogicalVariable upsertIndicatorVar = null;
                         List<LogicalVariable> prevSecondaryKeys = null;
                         LogicalVariable prevAdditionalFilteringKey = null;
                         if (opInsDel.getOperation() == Kind.UPSERT) {
+                            upsertIndicatorVar = getKey(opInsDel.getUpsertIndicatorExpr().getValue());
                             prevSecondaryKeys = new ArrayList<LogicalVariable>();
                             getKeys(opInsDel.getPrevSecondaryKeyExprs(), prevSecondaryKeys);
                             if (opInsDel.getPrevAdditionalFilteringExpression() != null) {
@@ -369,7 +371,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                         }
                         op.setPhysicalOperator(new IndexInsertDeleteUpsertPOperator(primaryKeys, secondaryKeys,
                                 additionalFilteringKeys, opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex(),
-                                prevSecondaryKeys, prevAdditionalFilteringKey,
+                                upsertIndicatorVar, prevSecondaryKeys, prevAdditionalFilteringKey,
                                 opInsDel.getNumberOfAdditionalNonFilteringFields()));
                     }
                     break;
@@ -407,12 +409,15 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
 
     private static void getKeys(List<Mutable<ILogicalExpression>> keyExpressions, List<LogicalVariable> keys) {
         for (Mutable<ILogicalExpression> kExpr : keyExpressions) {
-            ILogicalExpression e = kExpr.getValue();
-            if (e.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                throw new NotImplementedException();
-            }
-            keys.add(((VariableReferenceExpression) e).getVariableReference());
+            keys.add(getKey(kExpr.getValue()));
         }
+    }
+
+    private static LogicalVariable getKey(ILogicalExpression keyExpression) {
+        if (keyExpression.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            throw new NotImplementedException();
+        }
+        return ((VariableReferenceExpression) keyExpression).getVariableReference();
     }
 
     private static LogicalVariable getKeysAndLoad(Mutable<ILogicalExpression> payloadExpr,

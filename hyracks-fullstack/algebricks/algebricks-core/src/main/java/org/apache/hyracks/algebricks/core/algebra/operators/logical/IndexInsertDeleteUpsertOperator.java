@@ -49,6 +49,7 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
     // used for upsert operations
     private List<Mutable<ILogicalExpression>> prevSecondaryKeyExprs;
     private Mutable<ILogicalExpression> prevAdditionalFilteringExpression;
+    private Mutable<ILogicalExpression> upsertIndicatorExpr;
     private final int numberOfAdditionalNonFilteringFields;
 
     public IndexInsertDeleteUpsertOperator(IDataSourceIndex<?, ?> dataSourceIndex,
@@ -93,6 +94,12 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
                 }
             }
         }
+
+        // Upsert indicator var <For upsert>
+        if (upsertIndicatorExpr != null && visitor.transform(upsertIndicatorExpr)) {
+            b = true;
+        }
+
         // Old secondary <For upsert>
         if (prevSecondaryKeyExprs != null) {
             for (int i = 0; i < prevSecondaryKeyExprs.size(); i++) {
@@ -188,5 +195,13 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
 
     public int getNumberOfAdditionalNonFilteringFields() {
         return numberOfAdditionalNonFilteringFields;
+    }
+
+    public Mutable<ILogicalExpression> getUpsertIndicatorExpr() {
+        return upsertIndicatorExpr;
+    }
+
+    public void setUpsertIndicatorExpr(Mutable<ILogicalExpression> upsertIndicatorExpr) {
+        this.upsertIndicatorExpr = upsertIndicatorExpr;
     }
 }

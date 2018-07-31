@@ -496,6 +496,12 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));
                 }
             }
+
+            if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
+                indexUpdate.setUpsertIndicatorExpr(new MutableObject<>(
+                        new VariableReferenceExpression(primaryIndexModificationOp.getUpsertIndicatorVar())));
+            }
+
             context.computeAndSetTypeEnvironmentForOperator(indexUpdate);
             if (!primaryIndexModificationOp.isBulkload() || secondaryIndexTotalCnt == 1) {
                 currentTop = indexUpdate;

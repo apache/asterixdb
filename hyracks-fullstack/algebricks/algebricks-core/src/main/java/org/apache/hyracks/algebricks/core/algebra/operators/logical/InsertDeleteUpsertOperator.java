@@ -59,6 +59,9 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     // previous additional fields (for UPSERT)
     private List<LogicalVariable> prevAdditionalNonFilteringVars;
     private List<Object> prevAdditionalNonFilteringTypes;
+    // a boolean variable that indicates whether it's a delete operation (false) or upsert operation (true)
+    private LogicalVariable upsertIndicatorVar;
+    private Object upsertIndicatorVarType;
 
     public InsertDeleteUpsertOperator(IDataSource<?> dataSource, Mutable<ILogicalExpression> payloadExpr,
             List<Mutable<ILogicalExpression>> primaryKeyExprs,
@@ -85,6 +88,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     public void recomputeSchema() throws AlgebricksException {
         schema = new ArrayList<LogicalVariable>();
         if (operation == Kind.UPSERT) {
+            schema.add(upsertIndicatorVar);
             // The upsert case also produces the previous record
             schema.add(prevRecordVar);
             if (additionalNonFilteringExpressions != null) {
@@ -98,6 +102,9 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     }
 
     public void getProducedVariables(Collection<LogicalVariable> producedVariables) {
+        if (upsertIndicatorVar != null) {
+            producedVariables.add(upsertIndicatorVar);
+        }
         if (prevRecordVar != null) {
             producedVariables.add(prevRecordVar);
         }
@@ -147,6 +154,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
             public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
                     throws AlgebricksException {
                 if (operation == Kind.UPSERT) {
+                    target.addVariable(upsertIndicatorVar);
                     target.addVariable(prevRecordVar);
                     if (prevAdditionalNonFilteringVars != null) {
                         for (LogicalVariable var : prevAdditionalNonFilteringVars) {
@@ -171,6 +179,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         PropagatingTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
         if (operation == Kind.UPSERT) {
+            env.setVarType(upsertIndicatorVar, upsertIndicatorVarType);
             env.setVarType(prevRecordVar, prevRecordType);
             if (prevAdditionalNonFilteringVars != null) {
                 for (int i = 0; i < prevAdditionalNonFilteringVars.size(); i++) {
@@ -222,6 +231,22 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
 
     public void setPrevRecordVar(LogicalVariable prevRecordVar) {
         this.prevRecordVar = prevRecordVar;
+    }
+
+    public LogicalVariable getUpsertIndicatorVar() {
+        return upsertIndicatorVar;
+    }
+
+    public void setUpsertIndicatorVar(LogicalVariable upsertIndicatorVar) {
+        this.upsertIndicatorVar = upsertIndicatorVar;
+    }
+
+    public Object getUpsertIndicatorVarType() {
+        return upsertIndicatorVarType;
+    }
+
+    public void setUpsertIndicatorVarType(Object upsertIndicatorVarType) {
+        this.upsertIndicatorVarType = upsertIndicatorVarType;
     }
 
     public void setPrevRecordType(Object recordType) {
