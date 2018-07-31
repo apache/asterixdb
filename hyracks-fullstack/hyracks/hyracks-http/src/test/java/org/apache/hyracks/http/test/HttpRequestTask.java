@@ -32,8 +32,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -41,8 +41,8 @@ public class HttpRequestTask implements Callable<Void> {
 
     protected final HttpUriRequest request;
 
-    protected HttpRequestTask(int size) throws URISyntaxException {
-        request = post(null, size);
+    protected HttpRequestTask(int entitySize) throws URISyntaxException {
+        request = post(null, entitySize);
     }
 
     @Override
@@ -53,6 +53,8 @@ public class HttpRequestTask implements Callable<Void> {
                 HttpServerTest.SUCCESS_COUNT.incrementAndGet();
             } else if (response.getStatusLine().getStatusCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code()) {
                 HttpServerTest.UNAVAILABLE_COUNT.incrementAndGet();
+            } else if (response.getStatusLine().getStatusCode() == HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE.code()) {
+                throw new Exception(HttpResponseStatus.REQUEST_ENTITY_TOO_LARGE.reasonPhrase());
             } else {
                 HttpServerTest.OTHER_COUNT.incrementAndGet();
             }
@@ -73,7 +75,7 @@ public class HttpRequestTask implements Callable<Void> {
     }
 
     protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
-        HttpClient client = HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE).build();
+        HttpClient client = HttpClients.custom().setRetryHandler(new DefaultHttpRequestRetryHandler(0, false)).build();
         try {
             return client.execute(method);
         } catch (Exception e) {
@@ -90,7 +92,7 @@ public class HttpRequestTask implements Callable<Void> {
         return builder.build();
     }
 
-    protected HttpUriRequest post(String query, int size) throws URISyntaxException {
+    protected HttpUriRequest post(String query, int entitySize) throws URISyntaxException {
         URI uri = new URI(HttpServerTest.PROTOCOL, null, HttpServerTest.HOST, HttpServerTest.PORT, HttpServerTest.PATH,
                 query, null);
         RequestBuilder builder = RequestBuilder.post(uri);
@@ -102,11 +104,13 @@ public class HttpRequestTask implements Callable<Void> {
         String statement = str.toString();
         builder.setHeader("Content-type", "application/x-www-form-urlencoded");
         builder.addParameter("statement", statement);
-        for (int i = 0; i < size; i++) {
-            str.append("This is a string statement that will be ignored");
-            str.append('\n');
+        if (entitySize > 0) {
+            str.setLength(0);
+            for (int i = 0; i < entitySize; i++) {
+                str.append("x");
+            }
+            builder.setEntity(new StringEntity(str.toString(), StandardCharsets.UTF_8));
         }
-        builder.setEntity(new StringEntity(str.toString(), StandardCharsets.UTF_8));
         builder.setCharset(StandardCharsets.UTF_8);
         return builder.build();
     }

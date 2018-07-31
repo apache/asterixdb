@@ -40,6 +40,7 @@ import org.apache.hyracks.http.server.InterruptOnCloseHandler;
 import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.http.servlet.ChattyServlet;
 import org.apache.hyracks.http.servlet.SleepyServlet;
+import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -348,7 +349,8 @@ public class HttpServerTest {
     public void testLargeRequest() throws Exception {
         WebManager webMgr = new WebManager();
         // Server with max allowed request size = 512K
-        final HttpServerConfig config = HttpServerConfigBuilder.custom().setMaxRequestSize(512 * 1024).build();
+        final int maxRequestSize = StorageUtil.getIntSizeInBytes(512, StorageUtil.StorageUnit.KILOBYTE);
+        final HttpServerConfig config = HttpServerConfigBuilder.custom().setMaxRequestSize(maxRequestSize).build();
         HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, config);
         ChattyServlet servlet = new ChattyServlet(server.ctx(), new String[] { PATH });
         server.addServlet(servlet);
@@ -356,7 +358,7 @@ public class HttpServerTest {
         webMgr.start();
         Exception failure = null;
         try {
-            request(1, 32000);
+            request(1, maxRequestSize + 1);
             for (Future<Void> thread : FUTURES) {
                 thread.get();
             }
@@ -375,12 +377,12 @@ public class HttpServerTest {
     }
 
     private void request(int count) throws URISyntaxException {
-        request(count, 32);
+        request(count, 0);
     }
 
-    private void request(int count, int size) throws URISyntaxException {
+    private void request(int count, int entitySize) throws URISyntaxException {
         for (int i = 0; i < count; i++) {
-            HttpRequestTask requestTask = new HttpRequestTask(size);
+            HttpRequestTask requestTask = new HttpRequestTask(entitySize);
             Future<Void> next = executor.submit(requestTask);
             FUTURES.add(next);
             TASKS.add(requestTask);
