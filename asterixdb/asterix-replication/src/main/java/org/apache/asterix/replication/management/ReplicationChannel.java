@@ -114,7 +114,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     requestType = ReplicationProtocol.getRequestType(socketChannel, inBuffer);
                 }
             } catch (Exception e) {
-                LOGGER.warn("Unexpectedly error during replication.", e);
+                LOGGER.warn("Unexpected error during replication.", e);
             } finally {
                 if (socketChannel.isOpen()) {
                     try {
