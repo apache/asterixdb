@@ -655,7 +655,7 @@ public class NodeControllerService implements IControllerService {
 
     public void notifyTasksCompleted(CcId ccId) throws Exception {
         partitionManager.jobsCompleted(ccId);
-        application.onRegisterNode(ccId);
+        application.tasksCompleted(ccId);
     }
 
     private static INCApplication getApplication(NCConfig config)

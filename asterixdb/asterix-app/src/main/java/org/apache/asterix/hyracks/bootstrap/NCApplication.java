@@ -83,6 +83,7 @@ public class NCApplication extends BaseNCApplication {
     private INcApplicationContext runtimeContext;
     private String nodeId;
     private boolean stopInitiated;
+    private boolean startupCompleted;
     protected WebManager webManager;
 
     @Override
@@ -211,14 +212,19 @@ public class NCApplication extends BaseNCApplication {
     }
 
     @Override
-    public void startupCompleted() throws Exception {
+    public synchronized void startupCompleted() throws Exception {
         // configure servlets after joining the cluster, so we can create HyracksClientConnection
         configureServers();
         webManager.start();
+        startupCompleted = true;
+        notifyAll();
     }
 
     @Override
-    public synchronized void onRegisterNode(CcId ccId) throws Exception {
+    public synchronized void tasksCompleted(CcId ccId) throws Exception {
+        while (!startupCompleted) {
+            this.wait();
+        }
         final NodeControllerService ncs = (NodeControllerService) ncServiceCtx.getControllerService();
         final NodeStatus currentStatus = ncs.getNodeStatus();
         final SystemState systemState = isPendingStartupTasks(currentStatus, ncs.getPrimaryCcId(), ccId)

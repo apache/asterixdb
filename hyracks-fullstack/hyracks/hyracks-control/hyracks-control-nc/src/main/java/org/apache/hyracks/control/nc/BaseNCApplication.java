@@ -60,7 +60,7 @@ public class BaseNCApplication implements INCApplication {
     }
 
     @Override
-    public void onRegisterNode(CcId ccId) throws Exception {
+    public void tasksCompleted(CcId ccId) throws Exception {
         // no-op
     }
 

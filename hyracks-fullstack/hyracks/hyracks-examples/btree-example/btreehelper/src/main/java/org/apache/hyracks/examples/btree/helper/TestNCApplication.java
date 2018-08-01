@@ -46,7 +46,7 @@ public class TestNCApplication implements INCApplication {
     }
 
     @Override
-    public void onRegisterNode(CcId ccs) throws Exception {
+    public void tasksCompleted(CcId ccs) throws Exception {
         // No-op
     }
 

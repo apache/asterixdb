@@ -68,19 +68,19 @@ public class ReplicaManager implements IReplicaManager {
 
     @Override
     public synchronized void addReplica(ReplicaIdentifier id) {
+        final NodeControllerService controllerService =
+                (NodeControllerService) appCtx.getServiceContext().getControllerService();
+        final NodeStatus nodeStatus = controllerService.getNodeStatus();
+        if (nodeStatus != NodeStatus.ACTIVE) {
+            LOGGER.warn("Ignoring request to add replica. Node is not ACTIVE yet. Current status: {}", nodeStatus);
+            return;
+        }
         if (!partitions.contains(id.getPartition())) {
             throw new IllegalStateException(
                     "This node is not the current master of partition(" + id.getPartition() + ")");
         }
         if (isSelf(id)) {
             LOGGER.info("ignoring request to add replica to ourselves");
-            return;
-        }
-        final NodeControllerService controllerService =
-                (NodeControllerService) appCtx.getServiceContext().getControllerService();
-        final NodeStatus nodeStatus = controllerService.getNodeStatus();
-        if (nodeStatus != NodeStatus.ACTIVE) {
-            LOGGER.warn("Ignoring request to add replica. Node is not ACTIVE yet. Current status: {}", nodeStatus);
             return;
         }
         replicas.computeIfAbsent(id, k -> new PartitionReplica(k, appCtx));

@@ -34,5 +34,5 @@ public interface INCApplication extends IApplication {
      */
     IFileDeviceResolver getFileDeviceResolver();
 
-    void onRegisterNode(CcId ccId) throws Exception;
+    void tasksCompleted(CcId ccId) throws Exception;
 }
