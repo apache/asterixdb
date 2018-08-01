@@ -89,7 +89,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                 Thread thread = Thread.currentThread();
                 setDataConsumerThread(thread); // Sets the data consumer thread to the current thread.
                 try {
-                    thread.setName(MaterializingPipelinedPartition.class.getName() + pid);
+                    thread.setName(MaterializingPipelinedPartition.class.getName() + " " + pid);
                     FileReference fRefCopy;
                     synchronized (MaterializingPipelinedPartition.this) {
                         while (fRef == null && !eos && !failed) {
@@ -164,7 +164,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                         }
                     }
                 } catch (Exception e) {
-                    LOGGER.log(Level.ERROR, e.getMessage(), e);
+                    LOGGER.warn("Failure writing to a frame", e);
                 } finally {
                     setDataConsumerThread(null); // Sets back the data consumer thread to null.
                 }
