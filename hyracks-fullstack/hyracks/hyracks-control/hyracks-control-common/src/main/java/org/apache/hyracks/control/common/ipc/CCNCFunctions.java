@@ -113,6 +113,9 @@ public class CCNCFunctions {
         THREAD_DUMP_REQUEST,
         THREAD_DUMP_RESPONSE,
 
+        PING_REQUEST,
+        PING_RESPONSE,
+
         OTHER
     }
 
@@ -1316,6 +1319,19 @@ public class CCNCFunctions {
         }
     }
 
+    public static class PingFunction extends CCIdentifiedFunction {
+        private static final long serialVersionUID = 1L;
+
+        public PingFunction(CcId ccId) {
+            super(ccId);
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.PING_REQUEST;
+        }
+    }
+
     public static class ShutdownRequestFunction extends CCIdentifiedFunction {
         private static final long serialVersionUID = 1L;
 
@@ -1352,6 +1368,25 @@ public class CCNCFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.SHUTDOWN_RESPONSE;
+        }
+    }
+
+    public static class PingResponseFunction extends Function {
+        private static final long serialVersionUID = 1L;
+
+        private final String nodeId;
+
+        public PingResponseFunction(String nodeId) {
+            this.nodeId = nodeId;
+        }
+
+        public String getNodeId() {
+            return nodeId;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.PING_RESPONSE;
         }
     }
 

@@ -28,6 +28,7 @@ import org.apache.hyracks.control.nc.work.ApplicationMessageWork;
 import org.apache.hyracks.control.nc.work.CleanupJobletWork;
 import org.apache.hyracks.control.nc.work.DeployBinaryWork;
 import org.apache.hyracks.control.nc.work.DeployJobSpecWork;
+import org.apache.hyracks.control.nc.task.PingTask;
 import org.apache.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import org.apache.hyracks.control.nc.work.StartTasksWork;
 import org.apache.hyracks.control.nc.work.StateDumpWork;
@@ -131,6 +132,11 @@ final class NodeControllerIPCI implements IIPCI {
             case THREAD_DUMP_REQUEST:
                 final CCNCFunctions.ThreadDumpRequestFunction tdrf = (CCNCFunctions.ThreadDumpRequestFunction) fn;
                 ncs.getExecutor().submit(new ThreadDumpTask(ncs, tdrf.getRequestId(), tdrf.getCcId()));
+                return;
+
+            case PING_REQUEST:
+                final CCNCFunctions.PingFunction pcf = (CCNCFunctions.PingFunction) fn;
+                ncs.getExecutor().submit(new PingTask(ncs, pcf.getCcId()));
                 return;
 
             default:

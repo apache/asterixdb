@@ -175,6 +175,12 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
+    public void notifyPingResponse(String nodeId) throws Exception {
+        CCNCFunctions.PingResponseFunction fn = new CCNCFunctions.PingResponseFunction(nodeId);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
     public String toString() {
         return getClass().getSimpleName() + " [" + ipcHandle.getRemoteAddress() + "]";
     }

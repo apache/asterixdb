@@ -84,4 +84,13 @@ public interface INodeController {
      * @throws IPCException
      */
     void sendRegistrationResult(NodeParameters parameters, Exception regFailure) throws IPCException;
+
+    /**
+     * Sends a request to this {@link INodeController} to ping the
+     * cluster controller with id {@code ccId}
+     *
+     * @param ccId
+     * @throws IPCException
+     */
+    void ping(CcId ccId) throws IPCException;
 }

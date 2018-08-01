@@ -148,6 +148,11 @@ public class NodeControllerRemoteProxy implements INodeController {
         ipcHandle.send(-1, new CCNCFunctions.NodeRegistrationResult(parameters, regFailure), null);
     }
 
+    @Override
+    public void ping(CcId ccId) throws IPCException {
+        ipcHandle.send(-1, new CCNCFunctions.PingFunction(ccId), null);
+    }
+
     public InetSocketAddress getAddress() {
         return ipcHandle.getRemoteAddress();
     }

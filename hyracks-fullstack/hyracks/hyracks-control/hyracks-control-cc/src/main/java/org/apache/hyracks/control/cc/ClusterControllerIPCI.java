@@ -161,6 +161,10 @@ class ClusterControllerIPCI implements IIPCI {
                 ccs.getWorkQueue()
                         .schedule(new NotifyThreadDumpResponse(ccs, tdrf.getRequestId(), tdrf.getThreadDumpJSON()));
                 break;
+            case PING_RESPONSE:
+                CCNCFunctions.PingResponseFunction prf = (CCNCFunctions.PingResponseFunction) fn;
+                LOGGER.debug("Received ping response from node {}", prf.getNodeId());
+                break;
             default:
                 LOGGER.warn("Unknown function: " + fn.getFunctionId());
         }
