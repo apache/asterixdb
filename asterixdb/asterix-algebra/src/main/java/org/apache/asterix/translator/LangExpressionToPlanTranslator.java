@@ -1407,7 +1407,7 @@ class LangExpressionToPlanTranslator
         return switchExpr;
     }
 
-    private static AbstractFunctionCallExpression createFunctionCallExpressionForBuiltinOperator(OperatorType t,
+    protected static AbstractFunctionCallExpression createFunctionCallExpressionForBuiltinOperator(OperatorType t,
             SourceLocation sourceLoc) throws CompilationException {
         FunctionIdentifier fid;
         switch (t) {

@@ -17,27 +17,7 @@
  * under the License.
  */
 
-set rewrite_in_as_or "false";
+use tpch;
 
-drop dataverse sampdb if exists;
-create dataverse sampdb;
-use sampdb;
+load  dataset Customer using localfs ((`path`=`asterix_nc1://data/tpch0.001/customer.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));
 
-drop dataset samptable if exists;
-drop type samptabletype if exists;
-
-create type samptabletype as closed {
-  id: bigint
-};
-
-create dataset samptable(samptabletype) primary key id;
-
-select *
-from
-(
-  select id from samptable
-  where (id in [0] and id in [1])
-        or (id in [1] and id in [2])
-) st1;
-
-drop dataverse sampdb;

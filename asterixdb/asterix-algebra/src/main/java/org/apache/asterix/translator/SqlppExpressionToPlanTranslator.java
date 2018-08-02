@@ -38,11 +38,16 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
+import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.OperatorExpr;
+import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.struct.OperatorType;
+import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -69,8 +74,9 @@ import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
-import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IACollection;
+import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -116,16 +122,24 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * which is translated. The second argument of a visit method is the tuple
  * source for the current subtree.
  */
-class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator implements ILangExpressionToPlanTranslator,
+public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator
+        implements ILangExpressionToPlanTranslator,
         ISqlppVisitor<Pair<ILogicalOperator, LogicalVariable>, Mutable<ILogicalOperator>> {
+
     private static final String ERR_MSG = "Translator should never enter this method!";
+
+    public static final String REWRITE_IN_AS_OR_OPTION = "rewrite_in_as_or";
+    private static final boolean REWRITE_IN_AS_OR_OPTION_DEFAULT = true;
+
     private Deque<Mutable<ILogicalOperator>> uncorrelatedLeftBranchStack = new ArrayDeque<>();
     private final Map<VarIdentifier, IAObject> externalVars;
+    private final boolean translateInAsOr;
 
     public SqlppExpressionToPlanTranslator(MetadataProvider metadataProvider, int currentVarCounter,
             Map<VarIdentifier, IAObject> externalVars) throws AlgebricksException {
         super(metadataProvider, currentVarCounter);
         this.externalVars = externalVars != null ? externalVars : Collections.emptyMap();
+        translateInAsOr = metadataProvider.getBooleanProperty(REWRITE_IN_AS_OR_OPTION, REWRITE_IN_AS_OR_OPTION_DEFAULT);
     }
 
     @Override
@@ -634,32 +648,39 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
     protected ILogicalExpression translateVariableRef(VariableExpr varExpr) throws CompilationException {
         VarIdentifier varId = varExpr.getVar();
         if (SqlppVariableUtil.isExternalVariableIdentifier(varId)) {
-            IAObject value = externalVars.get(varId);
             SourceLocation sourceLoc = varExpr.getSourceLocation();
-            if (value == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, varId.toString());
-            }
-
-            ILogicalExpression resultExpr;
-            ConstantExpression constExpr = new ConstantExpression(new AsterixConstantValue(value));
-            constExpr.setSourceLocation(sourceLoc);
-            resultExpr = constExpr;
-
-            IAType valueType = value.getType();
-            if (valueType.getTypeTag().isDerivedType()) {
-                ScalarFunctionCallExpression castExpr =
-                        new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE));
-                castExpr.setSourceLocation(sourceLoc);
-                // The first argument is the field
-                castExpr.getArguments().add(new MutableObject<>(resultExpr));
-                TypeCastUtils.setRequiredAndInputTypes(castExpr, BuiltinType.ANY, valueType);
-                resultExpr = castExpr;
-            }
-
-            return resultExpr;
+            IAObject value = getExternalVariableValue(varId, sourceLoc);
+            return translateConstantValue(value, sourceLoc);
         }
 
         return super.translateVariableRef(varExpr);
+    }
+
+    private IAObject getExternalVariableValue(VarIdentifier varId, SourceLocation sourceLoc)
+            throws CompilationException {
+        IAObject value = externalVars.get(varId);
+        if (value == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, varId.toString());
+        }
+        return value;
+    }
+
+    private ILogicalExpression translateConstantValue(IAObject value, SourceLocation sourceLoc)
+            throws CompilationException {
+        ConstantExpression constExpr = new ConstantExpression(new AsterixConstantValue(value));
+        constExpr.setSourceLocation(sourceLoc);
+
+        IAType valueType = value.getType();
+        if (valueType.getTypeTag().isDerivedType()) {
+            ScalarFunctionCallExpression castExpr =
+                    new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE));
+            castExpr.setSourceLocation(sourceLoc);
+            castExpr.getArguments().add(new MutableObject<>(constExpr));
+            TypeCastUtils.setRequiredAndInputTypes(castExpr, BuiltinType.ANY, valueType);
+            return castExpr;
+        } else {
+            return constExpr;
+        }
     }
 
     private Pair<ILogicalOperator, LogicalVariable> produceSelectPlan(boolean isSubquery,
@@ -803,4 +824,163 @@ class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTranslator imp
         return new FieldBinding(fieldName, var);
     }
 
+    @Override
+    protected boolean expressionNeedsNoNesting(Expression expr) {
+        return super.expressionNeedsNoNesting(expr) || (translateInAsOr && expr.getKind() == Kind.QUANTIFIED_EXPRESSION
+                && isInOperatorWithStaticList((QuantifiedExpression) expr));
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(QuantifiedExpression qe, Mutable<ILogicalOperator> tupSource)
+            throws CompilationException {
+        return translateInAsOr && isInOperatorWithStaticList(qe) ? translateInOperatorWithStaticList(qe, tupSource)
+                : super.visit(qe, tupSource);
+    }
+
+    // At this point "$x in list_expr" is a quantified expression:
+    // "some $y in list_expr satisfies $x = $y"
+    // Look for such quantified expression with a constant list_expr ([e1, e2, ... eN])
+    // and translate it into "$x=e1 || $x=e2 || ... || $x=eN"
+    private boolean isInOperatorWithStaticList(QuantifiedExpression qe) {
+        if (qe.getQuantifier() != QuantifiedExpression.Quantifier.SOME) {
+            return false;
+        }
+        List<QuantifiedPair> qpList = qe.getQuantifiedList();
+        if (qpList.size() != 1) {
+            return false;
+        }
+        QuantifiedPair qp = qpList.get(0);
+
+        Expression condExpr = qe.getSatisfiesExpr();
+        if (condExpr.getKind() != Kind.OP_EXPRESSION) {
+            return false;
+        }
+        OperatorExpr opExpr = (OperatorExpr) condExpr;
+        if (opExpr.getOpList().get(0) != OperatorType.EQ) {
+            return false;
+        }
+        List<Expression> operandExprs = opExpr.getExprList();
+        if (operandExprs.size() != 2) {
+            return false;
+        }
+        int varPos = operandExprs.indexOf(qp.getVarExpr());
+        if (varPos < 0) {
+            return false;
+        }
+        Expression inExpr = qp.getExpr();
+        switch (inExpr.getKind()) {
+            case LIST_CONSTRUCTOR_EXPRESSION:
+                ListConstructor listExpr = (ListConstructor) inExpr;
+                List<Expression> itemExprs = listExpr.getExprList();
+                if (itemExprs.isEmpty()) {
+                    return false;
+                }
+                for (Expression itemExpr : itemExprs) {
+                    boolean isConst = itemExpr.getKind() == Kind.LITERAL_EXPRESSION
+                            || (itemExpr.getKind() == Kind.VARIABLE_EXPRESSION
+                                    && SqlppVariableUtil.isExternalVariableReference((VariableExpr) itemExpr));
+                    if (!isConst) {
+                        return false;
+                    }
+                }
+                return true;
+            case VARIABLE_EXPRESSION:
+                VarIdentifier inVarId = ((VariableExpr) inExpr).getVar();
+                if (!SqlppVariableUtil.isExternalVariableIdentifier(inVarId)) {
+                    return false;
+                }
+                IAObject inValue = externalVars.get(inVarId);
+                return inValue != null && inValue.getType().getTypeTag().isListType()
+                        && ((IACollection) inValue).size() > 0;
+            default:
+                return false;
+        }
+    }
+
+    private Pair<ILogicalOperator, LogicalVariable> translateInOperatorWithStaticList(QuantifiedExpression qe,
+            Mutable<ILogicalOperator> tupSource) throws CompilationException {
+        SourceLocation sourceLoc = qe.getSourceLocation();
+
+        QuantifiedPair qp = qe.getQuantifiedList().get(0);
+        VariableExpr varExpr = qp.getVarExpr();
+        List<Expression> operandExprs = ((OperatorExpr) qe.getSatisfiesExpr()).getExprList();
+        int varIdx = operandExprs.indexOf(varExpr);
+        Expression operandExpr = operandExprs.get(1 - varIdx);
+
+        Mutable<ILogicalOperator> topOp = tupSource;
+
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo1 = langExprToAlgExpression(operandExpr, topOp);
+        topOp = eo1.second;
+
+        LogicalVariable operandVar = context.newVar();
+        AssignOperator operandAssign = new AssignOperator(operandVar, new MutableObject<>(eo1.first));
+        operandAssign.getInputs().add(topOp);
+        operandAssign.setSourceLocation(sourceLoc);
+        topOp = new MutableObject<>(operandAssign);
+
+        List<MutableObject<ILogicalExpression>> disjuncts = new ArrayList<>();
+        Expression inExpr = qp.getExpr();
+        switch (inExpr.getKind()) {
+            case LIST_CONSTRUCTOR_EXPRESSION:
+                ListConstructor listExpr = (ListConstructor) inExpr;
+                for (Expression itemExpr : listExpr.getExprList()) {
+                    IAObject inValue;
+                    switch (itemExpr.getKind()) {
+                        case LITERAL_EXPRESSION:
+                            inValue = ConstantHelper.objectFromLiteral(((LiteralExpr) itemExpr).getValue());
+                            break;
+                        case VARIABLE_EXPRESSION:
+                            inValue = getExternalVariableValue(((VariableExpr) itemExpr).getVar(), sourceLoc);
+                            break;
+                        default:
+                            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                                    itemExpr.getKind());
+                    }
+                    ILogicalExpression eqExpr = createEqExpr(operandVar, inValue, sourceLoc);
+                    disjuncts.add(new MutableObject<>(eqExpr));
+                }
+                break;
+            case VARIABLE_EXPRESSION:
+                VarIdentifier inVarId = ((VariableExpr) inExpr).getVar();
+                IAObject inVarValue = externalVars.get(inVarId);
+                IACursor inVarCursor = ((IACollection) inVarValue).getCursor();
+                inVarCursor.reset();
+                while (inVarCursor.next()) {
+                    IAObject inValue = inVarCursor.get();
+                    ILogicalExpression eqExpr = createEqExpr(operandVar, inValue, sourceLoc);
+                    disjuncts.add(new MutableObject<>(eqExpr));
+                }
+                break;
+            default:
+                throw new IllegalStateException(String.valueOf(inExpr.getKind()));
+        }
+
+        MutableObject<ILogicalExpression> condExpr;
+        if (disjuncts.size() == 1) {
+            condExpr = disjuncts.get(0);
+        } else {
+            AbstractFunctionCallExpression orExpr =
+                    createFunctionCallExpressionForBuiltinOperator(OperatorType.OR, sourceLoc);
+            orExpr.getArguments().addAll(disjuncts);
+            condExpr = new MutableObject<>(orExpr);
+        }
+
+        LogicalVariable assignVar = context.newVar();
+        AssignOperator assignOp = new AssignOperator(assignVar, condExpr);
+        assignOp.getInputs().add(topOp);
+        assignOp.setSourceLocation(sourceLoc);
+        return new Pair<>(assignOp, assignVar);
+    }
+
+    private ILogicalExpression createEqExpr(LogicalVariable lhsVar, IAObject rhsValue, SourceLocation sourceLoc)
+            throws CompilationException {
+        VariableReferenceExpression lhsExpr = new VariableReferenceExpression(lhsVar);
+        lhsExpr.setSourceLocation(sourceLoc);
+        ILogicalExpression rhsExpr = translateConstantValue(rhsValue, sourceLoc);
+        AbstractFunctionCallExpression opExpr =
+                createFunctionCallExpressionForBuiltinOperator(OperatorType.EQ, sourceLoc);
+        opExpr.getArguments().add(new MutableObject<>(lhsExpr));
+        opExpr.getArguments().add(new MutableObject<>(rhsExpr));
+        return opExpr;
+    }
 }

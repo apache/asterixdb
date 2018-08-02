@@ -17,20 +17,9 @@
  * under the License.
  */
 
-set rewrite_in_as_or "false";
-
-drop dataverse sampdb if exists;
-create dataverse sampdb;
 use sampdb;
 
-drop dataset samptable if exists;
-drop type samptabletype if exists;
-
-create type samptabletype as closed {
-  id: bigint
-};
-
-create dataset samptable(samptabletype) primary key id;
+/* default: set `rewrite_in_as_or` "true" */
 
 select *
 from
@@ -40,4 +29,3 @@ from
         or (id in [1] and id in [2])
 ) st1;
 
-drop dataverse sampdb;

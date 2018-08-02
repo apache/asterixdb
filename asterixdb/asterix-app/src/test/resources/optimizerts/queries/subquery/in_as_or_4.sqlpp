@@ -17,27 +17,32 @@
  * under the License.
  */
 
-set rewrite_in_as_or "false";
+// requesttype=application/json
 
-drop dataverse sampdb if exists;
-create dataverse sampdb;
-use sampdb;
+// param $p_arr:json=["Customer#000000001", "Customer#000000002", "Customer#000000003"]
 
-drop dataset samptable if exists;
-drop type samptabletype if exists;
+drop  dataverse tpch if exists;
+create  dataverse tpch;
 
-create type samptabletype as closed {
-  id: bigint
+use tpch;
+
+create type tpch.CustomerType as
+ closed {
+  c_custkey : bigint,
+  c_name : string,
+  c_address : string,
+  c_nationkey : bigint,
+  c_phone : string,
+  c_acctbal : double,
+  c_mktsegment : string,
+  c_comment : string
 };
 
-create dataset samptable(samptabletype) primary key id;
+create  dataset Customer(CustomerType) primary key c_custkey;
 
-select *
-from
-(
-  select id from samptable
-  where (id in [0] and id in [1])
-        or (id in [1] and id in [2])
-) st1;
+set rewrite_in_as_or "false";
 
-drop dataverse sampdb;
+select value c.c_custkey
+from Customer c
+where c.c_name in $p_arr
+order by c.c_custkey;

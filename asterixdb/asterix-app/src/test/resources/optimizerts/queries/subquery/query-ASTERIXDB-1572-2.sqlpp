@@ -17,7 +17,7 @@
  * under the License.
  */
 
-set rewrite_in_as_or "false";
+/* default: set rewrite_in_as_or "true" */
 
 drop dataverse sampdb if exists;
 create dataverse sampdb;

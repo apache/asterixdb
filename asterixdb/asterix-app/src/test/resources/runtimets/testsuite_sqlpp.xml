@@ -6829,6 +6829,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="subquery">
+      <compilation-unit name="in_as_or">
+        <output-dir compare="Text">in_as_or</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
       <compilation-unit name="in_correlated">
         <output-dir compare="Text">in</output-dir>
       </compilation-unit>

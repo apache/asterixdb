@@ -188,6 +188,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return (T) config.remove(name);
     }
 
+    public boolean getBooleanProperty(String name, boolean defaultValue) {
+        Object v = config.get(name);
+        return v != null ? Boolean.parseBoolean(String.valueOf(v)) : defaultValue;
+    }
+
     public void disableBlockingOperator() {
         blockingOperatorDisabled = true;
     }

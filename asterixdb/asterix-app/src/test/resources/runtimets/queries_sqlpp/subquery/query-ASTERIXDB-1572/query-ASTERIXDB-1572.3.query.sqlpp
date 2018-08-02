@@ -19,6 +19,8 @@
 
 use sampdb;
 
+set `rewrite_in_as_or` "false";
+
 select *
 from
 (

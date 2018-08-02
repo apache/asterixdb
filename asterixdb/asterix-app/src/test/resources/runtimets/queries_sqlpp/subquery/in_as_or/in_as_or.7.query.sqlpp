@@ -17,27 +17,15 @@
  * under the License.
  */
 
-set rewrite_in_as_or "false";
+// requesttype=application/json
 
-drop dataverse sampdb if exists;
-create dataverse sampdb;
-use sampdb;
+// param $p1:string=Customer#000000001
+// param $p2:string=Customer#000000002
+// param $p3:string=Customer#000000003
 
-drop dataset samptable if exists;
-drop type samptabletype if exists;
+use tpch;
 
-create type samptabletype as closed {
-  id: bigint
-};
-
-create dataset samptable(samptabletype) primary key id;
-
-select *
-from
-(
-  select id from samptable
-  where (id in [0] and id in [1])
-        or (id in [1] and id in [2])
-) st1;
-
-drop dataverse sampdb;
+select value c.c_custkey
+from Customer c
+where c.c_name in [$p1, $p2, $p3]
+order by c.c_custkey
