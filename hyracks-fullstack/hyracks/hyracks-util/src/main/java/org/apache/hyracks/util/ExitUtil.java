@@ -74,7 +74,7 @@ public class ExitUtil {
                 LOGGER.warn("ignoring duplicate request to exit with status " + status
                         + "; already exiting with status " + exitThread.status + "...");
             } else {
-                exitThread.setStatus(status);
+                exitThread.setStatus(status, new Throwable("exit callstack"));
                 exitThread.start();
             }
         }
@@ -105,7 +105,7 @@ public class ExitUtil {
                 exitThread.join(shutdownHaltDelay.getValue()); // 10 min
                 if (exitThread.isAlive()) {
                     try {
-                        LOGGER.info("Watchdog is angry. Killing shutdown hook");
+                        LOGGER.warn("Watchdog is angry. Killing shutdown hook");
                     } finally {
                         ExitUtil.halt(EC_HALT_SHUTDOWN_TIMED_OUT);
                     }
@@ -117,7 +117,8 @@ public class ExitUtil {
     }
 
     private static class ExitThread extends Thread {
-        private int status;
+        private volatile int status;
+        private volatile Throwable callstack;
 
         ExitThread() {
             super("JVM exit thread");
@@ -127,14 +128,15 @@ public class ExitUtil {
         @Override
         public void run() {
             try {
-                LOGGER.info("JVM exiting with status " + status + "; bye!");
+                LOGGER.warn("JVM exiting with status " + status + "; bye!", callstack);
             } finally {
                 Runtime.getRuntime().exit(status);
             }
         }
 
-        public void setStatus(int status) {
+        public void setStatus(int status, Throwable callstack) {
             this.status = status;
+            this.callstack = callstack;
         }
     }
 }
