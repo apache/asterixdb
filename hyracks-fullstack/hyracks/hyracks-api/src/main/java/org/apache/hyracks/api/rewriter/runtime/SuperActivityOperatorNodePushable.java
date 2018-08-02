@@ -205,6 +205,10 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                 tasks.add(ctx.getExecutorService().submit(() -> {
                     startSemaphore.release();
                     try {
+                        Thread.currentThread()
+                                .setName(Thread.currentThread().getName() + ":" + ctx.getJobletContext().getJobId()
+                                        + ":" + ctx.getTaskAttemptId() + ":"
+                                        + SuperActivityOperatorNodePushable.class.getSimpleName());
                         action.run(op);
                     } catch (Throwable th) { // NOSONAR: Must catch all causes of failure
                         failures.offer(th);

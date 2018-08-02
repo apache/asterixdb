@@ -50,6 +50,8 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
                 @Override
                 public void run() {
                     try {
+                        Thread.currentThread()
+                                .setName(Thread.currentThread().getName() + " : WaitForCompletionForJobId: " + jobId);
                         jobRun.waitForCompletion();
                         callback.setValue(null);
                     } catch (Exception e) {

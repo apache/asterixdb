@@ -43,7 +43,13 @@ public class JobUtils {
         spec.setMaxReattempts(0);
         final JobId jobId = hcc.startJob(spec, jobFlags);
         if (waitForCompletion) {
-            hcc.waitForCompletion(jobId);
+            String nameBefore = Thread.currentThread().getName();
+            try {
+                Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
+                hcc.waitForCompletion(jobId);
+            } finally {
+                Thread.currentThread().setName(nameBefore);
+            }
         }
         return jobId;
     }
