@@ -286,6 +286,7 @@ public class IPCConnectionManager {
                 } catch (IOException e) {
                     LOGGER.error("Failed to accept channel ", e);
                     close(channelKey, channel);
+                    handle.setState(HandleState.CLOSED);
                 }
             }
             workingPendingConnections.clear();
