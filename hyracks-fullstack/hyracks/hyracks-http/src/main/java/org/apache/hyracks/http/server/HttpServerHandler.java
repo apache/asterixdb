@@ -91,7 +91,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
                 submit(ctx, servlet, request);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.ERROR, "Failure Submitting HTTP Request", e);
+            LOGGER.log(Level.WARN, "Failure Submitting HTTP Request", e);
             respond(ctx, request.protocolVersion(), new HttpResponseStatus(500, e.getMessage()));
         }
     }
@@ -125,15 +125,15 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     }
 
     protected void handleServletNotFound(ChannelHandlerContext ctx, FullHttpRequest request) {
-        if (LOGGER.isWarnEnabled()) {
-            LOGGER.warn("No servlet for " + request.uri());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("No servlet for " + request.uri());
         }
         respond(ctx, request.protocolVersion(), HttpResponseStatus.NOT_FOUND);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        LOGGER.log(Level.ERROR, "Failure handling HTTP Request", cause);
+        LOGGER.log(Level.WARN, "Failure handling HTTP Request", cause);
         ctx.close();
     }
 }

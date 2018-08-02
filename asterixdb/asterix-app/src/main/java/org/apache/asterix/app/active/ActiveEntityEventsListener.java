@@ -191,6 +191,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @SuppressWarnings("unchecked")
     protected void finish(ActiveEvent event) throws HyracksDataException {
         LOGGER.log(level, "the job " + jobId + " finished");
+        JobId lastJobId = jobId;
         if (numRegistered != numDeRegistered) {
             LOGGER.log(Level.WARN,
                     "the job {} finished with reported runtime registrations = {} and deregistrations = {}", jobId,
@@ -204,6 +205,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         if (!jobSuccessfullyTerminated(jobStatus)) {
             jobFailure = exceptions.isEmpty() ? new RuntimeDataException(ErrorCode.UNREPORTED_TASK_FAILURE_EXCEPTION)
                     : exceptions.get(0);
+            LOGGER.error("Active Job {} failed", lastJobId, jobFailure);
             setState((state == ActivityState.STOPPING || state == ActivityState.CANCELLING) ? ActivityState.STOPPED
                     : ActivityState.TEMPORARILY_FAILED);
             if (prevState == ActivityState.RUNNING) {
