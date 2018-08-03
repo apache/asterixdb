@@ -75,8 +75,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             ActivityState.STARTING, ActivityState.STOPPING, ActivityState.RECOVERING, ActivityState.CANCELLING);
     private static final String DEFAULT_ACTIVE_STATS = "{\"Stats\":\"N/A\"}";
     // TODO: Make configurable https://issues.apache.org/jira/browse/ASTERIXDB-2065
-    protected static final long STOP_MESSAGE_TIMEOUT = 2L;
-    protected static final long SUSPEND_MESSAGE_TIMEOUT = 5L;
+    protected static final long STOP_MESSAGE_TIMEOUT = 5L;
+    protected static final long SUSPEND_MESSAGE_TIMEOUT = 10L;
     protected static final TimeUnit TIMEOUT_UNIT = TimeUnit.MINUTES;
     protected final IClusterStateManager clusterStateManager;
     protected final ActiveNotificationHandler handler;
