@@ -296,7 +296,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 ((INcApplicationContext) (serviceCtx.getApplicationContext())).getIndexCheckpointManagerProvider();
 
         Map<Long, LocalResource> resourcesMap = localResourceRepository.loadAndGetAllResources();
-        Map<Long, Long> resourceId2MaxLSNMap = new HashMap<>();
+        final Map<Long, Long> resourceId2MaxLSNMap = new HashMap<>();
         TxnEntityId tempKeyTxnEntityId = new TxnEntityId(-1, -1, -1, null, -1, false);
 
         ILogRecord logRecord = null;
@@ -399,19 +399,25 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                             // we only need to flush open indexes here (opened by previous update records)
                             // if an index has no ongoing updates, then it's memory component must be empty
                             // and there is nothing to flush
-                            for (IndexInfo iInfo : dsInfo.getIndexes().values()) {
+                            for (final IndexInfo iInfo : dsInfo.getIndexes().values()) {
                                 if (iInfo.isOpen() && iInfo.getPartition() == partition) {
-                                    maxDiskLastLsn = resourceId2MaxLSNMap.get(iInfo.getResourceId());
-                                    index = iInfo.getIndex();
-                                    if (logRecord.getLSN() > maxDiskLastLsn
-                                            && !index.isCurrentMutableComponentEmpty()) {
-                                        // schedule flush
-                                        redoFlush(index, logRecord);
-                                        redoCount++;
+                                    Long maxLsnBeforeFlush = resourceId2MaxLSNMap.get(iInfo.getResourceId());
+                                    if (maxLsnBeforeFlush != null) {
+                                        // If there was at least one update to the resource.
+                                        // IMPORTANT: Don't remove the check above
+                                        // This check is to support indexes without transaction logs
+                                        maxDiskLastLsn = maxLsnBeforeFlush;
+                                        index = iInfo.getIndex();
+                                        if (logRecord.getLSN() > maxDiskLastLsn
+                                                && !index.isCurrentMutableComponentEmpty()) {
+                                            // schedule flush
+                                            redoFlush(index, logRecord);
+                                            redoCount++;
+                                        } else {
+                                            // TODO: update checkpoint file?
+                                        }
                                     } else {
-                                        // otherwise, do nothing since this component had no records when flush was
-                                        // scheduled.. TODO: update checkpoint file? and do the
-                                        // lsn checks from the checkpoint file
+                                        // TODO: update checkpoint file?
                                     }
                                 }
                             }
