@@ -98,4 +98,8 @@ public class HttpRequestHandler implements Callable<Void> {
     public IServlet getServlet() {
         return servlet;
     }
+
+    public IServletRequest getRequest() {
+        return request;
+    }
 }
