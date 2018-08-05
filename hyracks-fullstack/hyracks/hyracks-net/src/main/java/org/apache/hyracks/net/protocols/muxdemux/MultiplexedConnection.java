@@ -346,8 +346,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                 }
                 readerState.readBuffer.flip();
                 readerState.command.read(readerState.readBuffer);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Received command: " + readerState.command);
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Received command: " + readerState.command);
                 }
                 ChannelControlBlock ccb = null;
                 switch (readerState.command.getCommandType()) {
@@ -389,8 +389,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                         muxDemux.getChannelOpenListener().channelOpened(ccb);
                     }
                 }
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Applied command: " + readerState.command + " on " + ccb);
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Applied command: " + readerState.command + " on " + ccb);
                 }
             }
             if (readerState.pendingReadSize > 0) {

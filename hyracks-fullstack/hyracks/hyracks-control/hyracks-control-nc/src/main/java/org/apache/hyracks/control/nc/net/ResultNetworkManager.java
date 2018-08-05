@@ -137,8 +137,8 @@ public class ResultNetworkManager implements IChannelConnectionFactory {
             JobId jobId = new JobId(buffer.getLong());
             ResultSetId rsId = new ResultSetId(buffer.getLong());
             int partition = buffer.getInt();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Received initial result partition read request for JobId: " + jobId + " partition: "
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Received initial result partition read request for JobId: " + jobId + " partition: "
                         + partition + " on channel: " + ccb);
             }
             noc = new NetworkOutputChannel(ccb, nBuffers);

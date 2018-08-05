@@ -166,8 +166,8 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
     public synchronized void notifyDataAvailability(IInputChannel channel, int nFrames) {
         PartitionId pid = (PartitionId) channel.getAttachment();
         int senderIndex = pid.getSenderIndex();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Data available: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Data available: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
                     + pid.getReceiverIndex());
         }
         availableFrameCounts[senderIndex] += nFrames;
@@ -179,8 +179,8 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
     public synchronized void notifyEndOfStream(IInputChannel channel) {
         PartitionId pid = (PartitionId) channel.getAttachment();
         int senderIndex = pid.getSenderIndex();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("EOS: " + pid);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("EOS: " + pid);
         }
         eosSenders.set(senderIndex);
         notifyAll();

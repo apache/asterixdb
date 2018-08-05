@@ -107,8 +107,8 @@ public class NetworkInputChannel implements IInputChannel {
         writeBuffer.putInt(partitionId.getSenderIndex());
         writeBuffer.putInt(partitionId.getReceiverIndex());
         writeBuffer.flip();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Sending partition request: " + partitionId + " on channel: " + ccb);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Sending partition request: " + partitionId + " on channel: " + ccb);
         }
         ccb.getWriteInterface().getFullBufferAcceptor().accept(writeBuffer);
         ccb.getWriteInterface().getFullBufferAcceptor().close();

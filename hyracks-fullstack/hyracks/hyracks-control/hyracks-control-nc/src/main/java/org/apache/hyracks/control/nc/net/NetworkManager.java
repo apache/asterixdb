@@ -124,8 +124,8 @@ public class NetworkManager implements IChannelConnectionFactory {
         @Override
         public void accept(ByteBuffer buffer) {
             PartitionId pid = readInitialMessage(buffer);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Received initial partition request: " + pid + " on channel: " + ccb);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Received initial partition request: " + pid + " on channel: " + ccb);
             }
             noc = new NetworkOutputChannel(ccb, nBuffers);
             partitionManager.registerPartitionRequest(pid, noc);

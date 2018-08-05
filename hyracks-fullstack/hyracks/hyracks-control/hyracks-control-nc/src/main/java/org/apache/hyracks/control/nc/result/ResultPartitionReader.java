@@ -77,8 +77,8 @@ public class ResultPartitionReader {
                     buffer.flip();
                     channel.nextFrame(buffer);
                 }
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("result reading successful(" + resultState.getResultSetPartitionId() + ")");
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("result reading successful(" + resultState.getResultSetPartitionId() + ")");
                 }
             } catch (Exception e) {
                 LOGGER.error(() -> "failed to send result partition " + resultState.getResultSetPartitionId(), e);

@@ -71,7 +71,7 @@ class ResultSetMap implements IResultStateRecord, Serializable {
             final ResultState state = resultStates[partition];
             if (state != null) {
                 state.closeAndDelete();
-                LOGGER.debug("Removing partition: " + partition + " for JobId: " + jobId);
+                LOGGER.trace("Removing partition: {} for JobId: {}", partition, jobId);
             }
             resultStates[partition] = null;
             boolean stateEmpty = true;
@@ -96,7 +96,7 @@ class ResultSetMap implements IResultStateRecord, Serializable {
     void closeAndDeleteAll() {
         applyToAllStates((rsId, state, i) -> {
             state.closeAndDelete();
-            LOGGER.debug("Removing partition: " + i + " for result set " + rsId);
+            LOGGER.trace("Removing partition: {} for result set {}", i, rsId);
         });
     }
 

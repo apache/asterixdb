@@ -81,7 +81,7 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
             ResultState[] resultStates = rsIdMap.createOrGetResultStates(rsId, nPartitions);
             resultStates[partition] = dpw.getResultState();
         }
-        LOGGER.debug("Initialized partition writer: JobId: {}:partition: {}", jobId, partition);
+        LOGGER.trace("Initialized partition writer: JobId: {}:partition: {}", jobId, partition);
         return dpw;
     }
 
@@ -100,7 +100,7 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
     @Override
     public void reportPartitionWriteCompletion(JobId jobId, ResultSetId rsId, int partition) throws HyracksException {
         try {
-            LOGGER.debug("Reporting partition write completion: JobId: {}:ResultSetId: {}:partition: {}", jobId, rsId,
+            LOGGER.trace("Reporting partition write completion: JobId: {}:ResultSetId: {}:partition: {}", jobId, rsId,
                     partition);
             ncs.getClusterController(jobId.getCcId()).reportResultPartitionWriteCompletion(jobId, rsId, partition);
         } catch (Exception e) {
@@ -114,7 +114,7 @@ public class ResultPartitionManager extends AbstractResultManager implements IRe
         ResultState resultState = getResultState(jobId, resultSetId, partition);
         ResultPartitionReader dpr = new ResultPartitionReader(this, resultMemoryManager, executor, resultState);
         dpr.writeTo(writer);
-        LOGGER.debug("Initialized partition reader: JobId: {}:ResultSetId: {}:partition: {}", jobId, resultSetId,
+        LOGGER.trace("Initialized partition reader: JobId: {}:ResultSetId: {}:partition: {}", jobId, resultSetId,
                 partition);
     }
 
