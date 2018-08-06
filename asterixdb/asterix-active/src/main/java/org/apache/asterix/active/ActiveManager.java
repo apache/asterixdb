@@ -172,8 +172,6 @@ public class ActiveManager {
             executor.execute(() -> {
                 try {
                     stopIfRunning(runtime, content.getTimeout(), content.getUnit());
-                } catch (Exception e) {
-                    LOGGER.warn("Failed to stop runtime: {}", runtimeId, e);
                 } catch (Throwable th) {
                     LOGGER.warn("Failed to stop runtime: {}", runtimeId, th);
                     ExitUtil.halt(ExitUtil.EC_UNCAUGHT_THROWABLE);

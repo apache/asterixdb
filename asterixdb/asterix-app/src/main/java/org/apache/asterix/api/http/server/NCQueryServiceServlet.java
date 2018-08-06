@@ -45,8 +45,8 @@ import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.hyracks.api.application.INCServiceContext;
-import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.HttpServer;
@@ -144,6 +144,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             CancelQueryRequest cancelQueryMessage =
                     new CancelQueryRequest(nodeId, cancelQueryFuture.getFutureId(), clientContextID);
             // TODO(mblow): multicc -- need to send cancellation to the correct cc
+            LOGGER.info("Cancelling query due to {}", exception.getClass().getSimpleName());
             messageBroker.sendMessageToPrimaryCC(cancelQueryMessage);
             if (wait) {
                 cancelQueryFuture.get(ExecuteStatementRequestMessage.DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS,

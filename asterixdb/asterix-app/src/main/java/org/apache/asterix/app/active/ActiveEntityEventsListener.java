@@ -450,7 +450,9 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         }
         WaitForStateSubscriber subscriber = new WaitForStateSubscriber(this, waitFor);
         // Note: once we start sending stop messages, we can't go back until the entity is stopped
+        final String nameBefore = Thread.currentThread().getName();
         try {
+            Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
             sendStopMessages(metadataProvider, timeout, unit);
             LOGGER.log(Level.DEBUG, "Waiting for its state to become " + waitFor);
             subscriber.sync();
@@ -460,6 +462,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             Thread.currentThread().interrupt();
         } catch (Throwable e) {
             forceStop(subscriber, e);
+        } finally {
+            Thread.currentThread().setName(nameBefore);
         }
     }
 
