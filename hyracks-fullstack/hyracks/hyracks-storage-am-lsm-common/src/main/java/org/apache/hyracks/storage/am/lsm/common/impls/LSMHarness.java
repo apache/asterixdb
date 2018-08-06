@@ -142,9 +142,7 @@ public class LSMHarness implements ILSMHarness {
             }
             entranceSuccessful = numEntered == components.size();
         } catch (Throwable e) { // NOSONAR: Log and re-throw
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.log(Level.ERROR, opType.name() + " failed to enter components on " + lsmIndex, e);
-            }
+            LOGGER.warn("{} failed to enter components on {}", opType.name(), lsmIndex, e);
             throw e;
         } finally {
             if (!entranceSuccessful) {
@@ -201,9 +199,7 @@ public class LSMHarness implements ILSMHarness {
                     ctx.setAccessingComponents(false);
                     exitOperation(ctx, opType, newComponent, failedOperation);
                 } catch (Throwable e) { // NOSONAR: Log and re-throw
-                    if (LOGGER.isErrorEnabled()) {
-                        LOGGER.log(Level.ERROR, e.getMessage(), e);
-                    }
+                    LOGGER.warn("Failure exiting components", e);
                     throw e;
                 } finally {
                     if (failedOperation && (opType == LSMOperationType.MODIFICATION
@@ -710,9 +706,7 @@ public class LSMHarness implements ILSMHarness {
                 processor.finish();
             }
         } catch (HyracksDataException e) {
-            if (LOGGER.isErrorEnabled()) {
-                LOGGER.log(Level.ERROR, "Failed to process frame", e);
-            }
+            LOGGER.warn("Failed to process frame", e);
             throw e;
         } finally {
             exit(ctx);

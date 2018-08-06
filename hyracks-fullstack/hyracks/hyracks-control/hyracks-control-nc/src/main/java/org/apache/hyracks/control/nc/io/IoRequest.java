@@ -44,7 +44,7 @@ public class IoRequest implements IAsyncRequest, InterruptibleAction {
     private long offset;
     private ByteBuffer data;
     private ByteBuffer[] dataArray;
-    private HyracksDataException failure;
+    private Throwable failure;
     private int read;
     private int write;
     private long writes;
@@ -133,15 +133,17 @@ public class IoRequest implements IAsyncRequest, InterruptibleAction {
             state = State.OPERATION_SUCCEEDED;
         } catch (Throwable th) { // NOSONAR: This method must never throw anything
             state = State.OPERATION_FAILED;
-            failure = HyracksDataException.create(th);
+            failure = th;
+        } finally {
+            notifyAll();
         }
-        notifyAll();
     }
 
     public State getState() {
         return state;
     }
 
+    @SuppressWarnings("squid:S899") // Offer failing means we're over capacity and this should be garbage collected
     void recycle() {
         reset();
         freeRequests.offer(this);
@@ -165,6 +167,6 @@ public class IoRequest implements IAsyncRequest, InterruptibleAction {
     }
 
     public HyracksDataException getFailure() {
-        return failure;
+        return HyracksDataException.create(failure);
     }
 }
