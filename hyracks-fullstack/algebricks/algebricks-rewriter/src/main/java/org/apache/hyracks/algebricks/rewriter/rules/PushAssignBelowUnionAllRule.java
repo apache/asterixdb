@@ -163,6 +163,7 @@ public class PushAssignBelowUnionAllRule implements IAlgebraicRewriteRule {
                     assignOp.getExpressions().get(i).getValue().cloneExpression()));
         }
         AssignOperator assignCloneOp = new AssignOperator(vars, exprs);
+        assignCloneOp.setSourceLocation(assignOp.getSourceLocation());
         assignCloneOp.setExecutionMode(assignOp.getExecutionMode());
         return assignCloneOp;
     }

@@ -223,6 +223,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                     AssignOperator newAssignOperator =
                             new AssignOperator(newAssignVar, new MutableObject<ILogicalExpression>(cast));
                     newAssignOperator.setSourceLocation(sourceLoc);
+                    newAssignOperator.setExecutionMode(op.getExecutionMode());
                     newAssignOperator.getInputs().add(new MutableObject<ILogicalOperator>(op));
                     opRef.setValue(newAssignOperator);
                     context.computeAndSetTypeEnvironmentForOperator(newAssignOperator);

@@ -69,8 +69,9 @@ public class InjectTypeCastForUnionRule implements IAlgebraicRewriteRule {
         // Gets the type environments for the union all operator and its child operator with the right child index.
         IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op);
         Mutable<ILogicalOperator> branchOpRef = op.getInputs().get(childIndex);
-        IVariableTypeEnvironment childEnv = context.getOutputTypeEnvironment(branchOpRef.getValue());
-        SourceLocation sourceLoc = branchOpRef.getValue().getSourceLocation();
+        ILogicalOperator branchOp = branchOpRef.getValue();
+        IVariableTypeEnvironment childEnv = context.getOutputTypeEnvironment(branchOp);
+        SourceLocation sourceLoc = branchOp.getSourceLocation();
 
         // The two lists are used for the assign operator that calls cast functions.
         List<LogicalVariable> varsToCast = new ArrayList<>();
@@ -109,7 +110,8 @@ public class InjectTypeCastForUnionRule implements IAlgebraicRewriteRule {
         // Injects an assign operator to perform type casts.
         AssignOperator assignOp = new AssignOperator(varsToCast, castFunctionsForLeft);
         assignOp.setSourceLocation(sourceLoc);
-        assignOp.getInputs().add(new MutableObject<>(branchOpRef.getValue()));
+        assignOp.setExecutionMode(branchOp.getExecutionMode());
+        assignOp.getInputs().add(new MutableObject<>(branchOp));
         branchOpRef.setValue(assignOp);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
 

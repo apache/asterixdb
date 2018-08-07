@@ -76,12 +76,13 @@ public class InsertProjectBeforeUnionRule implements IAlgebraicRewriteRule {
     private void insertProjectOperator(UnionAllOperator opUnion, int branch, ArrayList<LogicalVariable> usedVariables,
             IOptimizationContext context) throws AlgebricksException {
         ProjectOperator projectOp = new ProjectOperator(usedVariables);
-        ILogicalOperator parentOp = opUnion.getInputs().get(branch).getValue();
-        projectOp.getInputs().add(new MutableObject<ILogicalOperator>(parentOp));
+        ILogicalOperator inputOp = opUnion.getInputs().get(branch).getValue();
+        projectOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         opUnion.getInputs().get(branch).setValue(projectOp);
         projectOp.setPhysicalOperator(new StreamProjectPOperator());
+        projectOp.setExecutionMode(inputOp.getExecutionMode());
         context.computeAndSetTypeEnvironmentForOperator(projectOp);
-        context.computeAndSetTypeEnvironmentForOperator(parentOp);
+        context.computeAndSetTypeEnvironmentForOperator(inputOp);
     }
 
     private boolean isIdentical(List<LogicalVariable> finalSchema, List<LogicalVariable> inputSchema)

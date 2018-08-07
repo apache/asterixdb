@@ -208,6 +208,7 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         }
 
         ProjectOperator pi2 = new ProjectOperator(new ArrayList<LogicalVariable>(toPush));
+        pi2.setSourceLocation(op.getSourceLocation());
         pi2.getInputs().add(new MutableObject<ILogicalOperator>(op));
         opRef.setValue(pi2);
         pi2.setExecutionMode(op.getExecutionMode());
