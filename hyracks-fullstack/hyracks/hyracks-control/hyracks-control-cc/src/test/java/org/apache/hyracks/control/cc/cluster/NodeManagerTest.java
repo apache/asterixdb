@@ -56,7 +56,7 @@ public class NodeManagerTest {
         final CCConfig ccConfig = makeCCConfig();
         final int coresMultiplier = 1;
         ccConfig.setCoresMultiplier(coresMultiplier);
-        INodeManager nodeManager = new NodeManager(mockCcs(), ccConfig, resourceManager);
+        INodeManager nodeManager = new NodeManager(mockCcs(), ccConfig, resourceManager, nodeId -> true);
         NodeControllerState ncState1 = mockNodeControllerState(NODE1, false);
         NodeControllerState ncState2 = mockNodeControllerState(NODE2, false);
 
@@ -84,7 +84,7 @@ public class NodeManagerTest {
         final CCConfig ccConfig = makeCCConfig();
         final int coresMultiplier = 3;
         ccConfig.setCoresMultiplier(coresMultiplier);
-        INodeManager nodeManager = new NodeManager(mockCcs(), ccConfig, resourceManager);
+        INodeManager nodeManager = new NodeManager(mockCcs(), ccConfig, resourceManager, nodeId -> true);
         NodeControllerState ncState1 = mockNodeControllerState(NODE1, false);
         NodeControllerState ncState2 = mockNodeControllerState(NODE2, false);
 
@@ -113,7 +113,7 @@ public class NodeManagerTest {
     @Test
     public void testException() throws HyracksException, IPCException {
         IResourceManager resourceManager = new ResourceManager();
-        INodeManager nodeManager = new NodeManager(mockCcs(), makeCCConfig(), resourceManager);
+        INodeManager nodeManager = new NodeManager(mockCcs(), makeCCConfig(), resourceManager, nodeId -> true);
         NodeControllerState ncState1 = mockNodeControllerState(NODE1, true);
 
         boolean invalidNetworkAddress = false;
@@ -142,7 +142,7 @@ public class NodeManagerTest {
     @Test
     public void testNullNode() throws HyracksException {
         IResourceManager resourceManager = new ResourceManager();
-        INodeManager nodeManager = new NodeManager(null, makeCCConfig(), resourceManager);
+        INodeManager nodeManager = new NodeManager(null, makeCCConfig(), resourceManager, nodeId -> true);
 
         boolean invalidParameter = false;
         // Verifies states after a failure during adding nodes.
@@ -215,6 +215,28 @@ public class NodeManagerTest {
             nodeNotExist = e.getErrorCode() == ErrorCode.NO_SUCH_NODE;
         }
         Assert.assertTrue(nodeNotExist);
+    }
+
+    @Test
+    public void testUnauthorized() throws HyracksException, IPCException {
+        IResourceManager resourceManager = new ResourceManager();
+        final CCConfig ccConfig = makeCCConfig();
+        INodeManager nodeManager = new NodeManager(mockCcs(), ccConfig, resourceManager, NODE1::equals);
+        NodeControllerState ncState1 = mockNodeControllerState(NODE1, false);
+        NodeControllerState ncState2 = mockNodeControllerState(NODE2, false);
+
+        nodeManager.addNode(NODE1, ncState1);
+        boolean nodeNotExist = false;
+        try {
+            nodeManager.addNode(NODE2, ncState2);
+        } catch (HyracksException e) {
+            nodeNotExist = e.getErrorCode() == ErrorCode.NO_SUCH_NODE;
+        }
+        Assert.assertTrue(nodeNotExist);
+        Assert.assertTrue(nodeManager.getIpAddressNodeNameMap().size() == 1);
+        Assert.assertTrue(nodeManager.getAllNodeIds().size() == 1);
+        Assert.assertTrue(nodeManager.getAllNodeControllerStates().size() == 1);
+        Assert.assertTrue(nodeManager.getNodeControllerState(NODE1) == ncState1);
     }
 
 }

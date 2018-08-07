@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.client.NodeStatus;
+import org.apache.hyracks.api.control.IGatekeeper;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -45,8 +46,6 @@ import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.cc.scheduler.IResourceManager;
 import org.apache.hyracks.control.common.controllers.CCConfig;
-import org.apache.hyracks.control.common.ipc.CCNCFunctions.AbortCCJobsFunction;
-import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.util.annotations.Idempotent;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
@@ -63,14 +62,17 @@ public class NodeManager implements INodeManager {
     private final Map<String, NodeControllerState> nodeRegistry;
     private final Map<InetAddress, Set<String>> ipAddressNodeNameMap;
     private final int nodeCoresMultiplier;
+    private final IGatekeeper gatekeeper;
 
-    public NodeManager(ClusterControllerService ccs, CCConfig ccConfig, IResourceManager resourceManager) {
+    public NodeManager(ClusterControllerService ccs, CCConfig ccConfig, IResourceManager resourceManager,
+            IGatekeeper gatekeeper) {
         this.ccs = ccs;
         this.ccConfig = ccConfig;
         this.resourceManager = resourceManager;
         this.nodeRegistry = new LinkedHashMap<>();
         this.ipAddressNodeNameMap = new HashMap<>();
         this.nodeCoresMultiplier = ccConfig.getCoresMultiplier();
+        this.gatekeeper = gatekeeper;
     }
 
     @Override
@@ -95,13 +97,16 @@ public class NodeManager implements INodeManager {
 
     @Override
     public synchronized void addNode(String nodeId, NodeControllerState ncState) throws HyracksException {
-        LOGGER.warn("addNode(" + nodeId + ") called");
+        LOGGER.warn("+addNode: " + nodeId);
         if (nodeId == null || ncState == null) {
             throw HyracksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
         }
+        if (!gatekeeper.isAuthorized(nodeId)) {
+            throw HyracksException.create(ErrorCode.NO_SUCH_NODE, nodeId);
+        }
         // Updates the node registry.
         if (nodeRegistry.containsKey(nodeId)) {
-            LOGGER.warn("Node with name " + nodeId + " has already registered; failing the node then re-registering.");
+            LOGGER.warn("Node '" + nodeId + "' is already registered; failing the node then re-registering.");
             failNode(nodeId);
         }
         try {
@@ -109,7 +114,7 @@ public class NodeManager implements INodeManager {
         } catch (IPCException e) {
             throw HyracksDataException.create(e);
         }
-        LOGGER.warn("adding node to registry");
+        LOGGER.info("adding node to registry");
         nodeRegistry.put(nodeId, ncState);
         // Updates the IP address to node names map.
         try {
@@ -121,8 +126,7 @@ public class NodeManager implements INodeManager {
             nodeRegistry.remove(nodeId);
             throw e;
         }
-        // Updates the cluster capacity.
-        LOGGER.warn("updating cluster capacity");
+        LOGGER.info("updating cluster capacity");
         resourceManager.update(nodeId, getAdjustedNodeCapacity(ncState.getCapacity()));
     }
 

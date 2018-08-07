@@ -86,6 +86,7 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.config.IConfigManager;
+import org.apache.hyracks.api.control.IGatekeeper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
@@ -117,6 +118,7 @@ public class CCApplication extends BaseCCApplication {
 
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
+        super.init(serviceCtx);
         ccServiceCtx = (ICCServiceContext) serviceCtx;
         ccServiceCtx.setThreadFactory(
                 new AsterixThreadFactory(ccServiceCtx.getThreadFactory(), new LifeCycleComponentManager()));
@@ -354,4 +356,8 @@ public class CCApplication extends BaseCCApplication {
         ApplicationConfigurator.validateJavaRuntime();
     }
 
+    @Override
+    public IGatekeeper getGatekeeper() {
+        return getConfigManager().getAppConfig().getNCNames()::contains;
+    }
 }

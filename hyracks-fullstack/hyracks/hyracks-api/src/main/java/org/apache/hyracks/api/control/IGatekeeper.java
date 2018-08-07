@@ -16,18 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.application;
+package org.apache.hyracks.api.control;
 
-import org.apache.hyracks.api.config.IConfigManager;
-import org.apache.hyracks.api.control.IGatekeeper;
-import org.apache.hyracks.api.job.resource.IJobCapacityController;
-
-public interface ICCApplication extends IApplication {
-
-    IJobCapacityController getJobCapacityController();
-
-    IConfigManager getConfigManager();
-
-    IGatekeeper getGatekeeper();
-
+@FunctionalInterface
+public interface IGatekeeper {
+    /**
+     * Indicates whether the supplied node is authorized to join this cluster
+     * @param nodeId
+     *          the node to consider
+     * @return <code>true</code> if the supplied node is authorized
+     */
+    boolean isAuthorized(String nodeId);
 }

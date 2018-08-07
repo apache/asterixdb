@@ -179,7 +179,7 @@ public class ClusterControllerService implements IControllerService {
         threadDumpRunMap = Collections.synchronizedMap(new HashMap<>());
 
         // Node manager is in charge of cluster membership management.
-        nodeManager = new NodeManager(this, ccConfig, resourceManager);
+        nodeManager = new NodeManager(this, ccConfig, resourceManager, application.getGatekeeper());
 
         ccId = ccConfig.getCcId();
         jobIdFactory = new JobIdFactory(ccId);
