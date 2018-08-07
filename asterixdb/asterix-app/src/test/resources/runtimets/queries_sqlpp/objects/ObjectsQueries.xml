@@ -178,7 +178,7 @@
   <test-case FilePath="objects">
     <compilation-unit name="closed-closed-fieldname-conflict_issue173">
       <output-dir compare="Text">closed-closed-fieldname-conflict_issue173</output-dir>
-      <expected-error>Closed fields 0 and 1 have the same field name "name"</expected-error>
+      <expected-error>Duplicate field name "name"</expected-error>
       <source-location>false</source-location>
     </compilation-unit>
   </test-case>

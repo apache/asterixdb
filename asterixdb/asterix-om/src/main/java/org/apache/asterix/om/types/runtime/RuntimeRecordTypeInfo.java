@@ -22,6 +22,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
@@ -99,8 +101,7 @@ public class RuntimeRecordTypeInfo {
                     int j = getFieldIndex(baaos.getByteArray(), serializedFieldNameOffsets[i],
                             UTF8StringUtil.getStringLength(baaos.getByteArray(), serializedFieldNameOffsets[i]));
                     if (j != i) {
-                        throw new IllegalStateException("Closed fields " + j + " and " + i
-                                + " have the same field name \"" + fieldNames[i] + "\"");
+                        throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME, fieldNames[i]);
                     }
                 }
             } catch (IOException e) {
