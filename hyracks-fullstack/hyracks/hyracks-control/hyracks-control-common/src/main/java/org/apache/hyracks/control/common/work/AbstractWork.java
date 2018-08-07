@@ -23,7 +23,7 @@ import org.apache.logging.log4j.Level;
 public abstract class AbstractWork implements Runnable {
 
     public Level logLevel() {
-        return Level.INFO;
+        return Level.DEBUG;
     }
 
     public String getName() {

@@ -147,7 +147,7 @@ public class StartTasksWork extends AbstractWork {
                 ActivityId aid = tid.getActivityId();
                 ActivityCluster ac = acg.getActivityMap().get(aid);
                 IActivity han = ac.getActivityMap().get(aid);
-                LOGGER.info("Initializing {} -> {} for {}", taId, han, jobId);
+                LOGGER.trace("Initializing {} -> {} for {}", taId, han, jobId);
                 final int partition = tid.getPartition();
                 List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
                 task = null;
@@ -159,7 +159,7 @@ public class StartTasksWork extends AbstractWork {
                     for (int i = 0; i < inputs.size(); ++i) {
                         IConnectorDescriptor conn = inputs.get(i);
                         IConnectorPolicy cPolicy = connectorPoliciesMap.get(conn.getConnectorId());
-                        LOGGER.info("input: {}: {}", i, conn.getConnectorId());
+                        LOGGER.trace("input: {}: {}", i, conn.getConnectorId());
                         RecordDescriptor recordDesc = ac.getConnectorRecordDescriptorMap().get(conn.getConnectorId());
                         IPartitionCollector collector =
                                 createPartitionCollector(td, partition, task, i, conn, recordDesc, cPolicy);
@@ -176,7 +176,7 @@ public class StartTasksWork extends AbstractWork {
 
                         IPartitionWriterFactory pwFactory =
                                 createPartitionWriterFactory(task, cPolicy, jobId, conn, partition, taId, flags);
-                        LOGGER.info("input: {}: {}", i, conn.getConnectorId());
+                        LOGGER.trace("input: {}: {}", i, conn.getConnectorId());
                         IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition,
                                 td.getPartitionCount(), td.getOutputPartitionCounts()[i]);
                         writer = enforce ? EnforceFrameWriter.enforce(writer) : writer;

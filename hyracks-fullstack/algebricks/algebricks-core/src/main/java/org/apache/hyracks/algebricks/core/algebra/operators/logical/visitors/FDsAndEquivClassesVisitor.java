@@ -313,12 +313,10 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
                 newGbyList.add(p);
             }
         }
-        if (changed) {
-            if (AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled()) {
-                AlgebricksConfig.ALGEBRICKS_LOGGER
-                        .debug(">>>> Group-by list changed from " + GroupByOperator.veListToString(gByList) + " to "
-                                + GroupByOperator.veListToString(newGbyList) + ".\n");
-            }
+        if (changed && AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER
+                    .trace(">>>> Group-by list changed from " + GroupByOperator.veListToString(gByList) + " to "
+                            + GroupByOperator.veListToString(newGbyList) + ".\n");
         }
         gByList.clear();
         gByList.addAll(newGbyList);

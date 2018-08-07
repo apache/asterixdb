@@ -114,18 +114,18 @@ public class JoinUtils {
         ILogicalOperator opBuild = op.getInputs().get(1).getValue();
         LogicalPropertiesVisitor.computeLogicalPropertiesDFS(opBuild, context);
         ILogicalPropertiesVector v = context.getLogicalPropertiesVector(opBuild);
-        boolean loggerDebugEnabled = AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled();
-        if (loggerDebugEnabled) {
+        boolean loggerTraceEnabled = AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled();
+        if (loggerTraceEnabled) {
             AlgebricksConfig.ALGEBRICKS_LOGGER
-                    .debug("// HybridHashJoin inner branch -- Logical properties for " + opBuild + ": " + v + "\n");
+                    .trace("// HybridHashJoin inner branch -- Logical properties for " + opBuild + ": " + v + "\n");
         }
         if (v != null) {
             int size2 = v.getMaxOutputFrames();
             HybridHashJoinPOperator hhj = (HybridHashJoinPOperator) op.getPhysicalOperator();
             if (size2 > 0 && size2 * hhj.getFudgeFactor() <= hhj.getMemSizeInFrames()) {
-                if (loggerDebugEnabled) {
+                if (loggerTraceEnabled) {
                     AlgebricksConfig.ALGEBRICKS_LOGGER
-                            .debug("// HybridHashJoin inner branch " + opBuild + " fits in memory\n");
+                            .trace("// HybridHashJoin inner branch " + opBuild + " fits in memory\n");
                 }
                 // maintains the local properties on the probe side
                 op.setPhysicalOperator(

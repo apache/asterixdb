@@ -124,8 +124,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         // somewhere else, too.
 
         physicalOptimizationConfig = context.getPhysicalOptimizationConfig();
-        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled()) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.debug(">>>> Optimizing operator " + op.getPhysicalOperator() + ".\n");
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> Optimizing operator " + op.getPhysicalOperator() + ".\n");
         }
 
         PhysicalOptimizationsUtil.computeFDsAndEquivalenceClasses(op, context);
@@ -320,7 +320,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         }
 
         if (opIsRedundantSort) {
-            if (AlgebricksConfig.DEBUG && loggerTraceEnabled) {
+            if (loggerTraceEnabled) {
                 AlgebricksConfig.ALGEBRICKS_LOGGER
                         .trace(">>>> Removing redundant SORT operator " + op.getPhysicalOperator() + "\n");
                 printOp(op);
@@ -477,7 +477,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
     private void addLocalEnforcers(AbstractLogicalOperator op, int i, List<ILocalStructuralProperty> localProperties,
             boolean nestedPlan, IOptimizationContext context) throws AlgebricksException {
-        if (AlgebricksConfig.DEBUG && AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
             AlgebricksConfig.ALGEBRICKS_LOGGER
                     .trace(">>>> Adding local enforcers for local props = " + localProperties + "\n");
         }
@@ -549,7 +549,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         }
         oo.getInputs().add(topOp);
         context.computeAndSetTypeEnvironmentForOperator(oo);
-        if (AlgebricksConfig.DEBUG && AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
             AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> Added sort enforcer " + oo.getPhysicalOperator() + ".\n");
         }
         return new MutableObject<ILogicalOperator>(oo);
@@ -632,9 +632,9 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             exchg.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
             OperatorPropertiesUtil.computeSchemaAndPropertiesRecIfNull(exchg, context);
             context.computeAndSetTypeEnvironmentForOperator(exchg);
-            if (AlgebricksConfig.DEBUG && AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled()) {
+            if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
                 AlgebricksConfig.ALGEBRICKS_LOGGER
-                        .debug(">>>> Added partitioning enforcer " + exchg.getPhysicalOperator() + ".\n");
+                        .trace(">>>> Added partitioning enforcer " + exchg.getPhysicalOperator() + ".\n");
                 printOp((AbstractLogicalOperator) op);
             }
         }
@@ -652,8 +652,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
     private void printOp(AbstractLogicalOperator op) throws AlgebricksException {
         LogicalOperatorPrettyPrintVisitor pvisitor = new LogicalOperatorPrettyPrintVisitor();
         PlanPrettyPrinter.printOperator(op, pvisitor, 0);
-        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled()) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.debug(pvisitor.get().toString());
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace(pvisitor.get().toString());
         }
     }
 

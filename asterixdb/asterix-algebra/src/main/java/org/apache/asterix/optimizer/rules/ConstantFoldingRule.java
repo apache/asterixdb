@@ -246,8 +246,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 IAObject o = (IAObject) serde.deserialize(dis);
                 return new Pair<>(true, new ConstantExpression(new AsterixConstantValue(o)));
             } catch (HyracksDataException | AlgebricksException e) {
-                if (AlgebricksConfig.ALGEBRICKS_LOGGER.isDebugEnabled()) {
-                    AlgebricksConfig.ALGEBRICKS_LOGGER.debug("Exception caught at constant folding: " + e, e);
+                if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
+                    AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Exception caught at constant folding: " + e, e);
                 }
                 return new Pair<>(false, null);
             }

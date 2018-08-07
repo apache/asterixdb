@@ -74,15 +74,15 @@ public class HeuristicOptimizer {
         if (plan == null) {
             return;
         }
-        if (AlgebricksConfig.DEBUG) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.debug("Starting logical optimizations.\n");
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting logical optimizations.\n");
         }
 
-        logPlanAt("Logical Plan", Level.DEBUG);
+        logPlanAt("Logical Plan", Level.TRACE);
         runOptimizationSets(plan, logicalRewrites);
         computeSchemaBottomUpForPlan(plan);
         runPhysicalOptimizations(plan, physicalRewrites);
-        logPlanAt("Optimized Plan", Level.DEBUG);
+        logPlanAt("Optimized Plan", Level.TRACE);
     }
 
     private void logPlanAt(String name, Level lvl) throws AlgebricksException {
@@ -126,8 +126,8 @@ public class HeuristicOptimizer {
     private void runPhysicalOptimizations(ILogicalPlan plan,
             List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites)
             throws AlgebricksException {
-        if (AlgebricksConfig.DEBUG) {
-            AlgebricksConfig.ALGEBRICKS_LOGGER.debug("Starting physical optimizations.\n");
+        if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting physical optimizations.\n");
         }
         // PhysicalOptimizationsUtil.computeFDsAndEquivalenceClasses(plan);
         runOptimizationSets(plan, physicalRewrites);

@@ -230,7 +230,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     public void close() {
         long stillAllocated = memoryAllocation.get();
         if (stillAllocated > 0) {
-            LOGGER.info(() -> "Freeing leaked " + stillAllocated + " bytes");
+            LOGGER.trace(() -> "Freeing leaked " + stillAllocated + " bytes");
             serviceCtx.getMemoryManager().deallocate(stillAllocated);
         }
         nodeController.getExecutor().execute(() -> deallocatableRegistry.close());

@@ -83,8 +83,8 @@ public class WorkQueue {
         if (DEBUG) {
             LOGGER.log(Level.DEBUG, "Enqueue (" + hashCode() + "): " + enqueueCount.incrementAndGet());
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Scheduling: " + event);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Scheduling: " + event);
         }
         queue.offer(event);
     }
@@ -128,19 +128,21 @@ public class WorkQueue {
                 } catch (Exception e) {
                     LOGGER.log(Level.WARN, "Exception while executing " + r, e);
                 } finally {
-                    auditWaitsAndBlocks(r, before);
+                    if (LOGGER.isTraceEnabled()) {
+                        traceWaitsAndBlocks(r, before);
+                    }
                 }
             }
         }
 
-        protected void auditWaitsAndBlocks(AbstractWork r, ThreadInfo before) {
+        protected void traceWaitsAndBlocks(AbstractWork r, ThreadInfo before) {
             ThreadInfo after = threadMXBean.getThreadInfo(thread.getId());
             final long waitedDelta = after.getWaitedCount() - before.getWaitedCount();
             final long blockedDelta = after.getBlockedCount() - before.getBlockedCount();
             if (waitedDelta > 0 || blockedDelta > 0) {
-                LOGGER.warn("Work " + r + " waited " + waitedDelta + " times (~"
-                        + (after.getWaitedTime() - before.getWaitedTime()) + "ms), blocked " + blockedDelta
-                        + " times (~" + (after.getBlockedTime() - before.getBlockedTime()) + "ms)");
+                LOGGER.trace("Work {} waited {} times (~{}ms), blocked {} times (~{}ms)", r, waitedDelta,
+                        after.getWaitedTime() - before.getWaitedTime(), blockedDelta,
+                        after.getBlockedTime() - before.getBlockedTime());
             }
         }
     }
