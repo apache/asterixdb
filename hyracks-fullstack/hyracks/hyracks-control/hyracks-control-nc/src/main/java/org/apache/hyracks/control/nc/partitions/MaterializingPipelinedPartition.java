@@ -30,6 +30,7 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.partitions.IPartition;
 import org.apache.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -89,7 +90,7 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                 Thread thread = Thread.currentThread();
                 setDataConsumerThread(thread); // Sets the data consumer thread to the current thread.
                 try {
-                    thread.setName(MaterializingPipelinedPartition.class.getName() + " " + pid);
+                    thread.setName(MaterializingPipelinedPartition.this.getClass().getSimpleName() + " " + pid);
                     FileReference fRefCopy;
                     synchronized (MaterializingPipelinedPartition.this) {
                         while (fRef == null && !eos && !failed) {
@@ -164,7 +165,8 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
                         }
                     }
                 } catch (Exception e) {
-                    LOGGER.warn("Failure writing to a frame", e);
+                    LOGGER.log(ExceptionUtils.causedByInterrupt(e) ? Level.DEBUG : Level.WARN,
+                            "Failure writing to a frame", e);
                 } finally {
                     setDataConsumerThread(null); // Sets back the data consumer thread to null.
                 }

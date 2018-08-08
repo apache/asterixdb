@@ -46,6 +46,7 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
@@ -193,7 +194,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                         tryRead(cPage);
                         cPage.valid = true;
                     } catch (Exception e) {
-                        LOGGER.log(Level.WARN, "Failure while trying to read a page from disk", e);
+                        LOGGER.log(ExceptionUtils.causedByInterrupt(e) ? Level.DEBUG : Level.WARN,
+                                "Failure while trying to read a page from disk", e);
                         throw e;
                     } finally {
                         if (!cPage.valid) {

@@ -355,10 +355,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         if (!exceptions.isEmpty()) {
             if (LOGGER.isWarnEnabled()) {
                 for (int i = 0; i < exceptions.size(); i++) {
-                    LOGGER.log(Level.WARN,
-                            "Task " + taskAttemptId + " failed with exception"
+                    Exception e = exceptions.get(i);
+                    LOGGER.log(ExceptionUtils.causedByInterrupt(e) ? Level.DEBUG : Level.WARN,
+                            "Task failed with exception"
                                     + (exceptions.size() > 1 ? "s (" + (i + 1) + "/" + exceptions.size() + ")" : ""),
-                            exceptions.get(i));
+                            e);
                 }
             }
             ExceptionUtils.setNodeIds(exceptions, ncs.getId());

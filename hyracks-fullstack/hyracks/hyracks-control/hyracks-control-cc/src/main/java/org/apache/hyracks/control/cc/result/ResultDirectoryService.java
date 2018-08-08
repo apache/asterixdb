@@ -40,6 +40,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.control.common.result.AbstractResultManager;
 import org.apache.hyracks.control.common.result.ResultStateSweeper;
 import org.apache.hyracks.control.common.work.IResultCallback;
@@ -146,19 +147,20 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
 
     @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
-        LOGGER.log(Level.INFO, "job " + jobId + " failed and is being reported to " + getClass().getSimpleName(),
-                exceptions.get(0));
+        Exception ex = exceptions.isEmpty() ? null : exceptions.get(0);
+        Level logLevel = ExceptionUtils.causedByInterrupt(ex) ? Level.DEBUG : Level.INFO;
+        LOGGER.log(logLevel, "job " + jobId + " failed and is being reported to " + getClass().getSimpleName(), ex);
         ResultJobRecord rjr = getResultJobRecord(jobId);
-        LOGGER.log(Level.INFO, "Result job record is " + rjr);
+        LOGGER.log(logLevel, "Result job record is " + rjr);
         if (rjr != null) {
-            LOGGER.log(Level.INFO, "Setting exceptions in Result job record");
+            LOGGER.log(logLevel, "Setting exceptions in Result job record");
             rjr.fail(exceptions);
         }
         final JobResultInfo jobResultInfo = jobResultLocations.get(jobId);
-        LOGGER.log(Level.INFO, "Job result info is " + jobResultInfo);
+        LOGGER.log(logLevel, "Job result info is " + jobResultInfo);
         if (jobResultInfo != null) {
-            LOGGER.log(Level.INFO, "Setting exceptions in Job result info");
-            jobResultInfo.setException(exceptions.isEmpty() ? null : exceptions.get(0));
+            LOGGER.log(logLevel, "Setting exceptions in Job result info");
+            jobResultInfo.setException(ex);
         }
         notifyAll();
     }

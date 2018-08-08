@@ -130,4 +130,7 @@ public class ExceptionUtils {
         return current;
     }
 
+    public static boolean causedByInterrupt(Throwable th) {
+        return getRootCause(th) instanceof InterruptedException;
+    }
 }
