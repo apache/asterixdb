@@ -353,6 +353,8 @@ public final class RuleCollections {
         physicalRewritesTopLevel.add(new ConstantFoldingRule(appCtx));
         physicalRewritesTopLevel.add(new PushLimitIntoOrderByRule());
         physicalRewritesTopLevel.add(new PushLimitIntoPrimarySearchRule());
+        // remove assigns that could become unused after PushLimitIntoPrimarySearchRule
+        physicalRewritesTopLevel.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesTopLevel.add(new IntroduceProjectsRule());
         physicalRewritesTopLevel.add(new SetAlgebricksPhysicalOperatorsRule());
         physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectAssignRule());

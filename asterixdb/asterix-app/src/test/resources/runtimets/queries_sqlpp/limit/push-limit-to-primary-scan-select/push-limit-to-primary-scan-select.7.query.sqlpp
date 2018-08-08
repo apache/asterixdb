@@ -16,32 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/* scan and print a delimited text file */
-
-/*
- * Description     : Test push down limit and select condition into primary index scan operator
- * Expected Result : Success
- */
-
-drop  dataverse test if exists;
-create  dataverse test;
 
 use test;
 
-create type test.DBLPType as
-{
-  id : bigint,
-  dblpid : string,
-  title : string,
-  authors : string,
-  misc : string
-};
-
-create type test.TweetMessageType as
-{
-  tweetid : string
-};
-
-create dataset DBLP1(DBLPType) primary key id;
-
-create  dataset TweetMessages(TweetMessageType) primary key tweetid;
+select substring(dblpid, 0, 21)
+from DBLP1
+where dblpid > "series"
+limit 1;

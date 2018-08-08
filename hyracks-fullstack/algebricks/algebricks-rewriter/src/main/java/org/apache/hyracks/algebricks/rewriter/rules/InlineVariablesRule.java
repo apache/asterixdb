@@ -187,7 +187,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         return modified;
     }
 
-    protected class InlineVariablesVisitor implements ILogicalExpressionReferenceTransform {
+    public static class InlineVariablesVisitor implements ILogicalExpressionReferenceTransform {
 
         private final Map<LogicalVariable, ILogicalExpression> varAssignRhs;
         private final Set<LogicalVariable> liveVars = new HashSet<>();

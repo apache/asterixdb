@@ -19,13 +19,17 @@
 package org.apache.asterix.optimizer.rules;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -34,16 +38,18 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.algebricks.rewriter.rules.InlineVariablesRule;
 
 /**
  * Pattern:
- * SCAN or UNNEST_MAP -> (SELECT)? -> (EXCHANGE)? -> LIMIT
+ * SCAN or UNNEST_MAP -> ((ASSIGN)* -> (SELECT))? -> (EXCHANGE)? -> LIMIT
  * We push both SELECT condition and LIMIT to SCAN or UNNEST_MAP
  *
  */
@@ -78,7 +84,7 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
         }
         boolean changed;
         if (childOp.getValue().getOperatorTag() == LogicalOperatorTag.SELECT) {
-            changed = rewriteSelect(childOp, outputLimit);
+            changed = rewriteSelect(childOp, outputLimit, context);
         } else {
             changed = setLimitForScanOrUnnestMap(childOp.getValue(), outputLimit);
         }
@@ -88,30 +94,64 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
         return changed;
     }
 
-    private boolean rewriteSelect(Mutable<ILogicalOperator> op, int outputLimit) {
+    private boolean rewriteSelect(Mutable<ILogicalOperator> op, int outputLimit, IOptimizationContext context)
+            throws AlgebricksException {
         SelectOperator select = (SelectOperator) op.getValue();
+        ILogicalExpression selectCondition = select.getCondition().getValue();
         Set<LogicalVariable> selectedVariables = new HashSet<>();
-        select.getCondition().getValue().getUsedVariables(selectedVariables);
+        selectCondition.getUsedVariables(selectedVariables);
+
+        MutableObject<ILogicalExpression> selectConditionRef = new MutableObject<>(selectCondition.cloneExpression());
+
+        // If the select condition uses variables from assigns then inline those variables into it
         ILogicalOperator child = select.getInputs().get(0).getValue();
-        boolean changed = false;
-        if (child.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-            DataSourceScanOperator scan = (DataSourceScanOperator) child;
-            if (isScanPushable(scan, selectedVariables)) {
-                scan.setSelectCondition(select.getCondition());
-                scan.setOutputLimit(outputLimit);
-                changed = true;
+        InlineVariablesRule.InlineVariablesVisitor inlineVisitor = null;
+        Map<LogicalVariable, ILogicalExpression> varAssignRhs = null;
+        for (; child.getOperatorTag() == LogicalOperatorTag.ASSIGN; child = child.getInputs().get(0).getValue()) {
+            if (varAssignRhs == null) {
+                varAssignRhs = new HashMap<>();
+            } else {
+                varAssignRhs.clear();
             }
-        } else if (child.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
-            UnnestMapOperator unnestMap = (UnnestMapOperator) child;
-            if (isUnnestMapPushable(unnestMap, selectedVariables)) {
-                unnestMap.setSelectCondition(select.getCondition());
-                unnestMap.setOutputLimit(outputLimit);
-                changed = true;
+            AssignOperator assignOp = (AssignOperator) child;
+            extractInlinableVariablesFromAssign(assignOp, selectedVariables, varAssignRhs);
+            if (!varAssignRhs.isEmpty()) {
+                if (inlineVisitor == null) {
+                    inlineVisitor = new InlineVariablesRule.InlineVariablesVisitor(varAssignRhs);
+                    inlineVisitor.setContext(context);
+                    inlineVisitor.setOperator(select);
+                }
+                if (!inlineVisitor.transform(selectConditionRef)) {
+                    break;
+                }
+                selectedVariables.clear();
+                selectConditionRef.getValue().getUsedVariables(selectedVariables);
             }
         }
+
+        boolean changed = false;
+        switch (child.getOperatorTag()) {
+            case DATASOURCESCAN:
+                DataSourceScanOperator scan = (DataSourceScanOperator) child;
+                if (isScanPushable(scan, selectedVariables)) {
+                    scan.setSelectCondition(selectConditionRef);
+                    scan.setOutputLimit(outputLimit);
+                    changed = true;
+                }
+                break;
+            case UNNEST_MAP:
+                UnnestMapOperator unnestMap = (UnnestMapOperator) child;
+                if (isUnnestMapPushable(unnestMap, selectedVariables)) {
+                    unnestMap.setSelectCondition(selectConditionRef);
+                    unnestMap.setOutputLimit(outputLimit);
+                    changed = true;
+                }
+                break;
+        }
+
         if (changed) {
             // SELECT is not needed
-            op.setValue(child);
+            op.setValue(op.getValue().getInputs().get(0).getValue());
         }
         return changed;
     }
@@ -174,4 +214,18 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
         return true;
     }
 
+    private void extractInlinableVariablesFromAssign(AssignOperator assignOp, Set<LogicalVariable> includeVariables,
+            Map<LogicalVariable, ILogicalExpression> outVarExprs) {
+        List<LogicalVariable> vars = assignOp.getVariables();
+        List<Mutable<ILogicalExpression>> exprs = assignOp.getExpressions();
+        for (int i = 0, ln = vars.size(); i < ln; i++) {
+            LogicalVariable var = vars.get(i);
+            if (includeVariables.contains(var)) {
+                ILogicalExpression expr = exprs.get(i).getValue();
+                if (expr.isFunctional()) {
+                    outVarExprs.put(var, expr);
+                }
+            }
+        }
+    }
 }

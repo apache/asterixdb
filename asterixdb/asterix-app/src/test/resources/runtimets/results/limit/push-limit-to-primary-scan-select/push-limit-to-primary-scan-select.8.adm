@@ -1,0 +1,28 @@
+distribute result [$$19]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 2
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$19])
+      -- STREAM_PROJECT  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$22(ASC) ]  |PARTITIONED|
+          limit 2
+          -- STREAM_LIMIT  |PARTITIONED|
+            project ([$$22, $$19])
+            -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$19] <- [$$23.getField("lang")]
+              -- ASSIGN  |PARTITIONED|
+                project ([$$22, $$23])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$23] <- [$$t.getField("user")]
+                  -- ASSIGN  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      data-scan []<-[$$22, $$t] <- test.TweetMessages condition (and(le(0, $$t.getField("user").getField("friends_count")), le($$t.getField("user").getField("friends_count"), 150))) limit 2
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
