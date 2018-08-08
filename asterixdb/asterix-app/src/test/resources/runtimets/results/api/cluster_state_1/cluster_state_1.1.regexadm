@@ -6,6 +6,8 @@
   \},
   "config" : \{
     "active\.memory\.global\.budget" : 67108864,
+    "active\.stop\.timeout" : 3600,
+    "active\.suspend\.timeout" : 3600,
     "compiler\.framesize" : 32768,
     "compiler\.groupmemory" : 163840,
     "compiler\.joinmemory" : 262144,

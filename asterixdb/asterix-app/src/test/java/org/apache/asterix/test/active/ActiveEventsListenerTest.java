@@ -37,6 +37,7 @@ import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
@@ -121,6 +122,7 @@ public class ActiveEventsListenerTest {
         Mockito.when(appCtx.getMetadataLockManager()).thenReturn(lockManager);
         Mockito.when(appCtx.getServiceContext()).thenReturn(ccServiceCtx);
         Mockito.when(appCtx.getClusterStateManager()).thenReturn(clusterStateManager);
+        Mockito.when(appCtx.getActiveProperties()).thenReturn(Mockito.mock(ActiveProperties.class));
         componentProvider = new StorageComponentProvider();
         Mockito.when(appCtx.getStorageComponentProvider()).thenReturn(componentProvider);
         Mockito.when(ccServiceCtx.getControllerService()).thenReturn(ccService);
@@ -375,7 +377,7 @@ public class ActiveEventsListenerTest {
         testStartWhenStartSucceed();
         // suspend
         Assert.assertEquals(ActivityState.RUNNING, listener.getState());
-        listener.onStop(Behavior.FAIL_COMPILE);
+        listener.onStop(Behavior.RUNNING_JOB_FAIL);
         Action suspension = users[1].suspendActivity(listener);
         suspension.sync();
         Assert.assertFalse(suspension.hasFailed());

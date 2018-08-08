@@ -196,6 +196,9 @@ public class TestEventsListener extends ActiveEntityEventsListener {
     }
 
     public void onStop(Behavior behavior) {
+        if (behavior == Behavior.FAIL_COMPILE) {
+            throw new IllegalArgumentException("Test framework is not designed for this case");
+        }
         this.onStop = behavior;
     }
 
@@ -215,7 +218,7 @@ public class TestEventsListener extends ActiveEntityEventsListener {
 
     @Override
     protected void doSuspend(MetadataProvider metadataProvider) throws HyracksDataException {
-        doStop(metadataProvider, SUSPEND_MESSAGE_TIMEOUT, TIMEOUT_UNIT);
+        doStop(metadataProvider, appCtx.getActiveProperties().getActiveSuspendTimeout(), TIMEOUT_UNIT);
     }
 
     @Override

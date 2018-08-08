@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
@@ -32,7 +33,9 @@ public class ActiveProperties extends AbstractProperties {
         ACTIVE_MEMORY_GLOBAL_BUDGET(
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(64L, MEGABYTE),
-                "The memory budget (in bytes) for the active runtime");
+                "The memory budget (in bytes) for the active runtime"),
+        ACTIVE_STOP_TIMEOUT(INTEGER, 3600, "The maximum time to wait for a graceful stop of an active runtime"),
+        ACTIVE_SUSPEND_TIMEOUT(INTEGER, 3600, "The maximum time to wait for a graceful suspend of an active runtime");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -71,5 +74,13 @@ public class ActiveProperties extends AbstractProperties {
 
     public long getMemoryComponentGlobalBudget() {
         return accessor.getLong(Option.ACTIVE_MEMORY_GLOBAL_BUDGET);
+    }
+
+    public int getActiveStopTimeout() {
+        return accessor.getInt(Option.ACTIVE_STOP_TIMEOUT);
+    }
+
+    public int getActiveSuspendTimeout() {
+        return accessor.getInt(Option.ACTIVE_SUSPEND_TIMEOUT);
     }
 }

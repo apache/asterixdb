@@ -74,10 +74,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     private static final EnumSet<ActivityState> TRANSITION_STATES = EnumSet.of(ActivityState.RESUMING,
             ActivityState.STARTING, ActivityState.STOPPING, ActivityState.RECOVERING, ActivityState.CANCELLING);
     private static final String DEFAULT_ACTIVE_STATS = "{\"Stats\":\"N/A\"}";
-    // TODO: Make configurable https://issues.apache.org/jira/browse/ASTERIXDB-2065
-    protected static final long STOP_MESSAGE_TIMEOUT = 5L;
-    protected static final long SUSPEND_MESSAGE_TIMEOUT = 10L;
-    protected static final TimeUnit TIMEOUT_UNIT = TimeUnit.MINUTES;
+    protected static final TimeUnit TIMEOUT_UNIT = TimeUnit.SECONDS;
     protected final IClusterStateManager clusterStateManager;
     protected final ActiveNotificationHandler handler;
     protected final List<IActiveEntityEventSubscriber> subscribers = new ArrayList<>();
@@ -521,7 +518,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         } else if (state == ActivityState.RUNNING) {
             setState(ActivityState.STOPPING);
             try {
-                doStop(metadataProvider, STOP_MESSAGE_TIMEOUT, TIMEOUT_UNIT);
+                doStop(metadataProvider, appCtx.getActiveProperties().getActiveStopTimeout(), TIMEOUT_UNIT);
             } catch (Exception e) {
                 setState(ActivityState.STOPPED);
                 LOGGER.log(Level.ERROR, "Failed to stop the entity " + entityId, e);
