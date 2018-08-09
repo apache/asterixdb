@@ -849,9 +849,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Opening file: " + fileId + " in cache: " + this);
         }
-        BufferedFileHandle fInfo = null;
         try {
-            fInfo = getOrCreateFileHandle(fileId);
+            final BufferedFileHandle fInfo = getOrCreateFileHandle(fileId);
             if (fInfo.getFileHandle() == null) {
                 // a new file
                 synchronized (fInfo) {
@@ -861,7 +860,10 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                             closeOpeningFiles(fInfo);
                         }
                         // create, open, and map new file reference
-                        FileReference fileRef = fileMapManager.lookupFileName(fileId);
+                        FileReference fileRef;
+                        synchronized (fileInfoMap) {
+                            fileRef = fileMapManager.lookupFileName(fileId);
+                        }
                         IFileHandle fh = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
                                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
                         fInfo.setFileHandle(fh);

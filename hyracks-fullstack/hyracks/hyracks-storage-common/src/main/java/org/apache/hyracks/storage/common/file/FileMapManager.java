@@ -25,7 +25,9 @@ import java.util.Map;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.util.annotations.NotThreadSafe;
 
+@NotThreadSafe
 public class FileMapManager implements IFileMapManager {
     private static final long serialVersionUID = 1L;
 

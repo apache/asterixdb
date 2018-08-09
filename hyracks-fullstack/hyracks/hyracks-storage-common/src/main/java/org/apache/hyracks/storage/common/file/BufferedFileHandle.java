@@ -24,7 +24,7 @@ import org.apache.hyracks.api.io.IFileHandle;
 
 public class BufferedFileHandle {
     private final int fileId;
-    private IFileHandle handle;
+    private volatile IFileHandle handle;
     private final AtomicInteger refCount;
 
     public BufferedFileHandle(int fileId, IFileHandle handle) {
