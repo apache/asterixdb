@@ -2046,19 +2046,19 @@ public class BuiltinFunctions {
         registeredFunctions.put(fi, functionInfo);
     }
 
-    private static void addAgg(FunctionIdentifier fi) {
+    public static void addAgg(FunctionIdentifier fi) {
         builtinAggregateFunctions.add(getAsterixFunctionInfo(fi));
     }
 
-    private static void addLocalAgg(FunctionIdentifier fi, FunctionIdentifier localfi) {
+    public static void addLocalAgg(FunctionIdentifier fi, FunctionIdentifier localfi) {
         aggregateToLocalAggregate.put(getAsterixFunctionInfo(fi), getAsterixFunctionInfo(localfi));
     }
 
-    private static void addIntermediateAgg(FunctionIdentifier fi, FunctionIdentifier globalfi) {
+    public static void addIntermediateAgg(FunctionIdentifier fi, FunctionIdentifier globalfi) {
         aggregateToIntermediateAggregate.put(getAsterixFunctionInfo(fi), getAsterixFunctionInfo(globalfi));
     }
 
-    private static void addGlobalAgg(FunctionIdentifier fi, FunctionIdentifier globalfi) {
+    public static void addGlobalAgg(FunctionIdentifier fi, FunctionIdentifier globalfi) {
         aggregateToGlobalAggregate.put(getAsterixFunctionInfo(fi), getAsterixFunctionInfo(globalfi));
         globalAggregateFunctions.add(getAsterixFunctionInfo(globalfi));
     }
@@ -2067,15 +2067,15 @@ public class BuiltinFunctions {
         builtinUnnestingFunctions.put(getAsterixFunctionInfo(fi), returnsUniqueValues);
     }
 
-    private static void addSerialAgg(FunctionIdentifier fi, FunctionIdentifier serialfi) {
+    public static void addSerialAgg(FunctionIdentifier fi, FunctionIdentifier serialfi) {
         aggregateToSerializableAggregate.put(getAsterixFunctionInfo(fi), getAsterixFunctionInfo(serialfi));
     }
 
-    private static void addScalarAgg(FunctionIdentifier fi, FunctionIdentifier scalarfi) {
+    public static void addScalarAgg(FunctionIdentifier fi, FunctionIdentifier scalarfi) {
         scalarToAggregateFunctionMap.put(getAsterixFunctionInfo(scalarfi), getAsterixFunctionInfo(fi));
     }
 
-    private static void addDistinctAgg(FunctionIdentifier distinctfi, FunctionIdentifier regularscalarfi) {
+    public static void addDistinctAgg(FunctionIdentifier distinctfi, FunctionIdentifier regularscalarfi) {
         distinctToRegularScalarAggregateFunctionMap.put(getAsterixFunctionInfo(distinctfi),
                 getAsterixFunctionInfo(regularscalarfi));
     }
