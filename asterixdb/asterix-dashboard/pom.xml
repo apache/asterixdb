@@ -58,29 +58,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.rat</groupId>
-        <artifactId>apache-rat-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>default</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <licenses combine.children="append">
-                <license
-                    implementation="org.apache.rat.analysis.license.MITLicense"/>
-              </licenses>
-              <excludes combine.children="append">
-                <exclude>src/main/resources/dashboard/static/*</exclude>
-                <exclude>src/node/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
         <version>1.6</version>
