@@ -40,6 +40,7 @@ public class Project {
     private String noticeText;
     private String licenseText;
     private String sourcePointer;
+    private String classifier;
 
     @JsonIgnore
     private MavenProject mavenProject;
@@ -54,6 +55,7 @@ public class Project {
         artifactId = project.getArtifactId();
         version = project.getVersion();
         url = project.getUrl();
+        classifier = project.getArtifact().getClassifier();
         this.artifactPath = artifactPath.getPath();
         setLocation(location);
     }
@@ -63,7 +65,7 @@ public class Project {
             @JsonProperty("artifactId") String artifactId, @JsonProperty("url") String url,
             @JsonProperty("version") String version, @JsonProperty("location") String location,
             @JsonProperty("artifactPath") String artifactPath, @JsonProperty("noticeText") String noticeText,
-            @JsonProperty("licenseText") String licenseText) {
+            @JsonProperty("licenseText") String licenseText, @JsonProperty("classifier") String classifier) {
         this.name = name;
         this.groupId = groupId;
         this.artifactId = artifactId;
@@ -73,6 +75,7 @@ public class Project {
         this.artifactPath = artifactPath;
         this.noticeText = noticeText;
         this.licenseText = licenseText;
+        this.classifier = classifier;
     }
 
     public String getName() {
@@ -91,6 +94,10 @@ public class Project {
         return url;
     }
 
+    public String getClassifier() {
+        return classifier;
+    }
+
     public String getVersion() {
         return version;
     }
@@ -105,6 +112,11 @@ public class Project {
         } else {
             this.location = location;
         }
+    }
+
+    @JsonIgnore
+    public String getJarName() {
+        return artifactId + "-" + version + (classifier != null ? "-" + classifier : "") + ".jar";
     }
 
     @JsonIgnore
@@ -127,6 +139,10 @@ public class Project {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public void setClassifier(String classifier) {
+        this.classifier = classifier;
     }
 
     public void setVersion(String version) {

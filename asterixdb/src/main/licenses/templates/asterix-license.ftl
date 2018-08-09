@@ -46,7 +46,7 @@ ${license.content}
    <#list projects as p>
        * ${p.name} (${p.groupId}:${p.artifactId}:${p.version})
      <#list p.locations as loc>
-         - ${loc}${p.artifactId}-${p.version}.jar
+         - ${loc}${p.jarName}
        </#list>
    </#list>
 
