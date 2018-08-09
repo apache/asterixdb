@@ -85,6 +85,7 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                 int startOffset2 = inputArg2.getStartOffset();
 
                 try {
+                    resultStorage.reset();
                     if (data0[startOffset0] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
                             || data1[startOffset1] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
                             || data2[startOffset2] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
@@ -99,7 +100,6 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                         result.set(resultStorage);
                         return;
                     }
-                    resultStorage.reset();
                     if (data1[startOffset1] != ATypeTag.SERIALIZED_INT32_TYPE_TAG) {
                         throw new TypeMismatchException(BuiltinFunctions.CREATE_MBR, 1, data1[startOffset1],
                                 ATypeTag.SERIALIZED_INT32_TYPE_TAG);
