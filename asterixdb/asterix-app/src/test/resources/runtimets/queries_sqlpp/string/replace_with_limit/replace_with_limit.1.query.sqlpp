@@ -30,6 +30,6 @@ select value t from
   [ 8, replace("_ab_ba_ab_ab_ab_", "ab", "xyz", bigint("4")) ],
   [ 9, replace("abracadabra_abracadabra_xyz","bra","*BRA*", 3) ],
   [ 10, replace("ab_ba_ab", "ab", "ba", 0) ],
-  [ 11, replace("ab_ba_ab", "ab", "ba", -100) ]
+  [ 11, replace("ab_ba_ab_ba_ab", "ab", "ba", -100) ]
 ] t
 order by t[0]

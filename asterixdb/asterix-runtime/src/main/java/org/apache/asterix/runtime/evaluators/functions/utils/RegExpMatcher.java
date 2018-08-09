@@ -180,6 +180,9 @@ public class RegExpMatcher {
      * @return a new string with contained regular expressions replaced.
      */
     public String replace(UTF8StringPointable replaceStrPtr, int replaceLimit) {
+        if (replaceLimit < 0) {
+            replaceLimit = Integer.MAX_VALUE;
+        }
         // Sets up a new replacement string if necessary.
         final boolean newReplace =
                 replaceStrPtr != null && (replaceStr == null || lastReplaceStrPtr.compareTo(replaceStrPtr) != 0);
@@ -187,7 +190,6 @@ public class RegExpMatcher {
             StringEvaluatorUtils.copyResetUTF8Pointable(replaceStrPtr, lastReplaceStorage, lastReplaceStrPtr);
             replaceStr = replaceStrPtr.toString();
         }
-
         // Does the actual replacement.
         resultBuf.setLength(0);
         for (int i = 0; i < replaceLimit && matcher.find(); i++) {

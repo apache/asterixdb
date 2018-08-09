@@ -626,8 +626,11 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     public static boolean findAndReplace(UTF8StringPointable srcPtr, UTF8StringPointable searchPtr,
             UTF8StringPointable replacePtr, int replaceLimit, UTF8StringBuilder builder, GrowableArray out)
             throws IOException {
-        if (replaceLimit < 1) {
+        if (replaceLimit == 0) {
             return false;
+        }
+        if (replaceLimit < 0) {
+            replaceLimit = Integer.MAX_VALUE;
         }
         int curIdx = find(srcPtr, searchPtr, false);
         if (curIdx < 0) {

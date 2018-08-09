@@ -340,7 +340,8 @@
     * `string_replacement` : a pattern `string` to be used as the replacement,
     * `string_flag` : (Optional) a `string` with flags to be used during replace.
         * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
-    * `replacement_limit`: (Optional) an `integer` specifying the maximum number of replacements to make
+    * `replacement_limit`: (Optional) an `integer` specifying the maximum number of replacements to make 
+         (if negative then all occurrences will be replaced)
  * Return Value:
     * Returns a `string` that is obtained after the replacements,
     * `missing` if any argument is a `missing` value,
@@ -395,7 +396,7 @@
     * `search_string` : a `string`  substring to be searched for,
     * `replacement_string` : a `string` to be used as the replacement,
     * `limit` : (Optional) an `integer` - maximum number of occurrences to be replaced.
-                If not specified then all occurrences will be replaced
+                If not specified or negative then all occurrences will be replaced
  * Return Value:
     * Returns a `string` that is obtained after the replacements,
     * `missing` if any argument is a `missing` value,
