@@ -169,7 +169,7 @@ public class PartitionReplica implements IPartitionReplica {
     private void sendGoodBye() {
         try {
             ReplicationProtocol.sendGoodbye(sc);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.warn("Failed to send good bye to {}", this, e);
         }
     }
