@@ -79,6 +79,7 @@ public class ErrorCode {
     public static final int TYPE_MISMATCH_GENERIC = 37;
     public static final int DIFFERENT_LIST_TYPE_ARGS = 38;
     public static final int INTEGER_VALUE_EXPECTED = 39;
+    public static final int NO_STATEMENT_PROVIDED = 40;
 
     public static final int UNSUPPORTED_JRE = 100;
 

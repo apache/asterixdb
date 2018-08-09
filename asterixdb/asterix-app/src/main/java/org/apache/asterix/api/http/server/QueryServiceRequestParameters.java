@@ -201,7 +201,7 @@ public class QueryServiceRequestParameters {
             ObjectNode on = OBJECT_MAPPER.createObjectNode();
             on.put("host", host);
             on.put("path", path);
-            on.put("statement", JSONUtil.escape(new StringBuilder(), statement).toString());
+            on.put("statement", statement != null ? JSONUtil.escape(new StringBuilder(), statement).toString() : null);
             on.put("pretty", pretty);
             on.put("mode", mode);
             on.put("clientContextID", clientContextID);

@@ -43,7 +43,8 @@ import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
@@ -416,7 +417,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         if (HttpUtil.ContentType.APPLICATION_JSON.equals(contentType)) {
             try {
                 JsonNode jsonRequest = OBJECT_MAPPER.readTree(HttpUtil.getRequestBody(request));
-                param.setStatement(jsonRequest.get(Parameter.STATEMENT.str()).asText());
+                final String statementParam = Parameter.STATEMENT.str();
+                if (jsonRequest.has(statementParam)) {
+                    param.setStatement(jsonRequest.get(statementParam).asText());
+                }
                 param.setFormat(toLower(getOptText(jsonRequest, Parameter.FORMAT.str())));
                 param.setPretty(getOptBoolean(jsonRequest, Parameter.PRETTY.str(), false));
                 param.setMode(toLower(getOptText(jsonRequest, Parameter.MODE.str())));
@@ -532,7 +536,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         List<ExecutionWarning> warnings = Collections.emptyList(); // we don't have any warnings yet
         try {
             if (param.getStatement() == null || param.getStatement().isEmpty()) {
-                throw new AsterixException("Empty request, no statement provided");
+                throw new RuntimeDataException(ErrorCode.NO_STATEMENT_PROVIDED);
             }
             String statementsText = param.getStatement() + ";";
             Map<String, String> optionalParams = null;
