@@ -28,7 +28,7 @@ public class AlgebricksAbsolutePartitionConstraint extends AlgebricksPartitionCo
 
     public AlgebricksAbsolutePartitionConstraint(String[] locations) {
         this.locations = locations.clone();
-        Arrays.sort(locations);
+        Arrays.sort(this.locations);
     }
 
     @Override
