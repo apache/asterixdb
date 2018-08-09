@@ -470,7 +470,7 @@ public class JobExecutor {
             throw new HyracksException("No satisfiable location found for " + taskAttempt.getTaskAttemptId());
         }
         if (!liveNodes.contains(nodeId)) {
-            throw new HyracksException("Node " + nodeId + " not live");
+            throw HyracksException.create(ErrorCode.NO_SUCH_NODE, nodeId);
         }
         return nodeId;
     }
