@@ -69,7 +69,7 @@ public class HeartbeatTask implements Runnable {
             synchronized (hbData) {
                 cc.nodeHeartbeat(ncId, hbData);
             }
-            LOGGER.log(Level.DEBUG, "Successfully sent heartbeat");
+            LOGGER.trace("Successfully sent heartbeat");
             return true;
         } catch (InterruptedException e) {
             throw e;

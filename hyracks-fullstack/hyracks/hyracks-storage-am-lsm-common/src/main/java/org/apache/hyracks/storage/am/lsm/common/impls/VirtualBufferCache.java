@@ -40,7 +40,6 @@ import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.util.JSONUtil;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -126,8 +125,8 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     private void logStats() {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.log(Level.INFO, "Free (allocated) pages = " + freePages.size() + ". Budget = " + pageBudget
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Free (allocated) pages = " + freePages.size() + ". Budget = " + pageBudget
                     + ". Large pages = " + largePages.get() + ". Overall usage = " + used.get());
         }
     }
@@ -188,8 +187,8 @@ public class VirtualBufferCache implements IVirtualBufferCache {
                 bucket.bucketLock.unlock();
             }
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.log(Level.INFO, "Reclaimed pages = " + reclaimedPages);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Reclaimed pages = " + reclaimedPages);
         }
         logStats();
     }

@@ -103,6 +103,6 @@ public class HeartbeatComputeTask extends TimerTask {
 
             ncs.getNodeControllerData().notifyHeartbeat(hbData);
         }
-        LOGGER.log(Level.DEBUG, "Successfully refreshed heartbeat data");
+        LOGGER.trace("Successfully refreshed heartbeat data");
     }
 }
