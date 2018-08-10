@@ -25,9 +25,12 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 
 public class AlgebricksAbsolutePartitionConstraint extends AlgebricksPartitionConstraint {
     private final String[] locations;
+    private final String[] sortedLocations;
 
     public AlgebricksAbsolutePartitionConstraint(String[] locations) {
         this.locations = locations;
+        sortedLocations = locations.clone();
+        Arrays.sort(sortedLocations);
     }
 
     @Override
@@ -55,7 +58,7 @@ public class AlgebricksAbsolutePartitionConstraint extends AlgebricksPartitionCo
                 break;
             case ABSOLUTE:
                 AlgebricksAbsolutePartitionConstraint thatAbsolute = (AlgebricksAbsolutePartitionConstraint) that;
-                if (Arrays.equals(locations, thatAbsolute.locations)) {
+                if (Arrays.equals(sortedLocations, thatAbsolute.sortedLocations)) {
                     return this;
                 }
                 break;
