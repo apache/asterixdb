@@ -19,6 +19,7 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.ASTERIX;
+import static org.apache.asterix.common.exceptions.ErrorCode.NO_STATEMENT_PROVIDED;
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_BAD_CLUSTER_STATE;
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_NODE_UNREGISTERED;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUEST_TIMEOUT;
@@ -625,6 +626,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 case ASTERIX + REJECT_NODE_UNREGISTERED:
                     LOGGER.warn("handleException: {}: {}", he.getMessage(), param);
                     state.setStatus(ResultStatus.FATAL, HttpResponseStatus.SERVICE_UNAVAILABLE);
+                    break;
+                case ASTERIX + NO_STATEMENT_PROVIDED:
+                    state.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
                     break;
                 default:
                     LOGGER.warn("handleException: unexpected exception {}: {}", he.getMessage(), param, he);
