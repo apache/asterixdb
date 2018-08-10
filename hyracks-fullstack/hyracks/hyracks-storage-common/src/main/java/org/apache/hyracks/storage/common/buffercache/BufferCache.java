@@ -967,8 +967,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Closing file: " + fileId + " in cache: " + this);
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(dumpState());
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(dumpState());
         }
 
         synchronized (fileInfoMap) {

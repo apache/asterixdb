@@ -52,7 +52,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
         implements IActiveNotificationHandler, IJobLifecycleListener {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Level level = Level.INFO;
+    private static final Level level = Level.DEBUG;
     public static final String ACTIVE_ENTITY_PROPERTY_NAME = "ActiveJob";
     private final Map<EntityId, IActiveEntityEventsListener> entityEventListeners;
     private final Map<JobId, EntityId> jobId2EntityId;
@@ -72,7 +72,9 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
         EntityId entityId = jobId2EntityId.get(event.getJobId());
         if (entityId != null) {
             IActiveEntityEventsListener listener = entityEventListeners.get(entityId);
-            LOGGER.log(level, "Next event is of type " + event.getEventKind());
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, "Next event is of type " + event.getEventKind());
+            }
             if (event.getEventKind() == Kind.JOB_FINISHED) {
                 LOGGER.log(level, "Removing the job");
                 jobId2EntityId.remove(event.getJobId());
@@ -90,11 +92,16 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
 
     @Override
     public void notifyJobCreation(JobId jobId, JobSpecification jobSpecification) throws HyracksDataException {
-        LOGGER.log(level,
-                "notifyJobCreation(JobId jobId, JobSpecification jobSpecification) was called with jobId = " + jobId);
+        if (LOGGER.isEnabled(level)) {
+            LOGGER.log(level,
+                    "notifyJobCreation(JobId jobId, JobSpecification jobSpecification) was called with jobId = "
+                            + jobId);
+        }
         Object property = jobSpecification.getProperty(ACTIVE_ENTITY_PROPERTY_NAME);
         if (property == null || !(property instanceof EntityId)) {
-            LOGGER.log(level, "Job is not of type active job. property found to be: " + property);
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, "Job is not of type active job. property found to be: " + property);
+            }
             return;
         }
         EntityId entityId = (EntityId) property;
@@ -105,17 +112,27 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     }
 
     private synchronized void monitorJob(JobId jobId, EntityId entityId) {
-        LOGGER.log(level, "monitorJob(JobId jobId, ActiveJob activeJob) called with job id: " + jobId);
+        if (LOGGER.isEnabled(level)) {
+            LOGGER.log(level, "monitorJob(JobId jobId, ActiveJob activeJob) called with job id: " + jobId);
+        }
         boolean found = jobId2EntityId.get(jobId) != null;
-        LOGGER.log(level, "Job was found to be: " + (found ? "Active" : "Inactive"));
+        if (LOGGER.isEnabled(level)) {
+            LOGGER.log(level, "Job was found to be: " + (found ? "Active" : "Inactive"));
+        }
         if (entityEventListeners.containsKey(entityId)) {
             if (jobId2EntityId.containsKey(jobId)) {
-                LOGGER.error("Job is already being monitored for job: " + jobId);
+                if (LOGGER.isErrorEnabled()) {
+                    LOGGER.error("Job is already being monitored for job: " + jobId);
+                }
                 return;
             }
-            LOGGER.log(level, "monitoring started for job id: " + jobId);
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, "monitoring started for job id: " + jobId);
+            }
         } else {
-            LOGGER.info("No listener was found for the entity: " + entityId);
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.info("No listener was found for the entity: " + entityId);
+            }
         }
         jobId2EntityId.put(jobId, entityId);
     }
@@ -131,12 +148,16 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     @Override
     public synchronized void notifyJobFinish(JobId jobId, JobStatus jobStatus, List<Exception> exceptions)
             throws HyracksException {
-        LOGGER.log(level, "Getting notified of job finish for JobId: " + jobId);
+        if (LOGGER.isEnabled(level)) {
+            LOGGER.log(level, "Getting notified of job finish for JobId: " + jobId);
+        }
         EntityId entityId = jobId2EntityId.get(jobId);
         if (entityId != null) {
             add(new ActiveEvent(jobId, Kind.JOB_FINISHED, entityId, Pair.of(jobStatus, exceptions)));
         } else {
-            LOGGER.log(level, "NO NEED TO NOTIFY JOB FINISH!");
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, "no need to notify job finish");
+            }
         }
     }
 
@@ -150,16 +171,22 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
 
     @Override
     public IActiveEntityEventsListener getListener(EntityId entityId) {
-        LOGGER.log(level, "getActiveEntityListener(EntityId entityId) was called with entity " + entityId);
+        if (LOGGER.isEnabled(level)) {
+            LOGGER.log(level, "getActiveEntityListener(EntityId entityId) was called with entity " + entityId);
+        }
         IActiveEntityEventsListener listener = entityEventListeners.get(entityId);
-        LOGGER.log(level, "Listener found: " + listener);
+        if (LOGGER.isEnabled(level)) {
+            LOGGER.log(level, "Listener found: " + listener);
+        }
         return entityEventListeners.get(entityId);
     }
 
     @Override
     public synchronized IActiveEntityEventsListener[] getEventListeners() {
-        LOGGER.log(level, "getEventListeners() was called");
-        LOGGER.log(level, "returning " + entityEventListeners.size() + " Listeners");
+        if (LOGGER.isEnabled(level)) {
+            LOGGER.log(level, "getEventListeners() was called");
+            LOGGER.log(level, "returning " + entityEventListeners.size() + " Listeners");
+        }
         return entityEventListeners.values().toArray(new IActiveEntityEventsListener[entityEventListeners.size()]);
     }
 
@@ -168,8 +195,10 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
         if (suspended) {
             throw new RuntimeDataException(ErrorCode.ACTIVE_NOTIFICATION_HANDLER_IS_SUSPENDED);
         }
-        LOGGER.log(level, "registerListener(IActiveEntityEventsListener listener) was called for the entity "
-                + listener.getEntityId());
+        if (LOGGER.isEnabled(level)) {
+            LOGGER.log(level, "registerListener(IActiveEntityEventsListener listener) was called for the entity "
+                    + listener.getEntityId());
+        }
         if (entityEventListeners.containsKey(listener.getEntityId())) {
             throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_IS_ALREADY_REGISTERED, listener.getEntityId());
         }
@@ -181,8 +210,10 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
         if (suspended) {
             throw new RuntimeDataException(ErrorCode.ACTIVE_NOTIFICATION_HANDLER_IS_SUSPENDED);
         }
-        LOGGER.log(level, "unregisterListener(IActiveEntityEventsListener listener) was called for the entity "
-                + listener.getEntityId());
+        if (LOGGER.isEnabled(level)) {
+            LOGGER.log(level, "unregisterListener(IActiveEntityEventsListener listener) was called for the entity "
+                    + listener.getEntityId());
+        }
         IActiveEntityEventsListener registeredListener = entityEventListeners.remove(listener.getEntityId());
         if (registeredListener == null) {
             throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_LISTENER_IS_NOT_REGISTERED, listener.getEntityId());
@@ -208,10 +239,12 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
 
     @Override
     public void recover() {
-        LOGGER.log(level, "Starting active recovery");
+        LOGGER.info("Starting active recovery");
         for (IActiveEntityEventsListener listener : getEventListeners()) {
             synchronized (listener) {
-                LOGGER.log(level, "Entity " + listener.getEntityId() + " is " + listener.getStats());
+                if (LOGGER.isEnabled(level)) {
+                    LOGGER.log(level, "Entity " + listener.getEntityId() + " is " + listener.getState());
+                }
                 listener.notifyAll();
             }
         }
@@ -233,7 +266,9 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
             // exclusive lock all the datasets
             String dataverseName = listener.getEntityId().getDataverse();
             String entityName = listener.getEntityId().getEntityName();
-            LOGGER.log(level, "Suspending " + listener.getEntityId());
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, "Suspending " + listener.getEntityId());
+            }
             LOGGER.log(level, "Acquiring locks");
             lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName + '.' + entityName);
             List<Dataset> datasets = ((ActiveEntityEventsListener) listener).getDatasets();
@@ -243,16 +278,22 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
             }
             LOGGER.log(level, "locks acquired");
             ((ActiveEntityEventsListener) listener).suspend(mdProvider);
-            LOGGER.log(level, listener.getEntityId() + " suspended");
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, listener.getEntityId() + " suspended");
+            }
         }
     }
 
-    public void resume(MetadataProvider mdProvider) throws HyracksDataException, InterruptedException {
+    public void resume(MetadataProvider mdProvider) throws HyracksDataException {
         LOGGER.log(level, "Resuming active events handler");
         for (IActiveEntityEventsListener listener : entityEventListeners.values()) {
-            LOGGER.log(level, "Resuming " + listener.getEntityId());
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, "Resuming " + listener.getEntityId());
+            }
             ((ActiveEntityEventsListener) listener).resume(mdProvider);
-            LOGGER.log(level, listener.getEntityId() + " resumed");
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, listener.getEntityId() + " resumed");
+            }
         }
         synchronized (this) {
             suspended = false;

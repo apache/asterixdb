@@ -174,7 +174,9 @@ public class PartitionMatchMaker {
     }
 
     public void removeUncommittedPartitions(Set<PartitionId> partitionIds, final Set<TaskAttemptId> taIds) {
-        LOGGER.info("Removing uncommitted partitions: " + partitionIds);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Removing uncommitted partitions: " + partitionIds);
+        }
         IEntryFilter<PartitionDescriptor> filter = new IEntryFilter<PartitionDescriptor>() {
             @Override
             public boolean matches(PartitionDescriptor o) {
@@ -193,7 +195,9 @@ public class PartitionMatchMaker {
     }
 
     public void removePartitionRequests(Set<PartitionId> partitionIds, final Set<TaskAttemptId> taIds) {
-        LOGGER.info("Removing partition requests: " + partitionIds);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Removing partition requests: " + partitionIds);
+        }
         IEntryFilter<PartitionRequest> filter = new IEntryFilter<PartitionRequest>() {
             @Override
             public boolean matches(PartitionRequest o) {

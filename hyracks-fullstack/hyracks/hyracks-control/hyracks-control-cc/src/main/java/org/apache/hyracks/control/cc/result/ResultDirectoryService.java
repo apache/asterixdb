@@ -28,19 +28,18 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
-import org.apache.hyracks.api.result.ResultDirectoryRecord;
-import org.apache.hyracks.api.result.ResultJobRecord;
-import org.apache.hyracks.api.result.ResultJobRecord.State;
-import org.apache.hyracks.api.result.IResultStateRecord;
-import org.apache.hyracks.api.result.ResultSetId;
-import org.apache.hyracks.api.result.ResultSetMetaData;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
-import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.hyracks.api.result.IResultStateRecord;
+import org.apache.hyracks.api.result.ResultDirectoryRecord;
+import org.apache.hyracks.api.result.ResultJobRecord;
+import org.apache.hyracks.api.result.ResultJobRecord.State;
+import org.apache.hyracks.api.result.ResultSetId;
+import org.apache.hyracks.api.result.ResultSetMetaData;
 import org.apache.hyracks.control.common.result.AbstractResultManager;
 import org.apache.hyracks.control.common.result.ResultStateSweeper;
 import org.apache.hyracks.control.common.work.IResultCallback;
@@ -76,8 +75,8 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
 
     @Override
     public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info(getClass().getSimpleName() + " notified of new job " + jobId);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(getClass().getSimpleName() + " notified of new job " + jobId);
         }
         if (jobResultLocations.get(jobId) != null) {
             throw HyracksDataException.create(ErrorCode.MORE_THAN_ONE_RESULT, jobId);
@@ -148,18 +147,16 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
         Exception ex = exceptions.isEmpty() ? null : exceptions.get(0);
-        Level logLevel = ExceptionUtils.causedByInterrupt(ex) ? Level.DEBUG : Level.INFO;
-        LOGGER.log(logLevel, "job " + jobId + " failed and is being reported to " + getClass().getSimpleName(), ex);
+        Level logLevel = Level.DEBUG;
+        if (LOGGER.isEnabled(logLevel)) {
+            LOGGER.log(logLevel, "job " + jobId + " failed and is being reported to " + getClass().getSimpleName(), ex);
+        }
         ResultJobRecord rjr = getResultJobRecord(jobId);
-        LOGGER.log(logLevel, "Result job record is " + rjr);
         if (rjr != null) {
-            LOGGER.log(logLevel, "Setting exceptions in Result job record");
             rjr.fail(exceptions);
         }
         final JobResultInfo jobResultInfo = jobResultLocations.get(jobId);
-        LOGGER.log(logLevel, "Job result info is " + jobResultInfo);
         if (jobResultInfo != null) {
-            LOGGER.log(logLevel, "Setting exceptions in Job result info");
             jobResultInfo.setException(ex);
         }
         notifyAll();

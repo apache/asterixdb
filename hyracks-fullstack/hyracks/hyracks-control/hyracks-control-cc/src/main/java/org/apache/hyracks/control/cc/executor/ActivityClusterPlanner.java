@@ -74,11 +74,11 @@ class ActivityClusterPlanner {
 
         TaskCluster[] taskClusters = computeTaskClusters(ac, jobRun, activityPlanMap);
 
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Plan for " + ac);
-            LOGGER.info("Built " + taskClusters.length + " Task Clusters");
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Plan for " + ac);
+            LOGGER.trace("Built " + taskClusters.length + " Task Clusters");
             for (TaskCluster tc : taskClusters) {
-                LOGGER.info("Tasks: " + Arrays.toString(tc.getTasks()));
+                LOGGER.trace("Tasks: " + Arrays.toString(tc.getTasks()));
             }
         }
 

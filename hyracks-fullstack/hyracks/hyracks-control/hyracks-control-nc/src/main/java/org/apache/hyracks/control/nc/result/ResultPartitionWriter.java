@@ -79,8 +79,8 @@ public class ResultPartitionWriter implements IFrameWriter {
 
     @Override
     public void open() {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("open(" + partition + ")");
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("open(" + partition + ")");
         }
         partitionRegistered = false;
         resultState.open();
@@ -105,8 +105,8 @@ public class ResultPartitionWriter implements IFrameWriter {
 
     @Override
     public void close() throws HyracksDataException {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("close(" + partition + ")");
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("close(" + partition + ")");
         }
         try {
             if (!failed) {

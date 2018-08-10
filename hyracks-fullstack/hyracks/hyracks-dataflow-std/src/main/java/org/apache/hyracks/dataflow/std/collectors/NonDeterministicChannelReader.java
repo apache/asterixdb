@@ -151,8 +151,10 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
     public synchronized void notifyFailure(IInputChannel channel, int errorCode) {
         PartitionId pid = (PartitionId) channel.getAttachment();
         int senderIndex = pid.getSenderIndex();
-        LOGGER.warn("Failure: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
-                + pid.getReceiverIndex());
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Failure: " + pid.getConnectorDescriptorId() + " sender: " + senderIndex + " receiver: "
+                    + pid.getReceiverIndex());
+        }
         // Note: if a remote failure overwrites the value of localFailure, then we rely on
         // the fact that the remote task will notify the cc of the failure.
         // Otherwise, the local task must fail
