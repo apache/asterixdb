@@ -21,6 +21,8 @@ package org.apache.asterix.common.utils;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.storage.ResourceReference;
@@ -39,12 +41,15 @@ import org.apache.logging.log4j.Logger;
 public class StoragePathUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Comparator<FileSplit> FILE_SPLIT_COMPARATOR =
+            Comparator.comparing(FileSplit::getNodeName).thenComparing(FileSplit::getPath);
 
     private StoragePathUtil() {
     }
 
     public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraints(
             FileSplit[] splits) {
+        Arrays.sort(splits, FILE_SPLIT_COMPARATOR);
         IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
         String[] loc = new String[splits.length];
         for (int p = 0; p < splits.length; p++) {
