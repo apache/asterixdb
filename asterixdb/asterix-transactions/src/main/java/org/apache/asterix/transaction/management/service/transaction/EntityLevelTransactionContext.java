@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.transaction.management.service.transaction;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
@@ -42,23 +42,21 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
 
     public EntityLevelTransactionContext(TxnId txnId) {
         super(txnId);
-        this.primaryIndexTrackers = new HashMap<>();
-        this.resourcePendingOps = new HashMap<>();
-        this.partitionPendingOps = new HashMap<>();
+        this.primaryIndexTrackers = new ConcurrentHashMap<>();
+        this.resourcePendingOps = new ConcurrentHashMap<>();
+        this.partitionPendingOps = new ConcurrentHashMap<>();
     }
 
     @Override
     public void register(long resourceId, int partition, ILSMIndex index, IModificationOperationCallback callback,
             boolean primaryIndex) {
         super.register(resourceId, partition, index, callback, primaryIndex);
-        synchronized (txnOpTrackers) {
-            AtomicInteger pendingOps = partitionPendingOps.computeIfAbsent(partition, p -> new AtomicInteger(0));
-            resourcePendingOps.put(resourceId, pendingOps);
-            if (primaryIndex) {
-                Pair<PrimaryIndexOperationTracker, IModificationOperationCallback> pair =
-                        new Pair<>((PrimaryIndexOperationTracker) index.getOperationTracker(), callback);
-                primaryIndexTrackers.put(partition, pair);
-            }
+        AtomicInteger pendingOps = partitionPendingOps.computeIfAbsent(partition, p -> new AtomicInteger(0));
+        resourcePendingOps.put(resourceId, pendingOps);
+        if (primaryIndex) {
+            Pair<PrimaryIndexOperationTracker, IModificationOperationCallback> pair =
+                    new Pair<>((PrimaryIndexOperationTracker) index.getOperationTracker(), callback);
+            primaryIndexTrackers.put(partition, pair);
         }
     }
 

@@ -36,7 +36,7 @@ import org.apache.hyracks.util.annotations.ThreadSafe;
 public abstract class AbstractTransactionContext implements ITransactionContext {
 
     protected final TxnId txnId;
-    protected final Map<Long, ITransactionOperationTracker> txnOpTrackers;
+    private final Map<Long, ITransactionOperationTracker> txnOpTrackers;
     private final AtomicLong firstLSN;
     private final AtomicLong lastLSN;
     private final AtomicInteger txnState;

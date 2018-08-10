@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.transaction.management.service.transaction;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.exceptions.ACIDException;
@@ -35,9 +35,9 @@ import org.apache.hyracks.util.annotations.ThreadSafe;
 @ThreadSafe
 public class AtomicTransactionContext extends AbstractTransactionContext {
 
-    private final Map<Long, ILSMOperationTracker> opTrackers = new HashMap<>();
-    private final Map<Long, AtomicInteger> indexPendingOps = new HashMap<>();
-    private final Map<Long, IModificationOperationCallback> callbacks = new HashMap<>();
+    private final Map<Long, ILSMOperationTracker> opTrackers = new ConcurrentHashMap<>();
+    private final Map<Long, AtomicInteger> indexPendingOps = new ConcurrentHashMap<>();
+    private final Map<Long, IModificationOperationCallback> callbacks = new ConcurrentHashMap<>();
 
     public AtomicTransactionContext(TxnId txnId) {
         super(txnId);
@@ -47,7 +47,7 @@ public class AtomicTransactionContext extends AbstractTransactionContext {
     public void register(long resourceId, int partition, ILSMIndex index, IModificationOperationCallback callback,
             boolean primaryIndex) {
         super.register(resourceId, partition, index, callback, primaryIndex);
-        synchronized (txnOpTrackers) {
+        synchronized (opTrackers) {
             if (primaryIndex && !opTrackers.containsKey(resourceId)) {
                 opTrackers.put(resourceId, index.getOperationTracker());
                 callbacks.put(resourceId, callback);
