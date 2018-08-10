@@ -20,6 +20,7 @@ package org.apache.asterix.translator;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
@@ -44,7 +45,9 @@ import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.MissingLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
+import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -69,6 +72,7 @@ import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
+import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -731,18 +735,27 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     }
 
     // Generates the return expression for a regular select clause.
-    private Expression generateReturnExpr(SelectRegular selectRegular, SelectBlock selectBlock) {
+    private Expression generateReturnExpr(SelectRegular selectRegular, SelectBlock selectBlock)
+            throws CompilationException {
         List<Expression> recordExprs = new ArrayList<>();
         List<FieldBinding> fieldBindings = new ArrayList<>();
         for (Projection projection : selectRegular.getProjections()) {
             if (projection.varStar()) {
+                SourceLocation sourceLoc = projection.getSourceLocation();
                 if (!fieldBindings.isEmpty()) {
                     RecordConstructor recordConstr = new RecordConstructor(new ArrayList<>(fieldBindings));
-                    recordConstr.setSourceLocation(projection.getSourceLocation());
+                    recordConstr.setSourceLocation(sourceLoc);
                     recordExprs.add(recordConstr);
                     fieldBindings.clear();
                 }
-                recordExprs.add(projection.getExpression());
+                Expression projectionExpr = projection.getExpression();
+                CallExpr toObjectExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.TO_OBJECT),
+                        Collections.singletonList(projectionExpr));
+                toObjectExpr.setSourceLocation(sourceLoc);
+                CallExpr ifMissingOrNullExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.IF_MISSING_OR_NULL),
+                        Arrays.asList(toObjectExpr, new RecordConstructor(Collections.emptyList())));
+                ifMissingOrNullExpr.setSourceLocation(sourceLoc);
+                recordExprs.add(ifMissingOrNullExpr);
             } else if (projection.star()) {
                 if (selectBlock.hasGroupbyClause()) {
                     getGroupBindings(selectBlock.getGroupbyClause(), fieldBindings);

@@ -340,7 +340,7 @@
     * `string_replacement` : a pattern `string` to be used as the replacement,
     * `string_flag` : (Optional) a `string` with flags to be used during replace.
         * The following modes are enabled with these flags: dotall (s), multiline (m), case_insensitive (i), and comments and whitespace (x).
-    * `replacement_limit`: (Optional) an `integer` specifying the maximum number of replacements to make 
+    * `replacement_limit`: (Optional) an `integer` specifying the maximum number of replacements to make
          (if negative then all occurrences will be replaced)
  * Return Value:
     * Returns a `string` that is obtained after the replacements,

@@ -5943,8 +5943,7 @@
     </test-case>
     <test-case FilePath="select-star">
       <compilation-unit name="var_star_2">
-        <output-dir compare="Text">var_star</output-dir>
-        <expected-error>ASX0002: Type mismatch</expected-error>
+        <output-dir compare="Text">var_star_2</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

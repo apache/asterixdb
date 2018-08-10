@@ -22,6 +22,5 @@
  * Expected Res : Success
  */
 
- SELECT t, t.*
+ SELECT t.*
  FROM [1, 2, 3] t
- ORDER BY t

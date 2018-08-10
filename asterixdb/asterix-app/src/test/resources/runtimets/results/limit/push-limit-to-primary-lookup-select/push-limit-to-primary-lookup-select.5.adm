@@ -22,7 +22,7 @@ distribute result [$$17]
                     -- BTREE_SEARCH  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        order (ASC, $$24) (ASC, $$25) 
+                        order (ASC, $$24) (ASC, $$25)
                         -- STABLE_SORT [$$24(ASC), $$25(ASC)]  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
