@@ -22,7 +22,7 @@
     DatabaseDeclaration ::= "USE" Identifier
 
 At the uppermost level, the world of data is organized into data namespaces called **dataverses**.
-To set the default dataverse for a series of statements, the USE statement is provided in SQL++.
+To set the default dataverse for statements, the USE statement is provided.
 
 As an example, the following statement sets the default dataverse to be "TinySocial".
 

@@ -19,8 +19,8 @@
 
 ### <a id="Functions"> Functions</a>
 
-The create function statement creates a **named** function that can then be used and reused in SQL++ queries.
-The body of a function can be any SQL++ expression involving the function's parameters.
+The create function statement creates a **named** function that can then be used and reused in queries.
+The body of a function can be any query expression involving the function's parameters.
 
     FunctionSpecification ::= "FUNCTION" FunctionOrTypeName IfNotExists ParameterList "{" Expression "}"
 
@@ -44,7 +44,7 @@ It differs from that example in that it results in a function that is persistent
                                    | "FUNCTION" FunctionSignature IfExists )
     IfExists            ::= ( "IF" "EXISTS" )?
 
-The DROP statement in SQL++ is the inverse of the CREATE statement. It can be used to drop dataverses, datatypes, datasets, indexes, and functions.
+The DROP statement is the inverse of the CREATE statement. It can be used to drop dataverses, datatypes, datasets, indexes, and functions.
 
 The following examples illustrate some uses of the DROP statement.
 
@@ -64,7 +64,7 @@ When an artifact is dropped, it will be droppped from the current dataverse if n
 (see the DROP DATASET example above) or from the specified dataverse (see the DROP TYPE example above)
 if one is specified by fully qualifying the artifact name in the DROP statement.
 When specifying an index to drop, the index name must be qualified by the dataset that it indexes.
-When specifying a function to drop, since SQL++ allows functions to be overloaded by their number of arguments,
+When specifying a function to drop, since the query language allows functions to be overloaded by their number of arguments,
 the identifying name of the function to be dropped must explicitly include that information.
 (`friendInfo@1` above denotes the 1-argument function named friendInfo in the current dataverse.)
 

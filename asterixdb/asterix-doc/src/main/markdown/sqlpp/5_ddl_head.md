@@ -30,8 +30,7 @@
                       | DeleteStatement
                       | Query
 
-In addition to queries, an implementation of SQL++ needs to support statements for data definition
-and manipulation purposes as well as controlling the context to be used in evaluating SQL++ expressions.
-This section details the DDL and DML statements supported in the SQL++ language as realized today in
-Apache AsterixDB.
+In addition to queries, an implementation of the query language needs to support statements for data definition
+and manipulation purposes as well as controlling the context to be used in evaluating query expressions.
+This section details the DDL and DML statements supported in the query language as realized today in Apache AsterixDB.
 

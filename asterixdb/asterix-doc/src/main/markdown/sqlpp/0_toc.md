@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 
-# The SQL++ Query Language
+# The Query Language
 
 * [1. Introduction](#Introduction)
 * [2. Expressions](#Expressions)
@@ -71,7 +71,7 @@
       * [WITH Clauses](#With_clauses)
       * [LET Clauses](#Let_clauses)
       * [UNION ALL](#Union_all)
-      * [SQL++ Vs. SQL-92](#Vs_SQL-92)
+      * [Differences from SQL-92](#Vs_SQL-92)
 * [4. Errors](#Errors)
       * [Syntax Errors](#Syntax_errors)
       * [Identifier Resolution Errors](#Identifier_resolution_errors)

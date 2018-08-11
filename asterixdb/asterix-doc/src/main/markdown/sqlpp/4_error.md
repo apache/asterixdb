@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 
-A SQL++ query can potentially result in one of the following errors:
+A query can potentially result in one of the following errors:
 
  * syntax error,
  * identifier resolution error,
@@ -29,7 +29,7 @@ terminate the ongoing processing of the query and
 immediately return an error message to the client.
 
 ## <a id="Syntax_errors">Syntax Errors</a>
-An valid SQL++ query must satisfy the SQL++ grammar rules.
+A valid query must satisfy the grammar rules of the query language.
 Otherwise, a syntax error will be raised.
 
 ##### Example
@@ -48,7 +48,7 @@ we will get a syntax error as follows:
     FROM GleambookUsers user
     WHERE type="advertiser";
 
-Since "type" is a reserved keyword in the SQL++ parser,
+Since "type" is a reserved keyword in the query parser,
 we will get a syntax error as follows:
 
     Error: Syntax error: In line 3 >>WHERE type="advertiser";<< Encountered 'type' "type" at column 7.
@@ -82,8 +82,8 @@ we will get an identifier resolution error as follows:
 
 ## <a id="Type_errors">Type Errors</a>
 
-The SQL++ compiler does type checks based on its available type information.
-In addition, the SQL++ runtime also reports type errors if a data model instance
+The query compiler does type checks based on its available type information.
+In addition, the query runtime also reports type errors if a data model instance
 it processes does not satisfy the type requirement.
 
 ##### Example

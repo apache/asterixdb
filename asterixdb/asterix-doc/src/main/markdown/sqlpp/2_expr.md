@@ -17,10 +17,12 @@
  ! under the License.
  !-->
 
-SQL++ is a highly composable expression language. Each SQL++ expression returns zero or more data model instances.
-There are three major kinds of expressions in SQL++. At the topmost level, a SQL++ expression can be an
-OperatorExpression (similar to a mathematical expression), or a QuantifiedExpression (which yields a boolean value).
-Each will be detailed as we explore the full SQL++ grammar.
+The query language is a highly composable expression language.
+Each expression in the query language returns zero or more data model instances.
+There are three major kinds of expressions.
+At the topmost level, an expression can be an OperatorExpression (similar to a mathematical expression) or a
+QuantifiedExpression (which yields a boolean value).
+Each will be detailed as we explore the full grammar of the language.
 
     Expression ::= OperatorExpression | QuantifiedExpression
 
@@ -29,14 +31,16 @@ Note that in the following text, words enclosed in angle brackets denote keyword
 
 ## <a id="Operator_expressions">Operator Expressions</a>
 
-Operators perform a specific operation on the input values or expressions. The syntax of an operator expression is as follows:
+Operators perform a specific operation on the input values or expressions.
+The syntax of an operator expression is as follows:
 
     OperatorExpression ::= PathExpression
                            | Operator OperatorExpression
                            | OperatorExpression Operator (OperatorExpression)?
                            | OperatorExpression <BETWEEN> OperatorExpression <AND> OperatorExpression
 
-SQL++ provides a full set of operators that you can use within its statements. Here are the categories of operators:
+The language provides a full set of operators that you can use within its statements.
+Here are the categories of operators:
 
 * [Arithmetic Operators](#Arithmetic_operators), to perform basic mathematical operations;
 * [Collection Operators](#Collection_operators), to evaluate expressions on collections or objects;
@@ -65,7 +69,9 @@ the enclosing operator will return `NULL`. However, there are a few exceptions l
 [comparison operators](#Comparison_operators) and [logical operators](#Logical_operators).
 
 ### <a id="Arithmetic_operators">Arithmetic Operators</a>
-Arithmetic operators are used to exponentiate, add, subtract, multiply, and divide numeric values, or concatenate string values.
+
+Arithmetic operators are used to exponentiate, add, subtract, multiply, and divide numeric values, or concatenate string
+values.
 
 | Operator     |  Purpose                                                                | Example    |
 |--------------|-------------------------------------------------------------------------|------------|
@@ -89,12 +95,13 @@ Collection operators are used for membership tests (IN, NOT IN) or empty collect
 | NOT EXISTS |  Check whether a collection is empty         | SELECT * FROM ChirpMessages cm <br/>WHERE NOT EXISTS cm.referredTopics; |
 
 ### <a id="Comparison_operators">Comparison Operators</a>
-Comparison operators are used to compare values. The comparison operators fall into one of two sub-categories: missing
-value comparisons and regular value comparisons. SQL++ (and JSON) has two ways of representing missing information in
-a object - the presence of the field with a NULL for its value (as in SQL), and the absence of the field (which
-JSON permits). For example, the first of the following objects represents Jack, whose friend is Jill. In the other
-examples, Jake is friendless a la SQL, with a friend field that is NULL, while Joe is friendless in a more natural
-(for JSON) way, i.e., by not having a friend field.
+Comparison operators are used to compare values.
+The comparison operators fall into one of two sub-categories: missing value comparisons and regular value comparisons.
+The query language (and JSON) has two ways of representing missing information in a object - the presence of the field
+with a NULL for its value (as in SQL), and the absence of the field (which JSON permits).
+For example, the first of the following objects represents Jack, whose friend is Jill.
+In the other examples, Jake is friendless a la SQL, with a friend field that is NULL, while Joe is friendless in a more
+natural (for JSON) way, i.e., by not having a friend field.
 
 ##### Examples
 {"name": "Jack", "friend": "Jill"}
@@ -103,7 +110,7 @@ examples, Jake is friendless a la SQL, with a friend field that is NULL, while J
 
 {"name": "Joe"}
 
-The following table enumerates all of SQL++'s comparison operators.
+The following table enumerates all of the query language's comparison operators.
 
 | Operator       |  Purpose                                       | Example    |
 |----------------|------------------------------------------------|------------|
@@ -203,14 +210,16 @@ A type error will be raised if the first expression in a quantified expression d
     Field           ::= "." Identifier
     Index           ::= "[" Expression "]"
 
-Components of complex types in the data model are accessed via path expressions. Path access can be applied to the result
-of a SQL++ expression that yields an instance of  a complex type, for example, a object or array instance. For objects,
-path access is based on field names. For arrays path access is based on (zero-based) array-style indexing.
+Components of complex types in the data model are accessed via path expressions.
+Path access can be applied to the result of a query expression that yields an instance of a complex type, for example, a
+object or array instance.
+For objects, path access is based on field names.
+For arrays, path access is based on (zero-based) array-style indexing.
 Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`.
-For multisets path access is also zero-based and returns an arbitrary multiset element if the index
-is within the size of the multiset or `MISSING` otherwise.
-Type errors will be raised for inappropriate use of a path expression, such as applying a field
-accessor to a numeric value.
+For multisets path access is also zero-based and returns an arbitrary multiset element if the index is within the size
+of the multiset or `MISSING` otherwise.
+Type errors will be raised for inappropriate use of a path expression, such as applying a field accessor to a numeric
+value.
 
 The following examples illustrate field access for a object, index-based element access for an array, and also a
 composition thereof.
@@ -234,10 +243,10 @@ composition thereof.
                   | CaseExpression
                   | Constructor
 
-The most basic building block for any SQL++ expression is PrimaryExpression. This can be a simple literal (constant)
-value, a reference to a query variable that is in scope, a statement parameter, a parenthesized expression,
-a function call, a conditional (case) expression, or a newly constructed instance of the data model
-(such as a newly constructed object, array, or multiset of data model instances).
+The most basic building block for any expression in the query langauge is PrimaryExpression.
+This can be a simple literal (constant) value, a reference to a query variable that is in scope, a parenthesized
+expression, a function call, or a newly constructed instance of the data model (such as a newly constructed object,
+array, or multiset of data model instances).
 
 ## <a id="Literals">Literals</a>
 
@@ -289,9 +298,13 @@ a function call, a conditional (case) expression, or a newly constructed instanc
     DoubleLiteral  ::= <DIGITS> "." <DIGITS>
                        | "." <DIGITS>
 
-Literals (constants) in SQL++ can be strings, integers, floating point values, double values, boolean constants, or special constant values like `NULL` and `MISSING`. The `NULL` value is like a `NULL` in SQL; it is used to represent an unknown field value. The specialy value `MISSING` is only meaningful in the context of SQL++ field accesses; it occurs when the accessed field simply does not exist at all in a object being accessed.
+Literals (constants) in a query can be strings, integers, floating point values, double values, boolean constants, or
+special constant values like `NULL` and `MISSING`.
+The `NULL` value is like a `NULL` in SQL; it is used to represent an unknown field value.
+The special value `MISSING` is only meaningful in the context of field accesses; it occurs when the accessed field
+simply does not exist at all in a object being accessed.
 
-The following are some simple examples of SQL++ literals.
+The following are some simple examples of literals.
 
 ##### Examples
 
@@ -299,7 +312,7 @@ The following are some simple examples of SQL++ literals.
     "test string"
     42
 
-Different from standard SQL, double quotes play the same role as single quotes and may be used for string literals in SQL++.
+Different from standard SQL, double quotes play the same role as single quotes and may be used for string literals in queries as well.
 
 ### <a id="Variable_references">Variable References</a>
 
@@ -317,10 +330,15 @@ Different from standard SQL, double quotes play the same role as single quotes a
                                     | ~["`","\\"])*
                               "`"
 
-A variable in SQL++ can be bound to any legal data model value. A variable reference refers to the value to which an in-scope variable is
-bound. (E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from an
-input parameter in the context of a function body.) Backticks, for example, \`id\`, are used for delimited identifiers. Delimiting is needed when
-a variable's desired name clashes with a SQL++ keyword or includes characters not allowed in regular identifiers. More information on exactly how variable references are resolved can be found in the appendix section on Variable Resolution.
+A variable in a query can be bound to any legal data model value.
+A variable reference refers to the value to which an in-scope variable is bound.
+(E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from
+an input parameter in the context of a function body.)
+Backticks, for example, \`id\`, are used for delimited identifiers.
+Delimiting is needed when a variable's desired name clashes with a keyword or includes characters not allowed in regular
+identifiers.
+More information on exactly how variable references are resolved can be found in the appendix section on Variable
+Resolution.
 
 ##### Examples
 
@@ -336,7 +354,8 @@ a variable's desired name clashes with a SQL++ keyword or includes characters no
     PositionalParameterReference    ::= ("$" <DIGITS>) | "?"
 
 A statement parameter is an external variable which value is provided through the [statement execution API](../api.html#queryservice).
-An error will be raised if the parameter is not bound at the query execution time. Positional parameter numbering starts at 1.
+An error will be raised if the parameter is not bound at the query execution time.
+Positional parameter numbering starts at 1.
 "?" parameters are interpreted as $1, .. $N in the order in which they appear in the statement.
 
 ##### Examples
@@ -349,7 +368,8 @@ An error will be raised if the parameter is not bound at the query execution tim
 
     ParenthesizedExpression ::= "(" Expression ")" | Subquery
 
-An expression can be parenthesized to control the precedence order or otherwise clarify a query. In SQL++, for composability, a subquery is also an parenthesized expression.
+An expression can be parenthesized to control the precedence order or otherwise clarify a query.
+For composability, a subquery is also an parenthesized expression.
 
 The following expression evaluates to the value 2.
 
@@ -361,7 +381,11 @@ The following expression evaluates to the value 2.
 
     FunctionCallExpression ::= FunctionName "(" ( Expression ( "," Expression )* )? ")"
 
-Functions are included in SQL++, like most languages, as a way to package useful functionality or to componentize complicated or reusable SQL++ computations. A function call is a legal SQL++ query expression that represents the value resulting from the evaluation of its body expression with the given parameter bindings; the parameter value bindings can themselves be any SQL++ expressions.
+Functions are included in the query language, like most languages, as a way to package useful functionality or to
+componentize complicated or reusable computations.
+A function call is a legal query expression that represents the value resulting from the evaluation of its body
+expression with the given parameter bindings; the parameter value bindings can themselves be any expressions in the
+query language.
 
 The following example is a (built-in) function call expression whose value is 8.
 
@@ -394,7 +418,7 @@ The following example illustrates the form of a case expression.
     ObjectConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
     FieldBinding             ::= Expression ":" Expression
 
-A major feature of SQL++ is its ability to construct new data model instances. This is accomplished using
+A major feature of the query language is its ability to construct new data model instances. This is accomplished using
 its constructors for each of the model's complex object structures, namely arrays, multisets, and objects.
 Arrays are like JSON arrays, while multisets have bag semantics.
 Objects are built from fields that are field-name/field-value pairs, again like JSON.
@@ -402,9 +426,9 @@ Objects are built from fields that are field-name/field-value pairs, again like 
 The following examples illustrate how to construct a new array with 4 items and a new object with 2 fields respectively.
 Array elements can be homogeneous (as in the first example),
 which is the common case, or they may be heterogeneous (as in the second example). The data values and field name values
-used to construct arrays, multisets, and objects in constructors are all simply SQL++ expressions. Thus, the collection
+used to construct arrays, multisets, and objects in constructors are all simply query expressions. Thus, the collection
 elements, field names, and field values used in constructors can be simple literals or they can come from query variable
-references or even arbitrarily complex SQL++ expressions (subqueries).
+references or even arbitrarily complex query expressions (subqueries).
 Type errors will be raised if the field names in an object are not strings, and
 duplicate field errors will be raised if they are not distinct.
 

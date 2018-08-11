@@ -23,9 +23,9 @@
 
     InsertStatement ::= <INSERT> <INTO> QualifiedName Query
 
-The SQL++ INSERT statement is used to insert new data into a dataset.
-The data to be inserted comes from a SQL++ query expression.
-This expression can be as simple as a constant expression, or in general it can be any legal SQL++ query.
+The INSERT statement is used to insert new data into a dataset.
+The data to be inserted comes from a query expression.
+This expression can be as simple as a constant expression, or in general it can be any legal query.
 If the target dataset has an auto-generated primary key field, the insert statement should not include a
 value for that field in it.
 (The system will automatically extend the provided object with this additional field and a corresponding value.)
@@ -45,7 +45,7 @@ The following example illustrates a query-based insertion.
 
     UpsertStatement ::= <UPSERT> <INTO> QualifiedName Query
 
-The SQL++ UPSERT statement syntactically mirrors the INSERT statement discussed above.
+The UPSERT statement syntactically mirrors the INSERT statement discussed above.
 The difference lies in its semantics, which for UPSERT are "add or replace" instead of the INSERT "add if not present, else error" semantics.
 Whereas an INSERT can fail if another object already exists with the specified key, the analogous UPSERT will replace the previous object's value with that of the new object in such cases.
 
@@ -55,13 +55,13 @@ The following example illustrates a query-based upsert operation.
 
     UPSERT INTO UsersCopy (SELECT VALUE user FROM GleambookUsers user)
 
-*Editor's note: Upserts currently work in AQL but are not yet enabled (at the moment) in SQL++.
+*Editor's note: Upserts currently work in AQL but are not yet enabled (at the moment) in the current query language.
 
 ### <a id="Deletes">DELETEs</a>
 
     DeleteStatement ::= <DELETE> <FROM> QualifiedName ( ( <AS> )? Variable )? ( <WHERE> Expression )?
 
-The SQL++ DELETE statement is used to delete data from a target dataset.
+The DELETE statement is used to delete data from a target dataset.
 The data to be deleted is identified by a boolean expression involving the variable bound to the target dataset in the DELETE statement.
 
 Deletes are processed transactionally by the system.

@@ -17,15 +17,15 @@
  ! under the License.
  !-->
 
-When writing a complex SQL++ query, it can sometimes be helpful to define one or more auxilliary functions
+When writing a complex query, it can sometimes be helpful to define one or more auxilliary functions
 that each address a sub-piece of the overall query.
 The declare function statement supports the creation of such helper functions.
-In general, the function body (expression) can be any legal SQL++ query expression.
+In general, the function body (expression) can be any legal query expression.
 
     FunctionDeclaration  ::= "DECLARE" "FUNCTION" Identifier ParameterList "{" Expression "}"
     ParameterList        ::= "(" ( <VARIABLE> ( "," <VARIABLE> )* )? ")"
 
-The following is a simple example of a temporary SQL++ function definition and its use.
+The following is a simple example of a temporary function definition and its use.
 
 ##### Example
 

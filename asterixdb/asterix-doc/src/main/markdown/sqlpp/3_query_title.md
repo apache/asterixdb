@@ -19,7 +19,7 @@
 
 # <a id="Queries">3. Queries</a>
 
-A SQL++ query can be any legal SQL++ expression or `SELECT` statement. A SQL++ query always ends with a semicolon.
+A query can be any legal expression or `SELECT` statement. A query always ends with a semicolon.
 
     Query ::= (Expression | SelectStatement) ";"
 
