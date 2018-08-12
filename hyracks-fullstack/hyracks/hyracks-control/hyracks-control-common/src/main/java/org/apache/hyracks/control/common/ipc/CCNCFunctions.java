@@ -24,8 +24,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -47,6 +50,7 @@ import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.connectors.ConnectorPolicyFactory;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
@@ -81,6 +85,7 @@ public class CCNCFunctions {
         NOTIFY_TASK_COMPLETE,
         NOTIFY_TASK_FAILURE,
         NODE_HEARTBEAT,
+        NODE_HEARTBEAT_ACK,
         REPORT_PROFILE,
         REGISTER_PARTITION_PROVIDER,
         REGISTER_PARTITION_REQUEST,
@@ -383,10 +388,12 @@ public class CCNCFunctions {
 
         private final String nodeId;
         private final HeartbeatData hbData;
+        private final InetSocketAddress ncAddress;
 
-        public NodeHeartbeatFunction(String nodeId, HeartbeatData hbData) {
+        public NodeHeartbeatFunction(String nodeId, HeartbeatData hbData, InetSocketAddress ncAddress) {
             this.nodeId = nodeId;
             this.hbData = hbData;
+            this.ncAddress = ncAddress;
         }
 
         @Override
@@ -402,21 +409,27 @@ public class CCNCFunctions {
             return hbData;
         }
 
+        public InetSocketAddress getNcAddress() {
+            return ncAddress;
+        }
+
         public static Object deserialize(ByteBuffer buffer, int length) throws Exception {
             ByteArrayInputStream bais = new ByteArrayInputStream(buffer.array(), buffer.position(), length);
-            DataInputStream dis = new DataInputStream(bais);
+            ObjectInputStream dis = new ObjectInputStream(bais);
 
-            String nodeId = dis.readUTF();
             HeartbeatData hbData = new HeartbeatData();
             hbData.readFields(dis);
-            return new NodeHeartbeatFunction(nodeId, hbData);
+            String nodeId = dis.readUTF();
+            InetSocketAddress ncAddress = (InetSocketAddress) dis.readObject();
+            return new NodeHeartbeatFunction(nodeId, hbData, ncAddress);
         }
 
         public static void serialize(OutputStream out, Object object) throws Exception {
             NodeHeartbeatFunction fn = (NodeHeartbeatFunction) object;
-            DataOutputStream dos = new DataOutputStream(out);
-            dos.writeUTF(fn.nodeId);
+            ObjectOutputStream dos = new ObjectOutputStream(out);
             fn.hbData.write(dos);
+            dos.writeUTF(fn.nodeId);
+            dos.writeObject(fn.ncAddress);
         }
     }
 
@@ -1329,6 +1342,25 @@ public class CCNCFunctions {
         @Override
         public FunctionId getFunctionId() {
             return FunctionId.PING_REQUEST;
+        }
+    }
+
+    public static class NodeHeartbeatAckFunction extends CCIdentifiedFunction {
+        private static final long serialVersionUID = 1L;
+        private final HyracksDataException exception;
+
+        public NodeHeartbeatAckFunction(CcId ccId, HyracksDataException e) {
+            super(ccId);
+            exception = e;
+        }
+
+        @Override
+        public FunctionId getFunctionId() {
+            return FunctionId.NODE_HEARTBEAT_ACK;
+        }
+
+        public HyracksDataException getException() {
+            return exception;
         }
     }
 

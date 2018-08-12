@@ -18,19 +18,39 @@
  */
 package org.apache.hyracks.control.cc.work;
 
+import java.net.InetSocketAddress;
+
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.NodeControllerState;
+import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
+import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import org.apache.logging.log4j.Level;
 
 public class NodeHeartbeatWork extends AbstractHeartbeatWork {
 
-    public NodeHeartbeatWork(ClusterControllerService ccs, String nodeId, HeartbeatData hbData) {
+    private final InetSocketAddress ncAddress;
+
+    public NodeHeartbeatWork(ClusterControllerService ccs, String nodeId, HeartbeatData hbData,
+            InetSocketAddress ncAddress) {
         super(ccs, nodeId, hbData);
+        this.ncAddress = ncAddress;
     }
 
     @Override
-    public void runWork() {
-
+    public void runWork() throws Exception {
+        INodeManager nodeManager = ccs.getNodeManager();
+        final NodeControllerState ncState = nodeManager.getNodeControllerState(nodeId);
+        if (ncState != null) {
+            ncState.getNodeController().heartbeatAck(ccs.getCcId(), null);
+        } else {
+            // unregistered nc- let him know
+            NodeControllerRemoteProxy nc =
+                    new NodeControllerRemoteProxy(ccs.getCcId(), ccs.getClusterIPC().getReconnectingHandle(ncAddress));
+            nc.heartbeatAck(ccs.getCcId(), HyracksDataException.create(ErrorCode.NO_SUCH_NODE, nodeId));
+        }
     }
 
     @Override

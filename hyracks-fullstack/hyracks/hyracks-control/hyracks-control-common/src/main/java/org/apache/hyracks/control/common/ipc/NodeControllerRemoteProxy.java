@@ -30,6 +30,7 @@ import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
@@ -151,6 +152,11 @@ public class NodeControllerRemoteProxy implements INodeController {
     @Override
     public void ping(CcId ccId) throws IPCException {
         ipcHandle.send(-1, new CCNCFunctions.PingFunction(ccId), null);
+    }
+
+    @Override
+    public void heartbeatAck(CcId ccId, HyracksDataException e) throws IPCException {
+        ipcHandle.send(-1, new CCNCFunctions.NodeHeartbeatAckFunction(ccId, e), null);
     }
 
     public InetSocketAddress getAddress() {

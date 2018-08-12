@@ -35,15 +35,11 @@ public class ApplicationMessageWork extends AbstractHeartbeatWork {
     private static final Logger LOGGER = LogManager.getLogger();
     private byte[] message;
     private DeploymentId deploymentId;
-    private String nodeId;
-    private ClusterControllerService ccs;
 
     public ApplicationMessageWork(ClusterControllerService ccs, byte[] message, DeploymentId deploymentId,
             String nodeId) {
         super(ccs, nodeId, null);
-        this.ccs = ccs;
         this.deploymentId = deploymentId;
-        this.nodeId = nodeId;
         this.message = message;
     }
 

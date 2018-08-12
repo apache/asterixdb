@@ -31,16 +31,12 @@ import org.apache.hyracks.control.common.deployment.DeploymentStatus;
  */
 public class NotifyDeployBinaryWork extends AbstractHeartbeatWork {
 
-    private final ClusterControllerService ccs;
-    private final String nodeId;
     private final DeploymentId deploymentId;
     private DeploymentStatus deploymentStatus;
 
     public NotifyDeployBinaryWork(ClusterControllerService ccs, DeploymentId deploymentId, String nodeId,
             DeploymentStatus deploymentStatus) {
         super(ccs, nodeId, null);
-        this.ccs = ccs;
-        this.nodeId = nodeId;
         this.deploymentId = deploymentId;
         this.deploymentStatus = deploymentStatus;
 

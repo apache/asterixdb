@@ -36,13 +36,15 @@ public class CcConnection {
     private static final long REGISTRATION_RESPONSE_POLL_PERIOD = TimeUnit.SECONDS.toMillis(1);
 
     private final IClusterController ccs;
+    private final InetSocketAddress ccAddress;
     private boolean registrationPending;
     private boolean registrationCompleted;
     private Exception registrationException;
     private NodeParameters nodeParameters;
 
-    CcConnection(IClusterController ccs) {
+    CcConnection(IClusterController ccs, InetSocketAddress ccAddress) {
         this.ccs = ccs;
+        this.ccAddress = ccAddress;
     }
 
     @Override
@@ -86,19 +88,17 @@ public class CcConnection {
         return nodeParameters;
     }
 
-    public synchronized void notifyConnectionRestored(NodeControllerService ncs, InetSocketAddress ccAddress)
-            throws InterruptedException {
-        if (registrationCompleted) {
-            registrationCompleted = false;
-            ncs.getExecutor().submit(() -> {
-                try {
-                    return ncs.registerNode(this, ccAddress);
-                } catch (Exception e) {
-                    LOGGER.log(Level.ERROR, "Failed registering with cc", e);
-                    throw new IllegalStateException(e);
-                }
-            });
-        }
+    public synchronized void forceReregister(NodeControllerService ncs) throws InterruptedException {
+        registrationCompleted = false;
+        ncs.getExecutor().submit(() -> {
+            try {
+                return ncs.registerNode(this);
+            } catch (Exception e) {
+                LOGGER.log(Level.ERROR, "Failed registering with cc", e);
+                throw new IllegalStateException(e);
+            }
+        });
+
         while (!registrationCompleted) {
             wait();
         }
@@ -107,5 +107,9 @@ public class CcConnection {
     public synchronized void notifyRegistrationCompleted() {
         registrationCompleted = true;
         notifyAll();
+    }
+
+    public InetSocketAddress getCcAddress() {
+        return ccAddress;
     }
 }

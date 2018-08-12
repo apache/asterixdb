@@ -20,6 +20,8 @@ package org.apache.hyracks.control.nc;
 
 import org.apache.hyracks.control.common.ipc.CCNCFunctions;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions.StateDumpRequestFunction;
+import org.apache.hyracks.control.nc.task.HeartbeatAckTask;
+import org.apache.hyracks.control.nc.task.PingTask;
 import org.apache.hyracks.control.nc.task.ShutdownTask;
 import org.apache.hyracks.control.nc.task.ThreadDumpTask;
 import org.apache.hyracks.control.nc.work.AbortAllJobsWork;
@@ -28,7 +30,6 @@ import org.apache.hyracks.control.nc.work.ApplicationMessageWork;
 import org.apache.hyracks.control.nc.work.CleanupJobletWork;
 import org.apache.hyracks.control.nc.work.DeployBinaryWork;
 import org.apache.hyracks.control.nc.work.DeployJobSpecWork;
-import org.apache.hyracks.control.nc.task.PingTask;
 import org.apache.hyracks.control.nc.work.ReportPartitionAvailabilityWork;
 import org.apache.hyracks.control.nc.work.StartTasksWork;
 import org.apache.hyracks.control.nc.work.StateDumpWork;
@@ -137,6 +138,11 @@ final class NodeControllerIPCI implements IIPCI {
             case PING_REQUEST:
                 final CCNCFunctions.PingFunction pcf = (CCNCFunctions.PingFunction) fn;
                 ncs.getExecutor().submit(new PingTask(ncs, pcf.getCcId()));
+                return;
+
+            case NODE_HEARTBEAT_ACK:
+                final CCNCFunctions.NodeHeartbeatAckFunction nbaf = (CCNCFunctions.NodeHeartbeatAckFunction) fn;
+                ncs.getExecutor().submit(new HeartbeatAckTask(ncs, nbaf.getCcId(), nbaf.getException()));
                 return;
 
             default:

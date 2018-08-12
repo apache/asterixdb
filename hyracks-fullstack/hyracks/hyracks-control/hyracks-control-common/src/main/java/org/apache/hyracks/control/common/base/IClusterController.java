@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.common.base;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
@@ -54,7 +55,7 @@ public interface IClusterController {
 
     void notifyShutdown(String nodeId) throws Exception;
 
-    void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception;
+    void nodeHeartbeat(String id, HeartbeatData hbData, InetSocketAddress ncAddress) throws Exception;
 
     void reportProfile(String id, List<JobProfile> profiles) throws Exception;
 

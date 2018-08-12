@@ -176,7 +176,7 @@ public class ConfigManager implements IConfigManager, Serializable {
     }
 
     public synchronized void ensureNode(String nodeId) {
-        LOGGER.debug("ensureNode: " + nodeId);
+        LOGGER.trace("+ensureNode: {}", nodeId);
         Map<IOption, Object> nodeDefinedMap =
                 nodeSpecificDefinedMap.computeIfAbsent(nodeId, this::createNodeSpecificMap);
         Map<IOption, Object> nodeDefaultMap =
@@ -186,14 +186,14 @@ public class ConfigManager implements IConfigManager, Serializable {
     }
 
     public synchronized void forgetNode(String nodeId) {
-        LOGGER.debug("forgetNode: " + nodeId);
+        LOGGER.trace("+forgetNode: {}", nodeId);
         nodeSpecificDefinedMap.remove(nodeId);
         nodeSpecificDefaultMap.remove(nodeId);
         nodeEffectiveMaps.remove(nodeId);
     }
 
     private Map<IOption, Object> createNodeSpecificMap(String nodeId) {
-        LOGGER.debug("createNodeSpecificMap: " + nodeId);
+        LOGGER.trace("+createNodeSpecificMap: {}", nodeId);
         return Collections.synchronizedMap(new HashMap<>());
     }
 

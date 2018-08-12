@@ -37,15 +37,11 @@ import org.apache.logging.log4j.Logger;
 public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private ClusterControllerService ccs;
     private JobId jobId;
-    private String nodeId;
 
     public JobletCleanupNotificationWork(ClusterControllerService ccs, JobId jobId, String nodeId) {
         super(ccs, nodeId, null);
-        this.ccs = ccs;
         this.jobId = jobId;
-        this.nodeId = nodeId;
     }
 
     @Override

@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.common.ipc;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
@@ -101,8 +102,8 @@ public class ClusterControllerRemoteProxy implements IClusterController {
     }
 
     @Override
-    public void nodeHeartbeat(String id, HeartbeatData hbData) throws Exception {
-        NodeHeartbeatFunction fn = new NodeHeartbeatFunction(id, hbData);
+    public void nodeHeartbeat(String id, HeartbeatData hbData, InetSocketAddress ncAddress) throws Exception {
+        NodeHeartbeatFunction fn = new NodeHeartbeatFunction(id, hbData, ncAddress);
         ipcHandle.send(-1, fn, null);
     }
 

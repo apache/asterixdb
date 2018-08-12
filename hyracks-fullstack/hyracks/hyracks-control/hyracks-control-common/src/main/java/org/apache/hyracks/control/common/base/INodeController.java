@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
 import org.apache.hyracks.api.deployment.DeploymentId;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.DeployedJobSpecId;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
@@ -93,4 +94,13 @@ public interface INodeController {
      * @throws IPCException
      */
     void ping(CcId ccId) throws IPCException;
+
+    /**
+     * Delivers a response to a heartbeat delivered to this {@link CcId}
+     *
+     * @param ccId
+     * @param e
+     * @throws IPCException
+     */
+    void heartbeatAck(CcId ccId, HyracksDataException e) throws IPCException;
 }

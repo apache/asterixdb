@@ -36,17 +36,13 @@ import org.apache.hyracks.control.cc.job.TaskCluster;
 import org.apache.hyracks.control.cc.job.TaskClusterAttempt;
 
 public abstract class AbstractTaskLifecycleWork extends AbstractHeartbeatWork {
-    protected final ClusterControllerService ccs;
     protected final JobId jobId;
     protected final TaskAttemptId taId;
-    protected final String nodeId;
 
     public AbstractTaskLifecycleWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId) {
         super(ccs, nodeId, null);
-        this.ccs = ccs;
         this.jobId = jobId;
         this.taId = taId;
-        this.nodeId = nodeId;
     }
 
     @Override

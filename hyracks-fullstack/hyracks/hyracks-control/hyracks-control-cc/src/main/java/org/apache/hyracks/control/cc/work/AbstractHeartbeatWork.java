@@ -27,9 +27,9 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
 
 public abstract class AbstractHeartbeatWork extends SynchronizableWork {
 
-    private final ClusterControllerService ccs;
-    private final String nodeId;
-    private final HeartbeatData hbData;
+    protected final ClusterControllerService ccs;
+    protected final String nodeId;
+    protected final HeartbeatData hbData;
 
     public AbstractHeartbeatWork(ClusterControllerService ccs, String nodeId, HeartbeatData hbData) {
         this.ccs = ccs;
@@ -38,7 +38,7 @@ public abstract class AbstractHeartbeatWork extends SynchronizableWork {
     }
 
     @Override
-    public void doRun() {
+    public void doRun() throws Exception {
         INodeManager nodeManager = ccs.getNodeManager();
         NodeControllerState state = nodeManager.getNodeControllerState(nodeId);
         if (state != null) {
@@ -51,6 +51,6 @@ public abstract class AbstractHeartbeatWork extends SynchronizableWork {
         runWork();
     }
 
-    public abstract void runWork();
+    public abstract void runWork() throws Exception;
 
 }

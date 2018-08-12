@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.nc.heartbeat;
 
+import java.net.InetSocketAddress;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -36,12 +37,15 @@ public class HeartbeatTask implements Runnable {
     private final Semaphore delayBlock = new Semaphore(0);
     private final IClusterController cc;
     private final long heartbeatPeriodNanos;
+    private final InetSocketAddress ncAddress;
 
-    public HeartbeatTask(String ncId, HeartbeatData hbData, IClusterController cc, long heartbeatPeriod) {
+    public HeartbeatTask(String ncId, HeartbeatData hbData, IClusterController cc, long heartbeatPeriod,
+            InetSocketAddress ncAddress) {
         this.ncId = ncId;
         this.hbData = hbData;
         this.cc = cc;
         this.heartbeatPeriodNanos = TimeUnit.MILLISECONDS.toNanos(heartbeatPeriod);
+        this.ncAddress = ncAddress;
     }
 
     @Override
@@ -67,18 +71,15 @@ public class HeartbeatTask implements Runnable {
     private boolean execute() throws InterruptedException {
         try {
             synchronized (hbData) {
-                cc.nodeHeartbeat(ncId, hbData);
+                cc.nodeHeartbeat(ncId, hbData, ncAddress);
             }
             LOGGER.trace("Successfully sent heartbeat");
             return true;
         } catch (InterruptedException e) {
             throw e;
         } catch (Exception e) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.log(Level.DEBUG, "Exception sending heartbeat; will retry after 1s", e);
-            } else {
-                LOGGER.log(Level.ERROR, "Exception sending heartbeat; will retry after 1s: " + e.toString());
-            }
+            LOGGER.log(Level.DEBUG, "Exception sending heartbeat; will retry after 1s", e);
+            LOGGER.log(Level.WARN, "Exception sending heartbeat; will retry after 1s: " + e.toString());
             return false;
         }
     }

@@ -49,10 +49,16 @@ public class RegisterNodeWork extends SynchronizableWork {
     @Override
     protected void doRun() throws Exception {
         String id = reg.getNodeId();
-        LOGGER.warn("Registering node: {}", id);
+        LOGGER.info("registering node: {}", id);
         NodeControllerRemoteProxy nc = new NodeControllerRemoteProxy(ccs.getCcId(),
                 ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerAddress()));
         INodeManager nodeManager = ccs.getNodeManager();
+        NodeParameters params = new NodeParameters();
+        params.setClusterControllerInfo(ccs.getClusterControllerInfo());
+        params.setDistributedState(ccs.getContext().getDistributedState());
+        params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriodMillis());
+        params.setProfileDumpPeriod(ccs.getCCConfig().getProfileDumpPeriod());
+        params.setRegistrationId(registrationId);
         try {
             NodeControllerState state = new NodeControllerState(nc, reg);
             nodeManager.addNode(id, state);
@@ -61,21 +67,13 @@ public class RegisterNodeWork extends SynchronizableWork {
             for (IOption option : cfg.getOptions()) {
                 ncConfiguration.put(option, cfg.get(option));
             }
-            LOGGER.warn("Registered node: {}", id);
-            NodeParameters params = new NodeParameters();
-            params.setClusterControllerInfo(ccs.getClusterControllerInfo());
-            params.setDistributedState(ccs.getContext().getDistributedState());
-            params.setHeartbeatPeriod(ccs.getCCConfig().getHeartbeatPeriodMillis());
-            params.setProfileDumpPeriod(ccs.getCCConfig().getProfileDumpPeriod());
-            params.setRegistrationId(registrationId);
-            LOGGER.warn("sending registration response to node {}", id);
+            LOGGER.info("registered node: {}", id);
             nc.sendRegistrationResult(params, null);
-            LOGGER.warn("notifying node {} joined", id);
             ccs.getContext().notifyNodeJoin(id, ncConfiguration);
         } catch (Exception e) {
-            LOGGER.error("Node {} registration failed", id, e);
+            LOGGER.error("node {} registration failed", id, e);
             nodeManager.removeNode(id);
-            nc.sendRegistrationResult(null, e);
+            nc.sendRegistrationResult(params, e);
         }
     }
 }

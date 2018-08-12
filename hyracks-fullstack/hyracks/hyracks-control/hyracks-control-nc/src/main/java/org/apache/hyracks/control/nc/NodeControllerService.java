@@ -59,7 +59,6 @@ import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.api.util.CleanupUtils;
-import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.control.common.NodeControllerData;
 import org.apache.hyracks.control.common.base.IClusterController;
 import org.apache.hyracks.control.common.config.ConfigManager;
@@ -75,7 +74,7 @@ import org.apache.hyracks.control.common.work.FutureValue;
 import org.apache.hyracks.control.common.work.WorkQueue;
 import org.apache.hyracks.control.nc.application.NCServiceContext;
 import org.apache.hyracks.control.nc.heartbeat.HeartbeatComputeTask;
-import org.apache.hyracks.control.nc.heartbeat.HeartbeatTask;
+import org.apache.hyracks.control.nc.heartbeat.HeartbeatManager;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.net.MessagingNetworkManager;
 import org.apache.hyracks.control.nc.net.NetworkManager;
@@ -144,7 +143,7 @@ public class NodeControllerService implements IControllerService {
 
     private ExecutorService executor;
 
-    private Map<CcId, Thread> heartbeatThreads = new ConcurrentHashMap<>();
+    private Map<CcId, HeartbeatManager> heartbeatManagers = new ConcurrentHashMap<>();
 
     private Map<CcId, Timer> ccTimers = new ConcurrentHashMap<>();
 
@@ -348,7 +347,7 @@ public class NodeControllerService implements IControllerService {
                     // we need to re-register in case of NC -> CC connection reset
                     final CcConnection ccConnection = getCcConnection(ccAddressMap.get(ccAddress));
                     try {
-                        ccConnection.notifyConnectionRestored(NodeControllerService.this, ccAddress);
+                        ccConnection.forceReregister(NodeControllerService.this);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw new IPCException(e);
@@ -357,7 +356,7 @@ public class NodeControllerService implements IControllerService {
             };
             ClusterControllerRemoteProxy ccProxy = new ClusterControllerRemoteProxy(
                     ipc.getHandle(ccAddress, ncConfig.getClusterConnectRetries(), 1, ipcEventListener));
-            return registerNode(new CcConnection(ccProxy), ccAddress);
+            return registerNode(new CcConnection(ccProxy, ccAddress));
         }
     }
 
@@ -395,8 +394,10 @@ public class NodeControllerService implements IControllerService {
                         () -> String.valueOf(e));
             }
             getWorkQueue().scheduleAndSync(new AbortAllJobsWork(this, ccId));
-            Thread hbThread = heartbeatThreads.remove(ccId);
-            hbThread.interrupt();
+            HeartbeatManager hbMgr = heartbeatManagers.remove(ccId);
+            if (hbMgr != null) {
+                hbMgr.shutdown();
+            }
             Timer ccTimer = ccTimers.remove(ccId);
             if (ccTimer != null) {
                 ccTimer.cancel();
@@ -406,13 +407,13 @@ public class NodeControllerService implements IControllerService {
         }
     }
 
-    public CcId registerNode(CcConnection ccc, InetSocketAddress ccAddress) throws Exception {
+    public CcId registerNode(CcConnection ccc) throws Exception {
         LOGGER.info("Registering with Cluster Controller {}", ccc);
         int registrationId = nextRegistrationId.incrementAndGet();
         pendingRegistrations.put(registrationId, ccc);
         CcId ccId = ccc.registerNode(nodeRegistration, registrationId);
         ccMap.put(ccId, ccc);
-        ccAddressMap.put(ccAddress, ccId);
+        ccAddressMap.put(ccc.getCcAddress(), ccId);
         Serializable distributedState = ccc.getNodeParameters().getDistributedState();
         if (distributedState != null) {
             getDistributedState().put(ccId, distributedState);
@@ -420,15 +421,8 @@ public class NodeControllerService implements IControllerService {
         IClusterController ccs = ccc.getClusterControllerService();
         NodeParameters nodeParameters = ccc.getNodeParameters();
         // Start heartbeat generator.
-        if (!heartbeatThreads.containsKey(ccId)) {
-            Thread heartbeatThread = new Thread(
-                    new HeartbeatTask(getId(), hbTask.getHeartbeatData(), ccs, nodeParameters.getHeartbeatPeriod()),
-                    id + "-Heartbeat");
-            heartbeatThread.setPriority(Thread.MAX_PRIORITY);
-            heartbeatThread.setDaemon(true);
-            heartbeatThread.start();
-            heartbeatThreads.put(ccId, heartbeatThread);
-        }
+        heartbeatManagers.computeIfAbsent(ccId, newCcId -> HeartbeatManager.init(this, ccc, hbTask.getHeartbeatData(),
+                nodeRegistration.getNodeControllerAddress()));
         if (!ccTimers.containsKey(ccId) && nodeParameters.getProfileDumpPeriod() > 0) {
             Timer ccTimer = new Timer("Timer-" + ccId, true);
             // Schedule profile dump generator.
@@ -506,10 +500,7 @@ public class NodeControllerService implements IControllerService {
              * Stop heartbeats only after NC has stopped to avoid false node failure detection
              * on CC if an NC takes a long time to stop.
              */
-            heartbeatThreads.values().parallelStream().forEach(t -> {
-                t.interrupt();
-                InvokeUtil.doUninterruptibly(() -> t.join(1000));
-            });
+            heartbeatManagers.values().parallelStream().forEach(HeartbeatManager::shutdown);
             synchronized (ccLock) {
                 ccMap.values().parallelStream().forEach(cc -> {
                     try {
@@ -671,6 +662,14 @@ public class NodeControllerService implements IControllerService {
     @Override
     public Object getApplicationContext() {
         return application.getApplicationContext();
+    }
+
+    public HeartbeatManager getHeartbeatManager(CcId ccId) {
+        return heartbeatManagers.get(ccId);
+    }
+
+    public NodeRegistration getNodeRegistration() {
+        return nodeRegistration;
     }
 
     private class ProfileDumpTask extends TimerTask {
