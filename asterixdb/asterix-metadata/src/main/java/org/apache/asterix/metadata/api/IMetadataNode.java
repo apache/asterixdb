@@ -24,7 +24,6 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
@@ -57,26 +56,23 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Begins a local transaction against the metadata.
      *
-     * @throws ACIDException
      * @throws RemoteException
      */
-    void beginTransaction(TxnId txnId) throws ACIDException, RemoteException;
+    void beginTransaction(TxnId txnId) throws RemoteException;
 
     /**
      * Commits a local transaction against the metadata.
      *
-     * @throws ACIDException
      * @throws RemoteException
      */
-    void commitTransaction(TxnId txnId) throws ACIDException, RemoteException;
+    void commitTransaction(TxnId txnId) throws RemoteException;
 
     /**
      * Aborts a local transaction against the metadata.
      *
-     * @throws ACIDException
      * @throws RemoteException
      */
-    void abortTransaction(TxnId txnId) throws ACIDException, RemoteException;
+    void abortTransaction(TxnId txnId) throws RemoteException;
 
     /**
      * Inserts a new dataverse into the metadata, acquiring local locks on behalf of

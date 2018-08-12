@@ -31,7 +31,6 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
-import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
@@ -129,8 +128,8 @@ public class MetadataNode implements IMetadataNode {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
     // shared between core and extension
-    private IDatasetLifecycleManager datasetLifecycleManager;
-    private ITransactionSubsystem transactionSubsystem;
+    private transient IDatasetLifecycleManager datasetLifecycleManager;
+    private transient ITransactionSubsystem transactionSubsystem;
     private int metadataStoragePartition;
     private transient CachingTxnIdFactory txnIdFactory;
     // core only
@@ -167,14 +166,14 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void beginTransaction(TxnId transactionId) throws ACIDException, RemoteException {
+    public void beginTransaction(TxnId transactionId) throws RemoteException {
         TransactionOptions options = new TransactionOptions(AtomicityLevel.ATOMIC);
         transactionSubsystem.getTransactionManager().beginTransaction(transactionId, options);
     }
 
     @SuppressWarnings("squid:S1181")
     @Override
-    public void commitTransaction(TxnId txnId) throws RemoteException, ACIDException {
+    public void commitTransaction(TxnId txnId) throws RemoteException {
         try {
             transactionSubsystem.getTransactionManager().commitTransaction(txnId);
         } catch (Throwable th) {
@@ -186,7 +185,7 @@ public class MetadataNode implements IMetadataNode {
 
     @SuppressWarnings("squid:S1181")
     @Override
-    public void abortTransaction(TxnId txnId) throws RemoteException, ACIDException {
+    public void abortTransaction(TxnId txnId) throws RemoteException {
         try {
             transactionSubsystem.getTransactionManager().abortTransaction(txnId);
         } catch (Throwable th) {
@@ -211,7 +210,7 @@ public class MetadataNode implements IMetadataNode {
         try {
             ITupleReference tuple = tupleTranslator.getTupleFromMetadataEntity(entity);
             insertTupleIntoIndex(txnId, index, tuple);
-        } catch (HyracksDataException | ACIDException e) {
+        } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -230,7 +229,7 @@ public class MetadataNode implements IMetadataNode {
         try {
             ITupleReference tuple = tupleTranslator.getTupleFromMetadataEntity(entity);
             upsertTupleIntoIndex(txnId, index, tuple);
-        } catch (HyracksDataException | ACIDException e) {
+        } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -249,7 +248,7 @@ public class MetadataNode implements IMetadataNode {
         try {
             ITupleReference tuple = tupleTranslator.getTupleFromMetadataEntity(entity);
             deleteTupleFromIndex(txnId, index, tuple);
-        } catch (HyracksDataException | ACIDException e) {
+        } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -263,7 +262,6 @@ public class MetadataNode implements IMetadataNode {
      * @param index
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
      */
     private <T> List<T> getEntities(TxnId txnId, ITupleReference searchKey,
             IMetadataEntityTupleTranslator<T> tupleTranslator, IMetadataIndex index)
@@ -336,8 +334,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -364,13 +360,11 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
     @Override
-    public void addIndex(TxnId txnId, Index index) throws AlgebricksException, RemoteException {
+    public void addIndex(TxnId txnId, Index index) throws AlgebricksException {
         try {
             IndexTupleTranslator tupleWriter = tupleTranslatorProvider.getIndexTupleTranslator(txnId, this, true);
             ITupleReference tuple = tupleWriter.getTupleFromMetadataEntity(index);
@@ -381,8 +375,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -398,8 +390,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -417,8 +407,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -436,8 +424,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -458,23 +444,21 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
     private void insertTupleIntoIndex(TxnId txnId, IMetadataIndex metadataIndex, ITupleReference tuple)
-            throws ACIDException, HyracksDataException {
+            throws HyracksDataException {
         modifyMetadataIndex(Operation.INSERT, txnId, metadataIndex, tuple);
     }
 
     private void upsertTupleIntoIndex(TxnId txnId, IMetadataIndex metadataIndex, ITupleReference tuple)
-            throws ACIDException, HyracksDataException {
+            throws HyracksDataException {
         modifyMetadataIndex(Operation.UPSERT, txnId, metadataIndex, tuple);
     }
 
     private void modifyMetadataIndex(Operation op, TxnId txnId, IMetadataIndex metadataIndex, ITupleReference tuple)
-            throws ACIDException, HyracksDataException {
+            throws HyracksDataException {
         String resourceName = metadataIndex.getFile().getRelativePath();
         ILSMIndex lsmIndex = (ILSMIndex) datasetLifecycleManager.get(resourceName);
         datasetLifecycleManager.open(resourceName);
@@ -532,7 +516,6 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void dropDataverse(TxnId txnId, String dataverseName) throws AlgebricksException, RemoteException {
         try {
-
             confirmDataverseCanBeDeleted(txnId, dataverseName);
 
             // As a side effect, acquires an S lock on the 'Function' dataset
@@ -586,7 +569,7 @@ public class MetadataNode implements IMetadataNode {
             }
 
             List<FeedPolicyEntity> feedPolicies = getDataversePolicies(txnId, dataverseName);
-            if (feedPolicies != null && feedPolicies.size() > 0) {
+            if (feedPolicies != null && !feedPolicies.isEmpty()) {
                 // Drop all feed ingestion policies in this dataverse.
                 for (FeedPolicyEntity feedPolicy : feedPolicies) {
                     dropFeedPolicy(txnId, dataverseName, feedPolicy.getPolicyName());
@@ -599,9 +582,6 @@ public class MetadataNode implements IMetadataNode {
             // on behalf of txnId.
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.DATAVERSE_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATAVERSE_DATASET, tuple);
-
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
                     && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
@@ -610,8 +590,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -654,7 +632,7 @@ public class MetadataNode implements IMetadataNode {
                     // As a side effect, acquires an S lock on the 'ExternalFile' dataset
                     // on behalf of txnId.
                     List<ExternalFile> datasetFiles = getExternalFiles(txnId, dataset);
-                    if (datasetFiles != null && datasetFiles.size() > 0) {
+                    if (datasetFiles != null && !datasetFiles.isEmpty()) {
                         // Drop all external files in this dataset.
                         for (ExternalFile file : datasetFiles) {
                             dropExternalFile(txnId, dataverseName, file.getDatasetName(), file.getFileNumber());
@@ -671,7 +649,7 @@ public class MetadataNode implements IMetadataNode {
             } finally {
                 deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
             }
-        } catch (HyracksDataException | ACIDException e) {
+        } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -685,8 +663,6 @@ public class MetadataNode implements IMetadataNode {
             // lock on the 'index' dataset.
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.INDEX_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.INDEX_DATASET, tuple);
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
                     && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
@@ -695,8 +671,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -722,8 +696,6 @@ public class MetadataNode implements IMetadataNode {
             // lock on the 'nodegroup' dataset.
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.NODEGROUP_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.NODEGROUP_DATASET, tuple);
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
             return true;
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
@@ -733,8 +705,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -759,9 +729,6 @@ public class MetadataNode implements IMetadataNode {
                     dropDatatype(txnId, dataverseName, dt.getDatatypeName());
                 }
             }
-
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
                     && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
@@ -769,8 +736,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -782,8 +747,6 @@ public class MetadataNode implements IMetadataNode {
             // lock on the 'datatype' dataset.
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.DATATYPE_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
                     && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
@@ -791,13 +754,11 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
     private void deleteTupleFromIndex(TxnId txnId, IMetadataIndex metadataIndex, ITupleReference tuple)
-            throws ACIDException, HyracksDataException {
+            throws HyracksDataException {
         modifyMetadataIndex(Operation.DELETE, txnId, metadataIndex, tuple);
     }
 
@@ -910,11 +871,10 @@ public class MetadataNode implements IMetadataNode {
 
     public List<Dataset> getAllDatasets(TxnId txnId) throws AlgebricksException, RemoteException {
         try {
-            ITupleReference searchKey = null;
             DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
             IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<Dataset> results = new ArrayList<>();
-            searchIndex(txnId, MetadataPrimaryIndexes.DATASET_DATASET, searchKey, valueExtractor, results);
+            searchIndex(txnId, MetadataPrimaryIndexes.DATASET_DATASET, null, valueExtractor, results);
             return results;
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
@@ -923,11 +883,10 @@ public class MetadataNode implements IMetadataNode {
 
     public List<Function> getAllFunctions(TxnId txnId) throws AlgebricksException, RemoteException {
         try {
-            ITupleReference searchKey = null;
             FunctionTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFunctionTupleTranslator(false);
             IValueExtractor<Function> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<Function> results = new ArrayList<>();
-            searchIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, searchKey, valueExtractor, results);
+            searchIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, null, valueExtractor, results);
             return results;
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
@@ -936,12 +895,11 @@ public class MetadataNode implements IMetadataNode {
 
     public List<Datatype> getAllDatatypes(TxnId txnId) throws AlgebricksException, RemoteException {
         try {
-            ITupleReference searchKey = null;
             DatatypeTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getDataTypeTupleTranslator(txnId, this, false);
             IValueExtractor<Datatype> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<Datatype> results = new ArrayList<>();
-            searchIndex(txnId, MetadataPrimaryIndexes.DATATYPE_DATASET, searchKey, valueExtractor, results);
+            searchIndex(txnId, MetadataPrimaryIndexes.DATATYPE_DATASET, null, valueExtractor, results);
             return results;
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
@@ -1055,7 +1013,6 @@ public class MetadataNode implements IMetadataNode {
                     || dataType.getDatatype().getTypeName().equals(datatypeName)) {
                 continue;
             }
-
             AbstractComplexType recType = (AbstractComplexType) dataType.getDatatype();
             if (recType.containsType(typeToBeDropped)) {
                 throw new AlgebricksException("Cannot drop type " + dataverseName + "." + datatypeName
@@ -1089,7 +1046,7 @@ public class MetadataNode implements IMetadataNode {
         return nestedTypes;
     }
 
-    public List<String> getDatasetNamesPartitionedOnThisNodeGroup(TxnId txnId, String nodegroup)
+    private List<String> getDatasetNamesPartitionedOnThisNodeGroup(TxnId txnId, String nodegroup)
             throws AlgebricksException, RemoteException {
         // this needs to scan the datasets and return the datasets that use this
         // nodegroup
@@ -1180,7 +1137,7 @@ public class MetadataNode implements IMetadataNode {
             throws AlgebricksException, RemoteException {
         try {
             ITupleReference searchKey = createTuple(functionSignature.getNamespace(), functionSignature.getName(),
-                    "" + functionSignature.getArity());
+                    Integer.toString(functionSignature.getArity()));
             FunctionTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFunctionTupleTranslator(false);
             List<Function> results = new ArrayList<>();
             IValueExtractor<Function> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -1216,13 +1173,10 @@ public class MetadataNode implements IMetadataNode {
 
     private void dropFunction(TxnId txnId, FunctionSignature functionSignature, boolean force)
             throws AlgebricksException, RemoteException {
-
         if (!force) {
             confirmFunctionCanBeDeleted(txnId, functionSignature);
         }
-
         Function function = getFunction(txnId, functionSignature);
-
         if (function == null) {
             throw new AlgebricksException(
                     "Cannot drop function '" + functionSignature.toString() + "' because it doesn't exist.");
@@ -1230,15 +1184,12 @@ public class MetadataNode implements IMetadataNode {
         try {
             // Delete entry from the 'function' dataset.
             ITupleReference searchKey = createTuple(functionSignature.getNamespace(), functionSignature.getName(),
-                    "" + functionSignature.getArity());
+                    Integer.toString(functionSignature.getArity()));
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'function' dataset.
             ITupleReference functionTuple =
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
-
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
                     && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
@@ -1247,8 +1198,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1258,8 +1207,6 @@ public class MetadataNode implements IMetadataNode {
         List<ITupleReference> results = new ArrayList<>();
         searchIndex(txnId, metadataIndex, searchKey, valueExtractor, results);
         if (results.isEmpty()) {
-            // TODO: Temporarily a TreeIndexException to make it get caught by
-            // caller in the appropriate catch block.
             throw HyracksDataException.create(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY);
         }
         // There should be exactly one result returned from the search.
@@ -1267,11 +1214,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     // Debugging Method
-    public String printMetadata() {
-
+    private String printMetadata() {
         StringBuilder sb = new StringBuilder();
         try {
-            RangePredicate rangePred = null;
+            RangePredicate rangePred;
             IMetadataIndex index = MetadataPrimaryIndexes.DATAVERSE_DATASET;
             String resourceName = index.getFile().toString();
             IIndex indexInstance = datasetLifecycleManager.get(resourceName);
@@ -1292,12 +1238,10 @@ public class MetadataNode implements IMetadataNode {
                     rangeCursor.close();
                 }
                 datasetLifecycleManager.close(resourceName);
-                index = MetadataPrimaryIndexes.DATASET_DATASET;
                 indexInstance = datasetLifecycleManager.get(resourceName);
                 datasetLifecycleManager.open(resourceName);
                 indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
                 rangeCursor = indexAccessor.createSearchCursor(false);
-                rangePred = null;
                 rangePred = new RangePredicate(null, null, true, true, null, null);
                 indexAccessor.search(rangeCursor, rangePred);
                 try {
@@ -1314,12 +1258,10 @@ public class MetadataNode implements IMetadataNode {
                     rangeCursor.close();
                 }
                 datasetLifecycleManager.close(resourceName);
-                index = MetadataPrimaryIndexes.INDEX_DATASET;
                 indexInstance = datasetLifecycleManager.get(resourceName);
                 datasetLifecycleManager.open(resourceName);
                 indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
                 rangeCursor = indexAccessor.createSearchCursor(false);
-                rangePred = null;
                 rangePred = new RangePredicate(null, null, true, true, null, null);
                 indexAccessor.search(rangeCursor, rangePred);
                 try {
@@ -1339,14 +1281,13 @@ public class MetadataNode implements IMetadataNode {
             }
             datasetLifecycleManager.close(resourceName);
         } catch (Exception e) {
-            // Debugging method
-            e.printStackTrace();
+            LOGGER.error(e);
         }
         return sb.toString();
     }
 
-    private <ResultType> void searchIndex(TxnId txnId, IMetadataIndex index, ITupleReference searchKey,
-            IValueExtractor<ResultType> valueExtractor, List<ResultType> results)
+    private <T> void searchIndex(TxnId txnId, IMetadataIndex index, ITupleReference searchKey,
+            IValueExtractor<T> valueExtractor, List<T> results)
             throws AlgebricksException, HyracksDataException, RemoteException {
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         if (index.getFile() == null) {
@@ -1374,8 +1315,8 @@ public class MetadataNode implements IMetadataNode {
         datasetLifecycleManager.close(resourceName);
     }
 
-    private <ResultType> void search(IIndexAccessor indexAccessor, RangePredicate rangePred, List<ResultType> results,
-            IValueExtractor<ResultType> valueExtractor, TxnId txnId)
+    private <T> void search(IIndexAccessor indexAccessor, RangePredicate rangePred, List<T> results,
+            IValueExtractor<T> valueExtractor, TxnId txnId)
             throws HyracksDataException, RemoteException, AlgebricksException {
         IIndexCursor rangeCursor = indexAccessor.createSearchCursor(false);
         try {
@@ -1383,7 +1324,7 @@ public class MetadataNode implements IMetadataNode {
             try {
                 while (rangeCursor.hasNext()) {
                     rangeCursor.next();
-                    ResultType result = valueExtractor.getValue(txnId, rangeCursor.getTuple());
+                    T result = valueExtractor.getValue(txnId, rangeCursor.getTuple());
                     if (result != null) {
                         results.add(result);
                     }
@@ -1447,8 +1388,6 @@ public class MetadataNode implements IMetadataNode {
         return mostRecentDatasetId;
     }
 
-    // TODO: Can use Hyrack's TupleUtils for this, once we switch to a newer
-    // Hyracks version.
     public static ITupleReference createTuple(String... fields) {
         ISerializerDeserializer<AString> stringSerde =
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
@@ -1499,8 +1438,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1519,9 +1456,6 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference datasetTuple =
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, datasetTuple);
-
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
                     && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
@@ -1529,10 +1463,7 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
-
     }
 
     @Override
@@ -1570,8 +1501,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1625,8 +1554,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1645,9 +1572,6 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference datasetTuple =
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.LIBRARY_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.LIBRARY_DATASET, datasetTuple);
-
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
                     && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
@@ -1655,10 +1579,7 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
-
     }
 
     @Override
@@ -1680,7 +1601,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public int getMostRecentDatasetId() throws AlgebricksException, RemoteException {
+    public int getMostRecentDatasetId() throws RemoteException {
         return DatasetIdFactory.getMostRecentDatasetId();
     }
 
@@ -1698,8 +1619,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1727,7 +1646,7 @@ public class MetadataNode implements IMetadataNode {
             FeedConnectionTupleTranslator tupleReaderWriter = new FeedConnectionTupleTranslator(true);
             ITupleReference feedConnTuple = tupleReaderWriter.getTupleFromMetadataEntity(feedConnection);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, feedConnTuple);
-        } catch (HyracksDataException | ACIDException e) {
+        } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -1773,7 +1692,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple =
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, tuple);
-        } catch (HyracksDataException | ACIDException e) {
+        } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
     }
@@ -1792,8 +1711,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1836,8 +1753,6 @@ public class MetadataNode implements IMetadataNode {
             // lock on the 'nodegroup' dataset.
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FEED_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FEED_DATASET, tuple);
-            // TODO: Change this to be a BTree specific exception, e.g.,
-            // BTreeKeyDoesNotExistException.
         } catch (HyracksDataException e) {
             if (e.getComponent().equals(ErrorCode.HYRACKS)
                     && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
@@ -1845,8 +1760,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1864,8 +1777,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1900,8 +1811,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -1939,8 +1848,6 @@ public class MetadataNode implements IMetadataNode {
             } else {
                 throw new AlgebricksException(e);
             }
-        } catch (ACIDException e) {
-            throw new AlgebricksException(e);
         }
     }
 
@@ -2021,7 +1928,7 @@ public class MetadataNode implements IMetadataNode {
             DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(true);
             datasetTuple = tupleReaderWriter.getTupleFromMetadataEntity(dataset);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
-        } catch (HyracksDataException | ACIDException e) {
+        } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
     }
