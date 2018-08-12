@@ -335,8 +335,8 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
             throw new IllegalStateException(
                     this + " receives illegal id. Old id " + this.componentId + ", new id " + componentId);
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.log(Level.INFO, "Component Id was reset from " + this.componentId + " to " + componentId);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Component Id was reset from " + this.componentId + " to " + componentId);
         }
         this.componentId = componentId;
         if (componentId != null) {

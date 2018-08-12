@@ -183,9 +183,9 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
 
     @Override
     public synchronized IActiveEntityEventsListener[] getEventListeners() {
-        if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "getEventListeners() was called");
-            LOGGER.log(level, "returning " + entityEventListeners.size() + " Listeners");
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("getEventListeners() was called");
+            LOGGER.trace("returning " + entityEventListeners.size() + " Listeners");
         }
         return entityEventListeners.values().toArray(new IActiveEntityEventsListener[entityEventListeners.size()]);
     }

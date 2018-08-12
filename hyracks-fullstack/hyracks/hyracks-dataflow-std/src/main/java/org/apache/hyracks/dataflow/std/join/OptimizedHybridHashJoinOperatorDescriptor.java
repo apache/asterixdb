@@ -295,8 +295,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             buildHpc, predEvaluator, isLeftOuter, nonMatchWriterFactories);
 
                     state.hybridHJ.initBuild();
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("OptimizedHybridHashJoin is starting the build phase with " + state.numOfPartitions
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace("OptimizedHybridHashJoin is starting the build phase with " + state.numOfPartitions
                                 + " partitions using " + state.memForJoin + " frames for memory.");
                     }
                 }
@@ -313,8 +313,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         state.hybridHJ.clearBuildTempFiles();
                     } else {
                         ctx.setStateObject(state);
-                        if (LOGGER.isDebugEnabled()) {
-                            LOGGER.debug("OptimizedHybridHashJoin closed its build phase");
+                        if (LOGGER.isTraceEnabled()) {
+                            LOGGER.trace("OptimizedHybridHashJoin closed its build phase");
                         }
                     }
                 }

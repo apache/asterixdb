@@ -132,8 +132,8 @@ public abstract class AbstractSorterOperatorDescriptor extends AbstractOperatorD
                     runGen.close();
                     state.generatedRunFileReaders = runGen.getRuns();
                     state.sorter = runGen.getSorter();
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info("InitialNumberOfRuns:" + runGen.getRuns().size());
+                    if (LOGGER.isTraceEnabled()) {
+                        LOGGER.trace("InitialNumberOfRuns:" + runGen.getRuns().size());
                     }
                     ctx.setStateObject(state);
                 }

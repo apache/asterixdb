@@ -146,8 +146,8 @@ public class ActivityClusterGraphBuilder {
         }
         acg.addActivityClusters(acList);
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(acg.toJSON().asText());
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace(acg.toJSON().asText());
         }
         return acg;
     }

@@ -81,7 +81,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             new ArrayBlockingQueue<>(IO_REQUEST_QUEUE_SIZE);
 
     //DEBUG
-    private static final Level fileOpsLevel = Level.DEBUG;
+    private static final Level fileOpsLevel = Level.TRACE;
     private ArrayList<CachedPage> confiscatedPages;
     private Lock confiscateLock;
     private HashMap<CachedPage, StackTraceElement[]> confiscatedPagesOwner;

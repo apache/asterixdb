@@ -478,7 +478,7 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx) throws HyracksDataException {
         ILSMIOOperation flush;
-        LOGGER.info("Flush is being scheduled on {}", lsmIndex);
+        LOGGER.debug("Flush is being scheduled on {}", lsmIndex);
         if (!lsmIndex.isMemoryComponentsAllocated()) {
             lsmIndex.allocateMemoryComponents();
         }
@@ -498,9 +498,7 @@ public class LSMHarness implements ILSMHarness {
     @SuppressWarnings("squid:S2142")
     @Override
     public void flush(ILSMIOOperation operation) throws HyracksDataException {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Started a flush operation for index: {}", lsmIndex);
-        }
+        LOGGER.debug("Started a flush operation for index: {}", lsmIndex);
         synchronized (opTracker) {
             while (!enterComponents(operation.getAccessor().getOpContext(), LSMOperationType.FLUSH)) {
                 try {
@@ -520,8 +518,8 @@ public class LSMHarness implements ILSMHarness {
                     operation.getAccessor().getOpContext().getSearchOperationCallback(),
                     operation.getAccessor().getOpContext().getModificationCallback());
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Finished the flush operation for index: {}. Result: ", lsmIndex, operation.getStatus());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Finished the flush operation for index: {}. Result: {}", lsmIndex, operation.getStatus());
         }
     }
 
@@ -561,8 +559,8 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public void merge(ILSMIOOperation operation) throws HyracksDataException {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Started a merge operation for index: {}", lsmIndex);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Started a merge operation for index: {}", lsmIndex);
         }
         synchronized (opTracker) {
             enterComponents(operation.getAccessor().getOpContext(), LSMOperationType.MERGE);
@@ -576,8 +574,8 @@ public class LSMHarness implements ILSMHarness {
                     operation.getAccessor().getOpContext().getSearchOperationCallback(),
                     operation.getAccessor().getOpContext().getModificationCallback());
         }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Finished the merge operation for index: {}. Result: {}", lsmIndex, operation.getStatus());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Finished the merge operation for index: {}. Result: {}", lsmIndex, operation.getStatus());
         }
     }
 

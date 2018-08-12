@@ -676,7 +676,7 @@ public class ConcurrentLockManager implements ILockManager, ILifeCycleComponent 
     }
 
     private long findResourceInGroup(ResourceGroup group, int dsId, int entityHashValue) {
-        stats.logCounters(LOGGER, Level.DEBUG, false);
+        stats.logCounters(LOGGER, LVL, false);
         long resSlot = group.firstResourceIndex.get();
         while (resSlot != NILL) {
             // either we already have a lock on this resource or we have a

@@ -78,12 +78,13 @@ public class HybridHashJoinPOperator extends AbstractHashJoinPOperator {
         this.maxInputBuildSizeInFrames = maxInputSizeInFrames;
         this.aveRecordsPerFrame = aveRecordsPerFrame;
         this.fudgeFactor = fudgeFactor;
-
-        LOGGER.debug("HybridHashJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
-                + partitioningType + ", List<LogicalVariable>=" + sideLeftOfEqualities + ", List<LogicalVariable>="
-                + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames + ", int maxInputSize0InFrames="
-                + maxInputSizeInFrames + ", int aveRecordsPerFrame=" + aveRecordsPerFrame + ", double fudgeFactor="
-                + fudgeFactor + ".");
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("HybridHashJoinPOperator constructed with: JoinKind=" + kind + ", JoinPartitioningType="
+                    + partitioningType + ", List<LogicalVariable>=" + sideLeftOfEqualities + ", List<LogicalVariable>="
+                    + sideRightOfEqualities + ", int memSizeInFrames=" + memSizeInFrames
+                    + ", int maxInputSize0InFrames=" + maxInputSizeInFrames + ", int aveRecordsPerFrame="
+                    + aveRecordsPerFrame + ", double fudgeFactor=" + fudgeFactor + ".");
+        }
     }
 
     @Override

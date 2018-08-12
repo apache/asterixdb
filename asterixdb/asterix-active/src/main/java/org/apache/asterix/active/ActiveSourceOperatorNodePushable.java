@@ -93,7 +93,7 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
 
     @Override
     public final void initialize() throws HyracksDataException {
-        LOGGER.log(Level.INFO, "initialize() called on ActiveSourceOperatorNodePushable");
+        LOGGER.trace("initialize() called on ActiveSourceOperatorNodePushable");
         taskThread = Thread.currentThread();
         activeManager.registerRuntime(this);
         try {
@@ -113,7 +113,7 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
                 done = true;
                 notifyAll();
             }
-            LOGGER.log(Level.INFO, "initialize() returning on ActiveSourceOperatorNodePushable");
+            LOGGER.trace("initialize() returning on ActiveSourceOperatorNodePushable");
         }
     }
 

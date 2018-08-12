@@ -110,8 +110,10 @@ public class InMemoryHashJoin {
         } else {
             isTableCapacityNotZero = false;
         }
-        LOGGER.debug("InMemoryHashJoin has been created for a table size of " + table.getTableSize() + " for Thread ID "
-                + Thread.currentThread().getId() + ".");
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("InMemoryHashJoin has been created for a table size of " + table.getTableSize()
+                    + " for Thread ID " + Thread.currentThread().getId() + ".");
+        }
     }
 
     public void build(ByteBuffer buffer) throws HyracksDataException {
@@ -205,8 +207,8 @@ public class InMemoryHashJoin {
             }
         }
         buffers.clear();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("InMemoryHashJoin has finished using " + nFrames + " frames for Thread ID "
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("InMemoryHashJoin has finished using " + nFrames + " frames for Thread ID "
                     + Thread.currentThread().getId() + ".");
         }
     }

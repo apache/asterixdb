@@ -114,8 +114,8 @@ public class ResultNetworkInputChannel implements IInputChannel {
         writeBuffer.putLong(resultSetId.getId());
         writeBuffer.putInt(partition);
         writeBuffer.flip();
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Sending partition request for JobId: " + jobId + " partition: " + partition + " on channel: "
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Sending partition request for JobId: " + jobId + " partition: " + partition + " on channel: "
                     + ccb);
         }
         ccb.getWriteInterface().getFullBufferAcceptor().accept(writeBuffer);
