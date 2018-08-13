@@ -22,7 +22,6 @@ import java.io.Serializable;
 
 import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
-import org.apache.hyracks.api.service.IControllerService;
 
 /**
  * Service Context at the Cluster Controller for an application.

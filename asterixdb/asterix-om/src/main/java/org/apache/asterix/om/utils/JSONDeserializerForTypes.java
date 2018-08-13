@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.google.common.collect.Lists;
 import org.apache.asterix.om.types.AOrderedListType;

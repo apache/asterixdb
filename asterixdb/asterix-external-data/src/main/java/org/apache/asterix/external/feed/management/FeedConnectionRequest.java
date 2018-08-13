@@ -20,7 +20,6 @@ package org.apache.asterix.external.feed.management;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.functions.FunctionSignature;

@@ -21,7 +21,6 @@ package org.apache.asterix.external.input.stream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.hyracks.algebricks.common.utils.Pair;

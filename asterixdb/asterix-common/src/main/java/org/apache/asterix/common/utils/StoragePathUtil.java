@@ -21,8 +21,6 @@ package org.apache.asterix.common.utils;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Comparator;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.storage.ResourceReference;

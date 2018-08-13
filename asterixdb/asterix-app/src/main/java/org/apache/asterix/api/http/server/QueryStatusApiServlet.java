@@ -28,7 +28,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.result.ResultJobRecord;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;

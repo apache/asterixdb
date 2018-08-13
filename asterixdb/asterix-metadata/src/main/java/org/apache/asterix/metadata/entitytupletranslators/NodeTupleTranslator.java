@@ -19,7 +19,6 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;

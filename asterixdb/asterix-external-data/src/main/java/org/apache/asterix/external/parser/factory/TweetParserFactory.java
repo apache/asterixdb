@@ -29,8 +29,6 @@ import org.apache.asterix.external.parser.TweetParser;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-import twitter4j.Status;
-
 public class TweetParserFactory implements IRecordDataParserFactory<String> {
 
     private static final long serialVersionUID = 1L;

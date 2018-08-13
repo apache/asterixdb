@@ -26,7 +26,6 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
-import org.apache.hyracks.data.std.api.IPointableFactory;
 
 public class OrderedBinaryComparatorFactory implements IBinaryComparatorFactory {
 

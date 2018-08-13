@@ -20,11 +20,9 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.om.base.APoint3D;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;

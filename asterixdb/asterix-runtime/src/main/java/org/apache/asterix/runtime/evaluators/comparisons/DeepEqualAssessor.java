@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.evaluators.comparisons;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;

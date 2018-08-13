@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 
 import org.apache.hyracks.api.io.IWritable;
 

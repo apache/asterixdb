@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.runtime.message;
 
-import java.util.Set;
-
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;

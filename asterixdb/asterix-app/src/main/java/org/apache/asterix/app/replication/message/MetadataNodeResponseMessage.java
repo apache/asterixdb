@@ -21,7 +21,6 @@ package org.apache.asterix.app.replication.message;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
-import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class MetadataNodeResponseMessage implements INCLifecycleMessage, ICcAddressedMessage {

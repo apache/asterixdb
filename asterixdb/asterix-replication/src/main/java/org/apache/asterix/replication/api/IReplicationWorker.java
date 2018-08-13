@@ -21,8 +21,6 @@ package org.apache.asterix.replication.api;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
-import org.apache.asterix.common.transactions.LogRecord;
-
 public interface IReplicationWorker extends Runnable {
 
     /**

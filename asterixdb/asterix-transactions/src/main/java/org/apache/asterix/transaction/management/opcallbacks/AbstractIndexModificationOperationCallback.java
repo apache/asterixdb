@@ -32,7 +32,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.tuples.SimpleTupleWriter;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
 
 public abstract class AbstractIndexModificationOperationCallback extends AbstractOperationCallback
         implements IExtendedModificationOperationCallback {

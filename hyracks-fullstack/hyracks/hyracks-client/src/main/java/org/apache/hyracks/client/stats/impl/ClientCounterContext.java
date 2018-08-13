@@ -27,8 +27,7 @@ import java.util.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.client.stats.AggregateCounter;
 import org.apache.hyracks.client.stats.Counters;

@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.input.record;
 
-import java.io.IOException;
-
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

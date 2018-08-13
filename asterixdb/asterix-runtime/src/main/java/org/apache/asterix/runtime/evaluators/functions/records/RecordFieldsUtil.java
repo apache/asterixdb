@@ -27,7 +27,6 @@ import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.ListBuilderFactory;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilderFactory;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMutableString;

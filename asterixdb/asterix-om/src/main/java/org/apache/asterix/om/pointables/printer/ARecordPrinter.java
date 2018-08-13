@@ -19,7 +19,6 @@
 
 package org.apache.asterix.om.pointables.printer;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 

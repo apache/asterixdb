@@ -21,7 +21,6 @@ package org.apache.asterix.om.pointables.printer.csv;
 
 import java.io.PrintStream;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AObjectPrinterFactory;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;

@@ -18,10 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.visitors;
 
-import java.io.IOException;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;

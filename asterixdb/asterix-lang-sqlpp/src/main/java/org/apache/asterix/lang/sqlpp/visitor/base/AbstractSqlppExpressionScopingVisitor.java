@@ -54,7 +54,6 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleExpressionVisitor {

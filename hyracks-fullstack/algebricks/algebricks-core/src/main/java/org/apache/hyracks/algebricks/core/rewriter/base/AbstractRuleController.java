@@ -19,7 +19,6 @@
 package org.apache.hyracks.algebricks.core.rewriter.base;
 
 import java.util.Collection;
-import java.util.logging.Level;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;

@@ -28,7 +28,6 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.partitions.IPartition;
-import org.apache.hyracks.control.nc.io.IOManager;
 
 public class MaterializedPartition implements IPartition {
     private final IHyracksTaskContext ctx;

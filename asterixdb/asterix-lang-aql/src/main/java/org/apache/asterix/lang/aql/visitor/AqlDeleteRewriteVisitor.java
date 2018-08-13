@@ -21,7 +21,6 @@ package org.apache.asterix.lang.aql.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;

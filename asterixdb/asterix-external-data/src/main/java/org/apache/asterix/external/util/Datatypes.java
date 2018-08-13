@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.util;
 
-import org.apache.asterix.external.parser.TweetParser;
-
 public class Datatypes {
 
     /*

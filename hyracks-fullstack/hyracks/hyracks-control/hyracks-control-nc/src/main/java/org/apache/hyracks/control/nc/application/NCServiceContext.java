@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.control.nc.application;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 

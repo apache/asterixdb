@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.data.utils;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 
 import org.apache.hyracks.util.string.UTF8StringUtil;
 

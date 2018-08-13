@@ -21,7 +21,6 @@ package org.apache.asterix.om.pointables.cast;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;

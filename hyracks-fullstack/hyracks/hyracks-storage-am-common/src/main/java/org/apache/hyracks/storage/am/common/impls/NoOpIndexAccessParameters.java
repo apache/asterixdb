@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCallback;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
-import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 
 public class NoOpIndexAccessParameters implements IIndexAccessParameters {

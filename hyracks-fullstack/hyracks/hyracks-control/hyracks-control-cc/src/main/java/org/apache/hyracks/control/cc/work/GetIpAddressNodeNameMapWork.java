@@ -22,7 +22,6 @@ import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 

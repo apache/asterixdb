@@ -19,11 +19,9 @@
 
 package org.apache.asterix.om.pointables.printer;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
