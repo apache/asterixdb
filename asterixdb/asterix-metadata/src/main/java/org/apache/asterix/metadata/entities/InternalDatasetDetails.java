@@ -49,11 +49,11 @@ public class InternalDatasetDetails implements IDatasetDetails {
 
     public enum FileStructure {
         BTREE
-    };
+    }
 
     public enum PartitioningStrategy {
         HASH
-    };
+    }
 
     private final FileStructure fileStructure;
     private final PartitioningStrategy partitioningStrategy;

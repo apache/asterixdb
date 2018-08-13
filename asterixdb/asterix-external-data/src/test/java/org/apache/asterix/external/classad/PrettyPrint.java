@@ -218,10 +218,10 @@ public class PrettyPrint extends ClassAdUnParser {
                 }
             }
             super.unparse(buffer, itr);
-            buffer.appendChar(',');;
+            buffer.appendChar(',');
         }
         if (exprs.size() > 0) {
-            buffer.decrementLength();;
+            buffer.decrementLength();
         }
         if (listIndent > 0) {
             indentLevel -= listIndent;

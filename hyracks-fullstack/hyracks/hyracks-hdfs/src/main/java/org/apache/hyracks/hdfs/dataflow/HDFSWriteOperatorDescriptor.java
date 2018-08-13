@@ -78,7 +78,7 @@ public class HDFSWriteOperatorDescriptor extends AbstractSingleActivityOperatorD
         return new AbstractUnaryInputSinkOperatorNodePushable() {
 
             private FSDataOutputStream dos;
-            private RecordDescriptor inputRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);;
+            private RecordDescriptor inputRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             private FrameTupleAccessor accessor = new FrameTupleAccessor(inputRd);
             private FrameTupleReference tuple = new FrameTupleReference();
             private ITupleWriter tupleWriter;

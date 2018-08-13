@@ -73,7 +73,7 @@ public final class DoublePointable extends AbstractPointable implements IHashabl
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return FACTORY;
         }
-    };
+    }
 
     public static long getLongBits(byte[] bytes, int start) {
         return LongPointable.getLong(bytes, start);

@@ -62,7 +62,7 @@ public final class RawUTF8StringPointable extends AbstractPointable implements I
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return FACTORY;
         }
-    };
+    }
 
     @Override
     public int compareTo(IPointable pointer) {

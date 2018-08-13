@@ -239,7 +239,7 @@ public class BuiltinClassAdFunctions {
 
             // Walk over each element in the list, and sum.
             for (ExprTree listElement : listToSum.getExprList()) {
-                len.setValue(len.getLongValue() + 1);;
+                len.setValue(len.getLongValue() + 1);
                 // Make sure this element is a number.
                 if (!listElement.publicEvaluate(state, listElementValue)) {
                     val.setErrorValue();
@@ -1686,7 +1686,7 @@ public class BuiltinClassAdFunctions {
         @Override
         public boolean call(String name, ExprList argList, EvalState state, Value result, ClassAdObjectPool objectPool)
                 throws HyracksDataException {
-            Value arg = objectPool.valuePool.get();;
+            Value arg = objectPool.valuePool.get();
             // takes exactly one argument
             if (argList.size() > 1) {
                 result.setErrorValue();

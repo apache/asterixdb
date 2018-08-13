@@ -636,7 +636,7 @@ public class ClassAd extends ExprTree {
             return (false);
         }
         CaseInsensitiveString aString = objectPool.caseInsensitiveStringPool.get();
-        aString.set(name);;
+        aString.set(name);
         boolean success = ad.delete(aString);
         return success;
     }
@@ -767,7 +767,7 @@ public class ClassAd extends ExprTree {
             throws HyracksDataException {
         ClassAd newAd = objectPool.classAdPool.get();
         Value eval = objectPool.valuePool.get();
-        ExprTreeHolder etree = objectPool.mutableExprPool.get();;
+        ExprTreeHolder etree = objectPool.mutableExprPool.get();
         ClassAd oldAd;
 
         tree.setInnerTree(null); // Just to be safe...  wenger 2003-12-11.
@@ -778,7 +778,7 @@ public class ClassAd extends ExprTree {
         for (Entry<CaseInsensitiveString, ExprTree> entry : attrList.entrySet()) {
             // flatten expression
             if (!entry.getValue().publicFlatten(state, eval, etree)) {
-                tree.setInnerTree(null);;
+                tree.setInnerTree(null);
                 eval.setUndefinedValue();
                 state.setCurAd(oldAd);
                 return false;
@@ -1266,7 +1266,7 @@ public class ClassAd extends ExprTree {
             }
 
             case ATTRREF_NODE: {
-                ClassAd start = objectPool.classAdPool.get();;
+                ClassAd start = objectPool.classAdPool.get();
                 ExprTreeHolder tree = objectPool.mutableExprPool.get();
                 ExprTreeHolder result = objectPool.mutableExprPool.get();
                 AMutableCharArrayString attr = objectPool.strPool.get();

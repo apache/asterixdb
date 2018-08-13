@@ -37,7 +37,7 @@ public class Operation extends ExprTree {
         SIG_CHLD2,
         SIG_DUMMY,
         SIG_CHLD3
-    };
+    }
 
     /// List of supported operators
     public static final int OpKind_NO_OP = 0;
@@ -545,7 +545,7 @@ public class Operation extends ExprTree {
 
         if (sig == SigValues.SIG_NONE.ordinal()) {
             result.setErrorValue();
-            tree.setInnerTree(null);;
+            tree.setInnerTree(null);
             return (false);
         }
 
@@ -639,7 +639,7 @@ public class Operation extends ExprTree {
         AMutableInt32 childOp2 = objectPool.int32Pool.get();
         childOp2.setValue(OpKind_NO_OP);
         ExprTreeHolder fChild1 = objectPool.mutableExprPool.get();
-        ExprTreeHolder fChild2 = objectPool.mutableExprPool.get();;
+        ExprTreeHolder fChild2 = objectPool.mutableExprPool.get();
         Value val1 = objectPool.valuePool.get();
         Value val2 = objectPool.valuePool.get();
         Value val3 = objectPool.valuePool.get();
@@ -647,7 +647,7 @@ public class Operation extends ExprTree {
         newOp.setValue(opKind);
         int op = opKind;
 
-        tree.setInnerTree(null);; // Just to be safe...  wenger 2003-12-11.
+        tree.setInnerTree(null);// Just to be safe...  wenger 2003-12-11.
 
         // if op is binary, but not associative or commutative, disallow splitting
         if ((op >= OpKind_COMPARISON_START && op <= OpKind_COMPARISON_END) || op == OpKind_SUBTRACTION_OP
@@ -1781,7 +1781,7 @@ public class Operation extends ExprTree {
                         fChild3.setInnerTree(Literal.createLiteral(eval3, objectPool));
                     }
                     if (fChild2.getInnerTree() == null || fChild3.getInnerTree() == null) {
-                        tree.setInnerTree(null);;
+                        tree.setInnerTree(null);
                         return false;
                     }
 

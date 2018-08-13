@@ -55,7 +55,7 @@ public abstract class ExprTree {
         EVAL_OK,
         EVAL_UNDEF,
         EVAL_ERROR
-    };
+    }
 
     public static final int EVAL_FAIL_Int = 0;
     public static final int EVAL_OK_Int = 1;

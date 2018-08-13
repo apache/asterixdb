@@ -277,7 +277,7 @@ public class MurmurHashForITupleReferenceTest extends AbstractBloomFilterTest {
                 k1 = MurmurHash128Bit.rotl64(k1, 31);
                 k1 *= c2;
                 h1 ^= k1;
-        };
+        }
 
         //----------
         // finalization

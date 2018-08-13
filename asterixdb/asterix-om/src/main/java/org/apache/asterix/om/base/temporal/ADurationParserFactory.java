@@ -73,8 +73,8 @@ public class ADurationParserFactory implements IValueParserFactory {
         HOUR,
         MIN,
         MILLISEC,
-        SEC;
-    };
+        SEC
+    }
 
     public enum ADurationParseOption {
         YEAR_MONTH,

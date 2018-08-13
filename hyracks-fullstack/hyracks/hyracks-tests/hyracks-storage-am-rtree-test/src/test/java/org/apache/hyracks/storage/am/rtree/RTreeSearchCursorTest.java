@@ -163,7 +163,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
             int p2x = RND.nextInt();
             int p2y = RND.nextInt();
 
-            int pk = RND.nextInt();;
+            int pk = RND.nextInt();
 
             TupleUtils.createIntegerTuple(tb, tuple, Math.min(p1x, p2x), Math.min(p1y, p2y), Math.max(p1x, p2x),
                     Math.max(p1y, p2y), pk);

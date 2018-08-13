@@ -94,7 +94,7 @@ public class TestCaseContext {
                     return OutputFormat.NONE;
             }
         }
-    };
+    }
 
     public static final String DEFAULT_TESTSUITE_XML_NAME = "testsuite.xml";
     public static final String ONLY_TESTSUITE_XML_NAME = "only.xml";

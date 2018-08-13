@@ -75,7 +75,7 @@ public class MonthsFromYearMonthDurationDescriptor extends AbstractScalarFunctio
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        resultStorage.reset();;
+                        resultStorage.reset();
                         eval0.evaluate(tuple, argPtr0);
                         byte[] bytes = argPtr0.getByteArray();
                         int offset = argPtr0.getStartOffset();

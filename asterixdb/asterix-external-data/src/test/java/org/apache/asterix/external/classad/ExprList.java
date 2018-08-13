@@ -222,7 +222,7 @@ public class ExprList extends ExprTree {
         Value tempVal = objectPool.valuePool.get();
         ExprList newList = objectPool.exprListPool.get();
 
-        tree.setInnerTree(null);; // Just to be safe...  wenger 2003-12-11.
+        tree.setInnerTree(null); // Just to be safe...  wenger 2003-12-11.
 
         for (ExprTree expr : exprList) {
             // flatten the constituent expression

@@ -1349,7 +1349,7 @@ public class ClassAdParser extends AbstractDataParser implements IRecordDataPars
                     if (!parseArgumentList(argList)) {
                         tree.setInnerTree(null);
                         return false;
-                    } ;
+                    }
                     // special case function-calls should be converted
                     // into a literal expression if the argument is a
                     // string literal

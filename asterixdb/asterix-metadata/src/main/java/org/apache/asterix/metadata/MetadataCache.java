@@ -395,7 +395,7 @@ public class MetadataCache {
         } else {
             op.entity.dropFromCache(this);
         }
-    };
+    }
 
     protected void undoOperation(MetadataLogicalOperation op) {
         if (!op.isAdd) {

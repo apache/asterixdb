@@ -116,5 +116,4 @@ public class ABinaryHexStringConstructorDescriptor extends AbstractScalarFunctio
         }
     }
 
-    ;
 }

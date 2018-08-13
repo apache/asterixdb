@@ -381,7 +381,7 @@ public class UTF8StringUtil {
 
     private static int compareTo(byte[] thisBytes, int thisStart, byte[] thatBytes, int thatStart, boolean useLowerCase,
             boolean useRawByte) {
-        int thisLength = getUTFLength(thisBytes, thisStart);;
+        int thisLength = getUTFLength(thisBytes, thisStart);
         int thatLength = getUTFLength(thatBytes, thatStart);
         int thisActualStart = thisStart + getNumBytesToStoreLength(thisLength);
         int thatActualStart = thatStart + getNumBytesToStoreLength(thatLength);

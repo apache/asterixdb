@@ -111,7 +111,7 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return COMPONENT_POS_COMPARATOR_FACTORY;
         }
-    };
+    }
 
     protected SecondaryCorrelatedTreeIndexOperationsHelper(Dataset dataset, Index index,
             PhysicalOptimizationConfig physOptConf, MetadataProvider metadataProvider) throws AlgebricksException {

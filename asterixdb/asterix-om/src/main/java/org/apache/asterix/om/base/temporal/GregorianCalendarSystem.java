@@ -55,7 +55,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
         MINUTE,
         SECOND,
         MILLISECOND
-    };
+    }
 
     //public static final int YEAR = 0, MONTH = 1, DAY = 2, HOUR = 3, MINUTE = 4, SECOND = 5, MILLISECOND = 6;
 

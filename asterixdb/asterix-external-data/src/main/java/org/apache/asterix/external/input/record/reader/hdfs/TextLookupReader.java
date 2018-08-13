@@ -60,6 +60,6 @@ public class TextLookupReader extends AbstractCharRecordLookupReader {
         if (reader == null) {
             reader = new HDFSTextLineReader();
         }
-        reader.resetReader(fs.open(new Path(file.getFileName())));;
+        reader.resetReader(fs.open(new Path(file.getFileName())));
     }
 }

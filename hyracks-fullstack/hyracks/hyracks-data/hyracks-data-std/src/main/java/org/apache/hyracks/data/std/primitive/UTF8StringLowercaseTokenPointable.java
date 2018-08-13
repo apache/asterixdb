@@ -60,7 +60,7 @@ public final class UTF8StringLowercaseTokenPointable extends AbstractPointable i
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return FACTORY;
         }
-    };
+    }
 
     // Set the length of this pointable
     public void setLength(int length) {

@@ -64,7 +64,7 @@ public final class IntegerPointable extends AbstractPointable implements IHashab
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return FACTORY;
         }
-    };
+    }
 
     public static int getInteger(byte[] bytes, int start) {
         return ((bytes[start] & 0xff) << 24) + ((bytes[start + 1] & 0xff) << 16) + ((bytes[start + 2] & 0xff) << 8)

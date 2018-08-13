@@ -49,7 +49,7 @@ public class SessionConfig implements Serializable {
         CSV,
         CLEAN_JSON,
         LOSSLESS_JSON
-    };
+    }
 
     /**
      * Used to specify the format for logical plan and optimized logical plan.
@@ -70,7 +70,7 @@ public class SessionConfig implements Serializable {
             }
             return defaultFmt;
         }
-    };
+    }
 
     /**
      * Produce out-of-band output for Hyracks Job.

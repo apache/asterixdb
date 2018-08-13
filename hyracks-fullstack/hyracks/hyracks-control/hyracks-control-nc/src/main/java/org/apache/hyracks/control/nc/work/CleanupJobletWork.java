@@ -49,7 +49,7 @@ public class CleanupJobletWork extends AbstractWork {
             LOGGER.info("Cleaning up after job: " + jobId);
         }
         ncs.removeJobParameterByteStore(jobId);
-        ncs.getPartitionManager().jobCompleted(jobId, status);;
+        ncs.getPartitionManager().jobCompleted(jobId, status);
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
         Joblet joblet = jobletMap.remove(jobId);
         if (joblet != null) {

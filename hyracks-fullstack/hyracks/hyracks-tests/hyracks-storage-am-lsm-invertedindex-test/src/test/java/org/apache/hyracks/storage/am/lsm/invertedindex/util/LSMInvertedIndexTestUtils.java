@@ -544,8 +544,8 @@ public class LSMInvertedIndexTestUtils {
         IHyracksTaskContext ctx = new HyracksTaskTestContext();
         // Intermediate and final search result will use this buffer manager to get frames.
         IDeallocatableFramePool framePool = new DeallocatableFramePool(ctx,
-                AccessMethodTestsConfig.LSM_INVINDEX_SEARCH_FRAME_LIMIT * ctx.getInitialFrameSize());;
-        ISimpleFrameBufferManager bufferManagerForSearch = new FramePoolBackedFrameBufferManager(framePool);;
+                AccessMethodTestsConfig.LSM_INVINDEX_SEARCH_FRAME_LIMIT * ctx.getInitialFrameSize());
+        ISimpleFrameBufferManager bufferManagerForSearch = new FramePoolBackedFrameBufferManager(framePool);
         // Keep the buffer manager in the hyracks context so that the search process can get it via the context.
         TaskUtil.put(HyracksConstants.INVERTED_INDEX_SEARCH_FRAME_MANAGER, bufferManagerForSearch, ctx);
         IIndexAccessParameters iap =

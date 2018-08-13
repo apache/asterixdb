@@ -61,7 +61,7 @@ public class Value {
         LIST_VALUE,
         /** A list value (owned via shared_ptr) */
         SLIST_VALUE
-    };
+    }
 
     /// Number factors
     public enum NumberFactor {
@@ -77,7 +77,7 @@ public class Value {
         G_FACTOR,
         /** Terra factor */
         T_FACTOR
-    };
+    }
 
     public ValueType getType() {
         return valueType;

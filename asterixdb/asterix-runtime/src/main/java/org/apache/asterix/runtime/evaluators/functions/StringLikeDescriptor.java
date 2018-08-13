@@ -84,4 +84,4 @@ public class StringLikeDescriptor extends AbstractScalarFunctionDynamicDescripto
         }
     }
 
-};
+}

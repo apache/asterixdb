@@ -58,7 +58,7 @@ public final class ShortPointable extends AbstractPointable implements IHashable
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return FACTORY;
         }
-    };
+    }
 
     public static short getShort(byte[] bytes, int start) {
         return (short) (((bytes[start] & 0xff) << 8) + (bytes[start + 1] & 0xff));

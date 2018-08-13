@@ -57,7 +57,7 @@ public final class UTF8StringLowercasePointable extends AbstractPointable implem
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return FACTORY;
         }
-    };
+    }
 
     @Override
     public int compareTo(IPointable pointer) {

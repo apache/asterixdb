@@ -85,7 +85,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         LSMRTREE,
         LSMRTREE_WITH_ANTIMATTER,
         RTREE
-    };
+    }
 
     protected RTreeType rTreeType;
 

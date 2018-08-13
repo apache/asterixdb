@@ -73,7 +73,7 @@ public class DatatypeTupleTranslator extends AbstractTupleTranslator<Datatype> {
         RECORD,
         UNORDEREDLIST,
         ORDEREDLIST
-    };
+    }
 
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ARecord> recordSerDes =

@@ -88,7 +88,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return FACTORY;
         }
-    };
+    }
 
     public static UTF8StringPointable generateUTF8Pointable(String string) {
         byte[] bytes;

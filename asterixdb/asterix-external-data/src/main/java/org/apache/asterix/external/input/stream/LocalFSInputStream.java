@@ -55,7 +55,7 @@ public class LocalFSInputStream extends AsterixInputStream {
     public void setFeedLogManager(FeedLogManager logManager) throws HyracksDataException {
         super.setFeedLogManager(logManager);
         watcher.setFeedLogManager(logManager);
-    };
+    }
 
     @Override
     public void close() throws IOException {

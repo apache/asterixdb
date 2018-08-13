@@ -58,7 +58,7 @@ public final class BytePointable extends AbstractPointable implements IHashable,
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return FACTORY;
         }
-    };
+    }
 
     public static byte getByte(byte[] bytes, int start) {
         return bytes[start];

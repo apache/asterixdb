@@ -31,7 +31,6 @@ public class CursorTest {
 
     // @Test commented out due to ASTERIXDB-1881
     public void test() {
-        ;
         FileInputStream in = null;
         BufferedReader reader = null;
         try {

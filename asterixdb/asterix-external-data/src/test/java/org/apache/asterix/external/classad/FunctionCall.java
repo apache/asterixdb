@@ -354,6 +354,6 @@ public class FunctionCall extends ExprTree {
     public void reset() {
         this.arguments.clear();
         this.function = null;
-        this.functionName.set("");;
+        this.functionName.set("");
     }
 }

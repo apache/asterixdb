@@ -58,7 +58,7 @@ public final class FloatPointable extends AbstractPointable implements IHashable
         public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
             return FACTORY;
         }
-    };
+    }
 
     private static int getIntBits(byte[] bytes, int start) {
         return IntegerPointable.getInteger(bytes, start);

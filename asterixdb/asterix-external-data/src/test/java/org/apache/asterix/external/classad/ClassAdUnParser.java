@@ -323,12 +323,12 @@ public class ClassAdUnParser {
             buffer.appendChar('.');
         }
         unparseAux(buffer, ref);
-    };
+    }
 
     public void unparseAux(AMutableCharArrayString buffer, final ExprTree tree, AMutableCharArrayString ref)
             throws HyracksDataException {
         unparseAux(buffer, tree, ref, false);
-    };
+    }
 
     public void unparseAuxPairs(AMutableCharArrayString buffer, List<Entry<AMutableCharArrayString, ExprTree>> attrlist)
             throws HyracksDataException {

@@ -160,7 +160,7 @@ public class DiskBTreeSearchCursorTest extends BTreeSearchCursorTest {
                 }
             }
         } finally {
-            pointCursor.destroy();;
+            pointCursor.destroy();
         }
         return true;
     }

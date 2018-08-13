@@ -62,7 +62,7 @@ public abstract class AbstractRTreeExamplesTest {
         LSMRTREE,
         LSMRTREE_WITH_ANTIMATTER,
         RTREE
-    };
+    }
 
     protected static final Logger LOGGER = LogManager.getLogger();
     protected final Random rnd = new Random(50);

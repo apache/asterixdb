@@ -111,14 +111,14 @@ public class FunctionalTester {
         cmd_Echo,
         cmd_Help,
         cmd_Quit
-    };
+    }
 
     public enum PrintFormat {
         print_Compact,
         print_Pretty,
         print_XML,
         print_XMLPretty
-    };
+    }
 
     public static class Parameters {
         public boolean debug;
@@ -965,7 +965,7 @@ public class FunctionalTester {
             if (parser.peekToken() != TokenType.LEX_COMMA) {
                 print_error_message("Missing comma.\n", state);
                 tree1.setInnerTree(null);
-                tree2.setInnerTree(null);;
+                tree2.setInnerTree(null);
             } else {
                 parser.consumeToken();
                 tree2.setInnerTree(parser.parseNextExpression());
@@ -1029,7 +1029,7 @@ public class FunctionalTester {
     public static boolean evaluate_expr(ExprTree tree, Value value, Parameters parameters, ClassAdObjectPool objectPool)
             throws HyracksDataException {
         ClassAd classad = new ClassAd(objectPool);
-        boolean success = false;;
+        boolean success = false;
         classad.insert("internal___", tree);
         success = classad.evaluateAttr("internal___", value);
         classad.remove("internal___");

@@ -53,7 +53,7 @@ public class SumAggregateDescriptor extends AbstractAggregateFunctionDynamicDesc
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
                 return new SumAggregateFunction(args, ctx, false, sourceLoc);
-            };
+            }
         };
     }
 }

@@ -95,7 +95,7 @@ public class Lexer {
         LEX_BACKSLASH,
         LEX_ABSOLUTE_TIME_VALUE,
         LEX_RELATIVE_TIME_VALUE
-    };
+    }
 
     public Lexer() {
         // initialize lexer state (token, etc.) variables
@@ -347,7 +347,7 @@ public class Lexer {
         NONE,
         INTEGER,
         REAL
-    };
+    }
 
     public TokenType tokenizeNumber() throws IOException {
         NumberType numberType = NumberType.NONE;

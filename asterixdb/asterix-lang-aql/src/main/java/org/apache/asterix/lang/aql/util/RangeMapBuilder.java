@@ -60,7 +60,7 @@ public abstract class RangeMapBuilder {
 
     public static IRangeMap parseHint(Object hint) throws CompilationException {
         ArrayBackedValueStorage abvs = new ArrayBackedValueStorage();
-        DataOutput out = abvs.getDataOutput();;
+        DataOutput out = abvs.getDataOutput();
         abvs.reset();
 
         IParser parser = parserFactory.createParser((String) hint);
