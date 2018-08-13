@@ -21,6 +21,7 @@ package org.apache.hyracks.net.protocols.muxdemux;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.comm.IBufferAcceptor;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
@@ -32,18 +33,18 @@ import org.apache.logging.log4j.Logger;
 public abstract class AbstractChannelWriteInterface implements IChannelWriteInterface {
 
     public static final int NO_ERROR_CODE = 0;
+    public static final int CONNECTION_LOST_ERROR_CODE = -1;
     public static final int REMOTE_ERROR_CODE = 1;
-    public static final int LOCAL_ERROR_CODE = -1;
     private static final Logger LOGGER = LogManager.getLogger();
     protected final IChannelControlBlock ccb;
     protected final Queue<ByteBuffer> wiFullQueue;
+    protected final AtomicInteger ecode = new AtomicInteger(NO_ERROR_CODE);
     protected boolean channelWritabilityState;
     protected final int channelId;
     protected IBufferAcceptor eba;
     protected int credits;
     protected boolean eos;
     protected boolean eosSent;
-    protected int ecode;
     protected boolean ecodeSent;
     protected ByteBuffer currentWriteBuffer;
     private final ICloseableBufferAcceptor fba;
@@ -56,7 +57,6 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
         credits = 0;
         eos = false;
         eosSent = false;
-        ecode = -1;
         ecodeSent = false;
     }
 
@@ -78,10 +78,7 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
         if (eos && !eosSent) {
             return true;
         }
-        if (ecode >= 0 && !ecodeSent) {
-            return true;
-        }
-        return false;
+        return ecode.get() == REMOTE_ERROR_CODE && !ecodeSent;
     }
 
     @Override
@@ -138,7 +135,7 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
                     return;
                 }
                 eos = true;
-                if (ecode != REMOTE_ERROR_CODE) {
+                if (ecode.get() != REMOTE_ERROR_CODE) {
                     adjustChannelWritability();
                 }
             }
@@ -146,8 +143,11 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
 
         @Override
         public void error(int ecode) {
+            AbstractChannelWriteInterface.this.ecode.set(ecode);
+            if (ecode == CONNECTION_LOST_ERROR_CODE) {
+                return;
+            }
             synchronized (ccb) {
-                AbstractChannelWriteInterface.this.ecode = ecode;
                 adjustChannelWritability();
             }
         }

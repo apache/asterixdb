@@ -66,7 +66,7 @@ public class InputChannelFrameReader implements IFrameReader, IInputChannelMonit
             }
         }
         if (hasFailed()) {
-            if (errorCode == AbstractChannelWriteInterface.LOCAL_ERROR_CODE) {
+            if (errorCode == AbstractChannelWriteInterface.CONNECTION_LOST_ERROR_CODE) {
                 throw HyracksDataException.create(ErrorCode.LOCAL_NETWORK_ERROR);
             }
             // Do not throw exception here to allow the root cause exception gets propagated to the master first.

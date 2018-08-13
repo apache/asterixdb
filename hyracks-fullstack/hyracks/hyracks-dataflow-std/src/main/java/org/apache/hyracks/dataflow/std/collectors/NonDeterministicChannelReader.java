@@ -158,7 +158,7 @@ public class NonDeterministicChannelReader implements IInputChannelMonitor, IPar
         // Note: if a remote failure overwrites the value of localFailure, then we rely on
         // the fact that the remote task will notify the cc of the failure.
         // Otherwise, the local task must fail
-        localFailure = errorCode == AbstractChannelWriteInterface.LOCAL_ERROR_CODE;
+        localFailure = errorCode == AbstractChannelWriteInterface.CONNECTION_LOST_ERROR_CODE;
         failSenders.set(senderIndex);
         eosSenders.set(senderIndex);
         notifyAll();

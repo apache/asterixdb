@@ -46,10 +46,10 @@ public class MessagingChannelWriteInterface extends AbstractChannelWriteInterfac
             } else {
                 adjustChannelWritability();
             }
-        } else if (ecode >= 0 && !ecodeSent) {
+        } else if (ecode.get() == REMOTE_ERROR_CODE && !ecodeSent) {
             writerState.getCommand().setChannelId(channelId);
             writerState.getCommand().setCommandType(MuxDemuxCommand.CommandType.ERROR);
-            writerState.getCommand().setData(ecode);
+            writerState.getCommand().setData(REMOTE_ERROR_CODE);
             writerState.reset(null, 0, null);
             ecodeSent = true;
             ccb.reportLocalEOS();

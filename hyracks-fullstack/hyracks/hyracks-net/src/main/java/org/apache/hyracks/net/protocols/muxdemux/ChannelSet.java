@@ -200,7 +200,7 @@ public class ChannelSet {
             for (int i = 0; i < ccbArray.length; ++i) {
                 ChannelControlBlock ccb = ccbArray[i];
                 if (ccb != null) {
-                    ccb.reportRemoteError(AbstractChannelWriteInterface.LOCAL_ERROR_CODE);
+                    ccb.reportRemoteError(AbstractChannelWriteInterface.CONNECTION_LOST_ERROR_CODE);
                     markEOSAck(i);
                     unmarkPendingCredits(i);
                 }
