@@ -46,7 +46,7 @@ public class DatasetId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if ((o == null) || !(o instanceof DatasetId)) {
+        if (!(o instanceof DatasetId)) {
             return false;
         }
         return ((DatasetId) o).id == this.id;

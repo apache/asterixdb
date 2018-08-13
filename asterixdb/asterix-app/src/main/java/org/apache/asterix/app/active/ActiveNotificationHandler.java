@@ -98,7 +98,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
                             + jobId);
         }
         Object property = jobSpecification.getProperty(ACTIVE_ENTITY_PROPERTY_NAME);
-        if (property == null || !(property instanceof EntityId)) {
+        if (!(property instanceof EntityId)) {
             if (LOGGER.isEnabled(level)) {
                 LOGGER.log(level, "Job is not of type active job. property found to be: " + property);
             }

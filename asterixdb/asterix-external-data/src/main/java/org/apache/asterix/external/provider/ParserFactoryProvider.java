@@ -47,7 +47,7 @@ public class ParserFactoryProvider {
             Map<String, String> configuration) throws AsterixException {
         IDataParserFactory parserFactory;
         String parserFactoryName = configuration.get(ExternalDataConstants.KEY_DATA_PARSER);
-        if ((parserFactoryName != null) && ExternalDataUtils.isExternal(parserFactoryName)) {
+        if (ExternalDataUtils.isExternal(parserFactoryName)) {
             return ExternalDataUtils.createExternalParserFactory(libraryManager,
                     ExternalDataUtils.getDataverse(configuration), parserFactoryName);
         } else {

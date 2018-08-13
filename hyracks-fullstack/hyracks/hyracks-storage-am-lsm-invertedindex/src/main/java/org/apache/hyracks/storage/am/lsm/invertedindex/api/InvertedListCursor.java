@@ -43,7 +43,7 @@ public abstract class InvertedListCursor extends EnforcedIndexCursor implements 
         int invListEndPageId = LSMInvertedIndexSearchCursorInitialState.INVALID_VALUE;
         int invListStartOffset = LSMInvertedIndexSearchCursorInitialState.INVALID_VALUE;
         int invListNumElements = LSMInvertedIndexSearchCursorInitialState.INVALID_VALUE;
-        if (initialState != null && initialState instanceof LSMInvertedIndexSearchCursorInitialState) {
+        if (initialState instanceof LSMInvertedIndexSearchCursorInitialState) {
             LSMInvertedIndexSearchCursorInitialState invIndexInitialState =
                     (LSMInvertedIndexSearchCursorInitialState) initialState;
             invListStartPageId = invIndexInitialState.getInvListStartPageId();

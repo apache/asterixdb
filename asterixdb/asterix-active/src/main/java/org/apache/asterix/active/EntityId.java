@@ -48,7 +48,7 @@ public class EntityId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof EntityId)) {
+        if (!(o instanceof EntityId)) {
             return false;
         }
         if (o == this) {

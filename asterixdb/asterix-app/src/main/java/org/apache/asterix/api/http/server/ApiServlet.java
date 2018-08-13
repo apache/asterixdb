@@ -234,6 +234,6 @@ public class ApiServlet extends AbstractServlet {
     }
 
     private static boolean isSet(String requestParameter) {
-        return requestParameter != null && "true".equals(requestParameter);
+        return "true".equals(requestParameter);
     }
 }

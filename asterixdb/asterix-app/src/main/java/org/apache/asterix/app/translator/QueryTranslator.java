@@ -1786,7 +1786,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             String currentDataverse) throws AlgebricksException {
         List<Dataverse> allDataverses = MetadataManager.INSTANCE.getDataverses(ctx);
         for (Dataverse dataverse : allDataverses) {
-            if (currentDataverse != null && dataverse.getDataverseName().equals(currentDataverse)) {
+            if (dataverse.getDataverseName().equals(currentDataverse)) {
                 continue;
             }
             List<Feed> feeds = MetadataManager.INSTANCE.getFeeds(ctx, dataverse.getDataverseName());

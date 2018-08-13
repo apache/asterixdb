@@ -44,8 +44,7 @@ public class GatherInnerClassVisitor extends ClassVisitor {
 
     @Override
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
-        if ((className == null || !name.equals(className))
-                && ((access & Opcodes.ACC_PUBLIC) == 0 || (access & Opcodes.ACC_STATIC) == 0)) {
+        if ((!name.equals(className)) && ((access & Opcodes.ACC_PUBLIC) == 0 || (access & Opcodes.ACC_STATIC) == 0)) {
             innerClassNames.add(name);
         }
     }

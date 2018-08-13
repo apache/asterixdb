@@ -82,7 +82,7 @@ public class ActivePartitionMessage implements ICcAddressedMessage {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof ActivePartitionMessage)) {
+        if (!(o instanceof ActivePartitionMessage)) {
             return false;
         }
         if (this == o) {

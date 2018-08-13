@@ -70,7 +70,7 @@ public class DatasetResourceReference extends ResourceReference {
         if (this == o) {
             return true;
         }
-        if (o != null && o instanceof ResourceReference) {
+        if (o instanceof ResourceReference) {
             ResourceReference that = (ResourceReference) o;
             return getRelativePath().toString().equals(that.getRelativePath().toString());
         }

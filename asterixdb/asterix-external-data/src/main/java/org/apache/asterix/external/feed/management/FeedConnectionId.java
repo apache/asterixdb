@@ -55,7 +55,7 @@ public class FeedConnectionId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof FeedConnectionId)) {
+        if (!(o instanceof FeedConnectionId)) {
             return false;
         }
 

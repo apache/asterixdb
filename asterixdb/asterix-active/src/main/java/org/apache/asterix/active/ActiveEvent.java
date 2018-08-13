@@ -70,7 +70,7 @@ public class ActiveEvent {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof ActiveEvent)) {
+        if (!(o instanceof ActiveEvent)) {
             return false;
         }
         if (this == o) {

@@ -123,7 +123,7 @@ class ARecordCaster {
             openFields = new boolean[numInputFields];
             fieldNamesSortedIndex = new int[numInputFields];
         }
-        if (cachedReqType == null || !reqType.equals(cachedReqType)) {
+        if (!reqType.equals(cachedReqType)) {
             try {
                 loadRequiredType(reqType);
             } catch (IOException e) {

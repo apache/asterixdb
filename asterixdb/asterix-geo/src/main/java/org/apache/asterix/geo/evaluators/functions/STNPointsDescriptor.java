@@ -42,7 +42,7 @@ public class STNPointsDescriptor extends AbstractSTSingleGeometryDescriptor {
     @Override
     protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
         Geometry esriGeometry = geometry.getEsriGeometry();
-        if (esriGeometry != null && esriGeometry instanceof MultiVertexGeometry) {
+        if (esriGeometry instanceof MultiVertexGeometry) {
             return ((MultiVertexGeometry) esriGeometry).getPointCount();
         } else if (esriGeometry instanceof Point) {
             return 1;
