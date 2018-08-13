@@ -771,7 +771,7 @@ class LangExpressionToPlanTranslator
                     Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(expr, topOp);
                     AbstractLogicalOperator o1 = (AbstractLogicalOperator) eo.second.getValue();
                     args.add(new MutableObject<>(eo.first));
-                    if (o1 != null && !(o1.getOperatorTag() == LogicalOperatorTag.ASSIGN && hasOnlyChild(o1, topOp))) {
+                    if (o1 != null) {
                         topOp = eo.second;
                     }
                     break;
@@ -1471,14 +1471,6 @@ class LangExpressionToPlanTranslator
         ScalarFunctionCallExpression callExpr = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fid));
         callExpr.setSourceLocation(sourceLoc);
         return callExpr;
-    }
-
-    private static boolean hasOnlyChild(ILogicalOperator parent, Mutable<ILogicalOperator> childCandidate) {
-        List<Mutable<ILogicalOperator>> inp = parent.getInputs();
-        if (inp == null || inp.size() != 1) {
-            return false;
-        }
-        return inp.get(0) == childCandidate;
     }
 
     protected Pair<ILogicalExpression, Mutable<ILogicalOperator>> langExprToAlgExpression(Expression expr,
