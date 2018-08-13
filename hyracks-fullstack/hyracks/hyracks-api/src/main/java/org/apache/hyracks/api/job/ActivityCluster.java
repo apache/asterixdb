@@ -110,9 +110,7 @@ public class ActivityCluster implements Serializable {
         insertIntoIndexedMap(activityInputMap, consumerActivity.getActivityId(), consumerPort, connector);
         insertIntoIndexedMap(activityOutputMap, producerActivity.getActivityId(), producerPort, connector);
         connectorActivityMap.put(connector.getConnectorId(),
-                Pair.<Pair<IActivity, Integer>, Pair<IActivity, Integer>> of(
-                        Pair.<IActivity, Integer> of(producerActivity, producerPort),
-                        Pair.<IActivity, Integer> of(consumerActivity, consumerPort)));
+                Pair.of(Pair.of(producerActivity, producerPort), Pair.of(consumerActivity, consumerPort)));
         connectorRecordDescriptorMap.put(connector.getConnectorId(), recordDescriptor);
     }
 

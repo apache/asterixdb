@@ -59,7 +59,7 @@ public class PartitionMatchMaker {
             while (i.hasNext()) {
                 PartitionRequest req = i.next();
                 if (partitionDescriptor.getState().isAtLeast(req.getMinimumState())) {
-                    matches.add(Pair.<PartitionDescriptor, PartitionRequest> of(partitionDescriptor, req));
+                    matches.add(Pair.of(partitionDescriptor, req));
                     i.remove();
                     matched = true;
                     if (!partitionDescriptor.isReusable()) {
@@ -95,7 +95,7 @@ public class PartitionMatchMaker {
             while (i.hasNext()) {
                 PartitionDescriptor descriptor = i.next();
                 if (descriptor.getState().isAtLeast(partitionRequest.getMinimumState())) {
-                    match = Pair.<PartitionDescriptor, PartitionRequest> of(descriptor, partitionRequest);
+                    match = Pair.of(descriptor, partitionRequest);
                     if (!descriptor.isReusable()) {
                         i.remove();
                     }

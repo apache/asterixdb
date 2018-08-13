@@ -144,9 +144,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         insertIntoIndexedMap(opInputMap, consumerOp.getOperatorId(), consumerPort, conn);
         insertIntoIndexedMap(opOutputMap, producerOp.getOperatorId(), producerPort, conn);
         connectorOpMap.put(conn.getConnectorId(),
-                Pair.<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> of(
-                        Pair.<IOperatorDescriptor, Integer> of(producerOp, producerPort),
-                        Pair.<IOperatorDescriptor, Integer> of(consumerOp, consumerPort)));
+                Pair.of(Pair.of(producerOp, producerPort), Pair.of(consumerOp, consumerPort)));
     }
 
     public void setProperty(String name, Serializable value) {
