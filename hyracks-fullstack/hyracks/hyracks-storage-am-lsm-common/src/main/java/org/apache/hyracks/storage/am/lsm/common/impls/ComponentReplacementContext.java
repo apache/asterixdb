@@ -37,7 +37,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,7 +47,7 @@ public class ComponentReplacementContext implements ILSMIndexOperationContext {
     private final List<ILSMComponentId> replacedComponentIds;
     private final int[] swapIndexes;
     private int count = 0;
-    boolean accessingComponent = true;
+    private boolean accessingComponent = true;
 
     public ComponentReplacementContext(ILSMIndex lsmIndex) {
         components = new ArrayList<>(lsmIndex.getNumberOfAllMemoryComponents());
@@ -156,12 +155,12 @@ public class ComponentReplacementContext implements ILSMIndexOperationContext {
             replacedComponentIds.add(components.get(i).getId());
             // ensure that disk component exists
             boolean found = false;
-            LOGGER.log(Level.INFO, "Looking for a component with the id: " + replacedComponentIds.get(i));
-            for (int j = 0; j < allDiskComponents.size(); j++) {
-                ILSMDiskComponent dc = allDiskComponents.get(j);
+            final ILSMComponentId replacedComponentId = replacedComponentIds.get(i);
+            LOGGER.trace("looking for a component with the id: {}", replacedComponentId);
+            for (ILSMDiskComponent dc : allDiskComponents) {
                 ILSMComponentId diskComponentId = dc.getId();
-                LOGGER.log(Level.INFO, "Next disk component id: " + diskComponentId);
-                if (diskComponentId.equals(replacedComponentIds.get(i))) {
+                LOGGER.trace("next disk component id: {}", diskComponentId);
+                if (diskComponentId.equals(replacedComponentId)) {
                     found = true;
                     diskComponents.add(dc);
                     break;
@@ -169,8 +168,8 @@ public class ComponentReplacementContext implements ILSMIndexOperationContext {
             }
             if (!found) {
                 // component has been merged?
-                LOGGER.log(Level.WARN, "Memory Component with id = " + replacedComponentIds.get(i)
-                        + " was flushed and merged before search cursor replaces it");
+                LOGGER.warn("memory component {} was flushed and merged before search cursor replaces it",
+                        replacedComponentId);
                 return false;
             }
         }
@@ -194,14 +193,14 @@ public class ComponentReplacementContext implements ILSMIndexOperationContext {
             for (int i = 0; i < count; i++) {
                 ILSMComponent removed = ctx.getComponentHolder().remove(swapIndexes[i]);
                 if (removed.getType() == LSMComponentType.MEMORY) {
-                    LOGGER.log(Level.INFO, "Removed a memory component from the search operation");
+                    LOGGER.info("Removed a memory component from the search operation");
                 } else {
                     throw new IllegalStateException("Disk components can't be removed from the search operation");
                 }
                 ctx.getComponentHolder().add(swapIndexes[i], diskComponents.get(i));
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARN, "Failure replacing memory components with disk components", e);
+            LOGGER.warn("Failure replacing memory components with disk components", e);
             throw e;
         }
     }

@@ -30,7 +30,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -276,7 +275,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
             allocated = true;
         } finally {
             if (!allocated) {
-                ((IVirtualBufferCache) getIndex().getBufferCache()).close();
+                getIndex().getBufferCache().close();
             }
         }
     }
