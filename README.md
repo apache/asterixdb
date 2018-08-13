@@ -85,11 +85,12 @@ Here are steps to get AsterixDB running on your local machine:
 
         http://localhost:19001
 
-* Read more [documentations](https://ci.apache.org/projects/asterixdb/index.html) to learn the data model, query language, and how to create a cluster instance.
+* Read more [documentation](https://ci.apache.org/projects/asterixdb/index.html) to learn the data model, query language, and how to create a cluster instance.
 
 ## Documentation
 
 * [master](https://ci.apache.org/projects/asterixdb/index.html) |
+  [0.9.3](http://asterixdb.apache.org/docs/0.9.3/index.html) |
   [0.9.2](http://asterixdb.apache.org/docs/0.9.2/index.html) |
   [0.9.1](http://asterixdb.apache.org/docs/0.9.1/index.html) |
   [0.9.0](http://asterixdb.apache.org/docs/0.9.0/index.html)
