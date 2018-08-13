@@ -48,7 +48,7 @@ public class EmptyTupleSourceRuntimeFactory extends AbstractPushRuntimeFactory {
 
             @Override
             public void open() throws HyracksDataException {
-                writer.open();
+                super.open();
                 if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
                     throw new IllegalStateException();
                 }
@@ -56,13 +56,10 @@ public class EmptyTupleSourceRuntimeFactory extends AbstractPushRuntimeFactory {
             }
 
             @Override
-            public void fail() throws HyracksDataException {
-                writer.fail();
-            }
-
-            @Override
             public void close() throws HyracksDataException {
-                writer.close();
+                if (isOpen) {
+                    writer.close();
+                }
             }
 
             @Override

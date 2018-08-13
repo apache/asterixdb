@@ -151,7 +151,8 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
         @Override
         public void open() throws HyracksDataException {
-            writer.open();
+            // writer opened many times?
+            super.open();
             if (first) {
                 first = false;
                 initAccessAppendRef(ctx);

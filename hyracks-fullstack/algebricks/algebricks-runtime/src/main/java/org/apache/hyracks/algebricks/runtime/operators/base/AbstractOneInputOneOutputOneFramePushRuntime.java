@@ -25,6 +25,7 @@ import org.apache.hyracks.api.comm.IFrameTupleAppender;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -51,25 +52,20 @@ public abstract class AbstractOneInputOneOutputOneFramePushRuntime extends Abstr
 
     @Override
     public void close() throws HyracksDataException {
-        HyracksDataException closeException = null;
+        if (!isOpen) {
+            return;
+        }
+        Throwable closeException = null;
         try {
             flushIfNotFailed();
         } catch (Exception e) {
-            closeException = HyracksDataException.create(e);
-            writer.fail();
+            closeException = e;
+            fail(closeException);
         } finally {
-            try {
-                writer.close();
-            } catch (Exception e) {
-                if (closeException == null) {
-                    closeException = HyracksDataException.create(e);
-                } else {
-                    closeException.addSuppressed(e);
-                }
-            }
+            closeException = CleanupUtils.close(writer, closeException);
         }
         if (closeException != null) {
-            throw closeException;
+            throw HyracksDataException.create(closeException);
         }
     }
 

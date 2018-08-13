@@ -72,7 +72,7 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
 
             @Override
             public void open() throws HyracksDataException {
-                writer.open();
+                super.open();
                 if (evalMaxObjects == null) {
                     initAccessAppendRef(ctx);
                     evalMaxObjects = maxObjectsEvalFactory.createScalarEvaluator(ctx);

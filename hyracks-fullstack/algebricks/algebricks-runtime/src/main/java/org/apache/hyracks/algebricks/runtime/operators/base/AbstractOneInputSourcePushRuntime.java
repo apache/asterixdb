@@ -32,16 +32,6 @@ public abstract class AbstractOneInputSourcePushRuntime extends AbstractOneInput
     }
 
     @Override
-    public void close() throws HyracksDataException {
-        // close is a no op since this operator completes operating in open()
-    }
-
-    @Override
-    public void fail() throws HyracksDataException {
-        // fail is a no op since if a failure happened, the operator would've already called fail() on downstream
-    }
-
-    @Override
     public void flush() throws HyracksDataException {
         // flush will never be called on this runtime
         throw new UnsupportedOperationException();

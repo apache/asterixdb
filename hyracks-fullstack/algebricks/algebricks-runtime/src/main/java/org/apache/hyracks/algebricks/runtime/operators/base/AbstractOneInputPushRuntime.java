@@ -27,6 +27,7 @@ public abstract class AbstractOneInputPushRuntime implements IPushRuntime {
     protected IFrameWriter writer;
     protected RecordDescriptor outputRecordDesc;
     protected boolean failed;
+    protected boolean isOpen;
 
     @Override
     public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
@@ -35,8 +36,24 @@ public abstract class AbstractOneInputPushRuntime implements IPushRuntime {
     }
 
     @Override
+    public void open() throws HyracksDataException {
+        isOpen = true;
+        writer.open();
+    }
+
+    @Override
     public void fail() throws HyracksDataException {
         failed = true;
-        writer.fail();
+        if (isOpen) {
+            writer.fail();
+        }
+    }
+
+    protected void fail(Throwable failure) {
+        try {
+            fail();
+        } catch (Throwable th) {
+            failure.addSuppressed(th);
+        }
     }
 }

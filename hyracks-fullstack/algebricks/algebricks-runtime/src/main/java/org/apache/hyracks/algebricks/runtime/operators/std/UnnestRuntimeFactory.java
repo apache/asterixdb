@@ -94,7 +94,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
             @Override
             public void open() throws HyracksDataException {
-                writer.open();
+                super.open();
                 if (tRef == null) {
                     initAccessAppendRef(ctx);
                 }

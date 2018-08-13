@@ -53,7 +53,7 @@ public class StreamProjectRuntimeFactory extends AbstractOneInputOneOutputRuntim
 
             @Override
             public void open() throws HyracksDataException {
-                writer.open();
+                super.open();
                 if (first) {
                     first = false;
                     initAccessAppend(ctx);

@@ -89,7 +89,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
                 return;
             }
             initAccessAppend(ctx);
-            writer.open();
+            super.open();
         } catch (ACIDException e) {
             throw HyracksDataException.create(e);
         }
@@ -139,31 +139,6 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
     protected int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {
         MurmurHash128Bit.hash3_x64_128(tuple, primaryKeyFields, SEED, longHashes);
         return Math.abs((int) longHashes[0]);
-    }
-
-    @Override
-    public void fail() throws HyracksDataException {
-        failed = true;
-        if (isSink) {
-            return;
-        }
-        writer.fail();
-    }
-
-    @Override
-    public void close() throws HyracksDataException {
-        if (isSink) {
-            return;
-        }
-        try {
-            flushIfNotFailed();
-        } catch (Exception e) {
-            writer.fail();
-            throw e;
-        } finally {
-            writer.close();
-        }
-        appender.reset(frame, true);
     }
 
     @Override

@@ -92,8 +92,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                     initAccessAppendFieldRef(ctx);
                     eval = cond.createScalarEvaluator(ctx);
                 }
-                writer.open();
-
+                super.open();
                 //prepare nullTupleBuilder
                 if (retainMissing && missingWriter == null) {
                     missingWriter = missingWriterFactory.createMissingWriter();
@@ -101,15 +100,6 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                     DataOutput out = missingTupleBuilder.getDataOutput();
                     missingWriter.writeMissing(out);
                     missingTupleBuilder.addFieldEndOffset();
-                }
-            }
-
-            @Override
-            public void close() throws HyracksDataException {
-                try {
-                    flushIfNotFailed();
-                } finally {
-                    writer.close();
                 }
             }
 

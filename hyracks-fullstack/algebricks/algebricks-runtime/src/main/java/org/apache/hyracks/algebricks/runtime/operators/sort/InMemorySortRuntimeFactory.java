@@ -27,6 +27,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.EnumFreeSlotPolicy;
 import org.apache.hyracks.dataflow.std.buffermanager.FrameFreeSlotPolicyFactory;
 import org.apache.hyracks.dataflow.std.buffermanager.IFrameBufferManager;
@@ -69,7 +70,7 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
             @Override
             public void open() throws HyracksDataException {
-                writer.open();
+                super.open();
                 if (frameSorter == null) {
                     IFrameBufferManager manager = new VariableFrameMemoryManager(
                             new VariableFramePool(ctx, VariableFramePool.UNLIMITED_MEMORY),
@@ -87,11 +88,22 @@ public class InMemorySortRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
             @Override
             public void close() throws HyracksDataException {
-                try {
-                    frameSorter.sort();
-                    frameSorter.flush(writer);
-                } finally {
-                    writer.close();
+                Throwable failure = null;
+                if (isOpen) {
+                    try {
+                        if (!failed) {
+                            frameSorter.sort();
+                            frameSorter.flush(writer);
+                        }
+                    } catch (Throwable th) {
+                        failure = th;
+                        fail(th);
+                    } finally {
+                        failure = CleanupUtils.close(writer, failure);
+                    }
+                }
+                if (failure != null) {
+                    throw HyracksDataException.create(failure);
                 }
             }
         };

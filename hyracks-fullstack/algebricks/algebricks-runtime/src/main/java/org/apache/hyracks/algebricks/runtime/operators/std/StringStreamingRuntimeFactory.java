@@ -43,6 +43,9 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
     private char fieldDelimiter;
     private ITupleParserFactory parserFactory;
 
+    /*
+     * NOTE: This operator doesn't follow the IFrameWriter protocol
+     */
     public StringStreamingRuntimeFactory(String command, IPrinterFactory[] printerFactories, char fieldDelimiter,
             ITupleParserFactory parserFactory) {
         super(null);
@@ -129,7 +132,6 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
                     first = false;
                     initAccessAppendRef(ctx);
                 }
-
                 try {
                     ITupleParser parser = parserFactory.createTupleParser(ctx);
                     process = Runtime.getRuntime().exec(command);
@@ -141,6 +143,7 @@ public class StringStreamingRuntimeFactory extends AbstractOneInputOneOutputRunt
                             new DumpInStreamToPrintStream(process.getErrorStream(), System.err);
                     dumpStderr = new Thread(disps);
                     dumpStderr.start();
+                    super.open();
                 } catch (IOException e) {
                     throw HyracksDataException.create(e);
                 }

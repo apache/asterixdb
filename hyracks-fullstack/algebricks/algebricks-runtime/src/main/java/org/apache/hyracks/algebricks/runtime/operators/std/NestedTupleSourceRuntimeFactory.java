@@ -49,11 +49,6 @@ public class NestedTupleSourceRuntimeFactory extends AbstractPushRuntimeFactory 
             initAccessAppend(ctx);
         }
 
-        @Override
-        public void open() throws HyracksDataException {
-            writer.open();
-        }
-
         public void writeTuple(ByteBuffer inputBuffer, int tIndex) throws HyracksDataException {
             tAccess.reset(inputBuffer);
             appendTupleToFrame(tIndex);
