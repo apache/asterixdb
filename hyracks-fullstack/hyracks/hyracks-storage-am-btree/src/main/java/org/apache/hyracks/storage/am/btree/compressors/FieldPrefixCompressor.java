@@ -77,7 +77,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
 
         ByteBuffer buf = frame.getBuffer();
         byte[] pageArray = buf.array();
-        IPrefixSlotManager slotManager = (IPrefixSlotManager) frame.getSlotManager();
+        IPrefixSlotManager slotManager = frame.getSlotManager();
 
         // perform analysis pass
         ArrayList<KeyPartition> keyPartitions = getKeyPartitions(frame, cmp, occurrenceThreshold);
@@ -334,7 +334,7 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
         int maxCmps = cmps.length - 1;
         ByteBuffer buf = frame.getBuffer();
         byte[] pageArray = buf.array();
-        IPrefixSlotManager slotManager = (IPrefixSlotManager) frame.getSlotManager();
+        IPrefixSlotManager slotManager = frame.getSlotManager();
 
         ArrayList<KeyPartition> keyPartitions = new ArrayList<KeyPartition>();
         KeyPartition kp = new KeyPartition(maxCmps);

@@ -39,10 +39,8 @@ public abstract class AbstractComparisonEvaluator implements IScalarEvaluator {
 
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected final DataOutput out = resultStorage.getDataOutput();
-    protected final TaggedValuePointable argLeft =
-            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
-    protected final TaggedValuePointable argRight =
-            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
+    protected final TaggedValuePointable argLeft = TaggedValuePointable.FACTORY.createPointable();
+    protected final TaggedValuePointable argRight = TaggedValuePointable.FACTORY.createPointable();
     protected final IPointable outLeft = VoidPointable.FACTORY.createPointable();
     protected final IPointable outRight = VoidPointable.FACTORY.createPointable();
     protected final IScalarEvaluator evalLeft;

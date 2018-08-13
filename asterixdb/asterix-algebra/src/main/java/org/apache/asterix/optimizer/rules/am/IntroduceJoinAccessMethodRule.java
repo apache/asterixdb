@@ -199,8 +199,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         if (op1.getInputs().size() != 1) {
             return false;
         }
-        if (((AbstractLogicalOperator) op1.getInputs().get(0).getValue())
-                .getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
+        if (op1.getInputs().get(0).getValue().getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
             return false;
         }
         if (op1.getOperatorTag() == LogicalOperatorTag.GROUP) {

@@ -100,7 +100,7 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
         @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
             ILogicalExpression e = exprRef.getValue();
-            switch (((AbstractLogicalExpression) e).getExpressionTag()) {
+            switch (e.getExpressionTag()) {
                 case FUNCTION_CALL:
                     return transformFunctionCallExpression((AbstractFunctionCallExpression) e);
                 default:

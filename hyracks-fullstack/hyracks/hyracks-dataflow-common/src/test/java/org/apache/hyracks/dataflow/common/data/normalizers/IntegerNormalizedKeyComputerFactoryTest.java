@@ -51,7 +51,7 @@ public class IntegerNormalizedKeyComputerFactoryTest extends AbstractNormalizedK
     }
 
     private IPointable getIntPointable(int value) {
-        IntegerPointable pointable = (IntegerPointable) IntegerPointable.FACTORY.createPointable();
+        IntegerPointable pointable = IntegerPointable.FACTORY.createPointable();
         pointable.set(new byte[Integer.BYTES], 0, Integer.BYTES);
         pointable.setInteger(value);
         return pointable;

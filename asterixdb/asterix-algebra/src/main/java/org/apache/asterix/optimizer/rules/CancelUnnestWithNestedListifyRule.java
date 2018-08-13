@@ -206,8 +206,7 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
 
         LogicalVariable aggVar = agg.getVariables().get(0);
         ILogicalExpression aggFun = agg.getExpressions().get(0).getValue();
-        if (!aggVar.equals(unnestedVar)
-                || ((AbstractLogicalExpression) aggFun).getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+        if (!aggVar.equals(unnestedVar) || aggFun.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) aggFun;
@@ -218,7 +217,7 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             return false;
         }
         ILogicalExpression arg0 = f.getArguments().get(0).getValue();
-        if (((AbstractLogicalExpression) arg0).getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+        if (arg0.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
             return false;
         }
         LogicalVariable paramVar = ((VariableReferenceExpression) arg0).getVariableReference();

@@ -58,7 +58,7 @@ public class AnalysisUtil {
     }
 
     public static int numberOfVarsInExpr(ILogicalExpression e) {
-        switch (((AbstractLogicalExpression) e).getExpressionTag()) {
+        switch (e.getExpressionTag()) {
             case CONSTANT: {
                 return 0;
             }

@@ -224,7 +224,7 @@ public class CheckpointingTest {
 
                 Thread t = new Thread(() -> {
                     TransactionManager spyTxnMgr = spy((TransactionManager) nc.getTransactionManager());
-                    doAnswer((Answer) i -> {
+                    doAnswer(i -> {
                         stallAbortTxn(Thread.currentThread(), txnCtx, nc.getTransactionSubsystem(),
                                 (TxnId) i.getArguments()[0]);
                         return null;

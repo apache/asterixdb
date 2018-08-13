@@ -71,7 +71,7 @@ public class AInterval implements IAObject {
 
     @Override
     public int hashCode() {
-        return (int) (((int) (this.intervalStart ^ (this.intervalStart >>> 32))) * 31
+        return (((int) (this.intervalStart ^ (this.intervalStart >>> 32))) * 31
                 + (int) (this.intervalEnd ^ (this.intervalEnd >>> 32))) * 31 + (int) this.typetag;
     }
 

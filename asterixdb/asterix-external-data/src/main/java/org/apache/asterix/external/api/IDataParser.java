@@ -70,7 +70,7 @@ public interface IDataParser {
 
             case ARRAY: {
                 OrderedListBuilder listBuilder = new OrderedListBuilder();
-                listBuilder.reset((AOrderedListType) ((AMutableOrderedList) obj).getType());
+                listBuilder.reset((AOrderedListType) obj.getType());
                 IACursor cursor = ((AMutableOrderedList) obj).getCursor();
                 ArrayBackedValueStorage listItemValue = new ArrayBackedValueStorage();
                 while (cursor.next()) {
@@ -85,7 +85,7 @@ public interface IDataParser {
 
             case MULTISET: {
                 UnorderedListBuilder listBuilder = new UnorderedListBuilder();
-                listBuilder.reset((AUnorderedListType) ((AMutableUnorderedList) obj).getType());
+                listBuilder.reset((AUnorderedListType) obj.getType());
                 IACursor cursor = ((AMutableUnorderedList) obj).getCursor();
                 ArrayBackedValueStorage listItemValue = new ArrayBackedValueStorage();
                 while (cursor.next()) {

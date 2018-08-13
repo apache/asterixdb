@@ -81,8 +81,7 @@ public class CountVarToCountOneRule implements IAlgebraicRewriteRule {
         if (exp3.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
             return false;
         }
-        if (((AbstractLogicalOperator) agg.getInputs().get(0).getValue())
-                .getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
+        if (agg.getInputs().get(0).getValue().getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
             return false;
         }
         fun.getArguments().get(0).setValue(new ConstantExpression(new AsterixConstantValue(new AInt64(1L))));

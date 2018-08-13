@@ -103,8 +103,7 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                 ILogicalPlan p0 = gby.getNestedPlans().get(0);
                 if (p0.getRoots().size() == 1) {
                     Mutable<ILogicalOperator> r0 = p0.getRoots().get(0);
-                    if (((AbstractLogicalOperator) (r0.getValue())).getOperatorTag()
-                            .equals(LogicalOperatorTag.AGGREGATE)) {
+                    if (r0.getValue().getOperatorTag().equals(LogicalOperatorTag.AGGREGATE)) {
                         AggregateOperator aggOp = (AggregateOperator) r0.getValue();
                         boolean serializable = true;
                         for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {

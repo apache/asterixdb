@@ -44,7 +44,7 @@ public class TupleCopyValueExtractor implements IValueExtractor<ITupleReference>
 
     public TupleCopyValueExtractor(ITypeTraits[] typeTraits) {
         this.tupleWriter = new TypeAwareTupleWriter(typeTraits);
-        this.tupleReference = (TypeAwareTupleReference) tupleWriter.createTupleReference();
+        this.tupleReference = tupleWriter.createTupleReference();
     }
 
     @Override

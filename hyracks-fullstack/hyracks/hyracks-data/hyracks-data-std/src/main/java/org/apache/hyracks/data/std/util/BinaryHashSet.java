@@ -232,11 +232,11 @@ public class BinaryHashSet {
     }
 
     private int getFrameIndex(int ptr) {
-        return (int) (ptr >> 16);
+        return ptr >> 16;
     }
 
     private int getFrameOffset(int ptr) {
-        return (int) (ptr & 0xffff);
+        return ptr & 0xffff;
     }
 
     public int size() {

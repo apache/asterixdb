@@ -65,10 +65,8 @@ public class GetOverlappingIntervalDescriptor extends AbstractScalarFunctionDyna
                     protected final IntervalLogic il = new IntervalLogic(sourceLoc);
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput out = resultStorage.getDataOutput();
-                    private TaggedValuePointable argPtr0 =
-                            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
-                    private TaggedValuePointable argPtr1 =
-                            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
+                    private TaggedValuePointable argPtr0 = TaggedValuePointable.FACTORY.createPointable();
+                    private TaggedValuePointable argPtr1 = TaggedValuePointable.FACTORY.createPointable();
                     private AIntervalPointable interval0 =
                             (AIntervalPointable) AIntervalPointable.FACTORY.createPointable();
                     private AIntervalPointable interval1 =

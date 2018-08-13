@@ -144,7 +144,7 @@ public abstract class AbstractExternalGroupbyTest {
                             resultAccessor.getAbsoluteFieldStartOffset(tid, fid));
                     outRecord[fid] = outputRec.getFields()[fid].deserialize(di);
                 }
-                Result result = answer.remove((String) outRecord[0]);
+                Result result = answer.remove(outRecord[0]);
                 assertNotNull(result);
                 assertEquals(result.sum, (int) outRecord[1]);
                 assertEquals(result.count, (int) outRecord[2]);

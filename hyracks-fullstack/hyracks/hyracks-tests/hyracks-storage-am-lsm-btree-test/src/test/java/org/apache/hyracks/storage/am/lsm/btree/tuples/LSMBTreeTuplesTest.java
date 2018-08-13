@@ -73,8 +73,7 @@ public class LSMBTreeTuplesTest {
                 ITupleReference maxTuple = TupleUtils.createTuple(maxFieldSerdes, (Object[]) maxFields);
                 ByteBuffer maxMatterBuf = writeTuple(maxTuple, maxMatterTupleWriter);
                 // Tuple reference should work for both matter and antimatter tuples (doesn't matter which factory creates it).
-                LSMBTreeTupleReference maxLsmBTreeTuple =
-                        (LSMBTreeTupleReference) maxMatterTupleWriter.createTupleReference();
+                LSMBTreeTupleReference maxLsmBTreeTuple = maxMatterTupleWriter.createTupleReference();
 
                 ISerializerDeserializer[] fieldSerdes = Arrays.copyOfRange(maxFieldSerdes, 0, numFields);
                 ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
@@ -99,8 +98,7 @@ public class LSMBTreeTuplesTest {
                 }
 
                 // Tuple reference should work for both matter and antimatter tuples (doesn't matter which factory creates it).
-                LSMBTreeTupleReference lsmBTreeTuple =
-                        (LSMBTreeTupleReference) matterTupleWriter.createTupleReference();
+                LSMBTreeTupleReference lsmBTreeTuple = matterTupleWriter.createTupleReference();
 
                 // Use LSMBTree tuple reference to interpret the written tuples.
                 // Repeat the block inside to test that repeated resetting to matter/antimatter tuples works.

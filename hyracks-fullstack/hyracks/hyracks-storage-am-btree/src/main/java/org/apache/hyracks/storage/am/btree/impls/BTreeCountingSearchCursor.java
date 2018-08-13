@@ -78,7 +78,7 @@ public class BTreeCountingSearchCursor extends EnforcedIndexCursor implements IT
     @Override
     public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
 
-        page = ((BTreeCursorInitialState) initialState).getPage();
+        page = initialState.getPage();
         isPageDirty = false;
         frame.setPage(page);
 

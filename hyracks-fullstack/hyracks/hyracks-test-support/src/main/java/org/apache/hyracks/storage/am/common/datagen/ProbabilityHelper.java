@@ -34,10 +34,10 @@ public class ProbabilityHelper {
         double[] probDist = new double[numChoices];
         double divisor = 0;
         for (int i = 1; i <= numChoices; i++) {
-            divisor += 1.0 / (double) Math.pow((double) i, (double) zipfSkew);
+            divisor += 1.0 / Math.pow((double) i, (double) zipfSkew);
         }
         for (int i = 1; i <= numChoices; i++) {
-            probDist[i - 1] = (1.0 / (double) Math.pow((double) i, (double) zipfSkew)) / divisor;
+            probDist[i - 1] = (1.0 / Math.pow((double) i, (double) zipfSkew)) / divisor;
         }
         return probDist;
     }

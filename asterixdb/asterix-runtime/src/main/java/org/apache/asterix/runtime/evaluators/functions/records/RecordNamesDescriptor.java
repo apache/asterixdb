@@ -77,8 +77,7 @@ public class RecordNamesDescriptor extends AbstractScalarFunctionDynamicDescript
 
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private final IPointable argPtr = new VoidPointable();
-                    private final ARecordPointable recordPointable =
-                            (ARecordPointable) ARecordPointable.FACTORY.createPointable();
+                    private final ARecordPointable recordPointable = ARecordPointable.FACTORY.createPointable();
                     private final AOrderedListType listType = new AOrderedListType(BuiltinType.ASTRING, null);
                     private final OrderedListBuilder listBuilder = new OrderedListBuilder();
                     private final ArrayBackedValueStorage itemStorage = new ArrayBackedValueStorage();

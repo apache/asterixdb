@@ -79,8 +79,7 @@ public class RecordLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                     private IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
 
                     private final IPointable argPtr = new VoidPointable();
-                    private final ARecordPointable recordPointable =
-                            (ARecordPointable) ARecordPointable.FACTORY.createPointable();
+                    private final ARecordPointable recordPointable = ARecordPointable.FACTORY.createPointable();
                     private final AMutableInt64 aInt64 = new AMutableInt64(0);
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<AInt64> int64Serde =

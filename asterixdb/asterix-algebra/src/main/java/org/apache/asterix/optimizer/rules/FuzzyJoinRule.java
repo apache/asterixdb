@@ -335,7 +335,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
                     break;
                 }
                 case LEFT_OUTER: {
-                    if (((AbstractLogicalOperator) outputOp).getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
+                    if (outputOp.getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
                         throw new IllegalStateException();
                     }
                     LeftOuterJoinOperator topJoin = (LeftOuterJoinOperator) outputOp;

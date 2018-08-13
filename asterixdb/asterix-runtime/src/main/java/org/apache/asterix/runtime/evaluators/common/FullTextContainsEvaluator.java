@@ -57,10 +57,8 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
 
     protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     protected final DataOutput out = resultStorage.getDataOutput();
-    protected final TaggedValuePointable argLeft =
-            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
-    protected final TaggedValuePointable argRight =
-            (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
+    protected final TaggedValuePointable argLeft = TaggedValuePointable.FACTORY.createPointable();
+    protected final TaggedValuePointable argRight = TaggedValuePointable.FACTORY.createPointable();
     protected TaggedValuePointable[] argOptions;
     protected final IScalarEvaluator evalLeft;
     protected final IScalarEvaluator evalRight;
@@ -122,7 +120,7 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
         for (int i = 0; i < optionArgsLength; i++) {
             this.evalOptions[i] = args[i + 2].createScalarEvaluator(context);
             this.outOptions[i] = VoidPointable.FACTORY.createPointable();
-            this.argOptions[i] = (TaggedValuePointable) TaggedValuePointable.FACTORY.createPointable();
+            this.argOptions[i] = TaggedValuePointable.FACTORY.createPointable();
         }
     }
 
