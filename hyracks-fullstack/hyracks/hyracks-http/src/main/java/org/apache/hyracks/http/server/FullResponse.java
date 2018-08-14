@@ -111,4 +111,9 @@ public class FullResponse implements IServletResponse {
         // Do nothing.
         // This response is sent as a single piece
     }
+
+    @Override
+    public void cancel() {
+        // Do nothing, as this response doesn't allocate buffers in constructor
+    }
 }

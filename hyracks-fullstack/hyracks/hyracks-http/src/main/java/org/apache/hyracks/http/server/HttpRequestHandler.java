@@ -40,6 +40,8 @@ public class HttpRequestHandler implements Callable<Void> {
     private final IServlet servlet;
     private final IServletRequest request;
     private final IServletResponse response;
+    private boolean started = false;
+    private boolean cancelled = false;
 
     public HttpRequestHandler(ChannelHandlerContext ctx, IServlet servlet, IServletRequest request, int chunkSize) {
         this.ctx = ctx;
@@ -52,6 +54,13 @@ public class HttpRequestHandler implements Callable<Void> {
 
     @Override
     public Void call() throws Exception {
+        synchronized (this) {
+            if (cancelled) {
+                LOGGER.warn("Request cancelled before it is started");
+                return null;
+            }
+            started = true;
+        }
         try {
             ChannelFuture lastContentFuture = handle();
             if (!HttpUtil.isKeepAlive(request.getHttpRequest())) {
@@ -83,7 +92,18 @@ public class HttpRequestHandler implements Callable<Void> {
     }
 
     public void notifyChannelInactive() {
-        response.notifyChannelInactive();
+        synchronized (this) {
+            if (!started) {
+                cancelled = true;
+            }
+        }
+        if (cancelled) {
+            // release request and response
+            response.cancel();
+            request.getHttpRequest().release();
+        } else {
+            response.notifyChannelInactive();
+        }
     }
 
     public void reject() throws IOException {

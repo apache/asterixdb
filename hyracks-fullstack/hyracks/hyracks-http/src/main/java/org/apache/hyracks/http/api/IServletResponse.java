@@ -86,4 +86,9 @@ public interface IServletResponse extends Closeable {
      * Notifies the response that the channel has become inactive.
      */
     void notifyChannelInactive();
+
+    /**
+     * Called on a created request that is cancelled before it is started
+     */
+    void cancel();
 }
