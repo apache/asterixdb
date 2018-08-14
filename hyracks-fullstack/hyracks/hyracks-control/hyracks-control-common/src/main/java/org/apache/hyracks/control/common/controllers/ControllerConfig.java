@@ -20,6 +20,7 @@ package org.apache.hyracks.control.common.controllers;
 
 import java.io.Serializable;
 import java.net.URL;
+import java.util.function.Function;
 
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
@@ -35,21 +36,32 @@ public class ControllerConfig implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public enum Option implements IOption {
-        CONFIG_FILE(OptionTypes.STRING, "Specify path to master configuration file", null),
-        CONFIG_FILE_URL(OptionTypes.URL, "Specify URL to master configuration file", null),
+        CONFIG_FILE(OptionTypes.STRING, (String) null, "Specify path to master configuration file"),
+        CONFIG_FILE_URL(OptionTypes.URL, (URL) null, "Specify URL to master configuration file"),
         DEFAULT_DIR(
                 OptionTypes.STRING,
                 "Directory where files are written to by default",
-                FileUtil.joinPath(System.getProperty(ConfigurationUtil.JAVA_IO_TMPDIR), "hyracks")),;
+                FileUtil.joinPath(System.getProperty(ConfigurationUtil.JAVA_IO_TMPDIR), "hyracks")),
+        LOG_DIR(
+                OptionTypes.STRING,
+                (Function<IApplicationConfig, String>) appConfig -> FileUtil
+                        .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "logs/"),
+                "The directory where logs for this node are written");
 
         private final IOptionType type;
         private final String description;
-        private String defaultValue;
+        private Object defaultValue;
 
-        Option(IOptionType type, String description, String defaultValue) {
+        <T> Option(IOptionType<T> type, T defaultValue, String description) {
             this.type = type;
-            this.description = description;
             this.defaultValue = defaultValue;
+            this.description = description;
+        }
+
+        <T> Option(IOptionType<T> type, Function<IApplicationConfig, T> defaultValue, String description) {
+            this.type = type;
+            this.defaultValue = defaultValue;
+            this.description = description;
         }
 
         @Override
@@ -105,5 +117,9 @@ public class ControllerConfig implements Serializable {
 
     public void setConfigFileUrl(URL configFileUrl) {
         configManager.set(ControllerConfig.Option.CONFIG_FILE_URL, configFileUrl);
+    }
+
+    public String getLogDir() {
+        return configManager.getAppConfig().getString(ControllerConfig.Option.LOG_DIR);
     }
 }

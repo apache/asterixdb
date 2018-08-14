@@ -28,6 +28,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.Log4J2LoggerFactory;
+import io.netty.util.internal.logging.Log4JLoggerFactory;
 import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.util.MXHelper;
@@ -49,6 +52,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.Log4J2LoggerFactory;
 
 public class HttpServer {
     // Constants
@@ -81,6 +86,10 @@ public class HttpServer {
     private Throwable cause;
     private HttpServerConfig config;
 
+    static {
+        InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
+    }
+
     public HttpServer(EventLoopGroup bossGroup, EventLoopGroup workerGroup, int port, HttpServerConfig config) {
         this(bossGroup, workerGroup, port, config, null);
     }
@@ -91,6 +100,7 @@ public class HttpServer {
         this.workerGroup = workerGroup;
         this.port = port;
         this.closedHandler = closeHandler;
+        InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
         this.config = config;
         ctx = new ConcurrentHashMap<>();
         servlets = new ArrayList<>();
@@ -100,11 +110,12 @@ public class HttpServer {
                 runnable -> new Thread(runnable, "HttpExecutor(port:" + port + ")-" + threadId.getAndIncrement()));
         long directMemoryBudget = numExecutorThreads * (long) HIGH_WRITE_BUFFER_WATER_MARK
                 + numExecutorThreads * config.getMaxResponseChunkSize();
-        LOGGER.log(Level.INFO, "The output direct memory budget for this server is " + directMemoryBudget + " bytes");
+        LOGGER.log(Level.DEBUG,
+                "The output direct memory budget for this server " + "is " + directMemoryBudget + " bytes");
         long inputBudgetEstimate =
                 (long) config.getMaxRequestInitialLineLength() * (config.getRequestQueueSize() + numExecutorThreads);
         inputBudgetEstimate = inputBudgetEstimate * 2;
-        LOGGER.log(Level.INFO,
+        LOGGER.log(Level.DEBUG,
                 "The \"estimated\" input direct memory budget for this server is " + inputBudgetEstimate + " bytes");
         // Having multiple arenas, memory fragments, and local thread cached buffers
         // can cause the input memory usage to exceed estimate and custom buffer allocator must be used to avoid this

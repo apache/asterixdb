@@ -15,6 +15,7 @@
     "compiler\.sortmemory" : 327680,
     "compiler\.textsearchmemory" : 163840,
     "default\.dir" : "target/io/dir/asterixdb",
+    "log\.dir" : "logs/",
     "log\.level" : "INFO",
     "max\.wait\.active\.cluster" : 60,
     "max.web.request.size" : 52428800,

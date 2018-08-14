@@ -30,6 +30,10 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.ConfigurationFactory;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.kohsuke.args4j.CmdLineException;
 
 public class CCDriver {
@@ -44,6 +48,12 @@ public class CCDriver {
             ICCApplication application = getApplication(args);
             application.registerConfig(configManager);
             CCConfig ccConfig = new CCConfig(configManager);
+            LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+            Configuration cfg = ctx.getConfiguration();
+            CCLogConfigurationFactory logCfgFactory = new CCLogConfigurationFactory(ccConfig);
+            ConfigurationFactory.setConfigurationFactory(logCfgFactory);
+            cfg.removeLogger("Console");
+            ctx.start(logCfgFactory.getConfiguration(ctx, ConfigurationSource.NULL_SOURCE));
             ClusterControllerService ccService = new ClusterControllerService(ccConfig, application);
             ccService.start();
             while (true) {

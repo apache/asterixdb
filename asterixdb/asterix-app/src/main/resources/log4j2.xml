@@ -17,9 +17,15 @@
  ! under the License.
  !-->
 <Configuration status="WARN">
+   <CustomLevels>
+    <CustomLevel name="ACCESS" intLevel="550" />
+  </CustomLevels>
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </Console>
+    <Console name="AccessLog" target="SYSTEM_OUT">
+      <PatternLayout pattern="%m%n"/>
     </Console>
   </Appenders>
   <Loggers>
@@ -27,5 +33,8 @@
       <AppenderRef ref="Console"/>
     </Root>
     <Logger name="org.apache.hyracks.control.nc.service" level="INFO"/>
+    <Logger name="org.apache.hyracks.http.server.CLFLogger" level="ACCESS" additivity="false">
+        <AppenderRef ref="AccessLog"/>
+    </Logger>
   </Loggers>
 </Configuration>

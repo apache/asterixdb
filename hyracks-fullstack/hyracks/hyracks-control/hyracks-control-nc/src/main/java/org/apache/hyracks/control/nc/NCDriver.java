@@ -28,6 +28,10 @@ import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.ConfigurationFactory;
+import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.kohsuke.args4j.CmdLineException;
 
 @SuppressWarnings("InfiniteLoopStatement")
@@ -44,6 +48,12 @@ public class NCDriver {
             INCApplication application = getApplication(args);
             application.registerConfig(configManager);
             NCConfig ncConfig = new NCConfig(nodeId, configManager);
+            LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+            Configuration cfg = ctx.getConfiguration();
+            NCLogConfigurationFactory logCfgFactory = new NCLogConfigurationFactory(ncConfig);
+            ConfigurationFactory.setConfigurationFactory(logCfgFactory);
+            cfg.removeLogger("Console");
+            ctx.start(logCfgFactory.getConfiguration(ctx, ConfigurationSource.NULL_SOURCE));
             final NodeControllerService ncService = new NodeControllerService(ncConfig, application);
             ncService.start();
             while (true) {
