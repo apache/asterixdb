@@ -39,7 +39,7 @@ if [ -z "$JAVA_HOME" -a -x /usr/libexec/java_home ]; then
   export JAVA_HOME
 fi
 
-export JAVA_VERSION=$(java -version 2>&1 | head -1 | awk '{ print $NF }' | tr -d '"')
+export JAVA_VERSION=$(java -version 2>&1 | head -1 | awk '{ print $3 }' | tr -d '"')
 case $JAVA_VERSION in
   1.8*|1.9*|10*|11*)
     ;;
