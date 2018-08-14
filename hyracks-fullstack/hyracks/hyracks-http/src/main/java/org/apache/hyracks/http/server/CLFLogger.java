@@ -23,7 +23,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -93,7 +93,7 @@ public class CLFLogger extends ChannelDuplexHandler {
             statusCode = resp.status().code();
             if (msg instanceof DefaultFullHttpResponse) {
                 lastChunk = true;
-                respSize = resp.headers().getInt(HttpHeaderNames.CONTENT_LENGTH);
+                respSize = resp.headers().getInt(HttpHeaderNames.CONTENT_LENGTH, 0);
             }
         } else if (msg instanceof DefaultHttpContent) {
             HttpContent content = (DefaultHttpContent) msg;
