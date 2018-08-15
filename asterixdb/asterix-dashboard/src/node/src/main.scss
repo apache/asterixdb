@@ -11,19 +11,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-@import './styles/general';
 
+@import './styles/general';
 // Include material core styles.
 @import '~@angular/material/theming';
 @include mat-core();
-
 // Define the light theme.
 $primary: mat-palette($mat-grey);
-$accent:  mat-palette($mat-orange, A200, A100, A400);
-
+$accent : mat-palette($mat-orange, A200, A100, A400);
 $theme: mat-light-theme($primary, $accent);
 @include angular-material-theme($theme);
-
-* {
-    font-family: Roboto, "Helvetica Neue", sans-serif;
-  }

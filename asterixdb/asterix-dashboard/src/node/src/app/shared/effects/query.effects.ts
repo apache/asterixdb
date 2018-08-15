@@ -13,41 +13,36 @@ limitations under the License.
 */
 import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
-import { Effect, Actions } from '@ngrx/effects';
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
+import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Observable ,  of } from 'rxjs';
 import { SQLService } from '../services/async-query.service';
 import * as sqlQueryActions from '../actions/query.actions';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/catch';
 
 export type Action = sqlQueryActions.All
 
 @Injectable()
 export class SQLQueryEffects {
   constructor(private actions: Actions,
-      private sqlService: SQLService) {}
+        private sqlService: SQLService) {}
 
-  /* Effect to Execute an SQL++ Query against the AsterixDB
-  */
-  @Effect()
-  executeQuery$: Observable<Action> = this.actions
-    .ofType(sqlQueryActions.EXECUTE_QUERY)
-    .switchMap(query => {
-        return this.sqlService.executeSQLQuery((query as any).payload)
-           .map(sqlQueryResult => new sqlQueryActions.ExecuteQuerySuccess(sqlQueryResult))
-           .catch(sqlQueryError => of(new sqlQueryActions.ExecuteQueryFail(sqlQueryError)));
-  });
+    /* Effect to Execute an SQL++ Query against the AsterixDB */
+    @Effect()
+    executeQuery$: Observable<Action> = this.actions
+        .ofType(sqlQueryActions.EXECUTE_QUERY)
+        .switchMap(query => {
+            return this.sqlService.executeSQLQuery((query as any).payload.queryString)
+                .map(sqlQueryResult => new sqlQueryActions.ExecuteQuerySuccess(sqlQueryResult))
+                .catch(sqlQueryError => of(new sqlQueryActions.ExecuteQueryFail(sqlQueryError)));
+    });
 
-  /* Effect to Execute an SQL++ Metadata Query against the AsterixDB
-  */
-  @Effect()
-  executeMetadataQuery$: Observable<Action> = this.actions
-    .ofType(sqlQueryActions.EXECUTE_METADATA_QUERY)
-    .switchMap(query => {
-        return this.sqlService.executeSQLQuery((query as any).payload)
-           .map(sqlMetadataQueryResult => new sqlQueryActions.ExecuteMetadataQuerySuccess(sqlMetadataQueryResult))
-           .catch(sqlMetadataQueryError => of(new sqlQueryActions.ExecuteMetadataQueryFail(sqlMetadataQueryError)));
-  });
+    /* Effect to Execute an SQL++ Metadata Query against the AsterixDB
+    */
+    @Effect()
+    executeMetadataQuery$: Observable<Action> = this.actions
+        .ofType(sqlQueryActions.EXECUTE_METADATA_QUERY)
+        .switchMap(query => {
+            return this.sqlService.executeSQLQuery((query as any).payload)
+                .map(sqlMetadataQueryResult => new sqlQueryActions.ExecuteMetadataQuerySuccess(sqlMetadataQueryResult))
+                .catch(sqlMetadataQueryError => of(new sqlQueryActions.ExecuteMetadataQueryFail(sqlMetadataQueryError)));
+    });
 }

@@ -11,22 +11,87 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 html {
   box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  font-family: "Roboto Mono", monospace;
-  font-size: 0.80rem;
-	font-weight: 500;
+  width: 100%;
+  height: 100%;
+  background-color: gainsboro;
+  overflow-y: scroll;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
 }
 
-// Tree and table styling
-
-.ui-datatable{
-  //overflow : auto
+* {
+  font-family: Roboto, "Helvetica Neue", monospace; //font-family: Consolas, Courier, monospace;
+  //font-size: 12px;
+  box-sizing: border-box;
 }
 
-.ui-datatable .ui-sortable-column div.ui-dt-c {
-  padding-right: 15px !important;
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+textarea {
+  font-size: 14px;
+  color: red;
+}
+
+:root {
+  --footer-color: #2cba92;
+  --palatte-padding-left: 0px;
+}
+
+.footer {
+  margin-top: 20px;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  height: 50px
+}
+
+.apache {
+  display: absolute;
+  bottom: 0;
+  margin: 15px;
+  font-size: 10px;
+  vertical-align: middle;
+  color: black;
+}
+
+.mat-checkbox-inner-container {
+  height: 15px !important;
+  width: 15px !important;
+}
+
+.cdk-global-scrollblock {
+  top: 0 !important;
+}
+
+.CodeMirror {
+  font-family: Arial, monospace;
+  font-size: 14px !important;
+  color: black;
+}
+
+.header-centered-v > .mat-content {
+  align-items: center;
+}
+
+.mat-expansion-panel-header-description {
+  margin-right: 0px !important;
 }

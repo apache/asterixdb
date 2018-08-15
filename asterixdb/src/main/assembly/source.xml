@@ -29,7 +29,7 @@
       <outputDirectory>.</outputDirectory>
       <useDefaultExcludes>true</useDefaultExcludes>
       <excludes>
-        <exclude>${project.build.directory}/**</exclude>
+        <exclude>**/${project.build.directory}/**</exclude>
         <exclude>release.properties</exclude>
       </excludes>
     </fileSet>

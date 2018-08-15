@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/-->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid meet" viewBox="-1.0028682170542123 -1.0037209302325536 24.000000000000007 24" width="20" height="20"><defs><path d="M0 0L20 0L20 20L0 20L0 0Z" id="gyXi6gBBT"></path><path d="M20 18L0 18" id="a3dxwHGaC"></path><path d="M0 0L0 18" id="b1vHLhKOaI"></path></defs><g><g></g><g><use xlink:href="#a3dxwHGaC" opacity="0.5" fill="#000000" fill-opacity="1"></use><g><use xlink:href="#a3dxwHGaC" opacity="0.5" fill-opacity="0" stroke="#000000" stroke-width="1" stroke-opacity="1"></use></g></g><g><use xlink:href="#b1vHLhKOaI" opacity="0.5" fill="#000000" fill-opacity="1"></use><g><use xlink:href="#b1vHLhKOaI" opacity="0.5" fill-opacity="0" stroke="#000000" stroke-width="1" stroke-opacity="1"></use></g></g></g></svg>

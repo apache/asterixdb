@@ -68,8 +68,6 @@
       <item name="Option 1: using NCService" href="ncservice.html"/>
       <item name="Option 2: using Ansible" href="ansible.html"/>
       <item name="Option 3: using Amazon Web Services" href="aws.html"/>
-      <item name="Option 4: using YARN" href="yarn.html"/>
-      <item name="Option 5: using Managix (deprecated)" href="install.html"/>
     </menu>
 
     <menu name = "AsterixDB Primer">

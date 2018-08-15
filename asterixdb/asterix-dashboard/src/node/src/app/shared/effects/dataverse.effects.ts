@@ -13,30 +13,32 @@ limitations under the License.
 */
 import { Injectable } from '@angular/core';
 import { Effect, Actions } from '@ngrx/effects';
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
+import { Observable ,  of } from 'rxjs';
 import * as dataverseActions from '../actions/dataverse.actions';
 import { SQLService } from '../services/async-query.service';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/catch';
 
 export type Action = dataverseActions.All
 
 @Injectable()
 export class DataverseEffects {
-  constructor(private actions: Actions,
-      private sqlService: SQLService) {}
+  constructor(private actions: Actions, private sqlService: SQLService) {}
 
-  /* Effect to load a collection of all Dataverses from AsterixDB
-  */
-  @Effect()
+    /* Effect to set the default Dataverse */
+    @Effect()
+    setDefaultDataverse$: Observable<Action> = this.actions
+        .ofType(dataverseActions.SET_DEFAULT_DATAVERSE)
+        .switchMap(query => {
+            return new Observable().map(dataverse => new dataverseActions.SetDefaultDataverse('Default'))
+    });
+
+    /* Effect to load a collection of all Dataverses from AsterixDB */
+    @Effect()
     selectDataverses$: Observable<Action> = this.actions
         .ofType(dataverseActions.SELECT_DATAVERSES)
         .switchMap(query => {
             return this.sqlService.selectDataverses()
-            .map(dataverse => new dataverseActions.SelectDataversesSuccess(dataverse))
-            .catch(err => of(new dataverseActions.SelectDataversesFail(err)));
+                .map(dataverse => new dataverseActions.SelectDataversesSuccess(dataverse))
+                .catch(err => of(new dataverseActions.SelectDataversesFail(err)));
     });
 
     /* Effect to create Dataverse from AsterixDB
@@ -46,8 +48,8 @@ export class DataverseEffects {
         .ofType(dataverseActions.CREATE_DATAVERSE)
         .switchMap(dataverseName => {
             return this.sqlService.createDataverse((dataverseName as any).payload)
-            .map(dataverse => new dataverseActions.CreateDataverseSuccess(dataverse))
-            .catch(err => of(new dataverseActions.CreateDataverseFail(err)));
+                .map(dataverse => new dataverseActions.CreateDataverseSuccess(dataverse))
+                .catch(err => of(new dataverseActions.CreateDataverseFail(err)));
     });
 
     /* Effect to drop a Dataverse from AsterixDB
@@ -57,7 +59,7 @@ export class DataverseEffects {
         .ofType(dataverseActions.DROP_DATAVERSE)
         .switchMap(dataverseName => {
             return this.sqlService.dropDataverse((dataverseName as any).payload)
-            .map(dataverse => new dataverseActions.DropDataverseSuccess(dataverse))
-            .catch(err => of(new dataverseActions.DropDataverseFail(err)));
+                .map(dataverse => new dataverseActions.DropDataverseSuccess(dataverse))
+                .catch(err => of(new dataverseActions.DropDataverseFail(err)));
     });
 }

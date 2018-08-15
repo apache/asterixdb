@@ -600,6 +600,7 @@ public class TestExecutor {
         HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, uri, "statement", newParams)
                 : constructPostMethodUrl(str, uri, "statement", newParams);
         // Set accepted output response type
+        method.setHeader("Origin", uri.getScheme() + uri.getAuthority());
         method.setHeader("Accept", OutputFormat.CLEAN_JSON.mimeType());
         HttpResponse response = executeHttpRequest(method);
         if (responseCodeValidator != null) {

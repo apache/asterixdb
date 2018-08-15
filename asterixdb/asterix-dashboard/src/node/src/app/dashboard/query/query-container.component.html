@@ -11,14 +11,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */ -->
-
 <div class="query-container">
-  <div class="metadata">   
-    <awc-metadata class="metadata-card"></awc-metadata>
-  </div>
-  <div class="vertical">
-    <awc-query class="query-card"></awc-query>
-    <awc-results class="output-card"></awc-results>
-  </div>
-</div> 
-
+    <div class="content">
+        <awc-query class="input-card"></awc-query>
+        <awc-results class="output-card"></awc-results>
+    </div>
+    <div *ngIf="visible" class="drawer">
+        <awc-metadata></awc-metadata>
+    </div>
+</div>

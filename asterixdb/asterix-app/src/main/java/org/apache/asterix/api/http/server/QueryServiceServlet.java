@@ -132,8 +132,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     @Override
     protected void options(IServletRequest request, IServletResponse response) throws Exception {
-        response.setHeader("Access-Control-Allow-Origin",
-                "http://" + hostName + ":" + appCtx.getExternalProperties().getQueryWebInterfacePort());
+        if (request.getHeader("Origin") != null) {
+            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+        }
         response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         response.setStatus(HttpResponseStatus.OK);
     }
@@ -547,8 +548,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             Map<String, byte[]> statementParams = org.apache.asterix.app.translator.RequestParameters
                     .serializeParameterValues(param.getStatementParams());
             // CORS
-            response.setHeader("Access-Control-Allow-Origin",
-                    "http://" + hostName + ":" + appCtx.getExternalProperties().getQueryWebInterfacePort());
+            if (request.getHeader("Origin") != null) {
+                response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+            }
             response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
             response.setStatus(execution.getHttpStatus());
             executeStatement(statementsText, sessionOutput, resultProperties, stats, param, execution, optionalParams,

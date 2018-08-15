@@ -11,52 +11,64 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-.awc-navbar {
-  a {
-    //color: #f0f0f0;
-    text-decoration: none;
-  }
 
-  border-bottom: 1px solid  hsla(0,0%,0%,.10);
-  overflow: hidden;
+.awc-navbar {
+    a {
+        text-decoration: none;
+    }
+    display: flex;
+    flex-flow: row;
+    justify-content: space-between;
+    border-bottom: 1px solid hsla(0, 0%, 0%, .10);
+    margin: 0px;
+    height: 50px;
+    width: 100%;
+    padding: 5px;
+    background-color : white;
+}
+
+.menu {
+    font-size: 13px;
 }
 
 .awc-navbar-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  padding: 8px 16px;
-
-  > .mat-button {
-    &:last-child {
-      margin-left: auto;
-    }
-  }
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
 }
 
 .flex-spacer {
-  flex-grow: 1;
+    flex: 1 1 40%;
 }
 
 .awc-asterixDB-logo {
-  height: 26px;
-  margin: 0 4px 3px 0;
-  vertical-align: middle;
+    height: 26px;
+    margin: 0 4px 3px 0;
+    margin-left: 15px;
+    margin-top: 10px;
 }
 
 .awc-github-logo {
-  height: 21px;
-  margin: 0 7px 2px 0;
-  vertical-align: middle;
+    height: 21px;
+    margin: 0 7px 2px 0;
+    vertical-align: middle;
 }
 
 .awc-navbar-link {
-  text-decoration: inherit;
-  flex: 1;
+    text-decoration: inherit;
+    flex: 1;
 }
 
-/*
-* Rules for when the device is detected to be a small screen.
-* Moves content two rows instead of one.
-*/
-//@media (max-width: 720px) {}
+.menu {
+    /deep/ .mat-tab-label {
+        font-size: 0.80rem !important;
+        font-weight: 500 !important;
+    }
+}
+
+.menu-icon {
+    margin: 0;
+    margin-right: 15px;
+    margin-left: 5px;
+}

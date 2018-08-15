@@ -12,34 +12,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */ -->
 <header class="awc-navbar">
+    <mat-divider [vertical]="true"></mat-divider>
+    <a routerLink="/" aria-label="AsterixDB Web Console">
+        <img class="awc-asterixDB-logo" src="./assets/asterixdb_tm.png" alt="AsterixDB">
+    </a>
+    <div class="flex-spacer"></div>
     <nav class="awc-navbar-header">
-      <a mat-button class="awc-button" routerLink="/" aria-label="AsterixDB Web Console">
-      <img class="awc-asterixDB-logo"
-            src="dashboard/assets/asterixdb_tm.png"
-            alt="AsterixDB">
-            <span>Administration Console</span>
-      </a>
-      <div class="flex-spacer"></div>
-      <a mat-button class="awc-button awc-navbar-hide-small" href="https://asterixDB.apache.org"
-         aria-label="WEBSITE">
-        WEBSITE
-      </a>
-      <a mat-button class="awc-button awc-navbar-hide-small" href="https://issues.apache.org/jira/browse/ASTERIXDB"
-         aria-label="FILE ISSUES">
-        FILE ISSUES
-      </a>
-      <a mat-button class="awc-button awc-navbar-hide-small" href="https://ci.apache.org/projects/asterixdb/index.html"
-         aria-label="DOCUMENTATION">
-        DOCUMENTATION
-      </a>
-      <a mat-button class="awc-button docs-navbar-hide-small" href="https://asterixdb.apache.org/community.html"
-         aria-label="CONTACT">
-        CONTACT
-      </a>
-
-      <a mat-button class="awc-button docs-navbar-hide-small" href="https://github.com/apache/asterixdb/"
-         aria-label="GITHUB">
-        GITHUB
-      </a>
+        <div class="menu">
+            <a mat-button class="menu awc-button awc-navbar-hide-small" href="https://asterixDB.apache.org" aria-label="WEBSITE">
+                WEBSITE
+            </a>
+            <a mat-button class="menu awc-button awc-navbar-hide-small" href="https://issues.apache.org/jira/browse/ASTERIXDB" aria-label="FILE ISSUES">
+                FILE ISSUES
+            </a>
+            <a mat-button class="menu awc-button awc-navbar-hide-small" href="https://ci.apache.org/projects/asterixdb/index.html" aria-label="DOCUMENTATION">
+                DOCUMENTATION
+            </a>
+            <a mat-button class="menu awc-button docs-navbar-hide-small" href="https://asterixdb.apache.org/community.html" aria-label="CONTACT">
+                CONTACT
+            </a>
+            <a mat-button class="menu awc-button docs-navbar-hide-small" href="https://github.com/apache/asterixdb/" aria-label="GITHUB">
+                GITHUB
+            </a>
+        </div>
     </nav>
 </header>
