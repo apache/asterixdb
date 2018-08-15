@@ -1006,6 +1006,7 @@ public class RTree extends AbstractTreeIndex {
                 //set next guide MBR
                 //if propagateBulk didnt have to do anything this may be un-necessary
                 if (nodeFrontiers.size() > 1 && nodeFrontiers.indexOf(n) < nodeFrontiers.size() - 1) {
+                    lowerFrame = nodeFrontiers.indexOf(n) != 0 ? prevInteriorFrame : leafFrame;
                     lowerFrame.setPage(n.page);
                     ((RTreeNSMFrame) lowerFrame).adjustMBR();
                     interiorFrameTupleWriter.writeTupleFields(((RTreeNSMFrame) lowerFrame).getMBRTuples(), 0, mbr, 0);

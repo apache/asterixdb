@@ -93,8 +93,13 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         }
     }
 
+    public void insertDoubleTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws HyracksDataException {
+        insertDoubleTuples(ctx, numTuples, rnd, false);
+    }
+
     @SuppressWarnings("unchecked")
-    public void insertDoubleTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+    public void insertDoubleTuples(IIndexTestContext ctx, int numTuples, Random rnd, boolean isPoint)
+            throws HyracksDataException {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         double[] fieldValues = new double[ctx.getFieldCount()];
@@ -104,7 +109,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         double maxValue = Math.ceil(Math.pow(numTuples, 1.0 / numKeyFields));
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
-            setDoubleKeyFields(fieldValues, numKeyFields, maxValue, rnd);
+            setDoubleKeyFields(fieldValues, numKeyFields, maxValue, rnd, isPoint);
             // Set values.
             setDoublePayloadFields(fieldValues, numKeyFields, fieldCount);
             TupleUtils.createDoubleTuple(ctx.getTupleBuilder(), ctx.getTuple(), fieldValues);
@@ -126,15 +131,20 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         }
     }
 
-    private void setDoubleKeyFields(double[] fieldValues, int numKeyFields, double maxValue, Random rnd) {
+    private void setDoubleKeyFields(double[] fieldValues, int numKeyFields, double maxValue, Random rnd,
+            boolean isPoint) {
         int maxFieldPos = numKeyFields / 2;
         for (int j = 0; j < maxFieldPos; j++) {
             int k = maxFieldPos + j;
             double firstValue = rnd.nextDouble() % maxValue;
             double secondValue;
-            do {
-                secondValue = rnd.nextDouble() % maxValue;
-            } while (secondValue < firstValue);
+            if (isPoint) {
+                secondValue = firstValue;
+            } else {
+                do {
+                    secondValue = rnd.nextDouble() % maxValue;
+                } while (secondValue < firstValue);
+            }
             fieldValues[j] = firstValue;
             fieldValues[k] = secondValue;
         }
@@ -155,8 +165,13 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         return checkTuple;
     }
 
-    @SuppressWarnings("unchecked")
     public void bulkLoadDoubleTuples(IIndexTestContext ctx, int numTuples, Random rnd) throws Exception {
+        bulkLoadDoubleTuples(ctx, numTuples, rnd, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void bulkLoadDoubleTuples(IIndexTestContext ctx, int numTuples, Random rnd, boolean isPoint)
+            throws HyracksDataException {
         int fieldCount = ctx.getFieldCount();
         int numKeyFields = ctx.getKeyFieldCount();
         double[] fieldValues = new double[ctx.getFieldCount()];
@@ -164,7 +179,7 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         Collection<CheckTuple> tmpCheckTuples = createCheckTuplesCollection();
         for (int i = 0; i < numTuples; i++) {
             // Set keys.
-            setDoubleKeyFields(fieldValues, numKeyFields, maxValue, rnd);
+            setDoubleKeyFields(fieldValues, numKeyFields, maxValue, rnd, isPoint);
             // Set values.
             setDoublePayloadFields(fieldValues, numKeyFields, fieldCount);
 
@@ -222,19 +237,53 @@ public class RTreeTestUtils extends TreeIndexTestUtils {
         return checkTuple;
     }
 
-    @Override
-    protected void setIntKeyFields(int[] fieldValues, int numKeyFields, int maxValue, Random rnd) {
+    @SuppressWarnings("unchecked")
+    public void bulkLoadIntTuples(IIndexTestContext ctx, int numTuples, Random rnd, boolean isPoint)
+            throws HyracksDataException {
+        int fieldCount = ctx.getFieldCount();
+        int numKeyFields = ctx.getKeyFieldCount();
+        int[] fieldValues = new int[ctx.getFieldCount()];
+        int maxValue = (int) Math.ceil(Math.pow(numTuples, 1.0 / numKeyFields));
+        Collection<CheckTuple> tmpCheckTuples = createCheckTuplesCollection();
+        for (int i = 0; i < numTuples; i++) {
+            // Set keys.
+            setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd, isPoint);
+            // Set values.
+            setIntPayloadFields(fieldValues, numKeyFields, fieldCount);
+
+            // Set expected values. (We also use these as the pre-sorted stream
+            // for ordered indexes bulk loading).
+            ctx.insertCheckTuple(createIntCheckTuple(fieldValues, ctx.getKeyFieldCount()), tmpCheckTuples);
+        }
+        bulkLoadCheckTuples(ctx, tmpCheckTuples, false);
+
+        // Add tmpCheckTuples to ctx check tuples for comparing searches.
+        for (CheckTuple checkTuple : tmpCheckTuples) {
+            ctx.insertCheckTuple(checkTuple, ctx.getCheckTuples());
+        }
+    }
+
+    protected void setIntKeyFields(int[] fieldValues, int numKeyFields, int maxValue, Random rnd, boolean isPoint) {
         int maxFieldPos = numKeyFields / 2;
         for (int j = 0; j < maxFieldPos; j++) {
             int k = maxFieldPos + j;
             int firstValue = rnd.nextInt() % maxValue;
             int secondValue;
-            do {
-                secondValue = rnd.nextInt() % maxValue;
-            } while (secondValue < firstValue);
+            if (isPoint) {
+                secondValue = firstValue;
+            } else {
+                do {
+                    secondValue = rnd.nextInt() % maxValue;
+                } while (secondValue < firstValue);
+            }
             fieldValues[j] = firstValue;
             fieldValues[k] = secondValue;
         }
+    }
+
+    @Override
+    protected void setIntKeyFields(int[] fieldValues, int numKeyFields, int maxValue, Random rnd) {
+        setIntKeyFields(fieldValues, numKeyFields, maxValue, rnd, false);
     }
 
     @Override

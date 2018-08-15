@@ -30,10 +30,16 @@ import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 public abstract class AbstractRTreeBulkLoadTest extends AbstractRTreeTestDriver {
 
     private final RTreeTestUtils rTreeTestUtils;
+    private final boolean isPoint;
 
     public AbstractRTreeBulkLoadTest(boolean testRstarPolicy) {
+        this(testRstarPolicy, false);
+    }
+
+    public AbstractRTreeBulkLoadTest(boolean testRstarPolicy, boolean isPoint) {
         super(testRstarPolicy);
         this.rTreeTestUtils = new RTreeTestUtils();
+        this.isPoint = isPoint;
     }
 
     @Override
@@ -47,9 +53,9 @@ public abstract class AbstractRTreeBulkLoadTest extends AbstractRTreeTestDriver 
         // We assume all fieldSerdes are of the same type. Check the first
         // one to determine which field types to generate.
         if (fieldSerdes[0] instanceof IntegerSerializerDeserializer) {
-            rTreeTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom());
+            rTreeTestUtils.bulkLoadIntTuples(ctx, numTuplesToInsert, getRandom(), isPoint);
         } else if (fieldSerdes[0] instanceof DoubleSerializerDeserializer) {
-            rTreeTestUtils.bulkLoadDoubleTuples(ctx, numTuplesToInsert, getRandom());
+            rTreeTestUtils.bulkLoadDoubleTuples(ctx, numTuplesToInsert, getRandom(), isPoint);
         }
 
         rTreeTestUtils.checkScan(ctx);

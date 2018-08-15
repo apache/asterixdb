@@ -128,7 +128,9 @@ public class LSMRTreeTupleReferenceForPointMBR extends RTreeTypeAwareTupleRefere
 
     @Override
     protected int getNullFlagsBytes() {
-        return BitOperationUtils.getFlagBytes(inputTotalFieldCount + (antimatterAware ? 1 : 0));
+        // stored key field count + value field count
+        return BitOperationUtils.getFlagBytes(
+                storedKeyFieldCount + inputTotalFieldCount - inputKeyFieldCount + (antimatterAware ? 1 : 0));
     }
 
     @Override
