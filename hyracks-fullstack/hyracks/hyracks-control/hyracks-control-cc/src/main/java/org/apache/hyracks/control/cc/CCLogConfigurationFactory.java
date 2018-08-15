@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.control.cc;
 
+import java.io.File;
+import java.net.URI;
+
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -30,8 +33,6 @@ import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
 import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 
-import java.net.URI;
-
 public class CCLogConfigurationFactory extends ConfigurationFactory {
     private CCConfig config;
 
@@ -40,7 +41,7 @@ public class CCLogConfigurationFactory extends ConfigurationFactory {
     }
 
     public Configuration createConfiguration(ConfigurationBuilder<BuiltConfiguration> builder) {
-        String logDir = config.getLogDir();
+        File logDir = new File(config.getLogDir());
         builder.setStatusLevel(Level.WARN);
         builder.setConfigurationName("RollingBuilder");
         // create a rolling file appender
@@ -50,8 +51,8 @@ public class CCLogConfigurationFactory extends ConfigurationFactory {
                 .addComponent(builder.newComponent("CronTriggeringPolicy").addAttribute("schedule", "0 0 0 * * ?"))
                 .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "50M"));
         AppenderComponentBuilder defaultRoll =
-                builder.newAppender("default", "RollingFile").addAttribute("fileName", logDir + "cc.log")
-                        .addAttribute("filePattern", logDir + "cc-%d{MM-dd-yy}.log.gz").add(defaultLayout)
+                builder.newAppender("default", "RollingFile").addAttribute("fileName", new File(logDir, "cc.log"))
+                        .addAttribute("filePattern", new File(logDir, "cc-%d{MM-dd-yy}.log.gz")).add(defaultLayout)
                         .addComponent(triggeringPolicy);
         builder.add(defaultRoll);
 
@@ -60,8 +61,8 @@ public class CCLogConfigurationFactory extends ConfigurationFactory {
 
         LayoutComponentBuilder accessLayout = builder.newLayout("PatternLayout").addAttribute("pattern", "%m%n");
         AppenderComponentBuilder accessRoll =
-                builder.newAppender("access", "RollingFile").addAttribute("fileName", logDir + "access.log")
-                        .addAttribute("filePattern", logDir + "access-%d{MM-dd-yy}.log.gz").add(accessLayout)
+                builder.newAppender("access", "RollingFile").addAttribute("fileName", new File(logDir, "access.log"))
+                        .addAttribute("filePattern", new File(logDir, "access-%d{MM-dd-yy}.log.gz")).add(accessLayout)
                         .addComponent(triggeringPolicy);
         builder.add(accessRoll);
         builder.add(builder.newLogger("org.apache.hyracks.http.server.CLFLogger", Level.forName("ACCESS", 550))

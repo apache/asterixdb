@@ -44,7 +44,7 @@ import io.netty.handler.codec.http.LastHttpContent;
 public class CLFLogger extends ChannelDuplexHandler {
 
     private static final Logger accessLogger = LogManager.getLogger();
-    private static final String ACCESS_LOG_LEVEL = "ACCESS";
+    private static final Level ACCESS_LOG_LEVEL = Level.forName("ACCESS", 550);
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z").withZone(ZoneId.systemDefault());
     private StringBuilder logLineBuilder;
@@ -116,6 +116,9 @@ public class CLFLogger extends ChannelDuplexHandler {
     }
 
     private void printAndPrepare() {
+        if (!accessLogger.isEnabled(ACCESS_LOG_LEVEL)) {
+            return;
+        }
         logLineBuilder.append(clientIp);
         //identd value - not relevant here
         logLineBuilder.append(" - ");
@@ -128,7 +131,7 @@ public class CLFLogger extends ChannelDuplexHandler {
         logLineBuilder.append(" ").append(statusCode);
         logLineBuilder.append(" ").append(respSize);
         logLineBuilder.append(" ").append(userAgentRef);
-        accessLogger.log(Level.forName(ACCESS_LOG_LEVEL, 550), logLineBuilder.toString());
+        accessLogger.log(ACCESS_LOG_LEVEL, logLineBuilder);
         respSize = 0;
         logLineBuilder.setLength(0);
     }

@@ -45,7 +45,7 @@ public class ControllerConfig implements Serializable {
         LOG_DIR(
                 OptionTypes.STRING,
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
-                        .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "logs/"),
+                        .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "logs"),
                 "The directory where logs for this node are written");
 
         private final IOptionType type;

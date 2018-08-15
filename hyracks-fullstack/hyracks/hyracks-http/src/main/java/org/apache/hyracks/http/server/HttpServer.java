@@ -100,7 +100,6 @@ public class HttpServer {
         this.workerGroup = workerGroup;
         this.port = port;
         this.closedHandler = closeHandler;
-        InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
         this.config = config;
         ctx = new ConcurrentHashMap<>();
         servlets = new ArrayList<>();
