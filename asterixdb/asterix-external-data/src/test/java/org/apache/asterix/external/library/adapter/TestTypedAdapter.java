@@ -55,7 +55,7 @@ public class TestTypedAdapter extends FeedAdapter {
 
     public TestTypedAdapter(ITupleParserFactory parserFactory, ARecordType sourceDatatype, IHyracksTaskContext ctx,
             Map<String, String> configuration, int partition) throws IOException {
-        super(null);
+        super(new TestTypedFeedDataFlowController(ctx));
         pos = new PipedOutputStream();
         pis = new PipedInputStream(pos);
         this.configuration = configuration;
@@ -150,4 +150,5 @@ public class TestTypedAdapter extends FeedAdapter {
     public boolean resume() {
         return false;
     }
+
 }
