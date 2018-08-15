@@ -104,8 +104,8 @@ public class NetworkOutputChannel implements IFrameWriter {
         ccb.getWriteInterface().getFullBufferAcceptor().close();
     }
 
-    public void abort() {
-        ccb.getWriteInterface().getFullBufferAcceptor().error(AbstractChannelWriteInterface.REMOTE_ERROR_CODE);
+    public void abort(int ecode) {
+        ccb.getWriteInterface().getFullBufferAcceptor().error(ecode);
         synchronized (NetworkOutputChannel.this) {
             aborted = true;
             NetworkOutputChannel.this.notifyAll();

@@ -41,6 +41,7 @@ import org.apache.hyracks.control.common.job.PartitionState;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.io.WorkspaceFileFactory;
 import org.apache.hyracks.control.nc.resources.DefaultDeallocatableRegistry;
+import org.apache.hyracks.net.protocols.muxdemux.AbstractChannelWriteInterface;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -105,7 +106,7 @@ public class PartitionManager {
 
     public synchronized void registerPartitionRequest(PartitionId partitionId, NetworkOutputChannel writer) {
         if (failedJobsCache.getIfPresent(partitionId.getJobId()) != null) {
-            writer.abort();
+            writer.abort(AbstractChannelWriteInterface.REMOTE_ERROR_CODE);
         }
         List<IPartition> pList = availablePartitionMap.get(partitionId);
         if (pList != null && !pList.isEmpty()) {
@@ -137,7 +138,8 @@ public class PartitionManager {
         if (!jobPartitions.isEmpty() || !pendingRequests.isEmpty()) {
             ncs.getExecutor().execute(() -> {
                 jobPartitions.forEach(IDeallocatable::deallocate);
-                pendingRequests.forEach(NetworkOutputChannel::abort);
+                pendingRequests.forEach(networkOutputChannel -> networkOutputChannel
+                        .abort(AbstractChannelWriteInterface.REMOTE_ERROR_CODE));
             });
         }
     }

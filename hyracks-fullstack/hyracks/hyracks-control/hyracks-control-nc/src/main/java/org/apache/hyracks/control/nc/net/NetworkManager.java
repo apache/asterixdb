@@ -139,7 +139,7 @@ public class NetworkManager implements IChannelConnectionFactory {
         @Override
         public void error(int ecode) {
             if (noc != null) {
-                noc.abort();
+                noc.abort(ecode);
             }
         }
     }
