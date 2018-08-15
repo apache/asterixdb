@@ -100,9 +100,6 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Sets up parameters.
         setup(declaredFunctions, topStatement, metadataProvider, context, externalVars);
 
-        // Inlines column aliases.
-        inlineColumnAlias();
-
         // Generates column names.
         generateColumnNames();
 
@@ -114,6 +111,9 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
         // Rewrites set operations.
         rewriteSetOperations();
+
+        // Inlines column aliases.
+        inlineColumnAlias();
 
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite();

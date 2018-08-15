@@ -96,7 +96,7 @@ public class SelectBlock extends AbstractClause {
     }
 
     public boolean hasLetClauses() {
-        return letClauses != null && !letClauses.isEmpty();
+        return !letClauses.isEmpty();
     }
 
     public boolean hasWhereClause() {
@@ -108,7 +108,7 @@ public class SelectBlock extends AbstractClause {
     }
 
     public boolean hasLetClausesAfterGroupby() {
-        return letClausesAfterGby != null && !letClausesAfterGby.isEmpty();
+        return !letClausesAfterGby.isEmpty();
     }
 
     public List<LetClause> getLetListAfterGroupby() {

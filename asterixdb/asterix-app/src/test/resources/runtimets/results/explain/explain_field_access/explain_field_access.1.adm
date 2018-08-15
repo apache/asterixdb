@@ -1,44 +1,44 @@
-distribute result [$$38]
+distribute result [$$40]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$38])
+    project ([$$40])
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$38] <- [{"deptId": $#1, "star_cost": $$41}]
+      assign [$$40] <- [{"deptId": $#1, "star_cost": $$43}]
       -- ASSIGN  |PARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          group by ([$#1 := $$46]) decor ([]) {
-                    aggregate [$$41] <- [agg-sql-sum($$45)]
+          group by ([$#1 := $$48]) decor ([]) {
+                    aggregate [$$43] <- [agg-sql-sum($$47)]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
-          -- SORT_GROUP_BY[$$46]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$48]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
-              group by ([$$46 := $$39]) decor ([]) {
-                        aggregate [$$45] <- [agg-local-sql-sum($$36)]
+            -- HASH_PARTITION_EXCHANGE [$$48]  |PARTITIONED|
+              group by ([$$48 := $$41]) decor ([]) {
+                        aggregate [$$47] <- [agg-local-sql-sum($$38)]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                      }
-              -- SORT_GROUP_BY[$$39]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$41]  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$36, $$39])
+                  project ([$$38, $$41])
                   -- STREAM_PROJECT  |PARTITIONED|
-                    assign [$$39] <- [substring($$43.getField("department_id"), 0)]
+                    assign [$$41] <- [substring($$45.getField("department_id"), 0)]
                     -- ASSIGN  |PARTITIONED|
-                      project ([$$36, $$43])
+                      project ([$$38, $$45])
                       -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$36, $$43] <- [$$e.getField("salary"), $$e.getField("dept")]
+                        assign [$$38, $$45] <- [$$e.getField("salary"), $$e.getField("dept")]
                         -- ASSIGN  |PARTITIONED|
                           project ([$$e])
                           -- STREAM_PROJECT  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$40, $$e] <- gby.Employee
+                              data-scan []<-[$$42, $$e] <- gby.Employee
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

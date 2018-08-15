@@ -54,9 +54,15 @@ public class SqlppSubstituteExpressionVisitor extends AbstractSqlppExpressionSco
     }
 
     protected Expression substitute(Expression expr) throws CompilationException {
+        Expression mappedExpr = getMappedExpr(expr);
+        // Makes a deep copy before returning to avoid shared references.
+        return mappedExpr == null ? expr : (Expression) SqlppRewriteUtil.deepCopy(mappedExpr);
+    }
+
+    protected Expression getMappedExpr(Expression expr) throws CompilationException {
         Expression mappedExpr = exprMap.get(expr);
         if (mappedExpr == null) {
-            return expr;
+            return null;
         }
         Collection<VariableExpr> freeVars = SqlppVariableUtil.getFreeVariables(expr);
         for (VariableExpr freeVar : freeVars) {
@@ -64,10 +70,9 @@ public class SqlppSubstituteExpressionVisitor extends AbstractSqlppExpressionSco
             if (currentScope.findSymbol(freeVar.getVar().getValue()) != null) {
                 // If the expression to be substituted uses variables defined in the outer-most expresion
                 // that is being visited, we shouldn't perform the substitution.
-                return expr;
+                return null;
             }
         }
-        // Makes a deep copy before returning to avoid shared references.
-        return (Expression) SqlppRewriteUtil.deepCopy(mappedExpr);
+        return mappedExpr;
     }
 }

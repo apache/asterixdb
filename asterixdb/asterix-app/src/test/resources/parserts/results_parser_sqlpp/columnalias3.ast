@@ -4,32 +4,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [root]
     :
-    FunctionCall asterix.sql-sum@1[
-      (
-        SELECT ELEMENT [
-        OperatorExpr [
-          FieldAccessor [
-            FieldAccessor [
-              Variable [ Name=#3 ]
-              Field=t
-            ]
-            Field=a
-          ]
-          *
-          FieldAccessor [
-            FieldAccessor [
-              Variable [ Name=#3 ]
-              Field=t
-            ]
-            Field=b
-          ]
-        ]
-        ]
-        FROM [          Variable [ Name=#1 ]
-          AS Variable [ Name=#3 ]
-        ]
-      )
-    ]
+    Variable [ Name=#1 ]
   )
 ]
 ]
@@ -45,19 +20,20 @@ Groupby
     Variable [ Name=$t ]
     Field=id
   ]
-  GROUP AS Variable [ Name=#1 ]
+  GROUP AS Variable [ Name=#2 ]
   (
     t:=Variable [ Name=$t ]
   )
 
-Orderby
+Let Variable [ Name=#1 ]
+  :=
   FunctionCall asterix.sql-sum@1[
     (
       SELECT ELEMENT [
       OperatorExpr [
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=#2 ]
+            Variable [ Name=#3 ]
             Field=t
           ]
           Field=a
@@ -65,17 +41,19 @@ Orderby
         *
         FieldAccessor [
           FieldAccessor [
-            Variable [ Name=#2 ]
+            Variable [ Name=#3 ]
             Field=t
           ]
           Field=b
         ]
       ]
       ]
-      FROM [        Variable [ Name=#1 ]
-        AS Variable [ Name=#2 ]
+      FROM [        Variable [ Name=#2 ]
+        AS Variable [ Name=#3 ]
       ]
     )
   ]
+Orderby
+  Variable [ Name=#1 ]
   ASC
 

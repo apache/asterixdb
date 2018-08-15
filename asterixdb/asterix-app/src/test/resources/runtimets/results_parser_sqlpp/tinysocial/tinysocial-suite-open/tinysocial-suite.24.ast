@@ -1,23 +1,11 @@
 DataverseUse TinySocial
 Query:
 SELECT [
-FieldAccessor [
-  Variable [ Name=$user ]
-  Field=name
-]
+Variable [ Name=#1 ]
 uname
-FieldAccessor [
-  Variable [ Name=$user ]
-  Field=alias
-]
+Variable [ Name=#2 ]
 alias
-FunctionCall TinySocial.substring@2[
-  FieldAccessor [
-    Variable [ Name=$message ]
-    Field=message
-  ]
-  LiteralExpr [LONG] [29]
-]
+Variable [ Name=#3 ]
 msg
 ]
 FROM [  FunctionCall asterix.dataset@1[
@@ -30,6 +18,27 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$user ]
 ]
+Let Variable [ Name=#1 ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$user ]
+    Field=name
+  ]
+Let Variable [ Name=#2 ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$user ]
+    Field=alias
+  ]
+Let Variable [ Name=#3 ]
+  :=
+  FunctionCall TinySocial.substring@2[
+    FieldAccessor [
+      Variable [ Name=$message ]
+      Field=message
+    ]
+    LiteralExpr [LONG] [29]
+  ]
 Where
   OperatorExpr [
     OperatorExpr [
@@ -63,22 +72,10 @@ Where
     ]
   ]
 Orderby
-  FieldAccessor [
-    Variable [ Name=$user ]
-    Field=name
-  ]
+  Variable [ Name=#1 ]
   ASC
-  FieldAccessor [
-    Variable [ Name=$user ]
-    Field=alias
-  ]
+  Variable [ Name=#2 ]
   ASC
-  FunctionCall TinySocial.substring@2[
-    FieldAccessor [
-      Variable [ Name=$message ]
-      Field=message
-    ]
-    LiteralExpr [LONG] [29]
-  ]
+  Variable [ Name=#3 ]
   ASC
 

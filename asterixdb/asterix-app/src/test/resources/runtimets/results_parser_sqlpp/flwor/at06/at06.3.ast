@@ -5,10 +5,7 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [partkey]
     :
-    FieldAccessor [
-      Variable [ Name=$gen0 ]
-      Field=partkey
-    ]
+    Variable [ Name=#1 ]
   )
   (
     LiteralExpr [STRING] [pid]
@@ -18,18 +15,12 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [shipdate]
     :
-    FieldAccessor [
-      Variable [ Name=$j ]
-      Field=l_shipdate
-    ]
+    Variable [ Name=#2 ]
   )
   (
     LiteralExpr [STRING] [orderkey]
     :
-    FieldAccessor [
-      Variable [ Name=$j ]
-      Field=l_orderkey
-    ]
+    Variable [ Name=#3 ]
   )
 ]
 ]
@@ -105,6 +96,24 @@ FROM [  (
  AT
 Variable [ Name=$p ]
 ]
+Let Variable [ Name=#1 ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$gen0 ]
+    Field=partkey
+  ]
+Let Variable [ Name=#2 ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$j ]
+    Field=l_shipdate
+  ]
+Let Variable [ Name=#3 ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$j ]
+    Field=l_orderkey
+  ]
 Where
   OperatorExpr [
     Variable [ Name=$p ]
@@ -112,19 +121,10 @@ Where
     LiteralExpr [LONG] [4]
   ]
 Orderby
-  FieldAccessor [
-    Variable [ Name=$gen0 ]
-    Field=partkey
-  ]
+  Variable [ Name=#1 ]
   ASC
-  FieldAccessor [
-    Variable [ Name=$j ]
-    Field=l_shipdate
-  ]
+  Variable [ Name=#2 ]
   ASC
-  FieldAccessor [
-    Variable [ Name=$j ]
-    Field=l_orderkey
-  ]
+  Variable [ Name=#3 ]
   ASC
 

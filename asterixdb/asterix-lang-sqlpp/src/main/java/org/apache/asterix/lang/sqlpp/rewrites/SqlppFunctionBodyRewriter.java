@@ -37,9 +37,6 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Sets up parameters.
         setup(declaredFunctions, topStatement, metadataProvider, context, externalVars);
 
-        // Inlines column aliases.
-        inlineColumnAlias();
-
         // Generates column names.
         generateColumnNames();
 
@@ -51,6 +48,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
         // Rewrites set operations.
         rewriteSetOperations();
+
+        // Inlines column aliases.
+        inlineColumnAlias();
 
         // Generate ids for variables (considering scopes) and replace global variable access with the dataset function.
         variableCheckAndRewrite();

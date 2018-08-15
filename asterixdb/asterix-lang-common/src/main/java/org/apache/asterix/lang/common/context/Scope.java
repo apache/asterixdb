@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -187,12 +188,20 @@ public final class Scope {
     }
 
     public Set<VariableExpr> getLiveVariables(Scope stopAtExclusive) {
+        return getLiveVariables(stopAtExclusive, null);
+    }
+
+    public Set<VariableExpr> getLiveVariables(Scope stopAtExclusive, Predicate<? super VarIdentifier> excludeFilter) {
         LinkedHashSet<VariableExpr> vars = new LinkedHashSet<>();
         Iterator<Identifier> identifierIterator = liveSymbols(stopAtExclusive);
         while (identifierIterator.hasNext()) {
             Identifier identifier = identifierIterator.next();
             if (identifier instanceof VarIdentifier) {
-                vars.add(new VariableExpr((VarIdentifier) identifier));
+                VarIdentifier varId = (VarIdentifier) identifier;
+                if (excludeFilter != null && excludeFilter.test(varId)) {
+                    continue;
+                }
+                vars.add(new VariableExpr(varId));
             }
         }
         return vars;

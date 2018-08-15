@@ -118,7 +118,8 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             return resolveAsDataset(dataverseName, datasetName, sourceLoc);
         }
 
-        Set<VariableExpr> localVars = scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope());
+        Set<VariableExpr> localVars = scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope(),
+                context::isExcludedForFieldAccessVar);
         switch (localVars.size()) {
             case 0:
                 return resolveAsDataset(dataverseName, datasetName, sourceLoc);

@@ -37,8 +37,13 @@ import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppSubstituteExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 
-// Replaces expressions that appear in having/select/order-by/limit clause and are identical to some
-// group by key expression with the group by key expression.
+/**
+ * <ul>
+ * <li> Generates group by key variables if they were not specified in the query </li>
+ * <li> Replaces expressions that appear in having/select/order-by/limit clause and are identical to some
+ *      group by key expression with the group by key variable </li>
+ * </ul>
+ */
 public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlppExpressionScopingVisitor {
 
     public SubstituteGroupbyExpressionWithVariableVisitor(LangRewritingContext context) {
@@ -62,7 +67,7 @@ public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlp
             // Rewrites LET/HAVING/SELECT clauses.
             if (selectBlock.hasLetClausesAfterGroupby()) {
                 for (LetClause letClause : selectBlock.getLetListAfterGroupby()) {
-                    letClause.accept(this, arg);
+                    letClause.accept(visitor, arg);
                 }
             }
             if (selectBlock.hasHavingClause()) {
@@ -84,21 +89,20 @@ public class SubstituteGroupbyExpressionWithVariableVisitor extends AbstractSqlp
         return super.visit(selectBlock, arg);
     }
 
-}
+    private static class SubstituteGroupbyExpressionVisitor extends SqlppSubstituteExpressionVisitor {
 
-class SubstituteGroupbyExpressionVisitor extends SqlppSubstituteExpressionVisitor {
+        private SubstituteGroupbyExpressionVisitor(LangRewritingContext context, Map<Expression, Expression> exprMap) {
+            super(context, exprMap);
+        }
 
-    public SubstituteGroupbyExpressionVisitor(LangRewritingContext context, Map<Expression, Expression> exprMap) {
-        super(context, exprMap);
-    }
-
-    @Override
-    public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
-        FunctionSignature signature = callExpr.getFunctionSignature();
-        if (FunctionMapUtil.isSql92AggregateFunction(signature)) {
-            return callExpr;
-        } else {
-            return super.visit(callExpr, arg);
+        @Override
+        public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
+            FunctionSignature signature = callExpr.getFunctionSignature();
+            if (FunctionMapUtil.isSql92AggregateFunction(signature)) {
+                return callExpr;
+            } else {
+                return super.visit(callExpr, arg);
+            }
         }
     }
 }
