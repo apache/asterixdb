@@ -29,16 +29,16 @@ public class ExtensionMetadataDataset<T> extends MetadataIndex {
 
     private static final long serialVersionUID = 1L;
     private final ExtensionMetadataDatasetId indexId;
-    private final transient IMetadataEntityTupleTranslator<T> tupleTranslator;
+    private final transient IMetadataEntityTupleTranslatorFactory<T> tupleTranslatorFactory;
 
     public ExtensionMetadataDataset(MetadataIndexImmutableProperties indexProperties, int numFields, IAType[] keyTypes,
             List<List<String>> keyNames, int numSecondaryIndexKeys, ARecordType payloadType, boolean isPrimaryIndex,
             int[] primaryKeyIndexes, ExtensionMetadataDatasetId indexId,
-            IMetadataEntityTupleTranslator<T> tupleTranslator) {
+            IMetadataEntityTupleTranslatorFactory<T> tupleTranslatorFactory) {
         super(indexProperties, numFields, keyTypes, keyNames, numSecondaryIndexKeys, payloadType, isPrimaryIndex,
                 primaryKeyIndexes);
         this.indexId = indexId;
-        this.tupleTranslator = tupleTranslator;
+        this.tupleTranslatorFactory = tupleTranslatorFactory;
     }
 
     public ExtensionMetadataDatasetId getId() {
@@ -46,6 +46,6 @@ public class ExtensionMetadataDataset<T> extends MetadataIndex {
     }
 
     public IMetadataEntityTupleTranslator<T> getTupleTranslator() {
-        return tupleTranslator;
+        return tupleTranslatorFactory.createTupleTranslator();
     }
 }
