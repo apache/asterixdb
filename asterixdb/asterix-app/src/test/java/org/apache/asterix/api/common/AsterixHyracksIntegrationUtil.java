@@ -125,6 +125,7 @@ public class AsterixHyracksIntegrationUtil {
         }
         ccApplication.registerConfig(configManager);
         final CCConfig ccConfig = createCCConfig(configManager);
+        configManager.processConfig();
         cc = new ClusterControllerService(ccConfig, ccApplication);
 
         nodeNames = ccConfig.getConfigManager().getNodeNames();

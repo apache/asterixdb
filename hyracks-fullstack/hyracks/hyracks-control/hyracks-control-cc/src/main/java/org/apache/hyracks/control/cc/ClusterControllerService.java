@@ -161,7 +161,6 @@ public class ClusterControllerService implements IControllerService {
             throw new IllegalArgumentException("ICCApplication cannot be null");
         }
         this.application = application;
-        configManager.processConfig();
         File jobLogFolder = new File(ccConfig.getRootDir(), "logs/jobs");
         jobLog = new LogFile(jobLogFolder);
 
