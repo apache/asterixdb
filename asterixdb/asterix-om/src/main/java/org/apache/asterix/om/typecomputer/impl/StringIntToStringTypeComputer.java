@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -31,13 +32,16 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
-    public static final StringIntToStringTypeComputer INSTANCE = new StringIntToStringTypeComputer(0, 0, 1, 1);
+    public static final StringIntToStringTypeComputer INSTANCE = new StringIntToStringTypeComputer(0, 0, 1, 1, false);
+
+    public static final StringIntToStringTypeComputer INSTANCE_NULLABLE =
+            new StringIntToStringTypeComputer(0, 0, 1, 1, true);
 
     public static final StringIntToStringTypeComputer INSTANCE_TRIPLE_STRING =
-            new StringIntToStringTypeComputer(0, 2, 3, 3);
+            new StringIntToStringTypeComputer(0, 2, 3, 3, false);
 
     public static final StringIntToStringTypeComputer INSTANCE_STRING_REGEXP_REPLACE_WITH_FLAG =
-            new StringIntToStringTypeComputer(0, 3, 3, 3);
+            new StringIntToStringTypeComputer(0, 3, 3, 3, false);
 
     private final int stringArgIdxMin;
 
@@ -47,11 +51,15 @@ public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
 
     private final int intArgIdxMax;
 
-    public StringIntToStringTypeComputer(int stringArgIdxMin, int stringArgIdxMax, int intArgIdxMin, int intArgIdxMax) {
+    private final boolean nullable;
+
+    public StringIntToStringTypeComputer(int stringArgIdxMin, int stringArgIdxMax, int intArgIdxMin, int intArgIdxMax,
+            boolean nullable) {
         this.stringArgIdxMin = stringArgIdxMin;
         this.stringArgIdxMax = stringArgIdxMax;
         this.intArgIdxMin = intArgIdxMin;
         this.intArgIdxMax = intArgIdxMax;
+        this.nullable = nullable;
     }
 
     @Override
@@ -84,7 +92,11 @@ public class StringIntToStringTypeComputer extends AbstractResultTypeComputer {
 
     @Override
     public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return BuiltinType.ASTRING;
+        IAType resultType = BuiltinType.ASTRING;
+        if (nullable) {
+            resultType = AUnionType.createNullableType(resultType);
+        }
+        return resultType;
     }
 
     private ATypeTag[] getExpectedTypes(boolean expectedStringType, boolean expectedIntType) {

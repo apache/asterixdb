@@ -98,19 +98,18 @@ public class Substring2Descriptor extends AbstractStringOffsetConfigurableDescri
                         array.reset();
                         try {
                             int actualStart = start >= 0 ? start - baseOffset : string.getStringLength() + start;
-                            UTF8StringPointable.substr(string, actualStart, Integer.MAX_VALUE, builder, array);
-                        } catch (StringIndexOutOfBoundsException e) {
-                            throw new RuntimeDataException(ErrorCode.OUT_OF_BOUND, getIdentifier(), 1, start);
+                            boolean success =
+                                    UTF8StringPointable.substr(string, actualStart, Integer.MAX_VALUE, builder, array);
+                            if (success) {
+                                out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                                out.write(array.getByteArray(), 0, array.getLength());
+                                result.set(resultStorage);
+                            } else {
+                                PointableHelper.setNull(result);
+                            }
                         } catch (IOException e) {
                             throw HyracksDataException.create(e);
                         }
-                        try {
-                            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            out.write(array.getByteArray(), 0, array.getLength());
-                        } catch (IOException e) {
-                            throw HyracksDataException.create(e);
-                        }
-                        result.set(resultStorage);
                     }
                 };
             }

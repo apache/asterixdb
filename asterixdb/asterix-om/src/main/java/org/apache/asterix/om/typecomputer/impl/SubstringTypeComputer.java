@@ -21,6 +21,7 @@ package org.apache.asterix.om.typecomputer.impl;
 import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -53,6 +54,6 @@ public class SubstringTypeComputer extends AbstractResultTypeComputer {
 
     @Override
     public IAType getResultType(ILogicalExpression expr, IAType... types) throws AlgebricksException {
-        return BuiltinType.ASTRING;
+        return AUnionType.createNullableType(BuiltinType.ASTRING);
     }
 }

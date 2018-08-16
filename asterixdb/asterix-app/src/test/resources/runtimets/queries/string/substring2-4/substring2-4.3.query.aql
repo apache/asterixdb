@@ -19,4 +19,5 @@
 use dataverse test;
 
 let $c1 := substring("HEllow",-3)
-return {"result1": $c1}
+let $c2 := substring("HEllow",-7)
+return {"result1": $c1, "result2": $c2}

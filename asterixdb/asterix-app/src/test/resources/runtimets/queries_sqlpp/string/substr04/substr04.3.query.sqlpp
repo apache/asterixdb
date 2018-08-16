@@ -32,7 +32,10 @@ from [
     substring('ABCD',0,4),
     substring('UC Irvine',3,(`string-length`('UC Irvine') - 3)),
     substring('UC Irvine',0,`string-length`('UC Irvine')),
-    substring(substring('UC Irvine',3),0,`string-length`('Irvine'))
+    substring(substring('UC Irvine',3),0,`string-length`('Irvine')),
+    substring('ABCD',-3,2),
+    substring('ABCD',-10,1),
+    substring('ABCD',1,-1)
   ] as a
 
 ;
