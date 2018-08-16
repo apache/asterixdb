@@ -536,7 +536,8 @@
  * Return Value:
     * a `string` that represents the substring,
     * `missing` if any argument is a `missing` value,
-    * `null` if any argument is a `null` value but no argument is a `missing` value,
+    * `null` if any argument is a `null` value but no argument is a `missing` value, or if the substring could not
+             be obtained because the starting offset is not within string bounds or `length` is negative.
     * a type error will be raised if:
         * the first argument is any other non-string value,
         * or, the second argument is not a `tinyint`, `smallint`, `integer`, or `bigint`,

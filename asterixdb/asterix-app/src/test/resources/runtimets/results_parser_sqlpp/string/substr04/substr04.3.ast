@@ -56,6 +56,21 @@ FROM [  OrderedListConstructor [
         LiteralExpr [STRING] [Irvine]
       ]
     ]
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [ABCD]
+      - LiteralExpr [LONG] [3]
+      LiteralExpr [LONG] [2]
+    ]
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [ABCD]
+      - LiteralExpr [LONG] [10]
+      LiteralExpr [LONG] [1]
+    ]
+    FunctionCall null.substring@3[
+      LiteralExpr [STRING] [ABCD]
+      LiteralExpr [LONG] [1]
+      - LiteralExpr [LONG] [1]
+    ]
   ]
   AS Variable [ Name=$a ]
 ]

@@ -328,21 +328,25 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         builder.finish();
     }
 
-    public void substr(int charOffset, int charLength, UTF8StringBuilder builder, GrowableArray out)
+    /**
+     * @return {@code true} if substring was successfully written into given {@code out}, or
+     *         {@code false} if substring could not be obtained ({@code charOffset} or {@code charLength}
+     *         are less than 0 or starting position is greater than the input length)
+     */
+    public boolean substr(int charOffset, int charLength, UTF8StringBuilder builder, GrowableArray out)
             throws IOException {
-        substr(this, charOffset, charLength, builder, out);
+        return substr(this, charOffset, charLength, builder, out);
     }
 
-    public static void substr(UTF8StringPointable src, int charOffset, int charLength, UTF8StringBuilder builder,
+    /**
+     * @return {@code true} if substring was successfully written into given {@code out}, or
+     *         {@code false} if substring could not be obtained ({@code charOffset} or {@code charLength}
+     *         are less than 0 or starting position is greater than the input length)
+     */
+    public static boolean substr(UTF8StringPointable src, int charOffset, int charLength, UTF8StringBuilder builder,
             GrowableArray out) throws IOException {
-        // Really don't understand why we need to support the charOffset < 0 case.
-        // At this time, usually there is mistake on user side, we'd better give him a warning.
-        // assert charOffset >= 0;
-        if (charOffset < 0) {
-            charOffset = 0;
-        }
-        if (charLength < 0) {
-            charLength = 0;
+        if (charOffset < 0 || charLength < 0) {
+            return false;
         }
 
         int utfLen = src.getUTF8Length();
@@ -353,11 +357,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             chIdx++;
         }
         if (byteIdx >= utfLen) {
-            // Again, why do we tolerant this kind of mistakes?
-            // throw new StringIndexOutOfBoundsException(charOffset);
-            builder.reset(out, 0);
-            builder.finish();
-            return;
+            return false;
         }
 
         builder.reset(out, Math.min(utfLen - byteIdx, (int) (charLength * 1.0 * byteIdx / chIdx)));
@@ -368,6 +368,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             byteIdx += src.charSize(src.getMetaDataLength() + byteIdx);
         }
         builder.finish();
+        return true;
     }
 
     public void substrBefore(UTF8StringPointable match, UTF8StringBuilder builder, GrowableArray out)

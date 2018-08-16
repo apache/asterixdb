@@ -9,4 +9,12 @@ RecordConstructor [
       - LiteralExpr [LONG] [3]
     ]
   )
+  (
+    LiteralExpr [STRING] [result2]
+    :
+    FunctionCall test.substring@2[
+      LiteralExpr [STRING] [HEllow]
+      - LiteralExpr [LONG] [7]
+    ]
+  )
 ]

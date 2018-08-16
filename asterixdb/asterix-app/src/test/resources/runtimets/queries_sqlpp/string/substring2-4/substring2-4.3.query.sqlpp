@@ -19,5 +19,7 @@
 
 use test;
 
-
-{'result1':test.substring('HEllow',-3)};
+{
+  'result1':substring('HEllow',-3),
+  'result2':substring('HEllow',-7)
+};
