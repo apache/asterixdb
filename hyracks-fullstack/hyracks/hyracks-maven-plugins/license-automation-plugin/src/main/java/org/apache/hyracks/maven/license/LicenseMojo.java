@@ -364,13 +364,16 @@ public abstract class LicenseMojo extends AbstractMojo {
             MavenProject dep = dependencyGavMap.get(gav);
             if (dep == null) {
                 getLog().warn("Unused override dependency " + gav + "; ignoring...");
-            } else if (override.getUrl() != null) {
+                continue;
+            }
+            if (override.getUrl() != null) {
                 final List<Pair<String, String>> newLicense =
                         Collections.singletonList(new ImmutablePair<>(override.getUrl(), override.getName()));
                 List<Pair<String, String>> prevLicense = dependencyLicenseMap.put(dep, newLicense);
                 warnUnlessFlag(dep, IGNORE_LICENSE_OVERRIDE, "license list for " + toGav(dep)
                         + " changed with <override>; was: " + prevLicense + ", now: " + newLicense);
-            } else if (override.getNoticeUrl() != null) {
+            }
+            if (override.getNoticeUrl() != null) {
                 noticeOverrides.put(gav, override.getNoticeUrl());
                 warnUnlessFlag(dep, IGNORE_NOTICE_OVERRIDE,
                         "notice for " + toGav(dep) + " changed with <override>; now: " + override.getNoticeUrl());
