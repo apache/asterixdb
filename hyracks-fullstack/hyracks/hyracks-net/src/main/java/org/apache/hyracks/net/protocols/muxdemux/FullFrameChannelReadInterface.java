@@ -27,9 +27,12 @@ import java.util.Deque;
 import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FullFrameChannelReadInterface extends AbstractChannelReadInterface {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Deque<ByteBuffer> riEmptyStack;
     private final IChannelControlBlock ccb;
 
@@ -63,6 +66,12 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
                 if (currentReadBuffer == null) {
                     currentReadBuffer = bufferFactory.createBuffer();
                 }
+            }
+            if (currentReadBuffer == null) {
+                if (LOGGER.isWarnEnabled()) {
+                    LOGGER.warn("{} read buffers exceeded. Current empty buffers: {}", ccb, riEmptyStack.size());
+                }
+                throw new IllegalStateException(ccb + " read buffers exceeded");
             }
             int rSize = Math.min(size, currentReadBuffer.remaining());
             if (rSize > 0) {
