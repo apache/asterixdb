@@ -75,7 +75,7 @@
 
  The function has an alias `ifmissing`.
 
-### if_missing_or_null (ifmissingornull) ###
+### if_missing_or_null (ifmissingornull, coalesce) ###
 
  * Syntax:
 
@@ -100,7 +100,7 @@
 
         { "a": null, "b": null, "c": "asterixdb" }
 
- The function has an alias `ifmissingornull`.
+ The function has two aliases: `ifmissingornull` and `coalesce`.
 
 ### if_inf (ifinf) ###
 

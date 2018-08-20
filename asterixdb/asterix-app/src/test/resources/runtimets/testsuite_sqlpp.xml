@@ -4933,6 +4933,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="null-missing">
+      <compilation-unit name="coalesce">
+        <output-dir compare="Text">ifmissingornull</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="null-missing">
       <compilation-unit name="query-ASTERIXDB-1689">
         <output-dir compare="Text">query-ASTERIXDB-1689</output-dir>
       </compilation-unit>

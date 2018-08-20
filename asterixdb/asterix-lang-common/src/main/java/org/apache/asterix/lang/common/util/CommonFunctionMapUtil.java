@@ -73,6 +73,7 @@ public class CommonFunctionMapUtil {
         addFunctionMapping("ifinf", "if-inf"); // ifinf, internal: if-inf
         addFunctionMapping("ifnan", "if-nan"); // ifnan, internal: if-nan
         addFunctionMapping("ifnanorinf", "if-nan-or-inf"); // ifnanorinf, internal: if-nan-or-inf
+        addFunctionMapping("coalesce", "if-missing-or-null"); // coalesce, internal: if-missing-or-null
         addFunctionMapping("missingif", "missing-if"); // missingif, internal: missing-if
         addFunctionMapping("nanif", "nan-if"); // nanif, internal: nan-if
         addFunctionMapping("neginfif", "neginf-if"); // neginfif, internal: neginf-if
