@@ -59,4 +59,9 @@ public class ObjectPool<E, T> {
             recycledObjects.add(object);
         }
     }
+
+    @Override
+    public String toString() {
+        return recycledObjects.toString();
+    }
 }

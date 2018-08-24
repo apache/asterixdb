@@ -59,4 +59,10 @@ public abstract class AbstractVisitablePointable implements IVisitablePointable 
         set(ivf.getByteArray(), ivf.getStartOffset(), ivf.getLength());
     }
 
+    @Override
+    public String toString() {
+        return "{ \"class\" : \"" + getClass().getSimpleName() + "\", \"data\" : "
+                + (data == null ? "null" : ("\"" + System.identityHashCode(data) + ":" + data.length + "\""))
+                + ", \"offset\" : " + start + ", \"length\" : " + len + " }";
+    }
 }

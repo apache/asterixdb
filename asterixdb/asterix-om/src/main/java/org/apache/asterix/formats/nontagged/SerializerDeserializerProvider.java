@@ -171,7 +171,7 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
     }
 
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer addTag(final ISerializerDeserializer nonTaggedSerde) {
+    public static ISerializerDeserializer addTag(final ISerializerDeserializer nonTaggedSerde) {
         return new ISerializerDeserializer<IAObject>() {
 
             private static final long serialVersionUID = 1L;

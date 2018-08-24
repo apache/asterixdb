@@ -36,6 +36,7 @@ import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.BooleanPointable;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
@@ -54,6 +55,45 @@ public class AdmNodeUtils {
             map.put(recPointable.getOpenFieldName(recordType, i), getOpenField(recPointable, recordType, i));
         }
         return map;
+    }
+
+    public static IAdmNode getAsAdmNode(IPointable pointable) throws IOException {
+        byte[] bytes = pointable.getByteArray();
+        int offset = pointable.getStartOffset();
+        int len = pointable.getLength();
+        if (len == 0) {
+            throw new IllegalArgumentException();
+        }
+        byte tagByte = bytes[offset];
+        ATypeTag tag = ATypeTag.VALUE_TYPE_MAPPING[tagByte];
+        switch (tag) {
+            case ARRAY:
+                AListPointable listPointable = AListPointable.FACTORY.createPointable();
+                listPointable.set(bytes, offset, len);
+                return getAsAdmNode(listPointable);
+            case BIGINT:
+                return new AdmBigIntNode(LongPointable.getLong(bytes, offset + 1));
+            case BOOLEAN:
+                return AdmBooleanNode.get(BooleanPointable.getBoolean(bytes, offset + 1));
+            case DOUBLE:
+                return new AdmDoubleNode(DoublePointable.getDouble(bytes, offset + 1));
+            case NULL:
+                return AdmNullNode.INSTANCE;
+            case OBJECT:
+                ARecordPointable recPointable = ARecordPointable.FACTORY.createPointable();
+                recPointable.set(bytes, offset, len);
+                try {
+                    return new AdmObjectNode(getOpenFields(recPointable, RecordUtil.FULLY_OPEN_RECORD_TYPE));
+                } catch (IOException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            case STRING:
+                UTF8StringPointable str = UTF8StringPointable.FACTORY.createPointable();
+                str.set(bytes, offset + 1, len - 1);
+                return new AdmStringNode(str.toString());
+            default:
+                throw new UnsupportedOperationException("Unsupported item type: " + tag);
+        }
     }
 
     private static IAdmNode getOpenField(ARecordPointable recPointable, ARecordType type, int i) throws IOException {

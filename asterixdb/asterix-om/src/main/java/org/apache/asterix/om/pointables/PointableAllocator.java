@@ -58,7 +58,7 @@ public class PointableAllocator {
                 }
             });
 
-    public IVisitablePointable allocateEmpty() {
+    public AFlatValuePointable allocateEmpty() {
         return flatValueAllocator.allocate(null);
     }
 
