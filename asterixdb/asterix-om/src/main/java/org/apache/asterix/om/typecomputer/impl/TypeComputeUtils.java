@@ -169,8 +169,7 @@ public class TypeComputeUtils {
         IAType resultType = type;
         if ((category & NULLABLE) != 0 || (category & NULL) != 0) {
             resultType = AUnionType.createUnknownableType(resultType);
-        }
-        if ((category & MISSABLE) != 0 || (category & MISSING) != 0) {
+        } else if ((category & MISSABLE) != 0 || (category & MISSING) != 0) {
             resultType = AUnionType.createMissableType(resultType);
         }
         return resultType;
