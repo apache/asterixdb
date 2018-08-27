@@ -92,6 +92,14 @@
         <expected-error>Duplicate alias definitions: s1</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-2446">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <expected-error>ASX0013: Duplicate field name "a"</expected-error>
+        <expected-error>ASX0013: Duplicate field name "c"</expected-error>
+        <expected-error>ASX0013: Duplicate field name "e"</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="explain">
     <test-case FilePath="explain">

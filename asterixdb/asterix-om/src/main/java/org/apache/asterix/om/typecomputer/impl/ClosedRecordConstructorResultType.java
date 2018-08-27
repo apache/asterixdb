@@ -21,6 +21,8 @@ package org.apache.asterix.om.typecomputer.impl;
 
 import java.util.Iterator;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.exceptions.InvalidExpressionException;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
@@ -68,12 +70,18 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
                 AUnionType unionType = (AUnionType) e2Type;
                 e2Type = AUnionType.createUnknownableType(unionType.getActualType());
             }
-            fieldTypes[i] = e2Type;
-            fieldNames[i] = ConstantExpressionUtil.getStringConstant(e1);
-            if (fieldNames[i] == null) {
+            String fieldName = ConstantExpressionUtil.getStringConstant(e1);
+            if (fieldName == null) {
                 throw new InvalidExpressionException(f.getSourceLocation(), funcName, 2 * i, e1,
                         LogicalExpressionTag.CONSTANT);
             }
+            for (int j = 0; j < i; j++) {
+                if (fieldName.equals(fieldNames[j])) {
+                    throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, f.getSourceLocation(), fieldName);
+                }
+            }
+            fieldTypes[i] = e2Type;
+            fieldNames[i] = fieldName;
             i++;
         }
         return new ARecordType(null, fieldNames, fieldTypes, false);
