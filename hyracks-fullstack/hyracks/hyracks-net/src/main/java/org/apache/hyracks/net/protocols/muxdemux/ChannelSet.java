@@ -239,4 +239,8 @@ public class ChannelSet {
             ccbArray = Arrays.copyOf(ccbArray, ccbArray.length * 2);
         }
     }
+
+    public MultiplexedConnection getMultiplexedConnection() {
+        return mConn;
+    }
 }
