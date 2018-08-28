@@ -4934,7 +4934,7 @@
     </test-case>
     <test-case FilePath="null-missing">
       <compilation-unit name="coalesce">
-        <output-dir compare="Text">ifmissingornull</output-dir>
+        <output-dir compare="Text">coalesce</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="null-missing">
