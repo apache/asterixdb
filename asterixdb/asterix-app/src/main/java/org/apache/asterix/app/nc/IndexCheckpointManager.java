@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IndexCheckpoint;
@@ -56,7 +55,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public synchronized void init(String lastComponentTimestamp, long lsn) throws HyracksDataException {
+    public synchronized void init(long validComponentSequence, long lsn) throws HyracksDataException {
         List<IndexCheckpoint> checkpoints;
         try {
             checkpoints = getCheckpoints();
@@ -67,25 +66,24 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
             LOGGER.warn(() -> "Checkpoints found on initializing: " + indexPath);
             delete();
         }
-        IndexCheckpoint firstCheckpoint = IndexCheckpoint.first(lastComponentTimestamp, lsn);
+        IndexCheckpoint firstCheckpoint = IndexCheckpoint.first(validComponentSequence, lsn);
         persist(firstCheckpoint);
     }
 
     @Override
-    public synchronized void replicated(String componentTimestamp, long masterLsn, long componentId)
+    public synchronized void replicated(long componentSequence, long masterLsn, long componentId)
             throws HyracksDataException {
         final Long localLsn = getLatest().getMasterNodeFlushMap().get(masterLsn);
         if (localLsn == null) {
             throw new IllegalStateException("Component flushed before lsn mapping was received");
         }
-        flushed(componentTimestamp, localLsn, componentId);
+        flushed(componentSequence, localLsn, componentId);
     }
 
     @Override
-    public synchronized void flushed(String componentTimestamp, long lsn, long componentId)
-            throws HyracksDataException {
+    public synchronized void flushed(long componentSequence, long lsn, long componentId) throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
-        IndexCheckpoint nextCheckpoint = IndexCheckpoint.next(latest, lsn, componentTimestamp, componentId);
+        IndexCheckpoint nextCheckpoint = IndexCheckpoint.next(latest, lsn, componentSequence, componentId);
         persist(nextCheckpoint);
         deleteHistory(nextCheckpoint.getId(), HISTORY_CHECKPOINTS);
     }
@@ -95,7 +93,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         final IndexCheckpoint latest = getLatest();
         latest.getMasterNodeFlushMap().put(masterLsn, localLsn);
         final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(),
-                latest.getValidComponentTimestamp(), latest.getLastComponentId());
+                latest.getValidComponentSequence(), latest.getLastComponentId());
         persist(next);
         notifyAll();
     }
@@ -119,9 +117,8 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public Optional<String> getValidComponentTimestamp() throws HyracksDataException {
-        String validComponentTimestamp = getLatest().getValidComponentTimestamp();
-        return validComponentTimestamp != null ? Optional.of(validComponentTimestamp) : Optional.empty();
+    public long getValidComponentSequence() throws HyracksDataException {
+        return getLatest().getValidComponentSequence();
     }
 
     @Override
@@ -153,18 +150,17 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     @Override
     public synchronized void setLastComponentId(long componentId) throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
-        final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(),
-                latest.getValidComponentTimestamp(), componentId);
+        final IndexCheckpoint next =
+                IndexCheckpoint.next(latest, latest.getLowWatermark(), latest.getValidComponentSequence(), componentId);
         persist(next);
     }
 
     @Override
-    public synchronized void advanceValidComponentTimestamp(String timestamp) throws HyracksDataException {
+    public synchronized void advanceValidComponentSequence(long componentSequence) throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
-        if (latest.getValidComponentTimestamp() == null
-                || timestamp.compareTo(latest.getValidComponentTimestamp()) > 0) {
-            final IndexCheckpoint next =
-                    IndexCheckpoint.next(latest, latest.getLowWatermark(), timestamp, latest.getLastComponentId());
+        if (componentSequence > latest.getValidComponentSequence()) {
+            final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(), componentSequence,
+                    latest.getLastComponentId());
             persist(next);
         }
     }

@@ -63,8 +63,8 @@ public class ComponentMaskTask implements IReplicaTask {
         final IIOManager ioManager = appCtx.getIoManager();
         final FileReference localPath = ioManager.resolve(componentFile);
         final Path resourceDir = Files.createDirectories(localPath.getFile().getParentFile().toPath());
-        final String componentId = PersistentLocalResourceRepository.getComponentId(componentFile);
-        return Paths.get(resourceDir.toString(), StorageConstants.COMPONENT_MASK_FILE_PREFIX + componentId);
+        final String componentSequence = PersistentLocalResourceRepository.getComponentSequence(componentFile);
+        return Paths.get(resourceDir.toString(), StorageConstants.COMPONENT_MASK_FILE_PREFIX + componentSequence);
     }
 
     @Override

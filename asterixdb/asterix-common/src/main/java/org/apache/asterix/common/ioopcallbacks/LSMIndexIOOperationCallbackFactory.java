@@ -70,8 +70,8 @@ public class LSMIndexIOOperationCallbackFactory implements ILSMIOOperationCallba
 
     @Override
     public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) throws HyracksDataException {
-        return new LSMIOOperationCallback(datasetInfoProvider.getDatasetInfo(ncCtx), index,
-                getComponentIdGenerator().getId(), getIndexCheckpointManagerProvider());
+        return new LSMIOOperationCallback(datasetInfoProvider.getDatasetInfo(ncCtx), index, getComponentIdGenerator(),
+                getIndexCheckpointManagerProvider());
     }
 
     @Override

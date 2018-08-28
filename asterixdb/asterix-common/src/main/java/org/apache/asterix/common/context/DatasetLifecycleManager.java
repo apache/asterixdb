@@ -19,6 +19,7 @@
 package org.apache.asterix.common.context;
 
 import static org.apache.asterix.common.metadata.MetadataIndexImmutableProperties.METADATA_DATASETS_PARTITIONS;
+import static org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId.MIN_VALID_COMPONENT_ID;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -112,6 +113,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             datasetResource = getDatasetLifecycle(did);
         }
         datasetResource.register(resource, (ILSMIndex) index);
+        if (((ILSMIndex) index).isPrimaryIndex()) {
+            initializeDatasetPartitionValidComponentId(datasetResource, resource);
+        }
     }
 
     private int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {
@@ -598,6 +602,26 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             }
             indexCheckpointManagerProvider.close(DatasetResourceReference.of(indexInfo.getLocalResource()));
             indexInfo.setOpen(false);
+        }
+    }
+
+    private void initializeDatasetPartitionValidComponentId(DatasetResource datasetResource,
+            LocalResource primaryIndexResource) {
+        final IndexInfo indexInfo = datasetResource.getIndexInfo(primaryIndexResource.getId());
+        final int partition = indexInfo.getPartition();
+        final ILSMComponentIdGenerator componentIdGenerator =
+                getComponentIdGenerator(datasetResource.getDatasetID(), partition);
+        final long indexLastValidComponentId = getIndexLastValidComponentId(indexInfo.getLocalResource());
+        componentIdGenerator.init(indexLastValidComponentId);
+    }
+
+    private long getIndexLastValidComponentId(LocalResource resource) {
+        try {
+            final DatasetResourceReference datasetResource = DatasetResourceReference.of(resource);
+            return Math.max(indexCheckpointManagerProvider.get(datasetResource).getLatest().getLastComponentId(),
+                    MIN_VALID_COMPONENT_ID);
+        } catch (HyracksDataException e) {
+            throw new IllegalStateException(e);
         }
     }
 }

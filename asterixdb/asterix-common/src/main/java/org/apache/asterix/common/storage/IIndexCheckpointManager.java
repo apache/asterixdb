@@ -27,33 +27,33 @@ public interface IIndexCheckpointManager {
     /**
      * Initializes the first checkpoint of an index with low watermark {@code lsn}
      *
-     * @param componentTimestamp
+     * @param validComponentSequence
      * @param lsn
      * @throws HyracksDataException
      */
-    void init(String componentTimestamp, long lsn) throws HyracksDataException;
+    void init(long validComponentSequence, long lsn) throws HyracksDataException;
 
     /**
      * Called when a new LSM disk component is flushed. When called, the index checkpoint is updated
-     * with the latest valid {@code componentTimestamp} and low watermark {@code lsn}
+     * with the latest valid {@code componentSequence} and low watermark {@code lsn}
      *
-     * @param componentTimestamp
+     * @param componentSequence
      * @param lsn
      * @throws HyracksDataException
      */
-    void flushed(String componentTimestamp, long lsn, long componentId) throws HyracksDataException;
+    void flushed(long componentSequence, long lsn, long componentId) throws HyracksDataException;
 
     /**
      * Called when a new LSM disk component is replicated from master. When called, the index checkpoint is updated
-     * with the latest valid {@code componentTimestamp} and the local lsn mapping of {@code masterLsn} is set as the
+     * with the latest valid {@code componentSequence} and the local lsn mapping of {@code masterLsn} is set as the
      * new low watermark.
      *
-     * @param componentTimestamp
+     * @param componentSequence
      * @param masterLsn
      * @param componentId
      * @throws HyracksDataException
      */
-    void replicated(String componentTimestamp, long masterLsn, long componentId) throws HyracksDataException;
+    void replicated(long componentSequence, long masterLsn, long componentId) throws HyracksDataException;
 
     /**
      * Called when a flush log is received and replicated from master. The mapping between
@@ -88,12 +88,12 @@ public interface IIndexCheckpointManager {
     void delete();
 
     /**
-     * Gets the index last valid component timestamp if the index has any components. Otherwise {@link Optional#empty()}
+     * Gets the index last valid component sequence.
      *
-     * @return the index last valid component timestamp
+     * @return the index last valid component sequence
      * @throws HyracksDataException
      */
-    Optional<String> getValidComponentTimestamp() throws HyracksDataException;
+    long getValidComponentSequence() throws HyracksDataException;
 
     /**
      * Gets the number of valid checkpoints the index has.
@@ -110,12 +110,12 @@ public interface IIndexCheckpointManager {
     IndexCheckpoint getLatest() throws HyracksDataException;
 
     /**
-     * Advance the last valid component timestamp. Used for replicated bulkloaded components
+     * Advance the last valid component sequence. Used for replicated bulkloaded components
      *
-     * @param timeStamp
+     * @param componentSequence
      * @throws HyracksDataException
      */
-    void advanceValidComponentTimestamp(String timeStamp) throws HyracksDataException;
+    void advanceValidComponentSequence(long componentSequence) throws HyracksDataException;
 
     /**
      * Set the last component id. Used during recovery or after component delete

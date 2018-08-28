@@ -39,4 +39,10 @@ public interface ILSMComponentIdGenerator {
      */
     int getCurrentComponentIndex();
 
+    /**
+     * Initializes this {@link ILSMComponentIdGenerator} by setting the last used id
+     *
+     * @param lastUsedId
+     */
+    void init(long lastUsedId);
 }

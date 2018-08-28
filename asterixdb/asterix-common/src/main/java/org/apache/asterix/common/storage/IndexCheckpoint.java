@@ -34,22 +34,22 @@ public class IndexCheckpoint {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final long INITIAL_CHECKPOINT_ID = 0;
     private long id;
-    private String validComponentTimestamp;
+    private long validComponentSequence;
     private long lowWatermark;
     private long lastComponentId;
     private Map<Long, Long> masterNodeFlushMap;
 
-    public static IndexCheckpoint first(String lastComponentTimestamp, long lowWatermark) {
+    public static IndexCheckpoint first(long lastComponentSequence, long lowWatermark) {
         IndexCheckpoint firstCheckpoint = new IndexCheckpoint();
         firstCheckpoint.id = INITIAL_CHECKPOINT_ID;
         firstCheckpoint.lowWatermark = lowWatermark;
-        firstCheckpoint.validComponentTimestamp = lastComponentTimestamp;
+        firstCheckpoint.validComponentSequence = lastComponentSequence;
         firstCheckpoint.lastComponentId = LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId();
         firstCheckpoint.masterNodeFlushMap = new HashMap<>();
         return firstCheckpoint;
     }
 
-    public static IndexCheckpoint next(IndexCheckpoint latest, long lowWatermark, String validComponentTimestamp,
+    public static IndexCheckpoint next(IndexCheckpoint latest, long lowWatermark, long validComponentSequence,
             long lastComponentId) {
         if (lowWatermark < latest.getLowWatermark()) {
             throw new IllegalStateException("Low watermark should always be increasing");
@@ -58,7 +58,7 @@ public class IndexCheckpoint {
         next.id = latest.getId() + 1;
         next.lowWatermark = lowWatermark;
         next.lastComponentId = lastComponentId;
-        next.validComponentTimestamp = validComponentTimestamp;
+        next.validComponentSequence = validComponentSequence;
         next.masterNodeFlushMap = latest.getMasterNodeFlushMap();
         // remove any lsn from the map that wont be used anymore
         next.masterNodeFlushMap.values().removeIf(lsn -> lsn <= lowWatermark);
@@ -69,8 +69,8 @@ public class IndexCheckpoint {
     private IndexCheckpoint() {
     }
 
-    public String getValidComponentTimestamp() {
-        return validComponentTimestamp;
+    public long getValidComponentSequence() {
+        return validComponentSequence;
     }
 
     public long getLowWatermark() {

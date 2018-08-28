@@ -37,6 +37,7 @@ import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
@@ -44,9 +45,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperati
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
+import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
@@ -68,17 +69,19 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     protected final DatasetInfo dsInfo;
     protected final ILSMIndex lsmIndex;
+    private final ILSMComponentIdGenerator componentIdGenerator;
     private long firstLsnForCurrentMemoryComponent = 0L;
     private long persistenceLsn = 0L;
     private int pendingFlushes = 0;
     private Deque<ILSMComponentId> componentIds = new ArrayDeque<>();
+    private boolean firstAllocation = true;
 
-    public LSMIOOperationCallback(DatasetInfo dsInfo, ILSMIndex lsmIndex, ILSMComponentId nextComponentId,
+    public LSMIOOperationCallback(DatasetInfo dsInfo, ILSMIndex lsmIndex, ILSMComponentIdGenerator componentIdGenerator,
             IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
         this.dsInfo = dsInfo;
         this.lsmIndex = lsmIndex;
+        this.componentIdGenerator = componentIdGenerator;
         this.indexCheckpointManagerProvider = indexCheckpointManagerProvider;
-        componentIds.add(nextComponentId);
     }
 
     @Override
@@ -132,8 +135,8 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
                 operation.getIOOpertionType() == LSMIOOperationType.FLUSH ? (Long) map.get(KEY_FLUSH_LOG_LSN) : 0L;
         final LSMComponentId id = (LSMComponentId) map.get(KEY_FLUSHED_COMPONENT_ID);
         final ResourceReference ref = ResourceReference.of(target.getAbsolutePath());
-        final String componentEndTime = AbstractLSMIndexFileManager.getComponentEndTime(ref.getName());
-        indexCheckpointManagerProvider.get(ref).flushed(componentEndTime, lsn, id.getMaxId());
+        final long componentSequence = IndexComponentFileReference.of(ref.getName()).getSequenceEnd();
+        indexCheckpointManagerProvider.get(ref).flushed(componentSequence, lsn, id.getMaxId());
     }
 
     private void deleteComponentsFromCheckpoint(ILSMIOOperation operation) throws HyracksDataException {
@@ -275,6 +278,9 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
 
     @Override
     public void allocated(ILSMMemoryComponent component) throws HyracksDataException {
-        // No Op
+        if (firstAllocation) {
+            firstAllocation = false;
+            componentIds.add(componentIdGenerator.getId());
+        }
     }
 }

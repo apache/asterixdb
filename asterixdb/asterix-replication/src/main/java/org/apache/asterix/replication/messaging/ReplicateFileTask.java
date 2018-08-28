@@ -98,7 +98,7 @@ public class ReplicateFileTask implements IReplicaTask {
         final IIndexCheckpointManager indexCheckpointManager = checkpointManagerProvider.get(indexRef);
         final long currentLSN = appCtx.getTransactionSubsystem().getLogManager().getAppendLSN();
         indexCheckpointManager.delete();
-        indexCheckpointManager.init(null, currentLSN);
+        indexCheckpointManager.init(Long.MIN_VALUE, currentLSN);
         LOGGER.info(() -> "Checkpoint index: " + indexRef);
     }
 

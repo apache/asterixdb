@@ -21,55 +21,52 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
+import org.apache.hyracks.util.annotations.ThreadSafe;
 
 /**
  * A default implementation of {@link ILSMComponentIdGenerator}.
- *
  */
+@ThreadSafe
 public class LSMComponentIdGenerator implements ILSMComponentIdGenerator {
 
     private final int numComponents;
     private int currentComponentIndex;
-    protected long previousTimestamp = -1L;
+    private long lastUsedId;
     private ILSMComponentId componentId;
+    private boolean initialized = false;
 
     public LSMComponentIdGenerator(int numComponents) {
         this.numComponents = numComponents;
+    }
+
+    @Override
+    public synchronized void init(long lastUsedId) {
+        this.lastUsedId = lastUsedId;
+        initialized = true;
         refresh();
         currentComponentIndex = 0;
     }
 
     @Override
-    public void refresh() {
-        long ts = getCurrentTimestamp();
-        componentId = new LSMComponentId(ts, ts);
+    public synchronized void refresh() {
+        if (!initialized) {
+            throw new IllegalStateException("Attempt to refresh component id before initialziation.");
+        }
+        final long nextId = ++lastUsedId;
+        componentId = new LSMComponentId(nextId, nextId);
         currentComponentIndex = (currentComponentIndex + 1) % numComponents;
     }
 
     @Override
-    public ILSMComponentId getId() {
+    public synchronized ILSMComponentId getId() {
+        if (!initialized) {
+            throw new IllegalStateException("Attempt to get component id before initialziation.");
+        }
         return componentId;
     }
 
     @Override
-    public int getCurrentComponentIndex() {
+    public synchronized int getCurrentComponentIndex() {
         return currentComponentIndex;
     }
-
-    protected long getCurrentTimestamp() {
-        long timestamp = System.currentTimeMillis();
-        while (timestamp <= previousTimestamp) {
-            // make sure timestamp is strictly increasing
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            timestamp = System.currentTimeMillis();
-        }
-        previousTimestamp = timestamp;
-        return timestamp;
-
-    }
-
 }

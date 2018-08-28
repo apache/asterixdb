@@ -18,18 +18,11 @@
  */
 package org.apache.asterix.test.storage;
 
-import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_TIMESTAMP_FORMAT;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.TestDataUtil;
@@ -129,17 +122,15 @@ public class PersistentLocalResourceRepositoryTest {
         TestDataUtil.upsertData(datasetName, 100);
         ncAppCtx.getDatasetLifecycleManager().flushDataset(dataset.getDatasetId(), false);
 
-        // create new invalid component with a timestamp > checkpoint valid component timestamp (i.e. in the future)
-        Format formatter = new SimpleDateFormat(COMPONENT_TIMESTAMP_FORMAT);
-        Date futureTime = new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
-        String invalidComponentTimestamp =
-                formatter.format(futureTime) + AbstractLSMIndexFileManager.DELIMITER + formatter.format(futureTime);
+        // create new invalid component sequence with a sequence > checkpoint valid component sequence
+        String invalidComponentId = "1000";
+        String invalidComponentRange = invalidComponentId + AbstractLSMIndexFileManager.DELIMITER + invalidComponentId;
         FileReference indexDirRef = ncAppCtx.getIoManager().resolve(indexPath);
         String indexDir = indexDirRef.getFile().getAbsolutePath();
         // create the invalid component files
-        Path btreePath = Paths.get(indexDir, invalidComponentTimestamp + AbstractLSMIndexFileManager.DELIMITER
+        Path btreePath = Paths.get(indexDir, invalidComponentRange + AbstractLSMIndexFileManager.DELIMITER
                 + AbstractLSMIndexFileManager.BTREE_SUFFIX);
-        Path filterPath = Paths.get(indexDir, invalidComponentTimestamp + AbstractLSMIndexFileManager.DELIMITER
+        Path filterPath = Paths.get(indexDir, invalidComponentRange + AbstractLSMIndexFileManager.DELIMITER
                 + AbstractLSMIndexFileManager.BLOOM_FILTER_SUFFIX);
         Files.createFile(btreePath);
         Files.createFile(filterPath);
@@ -156,14 +147,14 @@ public class PersistentLocalResourceRepositoryTest {
         DatasetResourceReference drr = DatasetResourceReference.of(localResource);
         IIndexCheckpointManagerProvider indexCheckpointManagerProvider = ncAppCtx.getIndexCheckpointManagerProvider();
         IIndexCheckpointManager indexCheckpointManager = indexCheckpointManagerProvider.get(drr);
-        Optional<String> validComponentTimestamp = indexCheckpointManager.getValidComponentTimestamp();
-        Assert.assertTrue(validComponentTimestamp.isPresent());
+        long validComponentSequence = indexCheckpointManager.getValidComponentSequence();
+        Assert.assertTrue(validComponentSequence > Long.MIN_VALUE);
 
         File[] indexRemainingFiles =
                 indexDirRef.getFile().listFiles(AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER);
         Assert.assertNotNull(indexRemainingFiles);
         long validComponentFilesCount = Arrays.stream(indexRemainingFiles)
-                .filter(file -> file.getName().startsWith(validComponentTimestamp.get())).count();
+                .filter(file -> file.getName().startsWith(String.valueOf(validComponentSequence))).count();
         Assert.assertTrue(validComponentFilesCount > 0);
     }
 
