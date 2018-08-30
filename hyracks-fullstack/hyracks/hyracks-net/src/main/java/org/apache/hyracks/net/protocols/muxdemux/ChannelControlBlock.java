@@ -19,7 +19,6 @@
 package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -163,9 +162,5 @@ public class ChannelControlBlock implements IChannelControlBlock {
         return "Channel:" + channelId + "[localClose: " + localClose + " localCloseAck: " + localCloseAck
                 + " remoteClose: " + remoteClose + " remoteCloseAck:" + remoteCloseAck + " readCredits: "
                 + ri.getCredits() + " writeCredits: " + wi.getCredits() + "]";
-    }
-
-    public InetSocketAddress getRemoteAddress() {
-        return cSet.getMultiplexedConnection().getRemoteAddress();
     }
 }

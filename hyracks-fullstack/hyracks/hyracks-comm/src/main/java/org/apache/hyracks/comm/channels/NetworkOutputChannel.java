@@ -18,11 +18,9 @@
  */
 package org.apache.hyracks.comm.channels;
 
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Objects;
 
 import org.apache.hyracks.api.comm.IBufferAcceptor;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -77,15 +75,7 @@ public class NetworkOutputChannel implements IFrameWriter {
                         break;
                     }
                     try {
-                        InetSocketAddress remoteAddress = ccb.getRemoteAddress();
-                        String nameBefore = Thread.currentThread().getName();
-                        try {
-                            Thread.currentThread()
-                                    .setName(nameBefore + ":SendingTo(" + Objects.toString(remoteAddress) + ")");
-                            wait();
-                        } finally {
-                            Thread.currentThread().setName(nameBefore);
-                        }
+                        wait();
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw HyracksDataException.create(e);

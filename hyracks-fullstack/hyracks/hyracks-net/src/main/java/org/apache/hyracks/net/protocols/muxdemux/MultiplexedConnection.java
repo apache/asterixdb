@@ -19,7 +19,6 @@
 package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -437,9 +436,5 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                 }
             }
         }
-    }
-
-    public InetSocketAddress getRemoteAddress() {
-        return tcpConnection == null ? null : tcpConnection.getRemoteAddress();
     }
 }
