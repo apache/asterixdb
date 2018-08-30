@@ -229,8 +229,9 @@ public class JobManager implements IJobManager {
         }
         run.setStatus(run.getPendingStatus(), run.getPendingExceptions());
         run.setEndTime(System.currentTimeMillis());
-        if (activeRunMap.remove(jobId) == null) {
-            LOGGER.warn("Job {} was not found running but is getting archived and capacity released", jobId);
+        if (activeRunMap.remove(jobId) != null) {
+            // non-active jobs have zero capacity
+            releaseJobCapacity(run);
         }
         runMapArchive.put(jobId, run);
         runMapHistory.put(jobId, run.getExceptions());
@@ -246,10 +247,6 @@ public class JobManager implements IJobManager {
                 caughtException = ExceptionUtils.suppress(caughtException, e);
             }
         }
-
-        // Releases cluster capacitys occupied by the job.
-        JobSpecification job = run.getJobSpecification();
-        jobCapacityController.release(job);
 
         // Picks the next job to execute.
         pickJobsToRun();
@@ -346,5 +343,10 @@ public class JobManager implements IJobManager {
         if (jobRun == null) {
             throw HyracksException.create(ErrorCode.INVALID_INPUT_PARAMETER);
         }
+    }
+
+    private void releaseJobCapacity(JobRun jobRun) {
+        final JobSpecification job = jobRun.getJobSpecification();
+        jobCapacityController.release(job);
     }
 }
