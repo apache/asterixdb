@@ -29,6 +29,10 @@ public class Span {
         spanNanos = unit.toNanos(span);
     }
 
+    public long getSpanNanos() {
+        return spanNanos;
+    }
+
     public static Span start(long span, TimeUnit unit) {
         return new Span(span, unit);
     }
