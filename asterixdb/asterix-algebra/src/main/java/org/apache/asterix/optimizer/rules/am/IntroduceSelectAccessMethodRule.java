@@ -220,13 +220,17 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         List<ILogicalOperator> subRoots = new ArrayList<>();
         for (Pair<IAccessMethod, Index> pair : chosenIndexes) {
             AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(pair.first);
-            subRoots.add(pair.first.createIndexSearchPlan(afterSelectRefs, selectRef, conditionRef,
-                    subTree.getAssignsAndUnnestsRefs(), subTree, null, pair.second, analysisCtx,
-                    AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(),
-                            subTree.getDataSourceRef().getValue(), afterSelectRefs),
-                    false, subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
-                            .getExecutionMode() == ExecutionMode.UNPARTITIONED,
-                    context, null));
+            boolean retainInput = AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(),
+                    subTree.getDataSourceRef().getValue(), afterSelectRefs);
+            boolean requiresBroadcast = subTree.getDataSourceRef().getValue().getInputs().get(0).getValue()
+                    .getExecutionMode() == ExecutionMode.UNPARTITIONED;
+            ILogicalOperator subRoot = pair.first.createIndexSearchPlan(afterSelectRefs, selectRef, conditionRef,
+                    subTree.getAssignsAndUnnestsRefs(), subTree, null, pair.second, analysisCtx, retainInput, false,
+                    requiresBroadcast, context, null);
+            if (subRoot == null) {
+                return false;
+            }
+            subRoots.add(subRoot);
         }
         // Connect each secondary index utilization plan to a common intersect operator.
         ILogicalOperator primaryUnnestOp = connectAll2ndarySearchPlanWithIntersect(subRoots, context);

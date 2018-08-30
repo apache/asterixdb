@@ -136,13 +136,13 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         Expression left = operatorExpr.getExprList().get(1);
         Expression right = operatorExpr.getExprList().get(2);
 
-        // Creates the expression left <= target.
-        Expression leftComparison =
-                createLessThanExpression(left, target, operatorExpr.getHints(), operatorExpr.getSourceLocation());
+        // Creates the expression target >= left.
+        Expression leftComparison = createOperatorExpression(OperatorType.GE, target, left, operatorExpr.getHints(),
+                operatorExpr.getSourceLocation());
         // Creates the expression target <= right.
         Expression targetCopy = (Expression) SqlppRewriteUtil.deepCopy(target);
-        Expression rightComparison =
-                createLessThanExpression(targetCopy, right, operatorExpr.getHints(), operatorExpr.getSourceLocation());
+        Expression rightComparison = createOperatorExpression(OperatorType.LE, targetCopy, right,
+                operatorExpr.getHints(), operatorExpr.getSourceLocation());
         OperatorExpr andExpr = new OperatorExpr();
         andExpr.addOperand(leftComparison);
         andExpr.addOperand(rightComparison);
@@ -158,12 +158,12 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         }
     }
 
-    private Expression createLessThanExpression(Expression lhs, Expression rhs, List<IExpressionAnnotation> hints,
-            SourceLocation sourceLoc) {
+    private Expression createOperatorExpression(OperatorType opType, Expression lhs, Expression rhs,
+            List<IExpressionAnnotation> hints, SourceLocation sourceLoc) {
         OperatorExpr comparison = new OperatorExpr();
         comparison.addOperand(lhs);
         comparison.addOperand(rhs);
-        comparison.addOperator(OperatorType.LE);
+        comparison.addOperator(opType);
         comparison.setSourceLocation(sourceLoc);
         if (hints != null) {
             for (IExpressionAnnotation hint : hints) {
