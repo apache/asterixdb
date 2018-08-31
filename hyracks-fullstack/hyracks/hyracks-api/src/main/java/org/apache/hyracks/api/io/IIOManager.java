@@ -97,4 +97,11 @@ public interface IIOManager extends Closeable {
      * @throws HyracksDataException
      */
     FileReference createWorkspaceFile(String prefix) throws HyracksDataException;
+
+    /**
+     * Gets the total disk usage in bytes of this {@link IIOManager} io devices handles.
+     *
+     * @return the total disk usage in bytes
+     */
+    long getTotalDiskUsage();
 }
