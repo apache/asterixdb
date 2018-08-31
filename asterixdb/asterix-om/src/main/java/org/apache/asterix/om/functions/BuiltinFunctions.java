@@ -68,6 +68,7 @@ import org.apache.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType
 import org.apache.asterix.om.typecomputer.impl.CollectionMemberResultType;
 import org.apache.asterix.om.typecomputer.impl.CollectionToSequenceTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ConcatNonNullTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ConcatTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.DoubleIfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessByNameResultType;
@@ -1240,7 +1241,7 @@ public class BuiltinFunctions {
         addFunction(BINARY_LENGTH, UnaryBinaryInt64TypeComputer.INSTANCE, true);
         addFunction(PARSE_BINARY, ABinaryTypeComputer.INSTANCE, true);
         addFunction(PRINT_BINARY, AStringTypeComputer.INSTANCE, true);
-        addFunction(BINARY_CONCAT, ABinaryTypeComputer.INSTANCE, true);
+        addFunction(BINARY_CONCAT, ConcatTypeComputer.INSTANCE_BINARY, true);
         addFunction(SUBBINARY_FROM, ABinaryTypeComputer.INSTANCE, true);
         addFunction(SUBBINARY_FROM_TO, ABinaryTypeComputer.INSTANCE, true);
         addFunction(FIND_BINARY, AInt64TypeComputer.INSTANCE, true);
@@ -1251,7 +1252,7 @@ public class BuiltinFunctions {
         addFunction(STRING_CONTAINS, ABooleanTypeComputer.INSTANCE, true);
         addFunction(STRING_TO_CODEPOINT, StringToInt64ListTypeComputer.INSTANCE, true);
         addFunction(CODEPOINT_TO_STRING, AStringTypeComputer.INSTANCE, true);
-        addFunction(STRING_CONCAT, AStringTypeComputer.INSTANCE, true);
+        addFunction(STRING_CONCAT, ConcatTypeComputer.INSTANCE_STRING, true);
         addFunction(SUBSTRING2, StringIntToStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_LENGTH, UnaryStringInt64TypeComputer.INSTANCE, true);
         addFunction(STRING_LOWERCASE, StringStringTypeComputer.INSTANCE, true);

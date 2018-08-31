@@ -94,11 +94,17 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         try {
                             listAccessor.reset(data, offset);
                             int concatLength = 0;
+                            boolean itemIsNull = false;
                             for (int i = 0; i < listAccessor.size(); i++) {
                                 int itemOffset = listAccessor.getItemOffset(i);
                                 ATypeTag itemType = listAccessor.getItemType(itemOffset);
                                 if (itemType != ATypeTag.BINARY) {
-                                    if (serializeUnknownIfAnyUnknown(itemType)) {
+                                    if (itemType == ATypeTag.NULL) {
+                                        itemIsNull = true;
+                                        continue;
+                                    }
+                                    if (itemType == ATypeTag.MISSING) {
+                                        missingSerde.serialize(AMissing.MISSING, dataOutput);
                                         result.set(resultStorage);
                                         return;
                                     }
@@ -106,6 +112,11 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                             itemType.serialize());
                                 }
                                 concatLength += ByteArrayPointable.getContentLength(data, itemOffset);
+                            }
+                            if (itemIsNull) {
+                                nullSerde.serialize(ANull.NULL, dataOutput);
+                                result.set(resultStorage);
+                                return;
                             }
                             dataOutput.writeByte(ATypeTag.SERIALIZED_BINARY_TYPE_TAG);
                             int metaLen = VarLenIntEncoderDecoder.encode(concatLength, metaBuffer, 0);
@@ -121,20 +132,6 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                             throw HyracksDataException.create(e);
                         }
                         result.set(resultStorage);
-                    }
-
-                    private boolean serializeUnknownIfAnyUnknown(ATypeTag... tags) throws HyracksDataException {
-                        for (ATypeTag typeTag : tags) {
-                            if (typeTag == ATypeTag.NULL) {
-                                nullSerde.serialize(ANull.NULL, dataOutput);
-                                return true;
-                            }
-                            if (typeTag == ATypeTag.MISSING) {
-                                missingSerde.serialize(AMissing.MISSING, dataOutput);
-                                return true;
-                            }
-                        }
-                        return false;
                     }
                 };
             }
