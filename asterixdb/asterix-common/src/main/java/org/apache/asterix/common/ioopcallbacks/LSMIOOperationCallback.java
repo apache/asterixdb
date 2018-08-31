@@ -72,7 +72,6 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
     private long persistenceLsn = 0L;
     private int pendingFlushes = 0;
     private Deque<ILSMComponentId> componentIds = new ArrayDeque<>();
-    private boolean firstAllocation = true;
 
     public LSMIOOperationCallback(DatasetInfo dsInfo, ILSMIndex lsmIndex, ILSMComponentId componentId,
             IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
