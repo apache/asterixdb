@@ -46,6 +46,11 @@ public class LicensingIT extends LicensingTestBase {
     }
 
     @Override
+    protected String getTopLevelDirPattern() {
+        return "apache-asterixdb.*";
+    }
+
+    @Override
     protected String pathToLicensingFiles() {
         return "";
     }

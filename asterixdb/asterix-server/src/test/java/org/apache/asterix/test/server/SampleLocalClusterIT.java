@@ -58,7 +58,7 @@ public class SampleLocalClusterIT {
     // src/test/resources/NCServiceExecutionIT/cc.conf.
     private static final String OUTPUT_DIR = joinPath(TARGET_DIR, "sample local cluster");
 
-    private static final String LOCAL_SAMPLES_DIR = joinPath(OUTPUT_DIR, "opt", "local");
+    private static String localSamplesDir;
 
     @Rule
     public TestRule watcher = new TestMethodTracer();
@@ -79,6 +79,8 @@ public class SampleLocalClusterIT {
         String installerZip = joinPath(pathElements);
 
         TestHelper.unzip(installerZip, OUTPUT_DIR);
+        String tlpName = new File(OUTPUT_DIR).list((dir, name) -> name.matches("apache-asterixdb.*"))[0];
+        localSamplesDir = joinPath(OUTPUT_DIR, tlpName, "opt", "local");
 
     }
 
@@ -109,9 +111,9 @@ public class SampleLocalClusterIT {
     @Test
     public void test0_startCluster() throws Exception {
         Process process =
-                new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh"), "-f").inheritIO().start();
+                new ProcessBuilder(joinPath(localSamplesDir, "bin/stop-sample-cluster.sh"), "-f").inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
-        process = new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/start-sample-cluster.sh")).inheritIO().start();
+        process = new ProcessBuilder(joinPath(localSamplesDir, "bin/start-sample-cluster.sh")).inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
     }
 
@@ -128,7 +130,7 @@ public class SampleLocalClusterIT {
     @Test
     public void test2_stopCluster() throws Exception {
         Process process =
-                new ProcessBuilder(joinPath(LOCAL_SAMPLES_DIR, "bin/stop-sample-cluster.sh")).inheritIO().start();
+                new ProcessBuilder(joinPath(localSamplesDir, "bin/stop-sample-cluster.sh")).inheritIO().start();
         Assert.assertEquals(0, process.waitFor());
         try {
             new URL("http://127.0.0.1:19002").openConnection().connect();

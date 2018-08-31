@@ -29,4 +29,4 @@ set hash_merge "true"
 
 load dataset testds
 using localfs
-(("path"="asterix_nc1://../../../../../asterix-app/target/data/big-object/big_object_20M.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1://../../../../../../asterix-app/target/data/big-object/big_object_20M.adm"),("format"="adm")) pre-sorted;

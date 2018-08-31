@@ -480,23 +480,23 @@
                 <configuration>
                   <dataSet>
                     <data>
-                      <src>${project.build.directory}/${project.build.finalName}-binary-assembly/</src>
+                      <src>${project.build.directory}/${project.build.finalName}-binary-assembly/apache-asterixdb-${project.version}/</src>
                       <excludes>bin/**</excludes>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
-                        <prefix>/opt/apache-asterixdb/</prefix>
+                        <prefix>/opt/apache-asterixdb-${project.version}/</prefix>
                         <user>asterixdb</user>
                         <group>asterixdb</group>
                         <filemode>644</filemode>
                       </mapper>
                     </data>
                     <data>
-                      <src>${project.build.directory}/${project.build.finalName}-binary-assembly/bin</src>
+                      <src>${project.build.directory}/${project.build.finalName}-binary-assembly/apache-asterixdb-${project.version}/bin</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
-                        <prefix>/opt/apache-asterixdb/bin</prefix>
+                        <prefix>/opt/apache-asterixdb-${project.version}/bin</prefix>
                         <user>asterixdb</user>
                         <group>asterixdb</group>
                         <filemode>754</filemode>
