@@ -100,6 +100,18 @@
         <expected-error>ASX0013: Duplicate field name "e"</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-2446-2">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <expected-error>ASX0013: Duplicate field name "a" (in line 27, at column 20)</expected-error>
+        <expected-error>ASX0013: Duplicate field name "b" (in line 27, at column 20)</expected-error>
+        <expected-error>ASX0013: Duplicate field name "c" (in line 27, at column 11)</expected-error>
+        <expected-error>ASX0013: Duplicate field name "d" (in line 27, at column 11)</expected-error>
+        <expected-error>ASX0013: Duplicate field name "e" (in line 27, at column 14)</expected-error>
+        <expected-error>ASX0013: Duplicate field name "f" (in line 27, at column 11)</expected-error>
+        <expected-error>ASX0013: Duplicate field name "g" (in line 27, at column 11)</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="explain">
     <test-case FilePath="explain">

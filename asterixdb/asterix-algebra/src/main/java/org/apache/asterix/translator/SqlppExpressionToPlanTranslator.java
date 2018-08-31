@@ -23,8 +23,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -736,16 +738,18 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             throws CompilationException {
         List<Expression> recordExprs = new ArrayList<>();
         List<FieldBinding> fieldBindings = new ArrayList<>();
+        Set<String> fieldNames = new HashSet<>();
+
         for (Projection projection : selectRegular.getProjections()) {
             if (projection.varStar()) {
-                SourceLocation sourceLoc = projection.getSourceLocation();
                 if (!fieldBindings.isEmpty()) {
                     RecordConstructor recordConstr = new RecordConstructor(new ArrayList<>(fieldBindings));
-                    recordConstr.setSourceLocation(sourceLoc);
+                    recordConstr.setSourceLocation(selectRegular.getSourceLocation());
                     recordExprs.add(recordConstr);
                     fieldBindings.clear();
                 }
                 Expression projectionExpr = projection.getExpression();
+                SourceLocation sourceLoc = projection.getSourceLocation();
                 CallExpr toObjectExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.TO_OBJECT),
                         Collections.singletonList(projectionExpr));
                 toObjectExpr.setSourceLocation(sourceLoc);
@@ -755,21 +759,22 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 recordExprs.add(ifMissingOrNullExpr);
             } else if (projection.star()) {
                 if (selectBlock.hasGroupbyClause()) {
-                    getGroupBindings(selectBlock.getGroupbyClause(), fieldBindings);
+                    getGroupBindings(selectBlock.getGroupbyClause(), fieldBindings, fieldNames);
                     if (selectBlock.hasLetClausesAfterGroupby()) {
-                        getLetBindings(selectBlock.getLetListAfterGroupby(), fieldBindings);
+                        getLetBindings(selectBlock.getLetListAfterGroupby(), fieldBindings, fieldNames);
                     }
                 } else if (selectBlock.hasFromClause()) {
-                    getFromBindings(selectBlock.getFromClause(), fieldBindings);
+                    getFromBindings(selectBlock.getFromClause(), fieldBindings, fieldNames);
                     if (selectBlock.hasLetClauses()) {
-                        getLetBindings(selectBlock.getLetList(), fieldBindings);
+                        getLetBindings(selectBlock.getLetList(), fieldBindings, fieldNames);
                     }
                 } else if (selectBlock.hasLetClauses()) {
-                    getLetBindings(selectBlock.getLetList(), fieldBindings);
+                    getLetBindings(selectBlock.getLetList(), fieldBindings, fieldNames);
                 }
+            } else if (projection.hasName()) {
+                fieldBindings.add(getFieldBinding(projection, fieldNames));
             } else {
-                fieldBindings.add(new FieldBinding(new LiteralExpr(new StringLiteral(projection.getName())),
-                        projection.getExpression()));
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, projection.getSourceLocation());
             }
         }
         if (!fieldBindings.isEmpty()) {
@@ -789,49 +794,68 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     }
 
     // Generates all field bindings according to the from clause.
-    private void getFromBindings(FromClause fromClause, List<FieldBinding> outFieldBindings) {
+    private void getFromBindings(FromClause fromClause, List<FieldBinding> outFieldBindings, Set<String> outFieldNames)
+            throws CompilationException {
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
-            outFieldBindings.add(getFieldBinding(fromTerm.getLeftVariable()));
+            outFieldBindings.add(getFieldBinding(fromTerm.getLeftVariable(), outFieldNames));
             if (fromTerm.hasPositionalVariable()) {
-                outFieldBindings.add(getFieldBinding(fromTerm.getPositionalVariable()));
+                outFieldBindings.add(getFieldBinding(fromTerm.getPositionalVariable(), outFieldNames));
             }
             if (!fromTerm.hasCorrelateClauses()) {
                 continue;
             }
             for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
-                outFieldBindings.add(getFieldBinding(correlateClause.getRightVariable()));
+                outFieldBindings.add(getFieldBinding(correlateClause.getRightVariable(), outFieldNames));
                 if (correlateClause.hasPositionalVariable()) {
-                    outFieldBindings.add(getFieldBinding(correlateClause.getPositionalVariable()));
+                    outFieldBindings.add(getFieldBinding(correlateClause.getPositionalVariable(), outFieldNames));
                 }
             }
         }
     }
 
     // Generates all field bindings according to the from clause.
-    private void getGroupBindings(GroupbyClause groupbyClause, List<FieldBinding> outFieldBindings) {
+    private void getGroupBindings(GroupbyClause groupbyClause, List<FieldBinding> outFieldBindings,
+            Set<String> outFieldNames) throws CompilationException {
         for (GbyVariableExpressionPair pair : groupbyClause.getGbyPairList()) {
-            outFieldBindings.add(getFieldBinding(pair.getVar()));
+            outFieldBindings.add(getFieldBinding(pair.getVar(), outFieldNames));
         }
         if (groupbyClause.hasGroupVar()) {
-            outFieldBindings.add(getFieldBinding(groupbyClause.getGroupVar()));
+            outFieldBindings.add(getFieldBinding(groupbyClause.getGroupVar(), outFieldNames));
         }
         if (groupbyClause.hasWithMap()) {
-            throw new IllegalStateException(groupbyClause.getWithVarMap().values().toString()); // no WITH in SQLPP
+            // no WITH in SQLPP
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, groupbyClause.getSourceLocation(),
+                    groupbyClause.getWithVarMap().values().toString());
         }
     }
 
     // Generates all field bindings according to the let clause.
-    private void getLetBindings(List<LetClause> letClauses, List<FieldBinding> outFieldBindings) {
+    private void getLetBindings(List<LetClause> letClauses, List<FieldBinding> outFieldBindings,
+            Set<String> outFieldNames) throws CompilationException {
         for (LetClause letClause : letClauses) {
-            outFieldBindings.add(getFieldBinding(letClause.getVarExpr()));
+            outFieldBindings.add(getFieldBinding(letClause.getVarExpr(), outFieldNames));
         }
     }
 
     // Generates a field binding for a variable.
-    private FieldBinding getFieldBinding(VariableExpr var) {
-        LiteralExpr fieldName = new LiteralExpr(
-                new StringLiteral(SqlppVariableUtil.variableNameToDisplayedFieldName(var.getVar().getValue())));
-        return new FieldBinding(fieldName, var);
+    private FieldBinding getFieldBinding(VariableExpr varExpr, Set<String> outFieldNames) throws CompilationException {
+        String fieldName = SqlppVariableUtil.variableNameToDisplayedFieldName(varExpr.getVar().getValue());
+        return generateFieldBinding(fieldName, varExpr, outFieldNames, varExpr.getSourceLocation());
+    }
+
+    // Generates a field binding for a named projection.
+    private FieldBinding getFieldBinding(Projection projection, Set<String> outFieldNames) throws CompilationException {
+        String fieldName = projection.getName();
+        Expression fieldValueExpr = projection.getExpression();
+        return generateFieldBinding(fieldName, fieldValueExpr, outFieldNames, projection.getSourceLocation());
+    }
+
+    private FieldBinding generateFieldBinding(String fieldName, Expression fieldValueExpr, Set<String> outFieldNames,
+            SourceLocation sourceLoc) throws CompilationException {
+        if (!outFieldNames.add(fieldName)) {
+            throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, sourceLoc, fieldName);
+        }
+        return new FieldBinding(new LiteralExpr(new StringLiteral(fieldName)), fieldValueExpr);
     }
 
     @Override
