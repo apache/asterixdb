@@ -127,7 +127,7 @@ public class TestLsmIoOpCallbackFactory extends LSMIndexIOOperationCallbackFacto
 
         public TestLsmIoOpCallback(DatasetInfo dsInfo, ILSMIndex index, ILSMComponentIdGenerator idGenerator,
                 IIndexCheckpointManagerProvider checkpointManagerProvider) {
-            super(dsInfo, index, idGenerator, checkpointManagerProvider);
+            super(dsInfo, index, idGenerator.getId(), checkpointManagerProvider);
             lsmBtree = (TestLsmBtree) index;
         }
 

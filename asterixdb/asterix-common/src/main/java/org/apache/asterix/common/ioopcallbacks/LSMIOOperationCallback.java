@@ -37,7 +37,6 @@ import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
@@ -69,19 +68,18 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     protected final DatasetInfo dsInfo;
     protected final ILSMIndex lsmIndex;
-    private final ILSMComponentIdGenerator componentIdGenerator;
     private long firstLsnForCurrentMemoryComponent = 0L;
     private long persistenceLsn = 0L;
     private int pendingFlushes = 0;
     private Deque<ILSMComponentId> componentIds = new ArrayDeque<>();
     private boolean firstAllocation = true;
 
-    public LSMIOOperationCallback(DatasetInfo dsInfo, ILSMIndex lsmIndex, ILSMComponentIdGenerator componentIdGenerator,
+    public LSMIOOperationCallback(DatasetInfo dsInfo, ILSMIndex lsmIndex, ILSMComponentId componentId,
             IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
         this.dsInfo = dsInfo;
         this.lsmIndex = lsmIndex;
-        this.componentIdGenerator = componentIdGenerator;
         this.indexCheckpointManagerProvider = indexCheckpointManagerProvider;
+        componentIds.add(componentId);
     }
 
     @Override
@@ -278,9 +276,6 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
 
     @Override
     public void allocated(ILSMMemoryComponent component) throws HyracksDataException {
-        if (firstAllocation) {
-            firstAllocation = false;
-            componentIds.add(componentIdGenerator.getId());
-        }
+        // no op
     }
 }

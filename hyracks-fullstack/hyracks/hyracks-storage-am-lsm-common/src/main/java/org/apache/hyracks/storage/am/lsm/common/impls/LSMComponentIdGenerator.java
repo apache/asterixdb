@@ -33,25 +33,16 @@ public class LSMComponentIdGenerator implements ILSMComponentIdGenerator {
     private int currentComponentIndex;
     private long lastUsedId;
     private ILSMComponentId componentId;
-    private boolean initialized = false;
 
-    public LSMComponentIdGenerator(int numComponents) {
+    public LSMComponentIdGenerator(int numComponents, long lastUsedId) {
         this.numComponents = numComponents;
-    }
-
-    @Override
-    public synchronized void init(long lastUsedId) {
         this.lastUsedId = lastUsedId;
-        initialized = true;
         refresh();
         currentComponentIndex = 0;
     }
 
     @Override
     public synchronized void refresh() {
-        if (!initialized) {
-            throw new IllegalStateException("Attempt to refresh component id before initialziation.");
-        }
         final long nextId = ++lastUsedId;
         componentId = new LSMComponentId(nextId, nextId);
         currentComponentIndex = (currentComponentIndex + 1) % numComponents;
@@ -59,9 +50,6 @@ public class LSMComponentIdGenerator implements ILSMComponentIdGenerator {
 
     @Override
     public synchronized ILSMComponentId getId() {
-        if (!initialized) {
-            throw new IllegalStateException("Attempt to get component id before initialziation.");
-        }
         return componentId;
     }
 

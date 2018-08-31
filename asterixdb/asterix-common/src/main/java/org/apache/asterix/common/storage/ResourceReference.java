@@ -38,6 +38,10 @@ public class ResourceReference {
     protected ResourceReference() {
     }
 
+    public static ResourceReference ofIndex(String indexPath) {
+        return of(new File(indexPath, StorageConstants.METADATA_FILE_NAME).toString());
+    }
+
     public static ResourceReference of(String localResourcePath) {
         ResourceReference lrr = new ResourceReference();
         parse(lrr, localResourcePath);
@@ -70,6 +74,11 @@ public class ResourceReference {
 
     public Path getRelativePath() {
         return Paths.get(root, partition, dataverse, dataset, rebalance, index);
+    }
+
+    public ResourceReference getDatasetReference() {
+        return ResourceReference
+                .ofIndex(Paths.get(root, partition, dataverse, dataset, rebalance, dataset).toFile().getPath());
     }
 
     public Path getFileRelativePath() {

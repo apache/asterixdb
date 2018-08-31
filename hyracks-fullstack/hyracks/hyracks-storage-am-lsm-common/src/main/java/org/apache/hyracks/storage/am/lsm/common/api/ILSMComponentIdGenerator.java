@@ -38,11 +38,4 @@ public interface ILSMComponentIdGenerator {
      * @return the index of the current memory component
      */
     int getCurrentComponentIndex();
-
-    /**
-     * Initializes this {@link ILSMComponentIdGenerator} by setting the last used id
-     *
-     * @param lastUsedId
-     */
-    void init(long lastUsedId);
 }

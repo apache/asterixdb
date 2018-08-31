@@ -53,7 +53,7 @@ public class DatasetLSMComponentIdGeneratorFactory implements ILSMComponentIdGen
         IDatasetLifecycleManager dslcManager =
                 ((INcApplicationContext) serviceCtx.getApplicationContext()).getDatasetLifecycleManager();
         int partition = StoragePathUtil.getPartitionNumFromRelativePath(resource.getPath());
-        return dslcManager.getComponentIdGenerator(datasetId, partition);
+        return dslcManager.getComponentIdGenerator(datasetId, partition, resource.getPath());
     }
 
     @Override

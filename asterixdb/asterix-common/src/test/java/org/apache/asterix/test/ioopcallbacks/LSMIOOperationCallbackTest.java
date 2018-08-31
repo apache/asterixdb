@@ -78,10 +78,9 @@ public class LSMIOOperationCallbackTest extends TestCase {
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(numMemoryComponents);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(Mockito.mock(AbstractLSMMemoryComponent.class));
         DatasetInfo dsInfo = new DatasetInfo(101, null);
-        LSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents);
-        idGenerator.init(MIN_VALID_COMPONENT_ID);
-        LSMIOOperationCallback callback =
-                new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator, mockIndexCheckpointManagerProvider());
+        LSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents, MIN_VALID_COMPONENT_ID);
+        LSMIOOperationCallback callback = new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator.getId(),
+                mockIndexCheckpointManagerProvider());
         //Flush first
         idGenerator.refresh();
         long flushLsn = 1L;
@@ -138,19 +137,19 @@ public class LSMIOOperationCallbackTest extends TestCase {
     public void testAllocateComponentId() throws HyracksDataException {
         int numMemoryComponents = 2;
         DatasetInfo dsInfo = new DatasetInfo(101, null);
-        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents);
-        idGenerator.init(MIN_VALID_COMPONENT_ID);
+        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents, MIN_VALID_COMPONENT_ID);
         ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(numMemoryComponents);
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(mockComponent);
-        LSMIOOperationCallback callback =
-                new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator, mockIndexCheckpointManagerProvider());
-        callback.allocated(mockComponent);
+        LSMIOOperationCallback callback = new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator.getId(),
+                mockIndexCheckpointManagerProvider());
         ILSMComponentId initialId = idGenerator.getId();
+        // simulate a partition is flushed before allocated
         idGenerator.refresh();
         long flushLsn = 1L;
         ILSMComponentId nextComponentId = idGenerator.getId();
+        callback.allocated(mockComponent);
         callback.recycled(mockComponent);
         checkMemoryComponent(initialId, mockComponent);
     }
@@ -159,16 +158,14 @@ public class LSMIOOperationCallbackTest extends TestCase {
     public void testRecycleComponentId() throws HyracksDataException {
         int numMemoryComponents = 2;
         DatasetInfo dsInfo = new DatasetInfo(101, null);
-        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents);
-        idGenerator.init(MIN_VALID_COMPONENT_ID);
+        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents, MIN_VALID_COMPONENT_ID);
         ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(numMemoryComponents);
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(mockComponent);
-        LSMIOOperationCallback callback =
-                new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator, mockIndexCheckpointManagerProvider());
+        LSMIOOperationCallback callback = new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator.getId(),
+                mockIndexCheckpointManagerProvider());
         String indexId = "mockIndexId";
-        callback.allocated(mockComponent);
         ILSMComponentId id = idGenerator.getId();
         callback.recycled(mockComponent);
         checkMemoryComponent(id, mockComponent);

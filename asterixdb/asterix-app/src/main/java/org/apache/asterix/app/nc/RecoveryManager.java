@@ -300,7 +300,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         TxnEntityId tempKeyTxnEntityId = new TxnEntityId(-1, -1, -1, null, -1, false);
 
         ILogRecord logRecord = null;
-        ILSMComponentIdGenerator idGenerator = null;
         try {
             logReader.setPosition(lowWaterMarkLSN);
             logRecord = logReader.next();
@@ -389,8 +388,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                         int partition = logRecord.getResourcePartition();
                         if (partitions.contains(partition)) {
                             int datasetId = logRecord.getDatasetId();
-                            idGenerator = datasetLifecycleManager.getComponentIdGenerator(datasetId, partition);
-                            if (idGenerator == null) {
+                            if (!datasetLifecycleManager.isRegistered(datasetId)) {
                                 // it's possible this dataset has been dropped
                                 logRecord = logReader.next();
                                 continue;
