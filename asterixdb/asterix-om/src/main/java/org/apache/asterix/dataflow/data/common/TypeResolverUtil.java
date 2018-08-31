@@ -106,7 +106,7 @@ public class TypeResolverUtil {
         // Gets the actual types for UNIONs and mark unknownable to be true.
         if (leftTypeTag == ATypeTag.UNION || rightTypeTag == ATypeTag.UNION) {
             leftType = TypeComputeUtils.getActualType(leftType);
-            rightType = TypeComputeUtils.getActualType(leftType);
+            rightType = TypeComputeUtils.getActualType(rightType);
             leftTypeTag = leftType.getTypeTag();
             rightTypeTag = rightType.getTypeTag();
             unknownable = true;

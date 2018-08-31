@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -72,6 +74,9 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
             IAType t2 = (IAType) env.getType(e2);
             String fieldName = ConstantExpressionUtil.getStringConstant(e1);
             if (fieldName != null && t2 != null && TypeHelper.isClosed(t2)) {
+                if (namesList.contains(fieldName)) {
+                    throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, f.getSourceLocation(), fieldName);
+                }
                 namesList.add(fieldName);
                 if (t2.getTypeTag() == ATypeTag.UNION) {
                     AUnionType unionType = (AUnionType) t2;

@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -415,5 +416,14 @@ public class IOManager implements IIOManager {
             LOGGER.log(Level.WARN, "Interrupted while shutting down {} executor service", getClass().getSimpleName());
             Thread.currentThread().interrupt();
         }
+    }
+
+    @Override
+    public long getTotalDiskUsage() {
+        long totalSize = 0;
+        for (IODeviceHandle handle : ioDevices) {
+            totalSize += FileUtils.sizeOfDirectory(handle.getMount());
+        }
+        return totalSize;
     }
 }

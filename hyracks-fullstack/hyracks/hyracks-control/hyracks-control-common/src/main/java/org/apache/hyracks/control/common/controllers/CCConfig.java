@@ -60,6 +60,7 @@ public class CCConfig extends ControllerConfig {
         CONSOLE_PUBLIC_PORT(INTEGER, CONSOLE_LISTEN_PORT),
         HEARTBEAT_PERIOD(LONG, 10000L), // TODO (mblow): add time unit
         HEARTBEAT_MAX_MISSES(INTEGER, 5),
+        DEAD_NODE_SWEEP_THRESHOLD(LONG, HEARTBEAT_PERIOD),
         PROFILE_DUMP_PERIOD(INTEGER, 0),
         JOB_HISTORY_SIZE(INTEGER, 10),
         RESULT_TTL(LONG, 86400000L), // TODO(mblow): add time unit
@@ -154,7 +155,9 @@ public class CCConfig extends ControllerConfig {
                 case HEARTBEAT_PERIOD:
                     return "Sets the time duration between two heartbeats from each node controller in milliseconds";
                 case HEARTBEAT_MAX_MISSES:
-                    return "Sets the maximum number of missed heartbeats before a node is marked as dead";
+                    return "Sets the maximum number of missed heartbeats before a node can be considered dead";
+                case DEAD_NODE_SWEEP_THRESHOLD:
+                    return "Sets the frequency (in milliseconds) to process nodes that can be considered dead";
                 case PROFILE_DUMP_PERIOD:
                     return "Sets the time duration between two profile dumps from each node controller in "
                             + "milliseconds; 0 to disable";
@@ -324,6 +327,14 @@ public class CCConfig extends ControllerConfig {
 
     public void setHeartbeatMaxMisses(int heartbeatMaxMisses) {
         configManager.set(Option.HEARTBEAT_MAX_MISSES, heartbeatMaxMisses);
+    }
+
+    public long getDeadNodeSweepThreshold() {
+        return getAppConfig().getLong(Option.DEAD_NODE_SWEEP_THRESHOLD);
+    }
+
+    public void setDeadNodeSweepThreshold(long deadNodeSweepThreshold) {
+        configManager.set(Option.DEAD_NODE_SWEEP_THRESHOLD, deadNodeSweepThreshold);
     }
 
     public int getProfileDumpPeriod() {

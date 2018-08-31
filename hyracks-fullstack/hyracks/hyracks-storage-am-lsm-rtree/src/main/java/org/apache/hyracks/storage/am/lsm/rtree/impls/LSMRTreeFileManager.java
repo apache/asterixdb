@@ -36,6 +36,7 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
+import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 
@@ -58,22 +59,15 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
-        String ts = getCurrentTimestamp();
-        String baseName = ts + DELIMITER + ts;
-        // Begin timestamp and end timestamp are identical since it is a flush
+        String baseName = getNextComponentSequence(btreeFilter);
         return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + RTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
     }
 
     @Override
-    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
-            throws HyracksDataException {
-        String[] firstTimestampRange = firstFileName.split(DELIMITER);
-        String[] lastTimestampRange = lastFileName.split(DELIMITER);
-        String baseName = firstTimestampRange[0] + DELIMITER + lastTimestampRange[1];
-        // Get the range of timestamps by taking the earliest and the latest
-        // timestamps
+    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName) {
+        final String baseName = IndexComponentFileReference.getMergeSequence(firstFileName, lastFileName);
         return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + RTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
@@ -82,9 +76,9 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
     @Override
     public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
-        ArrayList<ComparableFileName> allRTreeFiles = new ArrayList<>();
-        ArrayList<ComparableFileName> allBTreeFiles = new ArrayList<>();
-        ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<>();
+        ArrayList<IndexComponentFileReference> allRTreeFiles = new ArrayList<>();
+        ArrayList<IndexComponentFileReference> allBTreeFiles = new ArrayList<>();
+        ArrayList<IndexComponentFileReference> allBloomFilterFiles = new ArrayList<>();
 
         // Create a transaction filter <- to hide transaction components->
         FilenameFilter transactionFilter = getTransactionFileFilter(false);
@@ -93,9 +87,8 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
         cleanupAndGetValidFilesInternal(getCompoundFilter(transactionFilter, btreeFilter), btreeFactory, allBTreeFiles,
                 btreeFactory.getBufferCache());
         HashSet<String> btreeFilesSet = new HashSet<>();
-        for (ComparableFileName cmpFileName : allBTreeFiles) {
-            int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
-            btreeFilesSet.add(cmpFileName.fileName.substring(0, index));
+        for (IndexComponentFileReference cmpFileName : allBTreeFiles) {
+            btreeFilesSet.add(cmpFileName.getSequence());
         }
         validateFiles(btreeFilesSet, allRTreeFiles, getCompoundFilter(transactionFilter, rtreeFilter), rtreeFactory,
                 btreeFactory.getBufferCache());
@@ -113,52 +106,47 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
         }
 
         if (allRTreeFiles.size() == 1 && allBTreeFiles.size() == 1 && allBloomFilterFiles.size() == 1) {
-            validFiles.add(new LSMComponentFileReferences(allRTreeFiles.get(0).fileRef, allBTreeFiles.get(0).fileRef,
-                    allBloomFilterFiles.get(0).fileRef));
+            validFiles.add(new LSMComponentFileReferences(allRTreeFiles.get(0).getFileRef(),
+                    allBTreeFiles.get(0).getFileRef(), allBloomFilterFiles.get(0).getFileRef()));
             return validFiles;
         }
 
-        // Sorts files names from earliest to latest timestamp.
+        // Sorts files names from earliest to latest sequence.
         Collections.sort(allRTreeFiles);
         Collections.sort(allBTreeFiles);
         Collections.sort(allBloomFilterFiles);
 
-        List<ComparableFileName> validComparableRTreeFiles = new ArrayList<>();
-        ComparableFileName lastRTree = allRTreeFiles.get(0);
+        List<IndexComponentFileReference> validComparableRTreeFiles = new ArrayList<>();
+        IndexComponentFileReference lastRTree = allRTreeFiles.get(0);
         validComparableRTreeFiles.add(lastRTree);
 
-        List<ComparableFileName> validComparableBTreeFiles = new ArrayList<>();
-        ComparableFileName lastBTree = allBTreeFiles.get(0);
+        List<IndexComponentFileReference> validComparableBTreeFiles = new ArrayList<>();
+        IndexComponentFileReference lastBTree = allBTreeFiles.get(0);
         validComparableBTreeFiles.add(lastBTree);
 
-        List<ComparableFileName> validComparableBloomFilterFiles = new ArrayList<>();
-        ComparableFileName lastBloomFilter = allBloomFilterFiles.get(0);
+        List<IndexComponentFileReference> validComparableBloomFilterFiles = new ArrayList<>();
+        IndexComponentFileReference lastBloomFilter = allBloomFilterFiles.get(0);
         validComparableBloomFilterFiles.add(lastBloomFilter);
 
         for (int i = 1; i < allRTreeFiles.size(); i++) {
-            ComparableFileName currentRTree = allRTreeFiles.get(i);
-            ComparableFileName currentBTree = allBTreeFiles.get(i);
-            ComparableFileName currentBloomFilter = allBloomFilterFiles.get(i);
-            // Current start timestamp is greater than last stop timestamp.
-            if (currentRTree.interval[0].compareTo(lastRTree.interval[1]) > 0
-                    && currentBTree.interval[0].compareTo(lastBTree.interval[1]) > 0
-                    && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[1]) > 0) {
+            IndexComponentFileReference currentRTree = allRTreeFiles.get(i);
+            IndexComponentFileReference currentBTree = allBTreeFiles.get(i);
+            IndexComponentFileReference currentBloomFilter = allBloomFilterFiles.get(i);
+            // Current start sequence is greater than last stop sequence.
+            if (currentRTree.isMoreRecentThan(lastRTree) && currentBTree.isMoreRecentThan(lastBTree)
+                    && currentBloomFilter.isMoreRecentThan(lastBloomFilter)) {
                 validComparableRTreeFiles.add(currentRTree);
                 validComparableBTreeFiles.add(currentBTree);
                 validComparableBloomFilterFiles.add(currentBloomFilter);
                 lastRTree = currentRTree;
                 lastBTree = currentBTree;
                 lastBloomFilter = currentBloomFilter;
-            } else if (currentRTree.interval[0].compareTo(lastRTree.interval[0]) >= 0
-                    && currentRTree.interval[1].compareTo(lastRTree.interval[1]) <= 0
-                    && currentBTree.interval[0].compareTo(lastBTree.interval[0]) >= 0
-                    && currentBTree.interval[1].compareTo(lastBTree.interval[1]) <= 0
-                    && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
-                    && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0) {
-                // Invalid files are completely contained in last interval.
-                delete(treeFactory.getBufferCache(), currentRTree.fullPath);
-                delete(treeFactory.getBufferCache(), currentBTree.fullPath);
-                delete(treeFactory.getBufferCache(), currentBloomFilter.fullPath);
+            } else if (currentRTree.isWithin(lastRTree) && currentBTree.isWithin(lastBTree)
+                    && currentBloomFilter.isWithin(lastBloomFilter)) {
+                // Invalid files are completely contained in last sequence.
+                delete(treeFactory.getBufferCache(), currentRTree.getFullPath());
+                delete(treeFactory.getBufferCache(), currentBTree.getFullPath());
+                delete(treeFactory.getBufferCache(), currentBloomFilter.getFullPath());
             } else {
                 // This scenario should not be possible.
                 throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);
@@ -167,29 +155,28 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
 
         // Sort valid files in reverse lexicographical order, such that newer
         // files come first.
-        Collections.sort(validComparableRTreeFiles, recencyCmp);
-        Collections.sort(validComparableBTreeFiles, recencyCmp);
-        Collections.sort(validComparableBloomFilterFiles, recencyCmp);
+        validComparableRTreeFiles.sort(recencyCmp);
+        validComparableBTreeFiles.sort(recencyCmp);
+        validComparableBloomFilterFiles.sort(recencyCmp);
 
-        Iterator<ComparableFileName> rtreeFileIter = validComparableRTreeFiles.iterator();
-        Iterator<ComparableFileName> btreeFileIter = validComparableBTreeFiles.iterator();
-        Iterator<ComparableFileName> bloomFilterFileIter = validComparableBloomFilterFiles.iterator();
+        Iterator<IndexComponentFileReference> rtreeFileIter = validComparableRTreeFiles.iterator();
+        Iterator<IndexComponentFileReference> btreeFileIter = validComparableBTreeFiles.iterator();
+        Iterator<IndexComponentFileReference> bloomFilterFileIter = validComparableBloomFilterFiles.iterator();
         while (rtreeFileIter.hasNext() && btreeFileIter.hasNext()) {
-            ComparableFileName cmpRTreeFileName = rtreeFileIter.next();
-            ComparableFileName cmpBTreeFileName = btreeFileIter.next();
-            ComparableFileName cmpBloomFilterFileName = bloomFilterFileIter.next();
-            validFiles.add(new LSMComponentFileReferences(cmpRTreeFileName.fileRef, cmpBTreeFileName.fileRef,
-                    cmpBloomFilterFileName.fileRef));
+            IndexComponentFileReference cmpRTreeFileName = rtreeFileIter.next();
+            IndexComponentFileReference cmpBTreeFileName = btreeFileIter.next();
+            IndexComponentFileReference cmpBloomFilterFileName = bloomFilterFileIter.next();
+            validFiles.add(new LSMComponentFileReferences(cmpRTreeFileName.getFileRef(), cmpBTreeFileName.getFileRef(),
+                    cmpBloomFilterFileName.getFileRef()));
         }
         return validFiles;
     }
 
     @Override
     public LSMComponentFileReferences getNewTransactionFileReference() throws IOException {
-        String ts = getCurrentTimestamp();
+        String baseName = getNextComponentSequence(btreeFilter);
         // Create transaction lock file
-        Files.createFile(Paths.get(baseDir + TXN_PREFIX + ts));
-        String baseName = ts + DELIMITER + ts;
+        Files.createFile(Paths.get(baseDir + TXN_PREFIX + baseName));
         return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + RTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));

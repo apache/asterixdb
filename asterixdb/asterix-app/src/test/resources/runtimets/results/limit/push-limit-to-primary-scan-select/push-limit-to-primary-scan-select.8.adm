@@ -20,7 +20,7 @@ distribute result [$$19]
                   -- ASSIGN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$22, $$t] <- test.TweetMessages condition (and(le(0, $$t.getField("user").getField("friends_count")), le($$t.getField("user").getField("friends_count"), 150))) limit 2
+                      data-scan []<-[$$22, $$t] <- test.TweetMessages condition (and(ge($$t.getField("user").getField("friends_count"), 0), le($$t.getField("user").getField("friends_count"), 150))) limit 2
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

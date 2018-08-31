@@ -1,0 +1,7 @@
+{ "o_custkey": 40, "o_orderkey": 323, "o_orderstatus": "F" }
+{ "o_custkey": 40, "o_orderkey": 3653, "o_orderstatus": "F" }
+{ "o_custkey": 40, "o_orderkey": 4934, "o_orderstatus": "O" }
+{ "o_custkey": 43, "o_orderkey": 258, "o_orderstatus": "F" }
+{ "o_custkey": 43, "o_orderkey": 2596, "o_orderstatus": "O" }
+{ "o_custkey": 43, "o_orderkey": 3687, "o_orderstatus": "F" }
+{ "o_custkey": 43, "o_orderkey": 5378, "o_orderstatus": "F" }

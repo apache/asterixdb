@@ -55,12 +55,13 @@ public class TestPrimaryIndexOperationTrackerFactory extends PrimaryIndexOperati
             DatasetLifecycleManager dslcManager = (DatasetLifecycleManager) appCtx.getDatasetLifecycleManager();
             DatasetResource dsr = dslcManager.getDatasetLifecycle(datasetId);
             int partition = StoragePathUtil.getPartitionNumFromRelativePath(resource.getPath());
-            PrimaryIndexOperationTracker opTracker = dslcManager.getOperationTracker(datasetId, partition);
+            PrimaryIndexOperationTracker opTracker =
+                    dslcManager.getOperationTracker(datasetId, partition, resource.getPath());
             if (!(opTracker instanceof TestPrimaryIndexOperationTracker)) {
                 Field opTrackersField = DatasetResource.class.getDeclaredField("datasetPrimaryOpTrackers");
                 opTracker = new TestPrimaryIndexOperationTracker(datasetId, partition,
                         appCtx.getTransactionSubsystem().getLogManager(), dsr.getDatasetInfo(),
-                        dslcManager.getComponentIdGenerator(datasetId, partition));
+                        dslcManager.getComponentIdGenerator(datasetId, partition, resource.getPath()));
                 replaceMapEntry(opTrackersField, dsr, partition, opTracker);
             }
             return opTracker;

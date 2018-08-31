@@ -22,7 +22,6 @@ import static org.apache.asterix.common.utils.StorageConstants.INDEX_CHECKPOINT_
 import static org.apache.asterix.common.utils.StorageConstants.METADATA_FILE_NAME;
 import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_CREATE_FILE;
 import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER;
-import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_TIMESTAMP_FORMAT;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -30,12 +29,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.Format;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -71,6 +67,7 @@ import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
+import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.util.ExitUtil;
@@ -128,9 +125,6 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             return true;
         }
     };
-
-    private static final ThreadLocal<SimpleDateFormat> THREAD_LOCAL_FORMATTER =
-            ThreadLocal.withInitial(() -> new SimpleDateFormat(COMPONENT_TIMESTAMP_FORMAT));
 
     // Finals
     private final IIOManager ioManager;
@@ -202,7 +196,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(resource.toJson(persistedResourceRegistry));
             final Path path = Paths.get(resourceFile.getAbsolutePath());
             Files.write(path, bytes);
-            indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(null, 0);
+            indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(Long.MIN_VALUE, 0);
             deleteResourceFileMask(resourceFile);
         } catch (Exception e) {
             cleanup(resourceFile);
@@ -481,29 +475,17 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     private void deleteIndexInvalidComponents(File index) throws IOException, ParseException {
-        final Format formatter = THREAD_LOCAL_FORMATTER.get();
         final File[] indexComponentFiles = index.listFiles(COMPONENT_FILES_FILTER);
         if (indexComponentFiles == null) {
             throw new IOException(index + " doesn't exist or an IO error occurred");
         }
-        final Optional<String> validComponentTimestamp = getIndexCheckpointManager(index).getValidComponentTimestamp();
-        if (!validComponentTimestamp.isPresent()) {
-            // index doesn't have any valid component, delete all
-            for (File componentFile : indexComponentFiles) {
+        final long validComponentSequence = getIndexCheckpointManager(index).getValidComponentSequence();
+        for (File componentFile : indexComponentFiles) {
+            // delete any file with start sequence > valid component sequence
+            final long fileStart = IndexComponentFileReference.of(componentFile.getName()).getSequenceStart();
+            if (fileStart > validComponentSequence) {
                 LOGGER.info(() -> "Deleting invalid component file: " + componentFile.getAbsolutePath());
                 Files.delete(componentFile.toPath());
-            }
-        } else {
-            final Date validTimestamp = (Date) formatter.parseObject(validComponentTimestamp.get());
-            for (File componentFile : indexComponentFiles) {
-                // delete any file with startTime > validTimestamp
-                final String fileStartTimeStr =
-                        AbstractLSMIndexFileManager.getComponentStartTime(componentFile.getName());
-                final Date fileStartTime = (Date) formatter.parseObject(fileStartTimeStr);
-                if (fileStartTime.after(validTimestamp)) {
-                    LOGGER.info(() -> "Deleting invalid component file: " + componentFile.getAbsolutePath());
-                    Files.delete(componentFile.toPath());
-                }
             }
         }
     }
@@ -545,8 +527,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                     long fileSize = file.length();
                     totalSize += fileSize;
                     if (isComponentFile(resolvedPath.getFile(), file.getName())) {
-                        String componentId = getComponentId(file.getAbsolutePath());
-                        componentsStats.put(componentId, componentsStats.getOrDefault(componentId, 0L) + fileSize);
+                        String componentSeq = getComponentSequence(file.getAbsolutePath());
+                        componentsStats.put(componentSeq, componentsStats.getOrDefault(componentSeq, 0L) + fileSize);
                     }
                 }
             }
@@ -576,17 +558,16 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     /**
-     * Gets a component id based on its unique timestamp.
-     * e.g. a component file 2018-01-08-01-08-50-439_2018-01-08-01-08-50-439_b
-     * will return a component id 2018-01-08-01-08-50-439_2018-01-08-01-08-50-439
+     * Gets a component sequence based on its unique timestamp.
+     * e.g. a component file 1_3_b
+     * will return a component sequence 1_3
      *
-     * @param componentFile
-     *            any component file
-     * @return The component id
+     * @param componentFile any component file
+     * @return The component sequence
      */
-    public static String getComponentId(String componentFile) {
+    public static String getComponentSequence(String componentFile) {
         final ResourceReference ref = ResourceReference.of(componentFile);
-        return ref.getName().substring(0, ref.getName().lastIndexOf(AbstractLSMIndexFileManager.DELIMITER));
+        return IndexComponentFileReference.of(ref.getName()).getSequence();
     }
 
     private static boolean isComponentMask(File mask) {

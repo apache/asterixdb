@@ -36,6 +36,7 @@ import org.apache.asterix.transaction.management.resource.PersistentLocalResourc
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
+import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 import org.apache.hyracks.storage.common.LocalResource;
 
 /**
@@ -62,20 +63,19 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
             DatasetResourceReference ref = DatasetResourceReference.of(ls);
             final IIndexCheckpointManager indexCheckpointManager = indexCheckpointManagerProvider.get(ref);
             indexCheckpointManager.delete();
-            // Get most recent timestamp of existing files to avoid deletion
+            // Get most recent sequence of existing files to avoid deletion
             Path indexPath = StoragePathUtil.getIndexPath(ioManager, ref);
             String[] files = indexPath.toFile().list(AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER);
             if (files == null) {
                 throw HyracksDataException
                         .create(new IOException(indexPath + " is not a directory or an IO Error occurred"));
             }
-            String mostRecentTimestamp = null;
+            long maxComponentSequence = Long.MIN_VALUE;
             for (String file : files) {
-                String nextTimeStamp = AbstractLSMIndexFileManager.getComponentEndTime(file);
-                mostRecentTimestamp = mostRecentTimestamp == null || nextTimeStamp.compareTo(mostRecentTimestamp) > 0
-                        ? nextTimeStamp : mostRecentTimestamp;
+                maxComponentSequence =
+                        Math.max(maxComponentSequence, IndexComponentFileReference.of(file).getSequenceEnd());
             }
-            indexCheckpointManager.init(mostRecentTimestamp, currentLSN);
+            indexCheckpointManager.init(maxComponentSequence, currentLSN);
         }
         ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
     }

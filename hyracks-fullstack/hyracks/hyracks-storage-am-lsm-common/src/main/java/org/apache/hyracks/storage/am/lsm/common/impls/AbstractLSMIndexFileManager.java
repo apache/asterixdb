@@ -21,12 +21,9 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.text.Format;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
@@ -42,7 +39,9 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.annotations.NotThreadSafe;
 
+@NotThreadSafe
 public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManager {
 
     public enum TreeIndexState {
@@ -76,22 +75,18 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
      */
     public static final String TXN_PREFIX = ".T";
 
-    public static final String COMPONENT_TIMESTAMP_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS";
-
     public static final FilenameFilter COMPONENT_FILES_FILTER = (dir, name) -> !name.startsWith(".");
     protected static final FilenameFilter txnFileNameFilter = (dir, name) -> name.startsWith(TXN_PREFIX);
     protected static FilenameFilter bloomFilterFilter =
             (dir, name) -> !name.startsWith(".") && name.endsWith(BLOOM_FILTER_SUFFIX);
-    protected static final FilenameFilter dummyFilter = (dir, name) -> true;
     protected static final Comparator<String> cmp = new FileNameComparator();
+    private static final FilenameFilter dummyFilter = (dir, name) -> true;
 
     protected final IIOManager ioManager;
     // baseDir should reflect dataset name and partition name and be absolute
     protected final FileReference baseDir;
-    protected final Format formatter = new SimpleDateFormat(COMPONENT_TIMESTAMP_FORMAT);
-    protected final Comparator<ComparableFileName> recencyCmp = new RecencyComparator();
+    protected final Comparator<IndexComponentFileReference> recencyCmp = new RecencyComparator();
     protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
-    private String prevTimestamp = null;
 
     public AbstractLSMIndexFileManager(IIOManager ioManager, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory) {
@@ -131,18 +126,18 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<ComparableFileName> allFiles,
+            TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<IndexComponentFileReference> allFiles,
             IBufferCache bufferCache) throws HyracksDataException {
         String[] files = listDirFiles(baseDir, filter);
         for (String fileName : files) {
             FileReference fileRef = baseDir.getChild(fileName);
             if (treeFactory == null) {
-                allFiles.add(new ComparableFileName(fileRef));
+                allFiles.add(IndexComponentFileReference.of(fileRef));
                 continue;
             }
             TreeIndexState idxState = isValidTreeIndex(treeFactory.createIndexInstance(fileRef));
             if (idxState == TreeIndexState.VALID) {
-                allFiles.add(new ComparableFileName(fileRef));
+                allFiles.add(IndexComponentFileReference.of(fileRef));
             } else if (idxState == TreeIndexState.INVALID) {
                 bufferCache.deleteFile(fileRef);
             }
@@ -167,18 +162,16 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         return files;
     }
 
-    protected void validateFiles(HashSet<String> groundTruth, ArrayList<ComparableFileName> validFiles,
+    protected void validateFiles(HashSet<String> groundTruth, ArrayList<IndexComponentFileReference> validFiles,
             FilenameFilter filter, TreeIndexFactory<? extends ITreeIndex> treeFactory, IBufferCache bufferCache)
             throws HyracksDataException {
-        ArrayList<ComparableFileName> tmpAllInvListsFiles = new ArrayList<>();
+        ArrayList<IndexComponentFileReference> tmpAllInvListsFiles = new ArrayList<>();
         cleanupAndGetValidFilesInternal(filter, treeFactory, tmpAllInvListsFiles, bufferCache);
-        for (ComparableFileName cmpFileName : tmpAllInvListsFiles) {
-            int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
-            String file = cmpFileName.fileName.substring(0, index);
-            if (groundTruth.contains(file)) {
+        for (IndexComponentFileReference cmpFileName : tmpAllInvListsFiles) {
+            if (groundTruth.contains(cmpFileName.getSequence())) {
                 validFiles.add(cmpFileName);
             } else {
-                delete(bufferCache, cmpFileName.fullPath);
+                delete(bufferCache, cmpFileName.getFullPath());
             }
         }
     }
@@ -198,30 +191,20 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
-        String ts = getCurrentTimestamp();
-        // Begin timestamp and end timestamp are identical since it is a flush
-        return new LSMComponentFileReferences(baseDir.getChild(ts + DELIMITER + ts), null, null);
+        final String sequence = getNextComponentSequence(COMPONENT_FILES_FILTER);
+        return new LSMComponentFileReferences(baseDir.getChild(sequence), null, null);
     }
 
     @Override
-    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
-            throws HyracksDataException {
-        String[] firstTimestampRange = firstFileName.split(DELIMITER);
-        String[] lastTimestampRange = lastFileName.split(DELIMITER);
-        String start = firstTimestampRange[0];
-        String end = lastTimestampRange[1];
-        if (end.compareTo(start) <= 0) {
-            throw new IllegalArgumentException(
-                    "A Merge file must have end greater than start. Found end: " + end + " and start: " + start);
-        }
-        // Get the range of timestamps by taking the earliest and the latest timestamps
-        return new LSMComponentFileReferences(baseDir.getChild(start + DELIMITER + end), null, null);
+    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName) {
+        final String baseName = IndexComponentFileReference.getMergeSequence(firstFileName, lastFileName);
+        return new LSMComponentFileReferences(baseDir.getChild(baseName), null, null);
     }
 
     @Override
     public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
-        ArrayList<ComparableFileName> allFiles = new ArrayList<>();
+        ArrayList<IndexComponentFileReference> allFiles = new ArrayList<>();
 
         // Gather files and delete invalid files
         // There are two types of invalid files:
@@ -235,40 +218,37 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
 
         if (allFiles.size() == 1) {
-            validFiles.add(new LSMComponentFileReferences(allFiles.get(0).fileRef, null, null));
+            validFiles.add(new LSMComponentFileReferences(allFiles.get(0).getFileRef(), null, null));
             return validFiles;
         }
 
-        // Sorts files names from earliest to latest timestamp.
+        // Sorts files names from earliest to latest
         Collections.sort(allFiles);
 
-        List<ComparableFileName> validComparableFiles = new ArrayList<>();
-        ComparableFileName last = allFiles.get(0);
+        List<IndexComponentFileReference> validComparableFiles = new ArrayList<>();
+        IndexComponentFileReference last = allFiles.get(0);
         validComparableFiles.add(last);
         for (int i = 1; i < allFiles.size(); i++) {
-            ComparableFileName current = allFiles.get(i);
-            // The current start timestamp is greater than last stop timestamp so current is valid.
-            if (current.interval[0].compareTo(last.interval[1]) > 0) {
+            IndexComponentFileReference current = allFiles.get(i);
+            if (current.isMoreRecentThan(last)) {
+                // The current start sequence is greater than last stop sequence so current is valid.
                 validComparableFiles.add(current);
                 last = current;
-            } else if (current.interval[0].compareTo(last.interval[0]) >= 0
-                    && current.interval[1].compareTo(last.interval[1]) <= 0) {
+            } else if (current.isWithin(last)) {
                 // The current file is completely contained in the interval of the
                 // last file. Thus the last file must contain at least as much information
                 // as the current file, so delete the current file.
-                delete(treeFactory.getBufferCache(), current.fullPath);
+                delete(treeFactory.getBufferCache(), current.getFullPath());
             } else {
                 // This scenario should not be possible since timestamps are monotonically increasing.
                 throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);
             }
         }
-
         // Sort valid files in reverse lexicographical order, such that newer files come first.
-        Collections.sort(validComparableFiles, recencyCmp);
-        for (ComparableFileName cmpFileName : validComparableFiles) {
-            validFiles.add(new LSMComponentFileReferences(cmpFileName.fileRef, null, null));
+        validComparableFiles.sort(recencyCmp);
+        for (IndexComponentFileReference cmpFileName : validComparableFiles) {
+            validFiles.add(new LSMComponentFileReferences(cmpFileName.getFileRef(), null, null));
         }
-
         return validFiles;
     }
 
@@ -287,8 +267,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     private static class FileNameComparator implements Comparator<String> {
         @Override
         public int compare(String a, String b) {
-            // Consciously ignoring locale.
-            return -a.compareTo(b);
+            return IndexComponentFileReference.of(b).compareTo(IndexComponentFileReference.of(a));
         }
     }
 
@@ -309,45 +288,14 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
     }
 
-    protected class ComparableFileName implements Comparable<ComparableFileName> {
-        public final FileReference fileRef;
-        public final String fullPath;
-        public final String fileName;
-
-        // Timestamp interval.
-        public final String[] interval;
-
-        public ComparableFileName(FileReference fileRef) {
-            this.fileRef = fileRef;
-            this.fullPath = fileRef.getFile().getAbsolutePath();
-            this.fileName = fileRef.getFile().getName();
-            interval = fileName.split(DELIMITER);
-        }
-
+    private class RecencyComparator implements Comparator<IndexComponentFileReference> {
         @Override
-        public int compareTo(ComparableFileName b) {
-            int startCmp = interval[0].compareTo(b.interval[0]);
+        public int compare(IndexComponentFileReference a, IndexComponentFileReference b) {
+            int startCmp = -Long.compare(a.getSequenceStart(), b.getSequenceStart());
             if (startCmp != 0) {
                 return startCmp;
             }
-            return b.interval[1].compareTo(interval[1]);
-        }
-
-        @Override
-        public String toString() {
-            return "{\"type\" : \"" + (interval[0].equals(interval[1]) ? "flush" : "merge") + "\", \"start\" : \""
-                    + interval[0] + "\", \"end\" : \"" + interval[1] + "\"}";
-        }
-    }
-
-    private class RecencyComparator implements Comparator<ComparableFileName> {
-        @Override
-        public int compare(ComparableFileName a, ComparableFileName b) {
-            int cmp = -a.interval[0].compareTo(b.interval[0]);
-            if (cmp != 0) {
-                return cmp;
-            }
-            return -a.interval[1].compareTo(b.interval[1]);
+            return -Long.compare(a.getSequenceEnd(), b.getSequenceEnd());
         }
     }
 
@@ -382,10 +330,10 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         return null;
     }
 
-    protected static FilenameFilter createTransactionFilter(String transactionFileName, final boolean inclusive) {
+    private static FilenameFilter createTransactionFilter(String transactionFileName, final boolean inclusive) {
         final String timeStamp =
                 transactionFileName.substring(transactionFileName.indexOf(TXN_PREFIX) + TXN_PREFIX.length());
-        return (dir, name) -> inclusive ? name.startsWith(timeStamp) : !name.startsWith(timeStamp);
+        return (dir, name) -> inclusive == name.startsWith(timeStamp);
     }
 
     protected FilenameFilter getTransactionFileFilter(boolean inclusive) throws HyracksDataException {
@@ -406,34 +354,12 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         return (dir, name) -> filter1.accept(dir, name) && filter2.accept(dir, name);
     }
 
-    /**
-     * @return The string format of the current timestamp.
-     *         The returned results of this method are guaranteed to not have duplicates.
-     */
-    protected String getCurrentTimestamp() {
-        Date date = new Date();
-        String ts = formatter.format(date);
-        /**
-         * prevent a corner case where the same timestamp can be given.
-         */
-        while (prevTimestamp != null && ts.compareTo(prevTimestamp) == 0) {
-            try {
-                Thread.sleep(1);
-                date = new Date();
-                ts = formatter.format(date);
-            } catch (InterruptedException e) {
-                //ignore
-            }
+    protected String getNextComponentSequence(FilenameFilter filenameFilter) throws HyracksDataException {
+        long maxComponentSeq = -1;
+        final String[] files = listDirFiles(baseDir, filenameFilter);
+        for (String fileName : files) {
+            maxComponentSeq = Math.max(maxComponentSeq, IndexComponentFileReference.of(fileName).getSequenceEnd());
         }
-        prevTimestamp = ts;
-        return ts;
-    }
-
-    public static String getComponentStartTime(String fileName) {
-        return fileName.split(DELIMITER)[0];
-    }
-
-    public static String getComponentEndTime(String fileName) {
-        return fileName.split(DELIMITER)[1];
+        return IndexComponentFileReference.getFlushSequence(maxComponentSeq + 1);
     }
 }

@@ -24,12 +24,14 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 public class LSMComponentId implements ILSMComponentId {
 
     public static final long NOT_FOUND = -1;
+    public static final long MIN_VALID_COMPONENT_ID = 0;
 
     // Used to represent an empty index with no components
     public static final LSMComponentId EMPTY_INDEX_LAST_COMPONENT_ID = new LSMComponentId(NOT_FOUND, NOT_FOUND);
 
     // A default component id used for bulk loaded component
-    public static final LSMComponentId DEFAULT_COMPONENT_ID = new LSMComponentId(0, 0);
+    public static final LSMComponentId DEFAULT_COMPONENT_ID =
+            new LSMComponentId(MIN_VALID_COMPONENT_ID, MIN_VALID_COMPONENT_ID);
 
     private long minId;
 

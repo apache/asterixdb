@@ -49,7 +49,7 @@ public class PrimaryIndexOperationTrackerFactory implements ILSMOperationTracker
         IDatasetLifecycleManager dslcManager =
                 ((INcApplicationContext) ctx.getApplicationContext()).getDatasetLifecycleManager();
         int partition = StoragePathUtil.getPartitionNumFromRelativePath(resource.getPath());
-        return dslcManager.getOperationTracker(datasetId, partition);
+        return dslcManager.getOperationTracker(datasetId, partition, resource.getPath());
     }
 
     @Override

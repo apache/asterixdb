@@ -94,6 +94,7 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                             listAccessor.reset(listBytes, listOffset);
                             // calculate length first
                             int utf8Len = 0;
+                            boolean itemIsNull = false;
                             for (int i = 0; i < listAccessor.size(); i++) {
                                 int itemOffset = listAccessor.getItemOffset(i);
                                 ATypeTag itemType = listAccessor.getItemType(itemOffset);
@@ -104,9 +105,8 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                 }
                                 if (itemType != ATypeTag.STRING) {
                                     if (itemType == ATypeTag.NULL) {
-                                        nullSerde.serialize(ANull.NULL, out);
-                                        result.set(resultStorage);
-                                        return;
+                                        itemIsNull = true;
+                                        continue;
                                     }
                                     if (itemType == ATypeTag.MISSING) {
                                         missingSerde.serialize(AMissing.MISSING, out);
@@ -117,6 +117,11 @@ public class StringConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                             itemType.serialize());
                                 }
                                 utf8Len += UTF8StringUtil.getUTFLength(listBytes, itemOffset);
+                            }
+                            if (itemIsNull) {
+                                nullSerde.serialize(ANull.NULL, out);
+                                result.set(resultStorage);
+                                return;
                             }
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             int cbytes = UTF8StringUtil.encodeUTF8Length(utf8Len, tempLengthArray, 0);

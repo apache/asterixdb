@@ -19,6 +19,7 @@
 package org.apache.asterix.common.context;
 
 import static org.apache.asterix.common.metadata.MetadataIndexImmutableProperties.METADATA_DATASETS_PARTITIONS;
+import static org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId.MIN_VALID_COMPONENT_ID;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,7 +38,9 @@ import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.storage.DatasetResourceReference;
+import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
@@ -322,32 +325,36 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public synchronized PrimaryIndexOperationTracker getOperationTracker(int datasetId, int partition) {
+    public synchronized PrimaryIndexOperationTracker getOperationTracker(int datasetId, int partition, String path) {
         DatasetResource dataset = datasets.get(datasetId);
         PrimaryIndexOperationTracker opTracker = dataset.getOpTracker(partition);
         if (opTracker == null) {
-            populateOpTrackerAndIdGenerator(dataset, partition);
+            populateOpTrackerAndIdGenerator(dataset, partition, path);
             opTracker = dataset.getOpTracker(partition);
         }
         return opTracker;
     }
 
     @Override
-    public synchronized ILSMComponentIdGenerator getComponentIdGenerator(int datasetId, int partition) {
+    public synchronized ILSMComponentIdGenerator getComponentIdGenerator(int datasetId, int partition, String path) {
         DatasetResource dataset = datasets.get(datasetId);
-        if (dataset == null) {
-            return null;
-        }
         ILSMComponentIdGenerator generator = dataset.getComponentIdGenerator(partition);
         if (generator == null) {
-            populateOpTrackerAndIdGenerator(dataset, partition);
+            populateOpTrackerAndIdGenerator(dataset, partition, path);
             generator = dataset.getComponentIdGenerator(partition);
         }
         return generator;
     }
 
-    private void populateOpTrackerAndIdGenerator(DatasetResource dataset, int partition) {
-        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(storageProperties.getMemoryComponentsNum());
+    @Override
+    public synchronized boolean isRegistered(int datasetId) {
+        return datasets.containsKey(datasetId);
+    }
+
+    private void populateOpTrackerAndIdGenerator(DatasetResource dataset, int partition, String path) {
+        final long lastValidId = getDatasetLastValidComponentId(path);
+        ILSMComponentIdGenerator idGenerator =
+                new LSMComponentIdGenerator(storageProperties.getMemoryComponentsNum(), lastValidId);
         PrimaryIndexOperationTracker opTracker = new PrimaryIndexOperationTracker(dataset.getDatasetID(), partition,
                 logManager, dataset.getDatasetInfo(), idGenerator);
         dataset.setPrimaryIndexOperationTracker(partition, opTracker);
@@ -598,6 +605,20 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             }
             indexCheckpointManagerProvider.close(DatasetResourceReference.of(indexInfo.getLocalResource()));
             indexInfo.setOpen(false);
+        }
+    }
+
+    private long getDatasetLastValidComponentId(String indexPath) {
+        try {
+            final ResourceReference indexRef = ResourceReference.ofIndex(indexPath);
+            final ResourceReference primaryIndexRef = indexRef.getDatasetReference();
+            final IIndexCheckpointManager indexCheckpointManager = indexCheckpointManagerProvider.get(primaryIndexRef);
+            if (indexCheckpointManager.getCheckpointCount() > 0) {
+                return Math.max(indexCheckpointManager.getLatest().getLastComponentId(), MIN_VALID_COMPONENT_ID);
+            }
+            return MIN_VALID_COMPONENT_ID;
+        } catch (HyracksDataException e) {
+            throw new IllegalStateException(e);
         }
     }
 }

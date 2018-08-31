@@ -92,6 +92,14 @@
         <expected-error>Duplicate alias definitions: s1</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="flwor">
+      <compilation-unit name="query-ASTERIXDB-2446">
+        <output-dir compare="Text">query-ASTERIXDB-883</output-dir>
+        <expected-error>ASX0013: Duplicate field name "a"</expected-error>
+        <expected-error>ASX0013: Duplicate field name "c"</expected-error>
+        <expected-error>ASX0013: Duplicate field name "e"</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="explain">
     <test-case FilePath="explain">
@@ -3367,6 +3375,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="intersection-with-between">
+        <output-dir compare="Text">intersection-with-between</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="inverted-index-ngram-contains">
         <output-dir compare="Text">inverted-index-ngram-contains</output-dir>
       </compilation-unit>
@@ -6611,6 +6624,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="string-concat2">
+        <output-dir compare="Text">string-concat2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="string-equal1">
         <output-dir compare="Text">string-equal1</output-dir>
       </compilation-unit>
@@ -9826,6 +9844,11 @@
     <test-case FilePath="binary">
       <compilation-unit name="concat">
         <output-dir compare="Text">concat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="binary">
+      <compilation-unit name="concat2">
+        <output-dir compare="Text">concat2</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="binary">

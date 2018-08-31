@@ -29,5 +29,12 @@
             missing,
             case when get_year(current_datetime()) > 0 then missing else false end,
             case when get_year(current_datetime()) > 0 then true else null end
+        ),
+   "j": (
+            let v = if_missing(
+                case when get_year(current_datetime()) > 0 then missing else false end,
+                { "c": [ 2 ] }
+            )
+            select v as b
         )
 };

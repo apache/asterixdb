@@ -38,5 +38,4 @@ public interface ILSMComponentIdGenerator {
      * @return the index of the current memory component
      */
     int getCurrentComponentIndex();
-
 }

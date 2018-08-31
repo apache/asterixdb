@@ -26,12 +26,15 @@ import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
 import org.apache.hyracks.control.cc.scheduler.IResourceManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 // To avoid the computation cost for checking the capacity constraint for each node,
 // currently the admit/allocation decisions are based on the aggregated resource information.
 // TODO(buyingyi): investigate partition-aware resource control.
 public class JobCapacityController implements IJobCapacityController {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IResourceManager resourceManager;
 
     public JobCapacityController(IResourceManager resourceManager) {
@@ -71,6 +74,16 @@ public class JobCapacityController implements IJobCapacityController {
         int aggregatedNumCores = currentCapacity.getAggregatedCores();
         currentCapacity.setAggregatedMemoryByteSize(aggregatedMemoryByteSize + reqAggregatedMemoryByteSize);
         currentCapacity.setAggregatedCores(aggregatedNumCores + reqAggregatedNumCores);
+        ensureMaxCapacity();
     }
 
+    private void ensureMaxCapacity() {
+        final IClusterCapacity currentCapacity = resourceManager.getCurrentCapacity();
+        final IReadOnlyClusterCapacity maximumCapacity = resourceManager.getMaximumCapacity();
+        if (currentCapacity.getAggregatedCores() > maximumCapacity.getAggregatedCores()
+                || currentCapacity.getAggregatedMemoryByteSize() > maximumCapacity.getAggregatedMemoryByteSize()) {
+            LOGGER.warn("Current cluster available capacity {} is more than its maximum capacity {}", currentCapacity,
+                    maximumCapacity);
+        }
+    }
 }

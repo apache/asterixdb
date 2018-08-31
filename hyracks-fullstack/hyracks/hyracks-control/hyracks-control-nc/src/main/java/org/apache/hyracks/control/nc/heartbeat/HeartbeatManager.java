@@ -63,7 +63,6 @@ public class HeartbeatManager {
     }
 
     public void notifyAck(HyracksDataException exception) {
-        // TODO: we should also reregister in case of no ack
         LOGGER.debug("ack rec'd from {} w/ exception: {}", ccId::toString, () -> String.valueOf(exception));
         if (exception != null && exception.matches(ErrorCode.HYRACKS, ErrorCode.NO_SUCH_NODE)) {
             LOGGER.info("{} indicates it does not recognize us; force a reconnect", ccId);

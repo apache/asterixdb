@@ -32,6 +32,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
 
@@ -57,21 +58,15 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
-        String ts = getCurrentTimestamp();
-        String baseName = ts + DELIMITER + ts;
-        // Begin timestamp and end timestamp are identical since it is a flush
+        String baseName = getNextComponentSequence(deletedKeysBTreeFilter);
         return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + DICT_BTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + DELETED_KEYS_BTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
     }
 
     @Override
-    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName)
-            throws HyracksDataException {
-        String[] firstTimestampRange = firstFileName.split(DELIMITER);
-        String[] lastTimestampRange = lastFileName.split(DELIMITER);
-        String baseName = firstTimestampRange[0] + DELIMITER + lastTimestampRange[1];
-        // Get the range of timestamps by taking the earliest and the latest timestamps
+    public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName) {
+        final String baseName = IndexComponentFileReference.getMergeSequence(firstFileName, lastFileName);
         return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + DICT_BTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + DELETED_KEYS_BTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
@@ -80,18 +75,17 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
     @Override
     public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
-        ArrayList<ComparableFileName> allDictBTreeFiles = new ArrayList<>();
-        ArrayList<ComparableFileName> allInvListsFiles = new ArrayList<>();
-        ArrayList<ComparableFileName> allDeletedKeysBTreeFiles = new ArrayList<>();
-        ArrayList<ComparableFileName> allBloomFilterFiles = new ArrayList<>();
+        ArrayList<IndexComponentFileReference> allDictBTreeFiles = new ArrayList<>();
+        ArrayList<IndexComponentFileReference> allInvListsFiles = new ArrayList<>();
+        ArrayList<IndexComponentFileReference> allDeletedKeysBTreeFiles = new ArrayList<>();
+        ArrayList<IndexComponentFileReference> allBloomFilterFiles = new ArrayList<>();
 
         // Gather files.
         cleanupAndGetValidFilesInternal(deletedKeysBTreeFilter, btreeFactory, allDeletedKeysBTreeFiles,
                 btreeFactory.getBufferCache());
         HashSet<String> deletedKeysBTreeFilesSet = new HashSet<>();
-        for (ComparableFileName cmpFileName : allDeletedKeysBTreeFiles) {
-            int index = cmpFileName.fileName.lastIndexOf(DELIMITER);
-            deletedKeysBTreeFilesSet.add(cmpFileName.fileName.substring(0, index));
+        for (IndexComponentFileReference cmpFileName : allDeletedKeysBTreeFiles) {
+            deletedKeysBTreeFilesSet.add(cmpFileName.getSequence());
         }
 
         // TODO: do we really need to validate the inverted lists files or is validating the dict. BTrees is enough?
@@ -116,52 +110,48 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
         if (allDictBTreeFiles.size() == 1 && allInvListsFiles.size() == 1 && allDeletedKeysBTreeFiles.size() == 1
                 && allBloomFilterFiles.size() == 1) {
-            validFiles.add(new LSMComponentFileReferences(allDictBTreeFiles.get(0).fileRef,
-                    allDeletedKeysBTreeFiles.get(0).fileRef, allBloomFilterFiles.get(0).fileRef));
+            validFiles.add(new LSMComponentFileReferences(allDictBTreeFiles.get(0).getFileRef(),
+                    allDeletedKeysBTreeFiles.get(0).getFileRef(), allBloomFilterFiles.get(0).getFileRef()));
             return validFiles;
         }
 
-        // Sorts files names from earliest to latest timestamp.
+        // Sorts files names from earliest to latest sequence.
         Collections.sort(allDeletedKeysBTreeFiles);
         Collections.sort(allDictBTreeFiles);
         Collections.sort(allBloomFilterFiles);
 
-        List<ComparableFileName> validComparableDictBTreeFiles = new ArrayList<>();
-        ComparableFileName lastDictBTree = allDictBTreeFiles.get(0);
+        List<IndexComponentFileReference> validComparableDictBTreeFiles = new ArrayList<>();
+        IndexComponentFileReference lastDictBTree = allDictBTreeFiles.get(0);
         validComparableDictBTreeFiles.add(lastDictBTree);
 
-        List<ComparableFileName> validComparableDeletedKeysBTreeFiles = new ArrayList<>();
-        ComparableFileName lastDeletedKeysBTree = allDeletedKeysBTreeFiles.get(0);
+        List<IndexComponentFileReference> validComparableDeletedKeysBTreeFiles = new ArrayList<>();
+        IndexComponentFileReference lastDeletedKeysBTree = allDeletedKeysBTreeFiles.get(0);
         validComparableDeletedKeysBTreeFiles.add(lastDeletedKeysBTree);
 
-        List<ComparableFileName> validComparableBloomFilterFiles = new ArrayList<>();
-        ComparableFileName lastBloomFilter = allBloomFilterFiles.get(0);
+        List<IndexComponentFileReference> validComparableBloomFilterFiles = new ArrayList<>();
+        IndexComponentFileReference lastBloomFilter = allBloomFilterFiles.get(0);
         validComparableBloomFilterFiles.add(lastBloomFilter);
 
         for (int i = 1; i < allDictBTreeFiles.size(); i++) {
-            ComparableFileName currentDeletedKeysBTree = allDeletedKeysBTreeFiles.get(i);
-            ComparableFileName currentDictBTree = allDictBTreeFiles.get(i);
-            ComparableFileName currentBloomFilter = allBloomFilterFiles.get(i);
-            // Current start timestamp is greater than last stop timestamp.
-            if (currentDeletedKeysBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[1]) > 0
-                    && currentDictBTree.interval[0].compareTo(lastDictBTree.interval[1]) > 0
-                    && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[1]) > 0) {
+            IndexComponentFileReference currentDeletedKeysBTree = allDeletedKeysBTreeFiles.get(i);
+            IndexComponentFileReference currentDictBTree = allDictBTreeFiles.get(i);
+            IndexComponentFileReference currentBloomFilter = allBloomFilterFiles.get(i);
+            // Current start sequence is greater than last stop sequence.
+            if (currentDeletedKeysBTree.isMoreRecentThan(lastDeletedKeysBTree)
+                    && currentDictBTree.isMoreRecentThan(lastDictBTree)
+                    && currentBloomFilter.isMoreRecentThan(lastBloomFilter)) {
                 validComparableDictBTreeFiles.add(currentDictBTree);
                 validComparableDeletedKeysBTreeFiles.add(currentDeletedKeysBTree);
                 validComparableBloomFilterFiles.add(currentBloomFilter);
                 lastDictBTree = currentDictBTree;
                 lastDeletedKeysBTree = currentDeletedKeysBTree;
                 lastBloomFilter = currentBloomFilter;
-            } else if (currentDeletedKeysBTree.interval[0].compareTo(lastDeletedKeysBTree.interval[0]) >= 0
-                    && currentDeletedKeysBTree.interval[1].compareTo(lastDeletedKeysBTree.interval[1]) <= 0
-                    && currentDictBTree.interval[0].compareTo(lastDictBTree.interval[0]) >= 0
-                    && currentDictBTree.interval[1].compareTo(lastDictBTree.interval[1]) <= 0
-                    && currentBloomFilter.interval[0].compareTo(lastBloomFilter.interval[0]) >= 0
-                    && currentBloomFilter.interval[1].compareTo(lastBloomFilter.interval[1]) <= 0) {
-                // Invalid files are completely contained in last interval.
-                delete(treeFactory.getBufferCache(), currentDeletedKeysBTree.fullPath);
-                delete(treeFactory.getBufferCache(), currentDictBTree.fullPath);
-                delete(treeFactory.getBufferCache(), currentBloomFilter.fullPath);
+            } else if (currentDeletedKeysBTree.isWithin(lastDeletedKeysBTree)
+                    && currentDictBTree.isWithin(lastDictBTree) && currentBloomFilter.isWithin(lastBloomFilter)) {
+                // Invalid files are completely contained in last sequence.
+                delete(treeFactory.getBufferCache(), currentDeletedKeysBTree.getFullPath());
+                delete(treeFactory.getBufferCache(), currentDictBTree.getFullPath());
+                delete(treeFactory.getBufferCache(), currentBloomFilter.getFullPath());
             } else {
                 // This scenario should not be possible.
                 throw HyracksDataException.create(ErrorCode.FOUND_OVERLAPPING_LSM_FILES, baseDir);
@@ -170,21 +160,20 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
 
         // Sort valid files in reverse lexicographical order, such that newer
         // files come first.
-        Collections.sort(validComparableDictBTreeFiles, recencyCmp);
-        Collections.sort(validComparableDeletedKeysBTreeFiles, recencyCmp);
-        Collections.sort(validComparableBloomFilterFiles, recencyCmp);
+        validComparableDictBTreeFiles.sort(recencyCmp);
+        validComparableDeletedKeysBTreeFiles.sort(recencyCmp);
+        validComparableBloomFilterFiles.sort(recencyCmp);
 
-        Iterator<ComparableFileName> dictBTreeFileIter = validComparableDictBTreeFiles.iterator();
-        Iterator<ComparableFileName> deletedKeysBTreeIter = validComparableDeletedKeysBTreeFiles.iterator();
-        Iterator<ComparableFileName> bloomFilterFileIter = validComparableBloomFilterFiles.iterator();
+        Iterator<IndexComponentFileReference> dictBTreeFileIter = validComparableDictBTreeFiles.iterator();
+        Iterator<IndexComponentFileReference> deletedKeysBTreeIter = validComparableDeletedKeysBTreeFiles.iterator();
+        Iterator<IndexComponentFileReference> bloomFilterFileIter = validComparableBloomFilterFiles.iterator();
         while (dictBTreeFileIter.hasNext() && deletedKeysBTreeIter.hasNext()) {
-            ComparableFileName cmpDictBTreeFile = dictBTreeFileIter.next();
-            ComparableFileName cmpDeletedKeysBTreeFile = deletedKeysBTreeIter.next();
-            ComparableFileName cmpBloomFilterFileName = bloomFilterFileIter.next();
-            validFiles.add(new LSMComponentFileReferences(cmpDictBTreeFile.fileRef, cmpDeletedKeysBTreeFile.fileRef,
-                    cmpBloomFilterFileName.fileRef));
+            IndexComponentFileReference cmpDictBTreeFile = dictBTreeFileIter.next();
+            IndexComponentFileReference cmpDeletedKeysBTreeFile = deletedKeysBTreeIter.next();
+            IndexComponentFileReference cmpBloomFilterFileName = bloomFilterFileIter.next();
+            validFiles.add(new LSMComponentFileReferences(cmpDictBTreeFile.getFileRef(),
+                    cmpDeletedKeysBTreeFile.getFileRef(), cmpBloomFilterFileName.getFileRef()));
         }
-
         return validFiles;
     }
 

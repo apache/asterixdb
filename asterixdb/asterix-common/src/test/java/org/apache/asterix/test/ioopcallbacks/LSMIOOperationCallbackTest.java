@@ -19,9 +19,8 @@
 
 package org.apache.asterix.test.ioopcallbacks;
 
-import java.text.Format;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import static org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId.MIN_VALID_COMPONENT_ID;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +37,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.DiskComponentMetadata;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
@@ -64,13 +62,11 @@ public class LSMIOOperationCallbackTest extends TestCase {
      * 7. destroy
      */
 
-    private static final Format FORMATTER =
-            new SimpleDateFormat(AbstractLSMIndexFileManager.COMPONENT_TIMESTAMP_FORMAT);
+    private static long COMPONENT_SEQUENCE = 0;
 
     private static String getComponentFileName() {
-        Date date = new Date();
-        String ts = FORMATTER.format(date);
-        return ts + '_' + ts;
+        final String sequence = String.valueOf(COMPONENT_SEQUENCE++);
+        return sequence + '_' + sequence;
     }
 
     @Test
@@ -82,7 +78,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(numMemoryComponents);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(Mockito.mock(AbstractLSMMemoryComponent.class));
         DatasetInfo dsInfo = new DatasetInfo(101, null);
-        LSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents);
+        LSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents, MIN_VALID_COMPONENT_ID);
         LSMIOOperationCallback callback = new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator.getId(),
                 mockIndexCheckpointManagerProvider());
         //Flush first
@@ -141,7 +137,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
     public void testAllocateComponentId() throws HyracksDataException {
         int numMemoryComponents = 2;
         DatasetInfo dsInfo = new DatasetInfo(101, null);
-        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents);
+        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents, MIN_VALID_COMPONENT_ID);
         ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(numMemoryComponents);
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
@@ -153,9 +149,6 @@ public class LSMIOOperationCallbackTest extends TestCase {
         idGenerator.refresh();
         long flushLsn = 1L;
         ILSMComponentId nextComponentId = idGenerator.getId();
-        Map<String, Object> flushMap = new HashMap<>();
-        flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
-        flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
         callback.allocated(mockComponent);
         callback.recycled(mockComponent);
         checkMemoryComponent(initialId, mockComponent);
@@ -165,7 +158,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
     public void testRecycleComponentId() throws HyracksDataException {
         int numMemoryComponents = 2;
         DatasetInfo dsInfo = new DatasetInfo(101, null);
-        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents);
+        ILSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents, MIN_VALID_COMPONENT_ID);
         ILSMIndex mockIndex = Mockito.mock(ILSMIndex.class);
         Mockito.when(mockIndex.getNumberOfAllMemoryComponents()).thenReturn(numMemoryComponents);
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
@@ -223,7 +216,8 @@ public class LSMIOOperationCallbackTest extends TestCase {
         IIndexCheckpointManagerProvider indexCheckpointManagerProvider =
                 Mockito.mock(IIndexCheckpointManagerProvider.class);
         IIndexCheckpointManager indexCheckpointManager = Mockito.mock(IIndexCheckpointManager.class);
-        Mockito.doNothing().when(indexCheckpointManager).flushed(Mockito.any(), Mockito.anyLong(), Mockito.anyLong());
+        Mockito.doNothing().when(indexCheckpointManager).flushed(Mockito.anyLong(), Mockito.anyLong(),
+                Mockito.anyLong());
         Mockito.doReturn(indexCheckpointManager).when(indexCheckpointManagerProvider).get(Mockito.any());
         return indexCheckpointManagerProvider;
     }

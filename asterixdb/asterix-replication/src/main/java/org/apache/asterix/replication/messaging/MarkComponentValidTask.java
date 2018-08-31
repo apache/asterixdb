@@ -37,6 +37,7 @@ import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.replication.sync.IndexSynchronizer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
+import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 
 /**
  * A task to mark a replicated LSM component as valid
@@ -57,7 +58,7 @@ public class MarkComponentValidTask implements IReplicaTask {
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) {
         try {
             if (masterLsn == IndexSynchronizer.BULKLOAD_LSN) {
-                updateBulkLoadedLastComponentTimestamp(appCtx);
+                updateBulkLoadedLastComponentSequence(appCtx);
             } else if (masterLsn != IndexSynchronizer.MERGE_LSN) {
                 ensureComponentLsnFlushed(appCtx);
             }
@@ -70,13 +71,12 @@ public class MarkComponentValidTask implements IReplicaTask {
         }
     }
 
-    private void updateBulkLoadedLastComponentTimestamp(INcApplicationContext appCtx) throws HyracksDataException {
+    private void updateBulkLoadedLastComponentSequence(INcApplicationContext appCtx) throws HyracksDataException {
         final ResourceReference indexRef = ResourceReference.of(file);
         final IIndexCheckpointManagerProvider checkpointManagerProvider = appCtx.getIndexCheckpointManagerProvider();
         final IIndexCheckpointManager indexCheckpointManager = checkpointManagerProvider.get(indexRef);
-        final String componentEndTime = AbstractLSMIndexFileManager.getComponentEndTime(indexRef.getName());
-        indexCheckpointManager.advanceValidComponentTimestamp(componentEndTime);
-
+        final long componentSequence = IndexComponentFileReference.of(indexRef.getName()).getSequenceEnd();
+        indexCheckpointManager.advanceValidComponentSequence(componentSequence);
     }
 
     private void ensureComponentLsnFlushed(INcApplicationContext appCtx)
@@ -95,8 +95,8 @@ public class MarkComponentValidTask implements IReplicaTask {
                 indexCheckpointManager.wait(replicationTimeOut);
                 replicationTimeOut -= TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
             }
-            final String componentEndTime = AbstractLSMIndexFileManager.getComponentEndTime(indexRef.getName());
-            indexCheckpointManager.replicated(componentEndTime, masterLsn, lastComponentId);
+            final long componentSequence = IndexComponentFileReference.of(indexRef.getName()).getSequenceEnd();
+            indexCheckpointManager.replicated(componentSequence, masterLsn, lastComponentId);
         }
     }
 

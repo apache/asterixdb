@@ -30,5 +30,12 @@
             null,
             case when get_year(current_datetime()) > 0 then null else false end,
             case when get_year(current_datetime()) > 0 then true else missing end
+        ),
+   "j": (
+            let v = if_null(
+                case when get_year(current_datetime()) > 0 then null else false end,
+                { "c": [ 2 ] }
+            )
+            select v as b
         )
 };

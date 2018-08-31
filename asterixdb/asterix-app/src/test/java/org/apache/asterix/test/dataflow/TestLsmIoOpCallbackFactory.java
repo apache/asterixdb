@@ -28,7 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
@@ -64,8 +64,8 @@ public class TestLsmIoOpCallbackFactory extends LSMIndexIOOperationCallbackFacto
         // Whenever this is called, it resets the counter
         // However, the counters for the failed operations are never reset since we expect them
         // To be always 0
-        return new TestLsmIoOpCallback(datasetInfoProvider.getDatasetInfo(ncCtx), index,
-                getComponentIdGenerator().getId(), getIndexCheckpointManagerProvider());
+        return new TestLsmIoOpCallback(datasetInfoProvider.getDatasetInfo(ncCtx), index, getComponentIdGenerator(),
+                getIndexCheckpointManagerProvider());
     }
 
     public int getTotalFlushes() {
@@ -125,9 +125,9 @@ public class TestLsmIoOpCallbackFactory extends LSMIndexIOOperationCallbackFacto
     public class TestLsmIoOpCallback extends LSMIOOperationCallback {
         private final TestLsmBtree lsmBtree;
 
-        public TestLsmIoOpCallback(DatasetInfo dsInfo, ILSMIndex index, ILSMComponentId id,
+        public TestLsmIoOpCallback(DatasetInfo dsInfo, ILSMIndex index, ILSMComponentIdGenerator idGenerator,
                 IIndexCheckpointManagerProvider checkpointManagerProvider) {
-            super(dsInfo, index, id, checkpointManagerProvider);
+            super(dsInfo, index, idGenerator.getId(), checkpointManagerProvider);
             lsmBtree = (TestLsmBtree) index;
         }
 

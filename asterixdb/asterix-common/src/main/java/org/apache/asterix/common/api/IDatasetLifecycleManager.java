@@ -40,6 +40,15 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
     IIndex getIndex(int datasetId, long indexId) throws HyracksDataException;
 
     /**
+     * Indicates if the dataset with id {@code datasetId} is currently registered
+     * with this {@link IDatasetLifecycleManager}
+     *
+     * @param datasetId
+     * @return true if the dataset is currently registered. Otherwise false.
+     */
+    boolean isRegistered(int datasetId);
+
+    /**
      * Flushes all open datasets synchronously.
      *
      * @throws HyracksDataException
@@ -76,18 +85,20 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      *
      * @param datasetId
      * @param partition
+     * @param path
      * @return
      */
-    PrimaryIndexOperationTracker getOperationTracker(int datasetId, int partition);
+    PrimaryIndexOperationTracker getOperationTracker(int datasetId, int partition, String path);
 
     /**
      * creates (if necessary) and returns the component Id generator of a dataset.
      *
      * @param datasetId
      * @param partition
+     * @param path
      * @return
      */
-    ILSMComponentIdGenerator getComponentIdGenerator(int datasetId, int partition);
+    ILSMComponentIdGenerator getComponentIdGenerator(int datasetId, int partition, String path);
 
     /**
      * creates (if necessary) and returns the dataset virtual buffer caches.
