@@ -3220,6 +3220,11 @@
         <expected-error>The byte size of a single group</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="redundant-var-in-groupby">
+        <output-dir compare="Text">redundant-var-in-groupby</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">

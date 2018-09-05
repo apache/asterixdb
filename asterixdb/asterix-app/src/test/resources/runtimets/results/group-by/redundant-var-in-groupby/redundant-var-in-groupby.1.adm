@@ -1,0 +1,1 @@
+[ { "nearby_buildings": [ { "buildingType": "hospital", "cnt": 1 }, { "buildingType": "school", "cnt": 2 } ], "id": 1, "text": "im tweet", "latitude": 0.0, "longitude": 0.0 } ]

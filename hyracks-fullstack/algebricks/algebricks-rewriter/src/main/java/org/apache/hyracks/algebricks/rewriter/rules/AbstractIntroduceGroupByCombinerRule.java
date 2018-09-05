@@ -84,10 +84,12 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
             // p.second.getValue() should always return a VariableReferenceExpression, hence
             // usedDecorVars should always contain only one variable.
             p.second.getValue().getUsedVariables(usedDecorVars);
-            if (!newGbyLiveVars.contains(usedDecorVars.get(0))) {
+            LogicalVariable usedVar = usedDecorVars.get(0);
+            if (!newGbyLiveVars.contains(usedVar)) {
                 // Let the left-hand side of gbyOp's decoration expressions populated through the combiner group-by without
                 // any intermediate assignment.
                 newGbyOp.addDecorExpression(null, p.second.getValue());
+                newGbyLiveVars.add(usedVar);
             }
         }
         newGbyOp.setExecutionMode(ExecutionMode.LOCAL);
@@ -97,14 +99,11 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
         Object v2 = gbyOp.getAnnotations().get(OperatorAnnotations.USE_EXTERNAL_GROUP_BY);
         newGbyOp.getAnnotations().put(OperatorAnnotations.USE_EXTERNAL_GROUP_BY, v2);
 
-        List<LogicalVariable> propagatedVars = new LinkedList<LogicalVariable>();
-        VariableUtilities.getProducedVariables(newGbyOp, propagatedVars);
-
         Set<LogicalVariable> freeVars = new HashSet<LogicalVariable>();
         OperatorPropertiesUtil.getFreeVariablesInSubplans(gbyOp, freeVars);
 
         for (LogicalVariable var : freeVars) {
-            if (!propagatedVars.contains(var)) {
+            if (!newGbyLiveVars.contains(var)) {
                 LogicalVariable newDecorVar = context.newVar();
                 VariableReferenceExpression varRef = new VariableReferenceExpression(var);
                 varRef.setSourceLocation(gbyOp.getSourceLocation());
@@ -435,8 +434,8 @@ public abstract class AbstractIntroduceGroupByCombinerRule extends AbstractIntro
      *            The optimization context.
      * @param nestedGby
      *            The nested gby operator in the global gby operator's subplan.
-     * @param firstAggVar
-     *            The first aggregation variable produced by the combiner gby.
+     * @param aggregateVarsProducedByCombiner
+     *            The aggregation variables produced by the combiner gby.
      */
     protected abstract void processNullTest(IOptimizationContext context, GroupByOperator nestedGby,
             List<LogicalVariable> aggregateVarsProducedByCombiner);
