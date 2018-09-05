@@ -26,7 +26,6 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -134,10 +133,5 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
     @Override
     public final IFrameWriter getInputFrameWriter(int index) {
         return null;
-    }
-
-    @Override
-    public JobId getJobId() {
-        return ctx.getJobletContext().getJobId();
     }
 }

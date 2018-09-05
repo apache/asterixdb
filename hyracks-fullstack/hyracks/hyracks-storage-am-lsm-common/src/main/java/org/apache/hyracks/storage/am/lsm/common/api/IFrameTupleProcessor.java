@@ -43,4 +43,11 @@ public interface IFrameTupleProcessor {
      * Called once per batch before ending the batch process
      */
     void finish() throws HyracksDataException;
+
+    /**
+     * Called when a failure is encountered processing a frame
+     *
+     * @param th
+     */
+    void fail(Throwable th);
 }

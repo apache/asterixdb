@@ -700,6 +700,9 @@ public class LSMHarness implements ILSMHarness {
             try {
                 processFrame(accessor, tuple, processor);
                 frameOpCallback.frameCompleted();
+            } catch (Throwable th) {
+                processor.fail(th);
+                throw th;
             } finally {
                 processor.finish();
             }
