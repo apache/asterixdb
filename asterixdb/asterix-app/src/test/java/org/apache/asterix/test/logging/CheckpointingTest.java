@@ -65,7 +65,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.stubbing.Answer;
 
 public class CheckpointingTest {
 
@@ -134,7 +133,7 @@ public class CheckpointingTest {
                 ICheckpointManager checkpointManager = nc.getTransactionSubsystem().getCheckpointManager();
                 LogManager logManager = (LogManager) nc.getTransactionSubsystem().getLogManager();
                 // Number of log files after node startup should be one
-                int numberOfLogFiles = logManager.getLogFileIds().size();
+                int numberOfLogFiles = logManager.getOrderedLogFileIds().size();
                 Assert.assertEquals(1, numberOfLogFiles);
 
                 // Low-water mark LSN
@@ -142,10 +141,10 @@ public class CheckpointingTest {
                 // Low-water mark log file id
                 long initialLowWaterMarkFileId = logManager.getLogFileId(lowWaterMarkLSN);
                 // Initial Low-water mark should be in the only available log file
-                Assert.assertEquals(initialLowWaterMarkFileId, logManager.getLogFileIds().get(0).longValue());
+                Assert.assertEquals(initialLowWaterMarkFileId, logManager.getOrderedLogFileIds().get(0).longValue());
 
                 // Insert records until a new log file is created
-                while (logManager.getLogFileIds().size() == 1) {
+                while (logManager.getOrderedLogFileIds().size() == 1) {
                     ITupleReference tuple = tupleGenerator.next();
                     DataflowUtils.addTupleToFrame(tupleAppender, tuple, insertOp);
                 }
@@ -160,9 +159,9 @@ public class CheckpointingTest {
                      * the low-water mark is still in it (i.e. it is still required for
                      * recovery)
                      */
-                    int numberOfLogFilesBeforeCheckpoint = logManager.getLogFileIds().size();
+                    int numberOfLogFilesBeforeCheckpoint = logManager.getOrderedLogFileIds().size();
                     checkpointManager.tryCheckpoint(logManager.getAppendLSN());
-                    int numberOfLogFilesAfterCheckpoint = logManager.getLogFileIds().size();
+                    int numberOfLogFilesAfterCheckpoint = logManager.getOrderedLogFileIds().size();
                     Assert.assertEquals(numberOfLogFilesBeforeCheckpoint, numberOfLogFilesAfterCheckpoint);
 
                     /*
@@ -203,7 +202,7 @@ public class CheckpointingTest {
 
                     checkpointManager.tryCheckpoint(lowWaterMarkLSN);
                     // Validate initialLowWaterMarkFileId was deleted
-                    for (Long fileId : logManager.getLogFileIds()) {
+                    for (Long fileId : logManager.getOrderedLogFileIds()) {
                         Assert.assertNotEquals(initialLowWaterMarkFileId, fileId.longValue());
                     }
 

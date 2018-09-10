@@ -147,7 +147,7 @@ public class LogManagerTest {
     public void interruptedLogFileSwitch() throws Exception {
         final INcApplicationContext ncAppCtx = (INcApplicationContext) integrationUtil.ncs[0].getApplicationContext();
         final LogManager logManager = (LogManager) ncAppCtx.getTransactionSubsystem().getLogManager();
-        int logFileCountBeforeInterrupt = logManager.getLogFileIds().size();
+        int logFileCountBeforeInterrupt = logManager.getOrderedLogFileIds().size();
 
         // ensure an interrupted transactor will create next log file but will fail to position the log channel
         final AtomicBoolean failed = new AtomicBoolean(false);
@@ -162,7 +162,7 @@ public class LogManagerTest {
         interruptedTransactor.start();
         interruptedTransactor.join();
         // ensure a new log file was created and survived interrupt
-        int logFileCountAfterInterrupt = logManager.getLogFileIds().size();
+        int logFileCountAfterInterrupt = logManager.getOrderedLogFileIds().size();
         Assert.assertEquals(logFileCountBeforeInterrupt + 1, logFileCountAfterInterrupt);
         Assert.assertFalse(failed.get());
 
