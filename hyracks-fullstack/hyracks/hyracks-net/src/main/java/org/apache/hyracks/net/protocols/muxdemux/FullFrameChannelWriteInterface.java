@@ -58,7 +58,7 @@ public class FullFrameChannelWriteInterface extends AbstractChannelWriteInterfac
             ecodeSent = true;
             ccb.reportLocalEOS();
             adjustChannelWritability();
-        } else if (eos && !eosSent) {
+        } else if (isPendingCloseWrite()) {
             writerState.getCommand().setChannelId(channelId);
             writerState.getCommand().setCommandType(MuxDemuxCommand.CommandType.CLOSE_CHANNEL);
             writerState.getCommand().setData(0);

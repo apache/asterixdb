@@ -36,7 +36,7 @@ public interface ITreeIndexFrame {
          * Storage version #. Change this if you alter any tree frame formats to stop
          * possible corruption from old versions reading new formats.
          */
-        public static final int VERSION = 6;
+        public static final int VERSION = 7;
         public static final int TUPLE_COUNT_OFFSET = 0;
         public static final int FREE_SPACE_OFFSET = TUPLE_COUNT_OFFSET + 4;
         public static final int LEVEL_OFFSET = FREE_SPACE_OFFSET + 4;

@@ -206,6 +206,12 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             public void finish() throws HyracksDataException {
                 lsmAccessor.getCtx().setOperation(IndexOperation.UPSERT);
             }
+
+            @Override
+            public void fail(Throwable th) {
+                // We must fail before we exit the components
+                frameOpCallback.fail(th);
+            }
         };
         tracer = ctx.getJobletContext().getServiceContext().getTracer();
         traceCategory = tracer.getRegistry().get(TraceUtils.LATENCY);
@@ -314,12 +320,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
         int itemCount = accessor.getTupleCount();
-        try {
-            lsmAccessor.batchOperate(accessor, tuple, processor, frameOpCallback);
-        } catch (Throwable th) {// NOSONAR: Must notify of all failures
-            frameOpCallback.fail(th);
-            throw th;
-        }
+        lsmAccessor.batchOperate(accessor, tuple, processor, frameOpCallback);
         if (itemCount > 0) {
             lastRecordInTimeStamp = System.currentTimeMillis();
         }

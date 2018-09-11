@@ -107,6 +107,7 @@ public class PartitionManager {
     public synchronized void registerPartitionRequest(PartitionId partitionId, NetworkOutputChannel writer) {
         if (failedJobsCache.getIfPresent(partitionId.getJobId()) != null) {
             writer.abort(AbstractChannelWriteInterface.REMOTE_ERROR_CODE);
+            return;
         }
         List<IPartition> pList = availablePartitionMap.get(partitionId);
         if (pList != null && !pList.isEmpty()) {

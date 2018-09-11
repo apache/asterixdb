@@ -38,7 +38,7 @@ import java.util.Map;
 public class CheckpointManager extends AbstractCheckpointManager {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final long NO_SECURED_LSN = -1l;
+    private static final long NO_SECURED_LSN = -1L;
     private final Map<TxnId, Long> securedLSNs;
 
     public CheckpointManager(ITransactionSubsystem txnSubsystem, CheckpointProperties checkpointProperties) {

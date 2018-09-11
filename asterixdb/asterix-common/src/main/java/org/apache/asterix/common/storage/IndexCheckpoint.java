@@ -24,6 +24,8 @@ import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,6 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class IndexCheckpoint {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final long INITIAL_CHECKPOINT_ID = 0;
     private long id;
@@ -52,6 +55,9 @@ public class IndexCheckpoint {
     public static IndexCheckpoint next(IndexCheckpoint latest, long lowWatermark, long validComponentSequence,
             long lastComponentId) {
         if (lowWatermark < latest.getLowWatermark()) {
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error("low watermark {} less than the latest checkpoint low watermark {}", lowWatermark, latest);
+            }
             throw new IllegalStateException("Low watermark should always be increasing");
         }
         IndexCheckpoint next = new IndexCheckpoint();
@@ -102,6 +108,15 @@ public class IndexCheckpoint {
             return OBJECT_MAPPER.readValue(json, IndexCheckpoint.class);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
+        }
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return asJson();
+        } catch (HyracksDataException e) {
+            throw new IllegalStateException(e);
         }
     }
 }

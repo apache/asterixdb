@@ -60,6 +60,7 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final long SHARP_CHECKPOINT_LSN = -1;
     private static final FilenameFilter filter = (File dir, String name) -> name.startsWith(CHECKPOINT_FILENAME_PREFIX);
+    private static final long FIRST_CHECKPOINT_ID = 0;
     private final File checkpointDir;
     private final int historyToKeep;
     private final int lsnThreshold;
@@ -88,25 +89,118 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
         lsnThreshold = checkpointProperties.getLsnThreshold();
         pollFrequency = checkpointProperties.getPollFrequency();
         // We must keep at least the latest checkpoint
-        historyToKeep = checkpointProperties.getHistoryToKeep() == 0 ? 1 : checkpointProperties.getHistoryToKeep();
+        historyToKeep = checkpointProperties.getHistoryToKeep() + 1;
         persistedResourceRegistry = txnSubsystem.getApplicationContext().getPersistedResourceRegistry();
     }
 
     @Override
-    public Checkpoint getLatest() throws ACIDException {
-        // Read all checkpointObjects from the existing checkpoint files
+    public Checkpoint getLatest() {
         LOGGER.log(Level.INFO, "Getting latest checkpoint");
+        final List<File> checkpointFiles = getCheckpointFiles();
+        if (checkpointFiles.isEmpty()) {
+            return null;
+        }
+        final List<Checkpoint> orderedCheckpoints = getOrderedCheckpoints(checkpointFiles);
+        if (orderedCheckpoints.isEmpty()) {
+            /*
+             * If all checkpoint files are corrupted, we have no option but to try to perform recovery.
+             * We will forge a checkpoint that forces recovery to start from the beginning of the log.
+             * This shouldn't happen unless a hardware corruption happens.
+             */
+            return forgeForceRecoveryCheckpoint();
+        }
+        return orderedCheckpoints.get(orderedCheckpoints.size() - 1);
+    }
+
+    @Override
+    public void start() {
+        checkpointer = new CheckpointThread(this, txnSubsystem.getLogManager(), lsnThreshold, pollFrequency);
+        checkpointer.start();
+    }
+
+    @Override
+    public void stop(boolean dumpState, OutputStream ouputStream) throws IOException {
+        checkpointer.shutdown();
+        checkpointer.interrupt();
+        try {
+            // Wait until checkpoint thread stops
+            checkpointer.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    @Override
+    public void dumpState(OutputStream os) throws IOException {
+        // Nothing to dump
+    }
+
+    public Path getCheckpointPath(long checkpointId) {
+        return Paths.get(checkpointDir.getAbsolutePath() + File.separator + CHECKPOINT_FILENAME_PREFIX
+                + Long.toString(checkpointId));
+    }
+
+    protected void capture(long minMCTFirstLSN, boolean sharp) throws HyracksDataException {
+        ILogManager logMgr = txnSubsystem.getLogManager();
+        ITransactionManager txnMgr = txnSubsystem.getTransactionManager();
+        final long nextCheckpointId = getNextCheckpointId();
+        final Checkpoint checkpointObject = new Checkpoint(nextCheckpointId, logMgr.getAppendLSN(), minMCTFirstLSN,
+                txnMgr.getMaxTxnId(), sharp, StorageConstants.VERSION);
+        persist(checkpointObject);
+        cleanup();
+    }
+
+    private Checkpoint forgeForceRecoveryCheckpoint() {
+        /*
+         * By setting the checkpoint first LSN (low watermark) to Long.MIN_VALUE, the recovery manager will start from
+         * the first available log.
+         * We set the storage version to the current version. If there is a version mismatch, it will be detected
+         * during recovery.
+         */
+        return new Checkpoint(Long.MIN_VALUE, Long.MIN_VALUE, Integer.MIN_VALUE, FIRST_CHECKPOINT_ID, false,
+                StorageConstants.VERSION);
+    }
+
+    private void persist(Checkpoint checkpoint) throws HyracksDataException {
+        // Get checkpoint file path
+        Path path = getCheckpointPath(checkpoint.getId());
+
+        if (LOGGER.isInfoEnabled()) {
+            File file = path.toFile();
+            LOGGER.log(Level.INFO, "Persisting checkpoint file to " + file + " which "
+                    + (file.exists() ? "already exists" : "doesn't exist yet"));
+        }
+        // Write checkpoint file to disk
+        try {
+            byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(checkpoint.toJson(persistedResourceRegistry));
+            Files.write(path, bytes);
+        } catch (IOException e) {
+            LOGGER.log(Level.ERROR, "Failed to write checkpoint to disk", e);
+            throw HyracksDataException.create(e);
+        }
+        if (LOGGER.isInfoEnabled()) {
+            File file = path.toFile();
+            LOGGER.log(Level.INFO, "Completed persisting checkpoint file to " + file + " which now "
+                    + (file.exists() ? "exists" : " still doesn't exist"));
+        }
+    }
+
+    private List<File> getCheckpointFiles() {
         File[] checkpoints = checkpointDir.listFiles(filter);
         if (checkpoints == null || checkpoints.length == 0) {
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.log(Level.INFO,
                         "Listing of files in the checkpoint dir returned " + (checkpoints == null ? "null" : "empty"));
             }
-            return null;
+            return Collections.emptyList();
         }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.log(Level.INFO, "Listing of files in the checkpoint dir returned " + Arrays.toString(checkpoints));
         }
+        return Arrays.asList(checkpoints);
+    }
+
+    private List<Checkpoint> getOrderedCheckpoints(List<File> checkpoints) {
         List<Checkpoint> checkpointObjectList = new ArrayList<>();
         for (File file : checkpoints) {
             try {
@@ -134,106 +228,30 @@ public abstract class AbstractCheckpointManager implements ICheckpointManager {
                 }
             }
         }
-        /**
-         * If all checkpoint files are corrupted, we have no option but to try to perform recovery.
-         * We will forge a checkpoint that forces recovery to start from the beginning of the log.
-         * This shouldn't happen unless a hardware corruption happens.
-         */
-        if (checkpointObjectList.isEmpty()) {
-            LOGGER.error("All checkpoint files are corrupted. Forcing recovery from the beginning of the log");
-            checkpointObjectList.add(forgeForceRecoveryCheckpoint());
-        }
-
-        // Sort checkpointObjects in descending order by timeStamp to find out the most recent one.
         Collections.sort(checkpointObjectList);
-
-        // Return the most recent one (the first one in sorted list)
-        return checkpointObjectList.get(0);
-    }
-
-    @Override
-    public void start() {
-        checkpointer = new CheckpointThread(this, txnSubsystem.getLogManager(), lsnThreshold, pollFrequency);
-        checkpointer.start();
-    }
-
-    @Override
-    public void stop(boolean dumpState, OutputStream ouputStream) throws IOException {
-        checkpointer.shutdown();
-        checkpointer.interrupt();
-        try {
-            // Wait until checkpoint thread stops
-            checkpointer.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    @Override
-    public void dumpState(OutputStream os) throws IOException {
-        // Nothing to dump
-    }
-
-    public Path getCheckpointPath(long checkpointTimestamp) {
-        return Paths.get(checkpointDir.getAbsolutePath() + File.separator + CHECKPOINT_FILENAME_PREFIX
-                + Long.toString(checkpointTimestamp));
-    }
-
-    protected void capture(long minMCTFirstLSN, boolean sharp) throws HyracksDataException {
-        ILogManager logMgr = txnSubsystem.getLogManager();
-        ITransactionManager txnMgr = txnSubsystem.getTransactionManager();
-        Checkpoint checkpointObject = new Checkpoint(logMgr.getAppendLSN(), minMCTFirstLSN, txnMgr.getMaxTxnId(),
-                System.currentTimeMillis(), sharp, StorageConstants.VERSION);
-        persist(checkpointObject);
-        cleanup();
-    }
-
-    protected Checkpoint forgeForceRecoveryCheckpoint() {
-        /**
-         * By setting the checkpoint first LSN (low watermark) to Long.MIN_VALUE, the recovery manager will start from
-         * the first available log.
-         * We set the storage version to the current version. If there is a version mismatch, it will be detected
-         * during recovery.
-         */
-        return new Checkpoint(Long.MIN_VALUE, Long.MIN_VALUE, Integer.MIN_VALUE, System.currentTimeMillis(), false,
-                StorageConstants.VERSION);
-    }
-
-    private void persist(Checkpoint checkpoint) throws HyracksDataException {
-        // Get checkpoint file path
-        Path path = getCheckpointPath(checkpoint.getTimeStamp());
-
-        if (LOGGER.isInfoEnabled()) {
-            File file = path.toFile();
-            LOGGER.log(Level.INFO, "Persisting checkpoint file to " + file + " which "
-                    + (file.exists() ? "already exists" : "doesn't exist yet"));
-        }
-        // Write checkpoint file to disk
-        try {
-            byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(checkpoint.toJson(persistedResourceRegistry));
-            Files.write(path, bytes);
-        } catch (IOException e) {
-            LOGGER.log(Level.ERROR, "Failed to write checkpoint to disk", e);
-            throw HyracksDataException.create(e);
-        }
-        if (LOGGER.isInfoEnabled()) {
-            File file = path.toFile();
-            LOGGER.log(Level.INFO, "Completed persisting checkpoint file to " + file + " which now "
-                    + (file.exists() ? "exists" : " still doesn't exist"));
-        }
+        return checkpointObjectList;
     }
 
     private void cleanup() {
-        File[] checkpointFiles = checkpointDir.listFiles(filter);
-        // Sort the filenames lexicographically to keep the latest checkpoint history files.
-        Arrays.sort(checkpointFiles);
-        for (int i = 0; i < checkpointFiles.length - historyToKeep; i++) {
-            if (LOGGER.isWarnEnabled()) {
-                LOGGER.warn("Deleting checkpoint file at: " + checkpointFiles[i].getAbsolutePath());
-            }
-            if (!checkpointFiles[i].delete() && LOGGER.isWarnEnabled()) {
-                LOGGER.warn("Could not delete checkpoint file at: " + checkpointFiles[i].getAbsolutePath());
+        final List<File> checkpointFiles = getCheckpointFiles();
+        final List<Checkpoint> orderedCheckpoints = getOrderedCheckpoints(checkpointFiles);
+        final int deleteCount = orderedCheckpoints.size() - historyToKeep;
+        for (int i = 0; i < deleteCount; i++) {
+            final Checkpoint checkpoint = orderedCheckpoints.get(i);
+            final Path checkpointPath = getCheckpointPath(checkpoint.getId());
+            LOGGER.warn("Deleting checkpoint file at: {}", checkpointPath);
+            if (!checkpointPath.toFile().delete()) {
+                LOGGER.warn("Could not delete checkpoint file at: {}", checkpointPath);
             }
         }
     }
+
+    private long getNextCheckpointId() {
+        final Checkpoint latest = getLatest();
+        if (latest == null) {
+            return FIRST_CHECKPOINT_ID;
+        }
+        return latest.getId() + 1;
+    }
+
 }

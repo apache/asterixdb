@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.common.transactions;
 
-import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 
@@ -26,10 +25,8 @@ public interface ICheckpointManager extends ILifeCycleComponent {
 
     /**
      * @return The latest checkpoint on disk if any exists. Otherwise null.
-     * @throws ACIDException
-     *             when a checkpoint file cannot be read.
      */
-    Checkpoint getLatest() throws ACIDException;
+    Checkpoint getLatest();
 
     /**
      * Performs a sharp checkpoint.

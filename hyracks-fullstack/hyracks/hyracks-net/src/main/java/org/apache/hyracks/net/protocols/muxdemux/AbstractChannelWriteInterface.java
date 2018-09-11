@@ -75,7 +75,7 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
         if (writableDataPresent) {
             return credits > 0;
         }
-        if (eos && !eosSent) {
+        if (isPendingCloseWrite()) {
             return true;
         }
         return ecode.get() == REMOTE_ERROR_CODE && !ecodeSent;
@@ -114,6 +114,10 @@ public abstract class AbstractChannelWriteInterface implements IChannelWriteInte
     @Override
     public int getCredits() {
         return credits;
+    }
+
+    protected boolean isPendingCloseWrite() {
+        return eos && !eosSent && !ecodeSent;
     }
 
     private class CloseableBufferAcceptor implements ICloseableBufferAcceptor {

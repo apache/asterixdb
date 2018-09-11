@@ -29,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -103,7 +102,8 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         nodeId = txnSubsystem.getId();
         flushLogsQ = new LinkedBlockingQueue<>();
         txnSubsystem.getApplicationContext().getThreadExecutor().execute(new FlushLogsLogger());
-        initializeLogManager(SMALLEST_LOG_FILE_ID);
+        final long onDiskMaxLogFileId = getOnDiskMaxLogFileId();
+        initializeLogManager(onDiskMaxLogFileId);
     }
 
     private void initializeLogManager(long nextLogFileId) {
@@ -365,56 +365,32 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
     }
 
-    private long initializeLogAnchor(long nextLogFileId) {
-        long fileId = 0;
-        long offset = 0;
-        File fileLogDir = new File(logDir);
-        try {
-            if (fileLogDir.exists()) {
-                List<Long> logFileIds = getLogFileIds();
-                if (logFileIds.isEmpty()) {
-                    fileId = nextLogFileId;
-                    createFileIfNotExists(getLogFilePath(fileId));
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.info("created a log file: " + getLogFilePath(fileId));
-                    }
-                } else {
-                    fileId = logFileIds.get(logFileIds.size() - 1);
-                    File logFile = new File(getLogFilePath(fileId));
-                    offset = logFile.length();
-                }
-            } else {
-                fileId = nextLogFileId;
-                createNewDirectory(logDir);
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("created the log directory: " + logManagerProperties.getLogDir());
-                }
-                createFileIfNotExists(getLogFilePath(fileId));
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("created a log file: " + getLogFilePath(fileId));
-                }
-            }
-        } catch (IOException ioe) {
-            throw new IllegalStateException("Failed to initialize the log anchor", ioe);
-        }
+    private long initializeLogAnchor(long fileId) {
+        final String logFilePath = getLogFilePath(fileId);
+        createFileIfNotExists(logFilePath);
+        final File logFile = new File(logFilePath);
+        long offset = logFile.length();
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("log file Id: " + fileId + ", offset: " + offset);
+            LOGGER.info("initializing log anchor with log file Id: {} at offset: {}", fileId, offset);
         }
-        return logFileSize * fileId + offset;
+        return getLogFileFirstLsn(fileId) + offset;
     }
 
     @Override
     public void renewLogFiles() {
         terminateLogFlusher();
         closeCurrentLogFile();
-        long lastMaxLogFileId = deleteAllLogFiles();
-        initializeLogManager(lastMaxLogFileId + 1);
+        long nextLogFileId = getNextLogFileId();
+        createFileIfNotExists(getLogFilePath(nextLogFileId));
+        final long logFileFirstLsn = getLogFileFirstLsn(nextLogFileId);
+        deleteOldLogFiles(logFileFirstLsn);
+        initializeLogManager(nextLogFileId);
     }
 
     @Override
     public void deleteOldLogFiles(long checkpointLSN) {
         Long checkpointLSNLogFileID = getLogFileId(checkpointLSN);
-        List<Long> logFileIds = getLogFileIds();
+        List<Long> logFileIds = getOrderedLogFileIds();
         if (!logFileIds.isEmpty()) {
             //sort log files from oldest to newest
             Collections.sort(logFileIds);
@@ -461,24 +437,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
     }
 
-    private long deleteAllLogFiles() {
-        List<Long> logFileIds = getLogFileIds();
-        if (!logFileIds.isEmpty()) {
-            for (Long id : logFileIds) {
-                File file = new File(getLogFilePath(id));
-                LOGGER.info("Deleting log file: " + file.getAbsolutePath());
-                if (!file.delete()) {
-                    throw new IllegalStateException("Failed to delete a file: " + file.getAbsolutePath());
-                }
-                LOGGER.info("log file: " + file.getAbsolutePath() + " was deleted successfully");
-            }
-            return logFileIds.get(logFileIds.size() - 1);
-        } else {
-            throw new IllegalStateException("Couldn't find any log files.");
-        }
-    }
-
-    public List<Long> getLogFileIds() {
+    public List<Long> getOrderedLogFileIds() {
         File fileLogDir = new File(logDir);
         String[] logFileNames = null;
         List<Long> logFileIds = null;
@@ -510,12 +469,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         for (String fileName : logFileNames) {
             logFileIds.add(Long.parseLong(fileName.substring(logFilePrefix.length() + 1)));
         }
-        Collections.sort(logFileIds, new Comparator<Long>() {
-            @Override
-            public int compare(Long arg0, Long arg1) {
-                return arg0.compareTo(arg1);
-            }
-        });
+        logFileIds.sort(Long::compareTo);
         return logFileIds;
     }
 
@@ -531,17 +485,21 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         return lsn / logFileSize;
     }
 
-    private static boolean createFileIfNotExists(String path) throws IOException {
-        File file = new File(path);
-        File parentFile = file.getParentFile();
-        if (parentFile != null) {
-            parentFile.mkdirs();
+    private static void createFileIfNotExists(String path) {
+        try {
+            File file = new File(path);
+            if (file.exists()) {
+                return;
+            }
+            File parentFile = file.getParentFile();
+            if (parentFile != null) {
+                parentFile.mkdirs();
+            }
+            Files.createFile(file.toPath());
+            LOGGER.info("Created log file {}", path);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to create file in " + path, e);
         }
-        return file.createNewFile();
-    }
-
-    private static boolean createNewDirectory(String path) {
-        return (new File(path)).mkdir();
     }
 
     private void createNextLogFile() throws IOException {
@@ -579,7 +537,7 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
 
     @Override
     public long getReadableSmallestLSN() {
-        List<Long> logFileIds = getLogFileIds();
+        List<Long> logFileIds = getOrderedLogFileIds();
         if (!logFileIds.isEmpty()) {
             return logFileIds.get(0) * logFileSize;
         } else {
@@ -627,6 +585,22 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
             LOGGER.warn(() -> "Closing log file with id(" + logFileRef.getLogFileId() + ") with a closed channel.");
         }
         fileChannel.close();
+    }
+
+    private long getNextLogFileId() {
+        return getOnDiskMaxLogFileId() + 1;
+    }
+
+    private long getLogFileFirstLsn(long logFileId) {
+        return logFileId * logFileSize;
+    }
+
+    private long getOnDiskMaxLogFileId() {
+        final List<Long> logFileIds = getOrderedLogFileIds();
+        if (logFileIds.isEmpty()) {
+            return SMALLEST_LOG_FILE_ID;
+        }
+        return logFileIds.get(logFileIds.size() - 1);
     }
 
     /**

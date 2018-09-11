@@ -81,12 +81,13 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             (dir, name) -> !name.startsWith(".") && name.endsWith(BLOOM_FILTER_SUFFIX);
     protected static final Comparator<String> cmp = new FileNameComparator();
     private static final FilenameFilter dummyFilter = (dir, name) -> true;
-
+    private static final long UNINITALIZED_COMPONENT_SEQ = -1;
     protected final IIOManager ioManager;
     // baseDir should reflect dataset name and partition name and be absolute
     protected final FileReference baseDir;
     protected final Comparator<IndexComponentFileReference> recencyCmp = new RecencyComparator();
     protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
+    private long lastUsedComponentSeq = UNINITALIZED_COMPONENT_SEQ;
 
     public AbstractLSMIndexFileManager(IIOManager ioManager, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory) {
@@ -355,11 +356,18 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     protected String getNextComponentSequence(FilenameFilter filenameFilter) throws HyracksDataException {
+        if (lastUsedComponentSeq == UNINITALIZED_COMPONENT_SEQ) {
+            lastUsedComponentSeq = getOnDiskLastUsedComponentSequence(filenameFilter);
+        }
+        return IndexComponentFileReference.getFlushSequence(++lastUsedComponentSeq);
+    }
+
+    private long getOnDiskLastUsedComponentSequence(FilenameFilter filenameFilter) throws HyracksDataException {
         long maxComponentSeq = -1;
         final String[] files = listDirFiles(baseDir, filenameFilter);
         for (String fileName : files) {
             maxComponentSeq = Math.max(maxComponentSeq, IndexComponentFileReference.of(fileName).getSequenceEnd());
         }
-        return IndexComponentFileReference.getFlushSequence(maxComponentSeq + 1);
+        return maxComponentSeq;
     }
 }
