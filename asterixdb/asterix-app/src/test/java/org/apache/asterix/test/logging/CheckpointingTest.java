@@ -297,7 +297,7 @@ public class CheckpointingTest {
                 // Make sure the valid checkout wouldn't force full recovery
                 Assert.assertTrue(validCheckpoint.getMinMCTFirstLsn() >= minFirstLSN);
                 // Add a corrupted (empty) checkpoint file with a timestamp > than current checkpoint
-                Path corruptedCheckpointPath = checkpointManager.getCheckpointPath(validCheckpoint.getTimeStamp() + 1);
+                Path corruptedCheckpointPath = checkpointManager.getCheckpointPath(validCheckpoint.getId() + 1);
                 File corruptedCheckpoint = corruptedCheckpointPath.toFile();
                 corruptedCheckpoint.createNewFile();
                 // Make sure the corrupted checkpoint file was created
@@ -305,11 +305,11 @@ public class CheckpointingTest {
                 // Try to get the latest checkpoint again
                 Checkpoint cpAfterCorruption = checkpointManager.getLatest();
                 // Make sure the valid checkpoint was returned
-                Assert.assertEquals(validCheckpoint.getTimeStamp(), cpAfterCorruption.getTimeStamp());
+                Assert.assertEquals(validCheckpoint.getId(), cpAfterCorruption.getId());
                 // Make sure the corrupted checkpoint file was deleted
                 Assert.assertFalse(corruptedCheckpoint.exists());
                 // Corrupt the valid checkpoint by replacing its content
-                final Path validCheckpointPath = checkpointManager.getCheckpointPath(validCheckpoint.getTimeStamp());
+                final Path validCheckpointPath = checkpointManager.getCheckpointPath(validCheckpoint.getId());
                 File validCheckpointFile = validCheckpointPath.toFile();
                 Assert.assertTrue(validCheckpointFile.exists());
                 // Delete the valid checkpoint file and create it as an empty file

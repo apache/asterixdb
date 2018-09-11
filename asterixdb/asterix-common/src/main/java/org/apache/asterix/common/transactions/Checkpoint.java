@@ -18,11 +18,12 @@
  */
 package org.apache.asterix.common.transactions;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class Checkpoint implements Comparable<Checkpoint>, IJsonSerializable {
 
@@ -30,16 +31,16 @@ public class Checkpoint implements Comparable<Checkpoint>, IJsonSerializable {
     private final long checkpointLsn;
     private final long minMCTFirstLsn;
     private final long maxTxnId;
-    private final long timeStamp;
     private final boolean sharp;
     private final int storageVersion;
+    private long id;
 
-    public Checkpoint(long checkpointLsn, long minMCTFirstLsn, long maxTxnId, long timeStamp, boolean sharp,
+    public Checkpoint(long id, long checkpointLsn, long minMCTFirstLsn, long maxTxnId, boolean sharp,
             int storageVersion) {
+        this.id = id;
         this.checkpointLsn = checkpointLsn;
         this.minMCTFirstLsn = minMCTFirstLsn;
         this.maxTxnId = maxTxnId;
-        this.timeStamp = timeStamp;
         this.sharp = sharp;
         this.storageVersion = storageVersion;
     }
@@ -56,8 +57,8 @@ public class Checkpoint implements Comparable<Checkpoint>, IJsonSerializable {
         return maxTxnId;
     }
 
-    public long getTimeStamp() {
-        return timeStamp;
+    public long getId() {
+        return id;
     }
 
     public boolean isSharp() {
@@ -69,68 +70,47 @@ public class Checkpoint implements Comparable<Checkpoint>, IJsonSerializable {
     }
 
     @Override
-    public int compareTo(Checkpoint checkpoint) {
-        long compareTimeStamp = checkpoint.getTimeStamp();
-
-        // Descending order
-        long diff = compareTimeStamp - this.timeStamp;
-        if (diff > 0) {
-            return 1;
-        } else if (diff == 0) {
-            return 0;
-        } else {
-            return -1;
-        }
+    public int compareTo(Checkpoint other) {
+        return Long.compare(this.id, other.id);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (obj == null) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (!(obj instanceof Checkpoint)) {
-            return false;
-        }
-        Checkpoint other = (Checkpoint) obj;
-        return compareTo(other) == 0;
+        Checkpoint that = (Checkpoint) o;
+        return id == that.id;
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (int) (checkpointLsn ^ (checkpointLsn >>> 32));
-        result = prime * result + Long.hashCode(maxTxnId);
-        result = prime * result + (int) (minMCTFirstLsn ^ (minMCTFirstLsn >>> 32));
-        result = prime * result + (sharp ? 1231 : 1237);
-        result = prime * result + storageVersion;
-        result = prime * result + (int) (timeStamp ^ (timeStamp >>> 32));
-        return result;
+        return Long.hashCode(id);
     }
 
     @Override
     public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
         final ObjectNode checkpointJson = registry.getClassIdentifier(getClass(), serialVersionUID);
+        checkpointJson.put("id", id);
         checkpointJson.put("checkpointLsn", checkpointLsn);
         checkpointJson.put("minMCTFirstLsn", minMCTFirstLsn);
         checkpointJson.put("maxTxnId", maxTxnId);
-        checkpointJson.put("timeStamp", timeStamp);
-        checkpointJson.put("sharp", timeStamp);
+        checkpointJson.put("sharp", sharp);
         checkpointJson.put("storageVersion", storageVersion);
         return checkpointJson;
     }
 
     @SuppressWarnings("squid:S1172") // unused parameter
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
+        long id = json.get("id").asLong();
         long checkpointLsn = json.get("checkpointLsn").asLong();
         long minMCTFirstLsn = json.get("minMCTFirstLsn").asLong();
         long maxTxnId = json.get("maxTxnId").asLong();
-        long timeStamp = json.get("timeStamp").asLong();
         boolean sharp = json.get("sharp").asBoolean();
         int storageVersion = json.get("storageVersion").asInt();
-        return new Checkpoint(checkpointLsn, minMCTFirstLsn, maxTxnId, timeStamp, sharp, storageVersion);
+        return new Checkpoint(id, checkpointLsn, minMCTFirstLsn, maxTxnId, sharp, storageVersion);
     }
 }
