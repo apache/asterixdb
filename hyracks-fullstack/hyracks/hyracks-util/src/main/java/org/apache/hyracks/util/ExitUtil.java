@@ -161,9 +161,12 @@ public class ExitUtil {
                 Field hooksField = clazz.getDeclaredField("hooks");
                 hooksField.setAccessible(true);
                 IdentityHashMap hooks = (IdentityHashMap) hooksField.get(null);
-                LOGGER.info("the following ({}) shutdown hooks have been registered: {}", hooks::size, hooks::toString);
+                if (hooks != null) {
+                    LOGGER.info("the following ({}) shutdown hooks have been registered: {}", hooks::size,
+                            hooks::toString);
+                }
             } catch (Exception e) {
-                LOGGER.warn("ignoring exception trying to determine number of shutdown hooks", e);
+                LOGGER.debug("ignoring exception trying to log shutdown hooks", e);
             }
         }
     }
