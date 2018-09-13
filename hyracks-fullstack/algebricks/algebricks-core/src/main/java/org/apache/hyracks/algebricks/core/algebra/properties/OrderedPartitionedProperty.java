@@ -28,7 +28,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class OrderedPartitionedProperty implements IPartitioningProperty {
 
-    private List<OrderColumn> orderColumns;
+    private final List<OrderColumn> orderColumns;
     private INodeDomain domain;
 
     public OrderedPartitionedProperty(List<OrderColumn> orderColumns, INodeDomain domain) {
@@ -90,6 +90,11 @@ public class OrderedPartitionedProperty implements IPartitioningProperty {
                 orderColumn.setColumn(varMap.get(orderColumn.getColumn()));
             }
         }
+    }
+
+    @Override
+    public IPartitioningProperty clonePartitioningProperty() {
+        return new OrderedPartitionedProperty(new ArrayList<>(orderColumns), domain);
     }
 
 }
