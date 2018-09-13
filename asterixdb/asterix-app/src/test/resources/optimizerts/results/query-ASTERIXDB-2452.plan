@@ -1,0 +1,27 @@
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      -- ASSIGN  |UNPARTITIONED|
+        -- AGGREGATE  |UNPARTITIONED|
+          -- STREAM_PROJECT  |UNPARTITIONED|
+            -- STREAM_SELECT  |UNPARTITIONED|
+              -- STREAM_PROJECT  |UNPARTITIONED|
+                -- UNNEST  |UNPARTITIONED|
+                  -- STREAM_PROJECT  |UNPARTITIONED|
+                    -- UNNEST  |UNPARTITIONED|
+                      -- STREAM_PROJECT  |UNPARTITIONED|
+                        -- SUBPLAN  |UNPARTITIONED|
+                                {
+                                  -- AGGREGATE  |UNPARTITIONED|
+                                    -- UNNEST  |UNPARTITIONED|
+                                      -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                                }
+                          -- SUBPLAN  |UNPARTITIONED|
+                                  {
+                                    -- AGGREGATE  |UNPARTITIONED|
+                                      -- UNNEST  |UNPARTITIONED|
+                                        -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                                  }
+                            -- ASSIGN  |UNPARTITIONED|
+                              -- ASSIGN  |UNPARTITIONED|
+                                -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

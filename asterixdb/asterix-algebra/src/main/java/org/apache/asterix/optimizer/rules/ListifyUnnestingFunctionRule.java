@@ -156,6 +156,7 @@ public class ListifyUnnestingFunctionRule implements IAlgebraicRewriteRule {
         context.computeAndSetTypeEnvironmentForOperator(unnestOperator);
         context.computeAndSetTypeEnvironmentForOperator(aggregateOperator);
         context.computeAndSetTypeEnvironmentForOperator(subplanOperator);
+        context.computeAndSetTypeEnvironmentForOperator(op);
         return true;
     }
 
