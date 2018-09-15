@@ -92,9 +92,9 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     private AlgebricksAbsolutePartitionConstraint locations;
     protected ActivityState prevState;
     protected JobId jobId;
-    protected long statsTimestamp;
+    protected volatile long statsTimestamp;
     protected String stats;
-    protected boolean isFetchingStats;
+    protected volatile boolean isFetchingStats;
     protected int numRegistered;
     protected int numDeRegistered;
     protected volatile RecoveryTask rt;
