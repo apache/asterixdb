@@ -196,6 +196,9 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
                 // ensure it was written correctly by reading it
                 read(checkpointPath);
                 return;
+            } catch (ClosedByInterruptException e) {
+                LOGGER.info("interrupted while writing checkpoint at {}", checkpointPath);
+                throw HyracksDataException.create(e);
             } catch (IOException e) {
                 if (i == MAX_CHECKPOINT_WRITE_ATTEMPTS) {
                     throw HyracksDataException.create(e);

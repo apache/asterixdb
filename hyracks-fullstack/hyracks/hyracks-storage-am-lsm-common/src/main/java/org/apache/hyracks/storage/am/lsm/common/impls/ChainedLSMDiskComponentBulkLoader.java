@@ -101,8 +101,8 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
             for (int i = 0; i < bulkloadersCount; i++) {
                 bulkloaderChain.get(i).cleanupArtifacts();;
             }
+            diskComponent.deactivateAndDestroy();
         }
-        diskComponent.deactivateAndDestroy();
     }
 
     @Override
