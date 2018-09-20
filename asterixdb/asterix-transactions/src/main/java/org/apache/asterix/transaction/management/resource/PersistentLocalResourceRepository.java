@@ -66,8 +66,8 @@ import org.apache.hyracks.api.replication.IReplicationJob.ReplicationJobType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
-import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.util.ExitUtil;
@@ -196,7 +196,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(resource.toJson(persistedResourceRegistry));
             final Path path = Paths.get(resourceFile.getAbsolutePath());
             Files.write(path, bytes);
-            indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(Long.MIN_VALUE, 0);
+            indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(Long.MIN_VALUE, 0,
+                    LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId());
             deleteResourceFileMask(resourceFile);
         } catch (Exception e) {
             cleanup(resourceFile);
@@ -391,6 +392,21 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             partitionReplicatedFiles.addAll(getIndexFiles(indexDir));
         }
         return partitionReplicatedFiles;
+    }
+
+    public long getReplicatedIndexesMaxComponentId(int partition, IReplicationStrategy strategy)
+            throws HyracksDataException {
+        long maxComponentId = LSMComponentId.MIN_VALID_COMPONENT_ID;
+        final Map<Long, LocalResource> partitionResources = getPartitionResources(partition);
+        for (LocalResource lr : partitionResources.values()) {
+            DatasetLocalResource datasetLocalResource = (DatasetLocalResource) lr.getResource();
+            if (strategy.isMatch(datasetLocalResource.getDatasetId())) {
+                final IIndexCheckpointManager indexCheckpointManager =
+                        indexCheckpointManagerProvider.get(DatasetResourceReference.of(lr));
+                maxComponentId = Math.max(maxComponentId, indexCheckpointManager.getLatest().getLastComponentId());
+            }
+        }
+        return maxComponentId;
     }
 
     private List<String> getIndexFiles(File indexDir) {

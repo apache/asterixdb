@@ -55,7 +55,8 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public synchronized void init(long validComponentSequence, long lsn) throws HyracksDataException {
+    public synchronized void init(long validComponentSequence, long lsn, long validComponentId)
+            throws HyracksDataException {
         List<IndexCheckpoint> checkpoints;
         try {
             checkpoints = getCheckpoints();
@@ -66,7 +67,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
             LOGGER.warn(() -> "Checkpoints found on initializing: " + indexPath);
             delete();
         }
-        IndexCheckpoint firstCheckpoint = IndexCheckpoint.first(validComponentSequence, lsn);
+        IndexCheckpoint firstCheckpoint = IndexCheckpoint.first(validComponentSequence, lsn, validComponentId);
         persist(firstCheckpoint);
     }
 

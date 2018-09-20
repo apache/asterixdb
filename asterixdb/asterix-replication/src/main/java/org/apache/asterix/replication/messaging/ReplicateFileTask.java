@@ -40,6 +40,7 @@ import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -98,7 +99,8 @@ public class ReplicateFileTask implements IReplicaTask {
         final IIndexCheckpointManager indexCheckpointManager = checkpointManagerProvider.get(indexRef);
         final long currentLSN = appCtx.getTransactionSubsystem().getLogManager().getAppendLSN();
         indexCheckpointManager.delete();
-        indexCheckpointManager.init(Long.MIN_VALUE, currentLSN);
+        indexCheckpointManager.init(Long.MIN_VALUE, currentLSN,
+                LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId());
         LOGGER.info(() -> "Checkpoint index: " + indexRef);
     }
 
