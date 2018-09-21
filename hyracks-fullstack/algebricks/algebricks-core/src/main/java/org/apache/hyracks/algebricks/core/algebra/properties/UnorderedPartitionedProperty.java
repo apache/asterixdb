@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
@@ -75,6 +76,11 @@ public final class UnorderedPartitionedProperty extends AbstractGroupingProperty
                 columnSet.add(value);
             }
         });
+    }
+
+    @Override
+    public IPartitioningProperty clonePartitioningProperty() {
+        return new UnorderedPartitionedProperty(new ListSet<>(columnSet), domain);
     }
 
 }

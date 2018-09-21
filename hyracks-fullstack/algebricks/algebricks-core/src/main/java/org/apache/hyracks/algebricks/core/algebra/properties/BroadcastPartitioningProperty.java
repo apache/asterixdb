@@ -60,6 +60,12 @@ public class BroadcastPartitioningProperty implements IPartitioningProperty {
 
     @Override
     public void substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap) {
+
+    }
+
+    @Override
+    public IPartitioningProperty clonePartitioningProperty() {
+        return new BroadcastPartitioningProperty(domain);
     }
 
 }

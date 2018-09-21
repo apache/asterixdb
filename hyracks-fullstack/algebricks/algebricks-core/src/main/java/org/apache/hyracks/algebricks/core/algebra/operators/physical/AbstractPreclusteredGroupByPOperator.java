@@ -89,6 +89,10 @@ public abstract class AbstractPreclusteredGroupByPOperator extends AbstractPhysi
         IPartitioningProperty pp = childProp.getPartitioningProperty();
         Map<LogicalVariable, LogicalVariable> ppSubstMap = computePartitioningPropertySubstitutionMap(gby, pp);
         if (ppSubstMap != null) {
+            // We cannot modify pp directly, since it is owned by the input operator.
+            // Otherwise, the partitioning property would be modified even before this group by operator,
+            // which will be undesirable.
+            pp = pp.clonePartitioningProperty();
             pp.substituteColumnVars(ppSubstMap);
         }
         List<ILocalStructuralProperty> childLocals = childProp.getLocalProperties();

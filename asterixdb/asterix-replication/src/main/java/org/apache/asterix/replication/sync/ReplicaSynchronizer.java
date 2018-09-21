@@ -25,6 +25,8 @@ import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.replication.messaging.CheckpointPartitionIndexesTask;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
  * Performs the steps required to ensure any newly added replica
@@ -60,9 +62,17 @@ public class ReplicaSynchronizer {
     }
 
     private void checkpointReplicaIndexes() throws IOException {
+        final int partition = replica.getIdentifier().getPartition();
         CheckpointPartitionIndexesTask task =
-                new CheckpointPartitionIndexesTask(replica.getIdentifier().getPartition());
+                new CheckpointPartitionIndexesTask(partition, getPartitionMaxComponentId(partition));
         ReplicationProtocol.sendTo(replica, task);
         ReplicationProtocol.waitForAck(replica);
+    }
+
+    private long getPartitionMaxComponentId(int partition) throws HyracksDataException {
+        final IReplicationStrategy replStrategy = appCtx.getReplicationManager().getReplicationStrategy();
+        final PersistentLocalResourceRepository localResourceRepository =
+                (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
+        return localResourceRepository.getReplicatedIndexesMaxComponentId(partition, replStrategy);
     }
 }

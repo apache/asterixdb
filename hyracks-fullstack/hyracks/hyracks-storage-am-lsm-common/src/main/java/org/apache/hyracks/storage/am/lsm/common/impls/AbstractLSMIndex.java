@@ -577,7 +577,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         if (c != EmptyComponent.INSTANCE) {
             diskComponents.add(0, c);
         }
-        assert checkComponentIds();
+        validateComponentIds();
     }
 
     @Override
@@ -588,7 +588,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         if (newComponent != EmptyComponent.INSTANCE) {
             diskComponents.add(swapIndex, newComponent);
         }
-        assert checkComponentIds();
+        validateComponentIds();
     }
 
     /**
@@ -597,16 +597,16 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
      *
      * @throws HyracksDataException
      */
-    private boolean checkComponentIds() throws HyracksDataException {
+    private void validateComponentIds() throws HyracksDataException {
         for (int i = 0; i < diskComponents.size() - 1; i++) {
             ILSMComponentId id1 = diskComponents.get(i).getId();
             ILSMComponentId id2 = diskComponents.get(i + 1).getId();
             IdCompareResult cmp = id1.compareTo(id2);
             if (cmp != IdCompareResult.UNKNOWN && cmp != IdCompareResult.GREATER_THAN) {
-                return false;
+                throw new IllegalStateException(
+                        "found non-decreasing component ids (" + id1 + " -> " + id2 + ") on index " + this);
             }
         }
-        return true;
     }
 
     @Override

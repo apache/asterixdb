@@ -45,9 +45,11 @@ import org.apache.hyracks.storage.common.LocalResource;
 public class CheckpointPartitionIndexesTask implements IReplicaTask {
 
     private final int partition;
+    private final long maxComponentId;
 
-    public CheckpointPartitionIndexesTask(int partition) {
+    public CheckpointPartitionIndexesTask(int partition, long maxComponentId) {
         this.partition = partition;
+        this.maxComponentId = maxComponentId;
     }
 
     @Override
@@ -75,7 +77,7 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
                 maxComponentSequence =
                         Math.max(maxComponentSequence, IndexComponentFileReference.of(file).getSequenceEnd());
             }
-            indexCheckpointManager.init(maxComponentSequence, currentLSN);
+            indexCheckpointManager.init(maxComponentSequence, currentLSN, maxComponentId);
         }
         ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
     }
@@ -90,6 +92,7 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
         try {
             DataOutputStream dos = new DataOutputStream(out);
             dos.writeInt(partition);
+            dos.writeLong(maxComponentId);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -98,7 +101,8 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
     public static CheckpointPartitionIndexesTask create(DataInput input) throws HyracksDataException {
         try {
             int partition = input.readInt();
-            return new CheckpointPartitionIndexesTask(partition);
+            long maxComponentId = input.readLong();
+            return new CheckpointPartitionIndexesTask(partition, maxComponentId);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

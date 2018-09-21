@@ -55,7 +55,8 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public synchronized void init(long validComponentSequence, long lsn) throws HyracksDataException {
+    public synchronized void init(long validComponentSequence, long lsn, long validComponentId)
+            throws HyracksDataException {
         List<IndexCheckpoint> checkpoints;
         try {
             checkpoints = getCheckpoints();
@@ -66,7 +67,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
             LOGGER.warn(() -> "Checkpoints found on initializing: " + indexPath);
             delete();
         }
-        IndexCheckpoint firstCheckpoint = IndexCheckpoint.first(validComponentSequence, lsn);
+        IndexCheckpoint firstCheckpoint = IndexCheckpoint.first(validComponentSequence, lsn, validComponentId);
         persist(firstCheckpoint);
     }
 
@@ -196,6 +197,9 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
                 // ensure it was written correctly by reading it
                 read(checkpointPath);
                 return;
+            } catch (ClosedByInterruptException e) {
+                LOGGER.info("interrupted while writing checkpoint at {}", checkpointPath);
+                throw HyracksDataException.create(e);
             } catch (IOException e) {
                 if (i == MAX_CHECKPOINT_WRITE_ATTEMPTS) {
                     throw HyracksDataException.create(e);

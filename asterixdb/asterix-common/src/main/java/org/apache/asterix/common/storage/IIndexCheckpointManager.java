@@ -29,9 +29,10 @@ public interface IIndexCheckpointManager {
      *
      * @param validComponentSequence
      * @param lsn
+     * @param validComponentId
      * @throws HyracksDataException
      */
-    void init(long validComponentSequence, long lsn) throws HyracksDataException;
+    void init(long validComponentSequence, long lsn, long validComponentId) throws HyracksDataException;
 
     /**
      * Called when a new LSM disk component is flushed. When called, the index checkpoint is updated
