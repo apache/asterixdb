@@ -1,0 +1,102 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ *  Description     : Secondary BTree Index index-only selection plan verification test
+ *                  : The test is intended to verify that the secondary BTree index is used in the optimized query plan.
+ *                  : In this plan, we fetch PK and SK based on a select condition that utilizes a secondary index.
+ *                  : The plan should have two paths after the secondary index-lookup.
+ *                  : The left path:
+ *                      ... -> unnest-map (sidx) -> split -> unnest-map (pidx) -> select -> union -> ...
+ *                  : The right path:
+ *                      ... -> unnest-map (sidx) -> split ->                             -> union -> ...
+ *  Expected Result : Success
+ *
+*/
+
+drop dataverse twitter if exists;
+create dataverse twitter if not exists;
+use twitter;
+
+create type typeUser if not exists as open {
+    id: int64,
+    name: string,
+    screen_name : string,
+    profile_image_url : string,
+    lang : string,
+    location: string,
+    create_at: date,
+    description: string,
+    followers_count: int32,
+    friends_count: int32,
+    status_count: int64
+};
+
+create type typePlace if not exists as open{
+    country : string,
+    country_code : string,
+    full_name : string,
+    id : string,
+    name : string,
+    place_type : string,
+    bounding_box : rectangle
+};
+
+create type typeGeoTag if not exists as open {
+    stateID: int32,
+    stateName: string,
+    countyID: int32,
+    countyName: string,
+    cityID: int32?,
+    cityName: string?
+};
+
+create type typeTweet if not exists as open {
+    create_at : datetime,
+    id: int64,
+    text: string,
+    in_reply_to_status : int64,
+    in_reply_to_user : int64,
+    favorite_count : int64,
+    coordinate: point?,
+    retweet_count : int64,
+    lang : string,
+    is_retweet: boolean,
+    hashtags : {{ string }} ?,
+    user_mentions : {{ int64 }} ? ,
+    user : typeUser,
+    place : typePlace?,
+    geo_tag: typeGeoTag
+};
+
+create dataset ds_tweet(typeTweet) if not exists primary key id;
+
+create index create_at_status_count_idx on ds_tweet(user.create_at, user.status_count);
+
+select value count(first.create_at) from (
+select t.user.create_at, t.user.status_count, t.id from ds_tweet t
+where
+      t.user.create_at   >=
+      date_from_unix_time_in_days(10000) and
+      t.user.create_at   <
+      date_from_unix_time_in_days(12000) and
+          t.user.status_count  >= 0 and
+          t.user.status_count  <  1000000
+) first;
+

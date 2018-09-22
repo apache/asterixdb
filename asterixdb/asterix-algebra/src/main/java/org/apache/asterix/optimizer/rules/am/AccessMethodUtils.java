@@ -1196,6 +1196,30 @@ public class AccessMethodUtils {
             origVarToSIdxUnnestMapOpVarMap.put(tVar, skVarsFromSIdxUnnestMap.get(sIndexIdx));
         }
 
+        // For B-Tree case: if the given secondary key field variable is used only in the select or
+        // join condition, we were not able to catch the mapping between the the SK from the original
+        // data-scan and the SK from the secondary index search since they are different logical variables.
+        // (E.g., we are sending a query on a composite index but returns only one field.)
+        List<LogicalVariable> varsUsedInTopOpButNotAfterwards = new ArrayList<>();
+        copyVarsToAnotherList(uniqueUsedVarsInTopOp, varsUsedInTopOpButNotAfterwards);
+        varsUsedInTopOpButNotAfterwards.removeAll(usedVarsAfterTopOp);
+        if (idxType == IndexType.BTREE) {
+            for (LogicalVariable v : varsUsedInTopOpButNotAfterwards) {
+                int sIndexIdx = chosenIndexFieldNames.indexOf(subTree.getVarsToFieldNameMap().get(v));
+                // For the join-case, the match might not exist.
+                // In this case, we just propagate the variables later.
+                if (sIndexIdx == -1) {
+                    continue;
+                }
+                LogicalVariable replacedVar = context.newVar();
+                origPKRecAndSKVarToleftPathMap.put(v, replacedVar);
+                origVarToOutputVarMap.put(skVarsFromSIdxUnnestMap.get(sIndexIdx), v);
+                // Constructs the mapping between the SK from the original data-scan
+                // and the SK from the secondary index search since they are different logical variables.
+                origVarToSIdxUnnestMapOpVarMap.put(v, skVarsFromSIdxUnnestMap.get(sIndexIdx));
+            }
+        }
+
         // For R-Tree case: if the given secondary key field variable is used only in the select or join condition,
         // we were not able to catch the mapping between the original secondary key field and the newly restored
         // secondary key field in the assign operator in the right path.
