@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.http.HttpTestUtil;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.HttpServerConfig;
@@ -39,6 +47,7 @@ import org.apache.hyracks.http.server.HttpServerConfigBuilder;
 import org.apache.hyracks.http.server.InterruptOnCloseHandler;
 import org.apache.hyracks.http.server.WebManager;
 import org.apache.hyracks.http.servlet.ChattyServlet;
+import org.apache.hyracks.http.servlet.EchoServlet;
 import org.apache.hyracks.http.servlet.SleepyServlet;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.Level;
@@ -374,6 +383,36 @@ public class HttpServerTest {
         Field f = obj.getClass().getDeclaredField(filedName);
         f.setAccessible(true);
         f.set(obj, value);
+    }
+
+    @Test
+    public void chunkedRequestTest() throws Exception {
+        final WebManager webMgr = new WebManager();
+        final int serverRequestChunkSize = StorageUtil.getIntSizeInBytes(1, StorageUtil.StorageUnit.KILOBYTE);
+        final HttpServerConfig config = HttpServerConfigBuilder.custom().setThreadCount(16).setRequestQueueSize(16)
+                .setMaxRequestChunkSize(serverRequestChunkSize).build();
+        final HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, config);
+        EchoServlet servlet = new EchoServlet(server.ctx(), PATH);
+        server.addServlet(servlet);
+        webMgr.add(server);
+        webMgr.start();
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            final URI uri = new URI(HttpServerTest.PROTOCOL, null, HttpServerTest.HOST, HttpServerTest.PORT,
+                    HttpServerTest.PATH, null, null);
+            final HttpPost postRequest = new HttpPost(uri);
+            final int requestSize = StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.KILOBYTE);
+            final String requestBody = RandomStringUtils.randomAlphanumeric(requestSize);
+            final StringEntity chunkedEntity = new StringEntity(requestBody);
+            chunkedEntity.setChunked(true);
+            postRequest.setEntity(chunkedEntity);
+            try (CloseableHttpResponse response = httpClient.execute(postRequest)) {
+                final String responseBody = EntityUtils.toString(response.getEntity());
+                Assert.assertEquals(response.getStatusLine().getStatusCode(), HttpResponseStatus.OK.code());
+                Assert.assertEquals(responseBody, requestBody);
+            }
+        } finally {
+            webMgr.stop();
+        }
     }
 
     private void request(int count) throws URISyntaxException {
