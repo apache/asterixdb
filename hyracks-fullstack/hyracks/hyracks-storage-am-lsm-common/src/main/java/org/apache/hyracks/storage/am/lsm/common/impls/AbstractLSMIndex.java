@@ -20,12 +20,14 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -901,4 +903,17 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     protected abstract ILSMDiskComponent doFlush(ILSMIOOperation operation) throws HyracksDataException;
 
     protected abstract ILSMDiskComponent doMerge(ILSMIOOperation operation) throws HyracksDataException;
+
+    public Optional<Long> getLatestDiskComponentSequence() {
+        if (diskComponents.isEmpty()) {
+            return Optional.empty();
+        }
+        final ILSMDiskComponent latestDiskComponent = diskComponents.get(0);
+        final Set<String> diskComponentPhysicalFiles = latestDiskComponent.getLSMComponentPhysicalFiles();
+        final String fileName = diskComponentPhysicalFiles.stream().findAny()
+                .orElseThrow(() -> new IllegalStateException("Disk component without any physical files"));
+        return Optional
+                .of(IndexComponentFileReference.of(Paths.get(fileName).getFileName().toString()).getSequenceEnd());
+    }
+
 }
