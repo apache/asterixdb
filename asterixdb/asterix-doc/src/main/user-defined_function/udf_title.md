@@ -16,10 +16,12 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-# Installation using Amazon Web Services #
+
+# User-defined Functions #
 
 ## <a id="#toc">Table of Contents</a> ##
-* [Introduction](#Introduction)
-* [Prerequisites](#Prerequisites)
-* [Cluster Configuration](#config)
-* [Cluster Lifecycle Management](#lifecycle)
+* [Introduction](#introduction)
+* [Installing an UDF Library](#installingUDF)
+* [Attaching an UDF on Data Feeds](#UDFOnFeeds)
+* [A quick look of the UDF configuration](#udfConfiguration)
+* [Unstalling an UDF Library](#uninstall)

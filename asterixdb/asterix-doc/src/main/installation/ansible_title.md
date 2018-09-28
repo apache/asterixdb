@@ -16,7 +16,9 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
+# Installation using Ansible #
 
+## <a id="#toc">Table of Contents</a> ##
 * [Introduction](#Introduction)
 * [Prerequisites](#Prerequisites)
 * [Cluster Configuration](#config)

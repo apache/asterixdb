@@ -18,5 +18,4 @@
  */
 use externallibtest;
 
-let x=testlib#mysum(3,4)
-select VALUE x;
+testlib#mysum(3,4);

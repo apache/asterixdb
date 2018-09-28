@@ -17,14 +17,6 @@
  ! under the License.
  !-->
 
-# Support for Data Ingestion in AsterixDB #
-
-## <a id="#toc">Table of Contents</a> ##
-
-* [Introduction](#Introduction)
-* [Feed Adapters](#FeedAdapters)
-* [Feed Policies](#FeedPolicies)
-
 ## <a name="Introduction">Introduction</a>  ##
 
 In this document, we describe the support for data ingestion in
@@ -101,7 +93,12 @@ Twitter API requires providing the following.
 The "push_twitter" adapter takes as configuration the above mentioned
 parameters. End users are required to obtain the above authentication credentials prior to
 using the "push_twitter" adapter. For further information on obtaining OAuth keys and tokens and
-registering an application with Twitter, please visit http://apps.twitter.com
+registering an application with Twitter, please visit http://apps.twitter.com.
+
+Note that AsterixDB uses the Twitter4J API for getting data from Twitter. Due to a license conflict,
+Apache AsterixDB cannot ship the Twitter4J library. To use the Twitter adapter in AsterixDB,
+please download the necessary dependencies (`twitter4j-core-4.0.x.jar` and `twitter4j-stream-4.0.x.jar`) and drop
+them into the `repo/` directory before AsterixDB starts.
 
 Given below is an example SQL++ statement that creates a feed called "TwitterFeed" by using the
 "push_twitter" adapter.

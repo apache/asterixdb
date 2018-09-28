@@ -146,22 +146,4 @@ public class Datatypes {
         private Tweet_User() {
         }
     }
-
-    /*
-        The following assumes this DDL (but ignoring the field name orders):
-        create type ProcessedTweet if not exists as open {
-            id: string,
-            user_name:string,
-            location:point,
-            created_at:string,
-            message_text:string,
-            country: string,
-            topics: [string]
-        };
-    */
-    public static final class ProcessedTweet {
-        public static final String USER_NAME = "user_name";
-        public static final String LOCATION = "location";
-        public static final String TOPICS = "topics";
-    }
 }

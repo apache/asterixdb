@@ -54,7 +54,7 @@ public class AddHashTagsInPlaceFunction implements IExternalScalarFunction {
                 list.add(newField);
             }
         }
-        inputRecord.addField(Datatypes.ProcessedTweet.TOPICS, list);
+        inputRecord.addField("topics", list);
         functionHelper.setResult(inputRecord);
     }
 

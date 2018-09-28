@@ -22,8 +22,8 @@
  * Date         : 4th Oct 2017
  */
 // polltimeoutsecs=5
-use externallibtest;
+use udfs;
 
-select value t from TweetsFeedIngest t
+select value t from ProcessedTweets t
 ORDER BY t.id;
 

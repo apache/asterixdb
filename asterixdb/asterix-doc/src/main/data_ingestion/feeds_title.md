@@ -16,10 +16,10 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-# Installation using Amazon Web Services #
+
+# Data Ingestion with Feeds #
 
 ## <a id="#toc">Table of Contents</a> ##
 * [Introduction](#Introduction)
-* [Prerequisites](#Prerequisites)
-* [Cluster Configuration](#config)
-* [Cluster Lifecycle Management](#lifecycle)
+* [Feed Adapters](#FeedAdapters)
+* [Feed Policies](#FeedPolicies)

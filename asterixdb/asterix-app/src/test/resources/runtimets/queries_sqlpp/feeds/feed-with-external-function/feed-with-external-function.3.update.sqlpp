@@ -21,10 +21,8 @@
  * Expected Res : Success
  * Date         : 4th Oct 2017
  */
-use externallibtest;
+use udfs;
 
-SET `compiler.parallelism` "5";
-
-connect feed TweetFeed to dataset TweetsFeedIngest apply function `testlib#parseTweet`;
+connect feed TweetFeed to dataset ProcessedTweets apply function testlib#addMentionedUsers;
 
 start feed TweetFeed;

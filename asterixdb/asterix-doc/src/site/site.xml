@@ -90,7 +90,7 @@
 
     <menu name="Advanced Features">
       <item name="Accessing External Data" href="aql/externaldata.html"/>
-      <item name="Support for Data Ingestion" href="feeds/tutorial.html"/>
+      <item name="Data Ingestion with Feeds" href="feeds.html"/>
       <item name="User Defined Functions" href="udf.html"/>
       <item name="Filter-Based LSM Index Acceleration" href="sqlpp/filters.html"/>
       <item name="Support of Full-text Queries" href="sqlpp/fulltext.html"/>

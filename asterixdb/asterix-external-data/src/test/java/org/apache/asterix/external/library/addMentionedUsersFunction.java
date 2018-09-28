@@ -1,4 +1,4 @@
-/*
+/*  1
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,8 +19,6 @@
 package org.apache.asterix.external.library;
 
 import org.apache.asterix.external.library.java.JBuiltinType;
-import org.apache.asterix.external.library.java.base.JDouble;
-import org.apache.asterix.external.library.java.base.JPoint;
 import org.apache.asterix.external.library.java.base.JRecord;
 import org.apache.asterix.external.library.java.base.JString;
 import org.apache.asterix.external.library.java.base.JUnorderedList;
@@ -29,15 +27,15 @@ import org.apache.asterix.external.api.IFunctionHelper;
 import org.apache.asterix.external.library.java.JTypeTag;
 import org.apache.asterix.external.util.Datatypes;
 
-public class AddHashTagsFunction implements IExternalScalarFunction {
+public class addMentionedUsersFunction implements IExternalScalarFunction {
 
     private JUnorderedList list = null;
-    private JPoint location = null;
+    private String textFieldName;
 
     @Override
     public void initialize(IFunctionHelper functionHelper) {
         list = new JUnorderedList(JBuiltinType.JSTRING);
-        location = new JPoint(0, 0);
+        textFieldName = functionHelper.getParameters().get(0);
     }
 
     @Override
@@ -48,38 +46,18 @@ public class AddHashTagsFunction implements IExternalScalarFunction {
     public void evaluate(IFunctionHelper functionHelper) throws Exception {
         list.clear();
         JRecord inputRecord = (JRecord) functionHelper.getArgument(0);
-        JString text = (JString) inputRecord.getValueByName(Datatypes.Tweet.MESSAGE);
-        JDouble latitude = (JDouble) inputRecord.getValueByName(Datatypes.Tweet.LATITUDE);
-        JDouble longitude = (JDouble) inputRecord.getValueByName(Datatypes.Tweet.LONGITUDE);
-
-        if (latitude != null && longitude != null) {
-            location.setValue(latitude.getValue(), longitude.getValue());
-        } else {
-            location.setValue(0, 0);
-        }
+        JString text = (JString) inputRecord.getValueByName(textFieldName);
 
         String[] tokens = text.getValue().split(" ");
         for (String tk : tokens) {
-            if (tk.startsWith("#")) {
+            if (tk.startsWith("@")) {
                 JString newField = (JString) functionHelper.getObject(JTypeTag.STRING);
                 newField.setValue(tk);
                 list.add(newField);
             }
         }
-
-        JRecord outputRecord = (JRecord) functionHelper.getResultObject();
-        outputRecord.setField(Datatypes.Tweet.ID, inputRecord.getValueByName(Datatypes.Tweet.ID));
-
-        JRecord userRecord = (JRecord) inputRecord.getValueByName(Datatypes.Tweet.USER);
-        outputRecord.setField(Datatypes.ProcessedTweet.USER_NAME,
-                userRecord.getValueByName(Datatypes.Tweet.SCREEN_NAME));
-
-        outputRecord.setField(Datatypes.ProcessedTweet.LOCATION, location);
-        outputRecord.setField(Datatypes.Tweet.CREATED_AT, inputRecord.getValueByName(Datatypes.Tweet.CREATED_AT));
-        outputRecord.setField(Datatypes.Tweet.MESSAGE, text);
-        outputRecord.setField(Datatypes.ProcessedTweet.TOPICS, list);
-
-        functionHelper.setResult(outputRecord);
+        inputRecord.addField("mentionedUsers", list);
+        functionHelper.setResult(inputRecord);
     }
 
 }

@@ -69,6 +69,12 @@
                 <concat destfile="${project.build.directory}/generated-site/markdown/aws.md">
                   <filelist dir="${project.basedir}/src/main/installation/" files="aws_title.md,aws.md" />
                 </concat>
+                <concat destfile="${project.build.directory}/generated-site/markdown/feeds.md">
+                    <filelist dir="${project.basedir}/src/main/data_ingestion/" files="feeds_title.md,feeds.md" />
+                </concat>
+                <concat destfile="${project.build.directory}/generated-site/markdown/udf.md">
+                  <filelist dir="${project.basedir}/src/main/user-defined_function/" files="udf_title.md,udf.md" />
+                </concat>
               </target>
             </configuration>
             <goals>

@@ -42,16 +42,15 @@
       <function_type>SCALAR</function_type>
       <argument_type>TweetInputType</argument_type>
       <return_type>TweetOutputType</return_type>
-      <definition>org.apache.asterix.external.library.ParseTweetFactory
-      </definition>
+      <definition>org.apache.asterix.external.library.ParseTweetFactory</definition>
     </libraryFunction>
     <libraryFunction>
-      <name>addHashTags</name>
+      <name>addMentionedUsers</name>
       <function_type>SCALAR</function_type>
-      <argument_type>Tweet</argument_type>
-      <return_type>ProcessedTweet</return_type>
-      <definition>org.apache.asterix.external.library.AddHashTagsFactory
-      </definition>
+      <argument_type>TweetType</argument_type>
+      <return_type>TweetType</return_type>
+      <definition>org.apache.asterix.external.library.AddMentionedUsersFactory</definition>
+      <parameters>text</parameters>
     </libraryFunction>
     <libraryFunction>
       <name>addHashTagsInPlace</name>
