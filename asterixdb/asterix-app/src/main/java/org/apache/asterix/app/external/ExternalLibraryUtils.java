@@ -222,7 +222,7 @@ public class ExternalLibraryUtils {
                     String functionType = function.getFunctionType().trim();
                     List<String> args = new ArrayList<>();
                     for (String arg : fargs) {
-                        args.add(arg);
+                        args.add(arg.trim());
                     }
                     FunctionSignature signature = new FunctionSignature(dataverse, functionFullName, args.size());
                     Function f = new Function(signature, args, functionReturnType, functionDefinition, functionLanguage,

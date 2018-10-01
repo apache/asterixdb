@@ -24,6 +24,11 @@
 
   <test-group name="external-library">
     <test-case FilePath="external-library">
+      <compilation-unit name="type_validation">
+        <output-dir compare="Text">type_validation</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="mysum">
         <output-dir compare="Text">mysum</output-dir>
       </compilation-unit>

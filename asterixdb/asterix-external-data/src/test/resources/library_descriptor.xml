@@ -100,6 +100,14 @@
       <definition>org.apache.asterix.external.library.EchoDelayFactory
       </definition>
     </libraryFunction>
+    <libraryFunction>
+      <name>typeValidation</name>
+      <function_type>SCALAR</function_type>
+      <argument_type>AINT32, AFLOAT, ASTRING, ADouble, ABoolean, APoint, ADate, ADatetime, ALine, ACircle, ARectangle</argument_type>
+      <return_type>AString</return_type>
+      <definition>org.apache.asterix.external.library.TypeValidationFunctionFactory
+      </definition>
+    </libraryFunction>
   </libraryFunctions>
   <libraryAdapters>
     <libraryAdapter>

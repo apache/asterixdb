@@ -89,13 +89,29 @@ public class ExternalFunctionCompilerUtil {
     private static IAType getTypeInfo(String paramType, MetadataTransactionContext txnCtx, Function function)
             throws AlgebricksException {
         if (paramType.equalsIgnoreCase(BuiltinType.AINT32.getDisplayName())) {
-            return (BuiltinType.AINT32);
+            return BuiltinType.AINT32;
         } else if (paramType.equalsIgnoreCase(BuiltinType.AFLOAT.getDisplayName())) {
-            return (BuiltinType.AFLOAT);
+            return BuiltinType.AFLOAT;
         } else if (paramType.equalsIgnoreCase(BuiltinType.ASTRING.getDisplayName())) {
-            return (BuiltinType.ASTRING);
+            return BuiltinType.ASTRING;
         } else if (paramType.equalsIgnoreCase(BuiltinType.ADOUBLE.getDisplayName())) {
-            return (BuiltinType.ADOUBLE);
+            return BuiltinType.ADOUBLE;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.ABOOLEAN.getDisplayName())) {
+            return BuiltinType.ABOOLEAN;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.APOINT.getDisplayName())) {
+            return BuiltinType.APOINT;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.ADATE.getDisplayName())) {
+            return BuiltinType.ADATE;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.ADATETIME.getDisplayName())) {
+            return BuiltinType.ADATETIME;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.APOINT3D.getDisplayName())) {
+            return BuiltinType.APOINT3D;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.ALINE.getDisplayName())) {
+            return BuiltinType.ALINE;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.ACIRCLE.getDisplayName())) {
+            return BuiltinType.ACIRCLE;
+        } else if (paramType.equalsIgnoreCase(BuiltinType.ARECTANGLE.getDisplayName())) {
+            return BuiltinType.ARECTANGLE;
         } else {
             IAType collection = getCollectionType(paramType, txnCtx, function);
             if (collection != null) {
@@ -104,9 +120,9 @@ public class ExternalFunctionCompilerUtil {
                 Datatype datatype;
                 datatype = MetadataManager.INSTANCE.getDatatype(txnCtx, function.getDataverseName(), paramType);
                 if (datatype == null) {
-                    throw new MetadataException(" Type " + paramType + " not defined");
+                    throw new MetadataException(" Type " + paramType + " is not supported in UDF.");
                 }
-                return (datatype.getDatatype());
+                return datatype.getDatatype();
             }
         }
     }
