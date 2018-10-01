@@ -19,21 +19,33 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class IfNanOrInfTypeComputer extends AbstractResultTypeComputer {
 
-    public static final IfNanOrInfTypeComputer INSTANCE = new IfNanOrInfTypeComputer();
+    public static final IfNanOrInfTypeComputer INSTANCE = new IfNanOrInfTypeComputer(false);
+    public static final IfNanOrInfTypeComputer INSTANCE_SKIP_MISSING = new IfNanOrInfTypeComputer(true);
+
+    private final boolean skipMissing;
+
+    private IfNanOrInfTypeComputer(boolean skipMissing) {
+        this.skipMissing = skipMissing;
+    }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        if (strippedInputTypes.length == 0) {
-            return BuiltinType.ANULL;
+        if (strippedInputTypes.length < 2 || strippedInputTypes.length > Short.MAX_VALUE) {
+            String functionName = ((AbstractFunctionCallExpression) expr).getFunctionIdentifier().getName();
+            throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, expr.getSourceLocation(),
+                    functionName);
         }
 
         boolean any = false;
@@ -50,8 +62,12 @@ public class IfNanOrInfTypeComputer extends AbstractResultTypeComputer {
         }
 
         switch (currentType.getTypeTag()) {
-            case ANY:
             case MISSING:
+                if (skipMissing) {
+                    // i.e. all args have been inspected and couldn't find a candidate value, so return null
+                    return BuiltinType.ANULL;
+                }
+            case ANY:
             case BIGINT:
             case INTEGER:
             case SMALLINT:

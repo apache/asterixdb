@@ -36,6 +36,16 @@ import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+/**
+ * ifnanorinf(arg1, arg2, ...) scans the list of arguments in order and returns the first numeric argument it
+ * encounters.
+ * If the argument being inspected is missing or NaN/Infinity as determined by the mathematical definition of
+ * floating-points, then it skips the argument and inspects the next one. It returns null if:
+ * 1. the argument being inspected is not numeric.
+ * 2. all the arguments have been inspected and no candidate value has been found.
+ *
+ * Number of arguments: Min is 2. Max is {@link Short#MAX_VALUE}
+ */
 public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
@@ -48,7 +58,7 @@ public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescripto
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new AbstractIfInfOrNanEval(ctx, args) {
+                return new AbstractIfInfOrNanEval(ctx, args, true) {
                     @Override
                     protected boolean skipDouble(double d) {
                         return Double.isInfinite(d) || Double.isNaN(d);
@@ -78,13 +88,16 @@ public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescripto
         private final IScalarEvaluator[] argEvals;
 
         private final IPointable argPtr;
+        private final boolean skipMissing;
 
-        AbstractIfInfOrNanEval(IHyracksTaskContext ctx, IScalarEvaluatorFactory[] args) throws HyracksDataException {
+        AbstractIfInfOrNanEval(IHyracksTaskContext ctx, IScalarEvaluatorFactory[] args, boolean skipMissing)
+                throws HyracksDataException {
             argEvals = new IScalarEvaluator[args.length];
             for (int i = 0; i < argEvals.length; i++) {
                 argEvals[i] = args[i].createScalarEvaluator(ctx);
             }
             argPtr = new VoidPointable();
+            this.skipMissing = skipMissing;
         }
 
         @Override
@@ -110,11 +123,14 @@ public class IfNanOrInfDescriptor extends AbstractScalarFunctionDynamicDescripto
                         }
                         result.set(argPtr);
                         return;
+                    case MISSING:
+                        if (skipMissing) {
+                            continue;
+                        }
                     case BIGINT:
                     case INTEGER:
                     case SMALLINT:
                     case TINYINT:
-                    case MISSING:
                         result.set(argPtr);
                         return;
                     default:

@@ -1309,8 +1309,8 @@ public class BuiltinFunctions {
         addFunction(IF_MISSING, IfMissingTypeComputer.INSTANCE, true);
         addFunction(IF_MISSING_OR_NULL, IfMissingOrNullTypeComputer.INSTANCE, true);
         addFunction(IF_NULL, IfNullTypeComputer.INSTANCE, true);
-        addFunction(IF_NAN, IfNanOrInfTypeComputer.INSTANCE, true);
-        addFunction(IF_NAN_OR_INF, IfNanOrInfTypeComputer.INSTANCE, true);
+        addFunction(IF_NAN, IfNanOrInfTypeComputer.INSTANCE_SKIP_MISSING, true);
+        addFunction(IF_NAN_OR_INF, IfNanOrInfTypeComputer.INSTANCE_SKIP_MISSING, true);
 
         addFunction(MISSING_IF, MissingIfTypeComputer.INSTANCE, true);
         addFunction(NULL_IF, NullIfTypeComputer.INSTANCE, true);

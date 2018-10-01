@@ -5142,16 +5142,19 @@
     <test-case FilePath="numeric">
       <compilation-unit name="ifinf">
         <output-dir compare="Text">ifinf</output-dir>
+        <expected-error>Invalid number of arguments for function if-inf (in line 25, at column 14)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
       <compilation-unit name="ifnan">
         <output-dir compare="Text">ifnan</output-dir>
+        <expected-error>Invalid number of arguments for function if-nan (in line 25, at column 14)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
       <compilation-unit name="ifnanorinf">
         <output-dir compare="Text">ifnanorinf</output-dir>
+        <expected-error>Invalid number of arguments for function if-nan-or-inf (in line 25, at column 14)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">

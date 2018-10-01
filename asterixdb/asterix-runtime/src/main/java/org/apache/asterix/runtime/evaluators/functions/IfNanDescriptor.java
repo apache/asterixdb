@@ -28,6 +28,15 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+/**
+ * ifnan(arg1, arg2, ...) scans the list of arguments in order and returns the first numeric argument it encounters.
+ * If the argument being inspected is missing or NaN as determined by the mathematical definition of floating-points,
+ * then it skips the argument and inspects the next one. It returns null if:
+ * 1. the argument being inspected is not numeric.
+ * 2. all the arguments have been inspected and no candidate value has been found.
+ *
+ * Number of arguments: Min is 2. Max is {@link Short#MAX_VALUE}
+ */
 public class IfNanDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
@@ -40,7 +49,7 @@ public class IfNanDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IHyracksTaskContext ctx) throws HyracksDataException {
-                return new IfNanOrInfDescriptor.AbstractIfInfOrNanEval(ctx, args) {
+                return new IfNanOrInfDescriptor.AbstractIfInfOrNanEval(ctx, args, true) {
                     @Override
                     protected boolean skipDouble(double d) {
                         return Double.isNaN(d);
