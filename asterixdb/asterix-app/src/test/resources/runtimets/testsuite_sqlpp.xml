@@ -4195,28 +4195,6 @@
         </compilation-unit>
       </test-case>
     </test-group>
-    <test-group name="open-index-enforced/external-indexing">
-      <test-case FilePath="open-index-enforced/external-indexing">
-        <compilation-unit name="adm-format">
-          <output-dir compare="Text">adm-format</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="open-index-enforced/external-indexing">
-        <compilation-unit name="rtree-index">
-          <output-dir compare="Text">rtree-index</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="open-index-enforced/external-indexing">
-        <compilation-unit name="leftouterjoin">
-          <output-dir compare="Text">leftouterjoin</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="open-index-enforced/external-indexing">
-        <compilation-unit name="leftouterjoin-rtree">
-          <output-dir compare="Text">leftouterjoin-rtree</output-dir>
-        </compilation-unit>
-      </test-case>
-    </test-group>
     <test-group name="open-index-enforced/type-checking">
       <test-case FilePath="open-index-enforced/type-checking">
         <compilation-unit name="enforced-type-delete">
@@ -4408,28 +4386,6 @@
       <test-case FilePath="nested-open-index/index-selection">
         <compilation-unit name="rtree-secondary-index">
           <output-dir compare="Text">rtree-secondary-index</output-dir>
-        </compilation-unit>
-      </test-case>
-    </test-group>
-    <test-group name="nested-open-index/external-indexing">
-      <test-case FilePath="nested-open-index/external-indexing">
-        <compilation-unit name="adm-format">
-          <output-dir compare="Text">adm-format</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-open-index/external-indexing">
-        <compilation-unit name="rtree-index">
-          <output-dir compare="Text">rtree-index</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-open-index/external-indexing">
-        <compilation-unit name="leftouterjoin">
-          <output-dir compare="Text">leftouterjoin</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-open-index/external-indexing">
-        <compilation-unit name="leftouterjoin-rtree">
-          <output-dir compare="Text">leftouterjoin-rtree</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>
@@ -4670,28 +4626,6 @@
       <test-case FilePath="nested-index/index-selection">
         <compilation-unit name="rtree-secondary-index-optional">
           <output-dir compare="Text">rtree-secondary-index-open</output-dir>
-        </compilation-unit>
-      </test-case>
-    </test-group>
-    <test-group name="nested-index/external-indexing">
-      <test-case FilePath="nested-index/external-indexing">
-        <compilation-unit name="adm-format">
-          <output-dir compare="Text">adm-format</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-index/external-indexing">
-        <compilation-unit name="rtree-index">
-          <output-dir compare="Text">rtree-index</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-index/external-indexing">
-        <compilation-unit name="leftouterjoin">
-          <output-dir compare="Text">leftouterjoin</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-index/external-indexing">
-        <compilation-unit name="leftouterjoin-rtree">
-          <output-dir compare="Text">leftouterjoin-rtree</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>
@@ -6848,11 +6782,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="subquery">
-      <compilation-unit name="decorrelate_with_unique_id_2">
-        <output-dir compare="Text">decorrelate_with_unique_id_2</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="subquery">
       <compilation-unit name="exists">
         <output-dir compare="Text">exists</output-dir>
       </compilation-unit>
@@ -8815,11 +8744,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="hints">
-      <compilation-unit name="issue_251_dataset_hint_6">
-        <output-dir compare="Text">issue_251_dataset_hint_6</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="hints">
       <compilation-unit name="issue_251_dataset_hint_7">
         <output-dir compare="Text">issue_251_dataset_hint_7</output-dir>
       </compilation-unit>
@@ -9085,28 +9009,6 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="hdfs">
-    <test-case FilePath="hdfs">
-      <compilation-unit name="hdfs_shortcircuit">
-        <output-dir compare="Text">hdfs_shortcircuit</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="hdfs">
-      <compilation-unit name="issue_245_hdfs">
-        <output-dir compare="Text">issue_245_hdfs</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="hdfs">
-      <compilation-unit name="hdfs_02">
-        <output-dir compare="Text">hdfs_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="hdfs">
-      <compilation-unit name="hdfs_03">
-        <output-dir compare="Text">hdfs_03</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
   <test-group name="big-object">
     <test-case FilePath="big-object">
       <compilation-unit name="big_object_sort">
@@ -9131,38 +9033,6 @@
     <test-case FilePath="big-object">
       <compilation-unit name="big_object_load_20M">
         <output-dir compare="Text">big_object_load_20M</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="external-indexing">
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="text-format">
-        <output-dir compare="Text">text-format</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="sequence-format">
-        <output-dir compare="Text">sequence-format</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="rc-format">
-        <output-dir compare="Text">rc-format</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="rtree-index">
-        <output-dir compare="Text">rtree-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="leftouterjoin">
-        <output-dir compare="Text">leftouterjoin</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="leftouterjoin-rtree">
-        <output-dir compare="Text">leftouterjoin-rtree</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

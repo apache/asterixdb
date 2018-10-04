@@ -1,0 +1,160 @@
+<!--
+ ! Licensed to the Apache Software Foundation (ASF) under one
+ ! or more contributor license agreements.  See the NOTICE file
+ ! distributed with this work for additional information
+ ! regarding copyright ownership.  The ASF licenses this file
+ ! to you under the Apache License, Version 2.0 (the
+ ! "License"); you may not use this file except in compliance
+ ! with the License.  You may obtain a copy of the License at
+ !
+ !   http://www.apache.org/licenses/LICENSE-2.0
+ !
+ ! Unless required by applicable law or agreed to in writing,
+ ! software distributed under the License is distributed on an
+ ! "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ ! KIND, either express or implied.  See the License for the
+ ! specific language governing permissions and limitations
+ ! under the License.
+ !-->
+<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp" SourceLocation="true">
+  <test-group name="open-index-enforced">
+    <test-group name="open-index-enforced/external-indexing">
+      <test-case FilePath="open-index-enforced/external-indexing">
+        <compilation-unit name="adm-format">
+          <output-dir compare="Text">adm-format</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-enforced/external-indexing">
+        <compilation-unit name="rtree-index">
+          <output-dir compare="Text">rtree-index</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-enforced/external-indexing">
+        <compilation-unit name="leftouterjoin">
+          <output-dir compare="Text">leftouterjoin</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="open-index-enforced/external-indexing">
+        <compilation-unit name="leftouterjoin-rtree">
+          <output-dir compare="Text">leftouterjoin-rtree</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+  </test-group>
+  <test-group name="nested-open-index">
+    <test-group name="nested-open-index/external-indexing">
+      <test-case FilePath="nested-open-index/external-indexing">
+        <compilation-unit name="adm-format">
+          <output-dir compare="Text">adm-format</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-open-index/external-indexing">
+        <compilation-unit name="rtree-index">
+          <output-dir compare="Text">rtree-index</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-open-index/external-indexing">
+        <compilation-unit name="leftouterjoin">
+          <output-dir compare="Text">leftouterjoin</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-open-index/external-indexing">
+        <compilation-unit name="leftouterjoin-rtree">
+          <output-dir compare="Text">leftouterjoin-rtree</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+  </test-group>
+  <test-group name="nested-index">
+    <test-group name="nested-index/external-indexing">
+      <test-case FilePath="nested-index/external-indexing">
+        <compilation-unit name="adm-format">
+          <output-dir compare="Text">adm-format</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-index/external-indexing">
+        <compilation-unit name="rtree-index">
+          <output-dir compare="Text">rtree-index</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-index/external-indexing">
+        <compilation-unit name="leftouterjoin">
+          <output-dir compare="Text">leftouterjoin</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-index/external-indexing">
+        <compilation-unit name="leftouterjoin-rtree">
+          <output-dir compare="Text">leftouterjoin-rtree</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+  </test-group>
+  <test-group name="subquery">
+    <test-case FilePath="subquery">
+      <compilation-unit name="decorrelate_with_unique_id_2">
+        <output-dir compare="Text">decorrelate_with_unique_id_2</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="hints">
+    <test-case FilePath="hints">
+      <compilation-unit name="issue_251_dataset_hint_6">
+        <output-dir compare="Text">issue_251_dataset_hint_6</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="hdfs">
+    <test-case FilePath="hdfs">
+      <compilation-unit name="hdfs_shortcircuit">
+        <output-dir compare="Text">hdfs_shortcircuit</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="hdfs">
+      <compilation-unit name="issue_245_hdfs">
+        <output-dir compare="Text">issue_245_hdfs</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="hdfs">
+      <compilation-unit name="hdfs_02">
+        <output-dir compare="Text">hdfs_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="hdfs">
+      <compilation-unit name="hdfs_03">
+        <output-dir compare="Text">hdfs_03</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="external-indexing">
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="text-format">
+        <output-dir compare="Text">text-format</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="sequence-format">
+        <output-dir compare="Text">sequence-format</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="rc-format">
+        <output-dir compare="Text">rc-format</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="rtree-index">
+        <output-dir compare="Text">rtree-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="leftouterjoin">
+        <output-dir compare="Text">leftouterjoin</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-indexing">
+      <compilation-unit name="leftouterjoin-rtree">
+        <output-dir compare="Text">leftouterjoin-rtree</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>

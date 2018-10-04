@@ -75,7 +75,7 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.4-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.4-SNAPSHOT</hyracks.version>
-    <hadoop.version>2.2.0</hadoop.version>
+    <hadoop.version>2.8.5</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
@@ -321,7 +321,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.7.0</version>
+          <version>3.8.0</version>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
@@ -798,7 +798,8 @@
         <jdk>11</jdk>
       </activation>
       <properties>
-        <target.jdk.version>11</target.jdk.version>
+        <!-- several plugins do not yet support Java 11 classes (maven-plugin-plugin, maven-dependency-plugin) -->
+        <target.jdk.version>10</target.jdk.version>
       </properties>
     </profile>
     <profile>
@@ -933,6 +934,11 @@
             <artifactId>jdk.tools</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs-client</artifactId>
+        <version>${hadoop.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>

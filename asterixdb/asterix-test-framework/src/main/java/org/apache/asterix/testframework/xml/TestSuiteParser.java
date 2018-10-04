@@ -29,17 +29,27 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.sax.SAXSource;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
 
 public class TestSuiteParser {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public TestSuite parse(File testSuiteCatalog) throws SAXException, JAXBException, ParserConfigurationException {
         SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
         saxParserFactory.setNamespaceAware(true);
         saxParserFactory.setXIncludeAware(true);
         SAXParser saxParser = saxParserFactory.newSAXParser();
-        saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "file");
+        try {
+            saxParser.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "file");
+        } catch (SAXNotRecognizedException | SAXNotSupportedException e) {
+            LOGGER.warn("ignoring exception setting sax parser property", e);
+        }
 
         JAXBContext ctx = JAXBContext.newInstance(TestSuite.class);
         Unmarshaller um = ctx.createUnmarshaller();
