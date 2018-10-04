@@ -19,6 +19,7 @@
 
 package org.apache.asterix.test.runtime;
 
+import static org.apache.asterix.test.runtime.ExecutionTestUtil.integrationUtil;
 import static org.apache.hyracks.util.ThreadDumpUtil.takeDumpJSONString;
 
 import java.io.BufferedReader;
@@ -61,10 +62,15 @@ public class LangExecutionUtil {
     private static boolean checkStorageDistribution = true;
 
     public static void setUp(String configFile, TestExecutor executor) throws Exception {
+        setUp(configFile, executor, false);
+    }
+
+    public static void setUp(String configFile, TestExecutor executor, boolean startHdfs) throws Exception {
         testExecutor = executor;
         File outdir = new File(PATH_ACTUAL);
         outdir.mkdirs();
-        List<ILibraryManager> libraryManagers = ExecutionTestUtil.setUp(cleanupOnStart, configFile);
+        List<ILibraryManager> libraryManagers =
+                ExecutionTestUtil.setUp(cleanupOnStart, configFile, integrationUtil, startHdfs, null);
         ExternalUDFLibrarian.removeLibraryDir();
         librarian = new ExternalUDFLibrarian(libraryManagers);
         testExecutor.setLibrarian(librarian);
@@ -82,7 +88,7 @@ public class LangExecutionUtil {
         } finally {
             ExternalUDFLibrarian.removeLibraryDir();
             ExecutionTestUtil.tearDown(cleanupOnStop);
-            ExecutionTestUtil.integrationUtil.removeTestStorageFiles();
+            integrationUtil.removeTestStorageFiles();
             if (!badTestCases.isEmpty()) {
                 System.out.println("The following test cases left some data");
                 for (String testCase : badTestCases) {
@@ -140,7 +146,7 @@ public class LangExecutionUtil {
 
     // Checks whether data files are uniformly distributed among io devices.
     private static void checkStorageFiles() throws Exception {
-        NodeControllerService[] ncs = ExecutionTestUtil.integrationUtil.ncs;
+        NodeControllerService[] ncs = integrationUtil.ncs;
         // Checks that dataset files are uniformly distributed across each io device.
         for (NodeControllerService nc : ncs) {
             checkNcStore(nc);

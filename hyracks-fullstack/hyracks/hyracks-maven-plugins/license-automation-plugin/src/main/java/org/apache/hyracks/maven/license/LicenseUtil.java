@@ -109,7 +109,7 @@ public class LicenseUtil {
                 while (trimmed.length() > wrapLength) {
                     int cut = trimmed.lastIndexOf(' ', wrapLength);
                     cut = Math.max(cut, trimmed.lastIndexOf('\t', wrapLength));
-                    if (cut != -1) {
+                    if (cut != -1 && cut > leadingWS) {
                         out.append(trimmed.substring(0, cut));
                         out.append('\n');
                         trimmed = trimmed.substring(cut + 1);

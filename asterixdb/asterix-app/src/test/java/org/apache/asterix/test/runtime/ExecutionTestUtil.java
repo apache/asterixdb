@@ -52,7 +52,7 @@ public class ExecutionTestUtil {
     }
 
     public static List<ILibraryManager> setUp(boolean cleanup, String configFile) throws Exception {
-        return setUp(cleanup, configFile, integrationUtil, true, null);
+        return setUp(cleanup, configFile, integrationUtil, false, null);
     }
 
     public static List<ILibraryManager> setUp(boolean cleanup, String configFile,
