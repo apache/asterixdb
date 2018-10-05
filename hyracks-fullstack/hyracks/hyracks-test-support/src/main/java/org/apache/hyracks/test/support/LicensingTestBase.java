@@ -37,16 +37,27 @@ public abstract class LicensingTestBase {
             final String pattern = getInstallerDirPattern();
             final String targetDir = getTargetDir();
             final String[] list = new File(targetDir).list((dir, name) -> name.matches(pattern));
+            final String topLevelPattern = getTopLevelDirPattern();
+            String[] topLevel;
+            if (topLevelPattern == null) {
+                topLevel = new String[] { "" };
+            } else {
+                topLevel = new File(FileUtil.joinPath(targetDir, list[0]))
+                        .list((dir, name) -> name.matches(topLevelPattern));
+            }
+            installerDir = FileUtil.joinPath(targetDir, list[0], topLevel[0]);
             Assert.assertNotNull("installerDir", list);
-            Assert.assertFalse("Ambiguous install dir (" + pattern + "): " + Arrays.toString(list), list.length > 1);
-            Assert.assertEquals("Can't find install dir (" + pattern + ")", 1, list.length);
-            installerDir = FileUtil.joinPath(targetDir, list[0]);
+            Assert.assertFalse("Ambiguous install dir (" + pattern + "): " + Arrays.toString(topLevel),
+                    list.length > 1);
+            Assert.assertEquals("Can't find install dir (" + pattern + ")", 1, topLevel.length);
         }
     }
 
     protected abstract String getTargetDir();
 
     protected abstract String getInstallerDirPattern();
+
+    protected abstract String getTopLevelDirPattern();
 
     protected abstract String pathToLicensingFiles();
 

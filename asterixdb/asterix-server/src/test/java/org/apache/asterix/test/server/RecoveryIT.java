@@ -53,6 +53,8 @@ public class RecoveryIT {
     private static File installerTargetPath;
     private static String ncServiceHomeDirName;
     private static String ncServiceHomePath;
+    private static String ncServiceSubDirName;
+    private static String ncServiceSubPath;
     private static String scriptHomePath;
     private static String reportPath;
     private static ProcessBuilder pb;
@@ -74,14 +76,11 @@ public class RecoveryIT {
         asterixInstallerPath = new File(System.getProperty("user.dir"));
         installerTargetPath = new File(new File(asterixInstallerPath.getParentFile(), "asterix-server"), "target");
         reportPath = new File(installerTargetPath, "failsafe-reports").getAbsolutePath();
-        ncServiceHomeDirName = installerTargetPath.list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return new File(dir, name).isDirectory() && name.startsWith("asterix-server")
-                        && name.endsWith("binary-assembly");
-            }
-        })[0];
-        ncServiceHomePath = new File(installerTargetPath, ncServiceHomeDirName).getAbsolutePath();
+        ncServiceSubDirName =
+                installerTargetPath.list((dir, name) -> name.matches("asterix-server.*binary-assembly"))[0];
+        ncServiceSubPath = new File(installerTargetPath, ncServiceSubDirName).getAbsolutePath();
+        ncServiceHomeDirName = new File(ncServiceSubPath).list(((dir, name) -> name.matches("apache-asterixdb.*")))[0];
+        ncServiceHomePath = new File(ncServiceSubPath, ncServiceHomeDirName).getAbsolutePath();
 
         LOGGER.info("NCSERVICE_HOME=" + ncServiceHomePath);
 

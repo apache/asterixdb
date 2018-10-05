@@ -22,7 +22,7 @@
   <parent>
     <artifactId>asterix-maven-plugins</artifactId>
     <groupId>org.apache.asterix</groupId>
-    <version>0.9.4-SNAPSHOT</version>
+    <version>0.9.5-SNAPSHOT</version>
   </parent>
 
   <packaging>maven-plugin</packaging>

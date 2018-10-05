@@ -22,7 +22,7 @@
   <parent>
     <artifactId>apache-asterixdb</artifactId>
     <groupId>org.apache.asterix</groupId>
-    <version>0.9.4-SNAPSHOT</version>
+    <version>0.9.5-SNAPSHOT</version>
   </parent>
   <artifactId>asterix-docker</artifactId>
 
@@ -39,25 +39,30 @@
     </license>
   </licenses>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>com.spotify</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <version>0.2.11</version>
-        <configuration>
-          <imageName>asterixdb/demo</imageName>
-          <dockerDirectory>docker</dockerDirectory>
-          <resources>
-            <resource>
-              <targetPath>/</targetPath>
-              <directory>../asterix-server/target/</directory>
-              <include>asterix-server-${project.version}-binary-assembly.zip</include>
-            </resource>
-          </resources>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+  <profiles>
+    <profile>
+        <id>docker</id>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>com.spotify</groupId>
+              <artifactId>docker-maven-plugin</artifactId>
+              <version>0.2.11</version>
+              <configuration>
+                <imageName>asterixdb/demo</imageName>
+                <dockerDirectory>docker</dockerDirectory>
+                <resources>
+                  <resource>
+                    <targetPath>/</targetPath>
+                    <directory>../asterix-server/target/</directory>
+                    <include>asterix-server-${project.version}-binary-assembly.zip</include>
+                  </resource>
+                </resources>
+              </configuration>
+            </plugin>
+          </plugins>
+        </build>
+    </profile>
+  </profiles>
 
 </project>

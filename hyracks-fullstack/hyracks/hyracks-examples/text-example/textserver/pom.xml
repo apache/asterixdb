@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>text-example</artifactId>
-    <version>0.3.4-SNAPSHOT</version>
+    <version>0.3.5-SNAPSHOT</version>
   </parent>
 
   <properties>

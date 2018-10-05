@@ -27,4 +27,4 @@ use dataverse recovery;
 
 
 load dataset Fragile_raw using localfs
-(("path"="asterix_nc1://../../../../../asterix-app/data/csv/fragile_02.adm"),("format"="adm")) pre-sorted;
+(("path"="asterix_nc1://../../../../../../asterix-app/data/csv/fragile_02.adm"),("format"="adm")) pre-sorted;
