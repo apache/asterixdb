@@ -31,6 +31,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
@@ -135,6 +136,7 @@ public class TestExecutor {
     private static final Pattern MAX_RESULT_READS_PATTERN =
             Pattern.compile("maxresultreads=(\\d+)(\\D|$)", Pattern.MULTILINE);
     private static final Pattern HTTP_REQUEST_TYPE = Pattern.compile("requesttype=(.*)", Pattern.MULTILINE);
+    private static final String NC_ENDPOINT_PREFIX = "nc:";
     public static final int TRUNCATE_THRESHOLD = 16384;
     public static final Set<String> NON_CANCELLABLE =
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList("store", "validate")));
@@ -1723,16 +1725,25 @@ public class TestExecutor {
 
     protected URI createEndpointURI(String path, String query) throws URISyntaxException {
         InetSocketAddress endpoint;
-        if (!path.startsWith("nc:")) {
+        if (isCcEndPointPath(path)) {
             int endpointIdx = Math.abs(endpointSelector++ % endpoints.size());
             endpoint = endpoints.get(endpointIdx);
         } else {
+            // allowed patterns: [nc:endpointName URL] or [nc:nodeId:port URL]
             final String[] tokens = path.split(" ");
             if (tokens.length != 2) {
                 throw new IllegalArgumentException("Unrecognized http pattern");
             }
-            String nodeId = tokens[0].substring(3);
-            endpoint = getNcEndPoint(nodeId);
+            final String endpointName = tokens[0].substring(NC_ENDPOINT_PREFIX.length());
+            if (containsPort(endpointName)) {
+                // currently only loopback address is supported in the test framework
+                final String nodeIP = InetAddress.getLoopbackAddress().getHostAddress();
+                final String endpointParts[] = StringUtils.split(endpointName, ':');
+                int port = Integer.valueOf(endpointParts[1]);
+                endpoint = new InetSocketAddress(nodeIP, port);
+            } else {
+                endpoint = getNcEndPoint(endpointName);
+            }
             path = tokens[1];
         }
         URI uri = new URI("http", null, endpoint.getHostString(), endpoint.getPort(), path, query, null);
@@ -1873,11 +1884,11 @@ public class TestExecutor {
         Assert.assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine().getStatusCode());
     }
 
-    private InetSocketAddress getNcEndPoint(String nodeId) {
-        if (ncEndPoints == null || !ncEndPoints.containsKey(nodeId)) {
-            throw new IllegalStateException("No end point specified for node: " + nodeId);
+    private InetSocketAddress getNcEndPoint(String name) {
+        if (ncEndPoints == null || !ncEndPoints.containsKey(name)) {
+            throw new IllegalStateException("No end point specified for node: " + name);
         }
-        return ncEndPoints.get(nodeId);
+        return ncEndPoints.get(name);
     }
 
     private InetSocketAddress getNcReplicationAddress(String nodeId) {
@@ -1977,5 +1988,13 @@ public class TestExecutor {
 
     private static String toQueryServiceHandle(String handle) {
         return handle.replace("/aql/", "/service/");
+    }
+
+    private static boolean isCcEndPointPath(String endPoint) {
+        return !endPoint.startsWith(NC_ENDPOINT_PREFIX);
+    }
+
+    private static boolean containsPort(String endPoint) {
+        return StringUtils.contains(endPoint, ':');
     }
 }
