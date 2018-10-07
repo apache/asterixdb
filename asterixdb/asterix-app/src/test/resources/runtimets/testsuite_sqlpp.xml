@@ -3673,6 +3673,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="list">
+      <compilation-unit name="enforcing_item_type">
+        <output-dir compare="Text">enforcing_item_type</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
       <compilation-unit name="exists">
         <output-dir compare="Text">exists</output-dir>
       </compilation-unit>
@@ -3788,6 +3793,11 @@
     <test-case FilePath="misc">
       <compilation-unit name="comp-ASTERIXDB-2412">
         <output-dir compare="Text">comp-ASTERIXDB-2412</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="constant_folding">
+        <output-dir compare="Text">constant_folding</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">

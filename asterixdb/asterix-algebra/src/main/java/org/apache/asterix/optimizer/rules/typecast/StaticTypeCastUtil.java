@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.dataflow.data.common.TypeResolverUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
@@ -73,9 +74,9 @@ public class StaticTypeCastUtil {
      *
      * @param funcExpr
      *            record constructor function expression
-     * @param requiredListType
+     * @param reqType
      *            required record type
-     * @param inputRecordType
+     * @param inputType
      * @param env
      *            type environment
      * @throws AlgebricksException
@@ -179,7 +180,7 @@ public class StaticTypeCastUtil {
      *
      * @param funcExpr
      *            record constructor function expression
-     * @param requiredListType
+     * @param requiredRecordType
      *            required record type
      * @param inputRecordType
      * @param env
@@ -223,7 +224,7 @@ public class StaticTypeCastUtil {
         TypeCastUtils.setRequiredAndInputTypes(funcExpr, requiredListType, inputListType);
         List<Mutable<ILogicalExpression>> args = funcExpr.getArguments();
 
-        IAType itemType = requiredListType.getItemType();
+        IAType requiredItemType = requiredListType.getItemType();
         IAType inputItemType = inputListType.getItemType();
         boolean changed = false;
         for (int j = 0; j < args.size(); j++) {
@@ -233,7 +234,8 @@ public class StaticTypeCastUtil {
             switch (arg.getExpressionTag()) {
                 case FUNCTION_CALL:
                     ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) arg;
-                    changed = rewriteFuncExpr(argFunc, itemType, currentItemType, env) || changed;
+                    changed = rewriteFuncExpr(argFunc, requiredItemType, currentItemType, env) || changed;
+                    changed |= castItem(requiredItemType, currentItemType, argFunc, args.get(j));
                     break;
                 case VARIABLE:
                     changed = injectCastToRelaxType(args.get(j), currentItemType, env) || changed;
@@ -241,6 +243,20 @@ public class StaticTypeCastUtil {
             }
         }
         return changed;
+    }
+
+    private static boolean castItem(IAType requiredItemType, IAType currentItemType,
+            ScalarFunctionCallExpression itemExpr, Mutable<ILogicalExpression> itemExprRef) throws AlgebricksException {
+        if (TypeResolverUtil.needsCast(requiredItemType, currentItemType) && shouldCast(itemExpr)) {
+            injectCastFunction(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE), requiredItemType,
+                    currentItemType, itemExprRef, itemExpr);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean shouldCast(ScalarFunctionCallExpression itemExpr) {
+        return TypeCastUtils.getRequiredType(itemExpr) == null;
     }
 
     /**

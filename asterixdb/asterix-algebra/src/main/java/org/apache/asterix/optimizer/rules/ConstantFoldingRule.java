@@ -43,10 +43,14 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -237,11 +241,16 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
                 IScalarEvaluator eval = fact.createScalarEvaluator(null);
                 eval.evaluate(null, p);
-                Object t = _emptyTypeEnv.getType(expr);
-
+                IAType returnType = (IAType) _emptyTypeEnv.getType(expr);
+                ATypeTag runtimeType = PointableHelper.getTypeTag(p);
+                if (runtimeType.isDerivedType()) {
+                    returnType = TypeComputeUtils.getActualType(returnType);
+                } else {
+                    returnType = TypeTagUtil.getBuiltinTypeByTag(runtimeType);
+                }
                 @SuppressWarnings("rawtypes")
                 ISerializerDeserializer serde =
-                        jobGenCtx.getSerializerDeserializerProvider().getSerializerDeserializer(t);
+                        jobGenCtx.getSerializerDeserializerProvider().getSerializerDeserializer(returnType);
                 bbis.setByteBuffer(ByteBuffer.wrap(p.getByteArray(), p.getStartOffset(), p.getLength()), 0);
                 IAObject o = (IAObject) serde.deserialize(dis);
                 return new Pair<>(true, new ConstantExpression(new AsterixConstantValue(o)));

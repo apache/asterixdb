@@ -21,8 +21,10 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.function.IntPredicate;
 
 import org.apache.asterix.dataflow.data.common.TypeResolverUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -42,8 +44,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-import com.google.common.collect.ImmutableSet;
-
 /**
  * This rule injects casts for function parameters if they have heterogeneous return types:
  * <ul>
@@ -51,10 +51,20 @@ import com.google.common.collect.ImmutableSet;
  *     <li>for parameters of "if missing/null" functions  (if-missing(), if-null(), if-missing-or-null())</li>
  * </ul>
  */
-public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
+public class InjectTypeCastForFunctionArgumentsRule implements IAlgebraicRewriteRule {
 
-    private static final Set<FunctionIdentifier> IF_FUNCTIONS =
-            ImmutableSet.of(BuiltinFunctions.IF_MISSING, BuiltinFunctions.IF_NULL, BuiltinFunctions.IF_MISSING_OR_NULL);
+    private static final Map<FunctionIdentifier, IntPredicate> FUN_TO_ARG_CHECKER = new HashMap<>();
+
+    static {
+        addFunctionAndArgChecker(BuiltinFunctions.IF_MISSING, null);
+        addFunctionAndArgChecker(BuiltinFunctions.IF_NULL, null);
+        addFunctionAndArgChecker(BuiltinFunctions.IF_MISSING_OR_NULL, null);
+    }
+
+    // allows the rule to check other functions in addition to the ones specified here
+    public static void addFunctionAndArgChecker(FunctionIdentifier function, IntPredicate argChecker) {
+        FUN_TO_ARG_CHECKER.put(function, argChecker);
+    }
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -92,13 +102,9 @@ public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
         }
         FunctionIdentifier funcId = func.getFunctionIdentifier();
         if (funcId.equals(BuiltinFunctions.SWITCH_CASE)) {
-            if (rewriteSwitchCase(op, func, context)) {
-                rewritten = true;
-            }
-        } else if (IF_FUNCTIONS.contains(funcId)) {
-            if (rewriteFunction(op, func, context)) {
-                rewritten = true;
-            }
+            rewritten |= rewriteSwitchCase(op, func, context);
+        } else if (FUN_TO_ARG_CHECKER.containsKey(funcId)) {
+            rewritten |= rewriteFunction(op, func, FUN_TO_ARG_CHECKER.get(funcId), context);
         }
         return rewritten;
     }
@@ -121,7 +127,7 @@ public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
     }
 
     // Injects casts that cast types for all function parameters
-    private boolean rewriteFunction(ILogicalOperator op, AbstractFunctionCallExpression func,
+    private boolean rewriteFunction(ILogicalOperator op, AbstractFunctionCallExpression func, IntPredicate argChecker,
             IOptimizationContext context) throws AlgebricksException {
         IVariableTypeEnvironment env = op.computeInputTypeEnvironment(context);
         IAType producedType = (IAType) env.getType(func);
@@ -129,9 +135,8 @@ public class InjectTypeCastForSwitchCaseRule implements IAlgebraicRewriteRule {
         int argSize = argRefs.size();
         boolean rewritten = false;
         for (int argIndex = 0; argIndex < argSize; argIndex++) {
-            Mutable<ILogicalExpression> argRef = argRefs.get(argIndex);
-            if (rewriteFunctionArgument(argRef, producedType, env)) {
-                rewritten = true;
+            if (argChecker == null || argChecker.test(argIndex)) {
+                rewritten |= rewriteFunctionArgument(argRefs.get(argIndex), producedType, env);
             }
         }
         return rewritten;

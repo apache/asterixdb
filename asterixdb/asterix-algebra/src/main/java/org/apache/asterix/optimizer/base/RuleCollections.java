@@ -41,7 +41,7 @@ import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import org.apache.asterix.optimizer.rules.FixReplicateOperatorOutputsRule;
 import org.apache.asterix.optimizer.rules.FullTextContainsParameterCheckRule;
 import org.apache.asterix.optimizer.rules.FuzzyEqRule;
-import org.apache.asterix.optimizer.rules.InjectTypeCastForSwitchCaseRule;
+import org.apache.asterix.optimizer.rules.InjectTypeCastForFunctionArgumentsRule;
 import org.apache.asterix.optimizer.rules.InjectTypeCastForUnionRule;
 import org.apache.asterix.optimizer.rules.InlineUnnestFunctionRule;
 import org.apache.asterix.optimizer.rules.IntroduceAutogenerateIDRule;
@@ -306,7 +306,7 @@ public final class RuleCollections {
         planCleanupRules.add(new IntroduceDynamicTypeCastForExternalFunctionRule());
         planCleanupRules.add(new RemoveUnusedAssignAndAggregateRule());
         planCleanupRules.add(new RemoveCartesianProductWithEmptyBranchRule());
-        planCleanupRules.add(new InjectTypeCastForSwitchCaseRule());
+        planCleanupRules.add(new InjectTypeCastForFunctionArgumentsRule());
         planCleanupRules.add(new InjectTypeCastForUnionRule());
 
         // Needs to invoke ByNameToByIndexFieldAccessRule as the last logical optimization rule because
