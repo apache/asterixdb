@@ -52,6 +52,7 @@ public class FuzzyUtils {
                 return BuiltinFunctions.COUNTHASHED_WORD_TOKENS;
             case MULTISET:
             case ARRAY:
+            case UNION:
             case ANY:
                 return null;
             default:
@@ -118,5 +119,16 @@ public class FuzzyUtils {
         }
         simFunction = simFunction.toLowerCase();
         return simFunction;
+    }
+
+    public static String getSimFunction(FunctionIdentifier simFuncId) {
+        if (simFuncId.equals(BuiltinFunctions.SIMILARITY_JACCARD)
+                || simFuncId.equals(BuiltinFunctions.SIMILARITY_JACCARD_CHECK)) {
+            return JACCARD_FUNCTION_NAME;
+        } else if (simFuncId.equals(BuiltinFunctions.EDIT_DISTANCE)
+                || simFuncId.equals(BuiltinFunctions.EDIT_DISTANCE_CHECK)) {
+            return EDIT_DISTANCE_FUNCTION_NAME;
+        }
+        return null;
     }
 }

@@ -1,0 +1,76 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse fuzzyjoin_basic;
+
+set import-private-functions 'true'
+
+let $tokensUnrankedLeft := [ "a", "baesens", "baestaens", "bart", "den", "dirk", "dirk", "emma", "gestel", "johan", "k",
+"marleen", "poel", "suykens", "tony", "van", "van", "willekens" ]
+
+let $tokensUnrankedRight := [ "a", "baesens", "baestaens", "bart", "bedrijfskunde", "den", "dirk", "dirk", "emma", "en",
+"gent", "gestel", "johan", "k", "marleen", "poel", "suykens", "tony", "van", "van", "willekens" ]
+
+let $lenLeft := len($tokensUnrankedLeft)
+let $tokensLeft :=
+    for $tokenUnranked in $tokensUnrankedLeft
+    for $tokenRanked at $i in
+        //
+        // -- - Stage 1 - --
+        //
+        for $orders in dataset left
+        let $id := $orders.id
+        for $token in word-tokens($orders.authors)
+        /*+ hash */
+        group by $tokenGrouped := $token with $id
+        /*+ inmem 1 302 */
+        order by count($id), $tokenGrouped
+        return $tokenGrouped
+    where $tokenUnranked = /*+ bcast */ $tokenRanked
+    order by $i
+    return $i
+
+let $lenRight := len($tokensUnrankedRight)
+let $tokensRight :=
+    for $tokenUnranked in $tokensUnrankedRight
+    for $tokenRanked at $i in
+        //
+        // -- - Stage 1 - --
+        //
+        for $orders in dataset left
+        let $id := $orders.id
+        for $token in word-tokens($orders.authors)
+        /*+ hash */
+        group by $tokenGrouped := $token with $id
+        /*+ inmem 1 302 */
+        order by count($id), $tokenGrouped
+        return $tokenGrouped
+    where $tokenUnranked = /*+ bcast */ $tokenRanked
+    order by $i
+    return $i
+
+return {
+        "leftTokens": $tokensLeft, "rightTokens": $tokensRight, "lenLeftTrue": len($tokensUnrankedLeft),
+        "lenLeft": len($tokensLeft), "lenRightTrue": len($tokensUnrankedRight), "lenRight": len($tokensRight),
+        "full_sim": similarity-jaccard-check($tokensLeft, $tokensRight, .8f),
+        "true_sim": similarity-jaccard-check($tokensUnrankedLeft, $tokensUnrankedRight, .8f),
+        "pref_sim": similarity-jaccard-prefix(len($tokensLeft), $tokensLeft, len($tokensRight),
+                    $tokensRight, $tokensLeft[0], .8f),
+        "fast_sim": similarity-jaccard-prefix(len($tokensUnrankedLeft), $tokensLeft, len($tokensUnrankedRight),
+                    $tokensRight, $tokensLeft[0], .8f)
+        }

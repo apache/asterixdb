@@ -1,0 +1,30 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use dataverse test;
+set import-private-functions 'true';
+
+for $a in dataset('DBLP')
+for $b in dataset('CSX')
+for $c in dataset('DBLP')
+where gram-tokens($a.nested.title, 3, false) /* +indexnl */ ~= gram-tokens($b.nested.title, 3, false)
+      and gram-tokens($b.nested.authors, 3, false) ~= gram-tokens($c.nested.authors, 3, false)
+      and $a.nested.id < $b.nested.id
+order by $a.nested.id, $b.nested.id
+return { "arec": $a.nested, "brec": $b.nested }

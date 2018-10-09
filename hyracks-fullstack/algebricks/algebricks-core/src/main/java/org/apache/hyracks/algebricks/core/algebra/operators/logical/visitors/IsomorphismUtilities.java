@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +28,10 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 
 public class IsomorphismUtilities {
 
@@ -72,4 +78,62 @@ public class IsomorphismUtilities {
         return true;
     }
 
+    // Return an operator that produced the given PK variable.
+    private static ILogicalOperator getOpThatProducesPK(ILogicalOperator rootOp, LogicalVariable pkVar)
+            throws AlgebricksException {
+        ILogicalOperator prodOp = null;
+        boolean produced;
+        for (Mutable<ILogicalOperator> opRef : rootOp.getInputs()) {
+            produced = false;
+            List<LogicalVariable> producedVars = new ArrayList<>();
+            VariableUtilities.getProducedVariables(opRef.getValue(), producedVars);
+            if (producedVars.contains(pkVar)) {
+                prodOp = opRef.getValue();
+                produced = true;
+            } else if (opRef.getValue().hasInputs()) {
+                prodOp = getOpThatProducesPK(opRef.getValue(), pkVar);
+                if (prodOp != null) {
+                    produced = true;
+                }
+            }
+            if (produced) {
+                break;
+            }
+        }
+        return prodOp;
+    }
+
+    // Merge the cases where different PKs are derived from the same DATASOURCE
+    public static void mergeHomogeneousPK(ILogicalOperator op, List<LogicalVariable> pkVars)
+            throws AlgebricksException {
+        Map<LogicalVariable, ILogicalOperator> varOpMap = new HashMap<>();
+        for (LogicalVariable pk : pkVars) {
+            ILogicalOperator mOp = getOpThatProducesPK(op, pk);
+            if (mOp == null || !mOp.getOperatorTag().equals(LogicalOperatorTag.DATASOURCESCAN)) {
+                throw new AlgebricksException("Illegal variable production.");
+            }
+            varOpMap.put(pk, mOp);
+        }
+        // Check the isomorphic variables in pkVars by DataSource, use variableMapping to store each isomorphic pair.
+        // For any isomorphic pair <$i, $j>, use $i that is close to the beginning of pkVars as key and let $j as value.
+        Map<LogicalVariable, LogicalVariable> variableMapping = new HashMap<>();
+        for (int i = 0; i < pkVars.size() - 1; i++) {
+            for (int j = i + 1; j < pkVars.size(); j++) {
+                IDataSource<?> leftSource = ((DataSourceScanOperator) (varOpMap.get(pkVars.get(i)))).getDataSource();
+                IDataSource<?> rightSource = ((DataSourceScanOperator) (varOpMap.get(pkVars.get(j)))).getDataSource();
+                if (leftSource.getId().toString().equals(rightSource.getId().toString())) {
+                    mapVariablesTopDown(varOpMap.get(pkVars.get(i)), varOpMap.get(pkVars.get(j)), variableMapping);
+                }
+            }
+        }
+        // Remove a key variable in pkVars if it has at least one isomorphic variable in variableMapping.
+        Iterator<LogicalVariable> itr = pkVars.iterator();
+        while (itr.hasNext()) {
+            LogicalVariable pk = itr.next();
+            if (variableMapping.containsKey(pk)) {
+                variableMapping.remove(pk);
+                itr.remove();
+            }
+        }
+    }
 }

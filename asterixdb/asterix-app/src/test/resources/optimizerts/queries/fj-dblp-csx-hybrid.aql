@@ -1,0 +1,69 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Multiple fuzzy join on three datasets, with a star join condition.
+ *                  Each star join is composed of a linked join condition to propagate
+ *                  the fuzzy join results.
+ * Success        : Yes
+ */
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPNestedType as closed {
+  id: int64,
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type DBLPType as closed {
+  nested: DBLPNestedType
+}
+
+create type CSXNestedType as closed {
+  id: int64,
+  csxid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type CSXType as closed {
+  nested: CSXNestedType
+}
+
+create dataset DBLPOpen(DBLPNestedType) primary key id;
+
+create dataset DBLP(DBLPType) primary key nested.id;
+create dataset CSX(CSXType) primary key nested.id;
+
+set import-private-functions 'true';
+set simthreshold "0.5f";
+for $p in dataset DBLP
+for $p1 in dataset CSX
+for $p2 in dataset DBLPOpen
+for $p3 in dataset CSX
+for $p4 in dataset DBLPOpen
+where gram-tokens($p.nested.title, 3, false) ~= gram-tokens($p1.nested.title, 3, false)
+and word-tokens($p1.nested.title) ~= word-tokens($p2.title)
+and word-tokens($p.authors) ~= word-tokens($p3.nested.authors)
+and gram-tokens($p3.nested.misc, 3, false) ~= gram-tokens($p4.misc, 3, false)
+return { "pid": $p.nested.id, "p1id": $p1.nested.id, "p2id": $p2.id, "p3id": $p3.nested.id, "p4id": $p4.id }

@@ -1,0 +1,93 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse fuzzyjoin_basic;
+
+set import-private-functions 'true'
+
+let $r := count(
+    for $right in dataset('right')
+    let $idRight := $right.id
+    let $tokensUnrankedRight := word-tokens($right.authors)
+    let $lenRight := len($tokensUnrankedRight)
+    let $tokensRight :=
+        for $tokenUnranked in $tokensUnrankedRight
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $r in
+                for $orderRight in dataset('right')
+                let $rightId := $orderRight.id
+                for $orderTokenRight in word-tokens($orderRight.authors)
+                    /*+ hash */ group by $tokenRightGrouped := $orderTokenRight with $rightId
+                return {"rt": $tokenRightGrouped, "rc": count($rightId)}
+            for $l in
+                for $orderLeft in dataset('left')
+                let $leftId := $orderLeft.id
+                for $orderTokenLeft in word-tokens($orderLeft.authors)
+                    /*+ hash */ group by $tokenLeftGrouped := $orderTokenLeft with $leftId
+                return {"lt": $tokenLeftGrouped, "lc": count($leftId)}
+            where $r.rt = $l.lt
+            /*+ inmem 1 302 */ order by $r.rc * $l.lc
+            return $r.rt
+
+        where $tokenUnranked = /*+ bcast */ $tokenRanked
+        order by $i
+        return $i
+    for $prefixTokenRight in subset-collection($tokensRight, 0, prefix-len-jaccard(len($tokensRight), .8f))
+
+    for $left in dataset('left')
+    let $idLeft := $left.id
+    let $tokensUnrankedLeft := word-tokens($left.authors)
+    let $lenLeft := len($tokensUnrankedLeft)
+    let $tokensLeft :=
+        for $tokenUnranked in $tokensUnrankedLeft
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $r in
+                for $orderRight in dataset('right')
+                let $rightId := $orderRight.id
+                for $orderTokenRight in word-tokens($orderRight.authors)
+                    /*+ hash */ group by $tokenRightGrouped := $orderTokenRight with $rightId
+                return {"rt": $tokenRightGrouped, "rc": count($rightId)}
+            for $l in
+                for $orderLeft in dataset('left')
+                let $leftId := $orderLeft.id
+                for $orderTokenLeft in word-tokens($orderLeft.authors)
+                    /*+ hash */ group by $tokenLeftGrouped := $orderTokenLeft with $leftId
+                return {"lt": $tokenLeftGrouped, "lc": count($leftId)}
+            where $r.rt = $l.lt
+            /*+ inmem 1 302 */ order by $r.rc * $l.lc
+            return $r.rt
+
+        where $tokenUnranked = /*+ bcast */ $tokenRanked
+        order by $i
+        return $i
+    let $actualPrefixLen := prefix-len-jaccard(len($tokensUnrankedLeft), .8f) - len($tokensUnrankedLeft) + len($tokensLeft)
+    for $prefixTokenLeft in subset-collection($tokensLeft, 0, $actualPrefixLen)
+
+    where $prefixTokenRight = $prefixTokenLeft
+    let $sim := similarity-jaccard-prefix($lenRight, $tokensRight, $lenLeft, $tokensLeft, $prefixTokenLeft, .8f)
+    where $sim >= .8f
+    /*+ hash*/ group by $idRight := $idRight, $idLeft := $idLeft with $sim
+    return {'idDBLP': $idRight, 'idCSX': $idLeft, "sim": $sim[0]}
+)
+return $r

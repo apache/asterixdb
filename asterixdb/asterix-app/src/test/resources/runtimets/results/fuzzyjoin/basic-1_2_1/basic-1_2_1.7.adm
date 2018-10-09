@@ -1,0 +1,196 @@
+{ "tokens": [ "aharon", "bar", "hillel", "tomer", "hertz", "daphna", "weinshall" ], "ranks": [ null, null, null, null, null, null, null ] }
+{ "tokens": [ "ajith", "abraham", "swagatam", "das", "amit", "konar" ], "ranks": [ null, null, null, null, null, null ] }
+{ "tokens": [ "alessandro", "moschitti", "fabio", "massimo", "zanzotto" ], "ranks": [ null, null, null, 171, 631 ] }
+{ "tokens": [ "alexander", "schrijver" ], "ranks": [ null, 777 ] }
+{ "tokens": [ "alexei", "pozdnoukhov", "samy", "bengio" ], "ranks": [ 13, 431, 637, 712 ] }
+{ "tokens": [ "alexei", "vinokourov", "andrei", "n", "soklakov", "craig", "saunders" ], "ranks": [ null, null, null, null, null, 13, 807 ] }
+{ "tokens": [ "andrea", "c", "arpaci", "dusseau", "remzi", "h", "arpaci", "dusseau", "nathan", "c", "burnett", "timothy", "e", "denehy", "thomas", "j", "engle", "haryadi", "s", "gunawi", "james", "a", "nugent", "florentina", "i", "popovici" ], "ranks": [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 22, 659, 725, 781, 800, 805, 816, 817, 817, 819, 822 ] }
+{ "tokens": [ "andreas", "argyriou", "raphael", "hauser", "charles", "a", "micchelli", "massimiliano", "pontil" ], "ranks": [ 30, 216, 366, 375, 430, 448, 738, 740, 816 ] }
+{ "tokens": [ "andrew", "whitaker", "marianne", "shaw", "steven", "d", "gribble" ], "ranks": [ null, null, null, null, null, 519, 813 ] }
+{ "tokens": [ "annegret", "weng" ], "ranks": [ 25, 597 ] }
+{ "tokens": [ "antti", "airola", "sampo", "pyysalo", "jari", "björne", "tapio", "pahikkala", "filip", "ginter", "tapio", "salakoski" ], "ranks": [ 8, 28, 63, 175, 202, 263, 410, 434, 466, 467, 724, 724 ] }
+{ "tokens": [ "arvind", "seshadri", "mark", "luk", "ning", "qu", "adrian", "perrig" ], "ranks": [ 7, 36, 344, 398, 416, 438, 487, 784 ] }
+{ "tokens": [ "aurélie", "bugeau", "patrick", "pérez" ], "ranks": [ null, null, 435, 787 ] }
+{ "tokens": [ "bastian", "blankenburg", "rajdeep", "k", "dash", "sarvapali", "d", "ramchurn", "matthias", "klusch", "nicholas", "r", "jennings" ], "ranks": [ 133, 266, 443, 446, 473, 636, 641, 693, 704, 763, 812, 813, 818 ] }
+{ "tokens": [ "benjamin", "schrauwen", "jan", "van", "campenhout" ], "ranks": [ 638, 645, 713, 801, 814 ] }
+{ "tokens": [ "bernard", "haasdonk", "hans", "burkhardt" ], "ranks": [ null, null, null, 670 ] }
+{ "tokens": [ "brett", "fleisch", "mark", "allan", "a", "co" ], "ranks": [ 15, 76, 113, 177, 784, 816 ] }
+{ "tokens": [ "brian", "kulis", "mátyás", "a", "sustik", "inderjit", "s", "dhillon" ], "ranks": [ null, null, 655, 676, 695, 798, 816, 819 ] }
+{ "tokens": [ "brian", "kulis", "mátyás", "sustik", "inderjit", "dhillon" ], "ranks": [ null, null, 655, 676, 695, 798 ] }
+{ "tokens": [ "brian", "kulis", "sugato", "basu", "inderjit", "dhillon", "raymond", "mooney" ], "ranks": [ 49, 381, 450, 525, 655, 676, 695, 798 ] }
+{ "tokens": [ "brian", "n", "bershad" ], "ranks": [ 56, 798, 807 ] }
+{ "tokens": [ "brian", "n", "bershad", "craig", "chambers", "susan", "eggers", "chris", "maeda", "dylan", "mcnamee", "przemyslaw", "pardyak", "stefan", "savage", "emin", "gün", "sirer", "emin", "gun", "sirer" ], "ranks": [ null, null, null, null, null, null, null, null, null, null, null, null, null, null, 56, 108, 350, 531, 790, 798, 807 ] }
+{ "tokens": [ "bruno", "de", "bus", "dominique", "chanet", "ludo", "van", "put", "bjorn", "de", "sutter", "koen", "de", "bosschere" ], "ranks": [ 62, 68, 82, 96, 147, 307, 343, 433, 533, 643, 799, 799, 799, 814 ] }
+{ "tokens": [ "bryan", "ford", "mike", "hibler", "jay", "lepreau", "patrick", "tullmann", "godmar", "back", "stephen", "clawson" ], "ranks": [ 42, 78, 112, 181, 205, 231, 264, 332, 378, 562, 787, 791 ] }
+{ "tokens": [ "carl", "g", "looney" ], "ranks": [ 89, 341, 811 ] }
+{ "tokens": [ "carlo", "drioli", "davide", "rocchesso" ], "ranks": [ null, null, null, null ] }
+{ "tokens": [ "carsten", "ditze" ], "ranks": [ 91, 146 ] }
+{ "tokens": [ "chang", "wang", "stephen", "d", "scott" ], "ranks": [ 480, 647, 791, 808, 813 ] }
+{ "tokens": [ "charles", "a", "micchelli", "massimiliano", "pontil" ], "ranks": [ 366, 375, 430, 740, 816 ] }
+{ "tokens": [ "charles", "crowley" ], "ranks": [ 122, 740 ] }
+{ "tokens": [ "charles", "pecheur" ], "ranks": [ null, 740 ] }
+{ "tokens": [ "cheng", "soon", "ong", "alexander", "j", "smola", "robert", "c", "williamson" ], "ranks": [ 601, 741, 770, 772, 777, 785, 803, 817, 822 ] }
+{ "tokens": [ "cheng", "soon", "ong", "er", "j", "smola", "robert", "c", "williamson" ], "ranks": [ null, 601, 741, 770, 772, 785, 803, 817, 822 ] }
+{ "tokens": [ "cheng", "soon", "ong", "stéphane", "canu", "alexander", "j", "smola" ], "ranks": [ 87, 522, 741, 770, 772, 777, 785, 822 ] }
+{ "tokens": [ "chia", "hui", "chang", "yu", "chieh", "wu" ], "ranks": [ 100, 647, 649, 674, 728, 776 ] }
+{ "tokens": [ "christian", "poellabauer", "karsten", "schwan", "richard", "west" ], "ranks": [ 109, 429, 452, 598, 714, 782 ] }
+{ "tokens": [ "christina", "s", "leslie", "eleazar", "eskin", "adiel", "cohen", "jason", "weston", "william", "stafford", "noble" ], "ranks": [ 6, 115, 156, 167, 650, 696, 751, 765, 773, 774, 795, 819 ] }
+{ "tokens": [ "christoph", "heinz", "bernhard", "seeger" ], "ranks": [ 110, 220, 483, 640 ] }
+{ "tokens": [ "christoph", "m", "kirsch", "marco", "a", "a", "sanvido", "thomas", "a", "henzinger", "wolfgang", "pree" ], "ranks": [ null, null, null, null, null, null, 110, 725, 816, 816, 816, 820 ] }
+{ "tokens": [ "chunhua", "shen", "anton", "van", "den", "hengel", "anthony", "dick", "michael", "j", "brooks" ], "ranks": [ null, null, 26, 77, 111, 227, 654, 717, 814, 821, 822 ] }
+{ "tokens": [ "chunhua", "shen", "michael", "j", "brooks", "anton", "van", "den", "hengel" ], "ranks": [ 26, 77, 111, 227, 654, 717, 814, 821, 822 ] }
+{ "tokens": [ "cyril", "allauzen", "mehryar", "mohri", "ameet", "talwalkar" ], "ranks": [ 16, 18, 124, 536, 698, 701 ] }
+{ "tokens": [ "dan", "tsafrir", "yoav", "etsion", "dror", "g", "feitelson", "scott", "kirkpatrick" ], "ranks": [ 126, 152, 168, 174, 304, 480, 559, 614, 811 ] }
+{ "tokens": [ "daniel", "cremers", "timo", "kohlberger", "christoph", "schnörr" ], "ranks": [ null, null, null, null, null, 110 ] }
+{ "tokens": [ "daniel", "lohmann", "fabian", "scheler", "reinhard", "tartler", "olaf", "spinczyk", "wolfgang", "schröder", "preikschat" ], "ranks": [ null, null, null, null, null, null, null, null, null, null, null ] }
+{ "tokens": [ "daniel", "lohmann", "fabian", "scheler", "wolfgang", "schröder", "preikschat", "olaf", "spinczyk" ], "ranks": [ null, null, null, null, null, null, null, null, null ] }
+{ "tokens": [ "dao", "qiang", "zhang", "song", "can", "chen" ], "ranks": [ 86, 129, 510, 767, 810, 815 ] }
+{ "tokens": [ "daoqiang", "zhang", "songcan", "chen", "zhi", "hua", "zhou" ], "ranks": [ null, 130, 673, 736, 771, 810, 815 ] }
+{ "tokens": [ "daoqiang", "zhang", "zhi", "hua", "zhou", "songcan", "chen" ], "ranks": [ null, 130, 673, 736, 771, 810, 815 ] }
+{ "tokens": [ "darrin", "p", "lewis", "tony", "jebara", "william", "stafford", "noble" ], "ranks": [ 132, 335, 680, 765, 773, 786, 794, 795 ] }
+{ "tokens": [ "david", "j", "crisp", "christopher", "j", "c", "burges" ], "ranks": [ 80, 121, 652, 742, 817, 822, 822 ] }
+{ "tokens": [ "dawei", "liu", "xihong", "lin", "debashis", "ghosh" ], "ranks": [ null, null, null, null, null, 339 ] }
+{ "tokens": [ "dawson", "engler", "m", "frans", "kaashoek", "james", "o", "toole" ], "ranks": [ null, null, null, null, null, 401, 781, 820 ] }
+{ "tokens": [ "dawson", "r", "engler", "m", "frans", "kaashoek", "james", "o", "toole", "jr" ], "ranks": [ null, null, null, null, null, 284, 401, 781, 818, 820 ] }
+{ "tokens": [ "dawson", "r", "engler", "m", "frans", "kaashoek", "james", "o", "toole", "jr" ], "ranks": [ null, null, null, null, null, 284, 401, 781, 818, 820 ] }
+{ "tokens": [ "dawson", "r", "engler", "m", "frans", "kaashoek", "james", "o", "toole" ], "ranks": [ null, null, null, null, null, 401, 781, 818, 820 ] }
+{ "tokens": [ "ding", "xuan", "zhou" ], "ranks": [ 609, 656, 736 ] }
+{ "tokens": [ "en", "bedrijfskunde", "gent", "tony", "van", "gestel", "bart", "baesens", "johan", "a", "k", "suykens", "dirk", "van", "den", "poel", "dirk", "emma", "baestaens", "marleen", "willekens" ], "ranks": [ null, null, null, 43, 161, 362, 428, 599, 635, 654, 657, 657, 665, 721, 739, 754, 794, 812, 814, 814, 816 ] }
+{ "tokens": [ "endre", "boros", "vladimir", "gurvich" ], "ranks": [ null, null, null, 580 ] }
+{ "tokens": [ "erik", "h", "w", "meijering", "karel", "j", "zuiderveld", "max", "a", "viergever" ], "ranks": [ 288, 367, 373, 575, 629, 746, 800, 809, 816, 822 ] }
+{ "tokens": [ "ernest", "artiaga", "albert", "serra", "marisa", "gil" ], "ranks": [ 11, 35, 166, 200, 360, 486 ] }
+{ "tokens": [ "experimental", "design", "xuanlong", "nguyen", "martin", "j", "wainwright", "michael", "i", "jordan" ], "ranks": [ null, null, 586, 703, 732, 761, 802, 805, 821, 822 ] }
+{ "tokens": [ "faisal", "n", "abu", "khzam", "michael", "a", "langston", "w", "henry", "suters" ], "ranks": [ 4, 172, 228, 303, 324, 532, 807, 809, 816, 821 ] }
+{ "tokens": [ "fan", "zhang", "edwin", "r", "hancock" ], "ranks": [ null, null, null, 815, 818 ] }
+{ "tokens": [ "florent", "lafarge", "xavier", "descombes", "josiane", "zerubia" ], "ranks": [ 141, 178, 283, 321, 623, 729 ] }
+{ "tokens": [ "francesca", "odone", "annalisa", "barla", "alessandro", "verri" ], "ranks": [ 24, 47, 185, 402, 572, 631 ] }
+{ "tokens": [ "francis", "bach", "michael", "i", "jordan" ], "ranks": [ 778, 779, 802, 805, 821 ] }
+{ "tokens": [ "francis", "r", "bach" ], "ranks": [ 778, 779, 818 ] }
+{ "tokens": [ "francis", "r", "bach", "gert", "r", "g", "lanckriet", "michael", "i", "jordan" ], "ranks": [ 197, 322, 778, 779, 802, 805, 811, 818, 818, 821 ] }
+{ "tokens": [ "francis", "r", "bach", "michael", "i", "jordan" ], "ranks": [ 778, 779, 802, 805, 818, 821 ] }
+{ "tokens": [ "francis", "r", "bach", "romain", "thibaux", "michael", "i", "jordan" ], "ranks": [ 458, 548, 778, 779, 802, 805, 818, 821 ] }
+{ "tokens": [ "gang", "wang", "tao", "chen", "dit", "yan", "yeung", "frederick", "h", "lochovsky" ], "ranks": [ null, null, null, 744, 775, 793, 796, 800, 808, 810 ] }
+{ "tokens": [ "gernot", "heiser", "volkmar", "uhlig", "joshua", "levasseur" ], "ranks": [ null, null, 196, 221, 564, 584 ] }
+{ "tokens": [ "glenn", "fung", "murat", "dundar", "jinbo", "bi", "bharat", "rao" ], "ranks": [ null, null, null, null, null, null, null, null ] }
+{ "tokens": [ "greg", "kuperberg" ], "ranks": [ 206, 316 ] }
+{ "tokens": [ "gregory", "d", "benson", "ronald", "a", "olsson" ], "ranks": [ 53, 707, 748, 789, 813, 816 ] }
+{ "tokens": [ "gregory", "e", "fasshauer", "joseph", "w", "jerome" ], "ranks": [ 173, 269, 659, 685, 748, 809 ] }
+{ "tokens": [ "gregory", "r", "ganger", "dawson", "r", "engler", "m", "frans", "kaashoek", "héctor", "m", "briceño", "russell", "hunt", "thomas", "pinckney", "vividon", "inc" ], "ranks": [ null, null, null, null, null, null, null, null, null, null, null, 463, 725, 748, 818, 818, 820, 820 ] }
+{ "tokens": [ "guang", "dai", "dit", "yan", "yeung" ], "ranks": [ 668, 743, 744, 775, 796 ] }
+{ "tokens": [ "guang", "dai", "dit", "yan", "yeung", "hong", "chang" ], "ranks": [ 647, 668, 743, 744, 750, 775, 796 ] }
+{ "tokens": [ "hae", "jong", "seo", "peyman", "milanfar" ], "ranks": [ null, null, null, null, null ] }
+{ "tokens": [ "hideyuki", "tokuda", "tatsuo", "nakajima" ], "ranks": [ 233, 392, 539, 555 ] }
+{ "tokens": [ "hiren", "d", "patel", "sandeep", "k", "shukla" ], "ranks": [ 234, 413, 469, 720, 812, 813 ] }
+{ "tokens": [ "holger", "fröhlich", "jörg", "k", "wegner", "florian", "sieker", "andreas", "zell" ], "ranks": [ 179, 190, 241, 502, 589, 687, 734, 738, 812 ] }
+{ "tokens": [ "hujun", "yin" ], "ranks": [ 249, 613 ] }
+{ "tokens": [ "huzefa", "rangwala", "george", "karypis" ], "ranks": [ 194, 252, 290, 447 ] }
+{ "tokens": [ "ihor", "kuz", "yan", "liu", "ian", "gorton", "gernot", "heiser" ], "ranks": [ null, null, 196, 221, 254, 257, 317, 796 ] }
+{ "tokens": [ "ingo", "mierswa" ], "ranks": [ 376, 677 ] }
+{ "tokens": [ "ingo", "mierswa", "katharina", "morik" ], "ranks": [ 291, 376, 384, 677 ] }
+{ "tokens": [ "ingo", "steinwart" ], "ranks": [ 517, 677 ] }
+{ "tokens": [ "italo", "j", "dejter", "abel", "a", "delgado" ], "ranks": [ 3, 137, 258, 653, 816, 822 ] }
+{ "tokens": [ "jason", "weston", "christina", "leslie", "eugene", "ie", "dengyong", "zhou", "andre", "elisseeff", "william", "stafford", "noble" ], "ranks": [ null, 139, 169, 256, 650, 660, 696, 736, 751, 765, 773, 774, 795 ] }
+{ "tokens": [ "jean", "charles", "fabre" ], "ranks": [ null, 679, 740 ] }
+{ "tokens": [ "jezekiel", "ben", "arie", "zhiqian", "wang" ], "ranks": [ 32, 52, 270, 628, 808 ] }
+{ "tokens": [ "jezekiel", "ben", "arie", "zhiqian", "wang" ], "ranks": [ 32, 52, 270, 628, 808 ] }
+{ "tokens": [ "jianjun", "yu", "shengmin", "guo", "hao", "su", "hui", "zhang", "ke", "xu" ], "ranks": [ null, null, null, null, null, 674, 731, 749, 776, 815 ] }
+{ "tokens": [ "jieping", "ye", "jianhui", "chen", "shuiwang", "ji" ], "ranks": [ 681, 682, 683, 719, 733, 810 ] }
+{ "tokens": [ "jinbo", "bi", "glenn", "fung", "murat", "dundar", "bharat", "rao" ], "ranks": [ null, null, null, null, null, null, null, null ] }
+{ "tokens": [ "johannes", "aßfalg", "karsten", "m", "borgwardt", "hans", "peter", "kriegel" ], "ranks": [ 40, 279, 642, 670, 694, 782, 788, 820 ] }
+{ "tokens": [ "john", "penix", "willem", "visser", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "ranks": [ 1, 164, 165, 326, 415, 579, 593, 600, 704, 755 ] }
+{ "tokens": [ "john", "penix", "willem", "visser", "seungjoon", "park", "eric", "engstrom", "aaron", "larson", "nicholas", "weininger" ], "ranks": [ null, 1, 164, 165, 326, 415, 579, 593, 600, 704, 709, 755 ] }
+{ "tokens": [ "john", "shawe", "taylor", "christopher", "k", "i", "williams", "nello", "cristianini", "jaz", "kandola" ], "ranks": [ null, null, null, null, null, null, null, 742, 755, 805, 812 ] }
+{ "tokens": [ "jooseuk", "kim", "clayton", "d", "scott" ], "ranks": [ null, null, 480, 692, 813 ] }
+{ "tokens": [ "joseph", "reisinger", "peter", "stone", "risto", "miikkulainen" ], "ranks": [ 377, 451, 453, 521, 685, 788 ] }
+{ "tokens": [ "junbin", "gao", "daming", "shi", "xiaomao", "liu" ], "ranks": [ null, null, null, null, null, 192 ] }
+{ "tokens": [ "karsten", "m", "borgwardt", "cheng", "soon", "ong", "stefan", "schönauer", "s", "v", "n", "vishwanathan", "alex", "j", "smola", "hans", "peter", "kriegel" ], "ranks": [ null, 479, 642, 670, 694, 726, 727, 741, 770, 772, 782, 785, 788, 790, 807, 819, 820, 822 ] }
+{ "tokens": [ "keith", "sullivan", "sean", "luke" ], "ranks": [ 345, 481, 527, 690 ] }
+{ "tokens": [ "kenji", "hisazumi", "teruaki", "kitasuka", "tsuneo", "nakanishi", "akira", "fukuda" ], "ranks": [ 10, 191, 236, 298, 305, 393, 545, 561 ] }
+{ "tokens": [ "khawar", "m", "zuberi", "y", "padmanabhan", "pillai", "kang", "g", "shin" ], "ranks": [ null, 409, 424, 689, 691, 718, 737, 811, 820 ] }
+{ "tokens": [ "kiran", "b", "chilakamarri", "peter", "hamburger" ], "ranks": [ null, null, null, 634, 788 ] }
+{ "tokens": [ "koji", "tsuda" ], "ranks": [ null, null ] }
+{ "tokens": [ "koji", "tsuda", "taishin", "kin", "kiyoshi", "asai" ], "ranks": [ null, null, null, null, null, null ] }
+{ "tokens": [ "kristin", "p", "bennett", "michinari", "momma", "mark", "j", "embrechts" ], "ranks": [ null, null, null, null, null, 784, 786, 822 ] }
+{ "tokens": [ "kristis", "makris", "kyung", "dong", "ryu" ], "ranks": [ null, null, null, null, null ] }
+{ "tokens": [ "lamia", "youseff", "jack", "dongarra", "keith", "seymour", "rich", "wolski", "haihang", "you" ], "ranks": [ null, null, null, null, null, null, null, null, 260, 690 ] }
+{ "tokens": [ "lavi", "shpigelman", "yoram", "singer", "rony", "paz", "eilon", "vaadia" ], "ranks": [ null, null, null, null, null, null, null, null ] }
+{ "tokens": [ "lin", "gu", "john", "a", "stankovic" ], "ranks": [ null, 207, 339, 755, 816 ] }
+{ "tokens": [ "luc", "brun", "walter", "kropatsch" ], "ranks": [ null, null, null, null ] }
+{ "tokens": [ "m", "frans", "kaashoek", "dawson", "r", "engler", "gregory", "r", "ganger", "russell", "hunt", "thomas", "pinckney" ], "ranks": [ null, null, null, null, null, null, null, 463, 725, 748, 818, 818, 820 ] }
+{ "tokens": [ "majid", "m", "beigi", "andreas", "zell" ], "ranks": [ 51, 353, 734, 738, 820 ] }
+{ "tokens": [ "manuel", "díaz", "sergio", "romero", "bartolomé", "rubio", "enrique", "soler", "josé", "m", "troya" ], "ranks": [ null, null, null, null, null, null, null, null, 485, 697, 820 ] }
+{ "tokens": [ "maria", "florina", "balcan", "avrim", "blum", "santosh", "vempala" ], "ranks": [ 39, 45, 65, 180, 359, 472, 570 ] }
+{ "tokens": [ "mark", "baker", "hong", "ong" ], "ranks": [ 44, 750, 784, 785 ] }
+{ "tokens": [ "matthew", "brand" ], "ranks": [ 72, 762 ] }
+{ "tokens": [ "matthew", "burnside", "angelos", "d", "keromytis" ], "ranks": [ 23, 81, 299, 762, 813 ] }
+{ "tokens": [ "matthias", "daum", "jan", "dörrenbächer", "sebastian", "bogan" ], "ranks": [ 67, 134, 154, 482, 763, 801 ] }
+{ "tokens": [ "michael", "engel", "bernd", "freisleben" ], "ranks": [ 163, 189, 639, 821 ] }
+{ "tokens": [ "michael", "hohmuth", "hendrik", "tews", "shane", "g", "stephens" ], "ranks": [ 225, 239, 518, 546, 716, 811, 821 ] }
+{ "tokens": [ "michel", "gien" ], "ranks": [ 199, 700 ] }
+{ "tokens": [ "michel", "neuhaus", "horst", "bunke" ], "ranks": [ 79, 394, 671, 700 ] }
+{ "tokens": [ "min", "xu", "ravi", "sandhu", "xuxian", "jiang", "xinwen", "zhang" ], "ranks": [ 449, 470, 608, 610, 731, 752, 764, 815 ] }
+{ "tokens": [ "moonsang", "kwon", "yookun", "cho" ], "ranks": [ 104, 319, 382, 617 ] }
+{ "tokens": [ "nail", "akar", "khosrow", "sohraby" ], "ranks": [ 9, 302, 390, 508 ] }
+{ "tokens": [ "olivier", "chapelle", "s", "sathiya", "keerthi", "vikas", "sindhwani" ], "ranks": [ 97, 295, 475, 503, 577, 706, 819 ] }
+{ "tokens": [ "pancham", "shukla", "pier", "luigi", "dragotti" ], "ranks": [ null, null, null, null, 720 ] }
+{ "tokens": [ "paul", "mckenney", "jack", "slingwine", "phil", "krueger" ], "ranks": [ 260, 312, 368, 422, 505, 766 ] }
+{ "tokens": [ "pavel", "b", "brazdil", "carlos", "soares" ], "ranks": [ 73, 90, 506, 634, 710 ] }
+{ "tokens": [ "pavel", "p", "kuksa", "pai", "hsi", "huang", "vladimir", "pavlovic" ], "ranks": [ 245, 314, 411, 414, 580, 710, 780, 786 ] }
+{ "tokens": [ "peter", "druschel" ], "ranks": [ 153, 788 ] }
+{ "tokens": [ "philippe", "thévenaz", "thierry", "blu", "michael", "unser" ], "ranks": [ null, null, null, null, 423, 821 ] }
+{ "tokens": [ "prasanth", "b", "nair", "arindam", "choudhury", "andy", "j", "keane" ], "ranks": [ 33, 107, 293, 391, 432, 633, 634, 822 ] }
+{ "tokens": [ "qun", "dai", "songcan", "chen" ], "ranks": [ 440, 743, 771, 810 ] }
+{ "tokens": [ "r", "venkatesh", "babu", "patrick", "pérez", "patrick", "bouthemy" ], "ranks": [ 41, 70, 435, 571, 787, 787, 818 ] }
+{ "tokens": [ "rafael", "serrano", "gotarredona", "teresa", "serrano", "gotarredona", "antonio", "acosta", "jiménez", "bernabé", "linares", "barranco" ], "ranks": [ null, 5, 27, 48, 55, 340, 441, 544, 666, 666, 715, 715 ] }
+{ "tokens": [ "rafal", "kolanski", "gerwin", "gerwin", "klein" ], "ranks": [ null, null, 747, 747, 757 ] }
+{ "tokens": [ "ramani", "duraiswami", "vikas", "c", "raykar" ], "ranks": [ null, null, null, 577, 817 ] }
+{ "tokens": [ "richard", "west", "karsten", "schwan", "christian", "poellabauer" ], "ranks": [ 109, 429, 452, 598, 714, 782 ] }
+{ "tokens": [ "robert", "jenssen", "torbjørn", "eltoft" ], "ranks": [ 160, 268, 556, 803 ] }
+{ "tokens": [ "roberto", "manduchi", "pietro", "perona" ], "ranks": [ null, null, null, null ] }
+{ "tokens": [ "roger", "butenuth" ], "ranks": [ null, 455 ] }
+{ "tokens": [ "roland", "opfer" ], "ranks": [ 407, 456 ] }
+{ "tokens": [ "ronald", "g", "minnich", "matthew", "j", "sottile", "sung", "eun", "choi", "erik", "hendriks", "jim", "mckie" ], "ranks": [ 105, 170, 226, 274, 369, 380, 511, 529, 746, 762, 789, 811, 822 ] }
+{ "tokens": [ "rudolf", "berghammer", "thorsten", "hoffmann" ], "ranks": [ null, null, null, 238 ] }
+{ "tokens": [ "ryohei", "fujimaki", "takehisa", "yairi", "kazuo", "machida" ], "ranks": [ null, null, null, null, null, null ] }
+{ "tokens": [ "samuel", "g", "steckley", "shane", "g", "henderson" ], "ranks": [ 224, 468, 515, 716, 811, 811 ] }
+{ "tokens": [ "samy", "bengio", "johnny", "mariéthoz" ], "ranks": [ 281, 361, 637, 712 ] }
+{ "tokens": [ "sarit", "shwartz", "michael", "zibulevsky", "yoav", "y", "schechner" ], "ranks": [ null, null, null, null, null, 614, 821 ] }
+{ "tokens": [ "satoshi", "niijima", "satoru", "kuhara" ], "ranks": [ null, null, null, null ] }
+{ "tokens": [ "sauro", "menchetti", "fabrizio", "costa", "paolo", "frasconi" ], "ranks": [ 374, 476, 651, 661, 662, 708 ] }
+{ "tokens": [ "sayantan", "sur", "hyun", "wook", "jin", "dhabaleswar", "k", "panda" ], "ranks": [ 142, 253, 412, 477, 530, 605, 753, 812 ] }
+{ "tokens": [ "sayantan", "sur", "lei", "chai", "hyun", "wook", "jin", "dhabaleswar", "k", "panda", "sun", "microsystems" ], "ranks": [ null, 93, 142, 253, 330, 412, 477, 530, 605, 753, 792, 812 ] }
+{ "tokens": [ "sean", "luke", "keith", "sullivan" ], "ranks": [ 345, 481, 527, 690 ] }
+{ "tokens": [ "senjian", "an", "wanquan", "liu", "svetha", "venkatesh" ], "ranks": [ null, null, null, null, null, 571 ] }
+{ "tokens": [ "seung", "jean", "kim", "alessandro", "magnani", "stephen", "boyd" ], "ranks": [ 71, 351, 489, 631, 679, 692, 791 ] }
+{ "tokens": [ "shibin", "qiu", "terran", "lane" ], "ranks": [ null, null, null, null ] }
+{ "tokens": [ "shiliang", "sun", "changshui", "zhang" ], "ranks": [ 496, 648, 792, 815 ] }
+{ "tokens": [ "shotaro", "akaho" ], "ranks": [ null, null ] }
+{ "tokens": [ "si", "wu", "shun", "ichi", "amari" ], "ranks": [ 17, 255, 499, 501, 728 ] }
+{ "tokens": [ "songcan", "chen", "daoqiang", "zhang" ], "ranks": [ 130, 771, 810, 815 ] }
+{ "tokens": [ "songcan", "chen", "daoqiang", "zhang", "zhi", "hua", "zhou" ], "ranks": [ null, 130, 673, 736, 771, 810, 815 ] }
+{ "tokens": [ "stephen", "r", "schach", "bo", "jin", "david", "r", "wright", "gillian", "z", "heller", "a", "jefferson", "offutt" ], "ranks": [ null, null, null, null, null, null, null, null, 652, 753, 791, 816, 818, 818 ] }
+{ "tokens": [ "steven", "c", "h", "hoi", "rong", "jin", "jianke", "zhu", "michael", "r", "lyu" ], "ranks": [ null, null, 240, 349, 519, 753, 768, 800, 817, 818, 821 ] }
+{ "tokens": [ "subhransu", "maji", "alexander", "c", "berg", "jitendra", "malik" ], "ranks": [ 54, 278, 352, 355, 523, 777, 817 ] }
+{ "tokens": [ "swagatam", "das", "ajith", "abraham", "amit", "konar" ], "ranks": [ null, null, null, null, null, null ] }
+{ "tokens": [ "tatsuo", "nakajima", "hideyuki", "tokuda" ], "ranks": [ 233, 392, 539, 555 ] }
+{ "tokens": [ "thierry", "blu", "philippe", "thévenaz", "michael", "unser" ], "ranks": [ null, null, null, null, 423, 821 ] }
+{ "tokens": [ "thomas", "gärtner" ], "ranks": [ null, 725 ] }
+{ "tokens": [ "thomas", "röblitz", "oliver", "bühn", "frank", "mueller" ], "ranks": [ 84, 187, 386, 404, 464, 725 ] }
+{ "tokens": [ "tiffany", "m", "mintz", "james", "p", "davis" ], "ranks": [ null, null, null, 781, 786, 820 ] }
+{ "tokens": [ "tony", "van", "gestel", "johan", "a", "k", "suykens", "bart", "baesens", "stijn", "viaene", "jan", "vanthienen", "guido", "dedene", "bart", "de", "moor", "joos", "vandewalle" ], "ranks": [ null, 136, 208, 383, 520, 566, 567, 574, 635, 665, 721, 739, 739, 754, 794, 799, 801, 812, 814, 816 ] }
+{ "tokens": [ "vlad", "olaru", "walter", "f", "tichy" ], "ranks": [ null, null, null, null, null ] }
+{ "tokens": [ "vladimir", "vovk" ], "ranks": [ null, 580 ] }
+{ "tokens": [ "vojislav", "kecman", "te", "ming", "huang", "michael", "vogt" ], "ranks": [ 294, 379, 541, 581, 582, 780, 821 ] }
+{ "tokens": [ "volker", "roth", "bernd", "fischer" ], "ranks": [ 176, 460, 583, 639 ] }
+{ "tokens": [ "w", "chen" ], "ranks": [ 809, 810 ] }
+{ "tokens": [ "wim", "van", "de", "velde", "johan", "opsommer", "erik", "h", "d", "hollander" ], "ranks": [ 242, 408, 569, 602, 746, 754, 799, 800, 813, 814 ] }
+{ "tokens": [ "xuanlong", "nguyen", "martin", "j", "wainwright", "michael", "i", "jordan" ], "ranks": [ 586, 703, 732, 761, 802, 805, 821, 822 ] }
+{ "tokens": [ "xuanlong", "nguyen", "xuanlong", "martin", "j", "wainwright", "michael", "i", "jordan" ], "ranks": [ 586, 703, 732, 732, 761, 802, 805, 821, 822 ] }
+{ "tokens": [ "y", "jeon", "i", "h", "sloan", "e", "p", "stephan", "j", "elschner" ], "ranks": [ null, null, null, null, null, 659, 786, 800, 805, 822 ] }
+{ "tokens": [ "yaniv", "gurwicz", "boaz", "lerner" ], "ranks": [ null, null, null, null ] }
+{ "tokens": [ "yongmin", "li", "shaogang", "gong", "heather", "liddell" ], "ranks": [ null, null, null, null, null, 759 ] }
+{ "tokens": [ "yoshisato", "yanagisawa", "shigeru", "chiba", "kenichi", "kourai" ], "ranks": [ 99, 297, 311, 495, 611, 618 ] }
+{ "tokens": [ "zhang", "dao", "qiang", "chen", "song", "can" ], "ranks": [ 86, 129, 510, 767, 810, 815 ] }
+{ "tokens": [ "zhe", "wang", "songcan", "chen" ], "ranks": [ 626, 771, 808, 810 ] }
+{ "tokens": [ "zheng", "rong", "yang" ], "ranks": [ 735, 768, 797 ] }
+{ "tokens": [ "zhiwei", "gu", "tao", "mei", "jinhui", "tang", "xiuqing", "wu", "xian", "sheng", "hua" ], "ranks": [ null, null, 207, 277, 371, 493, 537, 607, 673, 728, 793 ] }

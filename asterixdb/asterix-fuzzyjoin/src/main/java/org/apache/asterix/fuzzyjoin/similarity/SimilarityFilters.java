@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,30 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.fuzzyjoin.similarity;
 
 import java.io.Serializable;
 
 public interface SimilarityFilters extends Serializable {
-    public int getLengthLowerBound(int length);
+    int getLengthLowerBound(int length);
 
-    public int getLengthUpperBound(int length);
+    int getLengthUpperBound(int length);
 
-    public int getPrefixLength(int length);
+    int getPrefixLength(int length);
 
-    public boolean passLengthFilter(int lengthX, int lengthY);
+    boolean passLengthFilter(int lengthX, int lengthY);
 
-    public boolean passPositionFilter(int noGramsCommon, int positionX, int lengthX, int positionY, int lengthY);
+    boolean passPositionFilter(int noGramsCommon, int positionX, int lengthX, int positionY, int lengthY);
 
-    public float passSimilarityFilter(final int[] tokensX, int startX, int lengthX, final int prefixLengthX,
+    float passSimilarityFilter(final int[] tokensX, int startX, int lengthX, final int prefixLengthX,
             final int[] tokensY, int startY, int lengthY, final int prefixLengthY, final int intersectionSizePrefix);
 
-    public float passSimilarityFilter(final int[] tokensX, final int prefixLengthX, final int[] tokensY,
+    float passSimilarityFilter(final int[] tokensX, final int prefixLengthX, final int[] tokensY,
             final int prefixLengthY, final int intersectionSizePrefix);
 
-    public boolean passSuffixFilter(int[] tokensX, int startX, int lengthX, int positionX, int[] tokensY, int startY,
+    boolean passSuffixFilter(int[] tokensX, int startX, int lengthX, int positionX, int[] tokensY, int startY,
             int lengthY, int positionY);
 
-    public boolean passSuffixFilter(int[] tokensX, int positionX, int[] tokensY, int positionY);
+    boolean passSuffixFilter(int[] tokensX, int positionX, int[] tokensY, int positionY);
 }

@@ -25,7 +25,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.fuzzyjoin.IntArray;
 import org.apache.asterix.fuzzyjoin.similarity.PartialIntersect;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFiltersJaccard;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetric;
@@ -45,6 +44,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IntArray;
 
 public class SimilarityJaccardPrefixEvaluator implements IScalarEvaluator {
     // assuming type indicator in serde format
@@ -184,6 +184,7 @@ public class SimilarityJaccardPrefixEvaluator implements IScalarEvaluator {
                     tokens2.add(token);
                 }
             }
+
             // pad tokens
             for (; i < length2; i++) {
                 tokens2.add(Integer.MAX_VALUE);
@@ -193,25 +194,18 @@ public class SimilarityJaccardPrefixEvaluator implements IScalarEvaluator {
             evalTokenPrefix.evaluate(tuple, inputVal);
             int tokenPrefix = ATypeHierarchy.getIntegerValue(BuiltinFunctions.SIMILARITY_JACCARD.getName(), 4,
                     inputVal.getByteArray(), inputVal.getStartOffset());
-
             //
             // -- - position filter - --
             //
             SimilarityMetric.getPartialIntersectSize(tokens1.get(), 0, tokens1.length(), tokens2.get(), 0,
                     tokens2.length(), tokenPrefix, parInter);
+
             if (similarityFilters.passPositionFilter(parInter.intersectSize, parInter.posXStop, length1,
-                    parInter.posYStop, length2)) {
-
-                //
-                // -- - suffix filter - --
-                //
-                if (similarityFilters.passSuffixFilter(tokens1.get(), 0, tokens1.length(), parInter.posXStart,
-                        tokens2.get(), 0, tokens2.length(), parInter.posYStart)) {
-
-                    sim = similarityFilters.passSimilarityFilter(tokens1.get(), 0, tokens1.length(),
-                            parInter.posXStop + 1, tokens2.get(), 0, tokens2.length(), parInter.posYStop + 1,
-                            parInter.intersectSize);
-                }
+                    parInter.posYStop, length2)
+                    && similarityFilters.passSuffixFilter(tokens1.get(), 0, tokens1.length(), parInter.posXStart,
+                            tokens2.get(), 0, tokens2.length(), parInter.posYStart)) { // -- - suffix filter - --
+                sim = similarityFilters.passSimilarityFilter(tokens1.get(), 0, tokens1.length(), parInter.posXStop + 1,
+                        tokens2.get(), 0, tokens2.length(), parInter.posYStop + 1, parInter.intersectSize);
             }
         }
 

@@ -1,0 +1,61 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse fuzzyjoin_basic;
+
+set import-private-functions 'true'
+
+let $hash := (
+    for $r in dataset left
+    let $c := (
+        for $t in counthashed-word-tokens($r.authors)
+        order by $t
+        distinct by $t
+        return $t
+    )
+    order by $r.id
+    return {"id": $r.id, "authors": $r.authors, "nondup": $c}
+)
+
+let $word := (
+    for $r in dataset left
+    let $c := (
+        for $t in word-tokens($r.authors)
+        order by $t
+        distinct by $t
+        return $t
+    )
+    order by $r.id
+    return {"id": $r.id, "authors": $r.authors, "nondup": $c}
+)
+
+for $s in $hash
+for $t in $word
+where $s.id = $t.id and count($s.nondup) != count($t.nondup)
+order by $s.authors
+return {
+        "authors": $s.authors,
+        "hdistinct": $s.nondup,
+        "hcount": count($s.nondup),
+        "hash": counthashed-word-tokens($s.authors),
+        "vhcount": count(counthashed-word-tokens($s.authors)),
+        "wdistinct": $t.nondup,
+        "wcount": count($t.nondup),
+        "word": word-tokens($t.authors),
+        "vwcount": count(word-tokens($t.authors))
+        }

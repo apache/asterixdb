@@ -1,0 +1,66 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Fuzzy join on two datasets, with a series of link join conditions.
+ *                  The dataset DBLP will fuzzy join with CSX and propagate the results
+ *                  with a series of linked join conditions on CSX.
+ * Success        : Yes
+ */
+drop dataverse test if exists;
+
+create dataverse test;
+
+use dataverse test;
+
+create type DBLPType as open {
+  id: int32,
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type CSXType as open {
+  id: int32,
+  csxid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create nodegroup group1 if not exists on asterix_nc1, asterix_nc2;
+
+create dataset DBLP(DBLPType) primary key id on group1;
+create dataset CSX(CSXType) primary key id on group1;
+
+write output to asterix_nc1:'rttest/test.adm';
+
+use dataverse test;
+set import-private-functions 'true';
+set simthreshold "0.5f";
+for $p in dataset DBLP
+for $p1 in dataset CSX
+for $p2 in dataset CSX
+for $p3 in dataset CSX
+for $p4 in dataset CSX
+where word-tokens($p.title) ~= word-tokens($p1.title)
+and word-tokens($p2.title) ~= word-tokens($p3.title)
+and gram-tokens($p1.authors, 3, false) ~= gram-tokens($p2.authors, 2, false)
+and gram-tokens($p3.misc, 3, false) ~= gram-tokens($p4.misc, 3, false)
+return { "pid":$p.id, "p1id":$p1.id, "p2id": $p2.id, "p3id": $p3.id, "p4id": $p4.id }

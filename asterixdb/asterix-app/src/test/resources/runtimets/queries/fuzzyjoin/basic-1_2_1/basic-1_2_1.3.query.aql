@@ -1,0 +1,123 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse fuzzyjoin_basic;
+
+set import-private-functions 'true'
+
+let $left := [1, 5, 6, 7]
+let $right := [4, 5, 6]
+let $leftnull := [null, null, 5, 6, 7]
+let $rightnull := [4, 5, 6]
+let $nullstring := [null, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+let $prefix1 := subset-collection($nullstring, 0, prefix-len-jaccard(len($nullstring), 0.1f))
+let $prefix2 := subset-collection($nullstring, 0, prefix-len-jaccard(len($nullstring), 0.2f))
+let $prefix3 := subset-collection($nullstring, 0, prefix-len-jaccard(len($nullstring), 0.3f))
+let $prefix4 := subset-collection($nullstring, 0, prefix-len-jaccard(len($nullstring), 0.4f))
+let $prefix5 := subset-collection($nullstring, 0, prefix-len-jaccard(len($nullstring), 0.5f))
+let $prefix6 := subset-collection($nullstring, 0, prefix-len-jaccard(len($nullstring), 0.6f))
+let $prefix7 := subset-collection($nullstring, 0, prefix-len-jaccard(len($nullstring), 0.7f))
+let $prefix8 := subset-collection($nullstring, 0, prefix-len-jaccard(len($nullstring), 0.8f))
+let $prefix9 := subset-collection($nullstring, 0, prefix-len-jaccard(len($nullstring), 0.9f))
+
+let $bound :=
+for $l in [1]
+return [
+  [
+  similarity-jaccard-prefix(3, [1, 2, 3], 3, [1, 2, 3], 1, 1f),
+  similarity-jaccard-prefix(3, [1, 2, 3], 3, [1, 2, 4], 1, .5f),
+  similarity-jaccard-prefix(3, [1, 2, 3], 3, [1, 2, 4], 1, .6f),
+  similarity-jaccard-prefix(3, [1, 2, 3], 9, [1, 2, 3], 1, .5f),
+  similarity-jaccard-prefix(4, [1, 2, 3, 4], 2, [1, 2], 1, .5f),
+  similarity-jaccard-prefix(4, [1, 2, 3, 4], 4, [1, 2], 1, .33f)
+  ],[
+  similarity-jaccard-prefix(3, [1, 2, 3], 3, [1, 2, 3], 2, 1f),
+  similarity-jaccard-prefix(3, [1, 2, 3], 3, [1, 2, 4], 2, .5f),
+  similarity-jaccard-prefix(3, [1, 2, 3], 3, [1, 2, 4], 2, .6f),
+  similarity-jaccard-prefix(3, [1, 2, 3], 9, [1, 2, 3], 2, .5f),
+  similarity-jaccard-prefix(4, [1, 2, 3, 4], 2, [1, 2], 2, .5f),
+  similarity-jaccard-prefix(4, [1, 2, 3, 4], 4, [1, 2], 2, .33f)
+  ],[
+  similarity-jaccard-prefix(3, [1, 2, 3], 3, [1, 2, 3], 3, 1f),
+  similarity-jaccard-prefix(3, [1, 2, 3], 3, [1, 2, 4], 3, .5f),
+  similarity-jaccard-prefix(3, [1, 2, 3], 3, [1, 2, 4], 3, .6f),
+  similarity-jaccard-prefix(3, [1, 2, 3], 9, [1, 2, 3], 3, .5f),
+  similarity-jaccard-prefix(4, [1, 2, 3, 4], 2, [1, 2], 3, .5f),
+  similarity-jaccard-prefix(4, [1, 2, 3, 4], 4, [1, 2], 3, .33f)
+  ]
+]
+
+let $trybound :=
+for $l in [1]
+return [
+similarity-jaccard-prefix(8, [3, 4, 5, 6, 7, 8], 10, [0, 0, 3, 4, 5, 6, 7, 8, 9, 10], -1, 0.5f),
+similarity-jaccard-prefix(8, [1, 2, 3, 4, 5, 6, 7, 8], 10, [3, 4, 5, 6, 7, 8, 9, 10], 0, 0.5f),
+similarity-jaccard-prefix(8, [3, 4, 5, 6, 7, 8], 10, [0, 0, 3, 4, 5, 6, 7, 8, 9, 10], 1, 0.5f),
+similarity-jaccard-prefix(8, [1, 2, 3, 4, 5, 6, 7, 8], 10, [3, 4, 5, 6, 7, 8, 9, 10], 2, 0.5f),
+similarity-jaccard-prefix(8, [3, 4, 5, 6, 7, 8], 10, [0, 0, 3, 4, 5, 6, 7, 8, 9, 10], 3, 0.5f),
+similarity-jaccard-prefix(8, [1, 2, 3, 4, 5, 6, 7, 8], 10, [3, 4, 5, 6, 7, 8, 9, 10], 4, 0.5f),
+similarity-jaccard-prefix(8, [3, 4, 5, 6, 7, 8], 10, [0, 0, 3, 4, 5, 6, 7, 8, 9, 10], 5, 0.5f),
+similarity-jaccard-prefix(8, [1, 2, 3, 4, 5, 6, 7, 8], 10, [3, 4, 5, 6, 7, 8, 9, 10], 6, 0.5f),
+similarity-jaccard-prefix(8, [3, 4, 5, 6, 7, 8], 10, [0, 0, 3, 4, 5, 6, 7, 8, 9, 10], 7, 0.5f),
+similarity-jaccard-prefix(8, [1, 2, 3, 4, 5, 6, 7, 8], 10, [0, 0, 3, 4, 5, 6, 7, 8, 9, 10], 8, 0.5f),
+similarity-jaccard-prefix(8, [1, 2, 3, 4, 5, 6, 7, 8], 10, [0, 0, 3, 4, 5, 6, 7, 8, 9, 10], 9, 0.5f),
+similarity-jaccard-prefix(8, [1, 2, 3, 4, 5, 6, 7, 8], 10, [0, 0, 3, 4, 5, 6, 7, 8, 9, 10], 10, 0.5f),
+similarity-jaccard-prefix(8, [1, 2, 5, 6, 7, 3, 4, 8], 10, [4, 5, 0, 0, 3, 6, 7, 8, 9, 10], 11, 0.5f)
+]
+
+let $checkbound :=
+for $l in [1]
+return [
+similarity-jaccard-check([1, 2, 3, 4, 5, 6, 7, 8], [null, 0, 3, 4, 5, 6, 7, 8, 9, 10], 0.1f),
+similarity-jaccard-check([null, 2, 3, 4, 5, 6, 7, 8], [null, 0, 3, 4, 5, 6, 7, 8, 9, 10], 0.2f),
+similarity-jaccard-check([null, 2, 3, 4, 5, 6, 7, 8], [null, null, 3, 4, 5, 6, 7, 8, 9, 10], 0.3f),
+similarity-jaccard-check([null, null, 3, 4, 5, 6, 7, 8], [null, null, 3, 4, 5, 6, 7, 8, 9, 10], 0.4f),
+similarity-jaccard-check([1, 2, 3, 4, 5, 6, 7, 8], [null, null, 3, 4, 5, 6, 7, 8, 9, 10], 0.5f),
+similarity-jaccard-check([1, 2, 3, 4, 5, 6, 7, 8], [0, 2, 3, 4, 5, 6, 7, 8, 9, 10], 0.6f),
+similarity-jaccard-check([1, 2, 3, 4, 5, 6, 7, 8], [null, null, 3, 4, 5, 6, 7, 8, 2], 0.7f),
+similarity-jaccard-check([1, 2, 3, 4, 5, 6, 7, 8], [null, null, 3, 4, 5, 6, 7, 8, 1, 2], 0.8f),
+similarity-jaccard-check([1, 2, 3, 4, 5, 6, 7, 8, 9], [null, 2, 3, 4, 5, 6, 7, 8, 9, 1], 0.9f)
+]
+
+let $len := len($right)
+
+let $negativesub1 := subset-collection($right, 6, prefix-len-jaccard($len, .4f))
+let $negativesub2 := subset-collection($right, 0, -1)
+let $prefix := subset-collection($right, 0, prefix-len-jaccard($len, .4f))
+let $sim1 := similarity-jaccard($leftnull, $right)
+let $sim2 := similarity-jaccard-prefix(len($left), $left, len($right), $right, -1, .4f)
+let $sim3 := similarity-jaccard($leftnull, $rightnull)
+let $sim4 := similarity-jaccard-prefix(8, [1, 2, 3, 4, 5, 6, 7, 8], 10, [0, 0, 3, 4, 5, 6, 7, 8, 9, 10], 1, .4f)
+let $sim5 := similarity-jaccard([1, 2, 3, 4, 5, 6, 7, 8], [null, null, 3, 4, 5, 6, 7, 8, 9, 10])
+
+let $joinpair :=
+for $s in $prefix4
+for $r in $prefix1
+where $s = $r
+return $s
+
+let $clearnull :=
+for $index at $i in $nullstring
+where $nullstring[$i] <= null
+return int16(string($nullstring[$i])) + 64
+
+let $cleanup := [$clearnull, $nullstring]
+
+return [$prefix, $sim1, $sim2, $sim3, $sim4, $sim5, $bound, $trybound, $checkbound, $negativesub1, $negativesub2,
+[$prefix1, $prefix2, $prefix3, $prefix4, $prefix5, $prefix6, $prefix7, $prefix8, $prefix9], $joinpair, $cleanup]

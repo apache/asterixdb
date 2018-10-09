@@ -1,0 +1,63 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse fuzzyjoin_basic;
+
+set import-private-functions 'true'
+
+// Stage 1
+let $rankedTokens := (
+    for $right in dataset left
+    let $id := $right.id
+    for $token in word-tokens($right.authors)
+        /*+ hash */ group by $tokenGroupped := $token with $id
+        /*+ inmem 34 198608 */ order by count($id), $tokenGroupped
+    return $tokenGroupped
+)
+
+// Stage 2_1 of left
+let $tokenLeftVerify := (
+    for $left in dataset left
+        let $tokenUnrankedLeft := word-tokens($left.authors)
+        let $lenLeft := len($tokenUnrankedLeft)
+        let $tokens := (
+            for $token in $tokenUnrankedLeft
+            let $index :=
+                for $tokenRanked at $i in $rankedTokens
+                    where $token = /*+ bcast */ $tokenRanked
+                return $i
+            order by $index
+            return $index
+        )
+    where count($tokenUnrankedLeft) != count($tokens)
+    order by $left.id
+    return {"tid": $left.id, "authors": $left.authors, "tokens": $tokenUnrankedLeft, "ranked": $tokens}
+)
+let $tokenLeft := (
+    for $left in dataset left
+        let $tokenUnrankedLeft := word-tokens($left.authors)
+        let $lenLeft := len($tokenUnrankedLeft)
+        for $token in $tokenUnrankedLeft
+        for $tokenRanked at $i in $rankedTokens
+            where $token = /*+ bcast */ $tokenRanked
+        order by $i
+    return $i
+)
+
+for $r in $tokenLeftVerify
+return $r

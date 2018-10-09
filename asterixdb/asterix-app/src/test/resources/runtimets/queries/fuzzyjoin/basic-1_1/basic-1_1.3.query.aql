@@ -1,0 +1,81 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse fuzzyjoin_basic;
+
+set simthreshold '0.6f';
+
+let $s1 := "Clear, Concise, and fun!"
+let $s2 := "Clear, Concise, and Charitable"
+let $psj := (
+    for $s in [$s1]
+    for $t in [$s2]
+    where word-tokens($s) ~= word-tokens($t)
+    return {"s1": $s, "s2": $t}
+)
+let $nsj := (
+    for $s in [$s1]
+    for $t in [$s2]
+    where word-tokens($s) /*+ indexnl */ ~= word-tokens($t)
+    return {"s1": $s, "s2": $t}
+)
+let $nvj := (
+    for $s in [$s1]
+    for $t in [$s2]
+    where similarity-jaccard-check(word-tokens($s), word-tokens($t), .6f)[0] = true
+    return {"s1": $s, "s2": $t}
+)
+let $nvr := (
+    for $s in [$s1]
+    for $t in [$s2]
+    where similarity-jaccard(word-tokens($s), word-tokens($t)) >= .6f
+    return {"s1": $s, "s2": $t}
+)
+let $tpsj := (
+    for $s in dataset Basic
+    for $t in dataset Basic
+    where /*+ skip-index */ similarity-jaccard(word-tokens($s.summary), word-tokens($t.summary)) >= .6f
+    and $s.id < $t.id
+    return {"s1": $s.summary, "s2": $t.summary}
+)
+let $tnsj := (
+    for $s in dataset Basic
+    for $t in dataset Basic
+    where /*+ indexnl */ similarity-jaccard(word-tokens($s.summary), word-tokens($t.summary)) >= .6f
+    and $s.id < $t.id
+    return {"s1": $s.summary, "s2": $t.summary}
+)
+let $itpsj := (
+    for $s in dataset BasicWithIndex
+    for $t in dataset BasicWithIndex
+    where /*+ skip-index */ similarity-jaccard(word-tokens($s.summary), word-tokens($t.summary)) >= 0.6
+    and $s.id < $t.id
+    return {"s1": $s.summary, "s2": $t.summary}
+)
+let $itnsj := (
+    for $s in dataset BasicWithIndex
+    for $t in dataset BasicWithIndex
+    where /*+ indexnl */ similarity-jaccard(word-tokens($s.summary), word-tokens($t.summary)) >= 0.6
+    and $s.id < $t.id
+    return {"s1": $s.summary, "s2": $t.summary}
+)
+let $left := word-tokens($s1)
+let $right := word-tokens($s2)
+let $vj := similarity-jaccard-check($left, $right, 0.6f)
+let $sr := similarity-jaccard($left, $right) >= 0.6
+return {"psj": $psj, "nsj": $nsj, "nvj": $nvj, "nvr": $nvr, "tpsj": $tpsj, "tnsj": $tnsj, "itpsj": $itpsj, "itnsj": $itnsj, "vj": $vj, "sr": $sr}

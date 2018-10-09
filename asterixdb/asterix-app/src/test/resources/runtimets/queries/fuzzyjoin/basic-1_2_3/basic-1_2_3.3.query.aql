@@ -1,0 +1,89 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse fuzzyjoin_basic;
+
+set import-private-functions 'true'
+
+set simthreshold '.2f';
+
+let $pj := (
+    for $r in dataset left
+    for $s in dataset right
+        where word-tokens($r.authors) ~= word-tokens($s.authors)
+    return {"rid": $r.id, "sid": $s.id, "rstr": $r.authors, "sstr": $s.authors}
+)
+
+let $nl := (
+    for $r in dataset left
+    for $s in dataset right
+        where word-tokens($r.authors) /*+ indexnl */ ~= word-tokens($s.authors)
+    return {"rid": $r.id, "sid": $s.id, "rstr": $r.authors, "sstr": $s.authors}
+)
+
+let $orderedTokens := (
+for $paper in dataset('right')
+            let $id := $paper.id
+            for $token in word-tokens($paper.authors)
+            /*+ hash */
+            group by $tokenGrouped := $token with $id
+            /*+ inmem 1 302 */
+            order by count($id), $tokenGrouped
+            return $tokenGrouped
+)
+
+let $simpairs := (
+    for $r in $nl
+    return {
+    "rid": $r.rid,
+    "sid": $r.sid,
+    "rstr": $r.rstr,
+    "sstr": $r.sstr,
+    "simpairs":
+        for $s in $pj
+            where $r.rid = $s.rid and $r.sid = $s.sid
+            return {"rid": $s.rid, "sid": $s.sid}
+    }
+)
+
+for $d in $simpairs
+where count($d.simpairs) = 0
+    let $rid := $d.rid
+    let $sid := $d.sid
+    let $rstr := for $t in word-tokens($d.rstr) order by $t return $t
+    let $sstr := for $t in word-tokens($d.sstr) order by $t return $t
+    let $rlen := len(for $t in word-tokens($d.rstr) order by $t return $t)
+    let $slen := len(for $t in word-tokens($d.sstr) order by $t return $t)
+    let $orstr := for $t in word-tokens($d.rstr) for $token at $i in $orderedTokens where $t /*+ bcast */ = $token order by $i return $i
+    let $osstr := for $t in word-tokens($d.sstr) for $token at $i in $orderedTokens where $t /*+ bcast */ = $token order by $i return $i
+    let $lorstr := len(for $t in word-tokens($d.rstr) for $token at $i in $orderedTokens where $t /*+ bcast */ = $token order by $i return $i)
+    let $losstr := len(for $t in word-tokens($d.sstr) for $token at $i in $orderedTokens where $t /*+ bcast */ = $token order by $i return $i)
+return {
+        "rid": $rid,
+        "sid": $sid,
+        "rstr": $rstr,
+        "sstr": $sstr,
+        "rlen": $rlen,
+        "slen": $slen,
+        "orstr": $orstr,
+        "osstr": $osstr,
+        "lorstr": $lorstr,
+        "losstr": $losstr,
+        "simpairs": $d,
+        "sim": let $cmmon := for $r in $orstr for $s in $osstr where $r = $s return $r
+                             return similarity-jaccard-prefix($rlen, $orstr, $slen, $osstr, $cmmon[0], 0.2f)}

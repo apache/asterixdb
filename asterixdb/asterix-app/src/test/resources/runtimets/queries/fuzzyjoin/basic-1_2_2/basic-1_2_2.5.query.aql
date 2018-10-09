@@ -1,0 +1,79 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse fuzzyjoin_basic;
+
+set import-private-functions 'true'
+
+let $t := count(
+    for $paperDBLP in dataset('left')
+    let $idDBLP := $paperDBLP.id
+    let $tokensUnrankedDBLP := word-tokens($paperDBLP.authors)
+    let $lenDBLP := len($tokensUnrankedDBLP)
+    let $tokensDBLP :=
+        for $tokenUnranked in $tokensUnrankedDBLP
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('left')
+            let $id := $paper.id
+            for $token in word-tokens($paper.authors)
+            /*+ hash */
+            group by $tokenGrouped := $token with $id
+            /*+ inmem 1 302 */
+            order by count($id), $tokenGrouped
+            return $tokenGrouped
+        where $tokenUnranked = /*+ bcast */ $tokenRanked
+        order by $i
+        return $i
+    for $prefixTokenDBLP in subset-collection($tokensDBLP, 0, prefix-len-jaccard(len($tokensDBLP), .8f))
+
+    for $paperCSX in dataset('right')
+    let $idCSX := $paperCSX.id
+    let $tokensUnrankedCSX := word-tokens($paperCSX.authors)
+    let $lenCSX := len($tokensUnrankedCSX)
+    let $tokensCSX :=
+        for $tokenUnranked in $tokensUnrankedCSX
+        for $tokenRanked at $i in
+            //
+            // -- - Stage 1 - --
+            //
+            for $paper in dataset('left')
+            let $id := $paper.id
+            for $token in word-tokens($paper.authors)
+            /*+ hash */
+            group by $tokenGrouped := $token with $id
+            /*+ inmem 1 302 */
+            order by count($id), $tokenGrouped
+            return $tokenGrouped
+        where $tokenUnranked = /*+ bcast */ $tokenRanked
+        order by $i
+        return $i
+    let $actualPrefixLen := prefix-len-jaccard(len($tokensUnrankedCSX), .8f) - len($tokensUnrankedCSX) + len($tokensCSX)
+    for $prefixTokenCSX in subset-collection($tokensCSX, 0, $actualPrefixLen)
+
+    where $prefixTokenDBLP = $prefixTokenCSX
+
+    /*+ hash*/
+    group by $idDBLP := $idDBLP, $idCSX := $idCSX with $tokensUnrankedDBLP, $tokensUnrankedCSX
+    let $sim := similarity-jaccard-check($tokensUnrankedDBLP[0], $tokensUnrankedCSX[0], .8f)
+    where $sim[1] >= .8f
+    return {'idDBLP': $idDBLP, 'idCSX': $idCSX, 'sim': $sim[1]}
+)
+return $t

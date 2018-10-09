@@ -1,0 +1,194 @@
+{ "authors": "Aria Nosratinia" }
+{ "authors": "Cheng Soon Ong Xavier Mary Stéphane Canu Alexander J. Smola" }
+{ "authors": "Dominique Chanet Bjorn De Sutter Bruno De Bus Ludo Van Put Koen De Bosschere" }
+{ "authors": "Faisal N. Abu-Khzam Michael A. Langston W. Henry Suters" }
+{ "authors": "Haifeng Li Tao Jiang" }
+{ "authors": "Jean-Philippe Vert" }
+{ "authors": "Liguo Yu Srini Ramaswamy" }
+{ "authors": "Manuel Delgado" }
+{ "authors": "Min Xu Xuxian Jiang Ravi S. Sandhu Xinwen Zhang" }
+{ "authors": "Ping Wah Wong" }
+{ "authors": "Sang-Woon Kim B. John Oommen" }
+{ "authors": "William S. Frantz Charles R. Landau" }
+{ "authors": "Yoshisato Yanagisawa Kenichi Kourai Shigeru Chiba" }
+{ "authors": "Choon Hui Teo S. V. N. Vishwanathan" }
+{ "authors": "Dao-Qiang Zhang Song-Can Chen" }
+{ "authors": "Dario Colazzo Giorgio Ghelli" }
+{ "authors": "Gilles Blanchard Olivier Bousquet Laurent Zwald" }
+{ "authors": "Gregory Gutin Khee Meng Koh Eng Guan Tay Anders Yeo" }
+{ "authors": "Inderjit S. Dhillon Yuqiang Guan Brian Kulis" }
+{ "authors": "Mucuy-kak Guevara Hortensia Galeana-Sánchez" }
+{ "authors": "Ronald Minnich Matthew J. Sottile Sung-Eun Choi Erik A. Hendriks Jim McKie" }
+{ "authors": "Shuyuan Yang Min Wang Licheng Jiao" }
+{ "authors": "Stefan Klanke Helge Ritter" }
+{ "authors": "Tzanko Donchev Marc Quincampoix" }
+{ "authors": "Xiaohai Sun Dominik Janzing Bernhard Schölkopf" }
+{ "authors": "Yoav Etsion Dan Tsafrir Scott Kirkpatrick Dror G. Feitelson" }
+{ "authors": "Bastian Blankenburg Matthias Klusch Onn Shehory" }
+{ "authors": "Bodhisattwa Mukherjee Karsten Schwan" }
+{ "authors": "Brett D. Fleisch Mark Allan A. Co" }
+{ "authors": "Brian Kan-Wing Mak Roger Wend-Huu Hsiao Simon Ka-Lung Ho James T. Kwok" }
+{ "authors": "Gernot Heiser Kevin Elphinstone Ihor Kuz Gerwin Klein Stefan M. Petters" }
+{ "authors": "Hortensia Galeana-Sánchez Mucuy-kak Guevara" }
+{ "authors": "Khawar M. Zuberi Padmanabhan Pillai Kang G. Shin" }
+{ "authors": "Kåre J. Lauvset Dag Johansen Keith Marzullo" }
+{ "authors": "Majid Beigi Andreas Zell" }
+{ "authors": "Martin L. Hazelton" }
+{ "authors": "Masashi Sugiyama Hirotaka Hachiya Christopher Towell Sethu Vijayakumar" }
+{ "authors": "Meihe Xu Paul M. Thompson Arthur W. Toga" }
+{ "authors": "Nick L. Petroni Jr. Michael W. Hicks" }
+{ "authors": "Pavel P. Kuksa Pai-Hsi Huang Vladimir Pavlovic" }
+{ "authors": "Philip Derrin Kevin Elphinstone Gerwin Klein David Cock Manuel M. T. Chakravarty" }
+{ "authors": "Shigeo Abe" }
+{ "authors": "Stephen Plaza Valeria Bertacco" }
+{ "authors": "Amol Shukla Lily Li Anand Subramanian Paul A. S. Ward Tim Brecht" }
+{ "authors": "Benjamin Schrauwen Jan M. Van Campenhout" }
+{ "authors": "Christopher J. C. Burges David J. Crisp" }
+{ "authors": "Dima Kuzmin Manfred K. Warmuth" }
+{ "authors": "Gavin C. Cawley Nicola L. C. Talbot" }
+{ "authors": "Hyun-Wook Jin Sayantan Sur Lei Chai Dhabaleswar K. Panda" }
+{ "authors": "Ivor W. Tsang James T. Kwok" }
+{ "authors": "Kun-Yuan Hsieh Yung-Chia Lin Chien-Ching Huang Jenq Kuen Lee" }
+{ "authors": "Shannon R. Campbell Ronald M. Summers" }
+{ "authors": "Thanh N. Tran Ron Wehrens Lutgarde M. C. Buydens" }
+{ "authors": "Tobias Glasmachers" }
+{ "authors": "Zhiqian Wang Jezekiel Ben-Arie" }
+{ "authors": "Aviezri S. Fraenkel" }
+{ "authors": "Dhammika Elkaduwe Gerwin Klein Kevin Elphinstone" }
+{ "authors": "Eli Levin Doron S. Lubinsky" }
+{ "authors": "Jieping Ye Shuiwang Ji Jianhui Chen" }
+{ "authors": "Johnny Mariéthoz Samy Bengio" }
+{ "authors": "Martin O'Connor Brendan Tangney Vinny Cahill Neville Harris" }
+{ "authors": "Min Hu Ken Jackson Jan Janssen Stefan Vandewalle" }
+{ "authors": "Patrick Haffner" }
+{ "authors": "Shun-ichi Amari Si Wu" }
+{ "authors": "Sourangshu Bhattacharya Chiranjib Bhattacharyya Nagasuma Chandra" }
+{ "authors": "Thomas Röblitz Frank Mueller Oliver Bühn" }
+{ "authors": "Tony Jebara" }
+{ "authors": "Volkmar Uhlig" }
+{ "authors": "Xiaohai Sun Dominik Janzing" }
+{ "authors": "XuanLong Nguyen Martin J. Wainwright Michael I. Jordan" }
+{ "authors": "Yu-Chieh Wu Chia-Hui Chang" }
+{ "authors": "Annalisa Barla Francesca Odone Alessandro Verri" }
+{ "authors": "Cheong Hee Park Haesun Park" }
+{ "authors": "Kenji Hisazumi Tsuneo Nakanishi Teruaki Kitasuka Akira Fukuda" }
+{ "authors": "Khawar M. Zuberi Kang G. Shin" }
+{ "authors": "Marc M. Van Hulle" }
+{ "authors": "Paul E. McKenney Jack Slingwine Phil Krueger" }
+{ "authors": "Saad Ali Mubarak Shah" }
+{ "authors": "Seung-Jean Kim Alessandro Magnani Stephen P. Boyd" }
+{ "authors": "Shuichi Oikawa Ragunathan Rajkumar" }
+{ "authors": "Susan Hert Michael Hoffmann Lutz Kettner Sylvain Pion Michael Seel" }
+{ "authors": "Dell Zhang Robert Mao" }
+{ "authors": "Jiong Guo" }
+{ "authors": "Jiong Guo Rolf Niedermeier" }
+{ "authors": "Jun Suzuki Yutaka Sasaki Eisaku Maeda" }
+{ "authors": "Maria-Florina Balcan Avrim Blum Santosh Vempala" }
+{ "authors": "Mark Heckman Cui Zhang Brian R. Becker Dave Peticolas Karl N. Levitt Ronald A. Olsson" }
+{ "authors": "Norman C. Hutchinson Larry L. Peterson" }
+{ "authors": "Thomas C. M. Lee" }
+{ "authors": "Vojislav Kecman Michael Vogt Te Ming Huang" }
+{ "authors": "Weichuan Yu Gerald Sommer Kostas Daniilidis" }
+{ "authors": "Weiming Gu" }
+{ "authors": "Zhihua Zhang James T. Kwok Dit-Yan Yeung" }
+{ "authors": "Alessio Ceroni Fabrizio Costa Paolo Frasconi" }
+{ "authors": "Andrea Vedaldi Stefano Soatto" }
+{ "authors": "Corinna Cortes Mehryar Mohri" }
+{ "authors": "Diomidis Spinellis" }
+{ "authors": "Jianguo Lee Jingdong Wang Changshui Zhang Zhaoqi Bian" }
+{ "authors": "Kai Zhang James T. Kwok" }
+{ "authors": "Kazuhiro Hotta" }
+{ "authors": "Steven C. H. Hoi Rong Jin Michael R. Lyu" }
+{ "authors": "Temujin Gautama Marc M. Van Hulle" }
+{ "authors": "Vikas Sindhwani S. Sathiya Keerthi Olivier Chapelle" }
+{ "authors": "André Elisseeff Jason Weston" }
+{ "authors": "Annegret Weng" }
+{ "authors": "Antti Airola Sampo Pyysalo Jari Björne Tapio Pahikkala Filip Ginter Tapio Salakoski" }
+{ "authors": "Christian Poellabauer Karsten Schwan Richard West" }
+{ "authors": "Christina S. Leslie Eleazar Eskin Adiel Cohen Jason Weston William Stafford Noble" }
+{ "authors": "Christoph Heinz Bernhard Seeger" }
+{ "authors": "Darrin P. Lewis Tony Jebara William Stafford Noble" }
+{ "authors": "Ding-Xuan Zhou" }
+{ "authors": "Francis R. Bach" }
+{ "authors": "Francis R. Bach Michael I. Jordan" }
+{ "authors": "Francisco J. Ballesteros Christopher K. Hess Fabio Kon Sergio Arévalo Roy H. Campbell" }
+{ "authors": "Matthew Brand" }
+{ "authors": "Michael Engel Bernd Freisleben" }
+{ "authors": "Michael Hohmuth Hendrik Tews Shane G. Stephens" }
+{ "authors": "Rafael Serrano-Gotarredona Teresa Serrano-Gotarredona Antonio Acosta-Jimenez Bernabé Linares-Barranco" }
+{ "authors": "Robert Jenssen Torbjørn Eltoft" }
+{ "authors": "Songcan Chen Daoqiang Zhang" }
+{ "authors": "W. Chen" }
+{ "authors": "XuanLong Nguyen Michael I. Jordan Bruno Sinopoli" }
+{ "authors": "Zhe Wang Songcan Chen" }
+{ "authors": "Alexei Pozdnoukhov Samy Bengio" }
+{ "authors": "Arvind Seshadri Mark Luk Ning Qu Adrian Perrig" }
+{ "authors": "Benjamin Schrauwen Jan Van Campenhout" }
+{ "authors": "Bryan Ford Mike Hibler Jay Lepreau Patrick Tullmann Godmar Back Stephen Clawson" }
+{ "authors": "Carlos Soares Pavel Brazdil" }
+{ "authors": "Charles Crowley" }
+{ "authors": "Constance L. Heitmeyer Myla Archer Elizabeth I. Leonard John D. McLean" }
+{ "authors": "Gregory E. Fasshauer Joseph W. Jerome" }
+{ "authors": "Matthew Burnside Angelos D. Keromytis" }
+{ "authors": "Michel Neuhaus Horst Bunke" }
+{ "authors": "Nail Akar Khosrow Sohraby" }
+{ "authors": "Robert D. Russell Philip J. Hatcher" }
+{ "authors": "Roland Opfer" }
+{ "authors": "Samuel G. Steckley Shane G. Henderson" }
+{ "authors": "Subhransu Maji Alexander C. Berg Jitendra Malik" }
+{ "authors": "Tatsuo Nakajima Hideyuki Tokuda" }
+{ "authors": "Wim Van de Velde Johan Opsommer Erik H. D'Hollander" }
+{ "authors": "Andreas Argyriou Raphael Hauser Charles A. Micchelli Massimiliano Pontil" }
+{ "authors": "Arindam Choudhury Prasanth B. Nair Andy J. Keane" }
+{ "authors": "Bart Baesens Stijn Viaene Tony Van Gestel Johan A. K. Suykens Guido Dedene Bart De Moor Jan Vanthienen" }
+{ "authors": "Bastian Blankenburg Rajdeep K. Dash Sarvapali D. Ramchurn Matthias Klusch Nicholas R. Jennings" }
+{ "authors": "Brian N. Bershad" }
+{ "authors": "Cheng Soon Ong Alexander J. Smola Robert C. Williamson" }
+{ "authors": "Dit-Yan Yeung Hong Chang Guang Dai" }
+{ "authors": "Erik H. W. Meijering Karel J. Zuiderveld Max A. Viergever" }
+{ "authors": "Ernest Artiaga Albert Serra Marisa Gil" }
+{ "authors": "Francis R. Bach Gert R. G. Lanckriet Michael I. Jordan" }
+{ "authors": "Gavin C. Cawley Nicola L. C. Talbot Robert J. Foxall Stephen R. Dorling Danilo P. Mandic" }
+{ "authors": "Hiren D. Patel Sandeep K. Shukla" }
+{ "authors": "Hua-Yan Wang Qiang Yang Hongbin Zha" }
+{ "authors": "Hujun Yin" }
+{ "authors": "Ingo Mierswa Katharina Morik" }
+{ "authors": "Michel Gien" }
+{ "authors": "Qun Dai Songcan Chen" }
+{ "authors": "Simon Fowler Andy J. Wellings" }
+{ "authors": "Carsten Ditze" }
+{ "authors": "Jieping Ye Jianhui Chen Shuiwang Ji" }
+{ "authors": "Le-Jeng Shiue Ian Jones Jörg Peters" }
+{ "authors": "MoonSang Kwon Yookun Cho" }
+{ "authors": "Peter Druschel" }
+{ "authors": "R. Venkatesh Babu Patrick Pérez Patrick Bouthemy" }
+{ "authors": "Zheng Rong Yang" }
+{ "authors": "Bin Cao Dou Shen Jian-Tao Sun Qiang Yang Zheng Chen" }
+{ "authors": "Carl G. Looney" }
+{ "authors": "Chris H. Q. Ding Rong Jin Tao Li Horst D. Simon" }
+{ "authors": "Florent Lafarge Xavier Descombes Josiane Zerubia" }
+{ "authors": "Gregory D. Benson Ronald A. Olsson" }
+{ "authors": "Huzefa Rangwala George Karypis" }
+{ "authors": "Ingo Steinwart" }
+{ "authors": "Jason Weston Christina S. Leslie Eugene Ie Dengyong Zhou André Elisseeff William Stafford Noble" }
+{ "authors": "Johannes Aßfalg Karsten M. Borgwardt Hans-Peter Kriegel" }
+{ "authors": "John Penix Willem Visser Eric Engstrom Aaron Larson Nicholas Weininger" }
+{ "authors": "Joseph Reisinger Peter Stone Risto Miikkulainen" }
+{ "authors": "Keith Sullivan Sean Luke" }
+{ "authors": "Mark Baker Hong Ong" }
+{ "authors": "Matthias Daum Jan Dörrenbächer Sebastian Bogan" }
+{ "authors": "Sauro Menchetti Fabrizio Costa Paolo Frasconi" }
+{ "authors": "Shiliang Sun Changshui Zhang" }
+{ "authors": "Tony Van Gestel Bart Baesens Johan A. K. Suykens Dirk Van den Poel Dirk-Emma Baestaens Marleen Willekens" }
+{ "authors": "Volker Roth Bernd Fischer" }
+{ "authors": "YongHong Tian Tiejun Huang Wen Gao" }
+{ "authors": "Brian Kulis Sugato Basu Inderjit S. Dhillon Raymond J. Mooney" }
+{ "authors": "Chunhua Shen Anton van den Hengel Michael J. Brooks" }
+{ "authors": "Cyril Allauzen Mehryar Mohri Ameet Talwalkar" }
+{ "authors": "Francis R. Bach Romain Thibaux Michael I. Jordan" }
+{ "authors": "Greg Kuperberg" }
+{ "authors": "Guang Dai Dit-Yan Yeung" }
+{ "authors": "Guo-Jun Qi Xian-Sheng Hua Yong Rui Jinhui Tang Tao Mei Meng Wang Hong-Jiang Zhang" }
+{ "authors": "Holger Fröhlich Jörg K. Wegner Florian Sieker Andreas Zell" }
+{ "authors": "Italo J. Dejter Abel A. Delgado" }
+{ "authors": "Karsten M. Borgwardt Cheng Soon Ong Stefan Schönauer S. V. N. Vishwanathan Alexander J. Smola Hans-Peter Kriegel" }
