@@ -9036,6 +9036,11 @@
         <expected-error>Function fundv.test_func0@1 is being used. It cannot be dropped</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="http_feed">
+        <output-dir compare="Text">http_feed</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="big-object">
     <test-case FilePath="big-object">

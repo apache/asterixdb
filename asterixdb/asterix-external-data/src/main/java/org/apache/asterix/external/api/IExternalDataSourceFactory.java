@@ -38,7 +38,7 @@ public interface IExternalDataSourceFactory extends Serializable {
      * The data source type indicates whether the data source produces a continuous stream or
      * a set of records
      */
-    public enum DataSourceType {
+    enum DataSourceType {
         STREAM,
         RECORDS
     }
@@ -46,7 +46,7 @@ public interface IExternalDataSourceFactory extends Serializable {
     /**
      * @return The data source type {STREAM or RECORDS}
      */
-    public DataSourceType getDataSourceType();
+    DataSourceType getDataSourceType();
 
     /**
      * Specifies on which locations this data source is expected to run.
@@ -54,7 +54,7 @@ public interface IExternalDataSourceFactory extends Serializable {
      * @return
      * @throws AsterixException
      */
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException;
+    AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException;
 
     /**
      * Configure the data parser factory. The passed map contains key value pairs from the
@@ -63,7 +63,7 @@ public interface IExternalDataSourceFactory extends Serializable {
      * @param configuration
      * @throws AsterixException
      */
-    public void configure(IServiceContext ctx, Map<String, String> configuration)
+    void configure(IServiceContext ctx, Map<String, String> configuration)
             throws AlgebricksException, HyracksDataException;
 
     /**
@@ -71,7 +71,7 @@ public interface IExternalDataSourceFactory extends Serializable {
      *
      * @return
      */
-    public default boolean isIndexible() {
+    default boolean isIndexible() {
         return false;
     }
 
@@ -84,7 +84,7 @@ public interface IExternalDataSourceFactory extends Serializable {
      * @return
      * @throws AlgebricksException
      */
-    public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(ICcApplicationContext appCtx,
+    static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(ICcApplicationContext appCtx,
             AlgebricksAbsolutePartitionConstraint constraints, int count) throws AlgebricksException {
         if (constraints == null) {
             IClusterStateManager clusterStateManager = appCtx.getClusterStateManager();

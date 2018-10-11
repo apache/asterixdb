@@ -72,11 +72,11 @@ public class DatasourceFactoryProvider {
                     ExternalDataUtils.createExternalInputStreamFactory(libraryManager, dataverse, streamSource);
         } else {
             switch (streamSource) {
-                case ExternalDataConstants.STREAM_LOCAL_FILESYSTEM:
+                case ExternalDataConstants.KEY_ADAPTER_NAME_LOCALFS:
                     streamSourceFactory = new LocalFSInputStreamFactory();
                     break;
-                case ExternalDataConstants.SOCKET:
-                case ExternalDataConstants.ALIAS_SOCKET_ADAPTER:
+                case ExternalDataConstants.KEY_ADAPTER_NAME_SOCKET:
+                case ExternalDataConstants.KEY_ALIAS_ADAPTER_NAME_SOCKET:
                     streamSourceFactory = new SocketServerInputStreamFactory();
                     break;
                 case ExternalDataConstants.STREAM_SOCKET_CLIENT:

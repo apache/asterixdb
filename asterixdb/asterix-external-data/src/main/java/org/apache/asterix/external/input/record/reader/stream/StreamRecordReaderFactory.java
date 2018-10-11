@@ -46,9 +46,10 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
     protected IInputStreamFactory streamFactory;
     protected Map<String, String> configuration;
     protected Class recordReaderClazz;
-    private static final List<String> recordReaderNames = Collections.unmodifiableList(
-            Arrays.asList(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER, ExternalDataConstants.ALIAS_SOCKET_ADAPTER,
-                    ExternalDataConstants.SOCKET, ExternalDataConstants.STREAM_SOCKET_CLIENT));
+    private static final List<String> recordReaderNames =
+            Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER,
+                    ExternalDataConstants.KEY_ALIAS_ADAPTER_NAME_SOCKET, ExternalDataConstants.KEY_ADAPTER_NAME_SOCKET,
+                    ExternalDataConstants.STREAM_SOCKET_CLIENT));
 
     @Override
     public DataSourceType getDataSourceType() {
@@ -69,8 +70,8 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
         String reader = config.get(ExternalDataConstants.KEY_READER);
         if (reader.equals(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER)) {
             streamFactory = new LocalFSInputStreamFactory();
-        } else if (reader.equals(ExternalDataConstants.ALIAS_SOCKET_ADAPTER)
-                || reader.equals(ExternalDataConstants.SOCKET)) {
+        } else if (reader.equals(ExternalDataConstants.KEY_ALIAS_ADAPTER_NAME_SOCKET)
+                || reader.equals(ExternalDataConstants.KEY_ADAPTER_NAME_SOCKET)) {
             streamFactory = new SocketServerInputStreamFactory();
         } else if (reader.equals(ExternalDataConstants.STREAM_SOCKET_CLIENT)) {
             streamFactory = new SocketClientInputStreamFactory();
