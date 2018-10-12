@@ -38,7 +38,7 @@ public class LocalAvgTypeComputer implements IResultTypeComputer {
             IMetadataProvider<?, ?> metadataProvider) throws AlgebricksException {
         return new ARecordType(null,
                 new String[] { "sum", "count" }, new IAType[] {
-                        AUnionType.createNullableType(BuiltinType.ADOUBLE, "OptionalDouble"), BuiltinType.AINT32 },
+                        AUnionType.createNullableType(BuiltinType.ADOUBLE, "OptionalDouble"), BuiltinType.AINT64 },
                 false);
     }
 }
