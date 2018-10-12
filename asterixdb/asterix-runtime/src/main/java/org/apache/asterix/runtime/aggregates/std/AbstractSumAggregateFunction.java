@@ -95,8 +95,13 @@ public abstract class AbstractSumAggregateFunction extends AbstractAggregateFunc
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.SUM, typeTag.serialize(),
-                    aggType.serialize());
+            if (typeTag.ordinal() > aggType.ordinal()) {
+                throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.SUM, typeTag.serialize(),
+                        aggType.serialize());
+            } else {
+                throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.SUM, aggType.serialize(),
+                        typeTag.serialize());
+            }
         }
 
         if (ATypeHierarchy.canPromote(aggType, typeTag)) {

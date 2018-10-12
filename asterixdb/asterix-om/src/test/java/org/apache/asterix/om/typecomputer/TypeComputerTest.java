@@ -96,6 +96,7 @@ public class TypeComputerTest {
         exceptionalTypeComputers.add("NullableDoubleTypeComputer");
         exceptionalTypeComputers.add("RecordMergeTypeComputer");
         exceptionalTypeComputers.add("BooleanOrMissingTypeComputer");
+        exceptionalTypeComputers.add("LocalSingleVarStatisticsTypeComputer");
 
         // Tests all usual type computers.
         Reflections reflections = new Reflections("org.apache.asterix.om.typecomputer", new SubTypesScanner(false));

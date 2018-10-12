@@ -1,0 +1,7 @@
+Query:
+SELECT ELEMENT [
+FunctionCall asterix.sql-stddev@1[
+  OrderedListConstructor [
+  ]
+]
+]

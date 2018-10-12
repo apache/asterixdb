@@ -40,4 +40,7 @@ use test;
 )),'sql-max':test.array_max((
     select element t.valplus
     from  Test as t
+)),'sql-stddev':test.array_stddev((
+    select element t.valplus
+    from  Test as t
 ))};

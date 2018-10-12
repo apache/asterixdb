@@ -52,4 +52,10 @@ use test;
         select element t
         from  Test as t
     ) as i
+)),'sql-stddev':test.array_stddev((
+    select element i.valplus
+    from  (
+        select element t
+        from  Test as t
+    ) as i
 ))};

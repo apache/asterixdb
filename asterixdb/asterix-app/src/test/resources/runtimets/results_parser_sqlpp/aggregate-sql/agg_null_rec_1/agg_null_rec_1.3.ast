@@ -121,4 +121,30 @@ RecordConstructor [
       )
     ]
   )
+  (
+    LiteralExpr [STRING] [sql-stddev]
+    :
+    FunctionCall asterix.sql-stddev@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=$i ]
+          Field=valplus
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=$t ]
+            ]
+            FROM [              FunctionCall asterix.dataset@1[
+                LiteralExpr [STRING] [test.Test]
+              ]
+              AS Variable [ Name=$t ]
+            ]
+          )
+          AS Variable [ Name=$i ]
+        ]
+      )
+    ]
+  )
 ]

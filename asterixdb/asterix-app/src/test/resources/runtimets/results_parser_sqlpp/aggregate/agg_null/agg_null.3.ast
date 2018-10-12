@@ -46,6 +46,15 @@ RecordConstructor [
     ]
   )
   (
+    LiteralExpr [STRING] [stddev1]
+    :
+    FunctionCall asterix.stddev@1[
+      OrderedListConstructor [
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
     LiteralExpr [STRING] [count2]
     :
     FunctionCall asterix.count@1[
@@ -89,6 +98,16 @@ RecordConstructor [
     LiteralExpr [STRING] [max2]
     :
     FunctionCall asterix.max@1[
+      UnorderedListConstructor [
+        LiteralExpr [NULL]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [stddev2]
+    :
+    FunctionCall asterix.stddev@1[
       UnorderedListConstructor [
         LiteralExpr [NULL]
         LiteralExpr [NULL]

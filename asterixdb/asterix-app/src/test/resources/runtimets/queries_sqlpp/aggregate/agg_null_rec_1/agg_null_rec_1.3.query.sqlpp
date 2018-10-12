@@ -52,4 +52,10 @@ use test;
         select element t
         from  Test as t
     ) as i
+)),'stddev':test.strict_stddev((
+    select element i.val
+    from  (
+        select element t
+        from  Test as t
+    ) as i
 ))};

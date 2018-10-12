@@ -101,7 +101,13 @@ public abstract class AbstractSerializableSumAggregateFunction extends AbstractS
         } else if (aggType == ATypeTag.SYSTEM_NULL) {
             aggType = typeTag;
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.SUM, bytes[offset], aggType.serialize());
+            if (typeTag.ordinal() > aggType.ordinal()) {
+                throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.SUM, bytes[offset],
+                        aggType.serialize());
+            } else {
+                throw new IncompatibleTypeException(sourceLoc, BuiltinFunctions.SUM, aggType.serialize(),
+                        bytes[offset]);
+            }
         }
 
         if (ATypeHierarchy.canPromote(aggType, typeTag)) {

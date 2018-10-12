@@ -81,6 +81,22 @@ RecordConstructor [
     ]
   )
   (
+    LiteralExpr [STRING] [stddev1]
+    :
+    FunctionCall asterix.stddev@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
     LiteralExpr [STRING] [count2]
     :
     FunctionCall asterix.count@1[
@@ -149,6 +165,22 @@ RecordConstructor [
     :
     FunctionCall asterix.max@1[
       UnorderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [stddev2]
+    :
+    FunctionCall asterix.stddev@1[
+      OrderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
         ]

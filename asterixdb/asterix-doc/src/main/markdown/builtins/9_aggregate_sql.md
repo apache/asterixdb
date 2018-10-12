@@ -110,7 +110,7 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
         6.9
 
 
-### array_sql_min ###
+### array_min ###
  * Syntax:
 
         array_min(num_collection)
@@ -168,6 +168,34 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
         3.4
 
 
+### array_stddev ###
+
+ * Syntax:
+
+        array_stddev(num_collection)
+
+ * Gets the standard deviation value of the non-null and non-missing numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the average of the non-null and non-missing numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if the given collection does not contain any non-null and non-missing items,
+    * any other non-array and non-multiset input value will cause a type error,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        array_stddev( [1.2, 2.3, 3.4, 0, null] );
+
+ * The expected result is:
+
+        1.4591664287073858
+
+
 ### strict_count ###
  * Syntax:
 
@@ -214,7 +242,7 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
  * The expected result is:
 
-        [ 200.0 ]
+        200.0
 
 ### strict_sum ###
  * Syntax:
@@ -243,7 +271,7 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         600
 
-### array_min ###
+### strict_min ###
  * Syntax:
 
         strict_min(num_collection)
@@ -272,7 +300,7 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
         5.0
 
 
-### array_max ###
+### strict_max ###
  * Syntax:
 
         strict_max(num_collection)
@@ -300,3 +328,27 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         100.0
 
+### strict_stddev ###
+ * Syntax:
+
+        strict_stddev(num_collection)
+
+ * Gets the standard deviation value of the numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the average of the numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if there is a `null` or `missing` in the input collection,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        strict_stddev( [100, 200, 300] );
+
+ * The expected result is:
+
+        100.0

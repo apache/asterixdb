@@ -40,4 +40,7 @@ use test;
 )),'max':test.strict_max((
     select element t.valplus
     from  Test as t
+)), 'stddev':test.strict_stddev((
+    select element t.valplus
+    from  Test as t
 ))};

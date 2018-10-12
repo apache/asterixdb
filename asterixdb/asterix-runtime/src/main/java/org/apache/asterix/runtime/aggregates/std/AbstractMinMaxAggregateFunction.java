@@ -88,7 +88,11 @@ public abstract class AbstractMinMaxAggregateFunction extends AbstractAggregateF
             // Initialize min value.
             outputVal.assign(inputVal);
         } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
-            throw new IncompatibleTypeException(sourceLoc, "min/max", typeTag.serialize(), aggType.serialize());
+            if (typeTag.ordinal() > aggType.ordinal()) {
+                throw new IncompatibleTypeException(sourceLoc, "min/max", typeTag.serialize(), aggType.serialize());
+            } else {
+                throw new IncompatibleTypeException(sourceLoc, "min/max", aggType.serialize(), typeTag.serialize());
+            }
         } else {
 
             // If a system_null is encountered locally, it would be an error; otherwise if it is seen

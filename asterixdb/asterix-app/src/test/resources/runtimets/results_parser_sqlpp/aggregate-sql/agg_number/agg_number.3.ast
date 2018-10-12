@@ -81,6 +81,22 @@ RecordConstructor [
     ]
   )
   (
+    LiteralExpr [STRING] [sql-stddev1]
+    :
+    FunctionCall asterix.sql-stddev@1[
+      OrderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
     LiteralExpr [STRING] [sql-count2]
     :
     FunctionCall asterix.sql-count@1[
@@ -148,6 +164,22 @@ RecordConstructor [
     LiteralExpr [STRING] [sql-max2]
     :
     FunctionCall asterix.sql-max@1[
+      UnorderedListConstructor [
+        FunctionCall null.float@1[
+          LiteralExpr [STRING] [2.0]
+        ]
+        FunctionCall null.double@1[
+          LiteralExpr [STRING] [3.0]
+        ]
+        LiteralExpr [LONG] [93847382783847382]
+        LiteralExpr [LONG] [1]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-stddev2]
+    :
+    FunctionCall asterix.sql-stddev@1[
       UnorderedListConstructor [
         FunctionCall null.float@1[
           LiteralExpr [STRING] [2.0]
