@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,16 +30,20 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
+import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
+import org.apache.hyracks.algebricks.core.algebra.properties.OrderedPartitionedProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 
@@ -67,16 +72,26 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
     }
 
     @Override
-    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator iop,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
-        if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
+    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator sortOp,
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext ctx) {
+        if (sortOp.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
             if (orderProp == null) {
-                computeLocalProperties(op);
+                computeLocalProperties(sortOp);
             }
-            StructuralPropertiesVector[] r = new StructuralPropertiesVector[] { new StructuralPropertiesVector(
-                    IPartitioningProperty.UNPARTITIONED, Collections.singletonList(orderProp)) };
-            return new PhysicalRequirements(r, IPartitioningRequirementsCoordinator.NO_COORDINATION);
+            StructuralPropertiesVector[] requiredProp = new StructuralPropertiesVector[1];
+            IPartitioningProperty partitioning;
+            INodeDomain targetNodeDomain = ctx.getComputationNodeDomain();
+            if (isFullParallel((AbstractLogicalOperator) sortOp, targetNodeDomain, ctx)) {
+                // partitioning requirement: input data is re-partitioned on sort columns (global ordering)
+                // TODO(ali): static range map implementation should be fixed to require ORDERED_PARTITION and come here
+                partitioning = new OrderedPartitionedProperty(Arrays.asList(sortColumns), targetNodeDomain);
+            } else {
+                // partitioning requirement: input data is unpartitioned (i.e. must be merged at one site)
+                partitioning = IPartitioningProperty.UNPARTITIONED;
+            }
+            // local requirement: each partition must be locally ordered
+            requiredProp[0] = new StructuralPropertiesVector(partitioning, Collections.singletonList(orderProp));
+            return new PhysicalRequirements(requiredProp, IPartitioningRequirementsCoordinator.NO_COORDINATION);
         } else {
             return emptyUnaryRequirements();
         }
@@ -122,5 +137,28 @@ public abstract class AbstractStableSortPOperator extends AbstractPhysicalOperat
     @Override
     public boolean expensiveThanMaterialization() {
         return true;
+    }
+
+    /**
+     * When true, the sort operator requires ORDERED_PARTITION (only applicable to dynamic version for now).
+     * Conditions:
+     * 1. Execution mode == partitioned
+     * 2. Dynamic range map was not disabled by some checks
+     * 3. User didn't disable it
+     * 4. User didn't provide static range map
+     * 5. Physical sort operator is not in-memory
+     * 6. There are at least two partitions in the cluster
+     * @param sortOp the sort operator
+     * @param clusterDomain the partitions specification of the cluster
+     * @param ctx optimization context
+     * @return true if the sort operator should be full parallel sort, false otherwise.
+     */
+    private boolean isFullParallel(AbstractLogicalOperator sortOp, INodeDomain clusterDomain,
+            IOptimizationContext ctx) {
+        return sortOp.getAnnotations().get(OperatorAnnotations.USE_DYNAMIC_RANGE) != Boolean.FALSE
+                && !sortOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)
+                && sortOp.getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.STABLE_SORT
+                && clusterDomain.cardinality() != null && clusterDomain.cardinality() > 1
+                && ctx.getPhysicalOptimizationConfig().getSortParallel();
     }
 }

@@ -19,6 +19,7 @@
 package org.apache.hyracks.dataflow.common.data.partition;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -35,9 +36,9 @@ public class RepartitionComputerFactory implements ITuplePartitionComputerFactor
     }
 
     @Override
-    public ITuplePartitionComputer createPartitioner() {
+    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext hyracksTaskContext) {
         return new ITuplePartitionComputer() {
-            private ITuplePartitionComputer delegate = delegateFactory.createPartitioner();
+            private ITuplePartitionComputer delegate = delegateFactory.createPartitioner(hyracksTaskContext);
 
             @Override
             public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {

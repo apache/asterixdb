@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
@@ -52,6 +53,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
@@ -63,23 +65,19 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
-/*
-    This visitor inlines the input <code>nts</code> in the query plan rooted
-    at the operator being visited, with the query plan rooted at the input
-    <code>subplanInputOperator</code>.
-
-    The visitor ensures that:
-    1. live variables at <code>subplanInputOperator</code> are
-    propagated to the top-most join operator in the query plan rooted
-    at the operator being visited;
-    2. no available tuple at <code>subplanInputOperator</code> get lost along the
-    pipeline to the top-most join operator in the query plan rooted
-    at the operator being visited.
-*/
+/**
+ * This visitor inlines the input {@code nts} in the query plan rooted at the operator being visited,
+ * with the query plan rooted at the input {@code subplanInputOperator}.
+ *
+ * The visitor ensures that:
+ * 1. live variables at {@code subplanInputOperator} are propagated to the top-most join operator in the query plan
+ * rooted at the operator being visited.
+ * 2. no available tuple at {@code subplanInputOperator} get lost along the pipeline to the top-most join operator
+ * in the query plan rooted at the operator being visited.
+ */
 class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisitor<ILogicalOperator, Void> {
     // The optimization context.
     private final IOptimizationContext context;
@@ -380,6 +378,12 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
         return visitSingleInputOperator(op);
     }
 
+    @Override
+    public ILogicalOperator visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
+        throw new UnsupportedOperationException(
+                "Nested subplans with a forward operator should have been disqualified for this rewriting!");
+    }
+
     private ILogicalOperator visitSingleInputOperator(ILogicalOperator op) throws AlgebricksException {
         if (op.getInputs().size() == 1) {
             // Deals with single input operators.
@@ -395,8 +399,7 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
     }
 
     /**
-     * Inject varaibles to indicate non-matches for the right branch of
-     * a left-outer join.
+     * Inject variables to indicate non-matches for the right branch of a left-outer join.
      *
      * @param joinOp
      *            the leftouter join operator.

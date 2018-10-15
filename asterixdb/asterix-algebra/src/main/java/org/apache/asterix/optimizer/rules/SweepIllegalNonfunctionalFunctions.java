@@ -34,11 +34,12 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -101,12 +102,10 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
     private class IllegalNonfunctionalFunctionSweeperOperatorVisitor implements ILogicalOperatorVisitor<Void, Void> {
 
         private void sweepExpression(ILogicalExpression expr, ILogicalOperator op) throws AlgebricksException {
-            if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                if (!expr.isFunctional()) {
-                    AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, fce.getSourceLocation(),
-                            "Found non-functional function " + fce.getFunctionIdentifier() + " in op " + op);
-                }
+            if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL && !expr.isFunctional()) {
+                AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, fce.getSourceLocation(),
+                        "Found non-functional function " + fce.getFunctionIdentifier() + " in op " + op);
             }
         }
 
@@ -306,6 +305,12 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
 
         @Override
         public Void visitTokenizeOperator(TokenizeOperator op, Void tag) throws AlgebricksException {
+            return null;
+        }
+
+        @Override
+        public Void visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
+            sweepExpression(op.getRangeMapExpression().getValue(), op);
             return null;
         }
     }

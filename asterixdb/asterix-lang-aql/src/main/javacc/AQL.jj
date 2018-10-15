@@ -67,12 +67,12 @@ import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.expression.UnionExpr;
-import org.apache.asterix.lang.aql.util.RangeMapBuilder;
 import org.apache.asterix.lang.aql.util.AQLFormatPrintUtil;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.IParser;
+import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -150,6 +150,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.common.util.RangeMapBuilder;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -210,6 +211,10 @@ class AQLParser extends ScopeChecker implements IParser {
             return null;
         }
         return s.substring(1).trim();
+    }
+
+    private static IParser createNewParser(String statement) {
+        return new AQLParser(statement);
     }
 
     private static void checkBindingVariable(Expression returnExpression, VariableExpr var,
@@ -2419,7 +2424,7 @@ Clause OrderbyClause()throws ParseException :
           }
           if (hint.startsWith(RANGE_HINT)) {
             try{
-              oc.setRangeMap(RangeMapBuilder.parseHint(hint.substring(RANGE_HINT.length())));
+              oc.setRangeMap(RangeMapBuilder.parseHint(createNewParser(hint.substring(RANGE_HINT.length()))));
             } catch (CompilationException e) {
               throw new ParseException(e.getMessage());
             }

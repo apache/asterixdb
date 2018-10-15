@@ -149,6 +149,9 @@ public class ErrorCode {
     public static final int UNDEFINED_INVERTED_LIST_MERGE_TYPE = 113;
     public static final int NODE_IS_NOT_ACTIVE = 114;
     public static final int LOCAL_NETWORK_ERROR = 115;
+    public static final int ONE_TUPLE_RANGEMAP_EXPECTED = 116;
+    public static final int NO_RANGEMAP_PRODUCED = 117;
+    public static final int RANGEMAP_NOT_FOUND = 118;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

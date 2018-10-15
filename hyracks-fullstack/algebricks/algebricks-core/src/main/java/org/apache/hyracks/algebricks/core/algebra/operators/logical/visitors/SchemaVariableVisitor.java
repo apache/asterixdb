@@ -39,6 +39,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -314,6 +315,13 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
     @Override
     public Void visitTokenizeOperator(TokenizeOperator op, Void arg) throws AlgebricksException {
         standardLayout(op);
+        return null;
+    }
+
+    @Override
+    public Void visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
+        // only consider variables from the branch of the data source
+        VariableUtilities.getLiveVariables(op.getInputs().get(0).getValue(), schemaVariables);
         return null;
     }
 

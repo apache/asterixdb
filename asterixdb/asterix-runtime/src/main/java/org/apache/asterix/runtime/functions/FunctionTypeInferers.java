@@ -19,6 +19,9 @@
 
 package org.apache.asterix.runtime.functions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
@@ -41,9 +44,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Implementations of {@link IFunctionTypeInferer} for built-in functions
@@ -92,6 +92,26 @@ public final class FunctionTypeInferers {
                 i++;
             }
             fd.setImmutableStates((Object[]) argsTypes);
+        }
+    };
+
+    public static final IFunctionTypeInferer SET_SORTING_PARAMETERS = new IFunctionTypeInferer() {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
+            AbstractFunctionCallExpression funCallExpr = (AbstractFunctionCallExpression) expr;
+            Object[] sortingParameters = funCallExpr.getOpaqueParameters();
+            fd.setImmutableStates(sortingParameters[0], sortingParameters[1]);
+        }
+    };
+
+    public static final IFunctionTypeInferer SET_NUM_SAMPLES = new IFunctionTypeInferer() {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
+            AbstractFunctionCallExpression funCallExpr = (AbstractFunctionCallExpression) expr;
+            Object[] samplingParameters = funCallExpr.getOpaqueParameters();
+            fd.setImmutableStates(samplingParameters[0]);
         }
     };
 

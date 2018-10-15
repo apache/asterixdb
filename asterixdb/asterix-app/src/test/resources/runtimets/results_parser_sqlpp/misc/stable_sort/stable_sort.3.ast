@@ -14,4 +14,14 @@ Orderby
     Field=l_partkey
   ]
   DESC
+  FieldAccessor [
+    Variable [ Name=$i ]
+    Field=l_orderkey
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$i ]
+    Field=l_linenumber
+  ]
+  ASC
 

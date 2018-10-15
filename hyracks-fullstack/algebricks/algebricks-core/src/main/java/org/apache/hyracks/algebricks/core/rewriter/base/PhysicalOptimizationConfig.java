@@ -20,6 +20,8 @@ package org.apache.hyracks.algebricks.core.rewriter.base;
 
 import java.util.Properties;
 
+import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
+
 public class PhysicalOptimizationConfig {
     private static final int MB = 1048576;
 
@@ -31,10 +33,11 @@ public class PhysicalOptimizationConfig {
     private static final String MAX_FRAMES_FOR_TEXTSEARCH = "MAX_FRAMES_FOR_TEXTSEARCH";
     private static final String FUDGE_FACTOR = "FUDGE_FACTOR";
     private static final String MAX_RECORDS_PER_FRAME = "MAX_RECORDS_PER_FRAME";
-
     private static final String DEFAULT_HASH_GROUP_TABLE_SIZE = "DEFAULT_HASH_GROUP_TABLE_SIZE";
     private static final String DEFAULT_EXTERNAL_GROUP_TABLE_SIZE = "DEFAULT_EXTERNAL_GROUP_TABLE_SIZE";
     private static final String DEFAULT_IN_MEM_HASH_JOIN_TABLE_SIZE = "DEFAULT_IN_MEM_HASH_JOIN_TABLE_SIZE";
+    private static final String SORT_PARALLEL = "SORT_PARALLEL";
+    private static final String SORT_SAMPLES = "SORT_SAMPLES";
 
     private Properties properties = new Properties();
 
@@ -143,6 +146,22 @@ public class PhysicalOptimizationConfig {
         setInt(DEFAULT_IN_MEM_HASH_JOIN_TABLE_SIZE, tableSize);
     }
 
+    public boolean getSortParallel() {
+        return getBoolean(SORT_PARALLEL, AlgebricksConfig.SORT_PARALLEL);
+    }
+
+    public void setSortParallel(boolean sortParallel) {
+        setBoolean(SORT_PARALLEL, sortParallel);
+    }
+
+    public int getSortSamples() {
+        return getInt(SORT_SAMPLES, AlgebricksConfig.SORT_SAMPLES);
+    }
+
+    public void setSortSamples(int sortSamples) {
+        setInt(SORT_SAMPLES, sortSamples);
+    }
+
     private void setInt(String property, int value) {
         properties.setProperty(property, Integer.toString(value));
     }
@@ -167,4 +186,16 @@ public class PhysicalOptimizationConfig {
             return Double.parseDouble(value);
     }
 
+    private void setBoolean(String property, boolean value) {
+        properties.setProperty(property, Boolean.toString(value));
+    }
+
+    private boolean getBoolean(String property, boolean defaultValue) {
+        String value = properties.getProperty(property);
+        if (value == null) {
+            return defaultValue;
+        } else {
+            return Boolean.parseBoolean(value);
+        }
+    }
 }

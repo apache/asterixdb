@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -41,7 +42,7 @@ public class TestPartitionComputerFactory implements ITuplePartitionComputerFact
     }
 
     @Override
-    public ITuplePartitionComputer createPartitioner() {
+    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext ctx) {
         return new ITuplePartitionComputer() {
             private final List<Integer> destinations =
                     new ArrayList<Integer>(TestPartitionComputerFactory.this.destinations);

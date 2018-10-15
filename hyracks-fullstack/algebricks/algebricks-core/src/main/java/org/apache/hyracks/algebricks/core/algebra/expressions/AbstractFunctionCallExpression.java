@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.expressions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -205,19 +206,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
                     return false;
                 }
             }
-            if (opaqueParameters != null) {
-                if (opaqueParameters.length != fce.opaqueParameters.length) {
-                    return false;
-                }
-                for (int i = 0; i < opaqueParameters.length; i++) {
-                    Object opaqueParameter = opaqueParameters[i];
-                    Object fceOpaqueParameter = fce.opaqueParameters[i];
-                    if (!opaqueParameter.equals(fceOpaqueParameter)) {
-                        return false;
-                    }
-                }
-            }
-            return true;
+            return Arrays.deepEquals(opaqueParameters, fce.opaqueParameters);
         }
     }
 
@@ -228,9 +217,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
             h = h * 41 + e.getValue().hashCode();
         }
         if (opaqueParameters != null) {
-            for (int i = 0; i < opaqueParameters.length; i++) {
-                h = h * 31 + opaqueParameters[i].hashCode();
-            }
+            h = h * 31 + Arrays.deepHashCode(opaqueParameters);
         }
         return h;
     }

@@ -29,12 +29,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.api.constraints.Constraint;
+import org.apache.hyracks.api.constraints.expressions.ConstraintExpression;
+import org.apache.hyracks.api.constraints.expressions.LValueConstraintExpression;
+import org.apache.hyracks.api.constraints.expressions.PartitionCountExpression;
+import org.apache.hyracks.api.constraints.expressions.PartitionLocationExpression;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.IActivity;
@@ -45,15 +49,13 @@ import org.apache.hyracks.api.job.JobSpecification;
 
 public class DotFormatGenerator {
 
-    private DotFormatGenerator() {
-    }
+    private final LogicalOperatorDotVisitor dotVisitor = new LogicalOperatorDotVisitor();
 
     /**
-     * Generates DOT format for {@link JobActivityGraph} that can be visualized
-     * using any DOT format visualizer.
+     * Generates DOT format plan for {@link JobActivityGraph} that can be visualized using any DOT format visualizer.
      *
      * @param jobActivityGraph The job activity graph
-     * @return DOT format
+     * @return DOT format plan
      */
     public static String generate(final JobActivityGraph jobActivityGraph) {
         final DotFormatBuilder graphBuilder = new DotFormatBuilder(DotFormatBuilder.StringValue.of("JobActivityGraph"));
@@ -146,92 +148,74 @@ public class DotFormatGenerator {
     }
 
     /**
-     * Generates DOT format for {@link JobSpecification} that can be visualized
-     * using any DOT format visualizer.
+     * Generates DOT format plan for {@link JobSpecification} that can be visualized using any DOT format visualizer.
      *
      * @param jobSpecification The job specification
-     * @return DOT format
+     * @return DOT format plan
      */
     public static String generate(final JobSpecification jobSpecification) {
         final DotFormatBuilder graphBuilder = new DotFormatBuilder(DotFormatBuilder.StringValue.of("JobSpecification"));
         final Map<ConnectorDescriptorId, IConnectorDescriptor> connectorMap = jobSpecification.getConnectorMap();
-        final Map<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> cOp =
+        final Set<Constraint> constraints = jobSpecification.getUserConstraints();
+        Map<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> cOp =
                 jobSpecification.getConnectorOperatorMap();
-        ConnectorDescriptorId connectorId;
-        IConnectorDescriptor connector;
-        IOperatorDescriptor leftOperator;
-        IOperatorDescriptor rightOperator;
-        DotFormatBuilder.Node sourceNode;
-        DotFormatBuilder.Node destinationNode;
-        String source;
-        String destination;
-        String edgeLabel;
-        for (Map.Entry<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> entry : cOp
-                .entrySet()) {
-            connectorId = entry.getKey();
-            connector = connectorMap.get(connectorId);
-            edgeLabel = connector.getClass().getName().substring(connector.getClass().getName().lastIndexOf(".") + 1);
-            edgeLabel += "-" + connectorId;
-            leftOperator = entry.getValue().getLeft().getLeft();
-            rightOperator = entry.getValue().getRight().getLeft();
-            source = leftOperator.getClass().getName()
-                    .substring(leftOperator.getClass().getName().lastIndexOf(".") + 1);
-            sourceNode =
-                    graphBuilder.createNode(DotFormatBuilder.StringValue.of(leftOperator.getOperatorId().toString()),
-                            DotFormatBuilder.StringValue.of(leftOperator.toString() + "-" + source));
-            destination = rightOperator.getClass().getName()
-                    .substring(rightOperator.getClass().getName().lastIndexOf(".") + 1);
-            destinationNode =
-                    graphBuilder.createNode(DotFormatBuilder.StringValue.of(rightOperator.getOperatorId().toString()),
-                            DotFormatBuilder.StringValue.of(rightOperator.toString() + "-" + destination));
-            graphBuilder.createEdge(sourceNode, destinationNode).setLabel(DotFormatBuilder.StringValue.of(edgeLabel));
-        }
-
+        cOp.forEach((connId, srcAndDest) -> addToGraph(graphBuilder, constraints, connectorMap, connId, srcAndDest));
         return graphBuilder.getDotDocument();
     }
 
     /**
-     * Generates DOT format for {@link ILogicalPlan} that can be visualized
-     * using any DOT format visualizer.
+     * Generates DOT format plan for {@link ILogicalPlan} that can be visualized using any DOT format visualizer.
      *
      * @param plan  The logical plan
-     * @param dotVisitor    The DOT visitor
-     * @return DOT format
-     * @throws AlgebricksException
+     * @param showDetails whether to show the details of the operator like physical properties
+     * @return DOT format plan
+     * @throws AlgebricksException When one operator throws an exception while visiting it.
      */
-    public static String generate(ILogicalPlan plan, LogicalOperatorDotVisitor dotVisitor) throws AlgebricksException {
-        final DotFormatBuilder graphBuilder = new DotFormatBuilder(DotFormatBuilder.StringValue.of("Plan"));
+    public String generate(ILogicalPlan plan, boolean showDetails) throws AlgebricksException {
         ILogicalOperator root = plan.getRoots().get(0).getValue();
-        generateNode(graphBuilder, root, dotVisitor, new HashSet<>());
+        return generate(root, showDetails);
+    }
+
+    /**
+     * Generates DOT format plan considering "startingOp" as the root operator.
+     *
+     * @param startingOp the starting operator
+     * @param showDetails whether to show the details of the operator like physical properties
+     * @return DOT format plan
+     * @throws AlgebricksException When one operator throws an exception while visiting it.
+     */
+    public String generate(ILogicalOperator startingOp, boolean showDetails) throws AlgebricksException {
+        final DotFormatBuilder graphBuilder = new DotFormatBuilder(DotFormatBuilder.StringValue.of("Plan"));
+        generateNode(graphBuilder, startingOp, showDetails, new HashSet<>());
         return graphBuilder.getDotDocument();
     }
 
-    public static void generateNode(DotFormatBuilder dotBuilder, ILogicalOperator op,
-            LogicalOperatorDotVisitor dotVisitor, Set<ILogicalOperator> operatorsVisited) throws AlgebricksException {
-        DotFormatBuilder.StringValue destinationNodeLabel = formatStringOf(op, dotVisitor);
+    private void generateNode(DotFormatBuilder dotBuilder, ILogicalOperator op, boolean showDetails,
+            Set<ILogicalOperator> operatorsVisited) throws AlgebricksException {
+        DotFormatBuilder.StringValue destinationNodeLabel = formatStringOf(op, showDetails);
         DotFormatBuilder.Node destinationNode = dotBuilder
                 .createNode(DotFormatBuilder.StringValue.of(Integer.toString(op.hashCode())), destinationNodeLabel);
         DotFormatBuilder.StringValue sourceNodeLabel;
         DotFormatBuilder.Node sourceNode;
         for (Mutable<ILogicalOperator> child : op.getInputs()) {
-            sourceNodeLabel = formatStringOf(child.getValue(), dotVisitor);
+            sourceNodeLabel = formatStringOf(child.getValue(), showDetails);
             sourceNode = dotBuilder.createNode(
                     DotFormatBuilder.StringValue.of(Integer.toString(child.getValue().hashCode())), sourceNodeLabel);
             dotBuilder.createEdge(sourceNode, destinationNode);
             if (!operatorsVisited.contains(child.getValue())) {
-                generateNode(dotBuilder, child.getValue(), dotVisitor, operatorsVisited);
+                generateNode(dotBuilder, child.getValue(), showDetails, operatorsVisited);
             }
         }
         if (((AbstractLogicalOperator) op).hasNestedPlans()) {
             ILogicalOperator nestedOperator;
             for (ILogicalPlan nestedPlan : ((AbstractOperatorWithNestedPlans) op).getNestedPlans()) {
                 nestedOperator = nestedPlan.getRoots().get(0).getValue();
-                sourceNodeLabel = formatStringOf(nestedOperator, dotVisitor);
+                sourceNodeLabel = formatStringOf(nestedOperator, showDetails);
                 sourceNode = dotBuilder.createNode(
                         DotFormatBuilder.StringValue.of(Integer.toString(nestedOperator.hashCode())), sourceNodeLabel);
                 dotBuilder.createEdge(sourceNode, destinationNode).setLabel(DotFormatBuilder.StringValue.of("subplan"));
                 if (!operatorsVisited.contains(nestedOperator)) {
-                    generateNode(dotBuilder, nestedOperator, dotVisitor, operatorsVisited);
+                    generateNode(dotBuilder, nestedOperator, showDetails, operatorsVisited);
                 }
             }
         }
@@ -246,7 +230,7 @@ public class DotFormatGenerator {
             sourceNode = destinationNode;
             for (int i = 0; i < replicateOperator.getOutputs().size(); i++) {
                 replicateOutput = replicateOperator.getOutputs().get(i).getValue();
-                destinationNodeLabel = formatStringOf(replicateOutput, dotVisitor);
+                destinationNodeLabel = formatStringOf(replicateOutput, showDetails);
                 destinationNode = dotBuilder.createNode(
                         DotFormatBuilder.StringValue.of(Integer.toString(replicateOutput.hashCode())),
                         destinationNodeLabel);
@@ -261,16 +245,52 @@ public class DotFormatGenerator {
         operatorsVisited.add(op);
     }
 
-    private static DotFormatBuilder.StringValue formatStringOf(ILogicalOperator operator,
-            LogicalOperatorDotVisitor dotVisitor) throws AlgebricksException {
-        String formattedString = operator.accept(dotVisitor, null).trim();
-        IPhysicalOperator physicalOperator = ((AbstractLogicalOperator) operator).getPhysicalOperator();
-        if (physicalOperator != null) {
-            formattedString += "\\n" + physicalOperator.toString().trim() + " |" + operator.getExecutionMode() + "|";
-        } else {
-            formattedString += "\\n|" + operator.getExecutionMode() + "|";
-        }
-
+    private DotFormatBuilder.StringValue formatStringOf(ILogicalOperator operator, boolean showDetails)
+            throws AlgebricksException {
+        String formattedString = operator.accept(dotVisitor, showDetails).trim();
         return DotFormatBuilder.StringValue.of(formattedString);
+    }
+
+    private static void addToGraph(DotFormatBuilder graph, Set<Constraint> constraints,
+            Map<ConnectorDescriptorId, IConnectorDescriptor> connMap, ConnectorDescriptorId connId,
+            Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>> srcAndDest) {
+        IConnectorDescriptor connector = connMap.get(connId);
+        String edgeLabel;
+        edgeLabel = connector.getClass().getName().substring(connector.getClass().getName().lastIndexOf(".") + 1);
+        edgeLabel += "-" + connId;
+        IOperatorDescriptor sourceOp = srcAndDest.getLeft().getLeft();
+        IOperatorDescriptor destOp = srcAndDest.getRight().getLeft();
+        StringBuilder source = new StringBuilder(
+                sourceOp.getClass().getName().substring(sourceOp.getClass().getName().lastIndexOf(".") + 1));
+        StringBuilder destination = new StringBuilder(
+                destOp.getClass().getName().substring(destOp.getClass().getName().lastIndexOf(".") + 1));
+        // constraints
+        for (Constraint constraint : constraints) {
+            LValueConstraintExpression lvalue = constraint.getLValue();
+            if (lvalue.getTag() == ConstraintExpression.ExpressionTag.PARTITION_COUNT) {
+                PartitionCountExpression count = (PartitionCountExpression) lvalue;
+                if (count.getOperatorDescriptorId().equals(sourceOp.getOperatorId())) {
+                    source.append("\n").append(constraint);
+                }
+                if (count.getOperatorDescriptorId().equals(destOp.getOperatorId())) {
+                    destination.append("\n").append(constraint);
+                }
+            } else if (lvalue.getTag() == ConstraintExpression.ExpressionTag.PARTITION_LOCATION) {
+                PartitionLocationExpression location = (PartitionLocationExpression) lvalue;
+                if (location.getOperatorDescriptorId().equals(sourceOp.getOperatorId())) {
+                    source.append("\n").append(constraint);
+                }
+                if (location.getOperatorDescriptorId().equals(destOp.getOperatorId())) {
+                    destination.append("\n").append(constraint);
+                }
+            }
+        }
+        DotFormatBuilder.Node sourceNode =
+                graph.createNode(DotFormatBuilder.StringValue.of(sourceOp.getOperatorId().toString()),
+                        DotFormatBuilder.StringValue.of(sourceOp.toString() + "-" + source));
+        DotFormatBuilder.Node destinationNode =
+                graph.createNode(DotFormatBuilder.StringValue.of(destOp.getOperatorId().toString()),
+                        DotFormatBuilder.StringValue.of(destOp.toString() + "-" + destination));
+        graph.createEdge(sourceNode, destinationNode).setLabel(DotFormatBuilder.StringValue.of(edgeLabel));
     }
 }

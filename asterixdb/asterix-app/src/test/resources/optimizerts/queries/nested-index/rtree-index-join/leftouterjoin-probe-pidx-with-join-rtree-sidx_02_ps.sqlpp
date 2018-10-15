@@ -1,0 +1,82 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary rtree index in index subtree.
+ * Issue        : 730, 741
+ * Expected Res : Success
+ * Date         : 8th May 2014
+ */
+
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+
+create type test.TwitterUserType as
+ closed {
+  `screen-name` : string,
+  lang : string,
+  `friends-count` : integer,
+  `statuses-count` : integer,
+  name : string,
+  `followers-count` : integer
+};
+
+create type test.TweetMessageNestedType as
+ closed {
+  tweetid : bigint,
+  user : TwitterUserType,
+  `sender-location` : point,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string,
+  countA : integer,
+  countB : integer
+};
+
+create type test.TweetMessageType as
+{
+  nested : TweetMessageNestedType
+};
+
+create  dataset TweetMessages(TweetMessageType) primary key nested.tweetid;
+
+create  index twmSndLocIx  on TweetMessages (nested.`sender-location`) type rtree;
+
+create  index msgCountAIx  on TweetMessages (nested.countA) type btree;
+
+create  index msgCountBIx  on TweetMessages (nested.countB) type btree;
+
+create  index msgTextIx  on TweetMessages (nested.`message-text`) type keyword;
+
+write output to asterix_nc1:"rttest/rtree-index-join_leftouterjoin-probe-pidx-with-join-rtree-sidx_02.adm";
+set `compiler.sort.parallel` "true";
+
+select element {'tweetid1':t1.nested.tweetid,'loc1':t1.nested.`sender-location`,'nearby-message':(
+        select element {'tweetid2':t2.nested.tweetid,'loc2':t2.nested.`sender-location`}
+        from  TweetMessages as t2
+        where (test.`spatial-intersect`(t2.nested.`sender-location`,n) and (t1.nested.tweetid != t2.nested.tweetid))
+        order by t2.nested.tweetid
+    )}
+from  TweetMessages as t1
+with  n as test.`create-circle`(t1.nested.`sender-location`,0.5)
+where (t1.nested.tweetid < test.bigint('10'))
+order by t1.nested.tweetid
+;

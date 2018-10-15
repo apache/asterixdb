@@ -68,6 +68,7 @@ import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSumAgg
 import org.apache.asterix.runtime.aggregates.std.AvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.CountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.RangeMapAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalStddevAggregateDescriptor;
@@ -78,6 +79,7 @@ import org.apache.asterix.runtime.aggregates.std.IntermediateStddevAggregateDesc
 import org.apache.asterix.runtime.aggregates.std.LocalAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalMinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalSamplingAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlMinAggregateDescriptor;
@@ -458,6 +460,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(LocalStddevAggregateDescriptor.FACTORY);
         fc.add(IntermediateStddevAggregateDescriptor.FACTORY);
         fc.add(GlobalStddevAggregateDescriptor.FACTORY);
+        fc.add(LocalSamplingAggregateDescriptor.FACTORY);
+        fc.add(RangeMapAggregateDescriptor.FACTORY);
 
         // serializable aggregates
         fc.add(SerializableCountAggregateDescriptor.FACTORY);

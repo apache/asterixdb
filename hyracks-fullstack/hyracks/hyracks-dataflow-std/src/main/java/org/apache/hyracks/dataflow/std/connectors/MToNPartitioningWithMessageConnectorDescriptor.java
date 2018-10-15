@@ -45,6 +45,6 @@ public class MToNPartitioningWithMessageConnectorDescriptor extends MToNPartitio
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
         return new PartitionWithMessageDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc,
-                tpcf.createPartitioner());
+                tpcf.createPartitioner(ctx));
     }
 }

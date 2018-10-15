@@ -25,12 +25,12 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 
 public class OrderbyClause extends AbstractClause {
     private List<Expression> orderbyList;
     private List<OrderModifier> modifierList;
-    private IRangeMap rangeMap;
+    private RangeMap rangeMap; // can be null
     private int numFrames = -1;
     private int numTuples = -1;
 
@@ -90,17 +90,17 @@ public class OrderbyClause extends AbstractClause {
         this.numTuples = numTuples;
     }
 
-    public IRangeMap getRangeMap() {
+    public RangeMap getRangeMap() {
         return rangeMap;
     }
 
-    public void setRangeMap(IRangeMap rangeMap) {
+    public void setRangeMap(RangeMap rangeMap) {
         this.rangeMap = rangeMap;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(modifierList, numFrames, numTuples, orderbyList);
+        return Objects.hash(modifierList, numFrames, numTuples, orderbyList, rangeMap);
     }
 
     @Override
@@ -113,6 +113,7 @@ public class OrderbyClause extends AbstractClause {
         }
         OrderbyClause target = (OrderbyClause) object;
         return Objects.equals(modifierList, target.modifierList) && numFrames == target.numFrames
-                && numTuples == target.numTuples && orderbyList.equals(target.orderbyList);
+                && numTuples == target.numTuples && orderbyList.equals(target.orderbyList)
+                && Objects.equals(rangeMap, target.rangeMap);
     }
 }

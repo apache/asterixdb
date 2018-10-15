@@ -113,6 +113,7 @@ public class PartitionDataWriter implements IFrameWriter {
 
     @Override
     public void open() throws HyracksDataException {
+        tpc.initialize();
         for (int i = 0; i < pWriters.length; ++i) {
             isOpen[i] = true;
             pWriters[i].open();

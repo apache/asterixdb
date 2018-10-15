@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -643,6 +644,14 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             addIndent(0).append(",\n");
             pprintExprList(op.getSecondaryKeyExpressions(), indent);
         }
+        return null;
+    }
+
+    @Override
+    public Void visitForwardOperator(ForwardOperator op, Integer indent) throws AlgebricksException {
+        addIndent(indent).append("\"operator\": \"forward\"");
+        addIndent(indent).append("\"expressions\": \""
+                + op.getRangeMapExpression().getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
         return null;
     }
 

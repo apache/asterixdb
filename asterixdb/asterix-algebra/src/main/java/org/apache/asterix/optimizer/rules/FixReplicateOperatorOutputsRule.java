@@ -140,7 +140,7 @@ public class FixReplicateOperatorOutputsRule implements IAlgebraicRewriteRule {
             boolean parentFixed = false;
             for (int oldParentIndex = 0; oldParentIndex < replicateOperator.getOutputs().size(); oldParentIndex++) {
                 if (parentsPathToReplicate.contains(replicateOperator.getOutputs().get(oldParentIndex))) {
-                    replicateOperator.getOutputs().get(oldParentIndex).setValue(replicateActualParent.getValue());
+                    replicateOperator.getOutputs().set(oldParentIndex, replicateActualParent);
                     parentFixed = true;
                     updateNumberOfParentsDone(replicateOperator);
                     break;

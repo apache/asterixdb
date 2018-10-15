@@ -200,7 +200,7 @@ public class PropertiesUtil {
      * @param target
      * @return true iff pref is a prefix of target
      */
-    private static <T> boolean isPrefixOf(Iterator<T> pref, Iterator<T> target) {
+    public static <T> boolean isPrefixOf(Iterator<T> pref, Iterator<T> target) {
         while (pref.hasNext()) {
             T v = pref.next();
             if (!target.hasNext()) {
@@ -213,50 +213,65 @@ public class PropertiesUtil {
         return true;
     }
 
+    /**
+     * Normalizes or reduces the order columns argument based on the functional dependencies argument. The caller is
+     * responsible for taking caution as to how to handle the returned object since this method either returns the same
+     * object that is passed or returns a new object.
+     * @param orderColumns the order columns that are to be normalized
+     * @param functionalDependencies {@link FunctionalDependency}
+     * @return a new normalized object if normalization is applied. Otherwise, the same argument object is returned.
+     */
     public static List<OrderColumn> applyFDsToOrderColumns(List<OrderColumn> orderColumns,
-            List<FunctionalDependency> fds) {
-        // the set of vars. is ordered
-        // so we try the variables in order from last to first
-        if (fds == null || fds.isEmpty()) {
+            List<FunctionalDependency> functionalDependencies) {
+        if (functionalDependencies == null || functionalDependencies.isEmpty()) {
             return orderColumns;
         }
 
+        // the set of vars. is ordered
+        // so we try the variables in order from last to first
         int deleted = 0;
+        boolean[] removedColumns = new boolean[orderColumns.size()];
         for (int i = orderColumns.size() - 1; i >= 0; i--) {
-            for (FunctionalDependency fdep : fds) {
-                if (impliedByPrefix(orderColumns, i, fdep)) {
-                    orderColumns.set(i, null);
+            for (FunctionalDependency functionalDependency : functionalDependencies) {
+                if (impliedByPrefix(orderColumns, i, functionalDependency)) {
+                    removedColumns[i] = true;
                     deleted++;
                     break;
                 }
             }
         }
-        List<OrderColumn> norm = new ArrayList<>(orderColumns.size() - deleted);
-        for (OrderColumn oc : orderColumns) {
-            if (oc != null) {
-                norm.add(oc);
+        List<OrderColumn> normalizedColumns = new ArrayList<>(orderColumns.size() - deleted);
+        for (int i = 0; i < orderColumns.size(); i++) {
+            if (!removedColumns[i]) {
+                normalizedColumns.add(orderColumns.get(i));
             }
         }
-        return norm;
+
+        return normalizedColumns;
     }
 
+    /**
+     * Normalizes or reduces the order columns argument based on the equivalenceClasses argument. The caller is
+     * responsible for taking caution as to how to handle the returned object since this method either returns the same
+     * object that is passed or returns a new object.
+     * @param orderColumns the order columns that are to be normalized
+     * @param equivalenceClasses {@link EquivalenceClass}
+     * @return a new normalized object if normalization is applied. Otherwise, the same argument object is returned.
+     */
     public static List<OrderColumn> replaceOrderColumnsByEqClasses(List<OrderColumn> orderColumns,
             Map<LogicalVariable, EquivalenceClass> equivalenceClasses) {
         if (equivalenceClasses == null || equivalenceClasses.isEmpty()) {
             return orderColumns;
         }
         List<OrderColumn> norm = new ArrayList<>();
-        for (OrderColumn v : orderColumns) {
-            EquivalenceClass ec = equivalenceClasses.get(v.getColumn());
-            if (ec == null) {
-                norm.add(v);
-            } else {
-                if (ec.representativeIsConst()) {
-                    // trivially satisfied, so the var. can be removed
-                } else {
-                    norm.add(new OrderColumn(ec.getVariableRepresentative(), v.getOrder()));
-                }
+        for (OrderColumn orderColumn : orderColumns) {
+            EquivalenceClass columnEQClass = equivalenceClasses.get(orderColumn.getColumn());
+            if (columnEQClass == null) {
+                norm.add(orderColumn);
+            } else if (!columnEQClass.representativeIsConst()) {
+                norm.add(new OrderColumn(columnEQClass.getVariableRepresentative(), orderColumn.getOrder()));
             }
+            // else columnEQClass rep. is constant, i.e. trivially satisfied, so the var. can be removed
         }
         return norm;
     }

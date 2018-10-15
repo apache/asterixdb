@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -138,50 +139,43 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
             switch (physOp.getOperatorTag()) {
                 case BROADCAST_EXCHANGE:
                 case ONE_TO_ONE_EXCHANGE:
-                case RANDOM_MERGE_EXCHANGE: {
+                case RANDOM_MERGE_EXCHANGE:
+                case SEQUENTIAL_MERGE_EXCHANGE:
                     // No variables used.
                     break;
-                }
-                case HASH_PARTITION_EXCHANGE: {
-                    HashPartitionExchangePOperator concreteOp = (HashPartitionExchangePOperator) physOp;
-                    usedVariables.addAll(concreteOp.getHashFields());
+                case HASH_PARTITION_EXCHANGE:
+                    HashPartitionExchangePOperator hashPartitionPOp = (HashPartitionExchangePOperator) physOp;
+                    usedVariables.addAll(hashPartitionPOp.getHashFields());
                     break;
-                }
-                case HASH_PARTITION_MERGE_EXCHANGE: {
-                    HashPartitionMergeExchangePOperator concreteOp = (HashPartitionMergeExchangePOperator) physOp;
-                    usedVariables.addAll(concreteOp.getPartitionFields());
-                    for (OrderColumn orderCol : concreteOp.getOrderColumns()) {
+                case HASH_PARTITION_MERGE_EXCHANGE:
+                    HashPartitionMergeExchangePOperator hashMergePOp = (HashPartitionMergeExchangePOperator) physOp;
+                    usedVariables.addAll(hashMergePOp.getPartitionFields());
+                    for (OrderColumn orderCol : hashMergePOp.getOrderColumns()) {
                         usedVariables.add(orderCol.getColumn());
                     }
                     break;
-                }
-                case SORT_MERGE_EXCHANGE: {
-                    SortMergeExchangePOperator concreteOp = (SortMergeExchangePOperator) physOp;
-                    for (OrderColumn orderCol : concreteOp.getSortColumns()) {
+                case SORT_MERGE_EXCHANGE:
+                    SortMergeExchangePOperator sortMergePOp = (SortMergeExchangePOperator) physOp;
+                    for (OrderColumn orderCol : sortMergePOp.getSortColumns()) {
                         usedVariables.add(orderCol.getColumn());
                     }
                     break;
-                }
-                case RANGE_PARTITION_EXCHANGE: {
-                    RangePartitionExchangePOperator concreteOp = (RangePartitionExchangePOperator) physOp;
-                    for (OrderColumn partCol : concreteOp.getPartitioningFields()) {
+                case RANGE_PARTITION_EXCHANGE:
+                    RangePartitionExchangePOperator rangePartitionPOp = (RangePartitionExchangePOperator) physOp;
+                    for (OrderColumn partCol : rangePartitionPOp.getPartitioningFields()) {
                         usedVariables.add(partCol.getColumn());
                     }
                     break;
-                }
-                case RANGE_PARTITION_MERGE_EXCHANGE: {
-                    RangePartitionMergeExchangePOperator concreteOp = (RangePartitionMergeExchangePOperator) physOp;
-                    for (OrderColumn partCol : concreteOp.getPartitioningFields()) {
+                case RANGE_PARTITION_MERGE_EXCHANGE:
+                    RangePartitionMergeExchangePOperator rangeMergePOp = (RangePartitionMergeExchangePOperator) physOp;
+                    for (OrderColumn partCol : rangeMergePOp.getPartitioningFields()) {
                         usedVariables.add(partCol.getColumn());
                     }
                     break;
-                }
-                case RANDOM_PARTITION_EXCHANGE: {
+                case RANDOM_PARTITION_EXCHANGE:
                     break;
-                }
-                default: {
+                default:
                     throw new AlgebricksException("Unhandled physical operator tag '" + physOp.getOperatorTag() + "'.");
-                }
             }
         }
         return null;
@@ -435,6 +429,12 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         for (Mutable<ILogicalExpression> e : op.getSecondaryKeyExpressions()) {
             e.getValue().getUsedVariables(usedVariables);
         }
+        return null;
+    }
+
+    @Override
+    public Void visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
+        op.getRangeMapExpression().getValue().getUsedVariables(usedVariables);
         return null;
     }
 

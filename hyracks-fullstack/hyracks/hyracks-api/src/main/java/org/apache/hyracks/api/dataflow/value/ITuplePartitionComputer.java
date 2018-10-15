@@ -22,5 +22,23 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ITuplePartitionComputer {
+    /**
+     * For the tuple (located at tIndex in the frame), it determines which target partition (0,1,... nParts-1) the tuple
+     * should be sent/written to.
+     * @param accessor The accessor of the frame to access tuples
+     * @param tIndex The index of the tuple in consideration
+     * @param nParts The number of target partitions
+     * @return The chosen target partition number as dictated by the logic of the partition computer
+     * @throws HyracksDataException
+     */
     public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException;
+
+    /**
+     * Gives the data partitioner a chance to set up its environment before it starts partitioning tuples. This method
+     * should be called in the open() of {@link org.apache.hyracks.api.comm.IFrameWriter}. The default implementation
+     * is "do nothing".
+     * @throws HyracksDataException
+     */
+    public default void initialize() throws HyracksDataException {
+    }
 }

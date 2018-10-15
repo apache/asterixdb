@@ -24,6 +24,7 @@ import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicyAssignmentPoli
 import org.apache.hyracks.api.dataflow.connectors.PipeliningConnectorPolicy;
 import org.apache.hyracks.api.dataflow.connectors.SendSideMaterializedPipeliningConnectorPolicy;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningMergingConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.connectors.MToOneSequentialMergingConnectorDescriptor;
 
 public class ConnectorPolicyAssignmentPolicy implements IConnectorPolicyAssignmentPolicy {
     private static final long serialVersionUID = 1L;
@@ -33,7 +34,8 @@ public class ConnectorPolicyAssignmentPolicy implements IConnectorPolicyAssignme
     @Override
     public IConnectorPolicy getConnectorPolicyAssignment(IConnectorDescriptor c, int nProducers, int nConsumers,
             int[] fanouts) {
-        if (c instanceof MToNPartitioningMergingConnectorDescriptor) {
+        if (c instanceof MToNPartitioningMergingConnectorDescriptor
+                || c instanceof MToOneSequentialMergingConnectorDescriptor) {
             return senderSideMaterializePolicy;
         } else {
             return pipeliningPolicy;

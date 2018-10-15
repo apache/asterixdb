@@ -39,7 +39,7 @@ use TinySocial;
   "t5": (
     select value object_remove(u, "lang")
     from TwitterUsers as u
-    order by u.screen-name
+    order by u.`screen-name`
   ),
 
   /* closed type */

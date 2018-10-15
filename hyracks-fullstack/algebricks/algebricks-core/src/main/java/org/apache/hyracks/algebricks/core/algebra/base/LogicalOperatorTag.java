@@ -28,6 +28,7 @@ public enum LogicalOperatorTag {
     EXCHANGE,
     DELEGATE_OPERATOR,
     EXTERNAL_LOOKUP,
+    FORWARD,
     GROUP,
     INDEX_INSERT_DELETE_UPSERT,
     INNERJOIN,

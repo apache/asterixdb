@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.AddEquivalenceClassForRecordConstructorRule;
 import org.apache.asterix.optimizer.rules.AsterixExtractFunctionsFromJoinConditionRule;
 import org.apache.asterix.optimizer.rules.AsterixInlineVariablesRule;
@@ -31,6 +32,7 @@ import org.apache.asterix.optimizer.rules.AsterixIntroduceGroupByCombinerRule;
 import org.apache.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
 import org.apache.asterix.optimizer.rules.CancelUnnestWithNestedListifyRule;
 import org.apache.asterix.optimizer.rules.CheckFilterExpressionTypeRule;
+import org.apache.asterix.optimizer.rules.CheckFullParallelSortRule;
 import org.apache.asterix.optimizer.rules.CheckInsertUpsertReturningRule;
 import org.apache.asterix.optimizer.rules.ConstantFoldingRule;
 import org.apache.asterix.optimizer.rules.CountVarToCountOneRule;
@@ -338,7 +340,9 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new SetAlgebricksPhysicalOperatorsRule());
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
         physicalRewritesAllLevels.add(new AddEquivalenceClassForRecordConstructorRule());
-        physicalRewritesAllLevels.add(new EnforceStructuralPropertiesRule());
+        physicalRewritesAllLevels.add(new CheckFullParallelSortRule());
+        physicalRewritesAllLevels
+                .add(new EnforceStructuralPropertiesRule(BuiltinFunctions.RANGE_MAP, BuiltinFunctions.LOCAL_SAMPLING));
         physicalRewritesAllLevels.add(new RemoveSortInFeedIngestionRule());
         physicalRewritesAllLevels.add(new RemoveUnnecessarySortMergeExchange());
         physicalRewritesAllLevels.add(new PushProjectDownRule());
@@ -377,6 +381,7 @@ public final class RuleCollections {
         prepareForJobGenRewrites.add(new SetAlgebricksPhysicalOperatorsRule());
         prepareForJobGenRewrites
                 .add(new IsolateHyracksOperatorsRule(HeuristicOptimizer.hyraxOperatorsBelowWhichJobGenIsDisabled));
+        prepareForJobGenRewrites.add(new FixReplicateOperatorOutputsRule());
         prepareForJobGenRewrites.add(new ExtractCommonOperatorsRule());
         // Re-infer all types, so that, e.g., the effect of not-is-null is
         // propagated.

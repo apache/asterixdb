@@ -137,4 +137,14 @@ Orderby
     ]
   ]
   ASC
+  Variable [ Name=$itv ]
+  ASC
+  FunctionCall test.get-overlapping-interval@2[
+    FieldAccessor [
+      Variable [ Name=$gen0 ]
+      Field=bin
+    ]
+    Variable [ Name=$itv ]
+  ]
+  ASC
 

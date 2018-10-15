@@ -22,7 +22,8 @@ public interface OperatorAnnotations {
     // hints
     public static final String USE_HASH_GROUP_BY = "USE_HASH_GROUP_BY"; // -->
     public static final String USE_EXTERNAL_GROUP_BY = "USE_EXTERNAL_GROUP_BY"; // -->
-    public static final String USE_RANGE_CONNECTOR = "USE_RANGE_CONNECTOR"; // -->
+    public static final String USE_STATIC_RANGE = "USE_STATIC_RANGE"; // -->
+    public static final String USE_DYNAMIC_RANGE = "USE_DYNAMIC_RANGE";
     // Boolean
     public static final String CARDINALITY = "CARDINALITY"; // -->
     // Integer

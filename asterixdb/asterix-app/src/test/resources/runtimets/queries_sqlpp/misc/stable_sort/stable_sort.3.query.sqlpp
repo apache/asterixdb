@@ -24,8 +24,7 @@
 
 use test;
 
-
 select element i
 from  LineItem as i
-order by i.l_partkey desc
+order by i.l_partkey desc, i.l_orderkey, i.l_linenumber
 ;

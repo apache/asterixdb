@@ -18,6 +18,8 @@
  */
 use dataverse testdv2;
 
+set "compiler.sortmemory" "32MB"
+
 for $d in dataset("testds")
-order by $d.id
+order by $d.name desc, $d.id
 return $d

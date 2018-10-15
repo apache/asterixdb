@@ -28,7 +28,7 @@ use dataverse tpch;
 for $l in dataset('LineItem')
 where $l.l_orderkey>=0
       and $l.l_orderkey<100
-order by $l.l_linenumber
+order by $l.l_linenumber, $l.l_orderkey
 return {
   "l_linenumber": $l.l_linenumber,
   "l_l_orderkey": $l.l_orderkey

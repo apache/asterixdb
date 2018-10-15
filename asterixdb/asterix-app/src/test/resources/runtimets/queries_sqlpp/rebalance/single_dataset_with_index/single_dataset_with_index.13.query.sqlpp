@@ -19,6 +19,8 @@
 
 use tpch;
 
+set `compiler.sort.parallel` "false";
+
 explain select value l
 from LineItem l
 where l_shipdate="1994-01-20"

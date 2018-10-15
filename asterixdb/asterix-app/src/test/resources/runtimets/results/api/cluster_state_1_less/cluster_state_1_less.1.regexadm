@@ -12,6 +12,8 @@
     "compiler\.groupmemory" : 163840,
     "compiler\.joinmemory" : 262144,
     "compiler\.parallelism" : 3,
+    "compiler\.sort\.parallel" : true,
+    "compiler\.sort\.samples" : 100,
     "compiler\.sortmemory" : 327680,
     "compiler\.textsearchmemory" : 163840,
     "default\.dir" : "target/io/dir/asterixdb",

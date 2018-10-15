@@ -1,0 +1,80 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop  dataverse tpch if exists;
+create  dataverse tpch;
+
+use tpch;
+
+
+create type tpch.LineItemType as
+ closed {
+  l_orderkey : integer,
+  l_partkey : integer,
+  l_suppkey : integer,
+  l_linenumber : integer,
+  l_quantity : double,
+  l_extendedprice : double,
+  l_discount : double,
+  l_tax : double,
+  l_returnflag : string,
+  l_linestatus : string,
+  l_shipdate : string,
+  l_commitdate : string,
+  l_receiptdate : string,
+  l_shipinstruct : string,
+  l_shipmode : string,
+  l_comment : string
+};
+
+create  dataset LineItem(LineItemType) primary key l_orderkey,l_linenumber;
+
+load  dataset LineItem using localfs ((`path`=`asterix_nc1://data/tpch0.001/lineitem.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`)) pre-sorted;
+
+write output to asterix_nc1:"rttest/tpch_q1_pricing_summary_report_nt.adm";
+set `compiler.sort.parallel` "true";
+
+select element {'l_returnflag':l_returnflag,'l_linestatus':l_linestatus,'sum_qty':tpch.strict_sum((
+        select element i.l.l_quantity
+        from  g as i
+    )),'sum_base_price':tpch.strict_sum((
+        select element i.l.l_extendedprice
+        from  g as i
+    )),'sum_disc_price':tpch.strict_sum((
+        select element (i.l.l_extendedprice * (1 - i.l.l_discount))
+        from  g as i
+    )),'sum_charge':tpch.strict_sum((
+        select element (i.l.l_extendedprice * (1 - i.l.l_discount) * (1 + i.l.l_tax))
+        from  g as i
+    )),'ave_qty':tpch.strict_avg((
+        select element i.l.l_quantity
+        from  g as i
+    )),'ave_price':tpch.strict_avg((
+        select element i.l.l_extendedprice
+        from  g as i
+    )),'ave_disc':tpch.strict_avg((
+        select element i.l.l_discount
+        from  g as i
+    )),'count_order':tpch.strict_count(g)}
+from  LineItem as l
+where (l.l_shipdate <= '1998-09-02')
+/* +hash */
+group by l.l_returnflag as l_returnflag,l.l_linestatus as l_linestatus group as g
+order by l_returnflag,l_linestatus
+;

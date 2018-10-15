@@ -23,7 +23,6 @@ import java.io.DataOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.external.library.java.base.ByteArrayAccessibleInputStream;
 import org.apache.asterix.external.parser.JSONDataParser;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.IAObject;
@@ -35,6 +34,7 @@ import org.apache.asterix.translator.ResultProperties;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.data.std.util.ByteArrayAccessibleInputStream;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 
 import com.fasterxml.jackson.databind.JsonNode;

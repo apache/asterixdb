@@ -1,0 +1,70 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : This test case is to verify the fix for issue810. p_sort enabled.
+ * https://code.google.com/p/asterixdb/issues/detail?id=810
+ * Expected Res : SUCCESS
+ * Date         : 16th Nov. 2014
+ */
+DROP  DATAVERSE tpch IF EXISTS;
+CREATE DATAVERSE tpch;
+USE tpch;
+
+CREATE TYPE LineItemType AS CLOSED {
+  l_orderkey : integer,
+  l_partkey : integer,
+  l_suppkey : integer,
+  l_linenumber : integer,
+  l_quantity : double,
+  l_extendedprice : double,
+  l_discount : double,
+  l_tax : double,
+  l_returnflag : string,
+  l_linestatus : string,
+  l_shipdate : string,
+  l_commitdate : string,
+  l_receiptdate : string,
+  l_shipinstruct : string,
+  l_shipmode : string,
+  l_comment : string
+};
+
+CREATE DATASET LineItem(LineItemType) PRIMARY KEY l_orderkey,l_linenumber;
+
+SET `compiler.sort.parallel` "true";
+
+SELECT l_returnflag AS l_returnflag,
+       l_linestatus AS l_linestatus,
+       strict_count(cheap) AS count_cheaps,
+       strict_count(expensive) AS count_expensives
+FROM LineItem AS l
+/* +hash */
+GROUP BY l.l_returnflag AS l_returnflag,l.l_linestatus AS l_linestatus
+GROUP AS g
+LET cheap = (
+      SELECT ELEMENT m
+      FROM (FROM g SELECT VALUE l) AS m
+      WHERE m.l_discount > 0.05
+),
+expensive = (
+      SELECT ELEMENT g.l
+      FROM g
+      WHERE g.l.l_discount <= 0.05
+)
+ORDER BY l_returnflag,l_linestatus;

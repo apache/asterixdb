@@ -35,4 +35,4 @@ from
     ) as gen0,
     gen0.i as x
 let itv = test.`interval-start-from-time`(x.time,x.duration)
-order by test.`get-interval-start`(gen0.bin);
+order by test.`get-interval-start`(gen0.bin), itv, test.`get-overlapping-interval`(gen0.bin,itv);

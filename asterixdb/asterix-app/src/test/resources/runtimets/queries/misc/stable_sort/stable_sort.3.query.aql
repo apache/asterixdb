@@ -25,5 +25,5 @@
 use dataverse test;
 
 for $i in dataset LineItem
-order by $i.l_partkey desc
+order by $i.l_partkey desc, $i.l_orderkey, $i.l_linenumber
 return $i

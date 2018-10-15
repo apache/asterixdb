@@ -1,0 +1,81 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary rtree index in index subtree.
+ * Issue        : 730, 741
+ * Expected Res : Success
+ * Date         : 8th May 2014
+ */
+
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+
+create type test.TwitterUserType as
+ closed {
+  `screen-name` : string,
+  lang : string,
+  `friends-count` : integer,
+  `statuses-count` : integer,
+  name : string,
+  `followers-count` : integer
+};
+
+create type test.TweetMessageType as
+ closed {
+  tweetid : bigint,
+  user : TwitterUserType,
+  `sender-location` : point,
+  `send-time` : datetime,
+  `referred-topics` : {{string}},
+  `message-text` : string,
+  countA : integer,
+  countB : integer
+};
+
+create  dataset TweetMessages(TweetMessageType) primary key tweetid;
+
+create  index twmSndLocIx  on TweetMessages (`sender-location`) type rtree;
+
+create  index msgCountAIx  on TweetMessages (countA) type btree;
+
+create  index msgCountBIx  on TweetMessages (countB) type btree;
+
+create  index msgKeywordIx  on TweetMessages (`message-text`) type keyword;
+
+create  index msgNgramIx  on TweetMessages (`message-text`) type ngram (3);
+
+create  index topicKeywordIx  on TweetMessages (`referred-topics`) type keyword;
+
+write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm";
+set `compiler.sort.parallel` "true";
+
+select element {'tweet':{'id':t1.tweetid,'topics':t1.`message-text`},'similar-tweets':(
+        select element {'id':t2.tweetid,'topics':t2.`message-text`}
+        from  TweetMessages as t2
+        with  sim as test.`edit-distance-check`(t1.`message-text`,t2.`message-text`,7)
+        where (sim[0] and (t2.tweetid != t1.tweetid))
+        order by t2.tweetid
+    )}
+from  TweetMessages as t1
+where (t1.tweetid > test.bigint('240'))
+order by t1.tweetid
+;

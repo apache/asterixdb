@@ -1,0 +1,44 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+ /*
+  *  Description     : BTree non-enforced index verification test
+  *                  : Test that the secondary non-enforced BTree index is used. p_sort enabled.
+  *  Expected Result : Success
+  *  Date            : 12th Jun 2017
+  */
+
+drop dataverse test if exists;
+create dataverse test;
+use test;
+
+write output to asterix_nc1:"rttest/btree-index-non-enforced_btree-index-non-enforced-11.adm";
+
+create type TestOpenType as open {
+  c_id: int64
+};
+
+create dataset TestOpen(TestOpenType) primary key c_id;
+create index idx_i8 on TestOpen(c_i8:int8);
+
+set `compiler.sort.parallel` "true";
+
+select t.c_x as res
+from TestOpen t
+where t.c_i8 > 499 and t.c_i8 < 99999
+order by t.c_x;

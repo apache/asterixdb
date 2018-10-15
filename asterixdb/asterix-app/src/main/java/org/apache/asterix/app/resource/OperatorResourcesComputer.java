@@ -86,6 +86,7 @@ public class OperatorResourcesComputer {
             case INDEX_INSERT_DELETE_UPSERT:
             case INSERT_DELETE_UPSERT:
             case INTERSECT:
+            case FORWARD:
                 return getOperatorRequiredMemory(operator, frameSize);
             case LEFT_OUTER_UNNEST_MAP:
             case UNNEST_MAP:

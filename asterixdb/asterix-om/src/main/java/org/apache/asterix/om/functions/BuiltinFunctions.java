@@ -103,6 +103,7 @@ import org.apache.asterix.om.typecomputer.impl.OrderedListOfAIntervalTypeCompute
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAPointTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAStringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.OrderedListOfAnyTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ListOfSamplesTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.PropagateTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordAddFieldsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
@@ -477,6 +478,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-stddev", 1);
     public static final FunctionIdentifier LOCAL_STDDEV =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-stddev", 1);
+    public static final FunctionIdentifier LOCAL_SAMPLING =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sampling", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier RANGE_MAP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-range-map", 1);
 
     public static final FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg", 1);
     public static final FunctionIdentifier SCALAR_COUNT =
@@ -1381,6 +1386,8 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_STDDEV, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SAMPLING, ListOfSamplesTypeComputer.INSTANCE, true);
+        addPrivateFunction(RANGE_MAP, ABinaryTypeComputer.INSTANCE, true);
 
         addPrivateFunction(SERIAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
@@ -1831,6 +1838,14 @@ public class BuiltinFunctions {
         addGlobalAgg(FIRST_ELEMENT, FIRST_ELEMENT);
 
         addScalarAgg(FIRST_ELEMENT, SCALAR_FIRST_ELEMENT);
+
+        // RANGE_MAP
+        addAgg(RANGE_MAP);
+        addAgg(LOCAL_SAMPLING);
+        addLocalAgg(RANGE_MAP, LOCAL_SAMPLING);
+        addIntermediateAgg(LOCAL_SAMPLING, RANGE_MAP);
+        addIntermediateAgg(RANGE_MAP, RANGE_MAP);
+        addGlobalAgg(RANGE_MAP, RANGE_MAP);
 
         // MIN
 

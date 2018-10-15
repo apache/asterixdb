@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -39,7 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 public abstract class AbstractReplicateOperator extends AbstractLogicalOperator {
 
     private int outputArity;
-    protected boolean[] outputMaterializationFlags;
+    private boolean[] outputMaterializationFlags;
     private List<Mutable<ILogicalOperator>> outputs;
 
     public AbstractReplicateOperator(int outputArity) {
@@ -93,6 +94,19 @@ public abstract class AbstractReplicateOperator extends AbstractLogicalOperator 
 
     public List<Mutable<ILogicalOperator>> getOutputs() {
         return outputs;
+    }
+
+    public void setOutputs(List<Pair<Mutable<ILogicalOperator>, Boolean>> newOutputs) {
+        // shrinking or expanding num of outputs
+        if (outputMaterializationFlags.length != newOutputs.size()) {
+            outputMaterializationFlags = new boolean[newOutputs.size()];
+        }
+        outputs.clear();
+        for (int i = 0; i < newOutputs.size(); i++) {
+            outputs.add(newOutputs.get(i).first);
+            outputMaterializationFlags[i] = newOutputs.get(i).second;
+        }
+        outputArity = newOutputs.size();
     }
 
     @Override

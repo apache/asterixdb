@@ -190,7 +190,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         ctx.getJobletContext().getJobId(), new TaskId(getActivityId(), partition));
                 private final FrameTupleAccessor accessorBuild = new FrameTupleAccessor(rd1);
                 private final ITuplePartitionComputer hpcBuild =
-                        new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories).createPartitioner();
+                        new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories).createPartitioner(ctx);
                 private final FrameTupleAppender appender = new FrameTupleAppender();
                 private final FrameTupleAppender ftappender = new FrameTupleAppender();
                 private IFrame[] bufferForPartitions;
@@ -303,9 +303,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     }
 
                     ITuplePartitionComputer hpc0 =
-                            new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories).createPartitioner();
+                            new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories).createPartitioner(ctx);
                     ITuplePartitionComputer hpc1 =
-                            new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories).createPartitioner();
+                            new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories).createPartitioner(ctx);
                     int tableSize = (int) (state.memoryForHashtable * recordsPerFrame * factor);
                     ISerializableTable table = new SimpleSerializableHashTable(tableSize, ctx);
                     state.joiner =
@@ -385,7 +385,7 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                         new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories);
                 private final ITuplePartitionComputerFactory hpcf1 =
                         new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories);
-                private final ITuplePartitionComputer hpcProbe = hpcf0.createPartitioner();
+                private final ITuplePartitionComputer hpcProbe = hpcf0.createPartitioner(ctx);
 
                 private final FrameTupleAppender appender = new FrameTupleAppender();
                 private final FrameTupleAppender ftap = new FrameTupleAppender();
@@ -476,9 +476,9 @@ public class HybridHashJoinOperatorDescriptor extends AbstractOperatorDescriptor
                             state.joiner.releaseMemory();
                         }
                         ITuplePartitionComputer hpcRep0 =
-                                new RepartitionComputerFactory(state.nPartitions, hpcf0).createPartitioner();
+                                new RepartitionComputerFactory(state.nPartitions, hpcf0).createPartitioner(ctx);
                         ITuplePartitionComputer hpcRep1 =
-                                new RepartitionComputerFactory(state.nPartitions, hpcf1).createPartitioner();
+                                new RepartitionComputerFactory(state.nPartitions, hpcf1).createPartitioner(ctx);
                         if (state.memoryForHashtable != memsize - 2) {
                             for (int i = 0; i < state.nPartitions; i++) {
                                 ByteBuffer buf = bufferForPartitions[i].getBuffer();

@@ -36,6 +36,9 @@ create  nodegroup group1 if not exists  on
 create  dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank on group1;
 
 write output to asterix_nc1:"rttest/introhashpartitionmerge.adm";
+
+SET `compiler.sort.parallel` "false";
+
 select element token2.rank
 from  TOKENSRANKEDADM as token1,
       (
@@ -44,5 +47,4 @@ from  TOKENSRANKEDADM as token1,
     order by tokenRanked.rank
 ) as token2
 where (token1.token = token2.token)
-order by token2.rank
-;
+order by token2.rank;

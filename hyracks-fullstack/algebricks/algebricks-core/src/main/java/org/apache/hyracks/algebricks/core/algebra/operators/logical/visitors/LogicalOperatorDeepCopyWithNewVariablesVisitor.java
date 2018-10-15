@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
@@ -582,6 +583,14 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
                 this.deepCopyVariableList(op.getTokenizeVars()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getFilterExpression()), op.getOperation(),
                 op.isBulkload(), op.isPartitioned(), op.getTokenizeVarTypes());
+        deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
+        return opCopy;
+    }
+
+    @Override
+    public ILogicalOperator visitForwardOperator(ForwardOperator op, ILogicalOperator arg) throws AlgebricksException {
+        ForwardOperator opCopy = new ForwardOperator(op.getRangeMapKey(),
+                exprDeepCopyVisitor.deepCopyExpressionReference(op.getRangeMapExpression()));
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

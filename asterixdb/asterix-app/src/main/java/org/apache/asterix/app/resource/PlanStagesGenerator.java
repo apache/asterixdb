@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -67,13 +68,22 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultO
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 
+/**
+ * Visits the operator first. Then, it visits all its inputs (pre-order traversal). When it visits an operator, it adds
+ * the operator to the current stage. If the operator is a multi-stage operator, it also adds the operator to a queue
+ * to re-visit the operator again to create the other stage.
+ */
 @NotThreadSafe
 public class PlanStagesGenerator implements ILogicalOperatorVisitor<Void, Void> {
 
-    private static final int JOIN_FIRST_INPUT = 1;
-    private static final int JOIN_SECOND_INPUT = 2;
+    private static final int JOIN_NON_BLOCKING_INPUT = 0;
+    private static final int JOIN_BLOCKING_INPUT = 1;
+    private static final int JOIN_NUM_INPUTS = 2;
+    private static final int FORWARD_NON_BLOCKING_INPUT = 0;
+    private static final int FORWARD_BLOCKING_INPUT = 1;
+    private static final int FORWARD_NUM_INPUTS = 2;
     private final Set<ILogicalOperator> visitedOperators = new HashSet<>();
-    private final LinkedList<ILogicalOperator> pendingBlockingOperators = new LinkedList<>();
+    private final LinkedList<ILogicalOperator> pendingMultiStageOperators = new LinkedList<>();
     private final List<PlanStage> stages = new ArrayList<>();
     private PlanStage currentStage;
     private int stageCounter;
@@ -163,7 +173,7 @@ public class PlanStagesGenerator implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitReplicateOperator(ReplicateOperator op, Void arg) throws AlgebricksException {
-        // Makes sure that the downstream of a replicate operator is only visited once.
+        // make sure that the downstream of a replicate operator is visited only once.
         if (!visitedOperators.contains(op)) {
             visitedOperators.add(op);
             visit(op);
@@ -175,7 +185,7 @@ public class PlanStagesGenerator implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitSplitOperator(SplitOperator op, Void arg) throws AlgebricksException {
-        // Makes sure that the downstream of a split operator is only visited once.
+        // make sure that the downstream of a split operator is visited only once.
         if (!visitedOperators.contains(op)) {
             visitedOperators.add(op);
             visit(op);
@@ -300,59 +310,82 @@ public class PlanStagesGenerator implements ILogicalOperatorVisitor<Void, Void> 
         return null;
     }
 
+    @Override
+    public Void visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
+        visit(op);
+        return null;
+    }
+
     public List<PlanStage> getStages() {
         return stages;
     }
 
     private void visit(ILogicalOperator op) throws AlgebricksException {
         addToStage(op);
-        if (!pendingBlockingOperators.isEmpty()) {
-            final ILogicalOperator firstPending = pendingBlockingOperators.pop();
-            visitBlocking(firstPending);
+        if (!pendingMultiStageOperators.isEmpty()) {
+            final ILogicalOperator firstPending = pendingMultiStageOperators.pop();
+            visitMultiStageOp(firstPending);
         }
     }
 
-    private void visitBlocking(ILogicalOperator blockingOp) throws AlgebricksException {
+    private void visitMultiStageOp(ILogicalOperator multiStageOp) throws AlgebricksException {
         final PlanStage blockingOpStage = new PlanStage(++stageCounter);
-        blockingOpStage.getOperators().add(blockingOp);
+        blockingOpStage.getOperators().add(multiStageOp);
         stages.add(blockingOpStage);
         currentStage = blockingOpStage;
-        switch (blockingOp.getOperatorTag()) {
+        switch (multiStageOp.getOperatorTag()) {
             case INNERJOIN:
             case LEFTOUTERJOIN:
-                // visit only the second input
-                ILogicalOperator joinSecondInput = getJoinOperatorInput(blockingOp, JOIN_SECOND_INPUT);
-                joinSecondInput.accept(this, null);
+                // visit only the blocking input creating a new stage
+                ILogicalOperator newStageOperator = getInputAt(multiStageOp, JOIN_BLOCKING_INPUT, JOIN_NUM_INPUTS);
+                newStageOperator.accept(this, null);
                 break;
             case GROUP:
             case ORDER:
-                visitInputs(blockingOp);
+                visitInputs(multiStageOp);
+                break;
+            case FORWARD:
+                // visit only the blocking input creating a new stage
+                ILogicalOperator newStageOp = getInputAt(multiStageOp, FORWARD_BLOCKING_INPUT, FORWARD_NUM_INPUTS);
+                newStageOp.accept(this, null);
                 break;
             default:
-                throw new IllegalStateException("Unrecognized blocking operator: " + blockingOp.getOperatorTag());
+                throw new IllegalStateException("Unrecognized blocking operator: " + multiStageOp.getOperatorTag());
         }
     }
 
+    /**
+     * Adds the op argument to the current stage. If the operator is a multi-stage, it adds the operator to the pending
+     * list and continues on the branch that is non-blocking (i.e., the branch continuing on the same current stage)
+     * @param op to be added to the current stage
+     * @throws AlgebricksException
+     */
     private void addToStage(ILogicalOperator op) throws AlgebricksException {
         currentStage.getOperators().add(op);
         switch (op.getOperatorTag()) {
             case INNERJOIN:
             case LEFTOUTERJOIN:
-                pendingBlockingOperators.add(op);
+                pendingMultiStageOperators.add(op);
                 // continue on the same stage
-                final ILogicalOperator joinFirstInput = getJoinOperatorInput(op, JOIN_FIRST_INPUT);
-                joinFirstInput.accept(this, null);
+                final ILogicalOperator joinNonBlockingInput = getInputAt(op, JOIN_NON_BLOCKING_INPUT, JOIN_NUM_INPUTS);
+                joinNonBlockingInput.accept(this, null);
                 break;
             case GROUP:
                 if (isBlockingGroupBy((GroupByOperator) op)) {
-                    pendingBlockingOperators.add(op);
+                    pendingMultiStageOperators.add(op);
                     return;
                 }
                 // continue on the same stage
                 visitInputs(op);
                 break;
             case ORDER:
-                pendingBlockingOperators.add(op);
+                pendingMultiStageOperators.add(op);
+                break;
+            case FORWARD:
+                pendingMultiStageOperators.add(op);
+                // continue on the same current stage through the branch that is non-blocking
+                ILogicalOperator nonBlockingInput = getInputAt(op, FORWARD_NON_BLOCKING_INPUT, FORWARD_NUM_INPUTS);
+                nonBlockingInput.accept(this, null);
                 break;
             default:
                 visitInputs(op);
@@ -397,15 +430,16 @@ public class PlanStagesGenerator implements ILogicalOperatorVisitor<Void, Void> 
         return false;
     }
 
-    private ILogicalOperator getJoinOperatorInput(ILogicalOperator op, int inputNum) {
-        if (inputNum != JOIN_FIRST_INPUT && inputNum != JOIN_SECOND_INPUT) {
-            throw new IllegalArgumentException("invalid input number for join operator");
-        }
+    private ILogicalOperator getInputAt(ILogicalOperator op, int inputIndex, int numInputs) {
         final List<Mutable<ILogicalOperator>> inputs = op.getInputs();
-        if (inputs.size() != 2) {
-            throw new IllegalStateException("Join must have exactly two inputs. Current inputs: " + inputs.size());
+        int inSize = inputs.size();
+        if (inSize != numInputs) {
+            throw new IllegalStateException("Op must have exactly " + numInputs + " inputs. Current inputs: " + inSize);
         }
-        return op.getInputs().get(inputNum - 1).getValue();
+        if (inputIndex >= inSize) {
+            throw new IllegalArgumentException("invalid input index for operator");
+        }
+        return inputs.get(inputIndex).getValue();
     }
 
     /**

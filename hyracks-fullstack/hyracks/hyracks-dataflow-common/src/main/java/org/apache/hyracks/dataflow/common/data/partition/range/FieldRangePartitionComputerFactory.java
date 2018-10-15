@@ -19,36 +19,41 @@
 package org.apache.hyracks.dataflow.common.data.partition.range;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class FieldRangePartitionComputerFactory implements ITuplePartitionComputerFactory {
+public abstract class FieldRangePartitionComputerFactory implements ITuplePartitionComputerFactory {
     private static final long serialVersionUID = 1L;
     private final int[] rangeFields;
-    private IRangeMap rangeMap;
     private IBinaryComparatorFactory[] comparatorFactories;
 
-    public FieldRangePartitionComputerFactory(int[] rangeFields, IBinaryComparatorFactory[] comparatorFactories,
-            IRangeMap rangeMap) {
+    protected FieldRangePartitionComputerFactory(int[] rangeFields, IBinaryComparatorFactory[] comparatorFactories) {
         this.rangeFields = rangeFields;
         this.comparatorFactories = comparatorFactories;
-        this.rangeMap = rangeMap;
     }
 
+    protected abstract RangeMap getRangeMap(IHyracksTaskContext hyracksTaskContext) throws HyracksDataException;
+
     @Override
-    public ITuplePartitionComputer createPartitioner() {
+    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext hyracksTaskContext) {
         final IBinaryComparator[] comparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < comparatorFactories.length; ++i) {
             comparators[i] = comparatorFactories[i].createBinaryComparator();
         }
+
         return new ITuplePartitionComputer() {
+            private RangeMap rangeMap;
+
             @Override
-            /**
-             * Determine the range partition.
-             */
+            public void initialize() throws HyracksDataException {
+                rangeMap = getRangeMap(hyracksTaskContext);
+            }
+
+            @Override
             public int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
                 if (nParts == 1) {
                     return 0;
@@ -62,13 +67,10 @@ public class FieldRangePartitionComputerFactory implements ITuplePartitionComput
                 return (int) Math.floor(slotIndex / rangesPerPart);
             }
 
-            /*
-             * Determine the range partition.
-             */
-            public int getRangePartition(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
+            private int getRangePartition(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
                 int slotIndex = 0;
-                for (int i = 0; i < rangeMap.getSplitCount(); ++i) {
-                    int c = compareSlotAndFields(accessor, tIndex, i);
+                for (int slotNumber = 0; slotNumber < rangeMap.getSplitCount(); ++slotNumber) {
+                    int c = compareSlotAndFields(accessor, tIndex, slotNumber);
                     if (c < 0) {
                         return slotIndex;
                     }
@@ -77,18 +79,18 @@ public class FieldRangePartitionComputerFactory implements ITuplePartitionComput
                 return slotIndex;
             }
 
-            public int compareSlotAndFields(IFrameTupleAccessor accessor, int tIndex, int fieldIndex)
+            private int compareSlotAndFields(IFrameTupleAccessor accessor, int tIndex, int slotNumber)
                     throws HyracksDataException {
                 int c = 0;
                 int startOffset = accessor.getTupleStartOffset(tIndex);
                 int slotLength = accessor.getFieldSlotsLength();
-                for (int f = 0; f < comparators.length; ++f) {
-                    int fIdx = rangeFields[f];
+                for (int fieldNum = 0; fieldNum < comparators.length; ++fieldNum) {
+                    int fIdx = rangeFields[fieldNum];
                     int fStart = accessor.getFieldStartOffset(tIndex, fIdx);
                     int fEnd = accessor.getFieldEndOffset(tIndex, fIdx);
-                    c = comparators[f].compare(accessor.getBuffer().array(), startOffset + slotLength + fStart,
-                            fEnd - fStart, rangeMap.getByteArray(fieldIndex, f), rangeMap.getStartOffset(fieldIndex, f),
-                            rangeMap.getLength(fieldIndex, f));
+                    c = comparators[fieldNum].compare(accessor.getBuffer().array(), startOffset + slotLength + fStart,
+                            fEnd - fStart, rangeMap.getByteArray(), rangeMap.getStartOffset(fieldNum, slotNumber),
+                            rangeMap.getLength(fieldNum, slotNumber));
                     if (c != 0) {
                         return c;
                     }

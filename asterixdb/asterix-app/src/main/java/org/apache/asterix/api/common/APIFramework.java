@@ -36,7 +36,6 @@ import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.config.CompilerProperties;
-import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -136,7 +135,8 @@ public class APIFramework {
     private static final Set<String> CONFIGURABLE_PARAMETER_NAMES =
             ImmutableSet.of(CompilerProperties.COMPILER_JOINMEMORY_KEY, CompilerProperties.COMPILER_GROUPMEMORY_KEY,
                     CompilerProperties.COMPILER_SORTMEMORY_KEY, CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY,
-                    CompilerProperties.COMPILER_PARALLELISM_KEY, FunctionUtil.IMPORT_PRIVATE_FUNCTIONS,
+                    CompilerProperties.COMPILER_PARALLELISM_KEY, CompilerProperties.COMPILER_SORT_PARALLEL_KEY,
+                    CompilerProperties.COMPILER_SORT_SAMPLES_KEY, FunctionUtil.IMPORT_PRIVATE_FUNCTIONS,
                     FuzzyUtils.SIM_FUNCTION_PROP_NAME, FuzzyUtils.SIM_THRESHOLD_PROP_NAME,
                     StartFeedStatement.WAIT_FOR_COMPLETION, FeedActivityDetails.FEED_POLICY_NAME,
                     FeedActivityDetails.COLLECT_LOCATIONS, SqlppQueryRewriter.INLINE_WITH_OPTION,
@@ -336,12 +336,17 @@ public class APIFramework {
         int textSearchFrameLimit = getFrameLimit(CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY,
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY),
                 compilerProperties.getTextSearchMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_TEXTSEARCH, sourceLoc);
-        final PhysicalOptimizationConfig physOptConf = OptimizationConfUtil.getPhysicalOptimizationConfig();
+        int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig);
+        boolean fullParallelSort = getSortParallel(compilerProperties, querySpecificConfig);
+
+        final PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
         physOptConf.setMaxFramesExternalSort(sortFrameLimit);
         physOptConf.setMaxFramesExternalGroupBy(groupFrameLimit);
         physOptConf.setMaxFramesForJoin(joinFrameLimit);
         physOptConf.setMaxFramesForTextSearch(textSearchFrameLimit);
+        physOptConf.setSortParallel(fullParallelSort);
+        physOptConf.setSortSamples(sortNumSamples);
 
         return physOptConf;
     }
@@ -493,6 +498,25 @@ public class APIFramework {
     private static int getParallelism(String parameter, int parallelismInConfiguration) {
         IOptionType<Integer> integerIPropertyInterpreter = OptionTypes.INTEGER;
         return parameter == null ? parallelismInConfiguration : integerIPropertyInterpreter.parse(parameter);
+    }
+
+    private boolean getSortParallel(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig) {
+        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_SORT_PARALLEL_KEY);
+        if (valueInQuery != null) {
+            return OptionTypes.BOOLEAN.parse(valueInQuery);
+        }
+        return compilerProperties.getSortParallel();
+    }
+
+    private int getSortSamples(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig) {
+        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_SORT_SAMPLES_KEY);
+        if (valueInQuery != null) {
+            int parsedNumSamples = OptionTypes.INTEGER.parse(valueInQuery);
+            if (parsedNumSamples > 0) {
+                return parsedNumSamples;
+            }
+        }
+        return compilerProperties.getSortSamples();
     }
 
     // Validates if the query contains unsupported query parameters.

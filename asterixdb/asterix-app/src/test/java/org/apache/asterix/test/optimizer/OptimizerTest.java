@@ -60,6 +60,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+/**
+ * Runs the optimization tests. The current configuration runs the tests with parallel sort disabled.
+ * Note: when adding a new test case and it includes sorting, provide another test case and enable parallel sort in the
+ * query by setting the property (append the test case name with "_ps")
+ */
 @RunWith(Parameterized.class)
 public class OptimizerTest {
 

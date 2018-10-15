@@ -21,9 +21,11 @@ package org.apache.hyracks.algebricks.rewriter.rules;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -40,28 +42,41 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.FDsAndEquivClassesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractPreSortedDistinctByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractPreclusteredGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractStableSortPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AggregatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.ForwardPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.InMemoryStableSortPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionMergeExchangePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.SequentialMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.LogicalOperatorPrettyPrintVisitor;
@@ -90,13 +105,20 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.dataflow.common.data.partition.range.IRangeMap;
+import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 
 public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
     private static final String HASH_MERGE = "hash_merge";
     private static final String TRUE_CONSTANT = "true";
     private PhysicalOptimizationConfig physicalOptimizationConfig;
+    private final FunctionIdentifier rangeMapFunction;
+    private final FunctionIdentifier localSamplingFun;
+
+    public EnforceStructuralPropertiesRule(FunctionIdentifier rangeMapFunction, FunctionIdentifier localSamplingFun) {
+        this.rangeMapFunction = rangeMapFunction;
+        this.localSamplingFun = localSamplingFun;
+    }
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -204,6 +226,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
         boolean changed = false;
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+
         optimizeUsingConstraintsAndEquivClasses(op);
         PhysicalRequirements pr = op.getRequiredPhysicalPropertiesForChildren(required, context);
         IPhysicalPropertiesVector[] reqdProperties = null;
@@ -214,26 +237,19 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
         // compute properties and figure out the domain
         INodeDomain childrenDomain = null;
-        {
-            int j = 0;
-            for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
-                AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
-                // recursive call
-                if (physOptimizeOp(childRef, reqdProperties[j], nestedPlan, context)) {
-                    changed = true;
-                }
-                child.computeDeliveredPhysicalProperties(context);
-                IPhysicalPropertiesVector delivered = child.getDeliveredPhysicalProperties();
-                if (childrenDomain == null) {
-                    childrenDomain = delivered.getPartitioningProperty().getNodeDomain();
-                } else {
-                    INodeDomain dom2 = delivered.getPartitioningProperty().getNodeDomain();
-                    if (!childrenDomain.sameAs(dom2)) {
-                        childrenDomain = context.getComputationNodeDomain();
-                    }
-                }
-                j++;
+        int j = 0;
+        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
+            AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
+            changed |= physOptimizeOp(childRef, reqdProperties[j], nestedPlan, context);
+            child.computeDeliveredPhysicalProperties(context);
+            IPhysicalPropertiesVector delivered = child.getDeliveredPhysicalProperties();
+            INodeDomain childDomain = delivered.getPartitioningProperty().getNodeDomain();
+            if (childrenDomain == null) {
+                childrenDomain = delivered.getPartitioningProperty().getNodeDomain();
+            } else if (!childrenDomain.sameAs(childDomain)) {
+                childrenDomain = context.getComputationNodeDomain();
             }
+            j++;
         }
 
         if (reqdProperties != null) {
@@ -252,7 +268,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         int startChildIndex = getStartChildIndex(op, pr, nestedPlan, context);
         IPartitioningProperty firstDeliveredPartitioning = null;
         // Enforce data properties in a top-down manner.
-        for (int j = 0; j < op.getInputs().size(); j++) {
+        for (j = 0; j < op.getInputs().size(); j++) {
             // Starts from a partitioning-compatible child if any to loop over all children.
             int childIndex = (j + startChildIndex) % op.getInputs().size();
             IPhysicalPropertiesVector requiredProperty = reqdProperties[childIndex];
@@ -555,6 +571,17 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         return new MutableObject<ILogicalOperator>(oo);
     }
 
+    /**
+     * Adds exchange operators (connectors) between {@code op} & its child at index {@code childIdx}.
+     * @param op the parent operator that is requiring a specific kind of connector at its child
+     * @param i the child index where we want to have the connector
+     * @param pp the required partitioning property at that child (i.e. the required connector)
+     * @param required the physical properties required at that child (partitioning + local properties)
+     * @param deliveredByChild the physical properties delivered by that child (partitioning + local properties)
+     * @param domain the destination domain of nodes that we want the connector to connect to
+     * @param context {@link IOptimizationContext}
+     * @throws AlgebricksException
+     */
     private void addPartitioningEnforcers(ILogicalOperator op, int i, IPartitioningProperty pp,
             IPhysicalPropertiesVector required, IPhysicalPropertiesVector deliveredByChild, INodeDomain domain,
             IOptimizationContext context) throws AlgebricksException {
@@ -562,52 +589,15 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             IPhysicalOperator pop;
             switch (pp.getPartitioningType()) {
                 case UNPARTITIONED: {
-                    List<OrderColumn> ordCols = computeOrderColumns(deliveredByChild);
-                    if (ordCols.isEmpty()) {
-                        pop = new RandomMergeExchangePOperator();
-                    } else {
-                        if (op.getAnnotations().containsKey(OperatorAnnotations.USE_RANGE_CONNECTOR)) {
-                            IRangeMap rangeMap =
-                                    (IRangeMap) op.getAnnotations().get(OperatorAnnotations.USE_RANGE_CONNECTOR);
-                            pop = new RangePartitionMergeExchangePOperator(ordCols, domain, rangeMap);
-                        } else {
-                            OrderColumn[] sortColumns = new OrderColumn[ordCols.size()];
-                            sortColumns = ordCols.toArray(sortColumns);
-                            pop = new SortMergeExchangePOperator(sortColumns);
-                        }
-                    }
+                    pop = createMergingConnector(op, domain, deliveredByChild);
                     break;
                 }
                 case UNORDERED_PARTITIONED: {
-                    List<LogicalVariable> varList = new ArrayList<>(((UnorderedPartitionedProperty) pp).getColumnSet());
-                    String hashMergeHint = (String) context.getMetadataProvider().getConfig().get(HASH_MERGE);
-                    if (hashMergeHint == null || !hashMergeHint.equalsIgnoreCase(TRUE_CONSTANT)) {
-                        pop = new HashPartitionExchangePOperator(varList, domain);
-                        break;
-                    }
-                    List<ILocalStructuralProperty> cldLocals = deliveredByChild.getLocalProperties();
-                    List<ILocalStructuralProperty> reqdLocals = required.getLocalProperties();
-                    boolean propWasSet = false;
-                    pop = null;
-                    if (reqdLocals != null && cldLocals != null && allAreOrderProps(cldLocals)) {
-                        AbstractLogicalOperator c = (AbstractLogicalOperator) op.getInputs().get(i).getValue();
-                        Map<LogicalVariable, EquivalenceClass> ecs = context.getEquivalenceClassMap(c);
-                        List<FunctionalDependency> fds = context.getFDList(c);
-                        if (PropertiesUtil.matchLocalProperties(reqdLocals, cldLocals, ecs, fds)) {
-                            List<OrderColumn> orderColumns =
-                                    getOrderColumnsFromGroupingProperties(reqdLocals, cldLocals);
-                            pop = new HashPartitionMergeExchangePOperator(orderColumns, varList, domain);
-                            propWasSet = true;
-                        }
-                    }
-                    if (!propWasSet) {
-                        pop = new HashPartitionExchangePOperator(varList, domain);
-                    }
+                    pop = createHashConnector(context, deliveredByChild, domain, required, pp, i, op);
                     break;
                 }
                 case ORDERED_PARTITIONED: {
-                    pop = new RangePartitionExchangePOperator(((OrderedPartitionedProperty) pp).getOrderColumns(),
-                            domain, null);
+                    pop = createRangePartitionerConnector((AbstractLogicalOperator) op, domain, pp, i, context);
                     break;
                 }
                 case BROADCAST: {
@@ -638,6 +628,264 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 printOp((AbstractLogicalOperator) op);
             }
         }
+    }
+
+    private IPhysicalOperator createMergingConnector(ILogicalOperator parentOp, INodeDomain domain,
+            IPhysicalPropertiesVector deliveredByChild) {
+        IPhysicalOperator mergingConnector;
+        List<OrderColumn> ordCols = computeOrderColumns(deliveredByChild);
+        if (ordCols.isEmpty()) {
+            IPartitioningProperty partitioningDeliveredByChild = deliveredByChild.getPartitioningProperty();
+            if (partitioningDeliveredByChild.getPartitioningType() == PartitioningType.ORDERED_PARTITIONED) {
+                mergingConnector = new SequentialMergeExchangePOperator();
+            } else {
+                mergingConnector = new RandomMergeExchangePOperator();
+            }
+        } else {
+            if (parentOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)) {
+                RangeMap rangeMap = (RangeMap) parentOp.getAnnotations().get(OperatorAnnotations.USE_STATIC_RANGE);
+                mergingConnector = new RangePartitionMergeExchangePOperator(ordCols, domain, rangeMap);
+            } else {
+                OrderColumn[] sortColumns = new OrderColumn[ordCols.size()];
+                sortColumns = ordCols.toArray(sortColumns);
+                mergingConnector = new SortMergeExchangePOperator(sortColumns);
+            }
+        }
+        return mergingConnector;
+    }
+
+    private IPhysicalOperator createHashConnector(IOptimizationContext ctx, IPhysicalPropertiesVector deliveredByChild,
+            INodeDomain domain, IPhysicalPropertiesVector requiredAtChild, IPartitioningProperty rqdPartitioning,
+            int childIndex, ILogicalOperator parentOp) {
+        IPhysicalOperator hashConnector;
+        List<LogicalVariable> vars = new ArrayList<>(((UnorderedPartitionedProperty) rqdPartitioning).getColumnSet());
+        String hashMergeHint = (String) ctx.getMetadataProvider().getConfig().get(HASH_MERGE);
+        if (hashMergeHint == null || !hashMergeHint.equalsIgnoreCase(TRUE_CONSTANT)) {
+            hashConnector = new HashPartitionExchangePOperator(vars, domain);
+            return hashConnector;
+        }
+        List<ILocalStructuralProperty> cldLocals = deliveredByChild.getLocalProperties();
+        List<ILocalStructuralProperty> reqdLocals = requiredAtChild.getLocalProperties();
+        boolean propWasSet = false;
+        hashConnector = null;
+        if (reqdLocals != null && cldLocals != null && allAreOrderProps(cldLocals)) {
+            AbstractLogicalOperator c = (AbstractLogicalOperator) parentOp.getInputs().get(childIndex).getValue();
+            Map<LogicalVariable, EquivalenceClass> ecs = ctx.getEquivalenceClassMap(c);
+            List<FunctionalDependency> fds = ctx.getFDList(c);
+            if (PropertiesUtil.matchLocalProperties(reqdLocals, cldLocals, ecs, fds)) {
+                List<OrderColumn> orderColumns = getOrderColumnsFromGroupingProperties(reqdLocals, cldLocals);
+                hashConnector = new HashPartitionMergeExchangePOperator(orderColumns, vars, domain);
+                propWasSet = true;
+            }
+        }
+        if (!propWasSet) {
+            hashConnector = new HashPartitionExchangePOperator(vars, domain);
+        }
+        return hashConnector;
+    }
+
+    /**
+     * Creates a range-based exchange operator.
+     * @param parentOp the operator requiring range-based partitioner to have input tuples repartitioned using a range
+     * @param domain the target node domain of the range-based partitioner
+     * @param requiredPartitioning {@see OrderedPartitionedProperty}
+     * @param childIndex the index of the child at which the required partitioning is needed
+     * @param ctx optimization context
+     * @return a range-based exchange operator
+     * @throws AlgebricksException
+     */
+    private IPhysicalOperator createRangePartitionerConnector(AbstractLogicalOperator parentOp, INodeDomain domain,
+            IPartitioningProperty requiredPartitioning, int childIndex, IOptimizationContext ctx)
+            throws AlgebricksException {
+        // options for range partitioning: 1. static range map, 2. dynamic range map computed at run time
+        List<OrderColumn> partitioningColumns = ((OrderedPartitionedProperty) requiredPartitioning).getOrderColumns();
+        if (parentOp.getAnnotations().containsKey(OperatorAnnotations.USE_STATIC_RANGE)) {
+            // TODO(ali): static range map implementation should be fixed to require ORDERED_PARTITION and come here.
+            RangeMap rangeMap = (RangeMap) parentOp.getAnnotations().get(OperatorAnnotations.USE_STATIC_RANGE);
+            return new RangePartitionExchangePOperator(partitioningColumns, domain, rangeMap);
+        } else {
+            return createDynamicRangePartitionExchangePOperator(parentOp, ctx, domain, partitioningColumns, childIndex);
+        }
+    }
+
+    private IPhysicalOperator createDynamicRangePartitionExchangePOperator(AbstractLogicalOperator parentOp,
+            IOptimizationContext ctx, INodeDomain targetDomain, List<OrderColumn> partitioningColumns, int childIndex)
+            throws AlgebricksException {
+        SourceLocation sourceLoc = parentOp.getSourceLocation();
+        // #1. create the replicate operator and add it above the source op feeding parent operator
+        ReplicateOperator replicateOp = createReplicateOperator(parentOp.getInputs().get(childIndex), ctx, sourceLoc);
+
+        // these two exchange ops are needed so that the parents of replicate stay the same during later optimizations.
+        // This is because replicate operator has references to its parents. If any later optimizations add new parents,
+        // then replicate would still point to the old ones.
+        MutableObject<ILogicalOperator> replicateOpRef = new MutableObject<>(replicateOp);
+        ExchangeOperator exchToLocalAgg = createOneToOneExchangeOp(replicateOpRef, ctx);
+        ExchangeOperator exchToForward = createOneToOneExchangeOp(replicateOpRef, ctx);
+        MutableObject<ILogicalOperator> exchToLocalAggRef = new MutableObject<>(exchToLocalAgg);
+        MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchToForward);
+
+        // add the exchange--to-forward at output 0, the exchange-to-local-aggregate at output 1
+        replicateOp.getOutputs().add(exchToForwardRef);
+        replicateOp.getOutputs().add(exchToLocalAggRef);
+        // materialize the data to be able to re-read the data again after sampling is done
+        replicateOp.getOutputMaterializationFlags()[0] = true;
+
+        // #2. create the aggregate operators and their sampling functions
+        // $$samplingResultVar = local_samplingFun($$partitioning_column)
+        // $$rangeMapResultVar = global_rangeMapFun($$samplingResultVar)
+        List<LogicalVariable> samplingResultVar = new ArrayList<>(1);
+        List<LogicalVariable> rangeMapResultVar = new ArrayList<>(1);
+        List<Mutable<ILogicalExpression>> samplingFun = new ArrayList<>(1);
+        List<Mutable<ILogicalExpression>> rangeMapFun = new ArrayList<>(1);
+
+        createAggregateFunction(ctx, samplingResultVar, samplingFun, rangeMapResultVar, rangeMapFun,
+                targetDomain.cardinality(), partitioningColumns, sourceLoc);
+
+        AggregateOperator localAggOp =
+                createAggregate(samplingResultVar, false, samplingFun, exchToLocalAggRef, ctx, sourceLoc);
+        MutableObject<ILogicalOperator> localAgg = new MutableObject<>(localAggOp);
+        AggregateOperator globalAggOp = createAggregate(rangeMapResultVar, true, rangeMapFun, localAgg, ctx, sourceLoc);
+        MutableObject<ILogicalOperator> globalAgg = new MutableObject<>(globalAggOp);
+
+        // #3. create the forward operator
+        String rangeMapKey = UUID.randomUUID().toString();
+        LogicalVariable rangeMapVar = rangeMapResultVar.get(0);
+        ForwardOperator forward = createForward(rangeMapKey, rangeMapVar, exchToForwardRef, globalAgg, ctx, sourceLoc);
+        MutableObject<ILogicalOperator> forwardRef = new MutableObject<>(forward);
+
+        // replace the old input of parentOp requiring the range partitioning with the new forward op
+        parentOp.getInputs().set(childIndex, forwardRef);
+        parentOp.recomputeSchema();
+        ctx.computeAndSetTypeEnvironmentForOperator(parentOp);
+
+        return new RangePartitionExchangePOperator(partitioningColumns, rangeMapKey, targetDomain);
+    }
+
+    private static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
+            IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
+        ReplicateOperator replicateOperator = new ReplicateOperator(2);
+        replicateOperator.setPhysicalOperator(new ReplicatePOperator());
+        replicateOperator.setSourceLocation(sourceLocation);
+        replicateOperator.getInputs().add(inputOperator);
+        OperatorManipulationUtil.setOperatorMode(replicateOperator);
+        replicateOperator.recomputeSchema();
+        context.computeAndSetTypeEnvironmentForOperator(replicateOperator);
+        return replicateOperator;
+    }
+
+    /**
+     * Creates the sampling expressions and embeds them in {@code localAggFunctions} & {@code globalAggFunctions}. Also,
+     * creates the variables which will hold the result of each one.
+     * {@code localResultVariables},{@code localAggFunctions},{@code globalResultVariables} & {@code globalAggFunctions}
+     * will be used when creating the corresponding aggregate operators.
+     * @param context used to get new variables which will be assigned the samples & the range map
+     * @param localResultVariables the variable to which the stats (e.g. samples) info is assigned
+     * @param localAggFunctions the local sampling expression is added to this list
+     * @param globalResultVariables the variable to which the range map is assigned
+     * @param globalAggFunctions the expression generating a range map is added to this list
+     * @param numPartitions passed to the expression generating a range map to know how many split points are needed
+     * @param partFields the fields based on which the partitioner partitions the tuples, also sampled fields
+     * @param sourceLocation source location
+     */
+    private void createAggregateFunction(IOptimizationContext context, List<LogicalVariable> localResultVariables,
+            List<Mutable<ILogicalExpression>> localAggFunctions, List<LogicalVariable> globalResultVariables,
+            List<Mutable<ILogicalExpression>> globalAggFunctions, int numPartitions, List<OrderColumn> partFields,
+            SourceLocation sourceLocation) {
+        // prepare the arguments of the local sampling function: sampled fields
+        List<Mutable<ILogicalExpression>> sampledFields = new ArrayList<>(partFields.size());
+        partFields.forEach(f -> {
+            AbstractLogicalExpression sampledField = new VariableReferenceExpression(f.getColumn());
+            sampledField.setSourceLocation(sourceLocation);
+            sampledFields.add(new MutableObject<>(sampledField));
+        });
+
+        // local info
+        IFunctionInfo samplingFun = context.getMetadataProvider().lookupFunction(localSamplingFun);
+        AbstractFunctionCallExpression samplingExp =
+                new AggregateFunctionCallExpression(samplingFun, false, sampledFields);
+        samplingExp.setSourceLocation(sourceLocation);
+        LogicalVariable samplingResultVar = context.newVar();
+        localResultVariables.add(samplingResultVar);
+        localAggFunctions.add(new MutableObject<>(samplingExp));
+        Object[] samplingParam = { context.getPhysicalOptimizationConfig().getSortSamples() };
+        samplingExp.setOpaqueParameters(samplingParam);
+
+        // prepare the argument of the global range map generator function: the result of the local function
+        List<Mutable<ILogicalExpression>> arg = new ArrayList<>(1);
+        AbstractLogicalExpression samplingResultVarExp = new VariableReferenceExpression(samplingResultVar);
+        samplingResultVarExp.setSourceLocation(sourceLocation);
+        arg.add(new MutableObject<>(samplingResultVarExp));
+
+        // global info
+        IFunctionInfo rangeMapFun = context.getMetadataProvider().lookupFunction(rangeMapFunction);
+        AbstractFunctionCallExpression rangeMapExp = new AggregateFunctionCallExpression(rangeMapFun, true, arg);
+        rangeMapExp.setSourceLocation(sourceLocation);
+        globalResultVariables.add(context.newVar());
+        globalAggFunctions.add(new MutableObject<>(rangeMapExp));
+
+        int i = 0;
+        boolean[] ascendingFlags = new boolean[partFields.size()];
+        for (OrderColumn column : partFields) {
+            ascendingFlags[i] = column.getOrder() == OrderOperator.IOrder.OrderKind.ASC;
+            i++;
+        }
+        rangeMapExp.setOpaqueParameters(new Object[] { numPartitions, ascendingFlags });
+    }
+
+    /**
+     * Creates an aggregate operator. $$resultVariables = expressions()
+     * @param resultVariables the variables which stores the result of the aggregation
+     * @param isGlobal whether the aggregate operator is a global or local one
+     * @param expressions the aggregation functions desired
+     * @param inputOperator the input op that is feeding the aggregate operator
+     * @param context optimization context
+     * @param sourceLocation source location
+     * @return an aggregate operator with the specified information
+     * @throws AlgebricksException when there is error setting the type environment of the newly created aggregate op
+     */
+    private static AggregateOperator createAggregate(List<LogicalVariable> resultVariables, boolean isGlobal,
+            List<Mutable<ILogicalExpression>> expressions, MutableObject<ILogicalOperator> inputOperator,
+            IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
+        AggregateOperator aggregateOperator = new AggregateOperator(resultVariables, expressions);
+        aggregateOperator.setPhysicalOperator(new AggregatePOperator());
+        aggregateOperator.setSourceLocation(sourceLocation);
+        aggregateOperator.getInputs().add(inputOperator);
+        aggregateOperator.setGlobal(isGlobal);
+        if (!isGlobal) {
+            aggregateOperator.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
+        } else {
+            aggregateOperator.setExecutionMode(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
+        }
+        aggregateOperator.recomputeSchema();
+        context.computeAndSetTypeEnvironmentForOperator(aggregateOperator);
+        return aggregateOperator;
+    }
+
+    private static ExchangeOperator createOneToOneExchangeOp(MutableObject<ILogicalOperator> inputOperator,
+            IOptimizationContext context) throws AlgebricksException {
+        ExchangeOperator exchangeOperator = new ExchangeOperator();
+        exchangeOperator.setPhysicalOperator(new OneToOneExchangePOperator());
+        exchangeOperator.getInputs().add(inputOperator);
+        exchangeOperator.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
+        exchangeOperator.recomputeSchema();
+        context.computeAndSetTypeEnvironmentForOperator(exchangeOperator);
+        return exchangeOperator;
+    }
+
+    private static ForwardOperator createForward(String rangeMapKey, LogicalVariable rangeMapVariable,
+            MutableObject<ILogicalOperator> exchangeOpFromReplicate, MutableObject<ILogicalOperator> globalAggInput,
+            IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
+        AbstractLogicalExpression rangeMapExpression = new VariableReferenceExpression(rangeMapVariable);
+        rangeMapExpression.setSourceLocation(sourceLocation);
+        ForwardOperator forwardOperator = new ForwardOperator(rangeMapKey, new MutableObject<>(rangeMapExpression));
+        forwardOperator.setSourceLocation(sourceLocation);
+        forwardOperator.setPhysicalOperator(new ForwardPOperator());
+        forwardOperator.getInputs().add(exchangeOpFromReplicate);
+        forwardOperator.getInputs().add(globalAggInput);
+        OperatorManipulationUtil.setOperatorMode(forwardOperator);
+        forwardOperator.recomputeSchema();
+        context.computeAndSetTypeEnvironmentForOperator(forwardOperator);
+        return forwardOperator;
     }
 
     private boolean allAreOrderProps(List<ILocalStructuralProperty> cldLocals) {

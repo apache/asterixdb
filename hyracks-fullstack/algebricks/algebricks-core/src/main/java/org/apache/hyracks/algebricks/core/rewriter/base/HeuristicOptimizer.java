@@ -37,28 +37,19 @@ import org.apache.logging.log4j.Level;
 
 public class HeuristicOptimizer {
 
-    public static PhysicalOperatorTag[] hyracksOperators =
-            new PhysicalOperatorTag[] { PhysicalOperatorTag.DATASOURCE_SCAN, PhysicalOperatorTag.BTREE_SEARCH,
-                    PhysicalOperatorTag.EXTERNAL_GROUP_BY, PhysicalOperatorTag.HASH_GROUP_BY,
-                    PhysicalOperatorTag.HDFS_READER, PhysicalOperatorTag.HYBRID_HASH_JOIN,
-                    PhysicalOperatorTag.IN_MEMORY_HASH_JOIN, PhysicalOperatorTag.NESTED_LOOP,
-                    PhysicalOperatorTag.PRE_SORTED_DISTINCT_BY, PhysicalOperatorTag.PRE_CLUSTERED_GROUP_BY,
-                    PhysicalOperatorTag.REPLICATE, PhysicalOperatorTag.STABLE_SORT, PhysicalOperatorTag.UNION_ALL };
-    public static PhysicalOperatorTag[] hyraxOperatorsBelowWhichJobGenIsDisabled = new PhysicalOperatorTag[] {};
-
-    public static boolean isHyracksOp(PhysicalOperatorTag opTag) {
-        for (PhysicalOperatorTag t : hyracksOperators) {
-            if (t == opTag) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private final IOptimizationContext context;
     private final List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites;
     private final List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites;
     private final ILogicalPlan plan;
+
+    private static final PhysicalOperatorTag[] hyracksOperators = new PhysicalOperatorTag[] {
+            PhysicalOperatorTag.DATASOURCE_SCAN, PhysicalOperatorTag.BTREE_SEARCH,
+            PhysicalOperatorTag.EXTERNAL_GROUP_BY, PhysicalOperatorTag.HASH_GROUP_BY, PhysicalOperatorTag.HDFS_READER,
+            PhysicalOperatorTag.HYBRID_HASH_JOIN, PhysicalOperatorTag.IN_MEMORY_HASH_JOIN,
+            PhysicalOperatorTag.NESTED_LOOP, PhysicalOperatorTag.PRE_SORTED_DISTINCT_BY,
+            PhysicalOperatorTag.PRE_CLUSTERED_GROUP_BY, PhysicalOperatorTag.REPLICATE, PhysicalOperatorTag.STABLE_SORT,
+            PhysicalOperatorTag.UNION_ALL, PhysicalOperatorTag.FORWARD };
+    public static final PhysicalOperatorTag[] hyraxOperatorsBelowWhichJobGenIsDisabled = new PhysicalOperatorTag[] {};
 
     public HeuristicOptimizer(ILogicalPlan plan,
             List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites,
@@ -68,6 +59,15 @@ public class HeuristicOptimizer {
         this.context = context;
         this.logicalRewrites = logicalRewrites;
         this.physicalRewrites = physicalRewrites;
+    }
+
+    public static boolean isHyracksOp(PhysicalOperatorTag opTag) {
+        for (PhysicalOperatorTag t : hyracksOperators) {
+            if (t == opTag) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void optimize() throws AlgebricksException {
@@ -129,7 +129,6 @@ public class HeuristicOptimizer {
         if (AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled()) {
             AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting physical optimizations.\n");
         }
-        // PhysicalOptimizationsUtil.computeFDsAndEquivalenceClasses(plan);
         runOptimizationSets(plan, physicalRewrites);
     }
 

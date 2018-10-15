@@ -111,7 +111,7 @@ public abstract class AbstractExternalSortRunMerger {
 
                 int stop = runs.size();
                 currentGenerationRunAvailable.set(0, stop);
-
+                int numberOfPasses = 1;
                 while (true) {
 
                     int unUsed = selectPartialRuns(maxMergeWidth * ctx.getInitialFrameSize(), runs, partialRuns,
@@ -147,7 +147,7 @@ public abstract class AbstractExternalSortRunMerger {
                         runs.add(reader);
 
                         if (currentGenerationRunAvailable.isEmpty()) {
-
+                            numberOfPasses++;
                             if (LOGGER.isDebugEnabled()) {
                                 LOGGER.debug("generated runs:" + stop);
                             }
@@ -157,7 +157,10 @@ public abstract class AbstractExternalSortRunMerger {
                             stop = runs.size();
                         }
                     } else {
-                        LOGGER.debug("final runs: {}", stop);
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("final runs: {}", stop);
+                            LOGGER.debug("number of passes: " + numberOfPasses);
+                        }
                         merge(finalWriter, partialRuns);
                         break;
                     }

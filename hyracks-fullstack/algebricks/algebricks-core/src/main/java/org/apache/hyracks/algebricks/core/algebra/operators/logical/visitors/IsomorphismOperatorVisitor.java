@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -592,6 +593,18 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             isomorphic = false;
         }
         return isomorphic;
+    }
+
+    @Override
+    public Boolean visitForwardOperator(ForwardOperator op, ILogicalOperator arg) throws AlgebricksException {
+        AbstractLogicalOperator argOperator = (AbstractLogicalOperator) arg;
+        if (argOperator.getOperatorTag() != LogicalOperatorTag.FORWARD) {
+            return Boolean.FALSE;
+        }
+        ForwardOperator otherOp = (ForwardOperator) copyAndSubstituteVar(op, arg);
+        ILogicalExpression rangeMapExp = op.getRangeMapExpression().getValue();
+        ILogicalExpression otherRangeMapExp = otherOp.getRangeMapExpression().getValue();
+        return rangeMapExp.equals(otherRangeMapExp) && op.getRangeMapKey().equals(otherOp.getRangeMapKey());
     }
 
     @Override

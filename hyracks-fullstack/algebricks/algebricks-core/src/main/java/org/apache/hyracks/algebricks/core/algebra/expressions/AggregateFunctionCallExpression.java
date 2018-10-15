@@ -60,6 +60,8 @@ public class AggregateFunctionCallExpression extends AbstractFunctionCallExpress
         fun.setStepTwoAggregate(stepTwoAggregate);
         fun.setStepOneAggregate(stepOneAggregate);
         fun.setSourceLocation(sourceLoc);
+        // opaqueParameters are not really cloned
+        fun.setOpaqueParameters(getOpaqueParameters());
         return fun;
     }
 

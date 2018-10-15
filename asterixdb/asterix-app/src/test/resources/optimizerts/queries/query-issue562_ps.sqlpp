@@ -1,0 +1,108 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : This test case is to verify the fix for issue562
+ * https://code.google.com/p/asterixdb/issues/detail?id=562
+ * Expected Res : SUCCESS
+ * Date         : 15th Jan. 2015
+ */
+
+drop  dataverse tpch if exists;
+create  dataverse tpch;
+
+use tpch;
+
+
+create type tpch.LineItemType as
+ closed {
+  l_orderkey : integer,
+  l_partkey : integer,
+  l_suppkey : integer,
+  l_linenumber : integer,
+  l_quantity : integer,
+  l_extendedprice : double,
+  l_discount : double,
+  l_tax : double,
+  l_returnflag : string,
+  l_linestatus : string,
+  l_shipdate : string,
+  l_commitdate : string,
+  l_receiptdate : string,
+  l_shipinstruct : string,
+  l_shipmode : string,
+  l_comment : string
+};
+
+create type tpch.OrderType as
+ closed {
+  o_orderkey : integer,
+  o_custkey : integer,
+  o_orderstatus : string,
+  o_totalprice : double,
+  o_orderdate : string,
+  o_orderpriority : string,
+  o_clerk : string,
+  o_shippriority : integer,
+  o_comment : string
+};
+
+create type tpch.CustomerType as
+ closed {
+  c_custkey : integer,
+  c_name : string,
+  c_address : string,
+  c_nationkey : integer,
+  c_phone : string,
+  c_acctbal : double,
+  c_mktsegment : string,
+  c_comment : string
+};
+
+create  dataset Orders(OrderType) primary key o_orderkey;
+
+create  dataset Customer(CustomerType) primary key c_custkey;
+set `compiler.sort.parallel` "true";
+
+declare function q22_customer_tmp() {
+(
+    select element {'c_acctbal':c.c_acctbal,'c_custkey':c.c_custkey,'cntrycode':phone_substr}
+    from  Customer as c
+    with  phone_substr as tpch.substring(c.c_phone,0,2)
+    where ((phone_substr = '13') or (phone_substr = '31') or (phone_substr = '23') or (phone_substr = '29') or (phone_substr = '30') or (phone_substr = '18') or (phone_substr = '17'))
+)
+};
+with  avg as tpch.strict_avg((
+      select element c.c_acctbal
+      from  Customer as c
+      with  phone_substr as tpch.substring(c.c_phone,0,2)
+      where ((c.c_acctbal > 0.0) and ((phone_substr = '13') or (phone_substr = '31') or (phone_substr = '23') or (phone_substr = '29') or (phone_substr = '30') or (phone_substr = '18') or (phone_substr = '17')))
+  ))
+select element {'cntrycode':cntrycode,'numcust':tpch.strict_count(g),'totacctbal':tpch.strict_sum((
+        select element i.ct.c_acctbal
+        from  g as i
+    ))}
+from  tpch.q22_customer_tmp() as ct
+where (tpch.strict_count((
+    select element o
+    from  Orders as o
+    where (ct.c_custkey = o.o_custkey)
+)) = 0)
+group by ct.cntrycode as cntrycode group as g
+order by cntrycode
+;

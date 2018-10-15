@@ -67,15 +67,18 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 public class InlineVariablesRule implements IAlgebraicRewriteRule {
 
-    // Map of variables that could be replaced by their producing expression.
-    // Populated during the top-down sweep of the plan.
-    protected Map<LogicalVariable, ILogicalExpression> varAssignRhs = new HashMap<>();
-    // Visitor for replacing variable reference expressions with their originating expression.
+    // map of variables that could be replaced by their producing expression.
+    // populated during the top-down sweep of the plan.
+    private Map<LogicalVariable, ILogicalExpression> varAssignRhs = new HashMap<>();
+    // visitor for replacing variable reference expressions with their originating expression.
     protected InlineVariablesVisitor inlineVisitor = new InlineVariablesVisitor(varAssignRhs);
-    // Set of FunctionIdentifiers that we should not inline.
+    // set of FunctionIdentifiers that we should not inline.
     protected Set<FunctionIdentifier> doNotInlineFuncs = new HashSet<>();
-    // Indicates whether the rule has been run
-    protected boolean hasRun = false;
+    // indicates whether the rule has been run
+    private boolean hasRun = false;
+    // set to prevent re-visiting a subtree from the other sides. Operators with multiple outputs are the ones that
+    // could be re-visited twice or more (e.g. replicate and split operators)
+    private final Map<ILogicalOperator, Boolean> subTreesDone = new HashMap<>();
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
@@ -103,6 +106,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     protected void prepare(IOptimizationContext context) {
         varAssignRhs.clear();
         inlineVisitor.setContext(context);
+        subTreesDone.clear();
     }
 
     protected boolean performBottomUpAction(AbstractLogicalOperator op) throws AlgebricksException {
@@ -118,10 +122,14 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    protected boolean inlineVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+    private boolean inlineVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
+        // check if you have already visited the subtree rooted at this operator
+        if (subTreesDone.containsKey(op)) {
+            return subTreesDone.get(op);
+        }
         // Update mapping from variables to expressions during top-down traversal.
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
@@ -183,6 +191,10 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             // Re-enable rules that we may have already tried. They could be applicable now after inlining.
             context.removeFromAlreadyCompared(opRef.getValue());
         }
+        // mark the subtree rooted at op as visited so that you don't visit it again
+        if (op.getOperatorTag() == LogicalOperatorTag.REPLICATE || op.getOperatorTag() == LogicalOperatorTag.SPLIT) {
+            subTreesDone.put(op, modified);
+        }
 
         return modified;
     }
@@ -209,7 +221,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
             this.context = context;
         }
 
-        public void setOperator(ILogicalOperator op) throws AlgebricksException {
+        public void setOperator(ILogicalOperator op) {
             this.op = op;
             liveVars.clear();
         }

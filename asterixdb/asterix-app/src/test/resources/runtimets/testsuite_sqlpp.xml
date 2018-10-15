@@ -4339,6 +4339,16 @@
         <output-dir compare="Text">uuid</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="p_sort_seq_merge">
+        <output-dir compare="Text">p_sort_seq_merge</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="p_sort_num_samples">
+        <output-dir compare="Text">p_sort_num_samples</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index">
     <test-group name="index/validations">

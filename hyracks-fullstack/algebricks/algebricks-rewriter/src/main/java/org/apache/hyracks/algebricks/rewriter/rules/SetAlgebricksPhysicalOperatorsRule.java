@@ -59,6 +59,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.DataSourceS
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.DistributeResultPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.EmptyTupleSourcePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.ForwardPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.InMemoryStableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.IndexBulkloadPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.IndexInsertDeleteUpsertPOperator;
@@ -394,6 +395,9 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     op.setPhysicalOperator(new SinkPOperator());
                     break;
                 }
+                case FORWARD:
+                    op.setPhysicalOperator(new ForwardPOperator());
+                    break;
             }
         }
         if (op.hasNestedPlans()) {

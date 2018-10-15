@@ -21,6 +21,7 @@ package org.apache.hyracks.dataflow.common.data.partition;
 import java.util.Random;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -30,7 +31,7 @@ public class RandomPartitionComputerFactory implements ITuplePartitionComputerFa
     private static final long serialVersionUID = 1L;
 
     @Override
-    public ITuplePartitionComputer createPartitioner() {
+    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext hyracksTaskContext) {
         return new ITuplePartitionComputer() {
 
             private final Random random = new Random();

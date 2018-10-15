@@ -18,16 +18,19 @@
  */
 package org.apache.asterix.optimizer.rules.subplan;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
@@ -227,6 +230,12 @@ class SubplanSpecialFlatteningCheckVisitor implements IQueryOperatorVisitor<Bool
     @Override
     public Boolean visitTokenizeOperator(TokenizeOperator op, Void arg) throws AlgebricksException {
         return visitInputs(op);
+    }
+
+    @Override
+    public Boolean visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
+        throw new CompilationException(ErrorCode.COMPILATION_ERROR, op.getSourceLocation(),
+                "Forward operator should have been disqualified for this rewriting!");
     }
 
     private boolean visitInputs(ILogicalOperator op) throws AlgebricksException {

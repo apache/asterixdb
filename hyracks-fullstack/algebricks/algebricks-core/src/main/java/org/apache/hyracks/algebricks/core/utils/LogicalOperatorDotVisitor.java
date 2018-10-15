@@ -18,14 +18,20 @@
  */
 package org.apache.hyracks.algebricks.core.utils;
 
+import static org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType.LOCAL_GROUPING_PROPERTY;
+import static org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty.PropertyType.LOCAL_ORDER_PROPERTY;
+
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -35,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -62,9 +69,14 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String, Void> {
+public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String, Boolean> {
 
     private final StringBuilder stringBuilder;
 
@@ -82,161 +94,214 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     }
 
     @Override
-    public String visitAggregateOperator(AggregateOperator op, Void noArgs) throws AlgebricksException {
+    public String visitAggregateOperator(AggregateOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("aggregate ").append(str(op.getVariables())).append(" <- ");
-        pprintExprList(op.getExpressions());
+        printExprList(op.getExpressions());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitRunningAggregateOperator(RunningAggregateOperator op, Void noArgs) throws AlgebricksException {
+    public String visitRunningAggregateOperator(RunningAggregateOperator op, Boolean showDetails)
+            throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("running-aggregate ").append(str(op.getVariables())).append(" <- ");
-        pprintExprList(op.getExpressions());
+        printExprList(op.getExpressions());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op, Void noArgs) throws AlgebricksException {
+    public String visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         stringBuilder.append("empty-tuple-source");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitGroupByOperator(GroupByOperator op, Void noArgs) throws AlgebricksException {
+    public String visitGroupByOperator(GroupByOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("group by").append(op.isGroupAll() ? " (all)" : "").append(" (");
-        pprintVeList(op.getGroupByList());
+        printVariableAndExprList(op.getGroupByList());
         stringBuilder.append(") decor (");
-        pprintVeList(op.getDecorList());
+        printVariableAndExprList(op.getDecorList());
         stringBuilder.append(")");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitDistinctOperator(DistinctOperator op, Void noArgs) throws AlgebricksException {
+    public String visitDistinctOperator(DistinctOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         stringBuilder.append("distinct (");
-        pprintExprList(op.getExpressions());
+        printExprList(op.getExpressions());
         stringBuilder.append(")");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitInnerJoinOperator(InnerJoinOperator op, Void noArgs) throws AlgebricksException {
+    public String visitInnerJoinOperator(InnerJoinOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("join (").append(op.getCondition().getValue().toString()).append(")");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Void noArgs) throws AlgebricksException {
+    public String visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("left outer join (").append(op.getCondition().getValue().toString()).append(")");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitNestedTupleSourceOperator(NestedTupleSourceOperator op, Void noArgs) throws AlgebricksException {
+    public String visitNestedTupleSourceOperator(NestedTupleSourceOperator op, Boolean showDetails)
+            throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("nested tuple source");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitOrderOperator(OrderOperator op, Void noArgs) throws AlgebricksException {
+    public String visitOrderOperator(OrderOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("order ");
         for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
             if (op.getTopK() != -1) {
                 stringBuilder.append("(topK: ").append(op.getTopK()).append(") ");
             }
-            String fst = getOrderString(p.first);
-            stringBuilder.append("(").append(fst).append(", ").append(p.second.getValue().toString()).append(") ");
+            stringBuilder.append("(");
+            switch (p.first.getKind()) {
+                case ASC:
+                    stringBuilder.append("ASC");
+                    break;
+                case DESC:
+                    stringBuilder.append("DESC");
+                    break;
+                default:
+                    final Mutable<ILogicalExpression> expressionRef = p.first.getExpressionRef();
+                    stringBuilder.append(expressionRef == null ? "null" : expressionRef.toString());
+            }
+            stringBuilder.append(", ").append(p.second.getValue().toString()).append(") ");
         }
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
-    private String getOrderString(OrderOperator.IOrder first) {
-        switch (first.getKind()) {
-            case ASC:
-                return "ASC";
-            case DESC:
-                return "DESC";
-            default:
-                return first.getExpressionRef().toString();
-        }
-    }
-
     @Override
-    public String visitAssignOperator(AssignOperator op, Void noArgs) throws AlgebricksException {
+    public String visitAssignOperator(AssignOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("assign ").append(str(op.getVariables())).append(" <- ");
-        pprintExprList(op.getExpressions());
+        printExprList(op.getExpressions());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitWriteOperator(WriteOperator op, Void noArgs) throws AlgebricksException {
+    public String visitWriteOperator(WriteOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         stringBuilder.append("write ");
-        pprintExprList(op.getExpressions());
+        printExprList(op.getExpressions());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitDistributeResultOperator(DistributeResultOperator op, Void noArgs) throws AlgebricksException {
+    public String visitDistributeResultOperator(DistributeResultOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         stringBuilder.append("distribute result ");
-        pprintExprList(op.getExpressions());
+        printExprList(op.getExpressions());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitWriteResultOperator(WriteResultOperator op, Void noArgs) throws AlgebricksException {
+    public String visitWriteResultOperator(WriteResultOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         stringBuilder.append("load ").append(str(op.getDataSource())).append(" from ")
                 .append(op.getPayloadExpression().getValue().toString()).append(" partitioned by ");
-        pprintExprList(op.getKeyExpressions());
+        printExprList(op.getKeyExpressions());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitSelectOperator(SelectOperator op, Void noArgs) throws AlgebricksException {
+    public String visitSelectOperator(SelectOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         stringBuilder.append("select (").append(op.getCondition().getValue().toString()).append(")");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitProjectOperator(ProjectOperator op, Void noArgs) throws AlgebricksException {
+    public String visitProjectOperator(ProjectOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("project ").append("(").append(op.getVariables()).append(")");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitSubplanOperator(SubplanOperator op, Void noArgs) throws AlgebricksException {
+    public String visitSubplanOperator(SubplanOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("subplan {}");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitUnionOperator(UnionAllOperator op, Void noArgs) throws AlgebricksException {
+    public String visitUnionOperator(UnionAllOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("union");
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> v : op.getVariableMappings()) {
             stringBuilder.append(" (").append(v.first).append(", ").append(v.second).append(", ").append(v.third)
                     .append(")");
         }
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitIntersectOperator(IntersectOperator op, Void noArgs) throws AlgebricksException {
+    public String visitIntersectOperator(IntersectOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("intersect (");
         stringBuilder.append('[');
@@ -261,154 +326,183 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
             stringBuilder.append(']');
         }
         stringBuilder.append("])");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitUnnestOperator(UnnestOperator op, Void noArgs) throws AlgebricksException {
+    public String visitUnnestOperator(UnnestOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("unnest ").append(op.getVariable());
         if (op.getPositionalVariable() != null) {
             stringBuilder.append(" at ").append(op.getPositionalVariable());
         }
         stringBuilder.append(" <- ").append(op.getExpressionRef().getValue().toString());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Void noArgs) throws AlgebricksException {
+    public String visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Boolean showDetails)
+            throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("outer-unnest ").append(op.getVariable());
         if (op.getPositionalVariable() != null) {
             stringBuilder.append(" at ").append(op.getPositionalVariable());
         }
         stringBuilder.append(" <- ").append(op.getExpressionRef().getValue().toString());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitUnnestMapOperator(UnnestMapOperator op, Void noArgs) throws AlgebricksException {
+    public String visitUnnestMapOperator(UnnestMapOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
-        printAbstractUnnestMapOperator(op, "unnest-map");
-        appendSelectConditionInformation(stringBuilder, op.getSelectCondition());
-        appendLimitInformation(stringBuilder, op.getOutputLimit());
+        printAbstractUnnestMapOperator(op, "unnest-map", showDetails);
+        appendSelectConditionInformation(op.getSelectCondition());
+        appendLimitInformation(op.getOutputLimit());
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void noArgs)
+    public String visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Boolean showDetails)
             throws AlgebricksException {
         stringBuilder.setLength(0);
-        printAbstractUnnestMapOperator(op, "left-outer-unnest-map");
+        printAbstractUnnestMapOperator(op, "left-outer-unnest-map", showDetails);
         return stringBuilder.toString();
     }
 
-    private void printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, String opSignature) {
+    private void printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, String opSignature, boolean show) {
         stringBuilder.append(opSignature).append(" ").append(op.getVariables()).append(" <- ")
                 .append(op.getExpressionRef().getValue().toString());
-        appendFilterInformation(stringBuilder, op.getMinFilterVars(), op.getMaxFilterVars());
+        appendFilterInformation(op.getMinFilterVars(), op.getMaxFilterVars());
+        appendSchema(op, show);
+        appendAnnotations(op, show);
+        appendPhysicalOperatorInfo(op, show);
     }
 
     @Override
-    public String visitDataScanOperator(DataSourceScanOperator op, Void noArgs) throws AlgebricksException {
+    public String visitDataScanOperator(DataSourceScanOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("data-scan ").append(op.getProjectVariables()).append("<-").append(op.getVariables())
                 .append(" <- ").append(op.getDataSource());
-        appendFilterInformation(stringBuilder, op.getMinFilterVars(), op.getMaxFilterVars());
-        appendSelectConditionInformation(stringBuilder, op.getSelectCondition());
-        appendLimitInformation(stringBuilder, op.getOutputLimit());
+        appendFilterInformation(op.getMinFilterVars(), op.getMaxFilterVars());
+        appendSelectConditionInformation(op.getSelectCondition());
+        appendLimitInformation(op.getOutputLimit());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
-    private void appendFilterInformation(StringBuilder plan, List<LogicalVariable> minFilterVars,
-            List<LogicalVariable> maxFilterVars) {
+    private void appendFilterInformation(List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars) {
         if (minFilterVars != null || maxFilterVars != null) {
-            plan.append(" with filter on");
+            stringBuilder.append(" with filter on");
         }
         if (minFilterVars != null) {
-            plan.append(" min:").append(minFilterVars);
+            stringBuilder.append(" min:").append(minFilterVars);
         }
         if (maxFilterVars != null) {
-            plan.append(" max:").append(maxFilterVars);
+            stringBuilder.append(" max:").append(maxFilterVars);
         }
     }
 
-    private Void appendSelectConditionInformation(StringBuilder plan, Mutable<ILogicalExpression> condition)
-            throws AlgebricksException {
+    private void appendSelectConditionInformation(Mutable<ILogicalExpression> condition) throws AlgebricksException {
         if (condition != null) {
-            plan.append(" condition:").append(condition.getValue().toString());
+            stringBuilder.append(" condition:").append(condition.getValue().toString());
         }
-        return null;
     }
 
-    private Void appendLimitInformation(StringBuilder plan, long outputLimit) throws AlgebricksException {
+    private void appendLimitInformation(long outputLimit) throws AlgebricksException {
         if (outputLimit >= 0) {
-            plan.append(" limit:").append(String.valueOf(outputLimit));
+            stringBuilder.append(" limit:").append(String.valueOf(outputLimit));
         }
-        return null;
     }
 
     @Override
-    public String visitLimitOperator(LimitOperator op, Void noArgs) throws AlgebricksException {
+    public String visitLimitOperator(LimitOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("limit ").append(op.getMaxObjects().getValue().toString());
         ILogicalExpression offset = op.getOffset().getValue();
         if (offset != null) {
             stringBuilder.append(", ").append(offset.toString());
         }
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitExchangeOperator(ExchangeOperator op, Void noArgs) throws AlgebricksException {
+    public String visitExchangeOperator(ExchangeOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("exchange");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitScriptOperator(ScriptOperator op, Void noArgs) throws AlgebricksException {
+    public String visitScriptOperator(ScriptOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("script (in: ").append(op.getInputVariables()).append(") (out: ")
                 .append(op.getOutputVariables()).append(")");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitReplicateOperator(ReplicateOperator op, Void noArgs) throws AlgebricksException {
+    public String visitReplicateOperator(ReplicateOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("replicate");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitSplitOperator(SplitOperator op, Void noArgs) throws AlgebricksException {
+    public String visitSplitOperator(SplitOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         Mutable<ILogicalExpression> branchingExpression = op.getBranchingExpression();
         stringBuilder.append("split ").append(branchingExpression.getValue().toString());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitMaterializeOperator(MaterializeOperator op, Void noArgs) throws AlgebricksException {
+    public String visitMaterializeOperator(MaterializeOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("materialize");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, Void noArgs)
-            throws AlgebricksException {
+    public String visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         String header = getIndexOpString(op.getOperation());
         stringBuilder.append(header).append(str(op.getDataSource())).append(" from record: ")
                 .append(op.getPayloadExpression().getValue().toString());
         if (op.getAdditionalNonFilteringExpressions() != null) {
             stringBuilder.append(", meta: ");
-            pprintExprList(op.getAdditionalNonFilteringExpressions());
+            printExprList(op.getAdditionalNonFilteringExpressions());
         }
         stringBuilder.append(" partitioned by ");
-        pprintExprList(op.getPrimaryKeyExpressions());
+        printExprList(op.getPrimaryKeyExpressions());
         if (op.getOperation() == Kind.UPSERT) {
             stringBuilder.append(" out: ([record-before-upsert:").append(op.getBeforeOpRecordVar());
             if (op.getBeforeOpAdditionalNonFilteringVars() != null) {
@@ -419,27 +513,32 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         if (op.isBulkload()) {
             stringBuilder.append(" [bulkload]");
         }
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Void noArgs)
-            throws AlgebricksException {
+    public String visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         String header = getIndexOpString(op.getOperation());
         stringBuilder.append(header).append(op.getIndexName()).append(" on ")
                 .append(str(op.getDataSourceIndex().getDataSource())).append(" from ");
         if (op.getOperation() == Kind.UPSERT) {
             stringBuilder.append(" replace:");
-            pprintExprList(op.getPrevSecondaryKeyExprs());
+            printExprList(op.getPrevSecondaryKeyExprs());
             stringBuilder.append(" with:");
-            pprintExprList(op.getSecondaryKeyExpressions());
+            printExprList(op.getSecondaryKeyExpressions());
         } else {
-            pprintExprList(op.getSecondaryKeyExpressions());
+            printExprList(op.getSecondaryKeyExpressions());
         }
         if (op.isBulkload()) {
             stringBuilder.append(" [bulkload]");
         }
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
@@ -452,60 +551,143 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
             case UPSERT:
                 return "upsert into ";
         }
-        return null;
+        return "";
     }
 
     @Override
-    public String visitTokenizeOperator(TokenizeOperator op, Void noArgs) throws AlgebricksException {
+    public String visitTokenizeOperator(TokenizeOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("tokenize ").append(str(op.getTokenizeVars())).append(" <- ");
-        pprintExprList(op.getSecondaryKeyExpressions());
+        printExprList(op.getSecondaryKeyExpressions());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitSinkOperator(SinkOperator op, Void noArgs) throws AlgebricksException {
+    public String visitSinkOperator(SinkOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         stringBuilder.append("sink");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
     @Override
-    public String visitDelegateOperator(DelegateOperator op, Void noArgs) throws AlgebricksException {
+    public String visitDelegateOperator(DelegateOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append(op.toString());
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
     }
 
-    private void pprintExprList(List<Mutable<ILogicalExpression>> expressions) {
+    @Override
+    public String visitForwardOperator(ForwardOperator op, Boolean showDetails) throws AlgebricksException {
+        stringBuilder.setLength(0);
+        stringBuilder.append("forward(").append(op.getRangeMapExpression().getValue().toString()).append(")");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
+        return stringBuilder.toString();
+    }
+
+    private void printExprList(List<Mutable<ILogicalExpression>> expressions) {
+        stringBuilder.append("[");
+        expressions.forEach(exprRef -> stringBuilder.append(exprRef.getValue().toString()).append(", "));
+        stringBuilder.append("]");
+    }
+
+    private void printVariableAndExprList(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> variableExprList) {
         stringBuilder.append("[");
         boolean first = true;
-        for (Mutable<ILogicalExpression> exprRef : expressions) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> variableExpressionPair : variableExprList) {
             if (first) {
                 first = false;
             } else {
-                stringBuilder.append(", ");
+                stringBuilder.append("; ");
             }
-            stringBuilder.append(exprRef.getValue().toString());
+            if (variableExpressionPair.first != null) {
+                stringBuilder.append(variableExpressionPair.first).append(" := ").append(variableExpressionPair.second);
+            } else {
+                stringBuilder.append(variableExpressionPair.second.getValue().toString());
+            }
         }
         stringBuilder.append("]");
     }
 
-    private void pprintVeList(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> vePairList) {
-        stringBuilder.append("[");
-        boolean fst = true;
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : vePairList) {
-            if (fst) {
-                fst = false;
-            } else {
-                stringBuilder.append("; ");
-            }
-            if (ve.first != null) {
-                stringBuilder.append(ve.first).append(" := ").append(ve.second);
-            } else {
-                stringBuilder.append(ve.second.getValue().toString());
+    private void appendSchema(AbstractLogicalOperator op, boolean show) {
+        if (show) {
+            stringBuilder.append("\\nSchema: ");
+            final List<LogicalVariable> schema = op.getSchema();
+            stringBuilder.append(schema == null ? "null" : schema);
+        }
+    }
+
+    private void appendAnnotations(AbstractLogicalOperator op, boolean show) {
+        if (show) {
+            final Map<String, Object> annotations = op.getAnnotations();
+            if (!annotations.isEmpty()) {
+                stringBuilder.append("\\nAnnotations: ").append(annotations);
             }
         }
-        stringBuilder.append("]");
+    }
+
+    private void appendPhysicalOperatorInfo(AbstractLogicalOperator op, boolean show) {
+        IPhysicalOperator physicalOp = op.getPhysicalOperator();
+        stringBuilder.append("\\n").append(physicalOp == null ? "null" : physicalOp.toString().trim());
+        stringBuilder.append(", Exec: ").append(op.getExecutionMode());
+        if (show) {
+            IPhysicalPropertiesVector properties = physicalOp == null ? null : physicalOp.getDeliveredProperties();
+            List<ILocalStructuralProperty> localProp = properties == null ? null : properties.getLocalProperties();
+            IPartitioningProperty partitioningProp = properties == null ? null : properties.getPartitioningProperty();
+            if (localProp != null) {
+                stringBuilder.append("\\nProperties in each partition: [");
+                for (ILocalStructuralProperty property : localProp) {
+                    if (property == null) {
+                        stringBuilder.append("null, ");
+                    } else if (property.getPropertyType() == LOCAL_ORDER_PROPERTY) {
+                        stringBuilder.append("ordered by ");
+                    } else if (property.getPropertyType() == LOCAL_GROUPING_PROPERTY) {
+                        stringBuilder.append("group by ");
+                    }
+                    stringBuilder.append(property).append(", ");
+                }
+                stringBuilder.append("]");
+            }
+
+            if (partitioningProp != null) {
+                stringBuilder.append("\\n").append(partitioningProp.getPartitioningType()).append(":");
+                INodeDomain nodeDomain = partitioningProp.getNodeDomain();
+                stringBuilder.append("\\n ");
+                if (nodeDomain != null && nodeDomain.cardinality() != null) {
+                    stringBuilder.append(nodeDomain.cardinality()).append(" partitions. ");
+                }
+                switch (partitioningProp.getPartitioningType()) {
+                    case BROADCAST:
+                        stringBuilder.append("Data is broadcast to partitions.");
+                        break;
+                    case RANDOM:
+                        stringBuilder.append("Data is randomly partitioned.");
+                        break;
+                    case ORDERED_PARTITIONED:
+                        stringBuilder.append("Data is orderly partitioned via a range.");
+                        break;
+                    case UNORDERED_PARTITIONED:
+                        stringBuilder.append("Data is hash partitioned.");
+                        break;
+                    case UNPARTITIONED:
+                        stringBuilder.append("Data is in one place.");
+                }
+                if (nodeDomain instanceof DefaultNodeGroupDomain) {
+                    DefaultNodeGroupDomain nd = (DefaultNodeGroupDomain) nodeDomain;
+                    stringBuilder.append("\\n").append(nd);
+                }
+            }
+        }
+
     }
 }

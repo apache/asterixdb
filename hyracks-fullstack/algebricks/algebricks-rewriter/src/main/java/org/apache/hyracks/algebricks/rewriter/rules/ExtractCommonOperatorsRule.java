@@ -52,6 +52,10 @@ import org.apache.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
+/**
+ * Pre-conditions:
+ *      FixReplicateOperatorOutputsRule should be fired
+ */
 public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
     private final HashMap<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> childrenToParents =
@@ -62,6 +66,8 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
     private final HashMap<Mutable<ILogicalOperator>, MutableInt> clusterMap = new HashMap<>();
     private final HashMap<Integer, BitSet> clusterWaitForMap = new HashMap<>();
     private int lastUsedClusterId = 0;
+    private final Map<Mutable<ILogicalOperator>, BitSet> replicateToOutputs = new HashMap<>();
+    private final List<Pair<Mutable<ILogicalOperator>, Boolean>> newOutputs = new ArrayList<>();
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -268,9 +274,69 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                     context.computeAndSetTypeEnvironmentForOperator(parentOp);
                 }
             }
+            cleanupPlan();
             rewritten = true;
         }
         return rewritten;
+    }
+
+    /**
+     * Cleans up the plan after combining similar branches into one branch making sure parents & children point to
+     * each other correctly.
+     */
+    private void cleanupPlan() {
+        for (Mutable<ILogicalOperator> root : roots) {
+            replicateToOutputs.clear();
+            newOutputs.clear();
+            findReplicateOp(root, replicateToOutputs);
+            cleanup(replicateToOutputs, newOutputs);
+        }
+    }
+
+    /**
+     * Updates the outputs references of a replicate operator to points to the valid parents.
+     * @param replicateToOutputs where the replicate operators are stored with its valid parents.
+     * @param newOutputs the valid parents of replicate operator.
+     */
+    private void cleanup(Map<Mutable<ILogicalOperator>, BitSet> replicateToOutputs,
+            List<Pair<Mutable<ILogicalOperator>, Boolean>> newOutputs) {
+        replicateToOutputs.forEach((repRef, allOutputs) -> {
+            newOutputs.clear();
+            // get the indexes that are set in the BitSet
+            allOutputs.stream().forEach(outIndex -> {
+                newOutputs.add(new Pair<>(((AbstractReplicateOperator) repRef.getValue()).getOutputs().get(outIndex),
+                        ((AbstractReplicateOperator) repRef.getValue()).getOutputMaterializationFlags()[outIndex]));
+            });
+            ((AbstractReplicateOperator) repRef.getValue()).setOutputs(newOutputs);
+        });
+    }
+
+    /**
+     * Collects all replicate operator starting from {@param parent} and all its descendants and keeps track of the
+     * valid parents of a replicate operator. The indexes of valid parents will be set in the BitSet.
+     * @param parent the current operator in consideration for which we want to find replicate op children.
+     * @param replicateToOutputs where the replicate operators will be stored with all its parents (valid & invalid).
+     */
+    private void findReplicateOp(Mutable<ILogicalOperator> parent,
+            Map<Mutable<ILogicalOperator>, BitSet> replicateToOutputs) {
+        List<Mutable<ILogicalOperator>> children = parent.getValue().getInputs();
+        for (Mutable<ILogicalOperator> childRef : children) {
+            AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
+            if (child.getOperatorTag() == LogicalOperatorTag.REPLICATE
+                    || child.getOperatorTag() == LogicalOperatorTag.SPLIT) {
+                AbstractReplicateOperator replicateChild = (AbstractReplicateOperator) child;
+                int parentIndex = replicateChild.getOutputs().indexOf(parent);
+                if (parentIndex >= 0) {
+                    BitSet replicateValidOutputs = replicateToOutputs.get(childRef);
+                    if (replicateValidOutputs == null) {
+                        replicateValidOutputs = new BitSet();
+                        replicateToOutputs.put(childRef, replicateValidOutputs);
+                    }
+                    replicateValidOutputs.set(parentIndex);
+                }
+            }
+            findReplicateOp(childRef, replicateToOutputs);
+        }
     }
 
     private void genCandidates(IOptimizationContext context) throws AlgebricksException {

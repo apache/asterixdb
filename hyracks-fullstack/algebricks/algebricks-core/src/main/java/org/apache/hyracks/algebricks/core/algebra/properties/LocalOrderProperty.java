@@ -121,20 +121,7 @@ public final class LocalOrderProperty implements ILocalStructuralProperty {
         Iterator<OrderColumn> currentColumnIterator = orderColumns.iterator();
 
         // Returns true if requiredColumnIterator is a prefix of currentColumnIterator.
-        return isPrefixOf(requiredColumnIterator, currentColumnIterator);
-    }
-
-    private <T> boolean isPrefixOf(Iterator<T> requiredColumnIterator, Iterator<T> currentColumnIterator) {
-        while (requiredColumnIterator.hasNext()) {
-            T oc = requiredColumnIterator.next();
-            if (!currentColumnIterator.hasNext()) {
-                return false;
-            }
-            if (!oc.equals(currentColumnIterator.next())) {
-                return false;
-            }
-        }
-        return true;
+        return PropertiesUtil.isPrefixOf(requiredColumnIterator, currentColumnIterator);
     }
 
     // Gets normalized  ordering columns, where each column variable is a representative variable of its equivalence

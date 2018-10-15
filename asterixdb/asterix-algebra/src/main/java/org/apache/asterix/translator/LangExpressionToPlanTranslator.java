@@ -38,7 +38,6 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.aql.util.RangeMapBuilder;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -69,6 +68,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.lang.common.util.RangeMapBuilder;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSource;
@@ -1163,9 +1163,9 @@ class LangExpressionToPlanTranslator
         }
         if (oc.getRangeMap() != null) {
             Iterator<OrderModifier> orderModifIter = oc.getModifierList().iterator();
-            boolean ascending = (orderModifIter.next() == OrderModifier.ASC);
+            boolean ascending = orderModifIter.next() == OrderModifier.ASC;
             RangeMapBuilder.verifyRangeOrder(oc.getRangeMap(), ascending);
-            ord.getAnnotations().put(OperatorAnnotations.USE_RANGE_CONNECTOR, oc.getRangeMap());
+            ord.getAnnotations().put(OperatorAnnotations.USE_STATIC_RANGE, oc.getRangeMap());
         }
         return new Pair<>(ord, null);
     }

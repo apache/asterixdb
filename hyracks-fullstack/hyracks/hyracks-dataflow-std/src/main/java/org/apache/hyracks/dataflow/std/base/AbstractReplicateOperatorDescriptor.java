@@ -180,6 +180,7 @@ public abstract class AbstractReplicateOperatorDescriptor extends AbstractOperat
 
                 @Override
                 public void fail() throws HyracksDataException {
+                    // TODO: shouldn't we fail the MaterializerTaskState state?
                     HyracksDataException hde = null;
                     for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
                         if (isOpen[i]) {
