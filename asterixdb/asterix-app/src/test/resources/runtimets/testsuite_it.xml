@@ -37,20 +37,5 @@
         <output-dir compare="Text">classad-parser-old</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="external-library">
-      <compilation-unit name="getCapital">
-        <output-dir compare="Text">getCapital</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-library">
-      <compilation-unit name="upperCase">
-        <output-dir compare="Text">upperCase</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-library">
-      <compilation-unit name="keyword_detector">
-        <output-dir compare="Text">keyword_detector</output-dir>
-      </compilation-unit>
-    </test-case>
   </test-group>
 </test-suite>
