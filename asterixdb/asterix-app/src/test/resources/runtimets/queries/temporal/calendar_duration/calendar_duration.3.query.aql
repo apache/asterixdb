@@ -1,0 +1,61 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse test;
+set import-private-functions 'true';
+
+let $t1 := datetime("1987-11-19T23:49:23.938")
+let $t2 := date("-1328-10-23")
+let $dr1 := duration("P7382DT39283M3921.329S")
+let $dr2 := duration("-PT63H398212M3219.328S")
+let $dr3 := duration("P1Y90M")
+let $dr4 := duration("-P3Y89M4089DT47382.983S")
+let $cdr1 := calendar-duration-from-datetime($t1, $dr1)
+let $dt1 := $t1 + $dr1
+let $dtt1 := $t1 + $cdr1
+let $c1 := $dt1 = $dtt1
+let $cdr2 := calendar-duration-from-datetime($t1, $dr2)
+let $dt2 := $t1 + $dr2
+let $dtt2 := $t1 + $cdr2
+let $c2 := $dt2 = $dtt2
+let $cdr3 := calendar-duration-from-datetime($t1, $dr3)
+let $dt3 := $t1 + $dr3
+let $dtt3 := $t1 + $cdr3
+let $c3 := $dt3 = $dtt3
+let $cdr4 := calendar-duration-from-datetime($t1, $dr4)
+let $dt4 := $t1 + $dr4
+let $dtt4 := $t1 + $cdr4
+let $c4 := $dt4 = $dtt4
+let $cdr5 := calendar-duration-from-date($t2, $dr1)
+let $dt5 := $t2 + $dr1
+let $dtt5 := $t2 + $cdr5
+let $c5 := $dt5 = $dtt5
+let $cdr6 := calendar-duration-from-date($t2, $dr2)
+let $dt6 := $t2 + $dr2
+let $dtt6 := $t2 + $cdr6
+let $c6 := $dt6 = $dtt6
+let $cdr7 := calendar-duration-from-date($t2, $dr3)
+let $dt7 := $t2 + $dr3
+let $dtt7 := $t2 + $cdr7
+let $c7 := $dt7 = $dtt7
+let $cdr8 := calendar-duration-from-date($t2, $dr4)
+let $dt8 := $t2 + $dr4
+let $dtt8 := $t2 + $cdr8
+let $c8 := $dt8 = $dtt8
+
+return { "cduration1":$cdr1, "c1":$c1, "cduration2":$cdr2, "c2":$c2, "cduration3":$cdr3, "c3":$c3, "cduration4":$cdr4, "c4":$c4, "cduration5":$cdr5, "c5":$c5, "cduration6":$cdr6, "c6":$c6, "cduration7":$cdr7, "c7":$c7, "cduration8":$cdr8, "c8":$c8, "cduration-null-1": calendar-duration-from-datetime(null, $dr1), "cduration-null-2": calendar-duration-from-datetime($t1, null), "cduration-null-3": calendar-duration-from-date(null, $dr1), "cduration-null-4": calendar-duration-from-date($t2, null) }

@@ -1,0 +1,123 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+* Description  : Create a highly nested datastructure that uses opened and closed datasets
+                at different levels. Use open-nested indexes at every level
+                to copy from one data set upwards
+                check the final result to see if copies were successful all the way up
+* Expected Res : Success
+* Date         : 20 Oct 2014
+*/
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type S as open{
+    id: int64
+}
+
+create type GS as closed{
+    id: int64,
+    Genus: string,
+    lower: S
+}
+
+create type FGS as open{
+    id: int64,
+    Family: string
+}
+
+create type OFGS as closed{
+    id: int64,
+    Order: string,
+    lower: FGS
+}
+
+create type COFGS as closed{
+    id: int64,
+    Class: string,
+    lower: OFGS
+}
+
+create type PCOFGS as closed{
+    id: int64,
+    Phylum: string,
+    lower: COFGS
+}
+
+create type KPCOFGS as open{
+    id: int64,
+    Kingdom: string
+}
+
+create type Classification as closed{
+    id: int64,
+    fullClassification:KPCOFGS
+}
+
+create type Animal as open{
+    id: int64
+}
+
+
+create dataset Animals(Animal)
+primary key id;
+
+create dataset Classifications(Classification)
+primary key id;
+
+create dataset KPCOFGSs(KPCOFGS)
+primary key id;
+
+create dataset Ss(S)
+primary key id;
+
+create dataset GSs(GS)
+primary key id;
+
+create dataset FGSs(FGS)
+primary key id;
+
+create dataset OFGSs(OFGS)
+primary key id;
+
+create dataset COFGSs(COFGS)
+primary key id;
+
+create dataset PCOFGSs(PCOFGS)
+primary key id;
+
+create index species on Ss(Species:string?) enforced;
+
+create index genus on GSs(lower.Species:string?) enforced;
+
+create index family on FGSs(lower.lower.Species:string?) enforced;
+
+create index orda on OFGSs(lower.lower.lower.Species:string?) enforced;
+
+create index classy on COFGSs(lower.lower.lower.lower.Species:string?) enforced;
+
+create index phylum on PCOFGSs(lower.lower.lower.lower.lower.Species:string?) enforced;
+
+create index phylum on KPCOFGSs(lower.lower.lower.lower.lower.lower.Species:string?) enforced;
+
+create index class on Classifications(fullClassification.lower.lower.lower.lower.lower.lower.Species:string?) enforced;
+
+create index anim on Animals(class.fullClassification.lower.lower.lower.lower.lower.lower.Species:string?) enforced;

@@ -1,0 +1,51 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Tests whether an ngram_index is applied to optimize a selection query using the contains function.
+ *                  The index should *not* be applied (see below).
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type DBLPTypetmp as closed {
+  id: int32,
+  dblpid: string,
+  title: string,
+  authors: string,
+  misc: string
+}
+
+create type DBLPType as closed {
+  nested : DBLPTypetmp
+}
+
+create dataset DBLP(DBLPType) primary key nested.id;
+
+create index ngram_index on DBLP(nested.title) type ngram(3);
+
+write output to asterix_nc1:"rttest/inverted-index-basic_ngram-contains-panic.adm";
+
+// Cannot optimize this query because the string constant is shorter than the gram length.
+for $o in dataset('DBLP')
+where contains($o.nested.title, "Mu")
+order by $o.nested.id
+return $o

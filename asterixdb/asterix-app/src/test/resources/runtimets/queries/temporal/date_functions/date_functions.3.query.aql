@@ -1,0 +1,61 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse test;
+set import-private-functions 'true';
+
+let $d1 := date-from-unix-time-in-days(15600)
+let $null1 := date-from-unix-time-in-days(null)
+let $unix1 := unix-time-from-date-in-days($d1)
+let $nullunix1 := date-from-unix-time-in-days(null)
+let $dt1 := datetime("1327-12-02T23:35:49.938Z")
+let $d2 := get-date-from-datetime($dt1)
+let $null2 := get-date-from-datetime(null)
+let $dt2 := datetime("2012-10-11T02:30:23+03:00")
+let $d3 := get-date-from-datetime($dt2)
+let $dr1 := duration("-P2Y1M90DT30H")
+let $d4 := $d1 + $dr1
+let $null3 := null + $dr1
+let $null4 := $d1 + null
+let $c1 := ($d1 = ($d4 + ($d1 - $d4)))
+let $dr2 := duration("P300Y900MT360000M")
+let $d5 := $d2 + $dr2
+let $c2 := ($d2 = ($d5 + ($d2 - $d5)))
+let $dr3 := $d5 - $d2
+let $dr4 := $d4 - $d1
+let $null5 := null - $d2
+let $null6 := $d5 - null
+
+return {
+  "date1": $d1,
+  "date2": $d2,
+  "date3": $d3,
+  "date4": $d4,
+  "date5": $d5,
+  "unix1": $unix1,
+  "duration1": $dr3,
+  "duration2": $dr4,
+  "c1": $c1,
+  "c2": $c2,
+  "null1": $null1,
+  "nullunix1": $nullunix1,
+  "null2": $null2,
+  "null3": $null3,
+  "null4": $null4,
+  "null5": $null5,
+  "null6": $null6 }

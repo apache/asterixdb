@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Test that left-outer-join may use two available indexes, one for primary index in prob subtree and another for secondary keyword inverted index in index subtree.
+ * Issue        : 730, 741
+ * Expected Res : Success
+ * Date         : 16th May 2014
+ */
+
+use dataverse test;
+
+for $t1 in dataset('TweetMessages')
+where $t1.nested.tweetid > int64("240")
+order by $t1.nested.tweetid
+return {
+    "tweet": {"id": $t1.nested.tweetid, "topics" : $t1.nested.message-text} ,
+    "similar-tweets": for $t2 in dataset('TweetMessages')
+                      let $sim := edit-distance-check($t1.nested.message-text, $t2.nested.message-text, 7)
+              where $sim[0] and
+                      $t2.nested.tweetid != $t1.nested.tweetid
+                      order by $t2.nested.tweetid
+                      return {"id": $t2.nested.tweetid, "topics" : $t2.nested.message-text}
+};

@@ -1,0 +1,29 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/**
+ * get-overlapping-interval test case
+ * Expected result: success
+ **/
+
+{ "overlap1": get-overlapping-interval(interval(time("11:23:39"), time("18:27:19")), interval(time("12:23:39"), time("23:18:00"))),
+  "overlap2": get-overlapping-interval(interval(time("12:23:39"), time("18:27:19")), interval(time("07:19:39"), time("09:18:00"))),
+  "overlap3": get-overlapping-interval(interval(date("1980-11-30"), date("1999-09-09")), interval(date("2013-01-01"), date("2014-01-01"))),
+  "overlap4": get-overlapping-interval(interval(date("1980-11-30"), date("2099-09-09")), interval(date("2013-01-01"), date("2014-01-01"))),
+  "overlap5": get-overlapping-interval(interval(datetime("1844-03-03T11:19:39"), datetime("2000-10-30T18:27:19")), interval(datetime("1989-03-04T12:23:39"), datetime("2009-10-10T23:18:00"))),
+  "overlap6": get-overlapping-interval(interval(datetime("1989-03-04T12:23:39"), datetime("2000-10-30T18:27:19")), interval(datetime("1844-03-03T11:19:39"), datetime("1888-10-10T23:18:00")))  }

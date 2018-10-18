@@ -1,0 +1,44 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/**
+ * Test case for parsing temporal strings with format strings
+ * Expected Result: Success
+ **/
+
+use dataverse test;
+
+{ "date1": parse-date("2013-8-23", "YY-M-D"), 
+  "date2": parse-date("Aug 12 -12", "MMM D Y"), 
+  "date3": parse-date("-1234-01-01", "YYYY-MM-DD"), 
+  "date4": parse-date("09/11/-1980", "D/M/Y"),
+  "date5": parse-date("09/11/-1990", "YY-M-D|MMM D Y|D/M/Y"),
+  "date6": parse-date("Mon Aug 19 2013", "W MMM D Y"),
+  "data7": parse-date("SKIPMEPLEASE Mon Aug SKIPME1ALSO 19 2013", "O W MMM O D Y"),
+  "time1": parse-time("8:23:49", "h:m:s"), 
+  "time2": parse-time("8.19.23:32", "h.m.s:nn"), 
+  "time3": parse-time("08.19.23:32 pm", "h.m.s:nn a"), 
+  "time4": parse-time("6:30:40.948 pm PST", "h:mm:ss.nnn a z"),
+  "time5": parse-time("6:30:40.948 pm PST", "h:m:s|h.m.s:nn|h.m.s:nn a|h:mm:ss.nnn a z"),
+  "datetime1": parse-datetime("Dec 30 -1203 3:48:27 PM", "MMM DD YYYY h:m:s a"), 
+  "datetime2": parse-datetime("12/30/-1203 03:48:27.392 PM Asia/Shanghai", "MM/DD/YYY hh:mm:ss.nnn a z"), 
+  "datetime3": parse-datetime("1723-12-03T23:59:23.392Z", "YYYY-MM-DDThh:mm:ss.nnnz"), 
+  "datetime4": parse-datetime("1723-12-03T23:59:23.392-04:00", "YYYY-MM-DDThh:mm:ss.nnnz"),
+  "datetime5": parse-datetime("1723-12-03T23:59:23.392-04:00", "MMM DD YYYY h:m:s a|MM/DD/YYY hh:mm:ss.nnn a z|YYYY-MM-DDThh:mm:ss.nnnz"),
+  "datetime6": parse-datetime("1970-01-01 Thu 23:59:23.392-04:00", "MMM DD YYYY h:m:s a|MM/DD/YYY hh:mm:ss.nnn a z|YYYY-MM-DD W hh:mm:ss.nnnz"),
+  "datetime7": parse-datetime("1723-12-03 What3v3r STRINGHERE 23:59:23.392-04:00", "MMM DD YYYY h:m:s a|MM/DD/YYY hh:mm:ss.nnn a z|YYYY-MM-DD O O hh:mm:ss.nnnz") }

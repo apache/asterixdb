@@ -1,0 +1,72 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Fuzzy self joins a dataset, TweetMessages, based on the similarity-jaccard-check function of its text-messages' word tokens.
+ *                  TweetMessages has a keyword index on text-message and btree index on the primary key tweetid, and we expect the join to be
+ *                    transformed into btree and inverted indexed nested-loop joins. We test whether the join condition can be transformed into
+ *                    multiple indexed nested loop joins of various type of indexes.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type TwitterUserType as closed {
+    screen-name: string,
+    lang: string,
+    friends-count: int32,
+    statuses-count: int32,
+    name: string,
+    followers-count: int32
+}
+
+create type TweetMessageNestedType as open {
+    tweetid: int64,
+    user: TwitterUserType,
+    sender-location: point,
+    send-time: datetime,
+    referred-topics: {{ string }},
+    countA: int32,
+    countB: int32
+}
+
+create type TweetMessageType as closed {
+    nested:  TweetMessageNestedType
+}
+
+create dataset TweetMessages(TweetMessageType)
+primary key nested.tweetid;
+
+create index twmSndLocIx on TweetMessages(nested.sender-location) type rtree;
+create index msgCountAIx on TweetMessages(nested.countA) type btree;
+create index msgCountBIx on TweetMessages(nested.countB) type btree;
+create index msgTextIx on TweetMessages(nested.message-text: string?) type keyword enforced;
+
+write output to asterix_nc1:"rttest/inverted-index-join_word-jaccard-check-after-btree-access.adm";
+
+for $t1 in dataset('TweetMessages')
+for $t2 in dataset('TweetMessages')
+let $sim := similarity-jaccard-check(word-tokens($t1.nested.message-text), word-tokens($t2.nested.message-text), 0.6f)
+where $sim[0] and $t1.nested.tweetid < int64("20") and $t2.nested.tweetid != $t1.nested.tweetid
+return {
+    "t1": $t1.nested.tweetid,
+    "t2": $t2.nested.tweetid,
+    "sim": $sim[1]
+}

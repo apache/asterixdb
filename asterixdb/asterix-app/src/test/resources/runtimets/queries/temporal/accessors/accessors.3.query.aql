@@ -1,0 +1,81 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse test;
+
+let $c1 := date("2010-10-30")
+let $c2 := datetime("1987-11-19T23:49:23.938")
+let $c3 := date("-1987-11-19")
+let $c4 := date("09280329")
+let $c5 := datetime("19371229T20030628")
+let $c6 := time("12:23:34.930+07:00")
+let $c7 := string("-0003-01-09T23:12:12.39-07:00")
+let $c8 := duration("P3Y73M632DT49H743M3948.94S")
+let $c9 := year-month-duration("P8Y12M")
+let $c10 := day-time-duration("P32DT49H743M3948.94S")
+
+return {
+  "year1": get-year($c1), 
+  "year2": get-year($c2), 
+  "year3": get-year($c3), 
+  "year4": get-year($c4), 
+  "year5": get-year($c5), 
+  "year6": get-year($c7), 
+  "year7": get-year($c8), 
+  "year8": get-year($c9), 
+  "year-null": get-year(null), 
+  "month1": get-month($c1), 
+  "month2": get-month($c2), 
+  "month3": get-month($c3), 
+  "month4": get-month($c4), 
+  "month5": get-month($c5), 
+  "month6": get-month($c8), 
+  "month7": get-month($c9), 
+  "month-null": get-month(null), 
+  "day1": get-day($c1), 
+  "day2": get-day($c2), 
+  "day3": get-day($c3), 
+  "day4": get-day($c4), 
+  "day5": get-day($c5), 
+  "day6": get-day($c8), 
+  "day7": get-day($c10), 
+  "day-null": get-day(null), 
+  "hour1": get-hour($c2), 
+  "hour2": get-hour($c5), 
+  "hour3": get-hour($c6), 
+  "hour4": get-hour($c8), 
+  "hour5": get-hour($c10), 
+  "hour-null": get-hour(null), 
+  "min1": get-minute($c2), 
+  "min2": get-minute($c5), 
+  "min3": get-minute($c6), 
+  "min4": get-minute($c8), 
+  "min5": get-minute($c10), 
+  "min-null": get-minute(null), 
+  "second1": get-second($c2), 
+  "second2": get-second($c5), 
+  "second3": get-second($c6), 
+  "second4": get-second($c8), 
+  "second5": get-second($c10), 
+  "second-null": get-second(null), 
+  "ms1": get-millisecond($c2), 
+  "ms2": get-millisecond($c5), 
+  "ms3": get-millisecond($c6), 
+  "ms4": get-millisecond($c8), 
+  "ms5": get-millisecond($c10), 
+  "ms-null": get-millisecond(null) }

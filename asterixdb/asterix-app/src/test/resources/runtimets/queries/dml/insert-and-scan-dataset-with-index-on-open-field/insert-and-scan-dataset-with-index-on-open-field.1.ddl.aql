@@ -1,0 +1,48 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Test case Name  : insert-and-scan-dataset-with-index-on-open-field.aql
+ * Description     : This test is intended to test inserting into a dataset that has a secondary index on opened field and scan
+ * the data at the same time where we insert a materializing to prevent the possibility of deadlatch.
+ * Expected Result : Success
+ * Date            : November 15 2013
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+create type test.Emp as open {
+id:int32,
+lname:string,
+age:int32,
+dept:string
+}
+
+create type test.EmpClosed as closed {
+id:int32,
+fname:string,
+lname:string,
+age:int32,
+dept:string
+}
+
+create dataset test.employee(Emp) primary key id;
+create dataset test.employeeClosed(EmpClosed) primary key id;
+
+create index idx_employee_first_name on test.employee(fname:string?) enforced;

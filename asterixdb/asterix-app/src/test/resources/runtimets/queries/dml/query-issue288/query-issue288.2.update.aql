@@ -1,0 +1,43 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : This test case is to verify the fix for issue288
+                 : https://code.google.com/p/asterixdb/issues/detail?id=288
+ * Expected Res : Success
+ * Date         : 3th April 2013
+ */
+
+use dataverse test;
+
+load dataset LineID
+using localfs
+(("path"="asterix_nc1://data/tpch0.001/lineitem_0.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+
+
+insert into dataset LineID (
+let $x:=1
+let $y:=2
+let $z:=3
+return {
+    "l_orderkey": $x,
+    "l_linenumber": $y,
+    "l_suppkey": $z
+}
+);
+

@@ -1,0 +1,65 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse test;
+set import-private-functions 'true';
+
+let $dt1 := datetime-from-unix-time-in-ms(956007429)
+let $null1 := datetime-from-unix-time-in-ms(null)
+let $dtsecs1 := datetime-from-unix-time-in-secs(1356048000)
+let $nullsecs1 := datetime-from-unix-time-in-secs(null)
+let $unixms1 := unix-time-from-datetime-in-ms($dt1)
+let $nullunixms1 := unix-time-from-datetime-in-ms(null)
+let $unixsecs1 := unix-time-from-datetime-in-secs($dtsecs1)
+let $nullunixsecs1 := unix-time-from-datetime-in-secs(null)
+let $d1 := date("1327-12-02")
+let $t1 := time("15:35:49.938-0800")
+let $dt2 := datetime-from-date-time($d1, $t1)
+let $null2 := datetime-from-date-time(null, $t1)
+let $null3 := datetime-from-date-time($d1, null)
+let $dr1 := $dt2 - $dt1
+let $null4 := null - $dt1
+let $null5 := $dt2 - null
+let $dt3 := $dt1 + $dr1
+let $null6 := null + $dr1
+let $null7 := $dt1 + null
+let $c1 := $dt1 = ($dt1 - $dt3) + $dt3
+let $dt4 := $dt1 - duration("P1MT1S")
+let $dt5 := $dt1 + duration("P1MT1S")
+
+return {
+  "datetime1" : $dt1,
+  "datetime1secs": $dtsecs1,
+  "datetime2" : $dt2,
+  "datetime3" : $dt3,
+  "datetime4" : $dt4,
+  "datetime5" : $dt5,
+  "unixms1" : $unixms1,
+  "unixsecs1": $unixsecs1,
+  "duration1" : $dr1,
+  "c1" : $c1,
+  "null1" : $null1,
+  "null1secs": $nullsecs1,
+  "nullunixms1" : $nullunixms1,
+  "nullunixsecs1": $nullunixsecs1,
+  "null2" : $null2,
+  "null3" : $null3,
+  "null4" : $null4,
+  "null5" : $null5,
+  "null6" : $null6,
+  "null7" : $null7 }

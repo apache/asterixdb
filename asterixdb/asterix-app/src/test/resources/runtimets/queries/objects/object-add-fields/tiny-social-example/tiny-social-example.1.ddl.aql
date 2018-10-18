@@ -1,0 +1,68 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+* Description  : Testing object-add-fields under different queries.
+* Expected Res : Success
+* Date         : 04 Aug 2015
+*/
+
+drop dataverse TinySocial if exists;
+create dataverse TinySocial;
+use dataverse TinySocial;
+
+create type TwitterUserType as open {
+        screen-name: string,
+        lang: string,
+        friends_count: int64,
+        statuses_count: int64,
+        name: string,
+        followers_count: int64
+}
+
+create type TweetMessageType as closed {
+        tweetid: string,
+        user: TwitterUserType,
+        sender-location: point?,
+        send-time: datetime,
+        referred-topics: {{ string }},
+        message-text: string
+}
+
+create type EmploymentType as open {
+        organization-name: string,
+        start-date: date,
+        end-date: date?
+}
+
+create type FacebookUserType as closed {
+        id: int64,
+        alias: string,
+        name: string,
+        user-since: datetime,
+        friend-ids: {{ int64 }},
+        employment: [EmploymentType]
+}
+
+create type FacebookMessageType as closed {
+        message-id: int64,
+        author-id: int64,
+        in-response-to: int64?,
+        sender-location: point?,
+        message: string
+}

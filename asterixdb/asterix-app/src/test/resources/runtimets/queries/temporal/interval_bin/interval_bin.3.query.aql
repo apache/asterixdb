@@ -1,0 +1,37 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/**
+ * Interval_bin test case: test the interval-bin function
+ * Expected result: success
+ **/
+
+use dataverse test;
+
+let $c1 := date("2010-10-30")
+let $c2 := datetime("-1987-11-19T23:49:23.938")
+let $c3 := time("12:23:34.930+07:00")
+
+return { "bin1": interval-bin($c1, date("1990-01-01"), year-month-duration("P1Y")), 
+         "bin2": interval-bin($c1, date("-1990-01-01"), year-month-duration("P1Y")),
+         "bin3": interval-bin($c2, datetime("1990-01-01T00:00:00.000Z"), year-month-duration("P6M")),
+         "bin4": interval-bin($c2, datetime("-1990-01-01T00:00:00.000Z"), day-time-duration("PT12H")),
+         "bin5": interval-bin($c3, time("12:00:00"), day-time-duration("PT2H")),
+         "bin6": interval-bin(null, date("-0023-01-01"), year-month-duration("P6M")),
+         "bin7": interval-bin($c1, null, year-month-duration("P6M")),
+         "bin8": interval-bin($c1, date("-0023-01-01"), null)  }

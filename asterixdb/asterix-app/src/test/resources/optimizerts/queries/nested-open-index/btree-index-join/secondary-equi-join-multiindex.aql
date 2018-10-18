@@ -1,0 +1,85 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Equi joins two datasets, FacebookUsers and FacebookMessages, based on their user's id.
+ *                  We first expect FacebookUsers' primary index to be used
+ *                  to satisfy the range condition on it's primary key.
+ *                  FacebookMessages has a secondary btree index on author-id-copy, and given the 'indexnl' hint
+ *                  we expect the join to be transformed into an indexed nested-loop join.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type EmploymentType as closed {
+  organization-name: string,
+  start-date: date,
+  end-date: date?
+}
+
+create type FacebookUserTypetmp as closed {
+  id: int32,
+  id-copy: int32,
+  alias: string,
+  name: string,
+  user-since: datetime,
+  user-since-copy: datetime,
+  friend-ids: {{ int32 }},
+  employment: [EmploymentType]
+}
+
+create type FacebookMessageTypetmp as open {
+  message-id: int32,
+  message-id-copy: int32,
+  author-id: int32,
+  in-response-to: int32?,
+  sender-location: point?,
+  message: string
+}
+
+create type FacebookUserType as closed {
+  nested : FacebookUserTypetmp
+}
+
+create type FacebookMessageType as closed {
+  nested : FacebookMessageTypetmp
+}
+
+create dataset FacebookUsers(FacebookUserType)
+primary key nested.id;
+
+create dataset FacebookMessages(FacebookMessageType)
+primary key nested.message-id;
+
+create index fbmIdxAutId if not exists on FacebookMessages(nested.author-id-copy: int32?) enforced;
+
+write output to asterix_nc1:"rttest/btree-index-join_title-secondary-equi-join-multiindex.adm";
+
+for $user in dataset('FacebookUsers')
+for $message in dataset('FacebookMessages')
+where $user.nested.id /*+ indexnl */ = $message.nested.author-id-copy
+and $user.nested.id >= 11000 and $user.nested.id <= 12000
+return {
+  "fbu-ID": $user.nested.id,
+  "fbm-auth-ID": $message.nested.author-id,
+  "uname": $user.nested.name,
+  "message": $message.nested.message
+}

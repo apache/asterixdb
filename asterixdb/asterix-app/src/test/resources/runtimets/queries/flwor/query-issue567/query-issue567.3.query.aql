@@ -1,0 +1,47 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description     : This test case is to verify the fix for issue567
+ * https://code.google.com/p/asterixdb/issues/detail?id=567
+ * Expected Result : Success
+ * Date            : 16th Nov. 2014
+ */
+
+let $sample :=
+{{
+  {"r": 1, "uid": "1a2b", "t": datetime("2000-01-01T01:00:00"), "event": "e1"},
+  {"r": 2, "uid": "1a2b", "t": datetime("2000-01-01T01:01:00"), "event": "e2"},
+  {"r": 3, "uid": "3c4d", "t": datetime("2000-01-01T01:02:00"), "event": "e1"},
+  {"r": 4, "uid": "3c4d", "t": datetime("2000-01-01T01:03:00"), "event": "e3"},
+  {"r": 5, "uid": "1a2b", "t": datetime("2000-01-01T01:04:00"), "event": "e1"},
+  {"r": 6, "uid": "1a2b", "t": datetime("2000-01-01T01:05:00"), "event": "e4"}
+}}
+
+for $s1 in $sample
+for $s2 in $sample
+where $s1.uid = $s2.uid
+  and $s1.t < $s2.t
+let $pair := { "s1": $s1, "s2": $s2 }
+group by $s1.uid, $s1.t with $pair
+let $next := 
+    for $p in $pair
+    order by $p.s2.t
+    limit 1
+    return $p
+return $next

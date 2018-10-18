@@ -1,0 +1,30 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse test;
+
+let $t1 := time("13:00:00.382-10:00")
+let $t2 := time("23:59:59.999Z")
+let $t3 := time("22:00:00+03:00")
+let $t4 := time("00:00:00.00Z")
+let $t5 := time("00:00:00.00-02:00")
+let $t6 := time("00:00:00.47+04:00")
+
+for $t in [$t1, $t2, $t3, $t4, $t5, $t6]
+order by $t
+return $t

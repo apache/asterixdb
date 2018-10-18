@@ -1,0 +1,38 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Use fully qualified dataset names to insert into target dataset by doing a select on source dataset.
+ * Expected Res : Success
+ * Date         : Sep 19 2012
+ */
+
+
+insert into dataset test.t1({"id":456,"name":"Roger"});
+insert into dataset test.t1({"id":351,"name":"Bob"});
+insert into dataset test.t1({"id":257,"name":"Sammy"});
+insert into dataset test.t1({"id":926,"name":"Richard"});
+insert into dataset test.t1({"id":482,"name":"Kevin"});
+
+insert into dataset test.t2({"id":438,"name":"Ravi"});
+insert into dataset test.t2({"id":321,"name":"Bobby"});
+insert into dataset test.t2({"id":219,"name":"Sam"});
+insert into dataset test.t2({"id":851,"name":"Ricardo"});
+insert into dataset test.t2({"id":201,"name":"Kelvin"});
+
+insert into dataset test.t1(for $l in dataset('test.t2') return $l);

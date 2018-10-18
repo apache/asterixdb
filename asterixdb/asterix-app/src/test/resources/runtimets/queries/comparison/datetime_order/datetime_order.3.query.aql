@@ -1,0 +1,35 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse test;
+
+let $dt1 := datetime("2011-12-31T14:00:00-10:00")
+let $dt2 := datetime("2012-01-01T00:00:00Z")
+let $dt3 := datetime("2005-01-01T00:00:00+04:00")
+let $dt4 := datetime("2011-12-31T13:00:00-11:00")
+let $dt5 := datetime("2012-04-06T00:00:00Z")
+let $dt6 := datetime("-1937-07-07T23:00:00+08:00")
+let $dt7 := datetime("-1600-03-01T00:00:00.384+06:00")
+let $dt8 := datetime("-1600-02-29T23:59:59.999Z")
+let $dt9 := datetime("2000-02-29T23:59:59.999Z")
+let $dt10 := datetime("2000-03-01T01:59:59.999+07:00")
+let $dt11 := datetime("-1600-03-01T00:00:00.384-06:00")
+
+for $dt in [$dt1, $dt2, $dt3, $dt4, $dt5, $dt6, $dt7, $dt8, $dt9, $dt10, $dt11]
+order by $dt
+return $dt

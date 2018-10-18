@@ -1,0 +1,71 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+use dataverse test;
+
+let $itv1 := interval(date("2010-10-30"), date("2010-12-21"))
+let $itv2 := interval(date("2011-10-30"), date("2012-10-21"))
+let $itv3 := interval(date("2010-12-21"), date("2013-01-01"))
+let $blnBefore1 := interval-before($itv1, $itv2)
+let $blnAfter1 := interval-after($itv2, $itv1)
+let $blnBefore2 := interval-before($itv1, $itv3)
+let $blnAfter2 := interval-after($itv3, $itv1)
+
+let $itv4 := interval(datetime("2012-06-26T01:01:01.111"), datetime("2012-07-27T02:02:02.222"))
+let $itv5 := interval(datetime("20120727T020202222"), datetime("2013-08-08T03:03:03.333"))
+let $itv6 := interval(datetime("19000707T020202222"), datetime("2013-08-07T03:03:03.333"))
+let $blnMeet1 := interval-meets($itv4, $itv5)
+let $blnMetBy1 := interval-met-by($itv5, $itv4)
+let $blnMeet2 := interval-meets($itv6, $itv4)
+let $blnMetBy2 := interval-met-by($itv6, $itv4)
+
+let $itv7 := interval(time("12:32:38"), time("20:29:20"))
+let $itv8 := interval(time("17:48:19"), time("22:19:49"))
+let $itv9 := interval(time("01:32:49"), time("17:48:19"))
+let $blnOverlaps1 := interval-overlaps($itv7, $itv8)
+let $blnOverlapped1 := interval-overlapped-by($itv8, $itv7)
+let $blnOverlaps2 := interval-overlaps($itv9, $itv8)
+let $blnOverlapped2 := interval-overlapped-by($itv8, $itv9)
+let $blnOverlap1 := interval-overlapping($itv9, $itv7)
+let $blnOverlap2 := interval-overlapping($itv9, $itv8)
+
+let $itv10 := interval(date("2010-10-30"), date("2010-11-30"))
+let $blnStarts1 := interval-starts($itv10, $itv1)
+let $blnStarts2 := interval-starts($itv10, $itv2)
+let $blnStartedBy1 := interval-started-by($itv1, $itv10)
+let $blnStartedBy2 := interval-started-by($itv10, $itv2)
+
+let $itv10 := interval(datetime("19000707T020202222"), datetime("2013-08-07T03:03:03.333"))
+let $itv11 := interval(datetime("19990707T020202222"), datetime("2013-08-07T03:03:03.333"))
+let $itv12 := interval(datetime("-19990707T020202222"), datetime("2013-08-07T03:03:03.333"))
+let $blnCovers1 := interval-covers($itv10, $itv11)
+let $blnCovers2 := interval-covers($itv10, $itv12)
+let $blnCoveredBy1 := interval-covered-by($itv11, $itv10)
+let $blnCoveredBy2 := interval-covered-by($itv12, $itv10)
+
+let $itv11 := interval(time("19:00:00.009"), time("20:29:20.000"))
+let $blnEnds1 := interval-ends($itv11, $itv7)
+let $blnEnds2 := interval-ends($itv11, $itv8)
+let $blnEndedBy1 := interval-ended-by($itv7, $itv11)
+let $blnEndedBy2 := interval-ended-by($itv8, $itv11)
+
+let $null1 := interval-before(null, $itv2)
+let $null2 := interval-covered-by($itv11, null)
+let $null3 := interval-overlapping(null, null)
+
+return { "before1" : $blnBefore1, "before2" : $blnBefore2, "after1" : $blnAfter1, "after2" : $blnAfter2, "meet1" : $blnMeet1, "meet2" : $blnMeet2, "metby1" : $blnMetBy1, "metby2" : $blnMetBy2, "overlaps1" : $blnOverlaps1, "overlaps2" : $blnOverlaps2, "overlapped1" : $blnOverlapped1, "overlapped2" : $blnOverlapped2, "overlap1" : $blnOverlap1, "overlap2" : $blnOverlap2, "starts1" : $blnStarts1, "starts2" : $blnStarts2, "startedby1" : $blnStartedBy1, "startedby2" : $blnStartedBy2, "covers1" : $blnCovers1, "covers2" : $blnCovers2, "coveredby1" : $blnCoveredBy1, "coveredby2" : $blnCoveredBy2, "ends1" : $blnEnds1, "ends2" : $blnEnds2, "endedby1" : $blnEndedBy1, "endedby2" : $blnEndedBy2, "null1": $null1, "null2": $null2, "null3": $null3 }

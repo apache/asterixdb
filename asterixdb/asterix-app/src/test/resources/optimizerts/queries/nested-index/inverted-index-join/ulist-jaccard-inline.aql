@@ -1,0 +1,62 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description    : Fuzzy self joins a dataset, Customers, based on the similarity-jaccard function of its interest sets.
+ *                  Customers has a keyword index on interests, and we expect the join to be transformed into an indexed nested-loop join.
+ *                  We test the inlining of variables that enable the select to be pushed into the join for subsequent optimization with an index.
+ *                  We expect the top-level equi join introduced because of surrogate optimization to be removed, since it is not necessary.
+ * Success        : Yes
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use dataverse test;
+
+create type AddressType as closed {
+  number: int32,
+  street: string,
+  city: string
+}
+
+create type CustomerTypetmp as closed {
+  cid: int32,
+  name: string,
+  age: int32?,
+  address: AddressType?,
+  interests: {{string}},
+  children: [ { name: string, age: int32? } ]
+}
+
+create type CustomerType as closed {
+  nested : CustomerTypetmp
+}
+
+create dataset Customers(CustomerType) primary key nested.cid;
+ 
+create dataset Customers2(CustomerType) primary key nested.cid;
+
+create index interests_index on Customers(nested.interests) type keyword;
+
+write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_ulist-jaccard-inline.adm";
+
+for $a in dataset('Customers')
+for $b in dataset('Customers')
+let $jacc := /*+ indexnl */ similarity-jaccard($a.nested.interests, $b.nested.interests)
+where $jacc >= 0.7f and $a.nested.cid < $b.nested.cid
+return {"ainterests": $a.nested.interests, "binterests": $b.nested.interests, "jacc": $jacc}

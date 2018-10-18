@@ -1,0 +1,51 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use dataverse test;
+
+let $itv41 := interval-start-from-date(date("0001-12-27"), duration("P3Y394DT48H398.483S"))
+let $itv42 := interval-start-from-date("0001-12-27", duration("P3Y394DT48H398.483S"))
+let $itv43 := interval-start-from-date(date("0001-12-27"), "P3Y394DT48H398.483S")
+let $itv44 := interval-start-from-date("0001-12-27", "P3Y394DT48H398.483S")
+let $itv45 := interval-start-from-date(null, duration("P3Y394DT48H398.483S"))
+let $itv46 := interval-start-from-date(date("0001-12-27"), null)
+let $itv51 := interval-start-from-time(time("20:03:20.948"), duration("P60DT48M389.938S"))
+let $itv52 := interval-start-from-time("20:03:20.948", duration("P60DT48M389.938S"))
+let $itv53 := interval-start-from-time(time("20:03:20.948"), "P60DT48M389.938S")
+let $itv54 := interval-start-from-time("20:03:20.948", "P60DT48M389.938S")
+let $itv55 := interval-start-from-time(null, duration("P60DT48M389.938S"))
+let $itv56 := interval-start-from-time(time("20:03:20.948"), null)
+let $itv61 := interval-start-from-datetime(datetime("-2043-11-19T15:32:39.293"), duration("P439Y3M20DT20H39M58.949S"))
+let $itv62 := interval-start-from-datetime("-2043-11-19T15:32:39.293", duration("P439Y3M20DT20H39M58.949S"))
+let $itv63 := interval-start-from-datetime(datetime("-2043-11-19T15:32:39.293"), "P439Y3M20DT20H39M58.949S")
+let $itv64 := interval-start-from-datetime("-2043-11-19T15:32:39.293", "P439Y3M20DT20H39M58.949S")
+let $itv65 := interval-start-from-datetime(null, duration("P439Y3M20DT20H39M58.949S"))
+let $itv66 := interval-start-from-datetime(datetime("-2043-11-19T15:32:39.293"), null)
+let $itv71 := interval(date("2010-10-30"), date("2012-10-21"))
+let $itv72 := interval(null, date("2012-10-21"))
+let $itv73 := interval(date("2010-10-30"), null)
+let $itv74 := interval(time("03:04:05.678-11:00"), time("232425267+0200"))
+let $itv75 := interval(null, time("232425267+0200"))
+let $itv76 := interval(time("03:04:05.678-11:00"), null)
+let $itv77 := interval(datetime("-1987-11-19T02:43:57.938+08:00"), datetime("19991112T124935948-0700"))
+let $itv78 := interval(null, datetime("19991112T124935948-0700"))
+let $itv79 := interval(datetime("-1987-11-19T02:43:57.938+08:00"), null)
+
+return {"interval41": $itv41, "interval42": $itv42, "interval43": $itv43, "interval44": $itv44, "interval45": $itv45, "interval46": $itv46, "interval51": $itv51, "interval52": $itv52, "interval53": $itv53, "interval54": $itv54, "interval55": $itv55, "interval56": $itv56, "interval61": $itv61, "interval62": $itv62, "interval63": $itv63, "interval64": $itv64, "interval65": $itv65, "interval66": $itv66, "interval71": $itv71, "interval72": $itv72, "interval73": $itv73, "interval74": $itv74, "interval75": $itv75, "interval76": $itv76, "interval77": $itv77, "interval78": $itv78, "interval79": $itv79}
+

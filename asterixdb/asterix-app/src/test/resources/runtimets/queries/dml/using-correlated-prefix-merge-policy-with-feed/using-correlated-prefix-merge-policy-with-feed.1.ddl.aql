@@ -1,0 +1,67 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Test case Name  : using-correlated-prefix-merge-policy-with-feed.aql
+ * Description     : This test is inteded to test the correlated prefix merge policy, and create secondary
+ * index for datasets using this policy
+ * Expected Result : Success
+ * Date            : June 9 2017
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type LineItemType as closed {
+  l_orderkey: int64,
+  l_partkey: int64,
+  l_suppkey: int64,
+  l_linenumber: int64,
+  l_quantity: int64,
+  l_extendedprice: double,
+  l_discount: double,
+  l_tax: double,
+  l_returnflag: string,
+  l_linestatus: string,
+  l_shipdate: string,
+  l_commitdate: string,
+  l_receiptdate: string,
+  l_shipinstruct: string,
+  l_shipmode: string,
+  l_comment: string
+}
+
+create dataset LineItem(LineItemType)
+primary key l_orderkey, l_linenumber
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
+
+create feed LineItemFeed with {
+  "adapter-name" : "localfs",
+  "path" : "asterix_nc1://data/tpch0.001/lineitem.tbl",
+  "format" : "delimited-text",
+  "delimiter" : "|",
+  "type-name" : "LineItemType",
+  "tuple-interval" : "10"
+};

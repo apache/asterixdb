@@ -1,0 +1,60 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description     : Test that multiple subtrees in the same query
+ *                   can be rewritten with secondary BTree indexes.
+ *                   Guards against regression to issue 204.
+ * Expected Result : Success
+ * Issue           : Issue 204
+ */
+
+drop dataverse tpch if exists;
+create dataverse tpch;
+use dataverse tpch;
+
+create type OrderTypetmp as closed {
+  o_orderkey: int64,
+  o_custkey: int64,
+  o_orderstatus: string,
+  o_totalprice: double,
+  o_orderdate: string,
+  o_orderpriority: string,
+  o_clerk: string,
+  o_shippriority: int64,
+  o_comment: string
+}
+
+create type Nested as open {
+  o_orderkey: int64,
+  o_orderstatus: string,
+  o_totalprice: double,
+  o_orderdate: string,
+  o_orderpriority: string,
+  o_clerk: string,
+  o_shippriority: int64,
+  o_comment: string
+}
+
+create type OrderType as closed {
+nested : Nested
+}
+
+create dataset Orders(OrderType) primary key nested.o_orderkey;
+create dataset Orderstmp(OrderTypetmp) primary key o_orderkey;
+

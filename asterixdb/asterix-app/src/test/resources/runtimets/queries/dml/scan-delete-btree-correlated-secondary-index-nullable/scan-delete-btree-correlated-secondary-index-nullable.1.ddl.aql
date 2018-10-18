@@ -1,0 +1,61 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Test case Name  : scan-delete-btree-secondary-index-nullable.aql
+ * Description     : This test is intended to test deletion from correlated secondary btree indexes that
+ * are built on nullable fields
+ * Expected Result : Success
+ * Date            : June 8 2017
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use dataverse test;
+
+create type AddressType as closed {
+  number: int64,
+  street: string,
+  city: string
+}
+
+create type CustomerType as closed {
+  cid: int64,
+  name: string,
+  age: int64?,
+  address: AddressType?,
+  interests: {{string}},
+  children: [ { name: string, age: int64? } ]
+}
+
+create dataset Customers(CustomerType) primary key cid
+with {
+  "merge-policy": {
+    "name": "correlated-prefix",
+    "parameters": { "max-mergable-component-size": 16384, "max-tolerance-component-count": 3 }
+  }
+};
+
+create feed CustomerFeed with {
+ "adapter-name" : "localfs",
+ "path" : "asterix_nc1://data/semistructured/co1k/customer.adm",
+ "format" : "adm",
+ "type-name" : "CustomerType",
+ "tuple-interval" : "10"
+};

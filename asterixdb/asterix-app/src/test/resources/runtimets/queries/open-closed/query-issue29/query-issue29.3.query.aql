@@ -1,0 +1,86 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : This test case is to verify the fix for issue29
+                 : https://code.google.com/p/asterixdb/issues/detail?id=29
+ * Expected Res : Success
+ * Date         : 26th November 2012
+ */
+
+let $tweets :=
+{{
+   {
+      "tweetid": "1023",
+      "user": {
+         "screen-name": "dflynn24",
+         "lang": "en",
+         "friends_count": 46,
+         "statuses_count": 987,
+         "name": "danielle flynn",
+         "followers_count": 47
+      },
+      "sender-location": "40.904177,-72.958996",
+      "send-time": "2010-02-21T11:56:02-05:00",
+      "referred-topics": {{ "verizon" }},
+      "message-text": "i need a #verizon phone like nowwwww! :("
+   },
+   {
+      "tweetid": "1024",
+      "user": {
+         "screen-name": "miriamorous",
+         "lang": "en",
+         "friends_count": 69,
+         "statuses_count": 1068,
+         "name": "Miriam Songco",
+         "followers_count": 78
+      },
+      "send-time": "2010-02-21T11:11:43-08:00",
+      "referred-topics": {{ "commercials", "verizon", "att" }},
+      "message-text": "#verizon & #att #commercials, so competitive"
+   },
+   {
+      "tweetid": "1025",
+      "user": {
+         "screen-name": "dj33",
+         "lang": "en",
+         "friends_count": 96,
+         "statuses_count": 1696,
+         "name": "Don Jango",
+         "followers_count": 22
+      },
+      "send-time": "2010-02-21T12:38:44-05:00",
+      "referred-topics": {{ "charlotte" }},
+      "message-text": "Chillin at dca waiting for 900am flight to #charlotte and from there to providenciales"
+   },
+   {
+      "tweetid": "1026",
+      "user": {
+      "screen-name": "reallyleila",
+         "lang": "en",
+         "friends_count": 106,
+         "statuses_count": 107,
+         "name": "Leila Samii",
+         "followers_count": 52
+      },
+      "send-time": "2010-02-21T21:31:57-06:00",
+      "referred-topics": {{ "verizon", "at&t", "iphone" }},
+      "message-text": "I think a switch from #verizon to #at&t may be in my near future... my smartphone is like a land line compared to the #iphone!"
+   }
+}}
+return $tweets

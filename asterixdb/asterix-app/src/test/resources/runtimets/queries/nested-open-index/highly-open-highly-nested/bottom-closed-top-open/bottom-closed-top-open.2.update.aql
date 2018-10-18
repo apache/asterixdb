@@ -1,0 +1,114 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+* Description  : Create a highly nested datastructure that uses opened and closed datasets
+                at different levels. Use open-nested indexes at every level
+                to copy from one data set upwards
+                check the final result to see if copies were successful all the way up
+* Expected Res : Success
+* Date         : 20 Oct 2014
+*/
+use dataverse test;
+
+insert into dataset Ss(
+    {"id":1,"Species":"Gulo"}
+);
+insert into dataset Ss(
+    {"id":2,"Species":"Johnstoni"}
+);
+insert into dataset GSs(
+    for $S in dataset Ss
+    where $S.Species = "Gulo"
+    return {"id":1,"Genus":"Gulo","lower":$S}
+);
+insert into dataset GSs(
+    for $S in dataset Ss
+    where $S.Species = "Johnstoni"
+    return {"id":2,"Genus":"Okapia","lower":$S}
+);
+insert into dataset FGSs(
+    for $S in dataset GSs
+    where $S.lower.Species = "Gulo"
+    return {"id":1,"Family":"Mustelinae","lower":$S}
+);
+insert into dataset FGSs(
+    for $S in dataset GSs
+    where $S.lower.Species = "Johnstoni"
+    return {"id":2,"Family":"Giraffidae","lower":$S}
+);
+insert into dataset OFGSs(
+    for $S in dataset FGSs
+    where $S.lower.lower.Species = "Gulo"
+    return {"id":1,"Order":"Carnivora","lower":$S}
+);
+insert into dataset OFGSs(
+    for $S in dataset FGSs
+    where $S.lower.lower.Species = "Johnstoni"
+    return {"id":2,"Order":"Artiodactyla","lower":$S}
+);
+insert into dataset COFGSs(
+    for $S in dataset OFGSs
+    where $S.lower.lower.lower.Species = "Gulo"
+    return {"id":1,"Class":"Mammalia","lower":$S}
+);
+insert into dataset COFGSs(
+    for $S in dataset OFGSs
+    where $S.lower.lower.lower.Species = "Johnstoni"
+    return {"id":2,"Class":"Mammalia","lower":$S}
+);
+insert into dataset PCOFGSs(
+    for $S in dataset COFGSs
+    where $S.lower.lower.lower.lower.Species = "Gulo"
+    return {"id":1,"Phylum":"Chordata","lower":$S}
+);
+insert into dataset PCOFGSs(
+    for $S in dataset COFGSs
+    where $S.lower.lower.lower.lower.Species = "Johnstoni"
+    return {"id":2,"Phylum":"Chordata","lower":$S}
+);
+insert into dataset KPCOFGSs(
+    for $S in dataset PCOFGSs
+    where $S.lower.lower.lower.lower.lower.Species = "Gulo"
+    return {"id":1,"Kingdom":"Animalia","lower":$S}
+);
+insert into dataset KPCOFGSs(
+    for $S in dataset PCOFGSs
+    where $S.lower.lower.lower.lower.lower.Species = "Johnstoni"
+    return {"id":2,"Kingdom":"Animalia","lower":$S}
+);
+insert into dataset Classifications(
+    for $S in dataset KPCOFGSs
+    where $S.lower.lower.lower.lower.lower.lower.Species = "Gulo"
+    return {"id":1,"fullClassification":$S}
+);
+insert into dataset Classifications(
+    for $S in dataset KPCOFGSs
+    where $S.lower.lower.lower.lower.lower.lower.Species = "Johnstoni"
+    return {"id":2,"fullClassification":$S}
+);
+insert into dataset Animals(
+    for $S in dataset Classifications
+    where $S.fullClassification.lower.lower.lower.lower.lower.lower.Species = "Gulo"
+    return {"id":1,"class":$S}
+);
+insert into dataset Animals(
+    for $S in dataset Classifications
+    where $S.fullClassification.lower.lower.lower.lower.lower.lower.Species = "Johnstoni"
+    return {"id":2,"class":$S}
+);

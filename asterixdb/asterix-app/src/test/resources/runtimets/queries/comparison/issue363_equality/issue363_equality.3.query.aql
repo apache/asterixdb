@@ -1,0 +1,72 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : a test case for equality comparisons for non-total-ordered types
+ * Expected Res : Success
+ * Date         : 9 May 2013
+ * Issue        : 363
+ */
+
+let $v1 := duration("P3Y6M3DT9H5M2.348S")
+let $v2 := year-month-duration("P3Y6M")
+let $v3 := day-time-duration("P3DT9H5M2.348S")
+let $v4 := point("47.44,80.65")
+let $v5 := line("10.1234,11.1e-1 +10.2E-2,-11.22")
+let $v6 := polygon("-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75")
+let $v7 := circle("0.1234,-1.00e-10 +10.5E-2")
+let $v8 := rectangle("0.1234,-1.00e-10 5.5487,0.48765")
+let $v9 := interval(datetime("-1987-11-19T02:43:57.938+08:00"), datetime("19991112T124935948-0700"))
+let $dv1 := duration("P3Y6M3DT9H5M2.348S")
+let $dv2 := year-month-duration("P3Y6M")
+let $dv3 := day-time-duration("P3DT9H5M2.348S")
+let $dv4 := point("47.44,80.65")
+let $dv5 := line("10.1234,11.1e-1 +10.2E-2,-11.22")
+let $dv6 := polygon("-1.0,+10.5e2 -02.15E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75")
+let $dv7 := circle("0.1234,-1.00e-10 +10.5E-2")
+let $dv8 := rectangle("0.1234,-1.00e-10 5.5487,0.48765")
+let $dv9 := interval(datetime("-1987-11-19T02:43:57.938+08:00"), datetime("19991112T124935948-0700"))
+let $ndv1 := duration("P4Y6M3DT9H5M2.348S")
+let $ndv2 := year-month-duration("P3Y7M")
+let $ndv3 := day-time-duration("P3DT1H5M2.348S")
+let $ndv4 := point("47.4444,80.65")
+let $ndv5 := line("10.5678,11.1e-1 +10.2E-2,-11.22")
+let $ndv6 := polygon("-1.0,+10.5e2 -02.19E+50,2.5 -1.0,+3.3e3 -2.50E+05,20.15 +3.5e+2,03.6 -4.60E-3,+4.75 -2,+1.0e2 -2.00E+5,20.10 30.5,03.25 -4.33E-3,+4.75")
+let $ndv7 := circle("0.5678,-1.00e-10 +10.5E-2")
+let $ndv8 := rectangle("0.5678,-1.00e-10 5.5487,0.48765")
+let $ndv9 := interval(datetime("-1983-11-19T02:43:57.938+08:00"), datetime("19991112T124935948-0700"))
+
+return { "duration":  $v1 = $dv1,
+"year-month-duration":  $v2 = $dv2,
+"day-time-duration":  $v3 = $dv3,
+"point": $v4 = $dv4,
+"line": $v5 = $dv5,
+"polygon": $v6 = $dv6,
+"circle": $v7 = $dv7,
+"rectangle": $v8 = $dv8,
+"interval": $v9 = $dv9,
+"duration2":  $v1 != $ndv1,
+"year-month-duration2": $v2 != $ndv2,
+"day-time-duration2":  $v3 != $ndv3,
+"point2": $v4 != $ndv4,
+"line2": $v5 != $ndv5,
+"polygon2": $v6 != $ndv6,
+"circle2": $v7 != $ndv7,
+"rectangle2": $v8 != $ndv8,
+"interval2": $v9 != $ndv9
+}
