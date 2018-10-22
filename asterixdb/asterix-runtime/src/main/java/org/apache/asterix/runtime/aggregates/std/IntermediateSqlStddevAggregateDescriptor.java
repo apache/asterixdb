@@ -53,7 +53,7 @@ public class IntermediateSqlStddevAggregateDescriptor extends AbstractAggregateF
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new IntermediateSqlStddevAggregateFunction(args, ctx, sourceLoc);
+                return new IntermediateSqlStddevAggregateFunction(args, ctx, false, sourceLoc);
             }
         };
     }

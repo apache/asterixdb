@@ -20,7 +20,10 @@
 use test;
 
 
-select element test.array_stddev((
+{'stddev': (select element test.array_stddev((
     select element x
     from  [test.tinyint('1'),test.tinyint('2'),test.tinyint('3')] as x
-));
+))), 'stddev_pop': (select element test.array_stddev_pop((
+    select element x
+    from  [test.tinyint('1'),test.tinyint('2'),test.tinyint('3')] as x
+)))};

@@ -218,6 +218,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="stddev_pop_mixed">
+        <output-dir compare="Text">stddev_pop_mixed</output-dir>
+        <expected-error>Type incompatibility: function agg-stddev_pop gets incompatible input values: string and float</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_stddev_pop_mixed">
+        <output-dir compare="Text">serial_stddev_pop_mixed</output-dir>
+        <expected-error>Type incompatibility: function agg-stddev_pop gets incompatible input values: string and float</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="agg_number">
         <output-dir compare="Text">agg_number</output-dir>
       </compilation-unit>
@@ -699,6 +711,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="stddev_distinct">
+        <output-dir compare="Text">stddev_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="sum_double">
         <output-dir compare="Text">sum_double</output-dir>
       </compilation-unit>
@@ -838,6 +855,18 @@
       <compilation-unit name="stddev_mixed">
         <output-dir compare="Text">stddev_mixed</output-dir>
         <expected-error>Type incompatibility: function agg-stddev gets incompatible input values: string and float</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_stddev_pop_mixed">
+        <output-dir compare="Text">serial_stddev_pop_mixed</output-dir>
+        <expected-error>Invalid item type: function agg-stddev_pop cannot process item type string in an input array (or multiset)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="stddev_pop_mixed">
+        <output-dir compare="Text">stddev_pop_mixed</output-dir>
+        <expected-error>Type incompatibility: function agg-stddev_pop gets incompatible input values: string and float</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1248,6 +1277,11 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="stddev_int8_null">
         <output-dir compare="Text">stddev_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="stddev_distinct">
+        <output-dir compare="Text">stddev_distinct</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">

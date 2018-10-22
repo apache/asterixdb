@@ -195,6 +195,32 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         1.4591664287073858
 
+### array_stddev_pop ###
+
+ * Syntax:
+
+        array_stddev_pop(num_collection)
+
+ * Gets the standard deviation value of the non-null and non-missing numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the average of the non-null and non-missing numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if the given collection does not contain any non-null and non-missing items,
+    * any other non-array and non-multiset input value will cause a type error,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        array_stddev_pop( [1.2, 2.3, 3.4, 0, null] );
+
+ * The expected result is:
+
+        1.2636751956100112
 
 ### strict_count ###
  * Syntax:
@@ -352,3 +378,28 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
  * The expected result is:
 
         100.0
+
+### strict_stddev_pop ###
+ * Syntax:
+
+        strict_stddev_pop(num_collection)
+
+ * Gets the standard deviation value of the numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the average of the numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if there is a `null` or `missing` in the input collection,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        strict_stddev_pop( [100, 200, 300] );
+
+ * The expected result is:
+
+        81.64965809277261

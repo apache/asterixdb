@@ -17,8 +17,9 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of stddev with an empty list.
+ * Description    : Tests the scalar version of stddev and stddev_pop with an empty list.
  * Success        : Yes
  */
 
-select element strict_stddev([]);
+{'stddev': (select element strict_stddev([])),
+'stddev_pop': (select element strict_stddev_pop([]))};

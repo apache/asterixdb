@@ -30,9 +30,18 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SqlStddevAggregateFunction extends AbstractSingleVarStatisticsAggregateFunction {
 
-    public SqlStddevAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+    private final boolean isPop;
+    private final int delta;
+
+    public SqlStddevAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean isPop,
             SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
+        this.isPop = isPop;
+        if (isPop) {
+            delta = 0;
+        } else {
+            delta = 1;
+        }
     }
 
     @Override
@@ -42,7 +51,7 @@ public class SqlStddevAggregateFunction extends AbstractSingleVarStatisticsAggre
 
     @Override
     public void finish(IPointable result) throws HyracksDataException {
-        finishStddevFinalResults(result);
+        finishStddevFinalResults(result, delta);
     }
 
     @Override
@@ -56,6 +65,10 @@ public class SqlStddevAggregateFunction extends AbstractSingleVarStatisticsAggre
 
     @Override
     protected FunctionIdentifier getFunctionIdentifier() {
-        return BuiltinFunctions.STDDEV;
+        if (isPop) {
+            return BuiltinFunctions.STDDEV_POP;
+        } else {
+            return BuiltinFunctions.STDDEV;
+        }
     }
 }

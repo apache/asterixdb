@@ -53,7 +53,7 @@ public class StddevAggregateDescriptor extends AbstractAggregateFunctionDynamicD
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new StddevAggregateFunction(args, ctx, sourceLoc);
+                return new StddevAggregateFunction(args, ctx, false, sourceLoc);
             }
         };
     }

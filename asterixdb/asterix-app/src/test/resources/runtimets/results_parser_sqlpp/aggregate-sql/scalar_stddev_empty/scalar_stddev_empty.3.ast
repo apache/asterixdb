@@ -1,7 +1,27 @@
 Query:
-SELECT ELEMENT [
-FunctionCall asterix.sql-stddev@1[
-  OrderedListConstructor [
-  ]
-]
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [stddev]
+    :
+    (
+      SELECT ELEMENT [
+      FunctionCall asterix.sql-stddev@1[
+        OrderedListConstructor [
+        ]
+      ]
+      ]
+    )
+  )
+  (
+    LiteralExpr [STRING] [stddev_pop]
+    :
+    (
+      SELECT ELEMENT [
+      FunctionCall asterix.sql-stddev_pop@1[
+        OrderedListConstructor [
+        ]
+      ]
+      ]
+    )
+  )
 ]

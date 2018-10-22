@@ -58,4 +58,10 @@ use test;
         select element t
         from  Test as t
     ) as i
+)),'sql-stddev_pop':test.array_stddev_pop((
+    select element i.valplus
+    from  (
+        select element t
+        from  Test as t
+    ) as i
 ))};

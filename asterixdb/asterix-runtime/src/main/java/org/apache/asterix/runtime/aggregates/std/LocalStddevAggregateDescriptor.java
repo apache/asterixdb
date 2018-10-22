@@ -53,7 +53,7 @@ public class LocalStddevAggregateDescriptor extends AbstractAggregateFunctionDyn
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new LocalStddevAggregateFunction(args, ctx, sourceLoc);
+                return new LocalStddevAggregateFunction(args, ctx, false, sourceLoc);
             }
         };
     }

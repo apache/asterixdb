@@ -32,9 +32,18 @@ import java.io.DataOutput;
 public class SerializableGlobalSqlStddevAggregateFunction
         extends AbstractSerializableSingleVariableStatisticsAggregateFunction {
 
+    private final boolean isPop;
+    private final int delta;
+
     public SerializableGlobalSqlStddevAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
-            SourceLocation sourceLoc) throws HyracksDataException {
+            boolean isPop, SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
+        this.isPop = isPop;
+        if (isPop) {
+            delta = 0;
+        } else {
+            delta = 1;
+        }
     }
 
     @Override
@@ -44,7 +53,7 @@ public class SerializableGlobalSqlStddevAggregateFunction
 
     @Override
     public void finish(byte[] state, int start, int len, DataOutput result) throws HyracksDataException {
-        finishStddevFinalResults(state, start, len, result);
+        finishStddevFinalResults(state, start, len, result, delta);
     }
 
     @Override
@@ -58,7 +67,11 @@ public class SerializableGlobalSqlStddevAggregateFunction
 
     @Override
     protected FunctionIdentifier getFunctionIdentifier() {
-        return BuiltinFunctions.STDDEV;
+        if (isPop) {
+            return BuiltinFunctions.STDDEV_POP;
+        } else {
+            return BuiltinFunctions.STDDEV;
+        }
     }
 
 }

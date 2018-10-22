@@ -17,8 +17,9 @@
  * under the License.
  */
 /*
- * Description    : Tests the scalar version of array_stddev with an empty list.
+ * Description    : Tests the scalar version of stddev and stddev_pop with an empty list.
  * Success        : Yes
  */
 
-select element array_stddev([]);
+{'stddev': (select element array_stddev([])),
+'stddev_pop': (select element array_stddev_pop([]))};

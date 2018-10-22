@@ -482,6 +482,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sampling", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier RANGE_MAP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-range-map", 1);
+    public static final FunctionIdentifier STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-stddev_pop", 1);
+    public static final FunctionIdentifier GLOBAL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-stddev_pop", 1);
+    public static final FunctionIdentifier INTERMEDIATE_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-stddev_pop", 1);
+    public static final FunctionIdentifier LOCAL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-stddev_pop", 1);
 
     public static final FunctionIdentifier SCALAR_AVG = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "avg", 1);
     public static final FunctionIdentifier SCALAR_COUNT =
@@ -501,6 +509,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-stddev", 1);
     public static final FunctionIdentifier SCALAR_LOCAL_STDDEV =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-stddev", 1);
+    public static final FunctionIdentifier SCALAR_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "stddev_pop", 1);
+    public static final FunctionIdentifier SCALAR_GLOBAL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-stddev_pop", 1);
+    public static final FunctionIdentifier SCALAR_LOCAL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-stddev_pop", 1);
 
     // serializable aggregate functions
     public static final FunctionIdentifier SERIAL_AVG =
@@ -525,6 +539,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-stddev-serial", 1);
     public static final FunctionIdentifier SERIAL_INTERMEDIATE_STDDEV =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-stddev-serial", 1);
+    public static final FunctionIdentifier SERIAL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "stddev_pop-serial", 1);
+    public static final FunctionIdentifier SERIAL_GLOBAL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-stddev_pop-serial", 1);
+    public static final FunctionIdentifier SERIAL_LOCAL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-stddev_pop-serial", 1);
+    public static final FunctionIdentifier SERIAL_INTERMEDIATE_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-stddev_pop-serial", 1);
 
     // distinct aggregate functions
     public static final FunctionIdentifier COUNT_DISTINCT =
@@ -547,6 +569,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-min-distinct", 1);
     public static final FunctionIdentifier SCALAR_MIN_DISTINCT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "min-distinct", 1);
+    public static final FunctionIdentifier STDDEV_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-stddev-distinct", 1);
+    public static final FunctionIdentifier SCALAR_STDDEV_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "stddev-distinct", 1);
+    public static final FunctionIdentifier STDDEV_POP_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-stddev_pop-distinct", 1);
+    public static final FunctionIdentifier SCALAR_STDDEV_POP_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "stddev_pop-distinct", 1);
 
     // sql aggregate functions
     public static final FunctionIdentifier SQL_AVG =
@@ -579,6 +609,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-stddev", 1);
     public static final FunctionIdentifier LOCAL_SQL_STDDEV =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-stddev", 1);
+    public static final FunctionIdentifier SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-stddev_pop", 1);
+    public static final FunctionIdentifier INTERMEDIATE_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-agg-sql-stddev_pop", 1);
+    public static final FunctionIdentifier GLOBAL_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-stddev_pop", 1);
+    public static final FunctionIdentifier LOCAL_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-stddev_pop", 1);
 
     public static final FunctionIdentifier SCALAR_SQL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-avg", 1);
@@ -600,6 +638,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-stddev", 1);
     public static final FunctionIdentifier SCALAR_LOCAL_SQL_STDDEV =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-stddev", 1);
+    public static final FunctionIdentifier SCALAR_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-stddev_pop", 1);
+    public static final FunctionIdentifier SCALAR_GLOBAL_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-stddev_pop", 1);
+    public static final FunctionIdentifier SCALAR_LOCAL_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-stddev_pop", 1);
 
     // serializable sql aggregate functions
     public static final FunctionIdentifier SERIAL_SQL_AVG =
@@ -624,6 +668,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-sql-stddev-serial", 1);
     public static final FunctionIdentifier SERIAL_LOCAL_SQL_STDDEV =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-stddev-serial", 1);
+    public static final FunctionIdentifier SERIAL_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-stddev_pop-serial", 1);
+    public static final FunctionIdentifier SERIAL_GLOBAL_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "global-sql-stddev_pop-serial", 1);
+    public static final FunctionIdentifier SERIAL_INTERMEDIATE_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-sql-stddev_pop-serial", 1);
+    public static final FunctionIdentifier SERIAL_LOCAL_SQL_STDDEV_POP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "local-sql-stddev_pop-serial", 1);
 
     // distinct sql aggregate functions
     public static final FunctionIdentifier SQL_COUNT_DISTINCT =
@@ -646,6 +698,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-min-distinct", 1);
     public static final FunctionIdentifier SCALAR_SQL_MIN_DISTINCT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-min-distinct", 1);
+    public static final FunctionIdentifier SQL_STDDEV_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-stddev-distinct", 1);
+    public static final FunctionIdentifier SCALAR_SQL_STDDEV_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-stddev-distinct", 1);
+    public static final FunctionIdentifier SQL_STDDEV_POP_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-stddev_pop-distinct", 1);
+    public static final FunctionIdentifier SCALAR_SQL_STDDEV_POP_DISTINCT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-stddev_pop-distinct", 1);
 
     // unnesting functions
     public static final FunctionIdentifier SCAN_COLLECTION =
@@ -1388,6 +1448,9 @@ public class BuiltinFunctions {
         addPrivateFunction(GLOBAL_STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SAMPLING, ListOfSamplesTypeComputer.INSTANCE, true);
         addPrivateFunction(RANGE_MAP, ABinaryTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
+        addFunction(STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
 
         addPrivateFunction(SERIAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
@@ -1412,6 +1475,14 @@ public class BuiltinFunctions {
         addPrivateFunction(SERIAL_GLOBAL_SQL_STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_STDDEV, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_STDDEV, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_GLOBAL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_LOCAL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_GLOBAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_LOCAL_SQL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_INTERMEDIATE_SQL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
 
         addFunction(SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
@@ -1439,6 +1510,13 @@ public class BuiltinFunctions {
         addFunction(SCALAR_SQL_STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SCALAR_GLOBAL_SQL_STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SCALAR_LOCAL_SQL_STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SQL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_SQL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_GLOBAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SCALAR_LOCAL_SQL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
 
         addPrivateFunction(SERIAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE, true);
@@ -1451,6 +1529,10 @@ public class BuiltinFunctions {
         addPrivateFunction(SERIAL_GLOBAL_STDDEV, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_STDDEV, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_STDDEV, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_GLOBAL_STDDEV_POP, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_LOCAL_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_INTERMEDIATE_STDDEV_POP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
 
         // Distinct aggregate functions
 
@@ -1478,6 +1560,16 @@ public class BuiltinFunctions {
         addFunction(SCALAR_MIN_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
         addFunction(SQL_MIN_DISTINCT, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_MIN_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
+
+        addFunction(STDDEV_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_STDDEV_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SQL_STDDEV_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_STDDEV_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
+
+        addFunction(STDDEV_POP_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_STDDEV_POP_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SQL_STDDEV_POP_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_STDDEV_POP_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
 
         // Similarity functions
         addFunction(EDIT_DISTANCE_CONTAINS, OrderedListOfAnyTypeComputer.INSTANCE, true);
@@ -1828,6 +1920,43 @@ public class BuiltinFunctions {
         addIntermediateAgg(SERIAL_GLOBAL_STDDEV, SERIAL_INTERMEDIATE_STDDEV);
         addGlobalAgg(SERIAL_STDDEV, SERIAL_GLOBAL_STDDEV);
 
+        // STDDEV DISTINCT
+
+        addDistinctAgg(STDDEV_DISTINCT, SCALAR_STDDEV);
+        addScalarAgg(STDDEV_DISTINCT, SCALAR_STDDEV_DISTINCT);
+
+        // STDDEV_POP
+
+        addAgg(STDDEV_POP);
+        addAgg(LOCAL_STDDEV_POP);
+        addAgg(GLOBAL_STDDEV_POP);
+        addLocalAgg(STDDEV_POP, LOCAL_STDDEV_POP);
+        addIntermediateAgg(STDDEV_POP, INTERMEDIATE_STDDEV_POP);
+        addIntermediateAgg(LOCAL_STDDEV_POP, INTERMEDIATE_STDDEV_POP);
+        addIntermediateAgg(GLOBAL_STDDEV_POP, INTERMEDIATE_STDDEV_POP);
+        addGlobalAgg(STDDEV_POP, GLOBAL_STDDEV_POP);
+
+        addScalarAgg(STDDEV_POP, SCALAR_STDDEV_POP);
+        addScalarAgg(GLOBAL_STDDEV_POP, SCALAR_GLOBAL_STDDEV_POP);
+        addScalarAgg(LOCAL_STDDEV_POP, SCALAR_LOCAL_STDDEV_POP);
+
+        addSerialAgg(STDDEV_POP, SERIAL_STDDEV_POP);
+        addSerialAgg(LOCAL_STDDEV_POP, SERIAL_LOCAL_STDDEV_POP);
+        addSerialAgg(GLOBAL_STDDEV_POP, SERIAL_GLOBAL_STDDEV_POP);
+        addAgg(SERIAL_STDDEV_POP);
+        addAgg(SERIAL_LOCAL_STDDEV_POP);
+        addAgg(SERIAL_GLOBAL_STDDEV_POP);
+        addLocalAgg(SERIAL_STDDEV_POP, SERIAL_LOCAL_STDDEV_POP);
+        addIntermediateAgg(SERIAL_STDDEV_POP, SERIAL_INTERMEDIATE_STDDEV_POP);
+        addIntermediateAgg(SERIAL_LOCAL_STDDEV_POP, SERIAL_INTERMEDIATE_STDDEV_POP);
+        addIntermediateAgg(SERIAL_GLOBAL_STDDEV_POP, SERIAL_INTERMEDIATE_STDDEV_POP);
+        addGlobalAgg(SERIAL_STDDEV_POP, SERIAL_GLOBAL_STDDEV_POP);
+
+        // STDDEV_POP DISTINCT
+
+        addDistinctAgg(STDDEV_POP_DISTINCT, SCALAR_STDDEV_POP);
+        addScalarAgg(STDDEV_POP_DISTINCT, SCALAR_STDDEV_POP_DISTINCT);
+
         // FIRST_ELEMENT
 
         addAgg(SCALAR_FIRST_ELEMENT);
@@ -1947,10 +2076,47 @@ public class BuiltinFunctions {
         addIntermediateAgg(SERIAL_GLOBAL_SQL_STDDEV, SERIAL_INTERMEDIATE_SQL_STDDEV);
         addGlobalAgg(SERIAL_SQL_STDDEV, SERIAL_GLOBAL_SQL_STDDEV);
 
+        // SQL STDDEV_POP
+
+        addAgg(SQL_STDDEV_POP);
+        addAgg(LOCAL_SQL_STDDEV_POP);
+        addAgg(GLOBAL_SQL_STDDEV_POP);
+        addLocalAgg(SQL_STDDEV_POP, LOCAL_SQL_STDDEV_POP);
+        addIntermediateAgg(SQL_STDDEV_POP, INTERMEDIATE_SQL_STDDEV_POP);
+        addIntermediateAgg(LOCAL_SQL_STDDEV_POP, INTERMEDIATE_SQL_STDDEV_POP);
+        addIntermediateAgg(GLOBAL_SQL_STDDEV_POP, INTERMEDIATE_SQL_STDDEV_POP);
+        addGlobalAgg(SQL_STDDEV_POP, GLOBAL_SQL_STDDEV_POP);
+
+        addScalarAgg(SQL_STDDEV_POP, SCALAR_SQL_STDDEV_POP);
+        addScalarAgg(GLOBAL_SQL_STDDEV_POP, SCALAR_GLOBAL_SQL_STDDEV_POP);
+        addScalarAgg(LOCAL_SQL_STDDEV_POP, SCALAR_LOCAL_SQL_STDDEV_POP);
+
+        addSerialAgg(SQL_STDDEV_POP, SERIAL_SQL_STDDEV_POP);
+        addSerialAgg(LOCAL_SQL_STDDEV_POP, SERIAL_LOCAL_SQL_STDDEV_POP);
+        addSerialAgg(GLOBAL_SQL_STDDEV_POP, SERIAL_GLOBAL_SQL_STDDEV_POP);
+        addAgg(SERIAL_SQL_STDDEV_POP);
+        addAgg(SERIAL_LOCAL_SQL_STDDEV_POP);
+        addAgg(SERIAL_GLOBAL_SQL_STDDEV_POP);
+        addLocalAgg(SERIAL_SQL_STDDEV_POP, SERIAL_LOCAL_SQL_STDDEV_POP);
+        addIntermediateAgg(SERIAL_SQL_STDDEV_POP, SERIAL_INTERMEDIATE_SQL_STDDEV_POP);
+        addIntermediateAgg(SERIAL_LOCAL_SQL_STDDEV_POP, SERIAL_INTERMEDIATE_SQL_STDDEV_POP);
+        addIntermediateAgg(SERIAL_GLOBAL_SQL_STDDEV_POP, SERIAL_INTERMEDIATE_SQL_STDDEV_POP);
+        addGlobalAgg(SERIAL_SQL_STDDEV_POP, SERIAL_GLOBAL_SQL_STDDEV_POP);
+
         // SQL AVG DISTINCT
 
         addDistinctAgg(SQL_AVG_DISTINCT, SCALAR_SQL_AVG);
         addScalarAgg(SQL_AVG_DISTINCT, SCALAR_SQL_AVG_DISTINCT);
+
+        // SQL STDDEV DISTINCT
+
+        addDistinctAgg(SQL_STDDEV_DISTINCT, SCALAR_SQL_STDDEV);
+        addScalarAgg(SQL_STDDEV_DISTINCT, SCALAR_SQL_STDDEV_DISTINCT);
+
+        // SQL STDDEV_POP DISTINCT
+
+        addDistinctAgg(SQL_STDDEV_POP_DISTINCT, SCALAR_SQL_STDDEV_POP);
+        addScalarAgg(SQL_STDDEV_POP_DISTINCT, SCALAR_SQL_STDDEV_POP_DISTINCT);
 
         // SQL COUNT
 

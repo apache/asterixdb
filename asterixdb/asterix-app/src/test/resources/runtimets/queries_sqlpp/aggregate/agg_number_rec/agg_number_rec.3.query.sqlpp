@@ -43,4 +43,7 @@ use test;
 )),'stddev':test.strict_stddev((
     select element t.valplus
     from  Test as t
+)),'stddev_pop':test.strict_stddev_pop((
+    select element t.valplus
+    from  Test as t
 ))};

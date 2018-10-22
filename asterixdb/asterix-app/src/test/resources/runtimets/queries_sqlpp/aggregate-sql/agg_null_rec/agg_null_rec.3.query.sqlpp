@@ -43,4 +43,7 @@ use test;
 )),'sql-stddev':test.array_stddev((
     select element t.valplus
     from  Test as t
+)),'sql-stddev_pop':test.array_stddev_pop((
+    select element t.valplus
+    from  Test as t
 ))};

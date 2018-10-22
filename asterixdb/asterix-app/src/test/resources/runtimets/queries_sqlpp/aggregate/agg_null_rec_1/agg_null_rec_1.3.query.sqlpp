@@ -58,4 +58,10 @@ use test;
         select element t
         from  Test as t
     ) as i
+)),'stddev_pop':test.strict_stddev_pop((
+    select element i.val
+    from  (
+        select element t
+        from  Test as t
+    ) as i
 ))};

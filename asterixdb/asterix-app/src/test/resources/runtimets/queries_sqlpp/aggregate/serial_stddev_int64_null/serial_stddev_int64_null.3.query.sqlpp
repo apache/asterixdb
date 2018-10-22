@@ -19,7 +19,8 @@
 
 use test;
 
-select gid, strict_stddev((select value g.valplus from g)) as stddev
+select gid, strict_stddev((select value g.valplus from g)) as stddev,
+   strict_stddev_pop((select value g.valplus from g)) as stddev_pop
 from Test as t
 /* +hash */
 group by t.gid as gid group as g(valplus as valplus);

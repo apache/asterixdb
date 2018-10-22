@@ -54,7 +54,7 @@ public class GlobalStddevAggregateDescriptor extends AbstractAggregateFunctionDy
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new GlobalStddevAggregateFunction(args, ctx, sourceLoc);
+                return new GlobalStddevAggregateFunction(args, ctx, false, sourceLoc);
             }
         };
     }

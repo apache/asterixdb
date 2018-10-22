@@ -30,9 +30,12 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class IntermediateSqlStddevAggregateFunction extends AbstractSingleVarStatisticsAggregateFunction {
 
+    private final boolean isPop;
+
     public IntermediateSqlStddevAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
-            SourceLocation sourceLoc) throws HyracksDataException {
+            boolean isPop, SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
+        this.isPop = isPop;
     }
 
     @Override
@@ -56,6 +59,10 @@ public class IntermediateSqlStddevAggregateFunction extends AbstractSingleVarSta
 
     @Override
     protected FunctionIdentifier getFunctionIdentifier() {
-        return BuiltinFunctions.STDDEV;
+        if (isPop) {
+            return BuiltinFunctions.STDDEV_POP;
+        } else {
+            return BuiltinFunctions.STDDEV;
+        }
     }
 }

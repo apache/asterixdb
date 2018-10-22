@@ -17,7 +17,10 @@
  * under the License.
  */
 
-select element strict_stddev((
+{'stddev':(select element strict_stddev((
     select element x
     from  [1.0,2.0,double('3.0')] as x
-));
+))), 'stddev_pop': (select element strict_stddev_pop((
+    select element x
+    from  [1.0,2.0,double('3.0')] as x
+)))};

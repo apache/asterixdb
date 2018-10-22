@@ -53,7 +53,7 @@ public class SqlStddevAggregateDescriptor extends AbstractAggregateFunctionDynam
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SqlStddevAggregateFunction(args, ctx, sourceLoc);
+                return new SqlStddevAggregateFunction(args, ctx, false, sourceLoc);
             }
         };
     }

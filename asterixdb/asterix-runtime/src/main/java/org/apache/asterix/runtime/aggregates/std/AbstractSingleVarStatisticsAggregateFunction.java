@@ -238,13 +238,13 @@ public abstract class AbstractSingleVarStatisticsAggregateFunction extends Abstr
         }
     }
 
-    protected void finishStddevFinalResults(IPointable result) throws HyracksDataException {
+    protected void finishStddevFinalResults(IPointable result, int delta) throws HyracksDataException {
         resultStorage.reset();
         try {
             if (moments.getCount() <= 1 || aggType == ATypeTag.NULL) {
                 nullSerde.serialize(ANull.NULL, resultStorage.getDataOutput());
             } else {
-                aDouble.setValue(Math.sqrt(moments.getM2() / (moments.getCount() - 1)));
+                aDouble.setValue(Math.sqrt(moments.getM2() / (moments.getCount() - delta)));
                 doubleSerde.serialize(aDouble, resultStorage.getDataOutput());
             }
         } catch (IOException e) {
