@@ -80,6 +80,10 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
 
     @Override
     public void open() throws HyracksDataException {
+        i = 0;
+        currentTupleIdx = 0;
+        lastFlushedTupleIdx = 0;
+        flushedPartialTuples = false;
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
         appender = new FrameTupleAppender(writeBuffer);
@@ -109,10 +113,6 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        currentTupleIdx = 0;
-        lastFlushedTupleIdx = 0;
-        flushedPartialTuples = false;
-
         accessor.reset(buffer);
         ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessor;
         int tupleCount = accessor.getTupleCount();
@@ -164,6 +164,9 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
             FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
         }
         i = 0;
+        currentTupleIdx = 0;
+        lastFlushedTupleIdx = 0;
+        flushedPartialTuples = false;
     }
 
     /**
