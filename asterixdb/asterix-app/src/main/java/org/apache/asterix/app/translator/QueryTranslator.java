@@ -70,7 +70,6 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
@@ -728,22 +727,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected static void validateIfResourceIsActiveInFeed(ICcApplicationContext appCtx, Dataset dataset,
             SourceLocation sourceLoc) throws CompilationException {
-        StringBuilder builder = null;
         ActiveNotificationHandler activeEventHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         IActiveEntityEventsListener[] listeners = activeEventHandler.getEventListeners();
         for (IActiveEntityEventsListener listener : listeners) {
             if (listener.isEntityUsingDataset(dataset) && listener.isActive()) {
-                if (builder == null) {
-                    builder = new StringBuilder();
-                }
-                builder.append(listener.getEntityId() + "\n");
+                throw new CompilationException(ErrorCode.COMPILATION_CANT_DROP_ACTIVE_DATASET, sourceLoc,
+                        dataset.getFullyQualifiedName(), listener.getEntityId().toString());
             }
-        }
-        if (builder != null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Dataset " + dataset.getDataverseName() + "." + dataset.getDatasetName() + " is currently being "
-                            + "fed into by the following active entities.\n" + builder.toString());
         }
     }
 
@@ -935,7 +926,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    public static void doCreateIndex(IHyracksClientConnection hcc, MetadataProvider metadataProvider, Dataset ds,
+    protected void doCreateIndex(IHyracksClientConnection hcc, MetadataProvider metadataProvider, Dataset ds,
             Index index, EnumSet<JobFlag> jobFlags, SourceLocation sourceLoc) throws Exception {
         ProgressState progress = ProgressState.NO_PROGRESS;
         boolean bActiveTxn = true;
@@ -949,7 +940,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             index.setPendingOp(MetadataUtil.PENDING_ADD_OP);
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
-                validateIfResourceIsActiveInFeed(metadataProvider.getApplicationContext(), ds, sourceLoc);
+                validateDatasetState(metadataProvider, ds, sourceLoc);
             } else {
                 // External dataset
                 // Check if the dataset is indexible
@@ -1414,7 +1405,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    public static void doDropDataset(String dataverseName, String datasetName, MetadataProvider metadataProvider,
+    public void doDropDataset(String dataverseName, String datasetName, MetadataProvider metadataProvider,
             boolean ifExists, IHyracksClientConnection hcc, boolean dropCorrespondingNodeGroup,
             SourceLocation sourceLoc) throws Exception {
         MutableObject<ProgressState> progress = new MutableObject<>(ProgressState.NO_PROGRESS);
@@ -1434,6 +1425,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             dataverseName);
                 }
             }
+            validateDatasetState(metadataProvider, ds, sourceLoc);
             ds.drop(metadataProvider, mdTxnCtx, jobsToExecute, bActiveTxn, progress, hcc, dropCorrespondingNodeGroup,
                     sourceLoc);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
@@ -1497,23 +1489,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                         dataverseName);
             }
-            ActiveNotificationHandler activeEventHandler =
-                    (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
-            IActiveEntityEventsListener[] listeners = activeEventHandler.getEventListeners();
-            StringBuilder builder = null;
-            for (IActiveEntityEventsListener listener : listeners) {
-                if (listener.isEntityUsingDataset(ds)) {
-                    if (builder == null) {
-                        builder = new StringBuilder();
-                    }
-                    builder.append(new FeedConnectionId(listener.getEntityId(), datasetName) + "\n");
-                }
-            }
-            if (builder != null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Dataset" + datasetName
-                        + " is currently being fed into by the following active entities: " + builder.toString());
-            }
-
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 Index index = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, indexName);
                 if (index == null) {
@@ -1525,6 +1500,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                 }
                 ensureNonPrimaryIndexDrop(index, sourceLoc);
+                validateDatasetState(metadataProvider, ds, sourceLoc);
                 // #. prepare a job to drop the index in NC.
                 jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, ds, sourceLoc));
 
@@ -2985,5 +2961,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
         }
         return m;
+    }
+
+    protected void validateDatasetState(MetadataProvider metadataProvider, Dataset dataset, SourceLocation sourceLoc)
+            throws Exception {
+        validateIfResourceIsActiveInFeed(metadataProvider.getApplicationContext(), dataset, sourceLoc);
     }
 }

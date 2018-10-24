@@ -36,7 +36,6 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
@@ -219,7 +218,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
         if (registeredListener == null) {
             throw new RuntimeDataException(ErrorCode.ACTIVE_ENTITY_LISTENER_IS_NOT_REGISTERED, listener.getEntityId());
         }
-        if (registeredListener.isActive()) {
+        if (registeredListener.isActive() && !registeredListener.isSuspended()) {
             entityEventListeners.put(registeredListener.getEntityId(), registeredListener);
             throw new RuntimeDataException(ErrorCode.CANNOT_DERIGESTER_ACTIVE_ENTITY_LISTENER, listener.getEntityId());
         }
@@ -251,8 +250,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
         }
     }
 
-    public void suspend(MetadataProvider mdProvider)
-            throws AlgebricksException, HyracksDataException, InterruptedException {
+    public void suspend(MetadataProvider mdProvider) throws HyracksDataException {
         synchronized (this) {
             if (suspended) {
                 throw new RuntimeDataException(ErrorCode.ACTIVE_EVENT_HANDLER_ALREADY_SUSPENDED);
@@ -260,54 +258,67 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
             LOGGER.log(level, "Suspending active events handler");
             suspended = true;
         }
+        Collection<IActiveEntityEventsListener> registeredListeners = entityEventListeners.values();
+        for (IActiveEntityEventsListener listener : registeredListeners) {
+            suspendForDdlOrHalt(listener, mdProvider, null);
+        }
+    }
+
+    public void resume(MetadataProvider mdProvider) {
+        LOGGER.log(level, "Resuming active events handler");
+        for (IActiveEntityEventsListener listener : entityEventListeners.values()) {
+            resumeOrHalt(listener, mdProvider);
+        }
+        synchronized (this) {
+            suspended = false;
+        }
+    }
+
+    public void suspendForDdlOrHalt(IActiveEntityEventsListener listener, MetadataProvider metadataProvider,
+            Dataset targetDataset) {
         try {
-            IMetadataLockManager lockManager = mdProvider.getApplicationContext().getMetadataLockManager();
-            Collection<IActiveEntityEventsListener> registeredListeners = entityEventListeners.values();
-            for (IActiveEntityEventsListener listener : registeredListeners) {
-                // write lock the listener
-                // exclusive lock all the datasets
-                String dataverseName = listener.getEntityId().getDataverse();
-                String entityName = listener.getEntityId().getEntityName();
-                if (LOGGER.isEnabled(level)) {
-                    LOGGER.log(level, "Suspending " + listener.getEntityId());
-                }
-                LOGGER.log(level, "Acquiring locks");
-                lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName + '.' + entityName);
-                List<Dataset> datasets = ((ActiveEntityEventsListener) listener).getDatasets();
-                for (Dataset dataset : datasets) {
-                    lockManager.acquireDatasetExclusiveModificationLock(mdProvider.getLocks(),
-                            DatasetUtil.getFullyQualifiedName(dataset));
-                }
-                LOGGER.log(level, "locks acquired");
-                ((ActiveEntityEventsListener) listener).suspend(mdProvider);
-                if (LOGGER.isEnabled(level)) {
-                    LOGGER.log(level, listener.getEntityId() + " suspended");
-                }
+            // write lock the listener
+            // exclusive lock all the datasets (except the target dataset)
+            IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
+            String dataverseName = listener.getEntityId().getDataverse();
+            String entityName = listener.getEntityId().getEntityName();
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, "Suspending " + listener.getEntityId());
             }
-        } catch (Throwable th) {
+            LOGGER.log(level, "Acquiring locks");
+            lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), dataverseName + '.' + entityName);
+            List<Dataset> datasets = ((ActiveEntityEventsListener) listener).getDatasets();
+            for (Dataset dataset : datasets) {
+                if (targetDataset != null && targetDataset.equals(dataset)) {
+                    // DDL operation already acquired the proper lock for the operation
+                    continue;
+                }
+                lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(),
+                        DatasetUtil.getFullyQualifiedName(dataset));
+            }
+            LOGGER.log(level, "locks acquired");
+            ((ActiveEntityEventsListener) listener).suspend(metadataProvider);
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, listener.getEntityId() + " suspended");
+            }
+        } catch (Throwable th) { // NOSONAR must halt in case of any failure
             LOGGER.error("Suspend active failed", th);
             ExitUtil.halt(ExitUtil.EC_ACTIVE_SUSPEND_FAILURE);
         }
     }
 
-    public void resume(MetadataProvider mdProvider) throws HyracksDataException {
-        LOGGER.log(level, "Resuming active events handler");
+    public void resumeOrHalt(IActiveEntityEventsListener listener, MetadataProvider metadataProvider) {
         try {
-            for (IActiveEntityEventsListener listener : entityEventListeners.values()) {
-                if (LOGGER.isEnabled(level)) {
-                    LOGGER.log(level, "Resuming " + listener.getEntityId());
-                }
-                ((ActiveEntityEventsListener) listener).resume(mdProvider);
-                if (LOGGER.isEnabled(level)) {
-                    LOGGER.log(level, listener.getEntityId() + " resumed");
-                }
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, "Resuming " + listener.getEntityId());
             }
-        } catch (Throwable th) {
+            ((ActiveEntityEventsListener) listener).resume(metadataProvider);
+            if (LOGGER.isEnabled(level)) {
+                LOGGER.log(level, listener.getEntityId() + " resumed");
+            }
+        } catch (Throwable th) { // NOSONAR must halt in case of any failure
             LOGGER.error("Resume active failed", th);
             ExitUtil.halt(ExitUtil.EC_ACTIVE_RESUME_FAILURE);
-        }
-        synchronized (this) {
-            suspended = false;
         }
     }
 }

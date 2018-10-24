@@ -681,6 +681,11 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     @Override
+    public synchronized boolean isSuspended() {
+        return suspended;
+    }
+
+    @Override
     public String toString() {
         return "{\"class\":\"" + getClass().getSimpleName() + "\"" + "\"entityId\":\"" + entityId + "\""
                 + "\"state\":\"" + state + "\"" + "}";

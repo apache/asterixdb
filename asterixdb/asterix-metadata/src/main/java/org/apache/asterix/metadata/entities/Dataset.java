@@ -341,17 +341,6 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             throws Exception {
         Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<>();
         if (getDatasetType() == DatasetType.INTERNAL) {
-            // prepare job spec(s) that would disconnect any active feeds involving the dataset.
-            IActiveNotificationHandler activeListener = (IActiveNotificationHandler) metadataProvider
-                    .getApplicationContext().getActiveNotificationHandler();
-            IActiveEntityEventsListener[] activeListeners = activeListener.getEventListeners();
-            for (IActiveEntityEventsListener listener : activeListeners) {
-                if (listener.isEntityUsingDataset(this)) {
-                    throw new CompilationException(ErrorCode.COMPILATION_CANT_DROP_ACTIVE_DATASET,
-                            RecordUtil.toFullyQualifiedName(dataverseName, datasetName),
-                            listener.getEntityId().toString());
-                }
-            }
             // #. prepare jobs to drop the datatset and the indexes in NC
             List<Index> indexes =
                     MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx.getValue(), dataverseName, datasetName);

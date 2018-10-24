@@ -85,6 +85,11 @@ public interface IActiveEntityEventsListener {
     boolean isActive();
 
     /**
+     * @return true, if this {@link IActiveEntityEventsListener} is suspended. Otherwise false.
+     */
+    boolean isSuspended();
+
+    /**
      * unregister the listener upon deletion of entity
      *
      * @throws HyracksDataException
