@@ -1,0 +1,42 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [var]
+    :
+    FunctionCall asterix.sql-var@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=$x ]
+          Field=int64Field
+        ]
+        ]
+        FROM [          FunctionCall asterix.dataset@1[
+            LiteralExpr [STRING] [test.Numeric]
+          ]
+          AS Variable [ Name=$x ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [var_pop]
+    :
+    FunctionCall asterix.sql-var_pop@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=$x ]
+          Field=int64Field
+        ]
+        ]
+        FROM [          FunctionCall asterix.dataset@1[
+            LiteralExpr [STRING] [test.Numeric]
+          ]
+          AS Variable [ Name=$x ]
+        ]
+      )
+    ]
+  )
+]

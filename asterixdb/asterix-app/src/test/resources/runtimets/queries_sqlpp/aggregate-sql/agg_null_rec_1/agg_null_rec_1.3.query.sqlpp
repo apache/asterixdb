@@ -64,4 +64,16 @@ use test;
         select element t
         from  Test as t
     ) as i
+)),'sql-var':test.array_var((
+    select element i.valplus
+    from  (
+        select element t
+        from  Test as t
+    ) as i
+)),'sql-var_pop':test.array_var_pop((
+    select element i.valplus
+    from  (
+        select element t
+        from  Test as t
+    ) as i
 ))};

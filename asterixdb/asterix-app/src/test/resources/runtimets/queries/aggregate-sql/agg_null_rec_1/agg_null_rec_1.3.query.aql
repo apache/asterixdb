@@ -26,6 +26,7 @@ use dataverse test;
 
 let $l := for $t in dataset Test return $t
 return { "sql-count": sql-count($l), "average": sql-avg(for $i in $l return $i.val), "sql-sum":
-sql-sum(for $i in $l return $i.val), "sql-stddev": sql-stddev(for $i in $l return $i.valplus),
-"sql-stddev_pop": sql-stddev_pop(for $i in $l return $i.valplus), "sql-min": sql-min(for $i in $l return $i.valplus),
-"sql-max": sql-max(for $i in $l return $i.valplus) }
+sql-sum(for $i in $l return $i.val),  "sql-min": sql-min(for $i in $l return $i.valplus),
+"sql-max": sql-max(for $i in $l return $i.valplus), "sql-stddev": sql-stddev(for $i in $l return $i.valplus),
+"sql-stddev_pop": sql-stddev_pop(for $i in $l return $i.valplus), "sql-var": sql-var(for $i in $l return $i.valplus),
+"sql-var_pop": sql-var_pop(for $i in $l return $i.valplus) }

@@ -289,6 +289,23 @@ public abstract class AbstractSerializableSingleVariableStatisticsAggregateFunct
         }
     }
 
+    protected void finishVarFinalResults(byte[] state, int start, int len, DataOutput result, int delta)
+            throws HyracksDataException {
+        double m2 = BufferSerDeUtil.getDouble(state, start + M2_OFFSET);
+        long count = BufferSerDeUtil.getLong(state, start + COUNT_OFFSET);
+        ATypeTag aggType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(state[start + AGG_TYPE_OFFSET]);
+        try {
+            if (count <= 1 || aggType == ATypeTag.NULL) {
+                nullSerde.serialize(ANull.NULL, result);
+            } else {
+                aDouble.setValue(m2 / (count - delta));
+                doubleSerde.serialize(aDouble, result);
+            }
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
     protected boolean skipStep(byte[] state, int start) {
         return false;
     }

@@ -1,0 +1,27 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [var]
+    :
+    (
+      SELECT ELEMENT [
+      FunctionCall asterix.var@1[
+        OrderedListConstructor [
+        ]
+      ]
+      ]
+    )
+  )
+  (
+    LiteralExpr [STRING] [var_pop]
+    :
+    (
+      SELECT ELEMENT [
+      FunctionCall asterix.var_pop@1[
+        OrderedListConstructor [
+        ]
+      ]
+      ]
+    )
+  )
+]

@@ -1,1 +1,1 @@
-{ "count": 3, "average": 5.32, "sum": 15.96, "stddev": 1.0, "stddev_pop": 0.816496580927726, "min": null, "max": null }
+{ "count": 3, "average": 5.32, "sum": 15.96, "stddev": 1.0, "stddev_pop": 0.816496580927726, "var": 1.0, "var_pop": 0.6666666666666666, "min": null, "max": null }

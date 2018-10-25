@@ -64,4 +64,16 @@ use test;
         select element t
         from  Test as t
     ) as i
+)),'var':test.strict_var((
+    select element i.val
+    from  (
+        select element t
+        from  Test as t
+    ) as i
+)),'var_pop':test.strict_var_pop((
+    select element i.val
+    from  (
+        select element t
+        from  Test as t
+    ) as i
 ))};

@@ -64,6 +64,24 @@ RecordConstructor [
     ]
   )
   (
+    LiteralExpr [STRING] [var1]
+    :
+    FunctionCall asterix.var@1[
+      OrderedListConstructor [
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [var_pop1]
+    :
+    FunctionCall asterix.var_pop@1[
+      OrderedListConstructor [
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
     LiteralExpr [STRING] [count2]
     :
     FunctionCall asterix.count@1[
@@ -127,6 +145,26 @@ RecordConstructor [
     LiteralExpr [STRING] [stddev_pop2]
     :
     FunctionCall asterix.stddev_pop@1[
+      UnorderedListConstructor [
+        LiteralExpr [NULL]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [var2]
+    :
+    FunctionCall asterix.var@1[
+      UnorderedListConstructor [
+        LiteralExpr [NULL]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [var_pop2]
+    :
+    FunctionCall asterix.var_pop@1[
       UnorderedListConstructor [
         LiteralExpr [NULL]
         LiteralExpr [NULL]

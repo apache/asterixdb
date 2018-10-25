@@ -17,7 +17,7 @@
  * under the License.
  */
  /*
- * Description  : Run serial-stddev over an ordered list with mixed types
+ * Description  : Run serial-stddev over an multiset with mixed types
  * Expected Res : Failure
  * Date         : March 5th 2018
  */

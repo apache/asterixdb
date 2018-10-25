@@ -22,4 +22,4 @@
 * Date         : Jun 2nd 2013
 */
 
-{'count1':strict_count([null]),'average1':strict_avg([null]),'sum1':strict_sum([null]),'min1':strict_min([null]),'max1':strict_max([null]),'stddev1':strict_stddev([null]),'stddev_pop1':strict_stddev_pop([null]),'count2':strict_count({{null,null}}),'average2':strict_avg({{null,null}}),'sum2':strict_sum({{null,null}}),'min2':strict_min({{null,null}}),'max2':strict_max({{null,null}}),'stddev2':strict_stddev({{null,null}}),'stddev_pop2':strict_stddev_pop({{null,null}})};
+{'count1':strict_count([null]),'average1':strict_avg([null]),'sum1':strict_sum([null]),'min1':strict_min([null]),'max1':strict_max([null]),'stddev1':strict_stddev([null]),'stddev_pop1':strict_stddev_pop([null]),'var1':strict_var([null]),'var_pop1':strict_var_pop([null]),'count2':strict_count({{null,null}}),'average2':strict_avg({{null,null}}),'sum2':strict_sum({{null,null}}),'min2':strict_min({{null,null}}),'max2':strict_max({{null,null}}),'stddev2':strict_stddev({{null,null}}),'stddev_pop2':strict_stddev_pop({{null,null}}),'var2':strict_var({{null,null}}),'var_pop2':strict_var_pop({{null,null}})};

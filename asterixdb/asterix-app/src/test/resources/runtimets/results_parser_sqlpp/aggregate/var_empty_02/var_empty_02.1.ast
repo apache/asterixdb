@@ -1,0 +1,8 @@
+DataverseUse test
+TypeDecl TestType [
+  closed RecordType {
+    id : integer,
+    val : double
+  }
+]
+DatasetDecl Test(TestType) partitioned by [[id]]

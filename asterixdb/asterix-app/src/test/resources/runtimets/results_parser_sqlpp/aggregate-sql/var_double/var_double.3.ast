@@ -1,0 +1,51 @@
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [var]
+    :
+    (
+      SELECT ELEMENT [
+      FunctionCall asterix.sql-var@1[
+        (
+          SELECT ELEMENT [
+          Variable [ Name=$x ]
+          ]
+          FROM [            OrderedListConstructor [
+              LiteralExpr [DOUBLE] [1.0]
+              LiteralExpr [DOUBLE] [2.0]
+              FunctionCall null.double@1[
+                LiteralExpr [STRING] [3.0]
+              ]
+            ]
+            AS Variable [ Name=$x ]
+          ]
+        )
+      ]
+      ]
+    )
+  )
+  (
+    LiteralExpr [STRING] [var_pop]
+    :
+    (
+      SELECT ELEMENT [
+      FunctionCall asterix.sql-var_pop@1[
+        (
+          SELECT ELEMENT [
+          Variable [ Name=$x ]
+          ]
+          FROM [            OrderedListConstructor [
+              LiteralExpr [DOUBLE] [1.0]
+              LiteralExpr [DOUBLE] [2.0]
+              FunctionCall null.double@1[
+                LiteralExpr [STRING] [3.0]
+              ]
+            ]
+            AS Variable [ Name=$x ]
+          ]
+        )
+      ]
+      ]
+    )
+  )
+]

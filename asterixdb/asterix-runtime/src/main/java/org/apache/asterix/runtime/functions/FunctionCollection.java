@@ -42,9 +42,13 @@ import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlMinAggregateDescrip
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableCountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalAvgAggregateDescriptor;
@@ -53,12 +57,20 @@ import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobal
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalStddevPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSqlVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateStddevPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateSqlVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableIntermediateVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlStddevAggregateDescriptor;
@@ -67,14 +79,22 @@ import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalS
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlSumAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalSqlVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlCountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.AvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.CountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalAvgAggregateDescriptor;
@@ -84,12 +104,20 @@ import org.apache.asterix.runtime.aggregates.std.GlobalSqlStddevAggregateDescrip
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalStddevPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.GlobalSqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.GlobalSqlVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.GlobalVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.GlobalVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.IntermediateStddevPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.IntermediateSqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.IntermediateSqlVarPopAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.IntermediateVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.IntermediateVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalMinAggregateDescriptor;
@@ -100,9 +128,13 @@ import org.apache.asterix.runtime.aggregates.std.LocalSqlMinAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalSqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalSqlVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.MaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.MinAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlAvgAggregateDescriptor;
@@ -112,9 +144,13 @@ import org.apache.asterix.runtime.aggregates.std.SqlMinAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlStddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlSumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.SqlVarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.SqlVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.StddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.StddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.VarAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.VarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.stream.EmptyStreamAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.stream.NonEmptyStreamAggregateDescriptor;
 import org.apache.asterix.runtime.evaluators.accessors.CircleCenterAccessor;
@@ -484,6 +520,14 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(LocalStddevPopAggregateDescriptor.FACTORY);
         fc.add(IntermediateStddevPopAggregateDescriptor.FACTORY);
         fc.add(GlobalStddevPopAggregateDescriptor.FACTORY);
+        fc.add(VarAggregateDescriptor.FACTORY);
+        fc.add(LocalVarAggregateDescriptor.FACTORY);
+        fc.add(IntermediateVarAggregateDescriptor.FACTORY);
+        fc.add(GlobalVarAggregateDescriptor.FACTORY);
+        fc.add(VarPopAggregateDescriptor.FACTORY);
+        fc.add(LocalVarPopAggregateDescriptor.FACTORY);
+        fc.add(IntermediateVarPopAggregateDescriptor.FACTORY);
+        fc.add(GlobalVarPopAggregateDescriptor.FACTORY);
 
         // serializable aggregates
         fc.add(SerializableCountAggregateDescriptor.FACTORY);
@@ -501,6 +545,14 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(SerializableLocalStddevPopAggregateDescriptor.FACTORY);
         fc.add(SerializableIntermediateStddevPopAggregateDescriptor.FACTORY);
         fc.add(SerializableGlobalStddevPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableVarAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalVarAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateVarAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalVarAggregateDescriptor.FACTORY);
+        fc.add(SerializableVarPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalVarPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateVarPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalVarPopAggregateDescriptor.FACTORY);
 
         // scalar aggregates
         fc.add(ScalarCountAggregateDescriptor.FACTORY);
@@ -512,6 +564,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(NonEmptyStreamAggregateDescriptor.FACTORY);
         fc.add(ScalarStddevAggregateDescriptor.FACTORY);
         fc.add(ScalarStddevPopAggregateDescriptor.FACTORY);
+        fc.add(ScalarVarAggregateDescriptor.FACTORY);
+        fc.add(ScalarVarPopAggregateDescriptor.FACTORY);
 
         // SQL aggregates
         fc.add(SqlCountAggregateDescriptor.FACTORY);
@@ -533,6 +587,14 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(LocalSqlStddevPopAggregateDescriptor.FACTORY);
         fc.add(IntermediateSqlStddevPopAggregateDescriptor.FACTORY);
         fc.add(GlobalSqlStddevPopAggregateDescriptor.FACTORY);
+        fc.add(SqlVarAggregateDescriptor.FACTORY);
+        fc.add(LocalSqlVarAggregateDescriptor.FACTORY);
+        fc.add(IntermediateSqlVarAggregateDescriptor.FACTORY);
+        fc.add(GlobalSqlVarAggregateDescriptor.FACTORY);
+        fc.add(SqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(LocalSqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(IntermediateSqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(GlobalSqlVarPopAggregateDescriptor.FACTORY);
 
         // SQL serializable aggregates
         fc.add(SerializableSqlCountAggregateDescriptor.FACTORY);
@@ -550,6 +612,14 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(SerializableLocalSqlStddevPopAggregateDescriptor.FACTORY);
         fc.add(SerializableIntermediateSqlStddevPopAggregateDescriptor.FACTORY);
         fc.add(SerializableGlobalSqlStddevPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableSqlVarAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalSqlVarAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateSqlVarAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalSqlVarAggregateDescriptor.FACTORY);
+        fc.add(SerializableSqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableLocalSqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableIntermediateSqlVarPopAggregateDescriptor.FACTORY);
+        fc.add(SerializableGlobalSqlVarPopAggregateDescriptor.FACTORY);
 
         // SQL scalar aggregates
         fc.add(ScalarSqlCountAggregateDescriptor.FACTORY);
@@ -559,6 +629,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ScalarSqlMinAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlStddevAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlStddevPopAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlVarAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlVarPopAggregateDescriptor.FACTORY);
 
         // boolean functions
         fc.add(AndDescriptor.FACTORY);

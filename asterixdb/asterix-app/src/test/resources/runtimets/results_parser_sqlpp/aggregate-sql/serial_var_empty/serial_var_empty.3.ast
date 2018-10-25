@@ -1,0 +1,57 @@
+DataverseUse test
+Query:
+SELECT [
+Variable [ Name=$gid ]
+gid
+FunctionCall asterix.sql-var@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#2 ]
+        Field=t
+      ]
+      Field=val
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#2 ]
+    ]
+  )
+]
+var
+FunctionCall asterix.sql-var_pop@1[
+  (
+    SELECT ELEMENT [
+    FieldAccessor [
+      FieldAccessor [
+        Variable [ Name=#3 ]
+        Field=t
+      ]
+      Field=val
+    ]
+    ]
+    FROM [      Variable [ Name=#1 ]
+      AS Variable [ Name=#3 ]
+    ]
+  )
+]
+var_pop
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.Test]
+  ]
+  AS Variable [ Name=$t ]
+]
+Groupby
+  Variable [ Name=$gid ]
+  :=
+  FieldAccessor [
+    Variable [ Name=$t ]
+    Field=gid
+  ]
+  GROUP AS Variable [ Name=#1 ]
+  (
+    t:=Variable [ Name=$t ]
+  )
+

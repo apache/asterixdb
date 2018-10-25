@@ -64,6 +64,24 @@ RecordConstructor [
     ]
   )
   (
+    LiteralExpr [STRING] [sql-var1]
+    :
+    FunctionCall asterix.sql-var@1[
+      OrderedListConstructor [
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-var_pop1]
+    :
+    FunctionCall asterix.sql-var_pop@1[
+      OrderedListConstructor [
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
     LiteralExpr [STRING] [sql-count2]
     :
     FunctionCall asterix.sql-count@1[
@@ -127,6 +145,26 @@ RecordConstructor [
     LiteralExpr [STRING] [sql-stddev_pop2]
     :
     FunctionCall asterix.sql-stddev_pop@1[
+      UnorderedListConstructor [
+        LiteralExpr [NULL]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-var2]
+    :
+    FunctionCall asterix.sql-var@1[
+      UnorderedListConstructor [
+        LiteralExpr [NULL]
+        LiteralExpr [NULL]
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [sql-var_pop2]
+    :
+    FunctionCall asterix.sql-var_pop@1[
       UnorderedListConstructor [
         LiteralExpr [NULL]
         LiteralExpr [NULL]

@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
-* Description  : Run array_avg over an ordered list with mixed types
+* Description  : Run array_avg over an multiset with mixed types
 * Expected Res : Failure
 * Date         : Feb 7th 2014
 */

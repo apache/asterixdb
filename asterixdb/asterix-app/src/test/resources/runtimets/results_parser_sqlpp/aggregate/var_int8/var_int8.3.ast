@@ -1,0 +1,60 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [var]
+    :
+    (
+      SELECT ELEMENT [
+      FunctionCall asterix.var@1[
+        (
+          SELECT ELEMENT [
+          Variable [ Name=$x ]
+          ]
+          FROM [            OrderedListConstructor [
+              FunctionCall test.int8@1[
+                LiteralExpr [STRING] [1]
+              ]
+              FunctionCall test.int8@1[
+                LiteralExpr [STRING] [2]
+              ]
+              FunctionCall test.int8@1[
+                LiteralExpr [STRING] [3]
+              ]
+            ]
+            AS Variable [ Name=$x ]
+          ]
+        )
+      ]
+      ]
+    )
+  )
+  (
+    LiteralExpr [STRING] [var_pop]
+    :
+    (
+      SELECT ELEMENT [
+      FunctionCall asterix.var_pop@1[
+        (
+          SELECT ELEMENT [
+          Variable [ Name=$x ]
+          ]
+          FROM [            OrderedListConstructor [
+              FunctionCall test.int8@1[
+                LiteralExpr [STRING] [1]
+              ]
+              FunctionCall test.int8@1[
+                LiteralExpr [STRING] [2]
+              ]
+              FunctionCall test.int8@1[
+                LiteralExpr [STRING] [3]
+              ]
+            ]
+            AS Variable [ Name=$x ]
+          ]
+        )
+      ]
+      ]
+    )
+  )
+]

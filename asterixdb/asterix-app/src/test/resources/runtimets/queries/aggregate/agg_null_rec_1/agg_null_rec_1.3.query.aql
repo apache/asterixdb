@@ -26,6 +26,7 @@ use dataverse test;
 
 let $l := for $t in dataset Test return $t
 return { "count": count($l), "average": avg(for $i in $l return $i.val), "sum":
-sum(for $i in $l return $i.val), "stddev": stddev(for $i in $l return $i.val),
-"stddev_pop": stddev_pop(for $i in $l return $i.val), "min": min(for $i in $l return $i.valplus),
-"max": max(for $i in $l return $i.valplus) }
+sum(for $i in $l return $i.val), "min": min(for $i in $l return $i.valplus),
+"max": max(for $i in $l return $i.valplus), "stddev": stddev(for $i in $l return $i.val),
+ "stddev_pop": stddev_pop(for $i in $l return $i.val), "var": var(for $i in $l return $i.val),
+ "var_pop": var_pop(for $i in $l return $i.val) }

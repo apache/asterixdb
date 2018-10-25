@@ -253,6 +253,21 @@ public abstract class AbstractSingleVarStatisticsAggregateFunction extends Abstr
         result.set(resultStorage);
     }
 
+    protected void finishVarFinalResults(IPointable result, int delta) throws HyracksDataException {
+        resultStorage.reset();
+        try {
+            if (moments.getCount() <= 1 || aggType == ATypeTag.NULL) {
+                nullSerde.serialize(ANull.NULL, resultStorage.getDataOutput());
+            } else {
+                aDouble.setValue(moments.getM2() / (moments.getCount() - delta));
+                doubleSerde.serialize(aDouble, resultStorage.getDataOutput());
+            }
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+        result.set(resultStorage);
+    }
+
     protected boolean skipStep() {
         return false;
     }

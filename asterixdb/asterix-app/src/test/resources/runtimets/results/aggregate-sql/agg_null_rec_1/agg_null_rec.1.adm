@@ -1,1 +1,1 @@
-{ "sql-count": 3, "average": 5.32, "sql-sum": 15.96, "sql-stddev": 2.720510431232472E16, "sql-stddev_pop": 1.9236913742132196E16, "sql-min": 473847, "sql-max": 38473827484738239 }
+{ "sql-count": 3, "average": 5.32, "sql-sum": 15.96, "sql-stddev": 2.720510431232472E16, "sql-stddev_pop": 1.9236913742132196E16, "sql-var": 7.40117700644469E32, "sql-var_pop": 3.700588503222345E32, "sql-min": 473847, "sql-max": 38473827484738239 }

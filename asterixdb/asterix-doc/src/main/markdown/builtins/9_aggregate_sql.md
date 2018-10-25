@@ -174,14 +174,14 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         array_stddev(num_collection)
 
- * Gets the standard deviation value of the non-null and non-missing numeric items in the given collection.
+ * Gets the sample standard deviation value of the non-null and non-missing numeric items in the given collection.
  * Arguments:
     * `num_collection` could be:
         * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
         * or, a `null` value,
         * or, a `missing` value.
  * Return Value:
-    * a `double` value representing the average of the non-null and non-missing numbers in the given collection,
+    * a `double` value representing the sample standard deviation of the non-null and non-missing numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
     * any other non-array and non-multiset input value will cause a type error,
@@ -201,14 +201,14 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         array_stddev_pop(num_collection)
 
- * Gets the standard deviation value of the non-null and non-missing numeric items in the given collection.
+ * Gets the population standard deviation value of the non-null and non-missing numeric items in the given collection.
  * Arguments:
     * `num_collection` could be:
         * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
         * or, a `null` value,
         * or, a `missing` value.
  * Return Value:
-    * a `double` value representing the average of the non-null and non-missing numbers in the given collection,
+    * a `double` value representing the population standard deviation of the non-null and non-missing numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
     * any other non-array and non-multiset input value will cause a type error,
@@ -221,6 +221,61 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
  * The expected result is:
 
         1.2636751956100112
+
+### array_var ###
+
+ * Syntax:
+
+        array_var(num_collection)
+
+ * Gets the sample variance value of the non-null and non-missing numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the sample variance of the non-null and non-missing numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if the given collection does not contain any non-null and non-missing items,
+    * any other non-array and non-multiset input value will cause a type error,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        array_var( [1.2, 2.3, 3.4, 0, null] );
+
+ * The expected result is:
+
+        2.1291666666666664
+
+### array_var_pop ###
+
+ * Syntax:
+
+        array_var_pop(num_collection)
+
+ * Gets the population variance value of the non-null and non-missing numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the population variance of the non-null and non-missing numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if the given collection does not contain any non-null and non-missing items,
+    * any other non-array and non-multiset input value will cause a type error,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        array_var_pop( [1.2, 2.3, 3.4, 0, null] );
+
+ * The expected result is:
+
+        1.5968749999999998
+
 
 ### strict_count ###
  * Syntax:
@@ -359,14 +414,14 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         strict_stddev(num_collection)
 
- * Gets the standard deviation value of the numeric items in the given collection.
+ * Gets the sample standard deviation value of the numeric items in the given collection.
  * Arguments:
     * `num_collection` could be:
         * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
         * or, a `null` value,
         * or, a `missing` value.
  * Return Value:
-    * a `double` value representing the average of the numbers in the given collection,
+    * a `double` value representing the sample standard deviation of the numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
     * any other non-numeric value in the input collection will cause a type error.
@@ -384,14 +439,14 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 
         strict_stddev_pop(num_collection)
 
- * Gets the standard deviation value of the numeric items in the given collection.
+ * Gets the population standard deviation value of the numeric items in the given collection.
  * Arguments:
     * `num_collection` could be:
         * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
         * or, a `null` value,
         * or, a `missing` value.
  * Return Value:
-    * a `double` value representing the average of the numbers in the given collection,
+    * a `double` value representing the population standard deviation of the numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
     * any other non-numeric value in the input collection will cause a type error.
@@ -403,3 +458,53 @@ SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
  * The expected result is:
 
         81.64965809277261
+
+### strict_var ###
+ * Syntax:
+
+        strict_var(num_collection)
+
+ * Gets the sample variance value of the numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the sample variance of the numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if there is a `null` or `missing` in the input collection,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        strict_var( [100, 200, 300] );
+
+ * The expected result is:
+
+        10000.0
+
+### strict_var_pop ###
+ * Syntax:
+
+        strict_var_pop(num_collection)
+
+ * Gets the population variance value of the numeric items in the given collection.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` containing numeric values, `null`s or `missing`s,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Return Value:
+    * a `double` value representing the population variance of the numbers in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if there is a `null` or `missing` in the input collection,
+    * any other non-numeric value in the input collection will cause a type error.
+
+ * Example:
+
+        strict_var_pop( [100, 200, 300] );
+
+ * The expected result is:
+
+        6666.666666666667

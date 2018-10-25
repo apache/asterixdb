@@ -146,6 +146,30 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="var_mixed">
+        <output-dir compare="AST">var_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_mixed">
+        <output-dir compare="AST">serial_var_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_pop_mixed">
+        <output-dir compare="AST">var_pop_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_pop_mixed">
+        <output-dir compare="AST">serial_var_pop_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="agg_number">
         <output-dir compare="AST">agg_number</output-dir>
       </compilation-unit>
@@ -472,6 +496,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_var">
+        <output-dir compare="AST">scalar_var</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_var_empty">
+        <output-dir compare="AST">scalar_var_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_var_null">
+        <output-dir compare="AST">scalar_var_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="serial_stddev_int8_null">
         <output-dir compare="AST">serial_stddev_int8_null</output-dir>
       </compilation-unit>
@@ -539,6 +578,76 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="serial_stddev_int8_null">
         <output-dir compare="AST">serial_stddev_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_int8_null">
+        <output-dir compare="AST">serial_var_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_double">
+        <output-dir compare="AST">serial_var_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_double_null">
+        <output-dir compare="AST">serial_var_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_empty">
+        <output-dir compare="AST">serial_var_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_float">
+        <output-dir compare="AST">serial_var_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_float_null">
+        <output-dir compare="AST">serial_var_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_int16">
+        <output-dir compare="AST">serial_var_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_int16_null">
+        <output-dir compare="AST">serial_var_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_int32">
+        <output-dir compare="AST">serial_var_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_int32_null">
+        <output-dir compare="AST">serial_var_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_int64">
+        <output-dir compare="AST">serial_var_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_int64_null">
+        <output-dir compare="AST">serial_var_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_int8">
+        <output-dir compare="AST">serial_var_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="serial_var_int8_null">
+        <output-dir compare="AST">serial_var_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -691,6 +800,76 @@
         <output-dir compare="AST">sum_numeric_null</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_double">
+        <output-dir compare="AST">var_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_double_null">
+        <output-dir compare="AST">var_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_empty_01">
+        <output-dir compare="AST">var_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_empty_02">
+        <output-dir compare="AST">var_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_float">
+        <output-dir compare="AST">var_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_float_null">
+        <output-dir compare="AST">var_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_int16">
+        <output-dir compare="AST">var_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_int16_null">
+        <output-dir compare="AST">var_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_int32">
+        <output-dir compare="AST">var_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_int32_null">
+        <output-dir compare="AST">var_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_int64">
+        <output-dir compare="AST">var_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_int64_null">
+        <output-dir compare="AST">var_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_int8">
+        <output-dir compare="AST">var_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="var_int8_null">
+        <output-dir compare="AST">var_int8_null</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aggregate-sql">
     <test-case FilePath="aggregate-sql">
@@ -757,6 +936,30 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="stddev_pop_mixed">
         <output-dir compare="AST">stddev_pop_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_var_mixed">
+        <output-dir compare="AST">serial_var_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_mixed">
+        <output-dir compare="AST">var_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="serial_var_pop_mixed">
+        <output-dir compare="AST">serial_var_pop_mixed</output-dir>
+        <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_pop_mixed">
+        <output-dir compare="AST">var_pop_mixed</output-dir>
         <expected-error>org.apache.asterix.common.exceptions.AsterixException</expected-error>
       </compilation-unit>
     </test-case>
@@ -991,21 +1194,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
-      <compilation-unit name="scalar_stddev_pop">
-        <output-dir compare="AST">scalar_stddev_pop</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="scalar_stddev_pop_empty">
-        <output-dir compare="AST">scalar_stddev_pop_empty</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="scalar_stddev_pop_null">
-        <output-dir compare="AST">scalar_stddev_pop_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_sum">
         <output-dir compare="AST">scalar_sum</output-dir>
       </compilation-unit>
@@ -1018,6 +1206,21 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_sum_null">
         <output-dir compare="AST">scalar_sum_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_var">
+        <output-dir compare="AST">scalar_var</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_var_empty">
+        <output-dir compare="AST">scalar_var_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_var_null">
+        <output-dir compare="AST">scalar_var_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1083,71 +1286,6 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="serial_stddev_int8_null">
         <output-dir compare="AST">serial_stddev_int8_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_double">
-        <output-dir compare="AST">serial_stddev_pop_double</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_double_null">
-        <output-dir compare="AST">serial_stddev_pop_double_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_empty">
-        <output-dir compare="AST">serial_stddev_pop_empty</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_float">
-        <output-dir compare="AST">serial_stddev_pop_float</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_float_null">
-        <output-dir compare="AST">serial_stddev_pop_float_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_int16">
-        <output-dir compare="AST">serial_stddev_pop_int16</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_int16_null">
-        <output-dir compare="AST">serial_stddev_pop_int16_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_int32">
-        <output-dir compare="AST">serial_stddev_pop_int32</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_int32_null">
-        <output-dir compare="AST">serial_stddev_pop_int32_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_int64">
-        <output-dir compare="AST">serial_stddev_pop_int64</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_int64_null">
-        <output-dir compare="AST">serial_stddev_pop_int64_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_int8">
-        <output-dir compare="AST">serial_stddev_pop_int8</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="serial_stddev_pop_int8_null">
-        <output-dir compare="AST">serial_stddev_pop_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1218,76 +1356,6 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="stddev_int8_null">
         <output-dir compare="AST">stddev_int8_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_double">
-        <output-dir compare="AST">stddev_pop_double</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_double_null">
-        <output-dir compare="AST">stddev_pop_double_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_empty_01">
-        <output-dir compare="AST">stddev_pop_empty_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_empty_02">
-        <output-dir compare="AST">stddev_pop_empty_02</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_float">
-        <output-dir compare="AST">stddev_pop_float</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_float_null">
-        <output-dir compare="AST">stddev_pop_float_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_int16">
-        <output-dir compare="AST">stddev_pop_int16</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_int16_null">
-        <output-dir compare="AST">stddev_pop_int16_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_int32">
-        <output-dir compare="AST">stddev_pop_int32</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_int32_null">
-        <output-dir compare="AST">stddev_pop_int32_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_int64">
-        <output-dir compare="AST">stddev_pop_int64</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_int64_null">
-        <output-dir compare="AST">stddev_pop_int64_null</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_int8">
-        <output-dir compare="AST">stddev_pop_int8</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="aggregate-sql">
-      <compilation-unit name="stddev_pop_int8_null">
-        <output-dir compare="AST">stddev_pop_int8_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -1368,6 +1436,76 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="sum_numeric_null">
         <output-dir compare="AST">sum_numeric_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_double">
+        <output-dir compare="AST">var_double</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_double_null">
+        <output-dir compare="AST">var_double_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_empty_01">
+        <output-dir compare="AST">var_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_empty_02">
+        <output-dir compare="AST">var_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_float">
+        <output-dir compare="AST">var_float</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_float_null">
+        <output-dir compare="AST">var_float_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_int16">
+        <output-dir compare="AST">var_int16</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_int16_null">
+        <output-dir compare="AST">var_int16_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_int32">
+        <output-dir compare="AST">var_int32</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_int32_null">
+        <output-dir compare="AST">var_int32_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_int64">
+        <output-dir compare="AST">var_int64</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_int64_null">
+        <output-dir compare="AST">var_int64_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_int8">
+        <output-dir compare="AST">var_int8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="var_int8_null">
+        <output-dir compare="AST">var_int8_null</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

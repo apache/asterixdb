@@ -173,5 +173,56 @@ RecordConstructor [
       )
     ]
   )
+  (
+    LiteralExpr [STRING] [var]
+    :
+    FunctionCall asterix.var@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=$i ]
+          Field=val
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=$t ]
+            ]
+            FROM [              FunctionCall asterix.dataset@1[
+                LiteralExpr [STRING] [test.Test]
+              ]
+              AS Variable [ Name=$t ]
+            ]
+          )
+          AS Variable [ Name=$i ]
+        ]
+      )
+    ]
+  )
+  (
+    LiteralExpr [STRING] [var_pop]
+    :
+    FunctionCall asterix.var_pop@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=$i ]
+          Field=val
+        ]
+        ]
+        FROM [          (
+            SELECT ELEMENT [
+            Variable [ Name=$t ]
+            ]
+            FROM [              FunctionCall asterix.dataset@1[
+                LiteralExpr [STRING] [test.Test]
+              ]
+              AS Variable [ Name=$t ]
+            ]
+          )
+          AS Variable [ Name=$i ]
+        ]
+      )
+    ]
+  )
 ]
-
