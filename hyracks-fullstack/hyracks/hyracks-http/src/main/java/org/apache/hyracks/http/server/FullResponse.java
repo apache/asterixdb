@@ -24,26 +24,23 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 
 import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 
 public class FullResponse implements IServletResponse {
     private final ChannelHandlerContext ctx;
     private final ByteArrayOutputStream baos;
     private final PrintWriter writer;
-    private final FullHttpResponse response;
-    private final boolean keepAlive;
+    private final DefaultFullHttpResponse response;
     private ChannelFuture future;
 
     public FullResponse(ChannelHandlerContext ctx, FullHttpRequest request) {
@@ -51,27 +48,15 @@ public class FullResponse implements IServletResponse {
         baos = new ByteArrayOutputStream();
         writer = new PrintWriter(baos);
         response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-        keepAlive = HttpUtil.isKeepAlive(request);
-        if (keepAlive) {
-            response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-        }
+        HttpUtil.setConnectionHeader(request, response);
     }
 
     @Override
     public void close() throws IOException {
         writer.close();
         FullHttpResponse fullResponse = response.replace(Unpooled.copiedBuffer(baos.toByteArray()));
-        if (keepAlive) {
-            if (response.status() == HttpResponseStatus.OK || response.status() == HttpResponseStatus.UNAUTHORIZED) {
-                fullResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, fullResponse.content().readableBytes());
-            } else {
-                fullResponse.headers().remove(HttpHeaderNames.CONNECTION);
-            }
-        }
+        fullResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, fullResponse.content().readableBytes());
         future = ctx.writeAndFlush(fullResponse);
-        if (response.status() != HttpResponseStatus.OK && response.status() != HttpResponseStatus.UNAUTHORIZED) {
-            future.addListener(ChannelFutureListener.CLOSE);
-        }
     }
 
     @Override

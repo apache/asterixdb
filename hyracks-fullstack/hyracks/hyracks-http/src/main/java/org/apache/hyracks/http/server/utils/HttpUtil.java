@@ -30,9 +30,12 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.BaseRequest;
 import org.apache.hyracks.http.server.FormUrlEncodedRequest;
 
+import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.util.AsciiString;
 
 public class HttpUtil {
     private static final Pattern PARENT_DIR = Pattern.compile("/[^./]+/\\.\\./");
@@ -154,4 +157,9 @@ public class HttpUtil {
         return clusterURL;
     }
 
+    public static void setConnectionHeader(HttpRequest request, DefaultHttpResponse response) {
+        final boolean keepAlive = io.netty.handler.codec.http.HttpUtil.isKeepAlive(request);
+        final AsciiString connectionHeaderValue = keepAlive ? HttpHeaderValues.KEEP_ALIVE : HttpHeaderValues.CLOSE;
+        response.headers().set(HttpHeaderNames.CONNECTION, connectionHeaderValue);
+    }
 }

@@ -30,13 +30,16 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
 
 public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboundHandler<Object> {
 
@@ -92,13 +95,18 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARN, "Failure Submitting HTTP Request", e);
-            respond(ctx, request.protocolVersion(), new HttpResponseStatus(500, e.getMessage()));
+            respond(ctx, request, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    protected void respond(ChannelHandlerContext ctx, HttpVersion httpVersion, HttpResponseStatus status) {
-        DefaultHttpResponse response = new DefaultHttpResponse(httpVersion, status);
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+    protected void respond(ChannelHandlerContext ctx, HttpRequest request, HttpResponseStatus status) {
+        final DefaultHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), status);
+        response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, 0);
+        HttpUtil.setConnectionHeader(request, response);
+        final ChannelFuture clientChannel = ctx.writeAndFlush(response);
+        if (!io.netty.handler.codec.http.HttpUtil.isKeepAlive(request)) {
+            clientChannel.addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     private void submit(ChannelHandlerContext ctx, IServlet servlet, FullHttpRequest request) throws IOException {
@@ -107,7 +115,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
             servletRequest = HttpUtil.toServletRequest(request);
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARN, "Failure Decoding Request", e);
-            respond(ctx, request.protocolVersion(), HttpResponseStatus.BAD_REQUEST);
+            respond(ctx, request, HttpResponseStatus.BAD_REQUEST);
             return;
         }
         handler = new HttpRequestHandler(ctx, servlet, servletRequest, chunkSize);
@@ -128,7 +136,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("No servlet for " + request.uri());
         }
-        respond(ctx, request.protocolVersion(), HttpResponseStatus.NOT_FOUND);
+        respond(ctx, request, HttpResponseStatus.NOT_FOUND);
     }
 
     @Override

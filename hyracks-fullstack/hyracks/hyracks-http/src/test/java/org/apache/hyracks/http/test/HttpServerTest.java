@@ -240,7 +240,7 @@ public class HttpServerTest {
                 pw.flush();
                 BufferedReader br = new BufferedReader(new InputStreamReader(s.getInputStream()));
                 String line;
-                while ((line = br.readLine()) != null) {
+                while ((line = br.readLine()) != null && !line.isEmpty()) {
                     response.append(line).append('\n');
                 }
                 br.close();

@@ -23,13 +23,13 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 
 import org.apache.hyracks.http.api.IServletResponse;
+import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
@@ -37,9 +37,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
 
@@ -65,12 +63,11 @@ public class ChunkedResponse implements IServletResponse {
     private final ChannelHandlerContext ctx;
     private final ChunkedNettyOutputStream outputStream;
     private final PrintWriter writer;
-    private HttpResponse response;
+    private DefaultHttpResponse response;
     private boolean headerSent;
     private ByteBuf error;
     private ChannelFuture future;
     private boolean done;
-    private final boolean keepAlive;
 
     public ChunkedResponse(ChannelHandlerContext ctx, FullHttpRequest request, int chunkSize) {
         this.ctx = ctx;
@@ -78,9 +75,7 @@ public class ChunkedResponse implements IServletResponse {
         writer = new PrintWriter(outputStream);
         response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         response.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
-        keepAlive = HttpUtil.isKeepAlive(request);
-        response.headers().set(HttpHeaderNames.CONNECTION,
-                keepAlive ? HttpHeaderValues.KEEP_ALIVE : HttpHeaderValues.CLOSE);
+        HttpUtil.setConnectionHeader(request, response);
     }
 
     @Override
