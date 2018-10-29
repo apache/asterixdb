@@ -185,7 +185,6 @@ public class IPCConnectionManager {
         }
 
         private void doRun() {
-            int failingLoops = 0;
             while (!stopped) {
                 try {
                     int n = selector.select();
@@ -199,16 +198,8 @@ public class IPCConnectionManager {
                     if (n > 0) {
                         processSelectedKeys();
                     }
-                    // reset failingLoops on a good loop
-                    failingLoops = 0;
                 } catch (Exception e) {
-                    int sleepSecs = (int) Math.pow(2, Math.min(11, failingLoops++));
-                    LOGGER.log(Level.ERROR, "Exception processing message; sleeping " + sleepSecs + " seconds", e);
-                    try {
-                        Thread.sleep(TimeUnit.SECONDS.toMillis(sleepSecs));
-                    } catch (InterruptedException e1) {
-                        Thread.currentThread().interrupt();
-                    }
+                    LOGGER.log(Level.ERROR, "Exception processing message", e);
                 }
             }
         }

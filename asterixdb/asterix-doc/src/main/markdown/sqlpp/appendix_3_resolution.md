@@ -197,6 +197,9 @@ The likely intent of the query above can be accomplished as follows:
     SELECT e.name, pay
     ORDER BY pay
 
+Note that variables defined by `JOIN` subclauses are not visible to other subclauses in the same `FROM` clause.
+This also applies to the `FROM` variable that starts the `JOIN` subclause.
+
 ## <a id="Resolving_names">Resolving Names</a>
 
 The process of name resolution begins with the leftmost identifier in the name.
