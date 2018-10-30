@@ -395,6 +395,7 @@
         <configuration>
           <ignoredDependencies combine.children="append">
             <ignoredDependency>org.apache.asterix:asterix-opt-bom:*</ignoredDependency>
+            <ignoredDependency>org.apache.hyracks:hyracks-storage-am-lsm-btree-test:*</ignoredDependency>
           </ignoredDependencies>
           <usedDependencies combine.children="append">
             <usedDependency>org.apache.asterix:asterix-app</usedDependency>
@@ -569,6 +570,12 @@
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-server</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-storage-am-lsm-btree-test</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
