@@ -64,6 +64,7 @@ import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.Servlets;
+import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -373,25 +374,30 @@ public class TestExecutor {
                     }
                     return false;
                 } else {
-                    // If the fields are floating-point numbers, test them
-                    // for equality safely
+                    // Get the String values
                     expectedFields[j] = expectedFields[j].split(",")[0];
                     actualFields[j] = actualFields[j].split(",")[0];
-                    try {
-                        Double double1 = Double.parseDouble(expectedFields[j]);
-                        Double double2 = Double.parseDouble(actualFields[j]);
-                        float float1 = (float) double1.doubleValue();
-                        float float2 = (float) double2.doubleValue();
 
-                        if (Math.abs(float1 - float2) == 0) {
-                            continue;
-                        } else {
+                    // Ensure type compatibility before value comparison
+                    if (NumberUtils.isSameTypeNumericStrings(expectedFields[j], actualFields[j])) {
+                        try {
+                            Double double1 = Double.parseDouble(expectedFields[j]);
+                            Double double2 = Double.parseDouble(actualFields[j]);
+                            float float1 = (float) double1.doubleValue();
+                            float float2 = (float) double2.doubleValue();
+
+                            if (Math.abs(float1 - float2) == 0) {
+                                continue;
+                            } else {
+                                return false;
+                            }
+                        } catch (NumberFormatException ignored) {
+                            // Guess they weren't numbers - must simply not be equal
                             return false;
                         }
-                    } catch (NumberFormatException ignored) {
-                        // Guess they weren't numbers - must simply not be equal
-                        return false;
                     }
+
+                    return false; // Not equal
                 }
             }
         }

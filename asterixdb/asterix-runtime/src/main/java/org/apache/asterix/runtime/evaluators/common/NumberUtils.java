@@ -116,4 +116,49 @@ public final class NumberUtils {
 
     private NumberUtils() {
     }
+
+    /**
+     * Checks if 2 strings are numeric and of the same type
+     * @param value1 first string value
+     * @param value2 second string value
+     * @return {@code true} if value1 and value2 are numeric values and of the same type, {@code false} otherwise
+     */
+    public static boolean isSameTypeNumericStrings(String value1, String value2) {
+        // Step 1: Confirm numeric strings
+        if (isNumericString(value1) && isNumericString(value2)) {
+            // Step 2: Confirm same type (2 ints or 2 floats = true, otherwise false)
+            return isIntegerNumericString(value1) == isIntegerNumericString(value2);
+        }
+
+        // Not numeric string
+        return false;
+    }
+
+    /**
+     * Checks if a string is a numeric value
+     * @param value string to be checked
+     * @return {@code true} if the string is a valid number, {@code false} otherwise
+     */
+    public static boolean isNumericString(String value) {
+        try {
+            Double.parseDouble(value);
+            return true;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Checks if a numeric string is of type int
+     * @param value numeric string value
+     * @return {@code true} if the string is of type int, {@code false} otherwise
+     */
+    public static boolean isIntegerNumericString(String value) {
+        try {
+            Integer.parseInt(value);
+            return true;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+    }
 }

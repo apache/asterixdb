@@ -4582,6 +4582,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="ensure_result_numeric_type">
+        <output-dir compare="Text">ensure_result_numeric_type</output-dir>
+        <source-location>false</source-location>
+        <expected-error>expected &lt; 3.0</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="partition-by-nonexistent-field">
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
         <expected-error>Field "id" is not found</expected-error>
