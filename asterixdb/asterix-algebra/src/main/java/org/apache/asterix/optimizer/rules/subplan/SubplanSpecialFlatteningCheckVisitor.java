@@ -52,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
 /**
@@ -236,6 +237,11 @@ class SubplanSpecialFlatteningCheckVisitor implements IQueryOperatorVisitor<Bool
     public Boolean visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
         throw new CompilationException(ErrorCode.COMPILATION_ERROR, op.getSourceLocation(),
                 "Forward operator should have been disqualified for this rewriting!");
+    }
+
+    @Override
+    public Boolean visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
+        return visitInputs(op);
     }
 
     private boolean visitInputs(ILogicalOperator op) throws AlgebricksException {

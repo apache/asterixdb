@@ -295,20 +295,7 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
     @Override
     public Void visit(OrderbyClause oc, Integer step) throws CompilationException {
         out.print(skip(step) + "order by ");
-        List<OrderModifier> mlist = oc.getModifierList();
-        List<Expression> list = oc.getOrderbyList();
-        int index = 0;
-        int size = list.size();
-        for (Expression expr : oc.getOrderbyList()) {
-            expr.accept(this, step);
-            OrderModifier orderModifier = mlist.get(index);
-            if (orderModifier != OrderModifier.ASC) {
-                out.print(" " + orderModifier.toString().toLowerCase());
-            }
-            if (++index < size) {
-                out.print(COMMA);
-            }
-        }
+        printDelimitedObyExpressions(oc.getOrderbyList(), oc.getModifierList(), step);
         out.println();
         return null;
     }
@@ -892,6 +879,22 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
             }
             pair.getExpr().accept(this, step);
             if (++gbyIndex < gbySize) {
+                out.print(COMMA);
+            }
+        }
+    }
+
+    protected void printDelimitedObyExpressions(List<Expression> list, List<OrderModifier> mlist, Integer step)
+            throws CompilationException {
+        int index = 0;
+        int size = list.size();
+        for (Expression expr : list) {
+            expr.accept(this, step);
+            OrderModifier orderModifier = mlist.get(index);
+            if (orderModifier != OrderModifier.ASC) {
+                out.print(orderModifier.toString().toLowerCase());
+            }
+            if (++index < size) {
                 out.print(COMMA);
             }
         }

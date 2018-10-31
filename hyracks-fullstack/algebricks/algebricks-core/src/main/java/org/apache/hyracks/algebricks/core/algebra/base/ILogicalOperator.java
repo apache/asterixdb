@@ -89,7 +89,7 @@ public interface ILogicalOperator {
      */
 
     public PhysicalRequirements getRequiredPhysicalPropertiesForChildren(IPhysicalPropertiesVector requiredProperties,
-            IOptimizationContext context);
+            IOptimizationContext context) throws AlgebricksException;
 
     /**
      * @return the physical properties that this operator delivers, based on

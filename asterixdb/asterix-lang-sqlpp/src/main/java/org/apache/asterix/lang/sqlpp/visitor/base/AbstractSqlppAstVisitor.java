@@ -34,6 +34,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 
 /**
  * A dummy abstract visitor to allow an implementation to only fill in necessary stuff.
@@ -110,4 +111,8 @@ public abstract class AbstractSqlppAstVisitor<R, T> extends AbstractAstVisitor<R
         return null;
     }
 
+    @Override
+    public R visit(WindowExpression winExpr, T arg) throws CompilationException {
+        return null;
+    }
 }

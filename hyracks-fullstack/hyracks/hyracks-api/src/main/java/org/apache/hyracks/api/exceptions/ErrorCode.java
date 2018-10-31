@@ -152,6 +152,7 @@ public class ErrorCode {
     public static final int ONE_TUPLE_RANGEMAP_EXPECTED = 116;
     public static final int NO_RANGEMAP_PRODUCED = 117;
     public static final int RANGEMAP_NOT_FOUND = 118;
+    public static final int UNSUPPORTED_WINDOW_SPEC = 119;
 
     // Compilation error codes.
     public static final int RULECOLLECTION_NOT_INSTANCE_OF_LIST = 10000;

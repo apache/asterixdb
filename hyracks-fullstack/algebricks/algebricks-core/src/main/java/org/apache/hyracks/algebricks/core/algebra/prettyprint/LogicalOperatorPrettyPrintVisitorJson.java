@@ -70,6 +70,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 
@@ -251,28 +252,10 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     @Override
     public Void visitOrderOperator(OrderOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("\"operator\": \"order\"");
-        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
-            buffer.append(",\n");
-            if (op.getTopK() != -1) {
-                addIndent(indent).append("\"topK\": \"" + op.getTopK() + "\",\n");
-            }
-            String fst = getOrderString(p.first);
-            addIndent(indent).append("\"first\": " + fst + ",\n");
-            addIndent(indent).append(
-                    "\"second\": \"" + p.second.getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
-        }
+        int topK = op.getTopK();
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions = op.getOrderExpressions();
+        pprintOrderExprList(orderExpressions, topK, indent);
         return null;
-    }
-
-    private String getOrderString(OrderOperator.IOrder first) {
-        switch (first.getKind()) {
-            case ASC:
-                return "\"ASC\"";
-            case DESC:
-                return "\"DESC\"";
-            default:
-                return first.getExpressionRef().toString();
-        }
     }
 
     @Override
@@ -667,6 +650,23 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         return null;
     }
 
+    @Override
+    public Void visitWindowOperator(WindowOperator op, Integer indent) throws AlgebricksException {
+        addIndent(indent).append("\"operator\": \"window\"");
+        variablePrintHelper(op.getVariables(), indent);
+        addIndent(0).append(",\n");
+        pprintExprList(op.getExpressions(), indent);
+        if (!op.getPartitionExpressions().isEmpty()) {
+            buffer.append(",\n");
+            addIndent(indent).append("\"partition by\": ");
+            pprintExprList(op.getPartitionExpressions(), indent);
+        }
+        buffer.append(",\n");
+        addIndent(indent).append("\"order by\": ");
+        pprintOrderExprList(op.getOrderExpressions(), -1, indent);
+        return null;
+    }
+
     protected void printNestedPlans(AbstractOperatorWithNestedPlans op, Integer indent) throws AlgebricksException {
         idCounter.nextPrefix();
         buffer.append("[\n");
@@ -717,5 +717,30 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
         }
         buffer.append("]");
+    }
+
+    private void pprintOrderExprList(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions,
+            int topK, Integer indent) throws AlgebricksException {
+        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExpressions) {
+            buffer.append(",\n");
+            if (topK != -1) {
+                addIndent(indent).append("\"topK\": \"" + topK + "\",\n");
+            }
+            String fst = getOrderString(p.first);
+            addIndent(indent).append("\"first\": " + fst + ",\n");
+            addIndent(indent).append(
+                    "\"second\": \"" + p.second.getValue().accept(exprVisitor, indent).replace('"', ' ') + "\"");
+        }
+    }
+
+    private String getOrderString(OrderOperator.IOrder first) {
+        switch (first.getKind()) {
+            case ASC:
+                return "\"ASC\"";
+            case DESC:
+                return "\"DESC\"";
+            default:
+                return first.getExpressionRef().toString();
+        }
     }
 }

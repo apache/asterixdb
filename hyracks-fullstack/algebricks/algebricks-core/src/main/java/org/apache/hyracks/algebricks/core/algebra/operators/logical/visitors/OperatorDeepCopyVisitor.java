@@ -66,6 +66,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
@@ -405,5 +406,20 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
             throws AlgebricksException {
         return new LeftOuterUnnestOperator(op.getVariable(), deepCopyExpressionRef(op.getExpressionRef()),
                 op.getPositionalVariable(), op.getPositionalVariableType(), op.getPositionWriter());
+    }
+
+    @Override
+    public ILogicalOperator visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
+        List<Mutable<ILogicalExpression>> newPartitionExprs = new ArrayList<>();
+        deepCopyExpressionRefs(op.getPartitionExpressions(), newPartitionExprs);
+        List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrderExprs =
+                deepCopyOrderAndExpression(op.getOrderExpressions());
+
+        ArrayList<LogicalVariable> newList = new ArrayList<>();
+        ArrayList<Mutable<ILogicalExpression>> newExpressions = new ArrayList<>();
+        newList.addAll(op.getVariables());
+        deepCopyExpressionRefs(newExpressions, op.getExpressions());
+
+        return new WindowOperator(newPartitionExprs, newOrderExprs, newList, newExpressions);
     }
 }

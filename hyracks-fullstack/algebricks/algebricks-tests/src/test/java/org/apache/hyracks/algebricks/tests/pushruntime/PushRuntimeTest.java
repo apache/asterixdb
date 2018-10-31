@@ -51,7 +51,7 @@ import org.apache.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.PrinterRuntimeFactory;
-import org.apache.hyracks.algebricks.runtime.operators.std.RunningAggregateRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.aggrun.RunningAggregateRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.SplitOperatorDescriptor;
 import org.apache.hyracks.algebricks.runtime.operators.std.StreamLimitRuntimeFactory;

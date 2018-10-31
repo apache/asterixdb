@@ -56,4 +56,5 @@ public enum LogicalOperatorTag {
     WRITE,
     WRITE_RESULT,
     INTERSECT,
+    WINDOW
 }

@@ -82,6 +82,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -647,6 +648,11 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     public ILogicalOperator visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
         throw new CompilationException(ErrorCode.COMPILATION_ERROR, op.getSourceLocation(),
                 "Forward operator should have been disqualified for this rewriting!");
+    }
+
+    @Override
+    public ILogicalOperator visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
+        return visitSingleInputOperator(op);
     }
 
     /**

@@ -66,6 +66,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
@@ -607,6 +608,20 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         LeftOuterUnnestOperator opCopy = new LeftOuterUnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
                 deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getPositionWriter());
+        deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
+        return opCopy;
+    }
+
+    @Override
+    public ILogicalOperator visitWindowOperator(WindowOperator op, ILogicalOperator arg) throws AlgebricksException {
+        List<Mutable<ILogicalExpression>> partitionExprCopy =
+                exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getPartitionExpressions());
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprCopy =
+                deepCopyOrderExpressionReferencePairList(op.getOrderExpressions());
+        List<LogicalVariable> varCopy = deepCopyVariableList(op.getVariables());
+        List<Mutable<ILogicalExpression>> exprCopy =
+                exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getExpressions());
+        WindowOperator opCopy = new WindowOperator(partitionExprCopy, orderExprCopy, varCopy, exprCopy);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

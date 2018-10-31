@@ -69,6 +69,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
@@ -609,7 +610,32 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
 
     @Override
     public Boolean visitSinkOperator(SinkOperator op, ILogicalOperator arg) throws AlgebricksException {
-        return true;
+        AbstractLogicalOperator aop = (AbstractLogicalOperator) arg;
+        if (aop.getOperatorTag() != LogicalOperatorTag.SINK) {
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
+    }
+
+    @Override
+    public Boolean visitWindowOperator(WindowOperator op, ILogicalOperator arg) throws AlgebricksException {
+        AbstractLogicalOperator aop = (AbstractLogicalOperator) arg;
+        if (aop.getOperatorTag() != LogicalOperatorTag.WINDOW) {
+            return Boolean.FALSE;
+        }
+        WindowOperator windowOpArg = (WindowOperator) copyAndSubstituteVar(op, arg);
+        if (!VariableUtilities.varListEqualUnordered(op.getPartitionExpressions(),
+                windowOpArg.getPartitionExpressions())) {
+            return Boolean.FALSE;
+        }
+        if (!compareIOrderAndExpressions(op.getOrderExpressions(), windowOpArg.getOrderExpressions())) {
+            return Boolean.FALSE;
+        }
+        if (!VariableUtilities.varListEqualUnordered(getPairList(op.getVariables(), op.getExpressions()),
+                getPairList(windowOpArg.getVariables(), windowOpArg.getExpressions()))) {
+            return Boolean.FALSE;
+        }
+        return Boolean.TRUE;
     }
 
     private Boolean compareExpressions(List<Mutable<ILogicalExpression>> opExprs,

@@ -68,6 +68,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -90,6 +91,13 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     @Override
     public Void visitRunningAggregateOperator(RunningAggregateOperator op, ILogicalOperator arg)
             throws AlgebricksException {
+        mapChildren(op, arg);
+        mapVariablesForAbstractAssign(op, arg);
+        return null;
+    }
+
+    @Override
+    public Void visitWindowOperator(WindowOperator op, ILogicalOperator arg) throws AlgebricksException {
         mapChildren(op, arg);
         mapVariablesForAbstractAssign(op, arg);
         return null;

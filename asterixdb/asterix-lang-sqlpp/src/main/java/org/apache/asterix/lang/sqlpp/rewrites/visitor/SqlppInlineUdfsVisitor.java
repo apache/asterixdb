@@ -44,6 +44,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppCloneAndSubstituteVariablesVisitor;
@@ -243,6 +244,22 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         return inlined || result.first;
     }
 
+    @Override
+    public Boolean visit(WindowExpression winExpr, List<FunctionDecl> funcs) throws CompilationException {
+        Pair<Boolean, Expression> result = inlineUdfsInExpr(winExpr.getExpr(), funcs);
+        winExpr.setExpr(result.second);
+        boolean inlined = result.first;
+        if (winExpr.hasPartitionList()) {
+            Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(winExpr.getPartitionList(), funcs);
+            winExpr.setPartitionList(inlinedList.second);
+            inlined |= inlinedList.first;
+        }
+        Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(winExpr.getOrderbyList(), funcs);
+        winExpr.setOrderbyList(inlinedList.second);
+        inlined |= inlinedList.first;
+        return inlined;
+    }
+
     private Map<Expression, Expression> extractLetBindingVariableExpressionMappings(List<LetClause> letClauses)
             throws CompilationException {
         Map<Expression, Expression> varExprMap = new HashMap<>();
@@ -253,5 +270,4 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         }
         return varExprMap;
     }
-
 }

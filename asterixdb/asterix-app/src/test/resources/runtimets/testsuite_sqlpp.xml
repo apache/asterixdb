@@ -8933,6 +8933,45 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="window">
+    <test-case FilePath="window">
+      <compilation-unit name="dense_rank_01">
+        <output-dir compare="Text">dense_rank_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="misc_01">
+        <output-dir compare="Text">misc_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="ntile_01">
+        <output-dir compare="Text">ntile_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="ntile_02">
+        <output-dir compare="Text">ntile_01</output-dir>
+        <expected-error>ASX0002: Type mismatch</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="percent_rank_01">
+        <output-dir compare="Text">percent_rank_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="rank_01">
+        <output-dir compare="Text">rank_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="window">
+      <compilation-unit name="row_number_01">
+        <output-dir compare="Text">row_number_01</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="writers">
     <test-case FilePath="writers">
       <compilation-unit name="print_01">

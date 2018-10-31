@@ -61,6 +61,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 
 public class AbstractSqlppSimpleExpressionVisitor
@@ -318,6 +319,16 @@ public class AbstractSqlppSimpleExpressionVisitor
     public Expression visit(UnaryExpr u, ILangExpression arg) throws CompilationException {
         u.setExpr(visit(u.getExpr(), u));
         return u;
+    }
+
+    @Override
+    public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
+        winExpr.setExpr(visit(winExpr.getExpr(), arg));
+        if (winExpr.hasPartitionList()) {
+            winExpr.setPartitionList(visit(winExpr.getPartitionList(), winExpr));
+        }
+        winExpr.setOrderbyList(visit(winExpr.getOrderbyList(), winExpr));
+        return winExpr;
     }
 
     @Override

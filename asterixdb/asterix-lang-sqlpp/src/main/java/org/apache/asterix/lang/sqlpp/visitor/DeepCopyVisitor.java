@@ -65,6 +65,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
@@ -283,7 +284,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (Expression orderExpr : oc.getOrderbyList()) {
             newOrderbyList.add((Expression) orderExpr.accept(this, arg));
         }
-        OrderbyClause copy = new OrderbyClause(newOrderbyList, oc.getModifierList());
+        OrderbyClause copy = new OrderbyClause(newOrderbyList, new ArrayList<>(oc.getModifierList()));
         copy.setSourceLocation(oc.getSourceLocation());
         return copy;
     }
@@ -492,6 +493,19 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         CaseExpression copy = new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
         copy.setSourceLocation(caseExpr.getSourceLocation());
         copy.addHints(caseExpr.getHints());
+        return copy;
+    }
+
+    @Override
+    public ILangExpression visit(WindowExpression winExpr, Void arg) throws CompilationException {
+        Expression newExpr = (Expression) winExpr.getExpr().accept(this, arg);
+        List<Expression> newPartitionList =
+                winExpr.hasPartitionList() ? copyExprList(winExpr.getPartitionList(), arg) : null;
+        List<Expression> newOrderbyList = copyExprList(winExpr.getOrderbyList(), arg);
+        List<OrderbyClause.OrderModifier> newOrderbyModifierList = new ArrayList<>(winExpr.getOrderbyModifierList());
+        WindowExpression copy = new WindowExpression(newExpr, newPartitionList, newOrderbyList, newOrderbyModifierList);
+        copy.setSourceLocation(winExpr.getSourceLocation());
+        copy.addHints(winExpr.getHints());
         return copy;
     }
 

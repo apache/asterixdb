@@ -57,6 +57,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 
@@ -274,4 +275,10 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
                 || visitExprList(caseExpr.getThenExprs(), arg) || caseExpr.getElseExpr().accept(this, arg);
     }
 
+    @Override
+    public Boolean visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
+        return winExpr.getExpr().accept(this, arg)
+                || (winExpr.hasPartitionList() && visitExprList(winExpr.getPartitionList(), arg))
+                || visitExprList(winExpr.getOrderbyList(), arg);
+    }
 }

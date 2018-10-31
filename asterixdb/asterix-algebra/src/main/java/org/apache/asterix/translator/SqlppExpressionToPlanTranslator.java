@@ -38,6 +38,7 @@ import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
@@ -68,6 +69,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
@@ -94,6 +96,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
@@ -110,10 +113,12 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -1016,5 +1021,78 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         opExpr.getArguments().add(new MutableObject<>(lhsExpr));
         opExpr.getArguments().add(new MutableObject<>(rhsExpr));
         return opExpr;
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(WindowExpression winExpr, Mutable<ILogicalOperator> tupSource)
+            throws CompilationException {
+        SourceLocation sourceLoc = winExpr.getSourceLocation();
+        Mutable<ILogicalOperator> currentOpRef = tupSource;
+
+        List<Mutable<ILogicalExpression>> partExprListOut = null;
+        if (winExpr.hasPartitionList()) {
+            List<Expression> partExprList = winExpr.getPartitionList();
+            partExprListOut = new ArrayList<>(partExprList.size());
+            for (Expression partExpr : partExprList) {
+                Pair<ILogicalOperator, LogicalVariable> partExprResult = partExpr.accept(this, currentOpRef);
+                VariableReferenceExpression partExprOut = new VariableReferenceExpression(partExprResult.second);
+                partExprOut.setSourceLocation(partExpr.getSourceLocation());
+                partExprListOut.add(new MutableObject<>(partExprOut));
+                currentOpRef = new MutableObject<>(partExprResult.first);
+            }
+        }
+
+        List<Expression> orderExprList = winExpr.getOrderbyList();
+        List<OrderbyClause.OrderModifier> orderModifierList = winExpr.getOrderbyModifierList();
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprListOut =
+                new ArrayList<>(orderExprList.size());
+        for (int i = 0, ln = orderExprList.size(); i < ln; i++) {
+            Expression orderExpr = orderExprList.get(i);
+            OrderbyClause.OrderModifier orderModifier = orderModifierList.get(i);
+            Pair<ILogicalOperator, LogicalVariable> orderExprResult = orderExpr.accept(this, currentOpRef);
+            VariableReferenceExpression orderExprOut = new VariableReferenceExpression(orderExprResult.second);
+            orderExprOut.setSourceLocation(orderExpr.getSourceLocation());
+            OrderOperator.IOrder orderModifierOut = translateOrderModifier(orderModifier);
+            orderExprListOut.add(new Pair<>(orderModifierOut, new MutableObject<>(orderExprOut)));
+            currentOpRef = new MutableObject<>(orderExprResult.first);
+        }
+
+        Expression expr = winExpr.getExpr();
+        Pair<ILogicalOperator, LogicalVariable> exprResult = expr.accept(this, currentOpRef);
+        ILogicalOperator exprOp = exprResult.first;
+        if (exprOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc);
+        }
+        AssignOperator exprAssignOp = (AssignOperator) exprOp;
+        currentOpRef = exprAssignOp.getInputs().get(0);
+        List<LogicalVariable> exprAssignVars = exprAssignOp.getVariables();
+        if (exprAssignVars.size() != 1) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc);
+        }
+        LogicalVariable exprAssignVar = exprAssignVars.get(0);
+        List<Mutable<ILogicalExpression>> exprAssignExprs = exprAssignOp.getExpressions();
+        ILogicalExpression exprAssignExpr = exprAssignExprs.get(0).getValue();
+        if (exprAssignExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            throw new CompilationException(ErrorCode.COMPILATION_EXPECTED_FUNCTION_CALL, sourceLoc);
+        }
+        AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) exprAssignExpr;
+        if (BuiltinFunctions.windowFunctionRequiresOrderArgs(callExpr.getFunctionIdentifier())) {
+            List<Mutable<ILogicalExpression>> callArgs = callExpr.getArguments();
+            for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprListOut) {
+                callArgs.add(new MutableObject<>(p.second.getValue().cloneExpression()));
+            }
+        }
+
+        WindowOperator winOp = new WindowOperator(partExprListOut, orderExprListOut, exprAssignVars, exprAssignExprs);
+        winOp.setSourceLocation(sourceLoc);
+        winOp.getInputs().add(currentOpRef);
+
+        // must return ASSIGN
+        LogicalVariable assignVar = context.newVar();
+        AssignOperator assignOp =
+                new AssignOperator(assignVar, new MutableObject<>(new VariableReferenceExpression(exprAssignVar)));
+        assignOp.setSourceLocation(sourceLoc);
+        assignOp.getInputs().add(new MutableObject<>(winOp));
+        return new Pair<>(assignOp, assignVar);
     }
 }

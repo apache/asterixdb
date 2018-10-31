@@ -65,13 +65,13 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import org.apache.hyracks.algebricks.rewriter.rules.AbstractExtractExprRule;
 
-public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule implements IAlgebraicRewriteRule {
+public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule {
 
     private final IllegalNonfunctionalFunctionSweeperOperatorVisitor visitor;
 
@@ -311,6 +311,20 @@ public class SweepIllegalNonfunctionalFunctions extends AbstractExtractExprRule 
         @Override
         public Void visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
             sweepExpression(op.getRangeMapExpression().getValue(), op);
+            return null;
+        }
+
+        @Override
+        public Void visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
+            for (Mutable<ILogicalExpression> me : op.getPartitionExpressions()) {
+                sweepExpression(me.getValue(), op);
+            }
+            for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
+                sweepExpression(p.second.getValue(), op);
+            }
+            for (Mutable<ILogicalExpression> me : op.getExpressions()) {
+                sweepExpression(me.getValue(), op);
+            }
             return null;
         }
     }

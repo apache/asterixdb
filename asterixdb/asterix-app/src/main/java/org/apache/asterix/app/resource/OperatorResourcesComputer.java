@@ -24,6 +24,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowPOperator;
 
 public class OperatorResourcesComputer {
 
@@ -106,6 +108,8 @@ public class OperatorResourcesComputer {
             case INNERJOIN:
             case LEFTOUTERJOIN:
                 return getOperatorRequiredMemory(operator, joinMemorySize);
+            case WINDOW:
+                return getWindowRequiredMemory((WindowOperator) operator);
             default:
                 throw new IllegalStateException("Unrecognized operator: " + operator.getOperatorTag());
         }
@@ -137,5 +141,11 @@ public class OperatorResourcesComputer {
             return getOperatorRequiredMemory(op, frameSize);
         }
         return 2L * MAX_BUFFER_PER_CONNECTION * numComputationPartitions * numComputationPartitions * frameSize;
+    }
+
+    private long getWindowRequiredMemory(WindowOperator op) {
+        WindowPOperator physOp = (WindowPOperator) op.getPhysicalOperator();
+        int frameCount = physOp.isPartitionMaterialization() ? 3 : 2;
+        return getOperatorRequiredMemory(op, frameSize * frameCount);
     }
 }

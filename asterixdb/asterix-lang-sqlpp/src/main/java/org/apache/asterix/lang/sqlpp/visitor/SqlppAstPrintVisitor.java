@@ -27,6 +27,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -47,6 +48,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -331,4 +333,28 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
         return null;
     }
 
+    @Override
+    public Void visit(WindowExpression winExpr, Integer step) throws CompilationException {
+        out.print(skip(step) + "WINDOW");
+        winExpr.getExpr().accept(this, step + 1);
+        out.println();
+        out.println(skip(step) + "OVER (");
+        if (winExpr.hasPartitionList()) {
+            out.println(skip(step + 1) + "PARTITION BY");
+            List<Expression> partitionList = winExpr.getPartitionList();
+            for (Expression expr : partitionList) {
+                expr.accept(this, step + 2);
+                out.println();
+            }
+        }
+        out.println(skip(step + 1) + "ORDER BY");
+        List<Expression> orderbyList = winExpr.getOrderbyList();
+        List<OrderbyClause.OrderModifier> orderbyModifierList = winExpr.getOrderbyModifierList();
+        for (int i = 0, ln = orderbyList.size(); i < ln; i++) {
+            orderbyList.get(i).accept(this, step + 2);
+            out.println(" " + orderbyModifierList.get(i));
+        }
+        out.println(skip(step) + ")");
+        return null;
+    }
 }

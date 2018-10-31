@@ -18,17 +18,17 @@
  */
 package org.apache.hyracks.algebricks.rewriter.rules;
 
-import org.apache.commons.lang3.mutable.Mutable;
+import java.util.List;
+import java.util.function.Function;
 
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 
@@ -55,8 +55,8 @@ public class ExtractGbyExpressionsRule extends AbstractExtractExprRule {
         }
         context.addToDontApplySet(this, op1);
         GroupByOperator g = (GroupByOperator) op1;
-        boolean r1 = gbyExprWasRewritten(g, context);
-        boolean r2 = decorExprWasRewritten(g, context);
+        boolean r1 = extractComplexExpressions(g, g.getGroupByList(), context);
+        boolean r2 = extractComplexExpressions(g, g.getDecorList(), context);
         boolean fired = r1 || r2;
         if (fired) {
             context.computeAndSetTypeEnvironmentForOperator(g);
@@ -64,56 +64,15 @@ public class ExtractGbyExpressionsRule extends AbstractExtractExprRule {
         return fired;
     }
 
-    private boolean gbyExprWasRewritten(GroupByOperator g, IOptimizationContext context) throws AlgebricksException {
-        if (!gbyHasComplexExpr(g)) {
-            return false;
-        }
-        Mutable<ILogicalOperator> opRef2 = g.getInputs().get(0);
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> gbyPair : g.getGroupByList()) {
-            ILogicalExpression expr = gbyPair.second.getValue();
-            if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                LogicalVariable v = extractExprIntoAssignOpRef(expr, opRef2, context);
-                VariableReferenceExpression vRef = new VariableReferenceExpression(v);
-                vRef.setSourceLocation(expr.getSourceLocation());
-                gbyPair.second.setValue(vRef);
-            }
-        }
-        return true;
+    private static boolean extractComplexExpressions(ILogicalOperator op,
+            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> exprList, IOptimizationContext context)
+            throws AlgebricksException {
+        return extractComplexExpressions(op, exprList, Pair::getSecond, context);
     }
 
-    private boolean decorExprWasRewritten(GroupByOperator g, IOptimizationContext context) throws AlgebricksException {
-        if (!decorHasComplexExpr(g)) {
-            return false;
-        }
-        Mutable<ILogicalOperator> opRef2 = g.getInputs().get(0);
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> decorPair : g.getDecorList()) {
-            ILogicalExpression expr = decorPair.second.getValue();
-            if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                LogicalVariable v = extractExprIntoAssignOpRef(expr, opRef2, context);
-                VariableReferenceExpression vRef = new VariableReferenceExpression(v);
-                vRef.setSourceLocation(expr.getSourceLocation());
-                decorPair.second.setValue(vRef);
-            }
-        }
-        return true;
+    public static <T> boolean extractComplexExpressions(ILogicalOperator op, List<T> exprList,
+            Function<T, Mutable<ILogicalExpression>> exprGetter, IOptimizationContext context)
+            throws AlgebricksException {
+        return extractComplexExpressions(op, exprList, exprGetter, t -> false, context);
     }
-
-    private boolean gbyHasComplexExpr(GroupByOperator g) {
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> gbyPair : g.getGroupByList()) {
-            if (gbyPair.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean decorHasComplexExpr(GroupByOperator g) {
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> gbyPair : g.getDecorList()) {
-            if (gbyPair.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 }

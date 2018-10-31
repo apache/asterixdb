@@ -38,6 +38,7 @@ public interface Expression extends ILangExpression {
         UNION_EXPRESSION,
         SELECT_EXPRESSION,
         PRIMARY_EXPRESSION,
-        CASE_EXPRESSION
+        CASE_EXPRESSION,
+        WINDOW_EXPRESSION
     }
 }

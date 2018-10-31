@@ -60,6 +60,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
@@ -200,6 +201,12 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
     @Override
     public Void visitRunningAggregateOperator(RunningAggregateOperator op, IOptimizationContext context)
             throws AlgebricksException {
+        visitAssignment(op, context);
+        return null;
+    }
+
+    @Override
+    public Void visitWindowOperator(WindowOperator op, IOptimizationContext context) throws AlgebricksException {
         visitAssignment(op, context);
         return null;
     }
@@ -367,5 +374,4 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
             throws AlgebricksException {
         return null;
     }
-
 }

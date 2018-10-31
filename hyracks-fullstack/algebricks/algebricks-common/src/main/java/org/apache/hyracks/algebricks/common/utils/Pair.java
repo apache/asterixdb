@@ -33,6 +33,22 @@ public class Pair<T1, T2> implements Serializable {
         this.second = second;
     }
 
+    public void setFirst(T1 value) {
+        first = value;
+    }
+
+    public T1 getFirst() {
+        return first;
+    }
+
+    public void setSecond(T2 value) {
+        second = value;
+    }
+
+    public T2 getSecond() {
+        return second;
+    }
+
     @Override
     public String toString() {
         return first + "," + second;

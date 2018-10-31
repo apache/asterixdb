@@ -66,6 +66,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -86,6 +87,12 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
 
     @Override
     public Void visitAssignOperator(AssignOperator op, Void arg) throws AlgebricksException {
+        producedVariables.addAll(op.getVariables());
+        return null;
+    }
+
+    @Override
+    public Void visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
         producedVariables.addAll(op.getVariables());
         return null;
     }

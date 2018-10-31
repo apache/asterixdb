@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOpera
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.OperatorDeepCopyVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -130,6 +131,13 @@ public class OperatorManipulationUtil {
                 if (op.getOperatorTag() == LogicalOperatorTag.GROUP) {
                     GroupByOperator gbyOp = (GroupByOperator) op;
                     if (gbyOp.isGroupAll() && gbyOp.isGlobal()) {
+                        op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
+                        forceUnpartitioned = true;
+                    }
+                }
+                if (op.getOperatorTag() == LogicalOperatorTag.WINDOW) {
+                    WindowOperator winOp = (WindowOperator) op;
+                    if (winOp.getPartitionExpressions().isEmpty()) {
                         op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
                         forceUnpartitioned = true;
                     }

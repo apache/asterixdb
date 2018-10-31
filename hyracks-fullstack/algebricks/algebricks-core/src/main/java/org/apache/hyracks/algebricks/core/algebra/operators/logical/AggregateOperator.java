@@ -57,16 +57,7 @@ public class AggregateOperator extends AbstractAssignOperator {
 
     @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
-        return new VariablePropagationPolicy() {
-
-            @Override
-            public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
-                    throws AlgebricksException {
-                for (LogicalVariable v : variables) {
-                    target.addVariable(v);
-                }
-            }
-        };
+        return createVariablePropagationPolicy(false);
     }
 
     @Override

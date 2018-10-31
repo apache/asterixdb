@@ -67,6 +67,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
@@ -192,23 +193,27 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
                 stringBuilder.append("(topK: ").append(op.getTopK()).append(") ");
             }
             stringBuilder.append("(");
-            switch (p.first.getKind()) {
-                case ASC:
-                    stringBuilder.append("ASC");
-                    break;
-                case DESC:
-                    stringBuilder.append("DESC");
-                    break;
-                default:
-                    final Mutable<ILogicalExpression> expressionRef = p.first.getExpressionRef();
-                    stringBuilder.append(expressionRef == null ? "null" : expressionRef.toString());
-            }
+            appendOrder(p.first);
             stringBuilder.append(", ").append(p.second.getValue().toString()).append(") ");
         }
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);
         return stringBuilder.toString();
+    }
+
+    private void appendOrder(OrderOperator.IOrder order) {
+        switch (order.getKind()) {
+            case ASC:
+                stringBuilder.append("ASC");
+                break;
+            case DESC:
+                stringBuilder.append("DESC");
+                break;
+            default:
+                final Mutable<ILogicalExpression> expressionRef = order.getExpressionRef();
+                stringBuilder.append(expressionRef == null ? "null" : expressionRef.toString());
+        }
     }
 
     @Override
@@ -589,6 +594,26 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     public String visitForwardOperator(ForwardOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
         stringBuilder.append("forward(").append(op.getRangeMapExpression().getValue().toString()).append(")");
+        appendSchema(op, showDetails);
+        appendAnnotations(op, showDetails);
+        appendPhysicalOperatorInfo(op, showDetails);
+        return stringBuilder.toString();
+    }
+
+    @Override
+    public String visitWindowOperator(WindowOperator op, Boolean showDetails) throws AlgebricksException {
+        stringBuilder.setLength(0);
+        stringBuilder.append("window (").append(str(op.getVariables())).append(" <- ");
+        printExprList(op.getExpressions());
+        stringBuilder.append(") partition by (");
+        printExprList(op.getPartitionExpressions());
+        stringBuilder.append(") order by (");
+        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
+            stringBuilder.append("(");
+            appendOrder(p.first);
+            stringBuilder.append(", ").append(p.second.getValue().toString()).append(") ");
+        }
+        stringBuilder.append(")");
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);

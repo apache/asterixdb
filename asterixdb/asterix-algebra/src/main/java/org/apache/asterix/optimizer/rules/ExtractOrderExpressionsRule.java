@@ -18,18 +18,16 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.commons.lang3.mutable.Mutable;
+import java.util.List;
 
 import org.apache.asterix.optimizer.base.AnalysisUtil;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
@@ -57,30 +55,12 @@ public class ExtractOrderExpressionsRule extends AbstractExtractExprRule {
         context.addToDontApplySet(this, op1);
         OrderOperator oo = (OrderOperator) op1;
 
-        if (!orderHasComplexExpr(oo)) {
-            return false;
-        }
-        Mutable<ILogicalOperator> opRef2 = oo.getInputs().get(0);
-        for (Pair<IOrder, Mutable<ILogicalExpression>> orderPair : oo.getOrderExpressions()) {
-            ILogicalExpression expr = orderPair.second.getValue();
-            if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE && !AnalysisUtil.isAccessToFieldRecord(expr)) {
-                LogicalVariable v = extractExprIntoAssignOpRef(expr, opRef2, context);
-                VariableReferenceExpression vRef = new VariableReferenceExpression(v);
-                vRef.setSourceLocation(expr.getSourceLocation());
-                orderPair.second.setValue(vRef);
-            }
-        }
-        context.computeAndSetTypeEnvironmentForOperator(oo);
-        return true;
+        return extractComplexExpressions(oo, oo.getOrderExpressions(), context);
     }
 
-    private boolean orderHasComplexExpr(OrderOperator oo) {
-        for (Pair<IOrder, Mutable<ILogicalExpression>> orderPair : oo.getOrderExpressions()) {
-            if (orderPair.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                return true;
-            }
-        }
-        return false;
+    static boolean extractComplexExpressions(ILogicalOperator op,
+            List<Pair<IOrder, Mutable<ILogicalExpression>>> exprList, IOptimizationContext context)
+            throws AlgebricksException {
+        return extractComplexExpressions(op, exprList, Pair::getSecond, AnalysisUtil::isAccessToFieldRecord, context);
     }
-
 }

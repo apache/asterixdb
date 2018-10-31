@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.rewriter.rules;
 
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -80,6 +82,10 @@ public class PushNestedOrderByUnderPreSortedGroupByRule implements IAlgebraicRew
         }
         OrderOperator order1 = (OrderOperator) op2;
         if (!isIndependentFromChildren(order1)) {
+            return false;
+        }
+        if (OperatorManipulationUtil.ancestorOfOperators(order1.getInputs().get(0).getValue(),
+                EnumSet.of(LogicalOperatorTag.ORDER))) {
             return false;
         }
         AbstractPhysicalOperator pOrder1 = (AbstractPhysicalOperator) op2.getPhysicalOperator();

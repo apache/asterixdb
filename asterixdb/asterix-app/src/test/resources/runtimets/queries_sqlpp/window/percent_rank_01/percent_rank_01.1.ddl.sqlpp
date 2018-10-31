@@ -1,0 +1,76 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Test PERCENT_RANK()
+ * Expected Res : SUCCESS
+ */
+
+drop  dataverse test if exists;
+create  dataverse test;
+
+use test;
+
+create type test.t1Type as open {
+  c1 : bigint
+};
+
+create dataset t1(t1Type) primary key c1;
+
+create dataset tRnd(t1Type) primary key c1;
+
+create function q0_rnd() {
+  let
+    rnd = tobigint((select value tRnd.rnd from tRnd where c1 = 1)[0] * 1000),
+    p = case when rnd >= 10 then rnd else 10 end,
+    n = tobigint( 1000 * 100 / p)
+  select p, n
+};
+
+create function q1_percent_rank(P, N, D) {
+  from
+    t1,
+    range(t1.one, P) p,
+    range(t1.one, N) n,
+    range(t1.one, D) d
+  let
+    rank = (N - n) * D + 1,
+    result_expected = (rank - 1) / (N * D - 1),
+    result_actual = percent_rank() over ( partition by t1.c2, p order by n desc ),
+    result_delta_raw = result_expected - result_actual,
+    result_delta = case when result_delta_raw < 0.001 then 0 else result_delta_raw end
+  select
+    min(result_delta) min_delta,
+    max(result_delta) max_delta
+};
+
+create function q2_percent_rank_no_partition(N, D) {
+  from
+    t1,
+    range(t1.one, N) n,
+    range(t1.one, D) d
+  let
+    rank = ((t1.c2 - 1) * N * D) + (N - n) * D + 1,
+    result_expected = (rank - 1) / (4 * N * D - 1),
+    result_actual = percent_rank() over ( order by t1.c2, n desc ),
+    result_delta_raw = result_expected - result_actual,
+    result_delta = case when result_delta_raw < 0.001 then 0 else result_delta_raw end
+  select
+    min(result_delta) min_delta,
+    max(result_delta) max_delta
+};

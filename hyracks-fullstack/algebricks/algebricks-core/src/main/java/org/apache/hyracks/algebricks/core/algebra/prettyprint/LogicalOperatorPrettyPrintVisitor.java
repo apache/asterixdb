@@ -66,6 +66,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
@@ -170,13 +171,10 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     @Override
     public Void visitOrderOperator(OrderOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("order ");
-        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
-            if (op.getTopK() != -1) {
-                buffer.append("(topK: " + op.getTopK() + ") ");
-            }
-            String fst = getOrderString(p.first);
-            buffer.append("(" + fst + ", " + p.second.getValue().accept(exprVisitor, indent) + ") ");
+        if (op.getTopK() != -1) {
+            buffer.append("(topK: " + op.getTopK() + ") ");
         }
+        pprintOrderList(op.getOrderExpressions(), indent);
         return null;
     }
 
@@ -484,6 +482,17 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         return null;
     }
 
+    @Override
+    public Void visitWindowOperator(WindowOperator op, Integer indent) throws AlgebricksException {
+        addIndent(indent).append("window ").append(str(op.getVariables())).append(" <- ");
+        pprintExprList(op.getExpressions(), indent);
+        buffer.append(" partition ");
+        pprintExprList(op.getPartitionExpressions(), indent);
+        buffer.append(" order ");
+        pprintOrderList(op.getOrderExpressions(), indent);
+        return null;
+    }
+
     protected void printNestedPlans(AbstractOperatorWithNestedPlans op, Integer indent) throws AlgebricksException {
         boolean first = true;
         if (op.getNestedPlans().isEmpty()) {
@@ -536,5 +545,13 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
             }
         }
         buffer.append("]");
+    }
+
+    protected void pprintOrderList(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderList,
+            Integer indent) throws AlgebricksException {
+        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderList) {
+            String fst = getOrderString(p.first);
+            buffer.append("(" + fst + ", " + p.second.getValue().accept(exprVisitor, indent) + ") ");
+        }
     }
 }

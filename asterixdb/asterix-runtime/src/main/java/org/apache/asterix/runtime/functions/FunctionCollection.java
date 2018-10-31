@@ -439,6 +439,11 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDate
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromTimeInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationGreaterThanComparatorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationLessThanComparatorDescriptor;
+import org.apache.asterix.runtime.runningaggregates.std.DenseRankRunningAggregateDescriptor;
+import org.apache.asterix.runtime.runningaggregates.std.NtileRunningAggregateDescriptor;
+import org.apache.asterix.runtime.runningaggregates.std.PercentRankRunningAggregateDescriptor;
+import org.apache.asterix.runtime.runningaggregates.std.RankRunningAggregateDescriptor;
+import org.apache.asterix.runtime.runningaggregates.std.RowNumberRunningAggregateDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.RangeDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
@@ -631,6 +636,13 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ScalarSqlStddevPopAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlVarAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlVarPopAggregateDescriptor.FACTORY);
+
+        // window functions
+        fc.add(RowNumberRunningAggregateDescriptor.FACTORY);
+        fc.add(RankRunningAggregateDescriptor.FACTORY);
+        fc.add(DenseRankRunningAggregateDescriptor.FACTORY);
+        fc.add(PercentRankRunningAggregateDescriptor.FACTORY);
+        fc.add(NtileRunningAggregateDescriptor.FACTORY);
 
         // boolean functions
         fc.add(AndDescriptor.FACTORY);

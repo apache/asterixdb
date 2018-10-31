@@ -61,6 +61,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -284,6 +285,12 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     @Override
     public Boolean visit(UnaryExpr u, ILangExpression arg) throws CompilationException {
         return visit(u.getExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
+        return visit(winExpr.getExpr(), arg) || (winExpr.hasPartitionList() && visit(winExpr.getPartitionList(), arg))
+                || visit(winExpr.getOrderbyList(), arg);
     }
 
     @Override

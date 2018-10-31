@@ -115,7 +115,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
 
     @Override
     public final PhysicalRequirements getRequiredPhysicalPropertiesForChildren(
-            IPhysicalPropertiesVector requiredProperties, IOptimizationContext context) {
+            IPhysicalPropertiesVector requiredProperties, IOptimizationContext context) throws AlgebricksException {
         return physicalOperator.getRequiredPropertiesForChildren(this, requiredProperties, context);
     }
 

@@ -52,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 
@@ -126,4 +127,6 @@ public interface ILogicalOperatorVisitor<R, T> {
     public R visitTokenizeOperator(TokenizeOperator op, T arg) throws AlgebricksException;
 
     public R visitForwardOperator(ForwardOperator op, T arg) throws AlgebricksException;
+
+    public R visitWindowOperator(WindowOperator op, T arg) throws AlgebricksException;
 }

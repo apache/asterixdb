@@ -65,6 +65,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.visitors.IQueryOperatorVisitor;
 
@@ -382,6 +384,11 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
     public ILogicalOperator visitForwardOperator(ForwardOperator op, Void arg) throws AlgebricksException {
         throw new UnsupportedOperationException(
                 "Nested subplans with a forward operator should have been disqualified for this rewriting!");
+    }
+
+    @Override
+    public ILogicalOperator visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
+        return visitSingleInputOperator(op);
     }
 
     private ILogicalOperator visitSingleInputOperator(ILogicalOperator op) throws AlgebricksException {

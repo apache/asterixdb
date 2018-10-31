@@ -166,6 +166,7 @@ import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
@@ -2588,7 +2589,7 @@ FieldBinding FieldBinding() throws ParseException:
 
 Expression FunctionCallExpr() throws ParseException:
 {
-  CallExpr callExpr;
+  Expression resultExpr;
   List<Expression> argList = new ArrayList<Expression>();
   Expression tmp = null;
   int arity = 0;
@@ -2596,6 +2597,10 @@ Expression FunctionCallExpr() throws ParseException:
   String hint = null;
   boolean star = false;
   boolean distinct = false;
+  Token overToken = null;
+  Expression partitionExpr = null;
+  List<Expression> partitionExprs = new ArrayList<Expression>();
+  OrderbyClause orderByClause = null;
 }
 {
   funcName = FunctionName()
@@ -2634,7 +2639,7 @@ Expression FunctionCallExpr() throws ParseException:
       if (signature == null) {
         signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
       }
-      callExpr = FunctionMapUtil.normalizedListInputFunctions(new CallExpr(signature,argList));
+      CallExpr callExpr = FunctionMapUtil.normalizedListInputFunctions(new CallExpr(signature,argList));
       if (hint != null) {
         if (hint.startsWith(INDEXED_NESTED_LOOP_JOIN_HINT)) {
           callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
@@ -2643,8 +2648,29 @@ Expression FunctionCallExpr() throws ParseException:
         }
       }
       callExpr.setSourceLocation(funcName.sourceLoc);
-      return callExpr;
+      resultExpr = callExpr;
     }
+
+  (
+    <OVER> { overToken = token; }
+    <LEFTPAREN>
+    (
+      <PARTITION> <BY>
+      partitionExpr = Expression() { partitionExprs.add(partitionExpr); }
+      ( <COMMA> partitionExpr = Expression() { partitionExprs.add(partitionExpr); } )*
+    )?
+    orderByClause = OrderbyClause()
+    <RIGHTPAREN>
+    {
+      WindowExpression winExp = new WindowExpression(callExpr, partitionExprs, orderByClause.getOrderbyList(),
+        orderByClause.getModifierList());
+      resultExpr = addSourceLocation(winExp, overToken);
+    }
+  )?
+
+  {
+     return resultExpr;
+  }
 }
 
 Expression ParenthesizedExpression() throws ParseException:
@@ -3393,7 +3419,9 @@ TOKEN [IGNORE_CASE]:
   | <ORDER : "order">
   | <OUTER : "outer">
   | <OUTPUT : "output">
+  | <OVER: "over">
   | <PATH : "path">
+  | <PARTITION : "partition">
   | <POLICY : "policy">
   | <PRESORTED : "pre-sorted">
   | <PRIMARY : "primary">

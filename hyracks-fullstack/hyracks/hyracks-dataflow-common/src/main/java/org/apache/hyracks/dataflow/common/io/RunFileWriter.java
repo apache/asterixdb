@@ -49,6 +49,11 @@ public class RunFileWriter implements IFrameWriter {
         maxOutputFrameSize = 0;
     }
 
+    public void rewind() {
+        size = 0;
+        maxOutputFrameSize = 0;
+    }
+
     @Override
     public void fail() throws HyracksDataException {
         ioManager.close(handle);

@@ -65,6 +65,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
@@ -85,15 +86,7 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitAggregateOperator(AggregateOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        List<LogicalVariable> variables = op.getVariables();
-        int n = variables.size();
-        for (int i = 0; i < n; i++) {
-            if (variables.get(i).equals(pair.first)) {
-                variables.set(i, pair.second);
-            } else {
-                op.getExpressions().get(i).getValue().substituteVar(pair.first, pair.second);
-            }
-        }
+        substAssignVariables(op.getVariables(), op.getExpressions(), pair);
         substVarTypes(op, pair);
         return null;
     }
@@ -101,15 +94,7 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitAssignOperator(AssignOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        List<LogicalVariable> variables = op.getVariables();
-        int n = variables.size();
-        for (int i = 0; i < n; i++) {
-            if (variables.get(i).equals(pair.first)) {
-                variables.set(i, pair.second);
-            } else {
-                op.getExpressions().get(i).getValue().substituteVar(pair.first, pair.second);
-            }
-        }
+        substAssignVariables(op.getVariables(), op.getExpressions(), pair);
         // Substitute variables stored in ordering property
         if (op.getExplicitOrderingProperty() != null) {
             List<OrderColumn> orderColumns = op.getExplicitOrderingProperty().getOrderColumns();
@@ -134,10 +119,10 @@ public class SubstituteVariableVisitor
                 return null;
             }
         }
-        substVarTypes(op, pair);
         if (op.getSelectCondition() != null) {
             op.getSelectCondition().getValue().substituteVar(pair.first, pair.second);
         }
+        substVarTypes(op, pair);
         return null;
     }
 
@@ -240,15 +225,7 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitRunningAggregateOperator(RunningAggregateOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        List<LogicalVariable> variables = op.getVariables();
-        int n = variables.size();
-        for (int i = 0; i < n; i++) {
-            if (variables.get(i).equals(pair.first)) {
-                variables.set(i, pair.second);
-            } else {
-                op.getExpressions().get(i).getValue().substituteVar(pair.first, pair.second);
-            }
-        }
+        substAssignVariables(op.getVariables(), op.getExpressions(), pair);
         substVarTypes(op, pair);
         return null;
     }
@@ -403,6 +380,18 @@ public class SubstituteVariableVisitor
         }
     }
 
+    private void substAssignVariables(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions,
+            Pair<LogicalVariable, LogicalVariable> pair) {
+        int n = variables.size();
+        for (int i = 0; i < n; i++) {
+            if (variables.get(i).equals(pair.first)) {
+                variables.set(i, pair.second);
+            } else {
+                expressions.get(i).getValue().substituteVar(pair.first, pair.second);
+            }
+        }
+    }
+
     @Override
     public Void visitReplicateOperator(ReplicateOperator op, Pair<LogicalVariable, LogicalVariable> arg)
             throws AlgebricksException {
@@ -507,6 +496,20 @@ public class SubstituteVariableVisitor
             }
         }
         op.getExpressionRef().getValue().substituteVar(pair.first, pair.second);
+        substVarTypes(op, pair);
+        return null;
+    }
+
+    @Override
+    public Void visitWindowOperator(WindowOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        for (Mutable<ILogicalExpression> pe : op.getPartitionExpressions()) {
+            pe.getValue().substituteVar(pair.first, pair.second);
+        }
+        for (Pair<IOrder, Mutable<ILogicalExpression>> oe : op.getOrderExpressions()) {
+            oe.second.getValue().substituteVar(pair.first, pair.second);
+        }
+        substAssignVariables(op.getVariables(), op.getExpressions(), pair);
         substVarTypes(op, pair);
         return null;
     }

@@ -120,6 +120,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressio
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -151,6 +152,7 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
+import org.apache.hyracks.algebricks.core.algebra.properties.UnpartitionedPropertyComputer;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileSplit;
@@ -871,6 +873,8 @@ class LangExpressionToPlanTranslator
                     new UnnestingFunctionCallExpression(FunctionUtil.getFunctionInfo(fi), args);
             ufce.setReturnsUniqueValues(BuiltinFunctions.returnsUniqueValues(fi));
             f = ufce;
+        } else if (BuiltinFunctions.isBuiltinWindowFunction(fi)) {
+            f = BuiltinFunctions.makeWindowFunctionExpression(fi, args);
         } else {
             f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(fi), args);
         }
@@ -1150,7 +1154,7 @@ class LangExpressionToPlanTranslator
         for (Expression e : oc.getOrderbyList()) {
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(e, topOp);
             OrderModifier m = modifIter.next();
-            OrderOperator.IOrder comp = (m == OrderModifier.ASC) ? OrderOperator.ASC_ORDER : OrderOperator.DESC_ORDER;
+            OrderOperator.IOrder comp = translateOrderModifier(m);
             ord.getOrderExpressions().add(new Pair<>(comp, new MutableObject<>(p.first)));
             topOp = p.second;
         }
@@ -1168,6 +1172,10 @@ class LangExpressionToPlanTranslator
             ord.getAnnotations().put(OperatorAnnotations.USE_STATIC_RANGE, oc.getRangeMap());
         }
         return new Pair<>(ord, null);
+    }
+
+    protected OrderOperator.IOrder translateOrderModifier(OrderModifier m) {
+        return m == OrderModifier.ASC ? OrderOperator.ASC_ORDER : OrderOperator.DESC_ORDER;
     }
 
     @Override
@@ -1587,8 +1595,7 @@ class LangExpressionToPlanTranslator
                 || k == Kind.FIELD_ACCESSOR_EXPRESSION;
         noNesting = noNesting || k == Kind.INDEX_ACCESSOR_EXPRESSION || k == Kind.UNARY_EXPRESSION
                 || k == Kind.IF_EXPRESSION;
-        return noNesting || k == Kind.CASE_EXPRESSION;
-
+        return noNesting || k == Kind.CASE_EXPRESSION || k == Kind.WINDOW_EXPRESSION;
     }
 
     protected <T> List<T> mkSingletonArrayList(T item) {

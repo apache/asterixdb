@@ -180,6 +180,7 @@ public class ErrorCode {
     public static final int ILLEGAL_SET_PARAMETER = 1092;
     public static final int COMPILATION_TRANSLATION_ERROR = 1093;
     public static final int RANGE_MAP_ERROR = 1094;
+    public static final int COMPILATION_EXPECTED_FUNCTION_CALL = 1095;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

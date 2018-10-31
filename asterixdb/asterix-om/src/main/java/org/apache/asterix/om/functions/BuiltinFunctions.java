@@ -132,10 +132,13 @@ import org.apache.asterix.om.typecomputer.impl.UnorderedListConstructorTypeCompu
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.hyracks.algebricks.core.algebra.properties.UnpartitionedPropertyComputer;
 
 public class BuiltinFunctions {
 
@@ -162,6 +165,9 @@ public class BuiltinFunctions {
     private static final Map<IFunctionInfo, IFunctionInfo> scalarToAggregateFunctionMap = new HashMap<>();
     private static final Map<IFunctionInfo, IFunctionInfo> distinctToRegularScalarAggregateFunctionMap =
             new HashMap<>();
+    private static final Map<IFunctionInfo, IFunctionInfo> builtinWindowFunctions = new HashMap<>();
+    private static final Set<IFunctionInfo> builtinWindowFunctionsWithOrderArgs = new HashSet<>();
+    private static final Set<IFunctionInfo> builtinWindowFunctionsWithMaterialization = new HashSet<>();
 
     private static final Map<IFunctionInfo, SpatialFilterKind> spatialFilterFunctions = new HashMap<>();
 
@@ -808,6 +814,26 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-var_pop-distinct", 1);
     public static final FunctionIdentifier SCALAR_SQL_VAR_POP_DISTINCT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-var_pop-distinct", 1);
+
+    // window functions
+    public static final FunctionIdentifier ROW_NUMBER =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "row-number", 0);
+    public static final FunctionIdentifier ROW_NUMBER_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "row-number-impl", 0);
+    public static final FunctionIdentifier RANK = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rank", 0);
+    public static final FunctionIdentifier RANK_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "rank-impl", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier DENSE_RANK =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dense-rank", 0);
+    public static final FunctionIdentifier DENSE_RANK_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dense-rank-impl", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier PERCENT_RANK =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "percent-rank", 0);
+    public static final FunctionIdentifier PERCENT_RANK_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "percent-rank-impl", FunctionIdentifier.VARARGS);
+    public static final FunctionIdentifier NTILE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ntile", 1);
+    public static final FunctionIdentifier NTILE_IMPL =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ntile-impl", FunctionIdentifier.VARARGS);
 
     // unnesting functions
     public static final FunctionIdentifier SCAN_COLLECTION =
@@ -1727,6 +1753,19 @@ public class BuiltinFunctions {
         addFunction(SQL_VAR_POP_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_VAR_POP_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
 
+        // Window functions
+
+        addFunction(ROW_NUMBER, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(ROW_NUMBER_IMPL, AInt64TypeComputer.INSTANCE, true);
+        addFunction(RANK, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(RANK_IMPL, AInt64TypeComputer.INSTANCE, true);
+        addFunction(DENSE_RANK, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(DENSE_RANK_IMPL, AInt64TypeComputer.INSTANCE, true);
+        addFunction(PERCENT_RANK, ADoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(PERCENT_RANK_IMPL, ADoubleTypeComputer.INSTANCE, true);
+        addFunction(NTILE, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(NTILE_IMPL, AInt64TypeComputer.INSTANCE, true);
+
         // Similarity functions
         addFunction(EDIT_DISTANCE_CONTAINS, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addFunction(SIMILARITY_JACCARD, AFloatTypeComputer.INSTANCE, true);
@@ -2487,6 +2526,15 @@ public class BuiltinFunctions {
     }
 
     static {
+        // Window functions
+        addWindowFunction(ROW_NUMBER, ROW_NUMBER_IMPL, false, false);
+        addWindowFunction(RANK, RANK_IMPL, true, false);
+        addWindowFunction(DENSE_RANK, DENSE_RANK_IMPL, true, false);
+        addWindowFunction(PERCENT_RANK, PERCENT_RANK_IMPL, true, true);
+        addWindowFunction(NTILE, NTILE_IMPL, false, true);
+    }
+
+    static {
         addUnnestFun(RANGE, true);
         addUnnestFun(SCAN_COLLECTION, false);
         addUnnestFun(SUBSET_COLLECTION, false);
@@ -2665,6 +2713,40 @@ public class BuiltinFunctions {
     public static void addDistinctAgg(FunctionIdentifier distinctfi, FunctionIdentifier regularscalarfi) {
         distinctToRegularScalarAggregateFunctionMap.put(getAsterixFunctionInfo(distinctfi),
                 getAsterixFunctionInfo(regularscalarfi));
+    }
+
+    public static void addWindowFunction(FunctionIdentifier fi, FunctionIdentifier implfi, boolean requiresOrderArgs,
+            boolean requiresMaterialization) {
+        IFunctionInfo implFinfo = getAsterixFunctionInfo(implfi);
+        builtinWindowFunctions.put(getAsterixFunctionInfo(fi), implFinfo);
+        if (requiresOrderArgs) {
+            builtinWindowFunctionsWithOrderArgs.add(implFinfo);
+        }
+        if (requiresMaterialization) {
+            builtinWindowFunctionsWithMaterialization.add(implFinfo);
+        }
+    }
+
+    public static boolean isBuiltinWindowFunction(FunctionIdentifier fi) {
+        return builtinWindowFunctions.containsKey(getAsterixFunctionInfo(fi));
+    }
+
+    public static boolean windowFunctionRequiresOrderArgs(FunctionIdentifier implfi) {
+        return builtinWindowFunctionsWithOrderArgs.contains(getAsterixFunctionInfo(implfi));
+    }
+
+    public static boolean windowFunctionRequiresMaterialization(FunctionIdentifier implfi) {
+        return builtinWindowFunctionsWithMaterialization.contains(getAsterixFunctionInfo(implfi));
+    }
+
+    public static AbstractFunctionCallExpression makeWindowFunctionExpression(FunctionIdentifier scalarfi,
+            List<Mutable<ILogicalExpression>> args) {
+        IFunctionInfo finfo = getAsterixFunctionInfo(scalarfi);
+        IFunctionInfo implFinfo = builtinWindowFunctions.get(finfo);
+        if (implFinfo == null) {
+            throw new IllegalStateException("no implementation for window function " + finfo);
+        }
+        return new StatefulFunctionCallExpression(implFinfo, UnpartitionedPropertyComputer.INSTANCE, args);
     }
 
     static {

@@ -59,9 +59,13 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ExternalGroupByPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PreclusteredGroupByPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.rewriter.util.JoinUtils;
@@ -276,6 +280,12 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
                     }
                     break;
                 }
+                case WINDOW: {
+                    WindowOperator winOp = (WindowOperator) op;
+                    WindowPOperator physOp = createWindowPOperator(winOp);
+                    op.setPhysicalOperator(physOp);
+                    break;
+                }
             }
         }
         if (op.hasNestedPlans()) {
@@ -330,4 +340,42 @@ public class SetAsterixPhysicalOperatorsRule implements IAlgebraicRewriteRule {
         aggOp.setMergeExpressions(mergeExpressionRefs);
     }
 
+    private static WindowPOperator createWindowPOperator(WindowOperator winOp) throws CompilationException {
+        List<Mutable<ILogicalExpression>> partitionExprs = winOp.getPartitionExpressions();
+        List<LogicalVariable> partitionColumns = new ArrayList<>(partitionExprs.size());
+        for (Mutable<ILogicalExpression> pe : partitionExprs) {
+            ILogicalExpression partExpr = pe.getValue();
+            if (partExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, winOp.getSourceLocation(),
+                        "Window partition/order expression has not been normalized");
+            }
+            LogicalVariable var = ((VariableReferenceExpression) partExpr).getVariableReference();
+            partitionColumns.add(var);
+        }
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprs = winOp.getOrderExpressions();
+        List<OrderColumn> orderColumns = new ArrayList<>(orderExprs.size());
+        for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> p : orderExprs) {
+            ILogicalExpression orderExpr = p.second.getValue();
+            if (orderExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, winOp.getSourceLocation(),
+                        "Window partition/order expression has not been normalized");
+            }
+            LogicalVariable var = ((VariableReferenceExpression) orderExpr).getVariableReference();
+            orderColumns.add(new OrderColumn(var, p.first.getKind()));
+        }
+        boolean partitionMaterialization = false;
+        for (Mutable<ILogicalExpression> exprRef : winOp.getExpressions()) {
+            ILogicalExpression expr = exprRef.getValue();
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, winOp.getSourceLocation(),
+                        expr.getExpressionTag());
+            }
+            AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) expr;
+            if (BuiltinFunctions.windowFunctionRequiresMaterialization(callExpr.getFunctionIdentifier())) {
+                partitionMaterialization = true;
+                break;
+            }
+        }
+        return new WindowPOperator(partitionColumns, partitionMaterialization, orderColumns);
+    }
 }

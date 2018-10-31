@@ -25,6 +25,8 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
 import org.apache.hyracks.algebricks.data.IBinaryHashFunctionFamilyProvider;
@@ -144,6 +146,20 @@ public final class JobGenHelper {
         return compFactories;
     }
 
+    public static IBinaryComparatorFactory[] variablesToBinaryComparatorFactories(Collection<OrderColumn> orderColumns,
+            IVariableTypeEnvironment env, JobGenContext context) throws AlgebricksException {
+        IBinaryComparatorFactory[] compFactories = new IBinaryComparatorFactory[orderColumns.size()];
+        IBinaryComparatorFactoryProvider bcfProvider = context.getBinaryComparatorFactoryProvider();
+        int i = 0;
+        for (OrderColumn oc : orderColumns) {
+            LogicalVariable v = oc.getColumn();
+            boolean ascending = oc.getOrder() == OrderOperator.IOrder.OrderKind.ASC;
+            Object type = env.getVarType(v);
+            compFactories[i++] = bcfProvider.getBinaryComparatorFactory(type, ascending);
+        }
+        return compFactories;
+    }
+
     public static INormalizedKeyComputerFactory variablesToAscNormalizedKeyComputerFactory(
             Collection<LogicalVariable> varLogical, IVariableTypeEnvironment env, JobGenContext context)
             throws AlgebricksException {
@@ -181,12 +197,20 @@ public final class JobGenHelper {
     }
 
     public static int[] projectAllVariables(IOperatorSchema opSchema) {
-        int[] projectionList = new int[opSchema.getSize()];
+        return projectVariablesImpl(opSchema, opSchema, opSchema.getSize());
+    }
+
+    public static int[] projectVariables(IOperatorSchema opSchema, List<LogicalVariable> variables) {
+        return projectVariablesImpl(opSchema, variables, variables.size());
+    }
+
+    private static int[] projectVariablesImpl(IOperatorSchema opSchema, Iterable<LogicalVariable> variables,
+            int variableCount) {
+        int[] projectionList = new int[variableCount];
         int k = 0;
-        for (LogicalVariable v : opSchema) {
+        for (LogicalVariable v : variables) {
             projectionList[k++] = opSchema.findVariable(v);
         }
         return projectionList;
     }
-
 }

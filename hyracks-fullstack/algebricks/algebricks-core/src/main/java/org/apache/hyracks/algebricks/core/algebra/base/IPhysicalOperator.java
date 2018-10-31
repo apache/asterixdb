@@ -40,7 +40,7 @@ public interface IPhysicalOperator {
      * @return for each child, one vector of required physical properties
      */
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context);
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException;
 
     /**
      * @return the physical properties that this operator delivers, based on

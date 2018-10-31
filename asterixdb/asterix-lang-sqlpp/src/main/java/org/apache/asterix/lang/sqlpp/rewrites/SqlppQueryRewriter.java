@@ -50,6 +50,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.parser.FunctionParser;
 import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.GenerateColumnNameVisitor;
@@ -392,5 +393,18 @@ public class SqlppQueryRewriter implements IQueryRewriter {
             return null;
         }
 
+        @Override
+        public Void visit(WindowExpression winExpr, Void arg) throws CompilationException {
+            winExpr.getExpr().accept(this, arg);
+            if (winExpr.hasPartitionList()) {
+                for (Expression expr : winExpr.getPartitionList()) {
+                    expr.accept(this, arg);
+                }
+            }
+            for (Expression expr : winExpr.getOrderbyList()) {
+                expr.accept(this, arg);
+            }
+            return null;
+        }
     }
 }

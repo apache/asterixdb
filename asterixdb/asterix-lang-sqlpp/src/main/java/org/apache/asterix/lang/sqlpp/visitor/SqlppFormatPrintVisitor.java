@@ -44,6 +44,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -328,6 +329,27 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
     @Override
     public Void visit(VariableExpr v, Integer step) {
         out.print(SqlppVariableUtil.toUserDefinedName(v.getVar().getValue()));
+        return null;
+    }
+
+    @Override
+    public Void visit(WindowExpression windowExpr, Integer step) throws CompilationException {
+        out.print(skip(step) + "window ");
+        windowExpr.getExpr().accept(this, step + 2);
+        out.print(skip(step) + " over (");
+        if (windowExpr.hasPartitionList()) {
+            List<Expression> partitionList = windowExpr.getPartitionList();
+            for (int i = 0, ln = partitionList.size(); i < ln; i++) {
+                if (i > 0) {
+                    out.print(COMMA);
+                }
+                Expression partExpr = partitionList.get(i);
+                partExpr.accept(this, step + 2);
+            }
+        }
+        out.print(" order by ");
+        printDelimitedObyExpressions(windowExpr.getOrderbyList(), windowExpr.getOrderbyModifierList(), step + 2);
+        out.println(skip(step) + ")");
         return null;
     }
 }

@@ -50,6 +50,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
@@ -410,5 +411,21 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         CaseExpression newCaseExpr = new CaseExpression(conditionExpr, whenExprList, thenExprList, elseExpr);
         newCaseExpr.setSourceLocation(caseExpr.getSourceLocation());
         return new Pair<>(newCaseExpr, env);
+    }
+
+    @Override
+    public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(WindowExpression winExpr,
+            VariableSubstitutionEnvironment env) throws CompilationException {
+        Expression newExpr = (Expression) winExpr.getExpr().accept(this, env).first;
+        List<Expression> newPartitionList = winExpr.hasPartitionList()
+                ? VariableCloneAndSubstitutionUtil.visitAndCloneExprList(winExpr.getPartitionList(), env, this) : null;
+        List<Expression> newOrderbyList =
+                VariableCloneAndSubstitutionUtil.visitAndCloneExprList(winExpr.getOrderbyList(), env, this);
+        List<OrderbyClause.OrderModifier> newOrderbyModifierList = new ArrayList<>(winExpr.getOrderbyModifierList());
+        WindowExpression newWinExpr =
+                new WindowExpression(newExpr, newPartitionList, newOrderbyList, newOrderbyModifierList);
+        newWinExpr.setSourceLocation(winExpr.getSourceLocation());
+        newWinExpr.addHints(winExpr.getHints());
+        return new Pair<>(newWinExpr, env);
     }
 }

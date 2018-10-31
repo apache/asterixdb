@@ -62,6 +62,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppQueryExpressionVisitor;
@@ -421,6 +422,16 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         visit(caseExpr.getWhenExprs(), freeVars);
         visit(caseExpr.getThenExprs(), freeVars);
         caseExpr.getElseExpr().accept(this, freeVars);
+        return null;
+    }
+
+    @Override
+    public Void visit(WindowExpression winExpr, Collection<VariableExpr> freeVars) throws CompilationException {
+        winExpr.getExpr().accept(this, freeVars);
+        if (winExpr.hasPartitionList()) {
+            visit(winExpr.getPartitionList(), freeVars);
+        }
+        visit(winExpr.getOrderbyList(), freeVars);
         return null;
     }
 
