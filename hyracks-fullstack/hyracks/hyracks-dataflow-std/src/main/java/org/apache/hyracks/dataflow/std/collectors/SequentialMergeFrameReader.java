@@ -24,6 +24,7 @@ import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+// TODO(ali): consider sort-concat-merge as an alternative.
 public class SequentialMergeFrameReader implements IFrameReader {
     private final int numSenders;
     private final IPartitionBatchManager partitionBatchManager;

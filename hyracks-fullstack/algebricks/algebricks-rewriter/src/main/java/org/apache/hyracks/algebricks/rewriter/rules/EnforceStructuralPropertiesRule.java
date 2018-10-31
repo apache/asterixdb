@@ -167,60 +167,6 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         return changed;
     }
 
-    private boolean physOptimizePlan(ILogicalPlan plan, IPhysicalPropertiesVector pvector, boolean nestedPlan,
-            IOptimizationContext context) throws AlgebricksException {
-        boolean loggerTraceEnabled = AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled();
-        boolean changed = false;
-        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            if (physOptimizeOp(root, pvector, nestedPlan, context)) {
-                changed = true;
-            }
-            AbstractLogicalOperator op = (AbstractLogicalOperator) root.getValue();
-            op.computeDeliveredPhysicalProperties(context);
-            if (loggerTraceEnabled) {
-                AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> Structural properties for " + op.getPhysicalOperator()
-                        + ": " + op.getDeliveredPhysicalProperties() + "\n");
-            }
-        }
-        return changed;
-    }
-
-    // Gets the index of a child to start top-down data property enforcement.
-    // If there is a partitioning-compatible child with the operator in opRef,
-    // start from this child; otherwise, start from child zero.
-    private int getStartChildIndex(AbstractLogicalOperator op, PhysicalRequirements pr, boolean nestedPlan,
-            IOptimizationContext context) throws AlgebricksException {
-        IPhysicalPropertiesVector[] reqdProperties = null;
-        if (pr != null) {
-            reqdProperties = pr.getRequiredProperties();
-        }
-
-        List<IPartitioningProperty> deliveredPartitioningPropertiesFromChildren = new ArrayList<>();
-        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
-            AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
-            deliveredPartitioningPropertiesFromChildren
-                    .add(child.getDeliveredPhysicalProperties().getPartitioningProperty());
-        }
-        int partitioningCompatibleChild = 0;
-        for (int i = 0; i < op.getInputs().size(); i++) {
-            IPartitioningProperty deliveredPropertyFromChild = deliveredPartitioningPropertiesFromChildren.get(i);
-            if (reqdProperties == null || reqdProperties[i] == null
-                    || reqdProperties[i].getPartitioningProperty() == null || deliveredPropertyFromChild == null
-                    || reqdProperties[i].getPartitioningProperty()
-                            .getPartitioningType() != deliveredPartitioningPropertiesFromChildren.get(i)
-                                    .getPartitioningType()) {
-                continue;
-            }
-            IPartitioningProperty requiredPropertyForChild = reqdProperties[i].getPartitioningProperty();
-            // If child i's delivered partitioning property already satisfies the required property, stop and return the child index.
-            if (PropertiesUtil.matchPartitioningProps(requiredPropertyForChild, deliveredPropertyFromChild, true)) {
-                partitioningCompatibleChild = i;
-                break;
-            }
-        }
-        return partitioningCompatibleChild;
-    }
-
     private boolean physOptimizeOp(Mutable<ILogicalOperator> opRef, IPhysicalPropertiesVector required,
             boolean nestedPlan, IOptimizationContext context) throws AlgebricksException {
 
@@ -357,6 +303,60 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             physOptimizeOp(opRef, required, nestedPlan, context);
         }
         return changed;
+    }
+
+    private boolean physOptimizePlan(ILogicalPlan plan, IPhysicalPropertiesVector pvector, boolean nestedPlan,
+            IOptimizationContext context) throws AlgebricksException {
+        boolean loggerTraceEnabled = AlgebricksConfig.ALGEBRICKS_LOGGER.isTraceEnabled();
+        boolean changed = false;
+        for (Mutable<ILogicalOperator> root : plan.getRoots()) {
+            if (physOptimizeOp(root, pvector, nestedPlan, context)) {
+                changed = true;
+            }
+            AbstractLogicalOperator op = (AbstractLogicalOperator) root.getValue();
+            op.computeDeliveredPhysicalProperties(context);
+            if (loggerTraceEnabled) {
+                AlgebricksConfig.ALGEBRICKS_LOGGER.trace(">>>> Structural properties for " + op.getPhysicalOperator()
+                        + ": " + op.getDeliveredPhysicalProperties() + "\n");
+            }
+        }
+        return changed;
+    }
+
+    // Gets the index of a child to start top-down data property enforcement.
+    // If there is a partitioning-compatible child with the operator in opRef,
+    // start from this child; otherwise, start from child zero.
+    private int getStartChildIndex(AbstractLogicalOperator op, PhysicalRequirements pr, boolean nestedPlan,
+            IOptimizationContext context) throws AlgebricksException {
+        IPhysicalPropertiesVector[] reqdProperties = null;
+        if (pr != null) {
+            reqdProperties = pr.getRequiredProperties();
+        }
+
+        List<IPartitioningProperty> deliveredPartitioningPropertiesFromChildren = new ArrayList<>();
+        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
+            AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
+            deliveredPartitioningPropertiesFromChildren
+                    .add(child.getDeliveredPhysicalProperties().getPartitioningProperty());
+        }
+        int partitioningCompatibleChild = 0;
+        for (int i = 0; i < op.getInputs().size(); i++) {
+            IPartitioningProperty deliveredPropertyFromChild = deliveredPartitioningPropertiesFromChildren.get(i);
+            if (reqdProperties == null || reqdProperties[i] == null
+                    || reqdProperties[i].getPartitioningProperty() == null || deliveredPropertyFromChild == null
+                    || reqdProperties[i].getPartitioningProperty()
+                            .getPartitioningType() != deliveredPartitioningPropertiesFromChildren.get(i)
+                                    .getPartitioningType()) {
+                continue;
+            }
+            IPartitioningProperty requiredPropertyForChild = reqdProperties[i].getPartitioningProperty();
+            // If child i's delivered partitioning property already satisfies the required property, stop and return the child index.
+            if (PropertiesUtil.matchPartitioningProps(requiredPropertyForChild, deliveredPropertyFromChild, true)) {
+                partitioningCompatibleChild = i;
+                break;
+            }
+        }
+        return partitioningCompatibleChild;
     }
 
     private IPhysicalPropertiesVector newPropertiesDiff(AbstractLogicalOperator newChild,
@@ -888,13 +888,13 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         return forwardOperator;
     }
 
-    private boolean allAreOrderProps(List<ILocalStructuralProperty> cldLocals) {
-        for (ILocalStructuralProperty lsp : cldLocals) {
-            if (lsp.getPropertyType() != PropertyType.LOCAL_ORDER_PROPERTY) {
+    private boolean allAreOrderProps(List<ILocalStructuralProperty> childLocalProperties) {
+        for (ILocalStructuralProperty childLocalProperty : childLocalProperties) {
+            if (childLocalProperty.getPropertyType() != PropertyType.LOCAL_ORDER_PROPERTY) {
                 return false;
             }
         }
-        return !cldLocals.isEmpty();
+        return !childLocalProperties.isEmpty();
     }
 
     private void printOp(AbstractLogicalOperator op) throws AlgebricksException {
@@ -927,7 +927,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         ILogicalOperator oldOp = opRef.getValue();
         opRef.setValue(newOp);
-        newOp.getInputs().add(new MutableObject<ILogicalOperator>(oldOp));
+        newOp.getInputs().add(new MutableObject<>(oldOp));
         newOp.recomputeSchema();
         newOp.computeDeliveredPhysicalProperties(context);
         context.computeAndSetTypeEnvironmentForOperator(newOp);

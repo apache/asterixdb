@@ -35,3 +35,7 @@ create type TestType as
 };
 
 create  dataset TestDS(TestType) primary key id;
+
+set `compiler.sort.parallel` "true";
+
+[(select * from TestDS  v order by v.f1, v.id)];

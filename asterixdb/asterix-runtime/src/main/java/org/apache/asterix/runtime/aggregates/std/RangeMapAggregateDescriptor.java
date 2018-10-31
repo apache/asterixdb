@@ -118,12 +118,12 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new GlobalSamplingAggregateFunction(args, ctx, ascendingFlags, numOfPartitions, numOrderFields);
+                return new RangeMapFunction(args, ctx, ascendingFlags, numOfPartitions, numOrderFields);
             }
         };
     }
 
-    private class GlobalSamplingAggregateFunction implements IAggregateEvaluator {
+    private class RangeMapFunction implements IAggregateEvaluator {
         private final IScalarEvaluator localSamplesEval;
         private final IPointable localSamples;
         private final List<List<byte[]>> finalSamples;
@@ -138,8 +138,8 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
         private final ArrayBackedValueStorage storage;
 
         @SuppressWarnings("unchecked")
-        private GlobalSamplingAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
-                boolean[] ascending, int numOfPartitions, int numOrderByFields) throws HyracksDataException {
+        private RangeMapFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context, boolean[] ascending,
+                int numOfPartitions, int numOrderByFields) throws HyracksDataException {
             localSamples = new VoidPointable();
             localSamplesEval = args[0].createScalarEvaluator(context);
             finalSamples = new ArrayList<>();

@@ -64,7 +64,7 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_SORT_SAMPLES(
                 INTEGER,
                 AlgebricksConfig.SORT_SAMPLES,
-                "The number of samples parallel sorting should " + "take from each partition");
+                "The number of samples which parallel sorting should take from each partition");
 
         private final IOptionType type;
         private final Object defaultValue;

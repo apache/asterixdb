@@ -69,7 +69,7 @@ public class DeterministicPartitionBatchManager implements IPartitionBatchManage
         }
     }
 
-    private synchronized boolean allPartitionsAdded() {
+    private boolean allPartitionsAdded() {
         for (int i = 0; i < partitions.length; i++) {
             if (partitions[i] == null) {
                 return false;
