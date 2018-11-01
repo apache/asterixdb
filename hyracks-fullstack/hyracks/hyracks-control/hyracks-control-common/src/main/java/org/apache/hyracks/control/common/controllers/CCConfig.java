@@ -19,10 +19,11 @@
 package org.apache.hyracks.control.common.controllers;
 
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
-import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.SHORT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -47,32 +48,32 @@ public class CCConfig extends ControllerConfig {
         ADDRESS(STRING, InetAddress.getLoopbackAddress().getHostAddress()),
         PUBLIC_ADDRESS(STRING, ADDRESS),
         CLUSTER_LISTEN_ADDRESS(STRING, ADDRESS),
-        CLUSTER_LISTEN_PORT(INTEGER, 1099),
+        CLUSTER_LISTEN_PORT(UNSIGNED_INTEGER, 1099),
         CLUSTER_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
-        CLUSTER_PUBLIC_PORT(INTEGER, CLUSTER_LISTEN_PORT),
+        CLUSTER_PUBLIC_PORT(UNSIGNED_INTEGER, CLUSTER_LISTEN_PORT),
         CLIENT_LISTEN_ADDRESS(STRING, ADDRESS),
-        CLIENT_LISTEN_PORT(INTEGER, 1098),
+        CLIENT_LISTEN_PORT(UNSIGNED_INTEGER, 1098),
         CLIENT_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
-        CLIENT_PUBLIC_PORT(INTEGER, CLIENT_LISTEN_PORT),
+        CLIENT_PUBLIC_PORT(UNSIGNED_INTEGER, CLIENT_LISTEN_PORT),
         CONSOLE_LISTEN_ADDRESS(STRING, ADDRESS),
-        CONSOLE_LISTEN_PORT(INTEGER, 16001),
+        CONSOLE_LISTEN_PORT(UNSIGNED_INTEGER, 16001),
         CONSOLE_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
-        CONSOLE_PUBLIC_PORT(INTEGER, CONSOLE_LISTEN_PORT),
+        CONSOLE_PUBLIC_PORT(UNSIGNED_INTEGER, CONSOLE_LISTEN_PORT),
         HEARTBEAT_PERIOD(LONG, 10000L), // TODO (mblow): add time unit
-        HEARTBEAT_MAX_MISSES(INTEGER, 5),
+        HEARTBEAT_MAX_MISSES(UNSIGNED_INTEGER, 5),
         DEAD_NODE_SWEEP_THRESHOLD(LONG, HEARTBEAT_PERIOD),
-        PROFILE_DUMP_PERIOD(INTEGER, 0),
-        JOB_HISTORY_SIZE(INTEGER, 10),
+        PROFILE_DUMP_PERIOD(UNSIGNED_INTEGER, 0),
+        JOB_HISTORY_SIZE(UNSIGNED_INTEGER, 10),
         RESULT_TTL(LONG, 86400000L), // TODO(mblow): add time unit
         RESULT_SWEEP_THRESHOLD(LONG, 60000L), // TODO(mblow): add time unit
         @SuppressWarnings("RedundantCast") // not redundant- false positive from IDEA
         ROOT_DIR(STRING, (Function<IApplicationConfig, String>) appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "ClusterControllerService"), "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/ClusterControllerService"),
         CLUSTER_TOPOLOGY(STRING),
         JOB_QUEUE_CLASS(STRING, "org.apache.hyracks.control.cc.scheduler.FIFOJobQueue"),
-        JOB_QUEUE_CAPACITY(INTEGER, 4096),
+        JOB_QUEUE_CAPACITY(POSITIVE_INTEGER, 4096),
         JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager"),
         ENFORCE_FRAME_WRITER_PROTOCOL(BOOLEAN, false),
-        CORES_MULTIPLIER(INTEGER, 3),
+        CORES_MULTIPLIER(POSITIVE_INTEGER, 3),
         CONTROLLER_ID(SHORT, (short) 0x0000);
 
         private final IOptionType parser;

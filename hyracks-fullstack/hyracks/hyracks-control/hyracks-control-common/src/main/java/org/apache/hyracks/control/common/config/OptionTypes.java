@@ -340,6 +340,54 @@ public class OptionTypes {
         }
     };
 
+    public static final IOptionType<Integer> UNSIGNED_INTEGER = new IOptionType<Integer>() {
+        @Override
+        public Integer parse(String s) {
+            return Integer.parseUnsignedInt(s);
+        }
+
+        @Override
+        public Integer parse(JsonNode node) {
+            return node.isNull() ? null : parse(node.asText());
+        }
+
+        @Override
+        public Class<Integer> targetType() {
+            return Integer.class;
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (int) value);
+        }
+    };
+
+    public static final IOptionType<Integer> POSITIVE_INTEGER = new IOptionType<Integer>() {
+        @Override
+        public Integer parse(String s) {
+            final int value = Integer.parseUnsignedInt(s);
+            if (value == 0) {
+                throw new IllegalArgumentException("Value must be greater than zero");
+            }
+            return value;
+        }
+
+        @Override
+        public Integer parse(JsonNode node) {
+            return node.isNull() ? null : parse(node.asText());
+        }
+
+        @Override
+        public Class<Integer> targetType() {
+            return Integer.class;
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (int) value);
+        }
+    };
+
     private OptionTypes() {
     }
 }

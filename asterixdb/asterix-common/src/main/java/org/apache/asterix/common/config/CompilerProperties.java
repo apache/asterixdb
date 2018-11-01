@@ -59,10 +59,10 @@ public class CompilerProperties extends AbstractProperties {
                         + "other integer values dictate the number of query execution parallel partitions. The system will "
                         + "fall back to use the number of all available CPU cores in the cluster as the degree of parallelism "
                         + "if the number set by a user is too large or too small"),
-        COMPILER_STRINGOFFSET(INTEGER, 0, "Position of a first character in a String/Binary (0 or 1)"),
+        COMPILER_STRINGOFFSET(UNSIGNED_INTEGER, 0, "Position of a first character in a String/Binary (0 or 1)"),
         COMPILER_SORT_PARALLEL(BOOLEAN, AlgebricksConfig.SORT_PARALLEL, "Enabling/Disabling full parallel sort"),
         COMPILER_SORT_SAMPLES(
-                INTEGER,
+                POSITIVE_INTEGER,
                 AlgebricksConfig.SORT_SAMPLES,
                 "The number of samples which parallel sorting should take from each partition");
 

@@ -496,7 +496,7 @@ public class APIFramework {
 
     // Gets the parallelism parameter.
     private static int getParallelism(String parameter, int parallelismInConfiguration) {
-        IOptionType<Integer> integerIPropertyInterpreter = OptionTypes.INTEGER;
+        IOptionType<Integer> integerIPropertyInterpreter = OptionTypes.UNSIGNED_INTEGER;
         return parameter == null ? parallelismInConfiguration : integerIPropertyInterpreter.parse(parameter);
     }
 
@@ -510,13 +510,8 @@ public class APIFramework {
 
     private int getSortSamples(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig) {
         String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_SORT_SAMPLES_KEY);
-        if (valueInQuery != null) {
-            int parsedNumSamples = OptionTypes.INTEGER.parse(valueInQuery);
-            if (parsedNumSamples > 0) {
-                return parsedNumSamples;
-            }
-        }
-        return compilerProperties.getSortSamples();
+        return valueInQuery == null ? compilerProperties.getSortSamples()
+                : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
     }
 
     // Validates if the query contains unsupported query parameters.

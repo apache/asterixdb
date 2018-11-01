@@ -21,8 +21,10 @@ package org.apache.hyracks.control.common.controllers;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING_ARRAY;
+import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -43,38 +45,38 @@ public class NCConfig extends ControllerConfig {
         ADDRESS(STRING, InetAddress.getLoopbackAddress().getHostAddress()),
         PUBLIC_ADDRESS(STRING, ADDRESS),
         CLUSTER_LISTEN_ADDRESS(STRING, ADDRESS),
-        CLUSTER_LISTEN_PORT(INTEGER, 0),
+        CLUSTER_LISTEN_PORT(UNSIGNED_INTEGER, 0),
         NCSERVICE_ADDRESS(STRING, PUBLIC_ADDRESS),
         NCSERVICE_PORT(INTEGER, 9090),
         CLUSTER_ADDRESS(STRING, (String) null),
-        CLUSTER_PORT(INTEGER, 1099),
+        CLUSTER_PORT(UNSIGNED_INTEGER, 1099),
         CLUSTER_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
-        CLUSTER_PUBLIC_PORT(INTEGER, CLUSTER_LISTEN_PORT),
+        CLUSTER_PUBLIC_PORT(UNSIGNED_INTEGER, CLUSTER_LISTEN_PORT),
         NODE_ID(STRING, (String) null),
         DATA_LISTEN_ADDRESS(STRING, ADDRESS),
-        DATA_LISTEN_PORT(INTEGER, 0),
+        DATA_LISTEN_PORT(UNSIGNED_INTEGER, 0),
         DATA_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
-        DATA_PUBLIC_PORT(INTEGER, DATA_LISTEN_PORT),
+        DATA_PUBLIC_PORT(UNSIGNED_INTEGER, DATA_LISTEN_PORT),
         RESULT_LISTEN_ADDRESS(STRING, ADDRESS),
-        RESULT_LISTEN_PORT(INTEGER, 0),
+        RESULT_LISTEN_PORT(UNSIGNED_INTEGER, 0),
         RESULT_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
-        RESULT_PUBLIC_PORT(INTEGER, RESULT_LISTEN_PORT),
+        RESULT_PUBLIC_PORT(UNSIGNED_INTEGER, RESULT_LISTEN_PORT),
         MESSAGING_LISTEN_ADDRESS(STRING, ADDRESS),
-        MESSAGING_LISTEN_PORT(INTEGER, 0),
+        MESSAGING_LISTEN_PORT(UNSIGNED_INTEGER, 0),
         MESSAGING_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
-        MESSAGING_PUBLIC_PORT(INTEGER, MESSAGING_LISTEN_PORT),
+        MESSAGING_PUBLIC_PORT(UNSIGNED_INTEGER, MESSAGING_LISTEN_PORT),
         REPLICATION_LISTEN_ADDRESS(STRING, ADDRESS),
-        REPLICATION_LISTEN_PORT(INTEGER, 2000),
+        REPLICATION_LISTEN_PORT(UNSIGNED_INTEGER, 2000),
         REPLICATION_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
-        REPLICATION_PUBLIC_PORT(INTEGER, REPLICATION_LISTEN_PORT),
-        CLUSTER_CONNECT_RETRIES(INTEGER, 5),
+        REPLICATION_PUBLIC_PORT(UNSIGNED_INTEGER, REPLICATION_LISTEN_PORT),
+        CLUSTER_CONNECT_RETRIES(UNSIGNED_INTEGER, 5),
         IODEVICES(
                 STRING_ARRAY,
                 appConfig -> new String[] {
                         FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "iodevice") },
                 "<value of " + ControllerConfig.Option.DEFAULT_DIR.cmdline() + ">/iodevice"),
-        NET_THREAD_COUNT(INTEGER, 1),
-        NET_BUFFER_COUNT(INTEGER, 1),
+        NET_THREAD_COUNT(POSITIVE_INTEGER, 1),
+        NET_BUFFER_COUNT(POSITIVE_INTEGER, 1),
         RESULT_TTL(LONG, 86400000L),
         RESULT_SWEEP_THRESHOLD(LONG, 60000L),
         RESULT_MANAGER_MEMORY(INTEGER_BYTE_UNIT, -1),
