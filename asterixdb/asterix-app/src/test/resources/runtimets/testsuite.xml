@@ -783,7 +783,7 @@
     <test-case FilePath="meta">
       <compilation-unit name="query_dataset_with_meta_failure">
         <output-dir compare="Text">query_dataset_with_meta_failure</output-dir>
-        <expected-error>Cannot resolve to ambiguity on the meta function call -- there are more than one dataset choices!</expected-error>
+        <expected-error>Cannot resolve ambiguous meta function call. There are more than one dataset choice!</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

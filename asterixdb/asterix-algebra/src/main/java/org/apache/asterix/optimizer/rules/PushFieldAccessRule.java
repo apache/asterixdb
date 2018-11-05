@@ -64,6 +64,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceSc
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -94,7 +95,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         } else {
             return false;
         }
-        return propagateFieldAccessRec(opRef, context, finalAnnot);
+        return pushDownFieldAccessRec(opRef, context, finalAnnot);
     }
 
     private boolean isAccessToIndexedField(AssignOperator assign, IOptimizationContext context)
@@ -173,36 +174,37 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         return e1.equals(e2);
     }
 
-    private boolean propagateFieldAccessRec(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
+    private boolean pushDownFieldAccessRec(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
             String finalAnnot) throws AlgebricksException {
-        AssignOperator access = (AssignOperator) opRef.getValue();
-        Mutable<ILogicalOperator> opRef2 = access.getInputs().get(0);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
-        // If it's not an indexed field, it is pushed so that scan can be
-        // rewritten into index search.
-        if (op2.getOperatorTag() == LogicalOperatorTag.PROJECT || context.checkAndAddToAlreadyCompared(access, op2)
-                && !(op2.getOperatorTag() == LogicalOperatorTag.SELECT && isAccessToIndexedField(access, context))) {
+        AssignOperator assignOp = (AssignOperator) opRef.getValue();
+        Mutable<ILogicalOperator> opRef2 = assignOp.getInputs().get(0);
+        AbstractLogicalOperator inputOp = (AbstractLogicalOperator) opRef2.getValue();
+        // If it's not an indexed field, it is pushed so that scan can be rewritten into index search.
+        if (inputOp.getOperatorTag() == LogicalOperatorTag.PROJECT
+                || context.checkAndAddToAlreadyCompared(assignOp, inputOp)
+                        && !(inputOp.getOperatorTag() == LogicalOperatorTag.SELECT
+                                && isAccessToIndexedField(assignOp, context))) {
             return false;
         }
-        Object annotation = op2.getAnnotations().get(OperatorPropertiesUtil.MOVABLE);
+        Object annotation = inputOp.getAnnotations().get(OperatorPropertiesUtil.MOVABLE);
         if (annotation != null && !((Boolean) annotation)) {
             return false;
         }
-        if (tryingToPushThroughSelectionWithSameDataSource(access, op2)) {
+        if (tryingToPushThroughSelectionWithSameDataSource(assignOp, inputOp)) {
             return false;
         }
-        if (testAndModifyRedundantOp(access, op2)) {
-            propagateFieldAccessRec(opRef2, context, finalAnnot);
+        if (testAndModifyRedundantOp(assignOp, inputOp)) {
+            pushDownFieldAccessRec(opRef2, context, finalAnnot);
             return true;
         }
         List<LogicalVariable> usedInAccess = new LinkedList<>();
-        VariableUtilities.getUsedVariables(access, usedInAccess);
+        VariableUtilities.getUsedVariables(assignOp, usedInAccess);
 
         List<LogicalVariable> produced2 = new LinkedList<>();
-        if (op2.getOperatorTag() == LogicalOperatorTag.GROUP) {
-            VariableUtilities.getLiveVariables(op2, produced2);
+        if (inputOp.getOperatorTag() == LogicalOperatorTag.GROUP) {
+            VariableUtilities.getLiveVariables(inputOp, produced2);
         } else {
-            VariableUtilities.getProducedVariables(op2, produced2);
+            VariableUtilities.getProducedVariables(inputOp, produced2);
         }
         boolean pushItDown = false;
         List<LogicalVariable> inter = new ArrayList<>(usedInAccess);
@@ -212,8 +214,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         inter.retainAll(produced2);
         if (inter.isEmpty()) {
             pushItDown = true;
-        } else if (op2.getOperatorTag() == LogicalOperatorTag.GROUP) {
-            GroupByOperator g = (GroupByOperator) op2;
+        } else if (inputOp.getOperatorTag() == LogicalOperatorTag.GROUP) {
+            GroupByOperator g = (GroupByOperator) inputOp;
             List<Pair<LogicalVariable, LogicalVariable>> varMappings = new ArrayList<>();
             for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : g.getDecorList()) {
                 ILogicalExpression e = p.second.getValue();
@@ -230,67 +232,63 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                 boolean changed = false;
                 for (Pair<LogicalVariable, LogicalVariable> m : varMappings) {
                     LogicalVariable v2 = context.newVar();
-                    LogicalVariable oldVar = access.getVariables().get(0);
+                    LogicalVariable oldVar = assignOp.getVariables().get(0);
                     VariableReferenceExpression v2Ref = new VariableReferenceExpression(v2);
                     v2Ref.setSourceLocation(g.getSourceLocation());
                     g.getDecorList().add(new Pair<LogicalVariable, Mutable<ILogicalExpression>>(oldVar,
                             new MutableObject<ILogicalExpression>(v2Ref)));
                     changed = true;
-                    access.getVariables().set(0, v2);
-                    VariableUtilities.substituteVariables(access, m.first, m.second, context);
+                    assignOp.getVariables().set(0, v2);
+                    VariableUtilities.substituteVariables(assignOp, m.first, m.second, context);
                 }
                 if (changed) {
                     context.computeAndSetTypeEnvironmentForOperator(g);
                 }
                 usedInAccess.clear();
-                VariableUtilities.getUsedVariables(access, usedInAccess);
+                VariableUtilities.getUsedVariables(assignOp, usedInAccess);
                 pushItDown = true;
             }
         }
         if (pushItDown) {
-            if (op2.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            if (inputOp.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
                 Mutable<ILogicalOperator> childOfSubplan =
-                        ((NestedTupleSourceOperator) op2).getDataSourceReference().getValue().getInputs().get(0);
-                pushAccessDown(opRef, op2, childOfSubplan, context, finalAnnot);
+                        ((NestedTupleSourceOperator) inputOp).getDataSourceReference().getValue().getInputs().get(0);
+                pushAccessDown(opRef, inputOp, childOfSubplan, context, finalAnnot);
                 return true;
             }
-            if (op2.getInputs().size() == 1 && !op2.hasNestedPlans()) {
-                pushAccessDown(opRef, op2, op2.getInputs().get(0), context, finalAnnot);
+            if (inputOp.getInputs().size() == 1 && !inputOp.hasNestedPlans()) {
+                pushAccessDown(opRef, inputOp, inputOp.getInputs().get(0), context, finalAnnot);
                 return true;
             } else {
-                for (Mutable<ILogicalOperator> inp : op2.getInputs()) {
+                for (Mutable<ILogicalOperator> inp : inputOp.getInputs()) {
                     HashSet<LogicalVariable> v2 = new HashSet<>();
                     VariableUtilities.getLiveVariables(inp.getValue(), v2);
                     if (v2.containsAll(usedInAccess)) {
-                        pushAccessDown(opRef, op2, inp, context, finalAnnot);
+                        pushAccessDown(opRef, inputOp, inp, context, finalAnnot);
                         return true;
                     }
                 }
             }
-            if (op2.hasNestedPlans()) {
-                AbstractOperatorWithNestedPlans nestedOp = (AbstractOperatorWithNestedPlans) op2;
+            if (inputOp.hasNestedPlans()) {
+                AbstractOperatorWithNestedPlans nestedOp = (AbstractOperatorWithNestedPlans) inputOp;
                 for (ILogicalPlan plan : nestedOp.getNestedPlans()) {
                     for (Mutable<ILogicalOperator> root : plan.getRoots()) {
                         HashSet<LogicalVariable> v2 = new HashSet<>();
                         VariableUtilities.getLiveVariables(root.getValue(), v2);
                         if (v2.containsAll(usedInAccess)) {
-                            pushAccessDown(opRef, op2, root, context, finalAnnot);
+                            pushAccessDown(opRef, inputOp, root, context, finalAnnot);
                             return true;
                         }
                     }
                 }
             }
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, access.getSourceLocation(),
-                    "Field access " + access.getExpressions().get(0).getValue()
-                            + " does not correspond to any input of operator " + op2);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, assignOp.getSourceLocation(),
+                    "Field access " + assignOp.getExpressions().get(0).getValue()
+                            + " does not correspond to any input of operator " + inputOp);
         } else {
-            // Check if the accessed field is not one of the partitioning key
-            // fields. If yes, we can equate the two variables.
-            if (op2.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-                DataSourceScanOperator scan = (DataSourceScanOperator) op2;
-                int n = scan.getVariables().size();
-                LogicalVariable scanRecordVar = scan.getVariables().get(n - 1);
-
+            // check if the accessed field is one of the partitioning key fields. If yes, we can equate the 2 variables
+            if (inputOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+                DataSourceScanOperator scan = (DataSourceScanOperator) inputOp;
                 IDataSource<DataSourceId> dataSource = (IDataSource<DataSourceId>) scan.getDataSource();
                 byte dsType = ((DataSource) dataSource).getDatasourceType();
                 if (dsType != DataSource.Type.INTERNAL_DATASET && dsType != DataSource.Type.EXTERNAL_DATASET) {
@@ -304,43 +302,71 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
                             asid.getDatasourceName(), asid.getDataverseName());
                 }
                 if (dataset.getDatasetType() != DatasetType.INTERNAL) {
-                    setAsFinal(access, context, finalAnnot);
+                    setAsFinal(assignOp, context, finalAnnot);
                     return false;
                 }
 
-                String tName = dataset.getItemTypeName();
-                IAType t = mp.findType(dataset.getItemTypeDataverseName(), tName);
-                if (t.getTypeTag() != ATypeTag.OBJECT) {
+                List<LogicalVariable> allVars = scan.getVariables();
+                LogicalVariable dataRecVarInScan = ((DataSource) dataSource).getDataRecordVariable(allVars);
+                LogicalVariable metaRecVarInScan = ((DataSource) dataSource).getMetaVariable(allVars);
+
+                // data part
+                String dataTypeName = dataset.getItemTypeName();
+                IAType dataType = mp.findType(dataset.getItemTypeDataverseName(), dataTypeName);
+                if (dataType.getTypeTag() != ATypeTag.OBJECT) {
                     return false;
                 }
-                ARecordType rt = (ARecordType) t;
-                Pair<ILogicalExpression, List<String>> fieldPathAndVar = getFieldExpression(access, rt);
-                ILogicalExpression e0 = fieldPathAndVar.first;
-                LogicalExpressionTag tag = e0.getExpressionTag();
-                if (tag == LogicalExpressionTag.VARIABLE) {
-                    VariableReferenceExpression varRef = (VariableReferenceExpression) e0;
-                    if (varRef.getVariableReference() == scanRecordVar) {
-                        int p = DatasetUtil.getPositionOfPartitioningKeyField(dataset, fieldPathAndVar.second);
-                        if (p < 0) { // not one of the partitioning fields
-                            setAsFinal(access, context, finalAnnot);
-                            return false;
+                ARecordType dataRecType = (ARecordType) dataType;
+                Pair<ILogicalExpression, List<String>> fieldPathAndVar = getFieldExpression(assignOp, dataRecType);
+                ILogicalExpression targetRecVar = fieldPathAndVar.first;
+                List<String> targetFieldPath = fieldPathAndVar.second;
+                boolean rewrite = false;
+                boolean fieldFromMeta = false;
+                if (sameRecords(targetRecVar, dataRecVarInScan)) {
+                    rewrite = true;
+                } else {
+                    // check meta part
+                    IAType metaType = mp.findMetaType(dataset); // could be null
+                    if (metaType != null && metaType.getTypeTag() == ATypeTag.OBJECT) {
+                        fieldPathAndVar = getFieldExpression(assignOp, (ARecordType) metaType);
+                        targetRecVar = fieldPathAndVar.first;
+                        targetFieldPath = fieldPathAndVar.second;
+                        if (sameRecords(targetRecVar, metaRecVarInScan)) {
+                            rewrite = true;
+                            fieldFromMeta = true;
                         }
-                        LogicalVariable keyVar = scan.getVariables().get(p);
-                        VariableReferenceExpression keyVarRef = new VariableReferenceExpression(keyVar);
-                        keyVarRef.setSourceLocation(varRef.getSourceLocation());
-                        access.getExpressions().get(0).setValue(keyVarRef);
-                        return true;
-
                     }
                 }
+
+                if (rewrite) {
+                    int p = DatasetUtil.getPositionOfPartitioningKeyField(dataset, targetFieldPath, fieldFromMeta);
+                    if (p < 0) { // not one of the partitioning fields
+                        setAsFinal(assignOp, context, finalAnnot);
+                        return false;
+                    }
+                    LogicalVariable keyVar = scan.getVariables().get(p);
+                    VariableReferenceExpression keyVarRef = new VariableReferenceExpression(keyVar);
+                    keyVarRef.setSourceLocation(targetRecVar.getSourceLocation());
+                    assignOp.getExpressions().get(0).setValue(keyVarRef);
+                    return true;
+                }
             }
-            setAsFinal(access, context, finalAnnot);
+            setAsFinal(assignOp, context, finalAnnot);
             return false;
         }
     }
 
-    private Pair<ILogicalExpression, List<String>> getFieldExpression(AssignOperator access, ARecordType rt)
-            throws AlgebricksException {
+    /**
+     * @param recordInAssign the variable reference expression in assign op
+     * @param recordInScan the record (payload) variable in scan op
+     * @return true if the expression in the assign op is a variable and that variable = record variable in scan op
+     */
+    private boolean sameRecords(ILogicalExpression recordInAssign, LogicalVariable recordInScan) {
+        return recordInAssign != null && recordInAssign.getExpressionTag() == LogicalExpressionTag.VARIABLE
+                && ((VariableReferenceExpression) recordInAssign).getVariableReference().equals(recordInScan);
+    }
+
+    private Pair<ILogicalExpression, List<String>> getFieldExpression(AssignOperator access, ARecordType rt) {
         LinkedList<String> fieldPath = new LinkedList<>();
         ILogicalExpression e0 = access.getExpressions().get(0).getValue();
         while (AnalysisUtil.isAccessToFieldRecord(e0)) {
@@ -388,7 +414,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         }
     }
 
-    // indirect recursivity with propagateFieldAccessRec
+    // indirect recursivity with pushDownFieldAccessRec
     private void pushAccessDown(Mutable<ILogicalOperator> fldAccessOpRef, ILogicalOperator op2,
             Mutable<ILogicalOperator> inputOfOp2, IOptimizationContext context, String finalAnnot)
             throws AlgebricksException {
@@ -401,7 +427,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         // typing
         context.computeAndSetTypeEnvironmentForOperator(fieldAccessOp);
         context.computeAndSetTypeEnvironmentForOperator(op2);
-        propagateFieldAccessRec(inputOfOp2, context, finalAnnot);
+        pushDownFieldAccessRec(inputOfOp2, context, finalAnnot);
     }
 
     private ILogicalExpression getFirstExpr(AssignOperator assign) {

@@ -9985,6 +9985,18 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="meta">
+    <test-case FilePath="meta">
+      <compilation-unit name="meta_in_with_clause">
+        <output-dir compare="Text">meta_in_with_clause</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="meta">
+      <compilation-unit name="resolving_pk_with_meta">
+        <output-dir compare="Text">resolving_pk_with_meta</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="big-object">
     <test-case FilePath="big-object">
       <compilation-unit name="big_object_sort">

@@ -19,7 +19,6 @@
 package org.apache.asterix.metadata.utils;
 
 import java.io.DataOutput;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +40,7 @@ import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
+import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -137,7 +137,7 @@ public class DatasetUtil {
         return typeTraits;
     }
 
-    public static int[] createFilterFields(Dataset dataset) throws AlgebricksException {
+    public static int[] createFilterFields(Dataset dataset) {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return null;
         }
@@ -154,7 +154,7 @@ public class DatasetUtil {
         return filterFields;
     }
 
-    public static int[] createBTreeFieldsWhenThereisAFilter(Dataset dataset) throws AlgebricksException {
+    public static int[] createBTreeFieldsWhenThereisAFilter(Dataset dataset) {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return null;
         }
@@ -173,15 +173,39 @@ public class DatasetUtil {
         return btreeFields;
     }
 
-    public static int getPositionOfPartitioningKeyField(Dataset dataset, List<String> fieldExpr) {
+    public static int getPositionOfPartitioningKeyField(Dataset dataset, List<String> fieldExpr,
+            boolean fieldFromMeta) {
+        List<Integer> keySourceIndicator = null;
+        IDatasetDetails datasetDetails = dataset.getDatasetDetails();
+        if (datasetDetails.getDatasetType() == DatasetType.INTERNAL) {
+            keySourceIndicator = ((InternalDatasetDetails) datasetDetails).getKeySourceIndicator();
+        }
         List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
         for (int i = 0; i < partitioningKeys.size(); i++) {
             List<String> partitioningKey = partitioningKeys.get(i);
-            if (partitioningKey.equals(fieldExpr)) {
+            if (partitioningKey.equals(fieldExpr) && keySourceMatches(keySourceIndicator, i, fieldFromMeta)) {
                 return i;
             }
         }
         return -1;
+    }
+
+    /**
+     * Once it's determined that a field name is a key (by just comparing the names), this method checks whether the
+     * field is actually a key by making sure the field is coming from the right record (data record or meta record),
+     * e.g. if the field name happens to be equal to the key name but the field is coming from the data record while
+     * the key is coming from the meta record.
+     * @param keySourceIndicator indicates where the key is coming from, 1 from meta record, 0 from data record
+     * @param keyIndex the key index we're checking the field against
+     * @param fieldFromMeta whether the field is coming from the meta record or the data record
+     * @return true if the key source matches the field source. Otherwise, false.
+     */
+    private static boolean keySourceMatches(List<Integer> keySourceIndicator, int keyIndex, boolean fieldFromMeta) {
+        if (keySourceIndicator != null) {
+            return (fieldFromMeta && keySourceIndicator.get(keyIndex) == 1)
+                    || (!fieldFromMeta && keySourceIndicator.get(keyIndex) == 0);
+        }
+        return true;
     }
 
     public static Pair<ILSMMergePolicyFactory, Map<String, String>> getMergePolicyFactory(Dataset dataset,
@@ -238,7 +262,7 @@ public class DatasetUtil {
     }
 
     public static JobSpecification dropDatasetJobSpec(Dataset dataset, MetadataProvider metadataProvider)
-            throws AlgebricksException, HyracksDataException, RemoteException, ACIDException {
+            throws AlgebricksException, ACIDException {
         LOGGER.info("DROP DATASET: " + dataset);
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());

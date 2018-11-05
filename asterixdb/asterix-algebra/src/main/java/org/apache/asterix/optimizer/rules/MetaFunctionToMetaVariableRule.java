@@ -34,6 +34,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -44,14 +45,15 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
- * This rule rewrites all meta() function calls in a query plan
- * to proper variable references.
+ * This rule rewrites all meta() and meta-key() function calls in a query plan to proper variable references.
  */
 public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
     // The rule can only apply once.
@@ -74,10 +76,10 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
         ILogicalOperator op = opRef.getValue();
 
         // Reaches NTS or ETS.
-        if (op.getInputs().size() == 0) {
+        if (op.getInputs().isEmpty()) {
             return NoOpExpressionReferenceTransform.INSTANCE;
         }
-        // Datascan returns an useful transform if the meta part presents in the dataset.
+        // Datascan returns a useful transform if the meta part is present in the dataset.
         if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             DataSourceScanOperator scanOp = (DataSourceScanOperator) op;
             ILogicalExpressionReferenceTransformWithCondition inputTransfomer = visit(op.getInputs().get(0));
@@ -137,7 +139,7 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
             }
         }
         ILogicalExpressionReferenceTransformWithCondition currentTransformer = null;
-        if (transformers.size() == 0) {
+        if (transformers.isEmpty()) {
             currentTransformer = NoOpExpressionReferenceTransform.INSTANCE;
         } else if (transformers.size() == 1) {
             currentTransformer = transformers.get(0);
@@ -147,6 +149,15 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
                 transformer.setVariableRequired();
             }
             currentTransformer = new CompositeExpressionReferenceTransform(transformers);
+        }
+
+        if (((AbstractLogicalOperator) op).hasNestedPlans()) {
+            AbstractOperatorWithNestedPlans opWithNestedPlans = (AbstractOperatorWithNestedPlans) op;
+            for (ILogicalPlan nestedPlan : opWithNestedPlans.getNestedPlans()) {
+                for (Mutable<ILogicalOperator> root : nestedPlan.getRoots()) {
+                    visit(root);
+                }
+            }
         }
         rewritten |= op.acceptExpressionTransform(currentTransformer);
         return currentTransformer;
@@ -167,7 +178,7 @@ class NoOpExpressionReferenceTransform implements ILogicalExpressionReferenceTra
     }
 
     @Override
-    public boolean transform(Mutable<ILogicalExpression> expression) throws AlgebricksException {
+    public boolean transform(Mutable<ILogicalExpression> expression) {
         return false;
     }
 
@@ -197,13 +208,14 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         List<Mutable<ILogicalExpression>> argRefs = funcExpr.getArguments();
 
+        boolean changed = false;
         // Recursively transform argument expressions.
         for (Mutable<ILogicalExpression> argRef : argRefs) {
-            transform(argRef);
+            changed |= transform(argRef);
         }
 
         if (!funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.META)) {
-            return false;
+            return changed;
         }
         // The user query provides more than one parameter for the meta function.
         if (argRefs.size() > 1) {
@@ -215,12 +227,12 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
         if (argRefs.size() == 1) {
             ILogicalExpression argExpr = argRefs.get(0).getValue();
             if (argExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                return false;
+                return changed;
             }
             VariableReferenceExpression argVarExpr = (VariableReferenceExpression) argExpr;
             LogicalVariable argVar = argVarExpr.getVariableReference();
             if (!dataVar.equals(argVar)) {
-                return false;
+                return changed;
             }
             VariableReferenceExpression metaVarRef = new VariableReferenceExpression(metaVar);
             metaVarRef.setSourceLocation(expr.getSourceLocation());
@@ -231,8 +243,7 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
         // The user query provides zero parameter for the meta function.
         if (variableRequired) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
-                    "Cannot resolve to ambiguity on the meta function call --"
-                            + " there are more than one dataset choices!");
+                    "Cannot resolve ambiguous meta function call. There are more than one dataset choice!");
         }
         VariableReferenceExpression metaVarRef = new VariableReferenceExpression(metaVar);
         metaVarRef.setSourceLocation(expr.getSourceLocation());
@@ -250,7 +261,7 @@ class CompositeExpressionReferenceTransform implements ILogicalExpressionReferen
 
     @Override
     public boolean transform(Mutable<ILogicalExpression> expression) throws AlgebricksException {
-        // Tries transfomations one by one.
+        // tries transformations one by one.
         for (ILogicalExpressionReferenceTransform transformer : transformers) {
             if (transformer.transform(expression)) {
                 return true;
@@ -323,7 +334,7 @@ class MetaKeyExpressionReferenceTransform implements ILogicalExpressionReference
     }
 
     @Override
-    public boolean transform(Mutable<ILogicalExpression> exprRef) throws AlgebricksException {
+    public boolean transform(Mutable<ILogicalExpression> exprRef) {
         ILogicalExpression expr = exprRef.getValue();
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
