@@ -28,10 +28,10 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public class NumericAggTypeComputer extends AbstractResultTypeComputer {
-    public static final NumericAggTypeComputer INSTANCE = new NumericAggTypeComputer();
+public class NumericSumAggTypeComputer extends AbstractResultTypeComputer {
+    public static final NumericSumAggTypeComputer INSTANCE = new NumericSumAggTypeComputer();
 
-    private NumericAggTypeComputer() {
+    private NumericSumAggTypeComputer() {
     }
 
     @Override
@@ -56,15 +56,19 @@ public class NumericAggTypeComputer extends AbstractResultTypeComputer {
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
         ATypeTag tag = strippedInputTypes[0].getTypeTag();
         switch (tag) {
-            case DOUBLE:
-            case FLOAT:
-            case BIGINT:
-            case INTEGER:
-            case SMALLINT:
             case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+                IAType int64Type = BuiltinType.AINT64;
+                return AUnionType.createNullableType(int64Type, "AggResult");
+            case FLOAT:
+            case DOUBLE:
+                IAType doubleType = BuiltinType.ADOUBLE;
+                return AUnionType.createNullableType(doubleType, "AggResult");
             case ANY:
-                IAType type = strippedInputTypes[0];
-                return AUnionType.createNullableType(type, "AggResult");
+                IAType anyType = strippedInputTypes[0];
+                return AUnionType.createNullableType(anyType, "AggResult");
             default:
                 // All other possible cases.
                 return BuiltinType.ANULL;

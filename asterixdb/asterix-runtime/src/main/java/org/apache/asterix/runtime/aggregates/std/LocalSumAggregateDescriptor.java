@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -32,17 +31,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class LocalSumAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID = BuiltinFunctions.LOCAL_SUM;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new LocalSumAggregateDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = LocalSumAggregateDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.LOCAL_SUM;
     }
 
     @Override
@@ -53,7 +46,7 @@ public class LocalSumAggregateDescriptor extends AbstractAggregateFunctionDynami
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SumAggregateFunction(args, ctx, true, sourceLoc);
+                return new LocalSumAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

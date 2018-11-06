@@ -9,7 +9,7 @@ distribute result [$$40]
         exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$#1 := $$48]) decor ([]) {
-                    aggregate [$$43] <- [agg-sql-sum($$47)]
+                    aggregate [$$43] <- [agg-global-sql-sum($$47)]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|

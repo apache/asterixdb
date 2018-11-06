@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.aggregates.serializable.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractSerializableAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -32,12 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class SerializableLocalSqlSumAggregateDescriptor extends AbstractSerializableAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new SerializableLocalSqlSumAggregateDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = SerializableLocalSqlSumAggregateDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -53,7 +47,7 @@ public class SerializableLocalSqlSumAggregateDescriptor extends AbstractSerializ
             @Override
             public ISerializedAggregateEvaluator createAggregateEvaluator(IHyracksTaskContext ctx)
                     throws HyracksDataException {
-                return new SerializableSqlSumAggregateFunction(args, true, ctx, sourceLoc);
+                return new SerializableLocalSqlSumAggregateFunction(args, ctx, sourceLoc);
             }
         };
     }

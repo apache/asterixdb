@@ -18,54 +18,62 @@
  */
 package org.apache.asterix.runtime.aggregates.serializable.std;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
-import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.runtime.exceptions.UnsupportedItemTypeException;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+
+import java.io.DataOutput;
+import java.io.IOException;
 
 public class SerializableSqlSumAggregateFunction extends AbstractSerializableSumAggregateFunction {
-    private final boolean isLocalAgg;
 
-    public SerializableSqlSumAggregateFunction(IScalarEvaluatorFactory[] args, boolean isLocalAgg,
-            IHyracksTaskContext context, SourceLocation sourceLoc) throws HyracksDataException {
+    public SerializableSqlSumAggregateFunction(IScalarEvaluatorFactory[] args, IHyracksTaskContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
-        this.isLocalAgg = isLocalAgg;
     }
 
+    // Called for each incoming tuple
+    @Override
+    public void step(IFrameTupleReference tuple, byte[] state, int start, int len) throws HyracksDataException {
+        super.step(tuple, state, start, len);
+    }
+
+    // Finish calculation
+    @Override
+    public void finish(byte[] state, int start, int len, DataOutput out) throws HyracksDataException {
+        super.finish(state, start, len, out);
+    }
+
+    // Is skip
+    @Override
+    protected boolean skipStep(byte[] state, int start) {
+        return false;
+    }
+
+    // Handle NULL step
     @Override
     protected void processNull(byte[] state, int start) {
+        // Do nothing
     }
 
+    // Handle SYSTEM_NULL step
     @Override
-    protected void processSystemNull() throws HyracksDataException {
-        // For global aggregates simply ignore system null here,
-        // but if all input value are system null, then we should return
-        // null in finish().
-        if (isLocalAgg) {
-            throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.SQL_SUM,
-                    ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
-        }
+    protected void processSystemNull() {
+        // Do nothing
     }
 
-    @SuppressWarnings("unchecked")
+    // Handle NULL finish
+    @Override
+    protected void finishNull(DataOutput out) throws IOException {
+        out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+    }
+
+    // Handle SYSTEM_NULL finish
     @Override
     protected void finishSystemNull(DataOutput out) throws IOException {
-        // Empty stream. For local agg return system null. For global agg return null.
-        if (isLocalAgg) {
-            out.writeByte(ATypeTag.SYSTEM_NULL.serialize());
-        } else {
-            serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-            serde.serialize(ANull.NULL, out);
-        }
+        out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
     }
-
 }

@@ -28,14 +28,8 @@ public class ScalarSumAggregateDescriptor extends AbstractScalarAggregateDescrip
 
     private static final long serialVersionUID = 1L;
 
-    public final static FunctionIdentifier FID = BuiltinFunctions.SCALAR_SUM;
-
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ScalarSumAggregateDescriptor(SumAggregateDescriptor.FACTORY.createFunctionDescriptor());
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY =
+            () -> new ScalarSumAggregateDescriptor(SumAggregateDescriptor.FACTORY.createFunctionDescriptor());
 
     private ScalarSumAggregateDescriptor(IFunctionDescriptor aggFuncDesc) {
         super(aggFuncDesc);
@@ -43,6 +37,6 @@ public class ScalarSumAggregateDescriptor extends AbstractScalarAggregateDescrip
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return FID;
+        return BuiltinFunctions.SCALAR_SUM;
     }
 }
