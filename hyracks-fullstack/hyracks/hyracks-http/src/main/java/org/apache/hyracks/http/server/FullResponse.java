@@ -29,6 +29,7 @@ import org.apache.hyracks.http.server.utils.HttpUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
@@ -41,9 +42,11 @@ public class FullResponse implements IServletResponse {
     private final ByteArrayOutputStream baos;
     private final PrintWriter writer;
     private final DefaultFullHttpResponse response;
+    private final HttpServerHandler<?> handler;
     private ChannelFuture future;
 
-    public FullResponse(ChannelHandlerContext ctx, FullHttpRequest request) {
+    public FullResponse(HttpServerHandler<?> handler, ChannelHandlerContext ctx, FullHttpRequest request) {
+        this.handler = handler;
         this.ctx = ctx;
         baos = new ByteArrayOutputStream();
         writer = new PrintWriter(baos);
@@ -56,7 +59,9 @@ public class FullResponse implements IServletResponse {
         writer.close();
         FullHttpResponse fullResponse = response.replace(Unpooled.copiedBuffer(baos.toByteArray()));
         fullResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, fullResponse.content().readableBytes());
-        future = ctx.writeAndFlush(fullResponse);
+        final ChannelPromise responseCompletionPromise = ctx.newPromise();
+        responseCompletionPromise.addListener(handler);
+        future = ctx.writeAndFlush(fullResponse, responseCompletionPromise);
     }
 
     @Override

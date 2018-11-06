@@ -33,23 +33,28 @@ import org.apache.logging.log4j.Logger;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
-public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboundHandler<Object> {
+public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboundHandler<Object>
+        implements ChannelFutureListener {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String PIPELINED_REQUEST_ERROR_MSG = "Server doesn't support pipelined requests";
     protected final T server;
-    protected final int chunkSize;
-    protected HttpRequestHandler handler;
-    protected IChannelClosedHandler closeHandler;
-    protected Future<Void> task;
-    protected IServlet servlet;
+    protected volatile HttpRequestHandler handler;
+    protected volatile Future<Void> task;
+    protected volatile IServlet servlet;
+    private volatile IChannelClosedHandler closeHandler;
+    private volatile boolean pipelinedRequest = false;
+    private final int chunkSize;
 
     public HttpServerHandler(T server, int chunkSize) {
         this.server = server;
@@ -63,19 +68,24 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
 
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-        if (ctx.channel().isWritable()) {
-            handler.notifyChannelWritable();
+        final HttpRequestHandler currentHandler = handler;
+        if (currentHandler != null && ctx.channel().isWritable()) {
+            currentHandler.notifyChannelWritable();
         }
         super.channelWritabilityChanged(ctx);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        if (handler != null) {
-            handler.notifyChannelInactive();
+        final HttpRequestHandler currentHandler = handler;
+        if (currentHandler != null) {
+            currentHandler.notifyChannelInactive();
         }
-        if (closeHandler != null) {
-            closeHandler.channelClosed(server, servlet, task);
+        final IChannelClosedHandler currentCloseHandler = closeHandler;
+        final IServlet currentServlet = servlet;
+        final Future<Void> currentTask = task;
+        if (currentCloseHandler != null && currentServlet != null && currentTask != null) {
+            currentCloseHandler.channelClosed(server, currentServlet, currentTask);
         }
         super.channelInactive(ctx);
     }
@@ -83,9 +93,15 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
         FullHttpRequest request = (FullHttpRequest) msg;
-        handler = null;
-        task = null;
-        closeHandler = null;
+        if (isPipelinedRequest()) {
+            pipelinedRequest = true;
+            rejectPipelinedRequestAndClose(ctx, request);
+            return;
+        }
+        if (request.decoderResult().isFailure()) {
+            respond(ctx, request, HttpResponseStatus.BAD_REQUEST);
+            return;
+        }
         try {
             servlet = server.getServlet(request);
             if (servlet == null) {
@@ -94,7 +110,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
                 submit(ctx, servlet, request);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARN, "Failure Submitting HTTP Request", e);
+            LOGGER.log(Level.WARN, "Failure handling HTTP request", e);
             respond(ctx, request, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -103,7 +119,9 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
         final DefaultHttpResponse response = new DefaultFullHttpResponse(request.protocolVersion(), status);
         response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, 0);
         HttpUtil.setConnectionHeader(request, response);
-        final ChannelFuture clientChannel = ctx.writeAndFlush(response);
+        final ChannelPromise responseCompletionPromise = ctx.newPromise();
+        responseCompletionPromise.addListener(this);
+        final ChannelFuture clientChannel = ctx.writeAndFlush(response, responseCompletionPromise);
         if (!io.netty.handler.codec.http.HttpUtil.isKeepAlive(request)) {
             clientChannel.addListener(ChannelFutureListener.CLOSE);
         }
@@ -118,7 +136,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
             respond(ctx, request, HttpResponseStatus.BAD_REQUEST);
             return;
         }
-        handler = new HttpRequestHandler(ctx, servlet, servletRequest, chunkSize);
+        handler = new HttpRequestHandler(this, ctx, servlet, servletRequest, chunkSize);
         submit(servlet);
     }
 
@@ -143,5 +161,30 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         LOGGER.log(Level.WARN, "Failure handling HTTP Request", cause);
         ctx.close();
+    }
+
+    @Override
+    public void operationComplete(ChannelFuture future) {
+        if (!pipelinedRequest) {
+            requestHandled();
+        }
+    }
+
+    private boolean isPipelinedRequest() {
+        return handler != null || servlet != null || closeHandler != null || task != null;
+    }
+
+    private void rejectPipelinedRequestAndClose(ChannelHandlerContext ctx, FullHttpRequest request) {
+        LOGGER.warn(PIPELINED_REQUEST_ERROR_MSG);
+        request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+        respond(ctx, request,
+                new HttpResponseStatus(HttpResponseStatus.BAD_REQUEST.code(), PIPELINED_REQUEST_ERROR_MSG));
+    }
+
+    private void requestHandled() {
+        handler = null;
+        servlet = null;
+        task = null;
+        closeHandler = null;
     }
 }

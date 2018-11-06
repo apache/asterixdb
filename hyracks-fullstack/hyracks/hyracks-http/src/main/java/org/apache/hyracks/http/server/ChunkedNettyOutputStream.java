@@ -90,7 +90,7 @@ public class ChunkedNettyOutputStream extends OutputStream {
                     }
                 }
             } else {
-                response.fullReponse(buffer);
+                response.fullResponse(buffer);
             }
             super.close();
         }

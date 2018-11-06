@@ -31,12 +31,14 @@ import org.apache.logging.log4j.Logger;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
@@ -63,13 +65,16 @@ public class ChunkedResponse implements IServletResponse {
     private final ChannelHandlerContext ctx;
     private final ChunkedNettyOutputStream outputStream;
     private final PrintWriter writer;
+    private final HttpServerHandler<?> handler;
     private DefaultHttpResponse response;
     private boolean headerSent;
     private ByteBuf error;
     private ChannelFuture future;
     private boolean done;
 
-    public ChunkedResponse(ChannelHandlerContext ctx, FullHttpRequest request, int chunkSize) {
+    public ChunkedResponse(HttpServerHandler<?> handler, ChannelHandlerContext ctx, FullHttpRequest request,
+            int chunkSize) {
+        this.handler = handler;
         this.ctx = ctx;
         outputStream = new ChunkedNettyOutputStream(ctx, chunkSize, this);
         writer = new PrintWriter(outputStream);
@@ -102,7 +107,7 @@ public class ChunkedResponse implements IServletResponse {
         writer.close();
         if (error == null && response.status() == HttpResponseStatus.OK) {
             if (!done) {
-                future = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+                respond(LastHttpContent.EMPTY_LAST_CONTENT);
             }
         } else {
             // There was an error
@@ -111,7 +116,7 @@ public class ChunkedResponse implements IServletResponse {
                 if (error != null) {
                     error.release();
                 }
-                future = ctx.channel().close();
+                future = ctx.channel().close().addListener(handler);
             } else {
                 // we didn't send anything to the user, we need to send an non-chunked error response
                 fullResponse(response.protocolVersion(), response.status(),
@@ -155,7 +160,7 @@ public class ChunkedResponse implements IServletResponse {
         return headerSent;
     }
 
-    public void fullReponse(ByteBuf buffer) {
+    public void fullResponse(ByteBuf buffer) {
         fullResponse(response.protocolVersion(), response.status(), buffer, response.headers());
     }
 
@@ -165,7 +170,7 @@ public class ChunkedResponse implements IServletResponse {
         // for a full response remove chunked transfer-encoding and set the content length instead
         fullResponse.headers().remove(HttpHeaderNames.TRANSFER_ENCODING);
         fullResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, buffer.readableBytes());
-        future = ctx.writeAndFlush(fullResponse);
+        respond(fullResponse);
         headerSent = true;
         done = true;
     }
@@ -183,5 +188,11 @@ public class ChunkedResponse implements IServletResponse {
     @Override
     public void cancel() {
         outputStream.cancel();
+    }
+
+    private void respond(HttpObject response) {
+        final ChannelPromise responseCompletionPromise = ctx.newPromise();
+        responseCompletionPromise.addListener(handler);
+        future = ctx.writeAndFlush(response, responseCompletionPromise);
     }
 }

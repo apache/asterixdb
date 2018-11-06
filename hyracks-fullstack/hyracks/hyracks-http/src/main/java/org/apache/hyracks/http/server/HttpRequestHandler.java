@@ -40,15 +40,18 @@ public class HttpRequestHandler implements Callable<Void> {
     private final IServlet servlet;
     private final IServletRequest request;
     private final IServletResponse response;
+    private final HttpServerHandler<?> handler;
     private boolean started = false;
     private boolean cancelled = false;
 
-    public HttpRequestHandler(ChannelHandlerContext ctx, IServlet servlet, IServletRequest request, int chunkSize) {
+    public HttpRequestHandler(HttpServerHandler<?> handler, ChannelHandlerContext ctx, IServlet servlet,
+            IServletRequest request, int chunkSize) {
+        this.handler = handler;
         this.ctx = ctx;
         this.servlet = servlet;
         this.request = request;
-        response = chunkSize == 0 ? new FullResponse(ctx, request.getHttpRequest())
-                : new ChunkedResponse(ctx, request.getHttpRequest(), chunkSize);
+        response = chunkSize == 0 ? new FullResponse(handler, ctx, request.getHttpRequest())
+                : new ChunkedResponse(handler, ctx, request.getHttpRequest(), chunkSize);
         request.getHttpRequest().retain();
     }
 
