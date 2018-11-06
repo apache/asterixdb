@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig;
-import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.transactions.TxnId;
@@ -36,7 +35,6 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
@@ -46,8 +44,6 @@ public class IndexUtil {
 
     //TODO: replace this null with an empty array. currently, this breaks many tests
     private static final int[] empty = null;
-    private static final PhysicalOptimizationConfig physicalOptimizationConfig =
-            OptimizationConfUtil.getPhysicalOptimizationConfig();
 
     private IndexUtil() {
     }
@@ -105,22 +101,22 @@ public class IndexUtil {
 
     public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
             Dataset dataset, SourceLocation sourceLoc) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
-                .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig, sourceLoc);
+        SecondaryIndexOperationsHelper secondaryIndexHelper =
+                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
         return secondaryIndexHelper.buildDropJobSpec(EnumSet.noneOf(DropOption.class));
     }
 
     public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
             Dataset dataset, Set<DropOption> options, SourceLocation sourceLoc) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
-                .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig, sourceLoc);
+        SecondaryIndexOperationsHelper secondaryIndexHelper =
+                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
         return secondaryIndexHelper.buildDropJobSpec(options);
     }
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
-                .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig, sourceLoc);
+        SecondaryIndexOperationsHelper secondaryIndexHelper =
+                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
         return secondaryIndexHelper.buildCreationJobSpec();
     }
 
@@ -135,10 +131,10 @@ public class IndexUtil {
         SecondaryIndexOperationsHelper secondaryIndexHelper;
         if (dataset.isCorrelated()) {
             secondaryIndexHelper = SecondaryCorrelatedTreeIndexOperationsHelper.createIndexOperationsHelper(dataset,
-                    index, metadataProvider, physicalOptimizationConfig, sourceLoc);
+                    index, metadataProvider, sourceLoc);
         } else {
             secondaryIndexHelper = SecondaryTreeIndexOperationsHelper.createIndexOperationsHelper(dataset, index,
-                    metadataProvider, physicalOptimizationConfig, sourceLoc);
+                    metadataProvider, sourceLoc);
         }
         if (files != null) {
             secondaryIndexHelper.setExternalFiles(files);
@@ -148,8 +144,8 @@ public class IndexUtil {
 
     public static JobSpecification buildSecondaryIndexCompactJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper = SecondaryIndexOperationsHelper
-                .createIndexOperationsHelper(dataset, index, metadataProvider, physicalOptimizationConfig, sourceLoc);
+        SecondaryIndexOperationsHelper secondaryIndexHelper =
+                SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
         return secondaryIndexHelper.buildCompactJobSpec();
     }
 

@@ -33,7 +33,6 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
-import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -45,6 +44,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
@@ -73,8 +73,8 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
     private int[] secondaryFilterFieldsForNonBulkLoadOps;
 
     protected SecondaryCorrelatedInvertedIndexOperationsHelper(Dataset dataset, Index index,
-            PhysicalOptimizationConfig physOptConf, MetadataProvider metadataProvider) throws AlgebricksException {
-        super(dataset, index, physOptConf, metadataProvider);
+            MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
+        super(dataset, index, metadataProvider, sourceLoc);
     }
 
     @Override
@@ -305,9 +305,8 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
         for (int i = 0; i < numPrimaryKeys; i++) {
             taggedSortFields[idx++] = i + numSecondaryKeys + NUM_TAG_FIELDS;
         }
-        ExternalSortOperatorDescriptor sortOp =
-                new ExternalSortOperatorDescriptor(spec, physOptConf.getMaxFramesExternalSort(), taggedSortFields,
-                        taggedSecondaryComparatorFactories, taggedSecondaryRecDesc);
+        ExternalSortOperatorDescriptor sortOp = new ExternalSortOperatorDescriptor(spec, sortNumFrames,
+                taggedSortFields, taggedSecondaryComparatorFactories, taggedSecondaryRecDesc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, sortOp, primaryPartitionConstraint);
         return sortOp;
     }

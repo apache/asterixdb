@@ -34,7 +34,6 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
-import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -46,6 +45,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.PointableBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
@@ -75,9 +75,9 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
     private int[] invertedIndexFieldsForNonBulkLoadOps;
     private int[] secondaryFilterFieldsForNonBulkLoadOps;
 
-    protected SecondaryInvertedIndexOperationsHelper(Dataset dataset, Index index,
-            PhysicalOptimizationConfig physOptConf, MetadataProvider metadataProvider) throws AlgebricksException {
-        super(dataset, index, physOptConf, metadataProvider);
+    protected SecondaryInvertedIndexOperationsHelper(Dataset dataset, Index index, MetadataProvider metadataProvider,
+            SourceLocation sourceLoc) throws AlgebricksException {
+        super(dataset, index, metadataProvider, sourceLoc);
     }
 
     @Override
@@ -265,7 +265,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         return spec;
     }
 
-    private AbstractOperatorDescriptor createTokenizerOp(JobSpecification spec) throws AlgebricksException {
+    private AbstractOperatorDescriptor createTokenizerOp(JobSpecification spec) {
         int docField = 0;
         int numSecondaryKeys = index.getKeyFieldNames().size();
         int[] primaryKeyFields = new int[numPrimaryKeys + numFilterFields];
@@ -289,14 +289,13 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         for (int i = 0; i < numTokenKeyPairFields; i++) {
             sortFields[i] = i;
         }
-        ExternalSortOperatorDescriptor sortOp = new ExternalSortOperatorDescriptor(spec,
-                physOptConf.getMaxFramesExternalSort(), sortFields, tokenKeyPairComparatorFactories, secondaryRecDesc);
+        ExternalSortOperatorDescriptor sortOp = new ExternalSortOperatorDescriptor(spec, sortNumFrames, sortFields,
+                tokenKeyPairComparatorFactories, secondaryRecDesc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, sortOp, primaryPartitionConstraint);
         return sortOp;
     }
 
-    private AbstractSingleActivityOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec)
-            throws AlgebricksException {
+    private AbstractSingleActivityOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec) {
         int[] fieldPermutation = new int[numTokenKeyPairFields + numFilterFields];
         for (int i = 0; i < fieldPermutation.length; i++) {
             fieldPermutation[i] = i;

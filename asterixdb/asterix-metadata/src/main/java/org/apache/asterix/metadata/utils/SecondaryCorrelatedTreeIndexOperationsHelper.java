@@ -34,7 +34,6 @@ import org.apache.asterix.runtime.operators.LSMSecondaryIndexCreationTupleProces
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
@@ -114,8 +113,8 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
     }
 
     protected SecondaryCorrelatedTreeIndexOperationsHelper(Dataset dataset, Index index,
-            PhysicalOptimizationConfig physOptConf, MetadataProvider metadataProvider) throws AlgebricksException {
-        super(dataset, index, physOptConf, metadataProvider);
+            MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
+        super(dataset, index, metadataProvider, sourceLoc);
     }
 
     protected RecordDescriptor getTaggedRecordDescriptor(RecordDescriptor recDescriptor) {
@@ -267,9 +266,8 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
         for (int i = 1; i < taggedSortFields.length; i++) {
             taggedSortFields[i] = i + 1;
         }
-        ExternalSortOperatorDescriptor sortOp =
-                new ExternalSortOperatorDescriptor(spec, physOptConf.getMaxFramesExternalSort(), taggedSortFields,
-                        taggedSecondaryComparatorFactories, taggedSecondaryRecDesc);
+        ExternalSortOperatorDescriptor sortOp = new ExternalSortOperatorDescriptor(spec, sortNumFrames,
+                taggedSortFields, taggedSecondaryComparatorFactories, taggedSecondaryRecDesc);
         sortOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, sortOp, primaryPartitionConstraint);
         return sortOp;
@@ -295,7 +293,7 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
     }
 
     protected IOperatorDescriptor createPrimaryIndexScanDiskComponentsOp(JobSpecification spec,
-            MetadataProvider metadataProvider, RecordDescriptor outRecDesc) throws AlgebricksException {
+            MetadataProvider metadataProvider, RecordDescriptor outRecDesc) {
         ITransactionSubsystemProvider txnSubsystemProvider = TransactionSubsystemProvider.INSTANCE;
         ISearchOperationCallbackFactory searchCallbackFactory = new PrimaryIndexInstantSearchOperationCallbackFactory(
                 dataset.getDatasetId(), dataset.getPrimaryBloomFilterFields(), txnSubsystemProvider,
@@ -311,31 +309,29 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
     }
 
     public static SecondaryIndexOperationsHelper createIndexOperationsHelper(Dataset dataset, Index index,
-            MetadataProvider metadataProvider, PhysicalOptimizationConfig physOptConf, SourceLocation sourceLoc)
-            throws AlgebricksException {
+            MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
 
         SecondaryIndexOperationsHelper indexOperationsHelper;
         switch (index.getIndexType()) {
             case BTREE:
                 indexOperationsHelper =
-                        new SecondaryCorrelatedBTreeOperationsHelper(dataset, index, physOptConf, metadataProvider);
+                        new SecondaryCorrelatedBTreeOperationsHelper(dataset, index, metadataProvider, sourceLoc);
                 break;
             case RTREE:
                 indexOperationsHelper =
-                        new SecondaryCorrelatedRTreeOperationsHelper(dataset, index, physOptConf, metadataProvider);
+                        new SecondaryCorrelatedRTreeOperationsHelper(dataset, index, metadataProvider, sourceLoc);
                 break;
             case SINGLE_PARTITION_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX:
                 indexOperationsHelper = new SecondaryCorrelatedInvertedIndexOperationsHelper(dataset, index,
-                        physOptConf, metadataProvider);
+                        metadataProvider, sourceLoc);
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, sourceLoc,
                         index.getIndexType());
         }
-        indexOperationsHelper.setSourceLocation(sourceLoc);
         indexOperationsHelper.init();
         return indexOperationsHelper;
     }

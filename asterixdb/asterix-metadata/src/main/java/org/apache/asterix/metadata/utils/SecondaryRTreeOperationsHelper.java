@@ -38,7 +38,6 @@ import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
-import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.SinkRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
@@ -47,6 +46,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -67,9 +67,9 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
     protected boolean isPointMBR;
     protected RecordDescriptor secondaryRecDescForPointMBR = null;
 
-    protected SecondaryRTreeOperationsHelper(Dataset dataset, Index index, PhysicalOptimizationConfig physOptConf,
-            MetadataProvider metadataProvider) throws AlgebricksException {
-        super(dataset, index, physOptConf, metadataProvider);
+    protected SecondaryRTreeOperationsHelper(Dataset dataset, Index index, MetadataProvider metadataProvider,
+            SourceLocation sourceLoc) throws AlgebricksException {
+        super(dataset, index, metadataProvider, sourceLoc);
     }
 
     @Override
@@ -309,7 +309,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
         return spec;
     }
 
-    protected int[] createFieldPermutationForBulkLoadOp(int numSecondaryKeyFields) {
+    private int[] createFieldPermutationForBulkLoadOp(int numSecondaryKeyFields) {
         int[] fieldPermutation = new int[numSecondaryKeyFields + numPrimaryKeys + numFilterFields];
         int numSecondaryKeyFieldsForPointMBR = numSecondaryKeyFields / 2;
         int end = isPointMBR ? numSecondaryKeyFieldsForPointMBR : fieldPermutation.length;

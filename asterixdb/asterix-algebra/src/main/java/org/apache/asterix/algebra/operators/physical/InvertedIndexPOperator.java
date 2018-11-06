@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.algebra.operators.physical;
 
+import java.util.Map;
+
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSourceId;
@@ -111,7 +114,9 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
             retainNull = true;
         }
         // In-memory budget (frame limit) for inverted-index search operations
-        int frameLimit = OptimizationConfUtil.getPhysicalOptimizationConfig().getMaxFramesForTextSearch();
+        CompilerProperties compilerProp = metadataProvider.getApplicationContext().getCompilerProperties();
+        Map<String, Object> queryConfig = metadataProvider.getConfig();
+        int frameLimit = OptimizationConfUtil.getTextSearchNumFrames(compilerProp, queryConfig, op.getSourceLocation());
 
         // Build runtime.
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> invIndexSearch =

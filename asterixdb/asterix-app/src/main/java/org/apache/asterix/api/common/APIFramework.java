@@ -36,6 +36,7 @@ import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -123,11 +124,6 @@ import com.google.common.collect.ImmutableSet;
  */
 public class APIFramework {
 
-    private static final int MIN_FRAME_LIMIT_FOR_SORT = 3;
-    private static final int MIN_FRAME_LIMIT_FOR_GROUP_BY = 4;
-    private static final int MIN_FRAME_LIMIT_FOR_JOIN = 5;
-    // one for query, two for intermediate results, one for final result, and one for reading an inverted list
-    private static final int MIN_FRAME_LIMIT_FOR_TEXTSEARCH = 5;
     private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerWithDefaultPrettyPrinter();
 
     // A white list of supported configurable parameters.
@@ -225,7 +221,7 @@ public class APIFramework {
         CompilerProperties compilerProperties = metadataProvider.getApplicationContext().getCompilerProperties();
         Map<String, Object> querySpecificConfig = validateConfig(metadataProvider.getConfig(), sourceLoc);
         final PhysicalOptimizationConfig physOptConf =
-                getPhysicalOptimizationConfig(compilerProperties, querySpecificConfig, sourceLoc);
+                OptimizationConfUtil.createPhysicalOptimizationConf(compilerProperties, querySpecificConfig, sourceLoc);
 
         HeuristicCompilerFactoryBuilder builder =
                 new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
@@ -319,36 +315,6 @@ public class APIFramework {
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
         }
-    }
-
-    protected PhysicalOptimizationConfig getPhysicalOptimizationConfig(CompilerProperties compilerProperties,
-            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AlgebricksException {
-        int frameSize = compilerProperties.getFrameSize();
-        int sortFrameLimit = getFrameLimit(CompilerProperties.COMPILER_SORTMEMORY_KEY,
-                (String) querySpecificConfig.get(CompilerProperties.COMPILER_SORTMEMORY_KEY),
-                compilerProperties.getSortMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_SORT, sourceLoc);
-        int groupFrameLimit = getFrameLimit(CompilerProperties.COMPILER_GROUPMEMORY_KEY,
-                (String) querySpecificConfig.get(CompilerProperties.COMPILER_GROUPMEMORY_KEY),
-                compilerProperties.getGroupMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_GROUP_BY, sourceLoc);
-        int joinFrameLimit = getFrameLimit(CompilerProperties.COMPILER_JOINMEMORY_KEY,
-                (String) querySpecificConfig.get(CompilerProperties.COMPILER_JOINMEMORY_KEY),
-                compilerProperties.getJoinMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_JOIN, sourceLoc);
-        int textSearchFrameLimit = getFrameLimit(CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY,
-                (String) querySpecificConfig.get(CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY),
-                compilerProperties.getTextSearchMemorySize(), frameSize, MIN_FRAME_LIMIT_FOR_TEXTSEARCH, sourceLoc);
-        int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig);
-        boolean fullParallelSort = getSortParallel(compilerProperties, querySpecificConfig);
-
-        final PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
-        physOptConf.setFrameSize(frameSize);
-        physOptConf.setMaxFramesExternalSort(sortFrameLimit);
-        physOptConf.setMaxFramesExternalGroupBy(groupFrameLimit);
-        physOptConf.setMaxFramesForJoin(joinFrameLimit);
-        physOptConf.setMaxFramesForTextSearch(textSearchFrameLimit);
-        physOptConf.setSortParallel(fullParallelSort);
-        physOptConf.setSortSamples(sortNumSamples);
-
-        return physOptConf;
     }
 
     protected IPrinterFactoryProvider getPrinterFactoryProvider(IDataFormat format,
@@ -475,43 +441,10 @@ public class APIFramework {
         return ncMap.values().stream().mapToInt(NodeControllerInfo::getNumAvailableCores).sum();
     }
 
-    // Gets the frame limit.
-    private static int getFrameLimit(String parameterName, String parameter, long memBudgetInConfiguration,
-            int frameSize, int minFrameLimit, SourceLocation sourceLoc) throws AlgebricksException {
-        IOptionType<Long> longBytePropertyInterpreter = OptionTypes.LONG_BYTE_UNIT;
-        long memBudget;
-        try {
-            memBudget = parameter == null ? memBudgetInConfiguration : longBytePropertyInterpreter.parse(parameter);
-        } catch (IllegalArgumentException e) {
-            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
-        }
-        int frameLimit = (int) (memBudget / frameSize);
-        if (frameLimit < minFrameLimit) {
-            throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, sourceLoc, parameterName,
-                    frameSize * minFrameLimit);
-        }
-        // Sets the frame limit to the minimum frame limit if the caculated frame limit is too small.
-        return Math.max(frameLimit, minFrameLimit);
-    }
-
     // Gets the parallelism parameter.
     private static int getParallelism(String parameter, int parallelismInConfiguration) {
         IOptionType<Integer> integerIPropertyInterpreter = OptionTypes.UNSIGNED_INTEGER;
         return parameter == null ? parallelismInConfiguration : integerIPropertyInterpreter.parse(parameter);
-    }
-
-    private boolean getSortParallel(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig) {
-        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_SORT_PARALLEL_KEY);
-        if (valueInQuery != null) {
-            return OptionTypes.BOOLEAN.parse(valueInQuery);
-        }
-        return compilerProperties.getSortParallel();
-    }
-
-    private int getSortSamples(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig) {
-        String valueInQuery = (String) querySpecificConfig.get(CompilerProperties.COMPILER_SORT_SAMPLES_KEY);
-        return valueInQuery == null ? compilerProperties.getSortSamples()
-                : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
     }
 
     // Validates if the query contains unsupported query parameters.
