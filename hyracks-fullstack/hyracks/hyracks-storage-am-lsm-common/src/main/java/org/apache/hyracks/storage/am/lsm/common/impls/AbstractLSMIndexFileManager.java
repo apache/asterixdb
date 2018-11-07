@@ -27,6 +27,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressor;
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -38,6 +40,9 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexMetadataFrame;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressor;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
+import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 
@@ -71,6 +76,10 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
      */
     public static final String DELETE_TREE_SUFFIX = "d";
     /**
+     * Indicates Look Aside File (LAF) for compressed indexes
+     */
+    public static final String LAF_SUFFIX = ".dic";
+    /**
      * Hides transaction components until they are either committed by removing this file or deleted along with the file
      */
     public static final String TXN_PREFIX = ".T";
@@ -88,12 +97,20 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     protected final Comparator<IndexComponentFileReference> recencyCmp = new RecencyComparator();
     protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
     private long lastUsedComponentSeq = UNINITALIZED_COMPONENT_SEQ;
+    private final ICompressorDecompressorFactory compressorDecompressorFactory;
 
     public AbstractLSMIndexFileManager(IIOManager ioManager, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> treeFactory) {
+        this(ioManager, file, treeFactory, NoOpCompressorDecompressorFactory.INSTANCE);
+    }
+
+    public AbstractLSMIndexFileManager(IIOManager ioManager, FileReference file,
+            TreeIndexFactory<? extends ITreeIndex> treeFactory,
+            ICompressorDecompressorFactory compressorDecompressorFactory) {
         this.ioManager = ioManager;
         this.baseDir = file;
         this.treeFactory = treeFactory;
+        this.compressorDecompressorFactory = compressorDecompressorFactory;
     }
 
     protected TreeIndexState isValidTreeIndex(ITreeIndex treeIndex) throws HyracksDataException {
@@ -131,7 +148,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             IBufferCache bufferCache) throws HyracksDataException {
         String[] files = listDirFiles(baseDir, filter);
         for (String fileName : files) {
-            FileReference fileRef = baseDir.getChild(fileName);
+            FileReference fileRef = getFileReference(fileName);
             if (treeFactory == null) {
                 allFiles.add(IndexComponentFileReference.of(fileRef));
                 continue;
@@ -360,6 +377,21 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
             lastUsedComponentSeq = getOnDiskLastUsedComponentSequence(filenameFilter);
         }
         return IndexComponentFileReference.getFlushSequence(++lastUsedComponentSeq);
+    }
+
+    protected FileReference getFileReference(String name) {
+        final ICompressorDecompressor compDecomp = compressorDecompressorFactory.createInstance();
+        //Avoid creating LAF file for NoOpCompressorDecompressor
+        if (compDecomp != NoOpCompressorDecompressor.INSTANCE && isCompressible(name)) {
+            final String path = baseDir.getChildPath(name);
+            return new CompressedFileReference(baseDir.getDeviceHandle(), compDecomp, path, path + LAF_SUFFIX);
+        }
+
+        return baseDir.getChild(name);
+    }
+
+    private boolean isCompressible(String fileName) {
+        return !fileName.endsWith(BLOOM_FILTER_SUFFIX) && !fileName.endsWith(DELETE_TREE_SUFFIX);
     }
 
     private long getOnDiskLastUsedComponentSequence(FilenameFilter filenameFilter) throws HyracksDataException {

@@ -49,5 +49,16 @@
         <output-dir compare="Text">release_partition</output-dir>
       </compilation-unit>
     </test-case>
+    <!-- Replication with compression -->
+    <test-case FilePath="replication">
+      <compilation-unit name="flushed_component_compressed">
+        <output-dir compare="Text">bulkload</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="replication">
+      <compilation-unit name="bulkload_with_compression">
+        <output-dir compare="Text">bulkload</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

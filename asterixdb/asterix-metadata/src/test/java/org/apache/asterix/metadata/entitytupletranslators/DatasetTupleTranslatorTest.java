@@ -24,12 +24,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.junit.Assert;
@@ -51,9 +51,9 @@ public class DatasetTupleTranslatorTest {
                     indicator == null ? null : Collections.singletonList(indicator),
                     Collections.singletonList(BuiltinType.AINT64), false, Collections.emptyList());
 
-            Dataset dataset =
-                    new Dataset("test", "log", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES", "prefix",
-                            compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0);
+            Dataset dataset = new Dataset("test", "log", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES",
+                    "prefix", compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0,
+                    CompressionManager.NONE);
             DatasetTupleTranslator dtTranslator = new DatasetTupleTranslator(true);
             ITupleReference tuple = dtTranslator.getTupleFromMetadataEntity(dataset);
             Dataset deserializedDataset = dtTranslator.getMetadataEntityFromTuple(tuple);

@@ -147,7 +147,7 @@ public class ErrorCode {
     public static final int UNSUPPORTED_WITH_FIELD = 1059;
     public static final int WITH_FIELD_MUST_BE_OF_TYPE = 1060;
     public static final int WITH_FIELD_MUST_CONTAIN_SUB_FIELD = 1061;
-    public static final int MERGE_POLICY_PARAMETER_INVALID_TYPE = 1062;
+    public static final int CONFIGURATION_PARAMETER_INVALID_TYPE = 1062;
     public static final int UNKNOWN_DATAVERSE = 1063;
     public static final int ERROR_OCCURRED_BETWEEN_TWO_TYPES_CONVERSION = 1064;
     public static final int CHOSEN_INDEX_COUNT_SHOULD_BE_GREATER_THAN_ONE = 1065;
@@ -181,6 +181,8 @@ public class ErrorCode {
     public static final int COMPILATION_TRANSLATION_ERROR = 1093;
     public static final int RANGE_MAP_ERROR = 1094;
     public static final int COMPILATION_EXPECTED_FUNCTION_CALL = 1095;
+    public static final int UNKNOWN_COMPRESSION_SCHEME = 1096;
+    public static final int UNSUPPORTED_WITH_SUBFIELD = 1097;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

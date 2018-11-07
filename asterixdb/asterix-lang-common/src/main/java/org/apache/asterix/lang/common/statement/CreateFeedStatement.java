@@ -18,18 +18,18 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import java.util.Map;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.util.ConfigurationUtil;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
-import org.apache.asterix.lang.common.util.MergePolicyUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-
-import java.util.Map;
 
 /**
  * The new create feed statement only concerns the feed adaptor configuration.
@@ -76,7 +76,7 @@ public class CreateFeedStatement extends AbstractStatement {
     }
 
     public Map<String, String> getConfiguration() throws CompilationException {
-        return MergePolicyUtils.toProperties(withObjectNode);
+        return ConfigurationUtil.toProperties(withObjectNode);
     }
 
     public AdmObjectNode getWithObjectNode() {

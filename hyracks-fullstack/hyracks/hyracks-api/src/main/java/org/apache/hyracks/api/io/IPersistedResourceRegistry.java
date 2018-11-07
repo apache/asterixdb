@@ -46,4 +46,16 @@ public interface IPersistedResourceRegistry {
      * @throws HyracksDataException
      */
     IJsonSerializable deserialize(JsonNode json) throws HyracksDataException;
+
+    /**
+     * This method must be used for optional fields or newly added fields to ensure back-compatibility
+     *
+     * @param json
+     * @param clazz
+     * @return A class object of the type id in {@code json} if exists
+     *         or a class object of type <code>clazz</code> otherwise.
+     * @throws HyracksDataException
+     */
+    IJsonSerializable deserializeOrDefault(JsonNode json, Class<? extends IJsonSerializable> clazz)
+            throws HyracksDataException;
 }

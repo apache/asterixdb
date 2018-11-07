@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
@@ -50,6 +51,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 
 public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
@@ -93,11 +95,20 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             case INTERNAL:
                 AsterixVirtualBufferCacheProvider vbcProvider =
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId());
+
+                final ICompressorDecompressorFactory compDecompFactory;
+                if (index.isPrimaryIndex()) {
+                    //Compress only primary index
+                    compDecompFactory = mdProvider.getCompressionManager().getFactory(dataset.getCompressionScheme());
+                } else {
+                    compDecompFactory = NoOpCompressorDecompressorFactory.INSTANCE;
+                }
+
                 return new LSMBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                         filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,
                         metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory,
                         mergePolicyProperties, true, bloomFilterFields, bloomFilterFalsePositiveRate,
-                        index.isPrimaryIndex(), btreeFields);
+                        index.isPrimaryIndex(), btreeFields, compDecompFactory);
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE,
                         dataset.getDatasetType().toString());

@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.INodeJobTracker;
-import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ActiveProperties;
@@ -44,7 +43,10 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
+import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
+import org.apache.asterix.common.transactions.ITxnIdFactory;
+import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.asterix.runtime.job.listener.NodeJobTracker;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -87,6 +89,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private IClusterStateManager clusterStateManager;
     private final INodeJobTracker nodeJobTracker;
     private final ITxnIdFactory txnIdFactory;
+    private final ICompressionManager compressionManager;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             ILibraryManager libraryManager, Supplier<IMetadataBootstrap> metadataBootstrapSupplier,
@@ -121,6 +124,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         this.resourceIdManager = new ResourceIdManager(clusterStateManager);
         nodeJobTracker = new NodeJobTracker();
         txnIdFactory = new BulkTxnIdFactory();
+        compressionManager = new CompressionManager(storageProperties);
 
     }
 
@@ -270,7 +274,13 @@ public class CcApplicationContext implements ICcApplicationContext {
         return NoOpCoordinationService.INSTANCE;
     }
 
+    @Override
     public ITxnIdFactory getTxnIdFactory() {
         return txnIdFactory;
+    }
+
+    @Override
+    public ICompressionManager getCompressionManager() {
+        return compressionManager;
     }
 }

@@ -163,6 +163,11 @@ public final class MetadataRecordTypes {
     public static final int DATASET_ARECORD_TIMESTAMP_FIELD_INDEX = 11;
     public static final int DATASET_ARECORD_DATASETID_FIELD_INDEX = 12;
     public static final int DATASET_ARECORD_PENDINGOP_FIELD_INDEX = 13;
+    //Optional open fields
+    public static final String DATASET_ARECORD_BLOCK_LEVEL_STORAGE_COMPRESSION_FIELD_NAME =
+            "BlockLevelStorageCompression";
+    public static final String DATASET_ARECORD_DATASET_COMPRESSION_SCHEME_FIELD_NAME = "DatasetCompressionScheme";
+    public static final String DATASET_ARECORD_REBALANCE_FIELD_NAME = "rebalanceCount";
     public static final ARecordType DATASET_RECORDTYPE = createRecordType(
             // RecordTypeName
             RECORD_NAME_DATASET,

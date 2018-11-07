@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.btree.dataflow;
 
 import java.util.Map;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
@@ -40,6 +41,7 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
     protected final double bloomFilterFalsePositiveRate;
     protected final boolean isPrimary;
     protected final int[] btreeFields;
+    protected final ICompressorDecompressorFactory compressorDecompressorFactory;
 
     public LSMBTreeLocalResourceFactory(IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
@@ -48,7 +50,8 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
             IMetadataPageManagerFactory metadataPageManagerFactory, IVirtualBufferCacheProvider vbcProvider,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, boolean durable, int[] bloomFilterKeyFields,
-            double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields) {
+            double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields,
+            ICompressorDecompressorFactory compressorDecompressorFactory) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                 mergePolicyFactory, mergePolicyProperties, durable);
@@ -56,6 +59,7 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.isPrimary = isPrimary;
         this.btreeFields = btreeFields;
+        this.compressorDecompressorFactory = compressorDecompressorFactory;
     }
 
     @Override
@@ -63,6 +67,6 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
         return new LSMBTreeLocalResource(typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
                 isPrimary, fileRef.getRelativePath(), storageManager, mergePolicyFactory, mergePolicyProperties,
                 filterTypeTraits, filterCmpFactories, btreeFields, filterFields, opTrackerProvider, ioOpCallbackFactory,
-                metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, durable);
+                metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, durable, compressorDecompressorFactory);
     }
 }

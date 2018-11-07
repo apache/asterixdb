@@ -18,31 +18,22 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.Identifier;
-import org.apache.asterix.lang.common.util.ExpressionUtils;
-import org.apache.asterix.lang.common.util.MergePolicyUtils;
+import org.apache.asterix.lang.common.util.ConfigurationUtil;
+import org.apache.asterix.lang.common.util.DatasetDeclParametersUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.object.base.AdmObjectNode;
-import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.asterix.runtime.compression.CompressionManager;
 
 public class DatasetDecl extends AbstractStatement {
-    protected static final String[] WITH_OBJECT_FIELDS = new String[] { MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME };
-    protected static final Set<String> WITH_OBJECT_FIELDS_SET = new HashSet<>(Arrays.asList(WITH_OBJECT_FIELDS));
-
     protected final Identifier name;
     protected final Identifier dataverse;
     protected final Identifier itemTypeDataverse;
@@ -76,14 +67,7 @@ public class DatasetDecl extends AbstractStatement {
         }
         this.nodegroupName = nodeGroupName;
         this.hints = hints;
-        try {
-            this.withObjectNode = withRecord == null ? null : ExpressionUtils.toNode(withRecord);
-        } catch (CompilationException e) {
-            throw e;
-        } catch (AlgebricksException e) {
-            // TODO(tillw) make signatures throw Algebricks exceptions
-            throw new CompilationException(e);
-        }
+        this.withObjectNode = DatasetDeclParametersUtil.validateAndGetWithObjectNode(withRecord);
         this.ifNotExists = ifNotExists;
         this.datasetType = datasetType;
         this.datasetDetailsDecl = idd;
@@ -141,50 +125,17 @@ public class DatasetDecl extends AbstractStatement {
         return nodegroupName;
     }
 
-    public String getCompactionPolicy() throws CompilationException {
+    private AdmObjectNode getMergePolicyObject() {
+        return (AdmObjectNode) withObjectNode.get(DatasetDeclParametersUtil.MERGE_POLICY_PARAMETER_NAME);
+    }
+
+    public String getCompactionPolicy() {
         AdmObjectNode mergePolicy = getMergePolicyObject();
         if (mergePolicy == null) {
             return null;
         }
-        IAdmNode mergePolicyName = mergePolicy.get(MergePolicyUtils.MERGE_POLICY_NAME_PARAMETER_NAME);
-        if (mergePolicyName == null) {
-            throw new CompilationException(ErrorCode.WITH_FIELD_MUST_CONTAIN_SUB_FIELD,
-                    MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME, MergePolicyUtils.MERGE_POLICY_NAME_PARAMETER_NAME);
-        }
-        if (mergePolicyName.getType() != ATypeTag.STRING) {
-            throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE,
-                    MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME + '.'
-                            + MergePolicyUtils.MERGE_POLICY_NAME_PARAMETER_NAME,
-                    ATypeTag.STRING);
-        }
-        return ((AdmStringNode) mergePolicyName).get();
-    }
 
-    private static AdmObjectNode validateWithObject(AdmObjectNode withObject) throws CompilationException {
-        if (withObject == null) {
-            return null;
-        }
-        for (String name : withObject.getFieldNames()) {
-            if (!WITH_OBJECT_FIELDS_SET.contains(name)) {
-                throw new CompilationException(ErrorCode.UNSUPPORTED_WITH_FIELD, name);
-            }
-        }
-        return withObject;
-    }
-
-    private AdmObjectNode getMergePolicyObject() throws CompilationException {
-        if (withObjectNode == null) {
-            return null;
-        }
-        IAdmNode mergePolicy = validateWithObject(withObjectNode).get(MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME);
-        if (mergePolicy == null) {
-            return null;
-        }
-        if (!mergePolicy.isObject()) {
-            throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE,
-                    MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME, ATypeTag.OBJECT);
-        }
-        return (AdmObjectNode) mergePolicy;
+        return mergePolicy.getOptionalString(DatasetDeclParametersUtil.MERGE_POLICY_NAME_PARAMETER_NAME);
     }
 
     public Map<String, String> getCompactionPolicyProperties() throws CompilationException {
@@ -192,17 +143,26 @@ public class DatasetDecl extends AbstractStatement {
         if (mergePolicy == null) {
             return null;
         }
-        IAdmNode mergePolicyParameters = mergePolicy.get(MergePolicyUtils.MERGE_POLICY_PARAMETERS_PARAMETER_NAME);
+        IAdmNode mergePolicyParameters =
+                mergePolicy.get(DatasetDeclParametersUtil.MERGE_POLICY_PARAMETERS_PARAMETER_NAME);
         if (mergePolicyParameters == null) {
             return null;
         }
-        if (mergePolicyParameters.getType() != ATypeTag.OBJECT) {
-            throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE,
-                    MergePolicyUtils.MERGE_POLICY_PARAMETER_NAME + '.'
-                            + MergePolicyUtils.MERGE_POLICY_PARAMETERS_PARAMETER_NAME,
-                    ATypeTag.OBJECT);
+        return ConfigurationUtil.toProperties((AdmObjectNode) mergePolicyParameters);
+    }
+
+    public String getDatasetCompressionScheme() {
+        if (datasetType != DatasetType.INTERNAL) {
+            return CompressionManager.NONE;
         }
-        return MergePolicyUtils.toProperties((AdmObjectNode) mergePolicyParameters);
+
+        final AdmObjectNode storageBlockCompression =
+                (AdmObjectNode) withObjectNode.get(DatasetDeclParametersUtil.STORAGE_BLOCK_COMPRESSION_PARAMETER_NAME);
+        if (storageBlockCompression == null) {
+            return null;
+        }
+        return storageBlockCompression
+                .getOptionalString(DatasetDeclParametersUtil.STORAGE_BLOCK_COMPRESSION_SCHEME_PARAMETER_NAME);
     }
 
     public Map<String, String> getHints() {

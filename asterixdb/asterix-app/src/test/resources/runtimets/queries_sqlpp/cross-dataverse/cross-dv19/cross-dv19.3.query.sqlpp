@@ -22,7 +22,20 @@
  * Date         : Sep 20 2012
  */
 
-select element l
+select l.DataverseName,
+  l.DatasetName,
+  l.DatatypeDataverseName,
+  l.DatatypeName,
+  l.DatasetType,
+  l.GroupName,
+  l.CompactionPolicy,
+  l.CompactionPolicyProperties,
+  l.ExternalDetails,
+  l.InternalDetails,
+  l.`Hints`,
+  l.Timestamp,
+  l.DatasetId,
+  l.PendingOp
 from  `Metadata`.`Dataset` as l
 where ((l.DataverseName = 'test1') or (l.DataverseName = 'test2') or (l.DataverseName = 'TwitterData'))
 order by l.DataverseName, l.DatasetName, l.DatatypeDataverseName

@@ -1043,9 +1043,9 @@ public class BTree extends AbstractTreeIndex {
 
                         ((IBTreeLeafFrame) leafFrame).setNextLeaf(leafFrontier.pageId);
 
-                        queue.put(leafFrontier.page, this);
+                        putInQueue(leafFrontier.page);
                         for (ICachedPage c : pagesToWrite) {
-                            queue.put(c, this);
+                            putInQueue(c);
                         }
                         pagesToWrite.clear();
                         splitKey.setRightPage(leafFrontier.pageId);
@@ -1152,7 +1152,7 @@ public class BTree extends AbstractTreeIndex {
                 ICachedPage lastLeaf = nodeFrontiers.get(level).page;
                 int lastLeafPage = nodeFrontiers.get(level).pageId;
                 lastLeaf.setDiskPageId(BufferedFileHandle.getDiskPageId(getFileId(), nodeFrontiers.get(level).pageId));
-                queue.put(lastLeaf, this);
+                putInQueue(lastLeaf);
                 nodeFrontiers.get(level).page = null;
                 persistFrontiers(level + 1, lastLeafPage);
                 return;
@@ -1167,7 +1167,7 @@ public class BTree extends AbstractTreeIndex {
             ((IBTreeInteriorFrame) interiorFrame).setRightmostChildPageId(rightPage);
             int finalPageId = freePageManager.takePage(metaFrame);
             frontier.page.setDiskPageId(BufferedFileHandle.getDiskPageId(getFileId(), finalPageId));
-            queue.put(frontier.page, this);
+            putInQueue(frontier.page);
             frontier.pageId = finalPageId;
             persistFrontiers(level + 1, finalPageId);
         }

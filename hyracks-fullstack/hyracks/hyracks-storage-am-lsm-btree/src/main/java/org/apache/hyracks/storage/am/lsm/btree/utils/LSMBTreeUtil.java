@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.btree.utils;
 
 import java.util.List;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -72,8 +73,8 @@ public class LSMBTreeUtil {
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, boolean needKeyDupCheck, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields, boolean durable,
-            IMetadataPageManagerFactory freePageManagerFactory, boolean updateAware, ITracer tracer)
-            throws HyracksDataException {
+            IMetadataPageManagerFactory freePageManagerFactory, boolean updateAware, ITracer tracer,
+            ICompressorDecompressorFactory compressorDecompressorFactory) throws HyracksDataException {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory =
                 new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, false, updateAware);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory =
@@ -106,10 +107,10 @@ public class LSMBTreeUtil {
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
         }
 
-        //Primary LSMBTree index has a BloomFilter.
-        ILSMIndexFileManager fileNameManager =
-                new LSMBTreeFileManager(ioManager, file, diskBTreeFactory, needKeyDupCheck);
+        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(ioManager, file, diskBTreeFactory,
+                needKeyDupCheck, compressorDecompressorFactory);
 
+        //Primary LSMBTree index has a BloomFilter.
         ILSMDiskComponentFactory componentFactory;
         ILSMDiskComponentFactory bulkLoadComponentFactory;
         if (needKeyDupCheck) {

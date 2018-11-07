@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LsmResource;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 
 public class ExternalBTreeLocalResourceFactory extends LSMBTreeLocalResourceFactory {
 
@@ -46,7 +47,7 @@ public class ExternalBTreeLocalResourceFactory extends LSMBTreeLocalResourceFact
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, metadataPageManagerFactory, null, ioSchedulerProvider,
                 mergePolicyFactory, mergePolicyProperties, durable, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
-                isPrimary, btreeFields);
+                isPrimary, btreeFields, NoOpCompressorDecompressorFactory.INSTANCE);
     }
 
     @Override

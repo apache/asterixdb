@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.common.buffercache;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
+import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 
 public interface IBufferCache {
 
@@ -277,5 +278,12 @@ public interface IBufferCache {
      * @throws HyracksDataException
      */
     void closeFileIfOpen(FileReference fileRef);
+
+    /**
+     * @return compressed page writer
+     */
+    default ICompressedPageWriter getCompressedPageWriter(int fileId) {
+        throw new UnsupportedOperationException(this.getClass().getName() + " does not support compressed pages");
+    }
 
 }

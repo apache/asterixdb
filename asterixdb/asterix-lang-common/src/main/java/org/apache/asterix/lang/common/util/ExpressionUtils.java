@@ -39,13 +39,12 @@ import org.apache.asterix.object.base.AdmNullNode;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class ExpressionUtils {
     private ExpressionUtils() {
     }
 
-    public static IAdmNode toNode(Expression expr) throws AlgebricksException {
+    public static IAdmNode toNode(Expression expr) throws CompilationException {
         switch (expr.getKind()) {
             case LIST_CONSTRUCTOR_EXPRESSION:
                 return toNode((ListConstructor) expr);
@@ -58,7 +57,7 @@ public class ExpressionUtils {
         }
     }
 
-    public static AdmObjectNode toNode(RecordConstructor recordConstructor) throws AlgebricksException {
+    public static AdmObjectNode toNode(RecordConstructor recordConstructor) throws CompilationException {
         AdmObjectNode node = new AdmObjectNode();
         final List<FieldBinding> fbList = recordConstructor.getFbList();
         for (int i = 0; i < fbList.size(); i++) {
@@ -70,7 +69,7 @@ public class ExpressionUtils {
         return node;
     }
 
-    private static IAdmNode toNode(ListConstructor listConstructor) throws AlgebricksException {
+    private static IAdmNode toNode(ListConstructor listConstructor) throws CompilationException {
         final List<Expression> exprList = listConstructor.getExprList();
         AdmArrayNode array = new AdmArrayNode(exprList.size());
         for (int i = 0; i < exprList.size(); i++) {
@@ -79,7 +78,7 @@ public class ExpressionUtils {
         return array;
     }
 
-    private static IAdmNode toNode(LiteralExpr literalExpr) throws AlgebricksException {
+    private static IAdmNode toNode(LiteralExpr literalExpr) throws CompilationException {
         final Literal value = literalExpr.getValue();
         final Literal.Type literalType = value.getLiteralType();
         switch (literalType) {

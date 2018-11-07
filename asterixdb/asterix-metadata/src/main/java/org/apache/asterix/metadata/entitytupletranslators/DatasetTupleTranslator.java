@@ -60,10 +60,13 @@ import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.AOrderedListType;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -77,7 +80,6 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     private static final long serialVersionUID = 1L;
     // Payload field containing serialized Dataset.
     public static final int DATASET_PAYLOAD_TUPLE_FIELD_INDEX = 2;
-    private static final String REBALANCE_ID_FIELD_NAME = "rebalanceCount";
 
     @SuppressWarnings("unchecked")
     protected final ISerializerDeserializer<ARecord> recordSerDes =
@@ -256,14 +258,33 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             metaTypeName = ((AString) datasetRecord.getValueByPos(metaTypeNameIndex)).getStringValue();
         }
 
-        // Read the rebalance count if there is one.
-        int rebalanceCountIndex = datasetRecord.getType().getFieldIndex(REBALANCE_ID_FIELD_NAME);
-        long rebalanceCount = rebalanceCountIndex >= 0
-                ? ((AInt64) datasetRecord.getValueByPos(rebalanceCountIndex)).getLongValue() : 0;
+        long rebalanceCount = getRebalanceCount(datasetRecord);
+        String compressionScheme = getCompressionScheme(datasetRecord);
 
         return new Dataset(dataverseName, datasetName, typeDataverseName, typeName, metaTypeDataverseName, metaTypeName,
                 nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints, datasetType,
-                datasetId, pendingOp, rebalanceCount);
+                datasetId, pendingOp, rebalanceCount, compressionScheme);
+    }
+
+    private long getRebalanceCount(ARecord datasetRecord) {
+        // Read the rebalance count if there is one.
+        int rebalanceCountIndex =
+                datasetRecord.getType().getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_REBALANCE_FIELD_NAME);
+        return rebalanceCountIndex >= 0 ? ((AInt64) datasetRecord.getValueByPos(rebalanceCountIndex)).getLongValue()
+                : 0;
+    }
+
+    private String getCompressionScheme(ARecord datasetRecord) {
+        final ARecordType datasetType = datasetRecord.getType();
+        final int compressionIndex = datasetType
+                .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_BLOCK_LEVEL_STORAGE_COMPRESSION_FIELD_NAME);
+        if (compressionIndex >= 0) {
+            final ARecordType compressionType = (ARecordType) datasetType.getFieldTypes()[compressionIndex];
+            final int schemeIndex = compressionType
+                    .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_COMPRESSION_SCHEME_FIELD_NAME);
+            return ((AString) datasetRecord.getValueByPos(schemeIndex)).getStringValue();
+        }
+        return CompressionManager.NONE;
     }
 
     @Override
@@ -392,8 +413,19 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         return tuple;
     }
 
+    /**
+     * Keep protected to allow other extensions to add additional fields
+     *
+     * @param dataset
+     * @throws HyracksDataException
+     */
     protected void writeOpenFields(Dataset dataset) throws HyracksDataException {
-        // write open fields
+        writeMetaPart(dataset);
+        writeRebalanceCount(dataset);
+        writeBlockLevelStorageCompression(dataset);
+    }
+
+    private void writeMetaPart(Dataset dataset) throws HyracksDataException {
         if (dataset.hasMetaPart()) {
             // write open field 1, the meta item type Dataverse name.
             fieldName.reset();
@@ -413,10 +445,35 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             stringSerde.serialize(aString, fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
         }
+    }
+
+    private void writeBlockLevelStorageCompression(Dataset dataset) throws HyracksDataException {
+        if (CompressionManager.NONE.equals(dataset.getCompressionScheme())) {
+            return;
+        }
+        RecordBuilder compressionObject = new RecordBuilder();
+        compressionObject.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+        fieldName.reset();
+        aString.setValue(MetadataRecordTypes.DATASET_ARECORD_DATASET_COMPRESSION_SCHEME_FIELD_NAME);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        fieldValue.reset();
+        aString.setValue(dataset.getCompressionScheme());
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        compressionObject.addField(fieldName, fieldValue);
+
+        fieldName.reset();
+        aString.setValue(MetadataRecordTypes.DATASET_ARECORD_BLOCK_LEVEL_STORAGE_COMPRESSION_FIELD_NAME);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        fieldValue.reset();
+        compressionObject.write(fieldValue.getDataOutput(), true);
+        recordBuilder.addField(fieldName, fieldValue);
+    }
+
+    private void writeRebalanceCount(Dataset dataset) throws HyracksDataException {
         if (dataset.getRebalanceCount() > 0) {
             // Adds the field rebalanceCount.
             fieldName.reset();
-            aString.setValue("rebalanceCount");
+            aString.setValue(MetadataRecordTypes.DATASET_ARECORD_REBALANCE_FIELD_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
             aBigInt.setValue(dataset.getRebalanceCount());

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -40,6 +41,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCacheProvider;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LsmResource;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -52,6 +54,7 @@ public class LSMBTreeLocalResource extends LsmResource {
     protected final double bloomFilterFalsePositiveRate;
     protected final boolean isPrimary;
     protected final int[] btreeFields;
+    protected final ICompressorDecompressorFactory compressorDecompressorFactory;
 
     public LSMBTreeLocalResource(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate, boolean isPrimary, String path,
@@ -60,7 +63,8 @@ public class LSMBTreeLocalResource extends LsmResource {
             IBinaryComparatorFactory[] filterCmpFactories, int[] btreeFields, int[] filterFields,
             ILSMOperationTrackerFactory opTrackerProvider, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory, IVirtualBufferCacheProvider vbcProvider,
-            ILSMIOOperationSchedulerProvider ioSchedulerProvider, boolean durable) {
+            ILSMIOOperationSchedulerProvider ioSchedulerProvider, boolean durable,
+            ICompressorDecompressorFactory compressorDecompressorFactory) {
         super(path, storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                 mergePolicyFactory, mergePolicyProperties, durable);
@@ -68,15 +72,18 @@ public class LSMBTreeLocalResource extends LsmResource {
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.isPrimary = isPrimary;
         this.btreeFields = btreeFields;
+        this.compressorDecompressorFactory = compressorDecompressorFactory;
     }
 
     protected LSMBTreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int[] bloomFilterKeyFields,
-            double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields) throws HyracksDataException {
+            double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields,
+            ICompressorDecompressorFactory compressorDecompressorFactory) throws HyracksDataException {
         super(registry, json);
         this.bloomFilterKeyFields = bloomFilterKeyFields;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
         this.isPrimary = isPrimary;
         this.btreeFields = btreeFields;
+        this.compressorDecompressorFactory = compressorDecompressorFactory;
     }
 
     @Override
@@ -92,7 +99,8 @@ public class LSMBTreeLocalResource extends LsmResource {
                 mergePolicyFactory.createMergePolicy(mergePolicyProperties, serviceCtx),
                 opTrackerProvider.getOperationTracker(serviceCtx, this), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory, isPrimary, filterTypeTraits, filterCmpFactories, btreeFields, filterFields,
-                durable, metadataPageManagerFactory, updateAware, serviceCtx.getTracer());
+                durable, metadataPageManagerFactory, updateAware, serviceCtx.getTracer(),
+                compressorDecompressorFactory);
     }
 
     @Override
@@ -108,8 +116,11 @@ public class LSMBTreeLocalResource extends LsmResource {
         final double bloomFilterFalsePositiveRate = json.get("bloomFilterFalsePositiveRate").asDouble();
         final boolean isPrimary = json.get("isPrimary").asBoolean();
         final int[] btreeFields = OBJECT_MAPPER.convertValue(json.get("btreeFields"), int[].class);
+        final JsonNode compressorDecompressorNode = json.get("compressorDecompressorFactory");
+        final ICompressorDecompressorFactory compDecompFactory = (ICompressorDecompressorFactory) registry
+                .deserializeOrDefault(compressorDecompressorNode, NoOpCompressorDecompressorFactory.class);
         return new LSMBTreeLocalResource(registry, json, bloomFilterKeyFields, bloomFilterFalsePositiveRate, isPrimary,
-                btreeFields);
+                btreeFields, compDecompFactory);
     }
 
     @Override
@@ -120,5 +131,6 @@ public class LSMBTreeLocalResource extends LsmResource {
         json.put("bloomFilterFalsePositiveRate", bloomFilterFalsePositiveRate);
         json.put("isPrimary", isPrimary);
         json.putPOJO("btreeFields", btreeFields);
+        json.putPOJO("compressorDecompressorFactory", compressorDecompressorFactory.toJson(registry));
     }
 }

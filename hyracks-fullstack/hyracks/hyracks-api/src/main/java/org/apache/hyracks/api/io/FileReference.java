@@ -27,7 +27,7 @@ import java.util.Date;
  * Used to identify a file in the local Node Controller.
  * Only used for files which are stored inside an IO device.
  */
-public final class FileReference implements Serializable {
+public class FileReference implements Serializable {
     private static final long serialVersionUID = 1L;
     private final File file;
     private final IODeviceHandle dev;
@@ -90,7 +90,11 @@ public final class FileReference implements Serializable {
     }
 
     public FileReference getChild(String name) {
-        return new FileReference(dev, path + File.separator + name);
+        return new FileReference(dev, getChildPath(name));
+    }
+
+    public String getChildPath(String name) {
+        return path + File.separator + name;
     }
 
     public void register() {
@@ -110,5 +114,9 @@ public final class FileReference implements Serializable {
             throw new IllegalStateException("File " + toString() + " wasn't registered before");
         }
         registrationTime = 0;
+    }
+
+    public boolean isCompressed() {
+        return false;
     }
 }

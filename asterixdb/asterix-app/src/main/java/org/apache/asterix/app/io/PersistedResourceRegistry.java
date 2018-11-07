@@ -59,6 +59,7 @@ import org.apache.asterix.metadata.utils.SecondaryCorrelatedTreeIndexOperationsH
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.asterix.om.pointables.nonvisitor.AListPointable;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
+import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.asterix.runtime.utils.RuntimeComponentsProvider;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerFactory;
@@ -248,6 +249,9 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         REGISTERED_CLASSES.put("UTF8NGramTokenFactory", UTF8NGramTokenFactory.class);
         REGISTERED_CLASSES.put("UTF8WordTokenFactory", UTF8WordTokenFactory.class);
         REGISTERED_CLASSES.put("RTreePolicyType", RTreePolicyType.class);
+
+        //ICompressorDecompressorFactory
+        CompressionManager.registerCompressorDecompressorsFactoryClasses(REGISTERED_CLASSES);
     }
 
     @Override
@@ -259,6 +263,30 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
             //Using static method (fromJson)
             Method method = clazz.getMethod(DESERIALIZATION_METHOD, IPersistedResourceRegistry.class, JsonNode.class);
             return (IJsonSerializable) method.invoke(null, this, json);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    @Override
+    public IJsonSerializable deserializeOrDefault(JsonNode json, Class<? extends IJsonSerializable> defaultClass)
+            throws HyracksDataException {
+        if (json != null) {
+            return deserialize(json);
+        }
+
+        return deserializeDefault(defaultClass);
+    }
+
+    private IJsonSerializable deserializeDefault(Class<? extends IJsonSerializable> defaultClass)
+            throws HyracksDataException {
+        //Ensure it is registered
+        final String resourceId = getResourceId(defaultClass);
+        try {
+            Class<? extends IJsonSerializable> clazz = getResourceClass(resourceId);
+            //Using static method (fromJson)
+            Method method = clazz.getMethod(DESERIALIZATION_METHOD, IPersistedResourceRegistry.class, JsonNode.class);
+            return (IJsonSerializable) method.invoke(null, this, null);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw HyracksDataException.create(e);
         }

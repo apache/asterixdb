@@ -941,9 +941,10 @@ public class RTree extends AbstractTreeIndex {
                     propagateBulk(1, false, pagesToWrite);
 
                     leafFrontier.pageId = freePageManager.takePage(metaFrame);
-                    queue.put(leafFrontier.page, this);
+
+                    putInQueue(leafFrontier.page);
                     for (ICachedPage c : pagesToWrite) {
-                        queue.put(c, this);
+                        putInQueue(c);
                     }
                     pagesToWrite.clear();
                     leafFrontier.page = bufferCache
@@ -974,7 +975,7 @@ public class RTree extends AbstractTreeIndex {
             }
 
             for (ICachedPage c : pagesToWrite) {
-                queue.put(c, this);
+                putInQueue(c);
             }
             finish();
             super.end();
@@ -1011,7 +1012,7 @@ public class RTree extends AbstractTreeIndex {
                     ((RTreeNSMFrame) lowerFrame).adjustMBR();
                     interiorFrameTupleWriter.writeTupleFields(((RTreeNSMFrame) lowerFrame).getMBRTuples(), 0, mbr, 0);
                 }
-                queue.put(n.page, this);
+                putInQueue(n.page);
                 n.page = null;
                 prevPageId = n.pageId;
             }

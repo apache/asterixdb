@@ -21,12 +21,14 @@ package org.apache.hyracks.storage.am.lsm.btree.impls;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.DiskBTree;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentFilter;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
+import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 
 public class LSMBTreeDiskComponent extends AbstractLSMDiskComponent {
     protected final DiskBTree btree;
@@ -80,7 +82,12 @@ public class LSMBTreeDiskComponent extends AbstractLSMDiskComponent {
 
     static Set<String> getFiles(BTree btree) {
         Set<String> files = new HashSet<>();
-        files.add(btree.getFileReference().getFile().getAbsolutePath());
+        final FileReference fileRef = btree.getFileReference();
+        files.add(fileRef.getAbsolutePath());
+        if (fileRef.isCompressed()) {
+            final CompressedFileReference cFileRef = (CompressedFileReference) fileRef;
+            files.add(cFileRef.getLAFAbsolutePath());
+        }
         return files;
     }
 }

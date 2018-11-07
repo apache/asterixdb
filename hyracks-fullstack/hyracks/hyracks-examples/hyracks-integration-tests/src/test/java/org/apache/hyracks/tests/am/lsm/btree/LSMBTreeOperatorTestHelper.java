@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.SynchronousSchedulerProvid
 import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingOperationTrackerFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 import org.apache.hyracks.tests.am.common.LSMTreeOperatorTestHelper;
 
 public class LSMBTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
@@ -46,6 +47,6 @@ public class LSMBTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
                 NoOpIOOperationCallbackFactory.INSTANCE, pageManagerFactory, getVirtualBufferCacheProvider(),
                 SynchronousSchedulerProvider.INSTANCE, MERGE_POLICY_FACTORY, MERGE_POLICY_PROPERTIES, DURABLE,
                 bloomFilterKeyFields, LSMTreeOperatorTestHelper.DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, true,
-                btreefields);
+                btreefields, NoOpCompressorDecompressorFactory.INSTANCE);
     }
 }

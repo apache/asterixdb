@@ -31,6 +31,9 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  */
 public class DatasetHints {
 
+    private DatasetHints() {
+    }
+
     /**
      * validate the use of a hint
      *

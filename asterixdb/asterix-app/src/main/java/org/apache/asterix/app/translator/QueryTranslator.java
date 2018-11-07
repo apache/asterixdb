@@ -554,6 +554,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String nodegroupName = ngNameId == null ? null : ngNameId.getValue();
         String compactionPolicy = dd.getCompactionPolicy();
         Map<String, String> compactionPolicyProperties = dd.getCompactionPolicyProperties();
+        String compressionScheme = metadataProvider.getCompressionManager()
+                .getDdlOrDefaultCompressionScheme(dd.getDatasetCompressionScheme());
         boolean defaultCompactionPolicy = compactionPolicy == null;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -652,7 +654,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             dataset = new Dataset(dataverseName, datasetName, itemTypeDataverseName, itemTypeName,
                     metaItemTypeDataverseName, metaItemTypeName, ngName, compactionPolicy, compactionPolicyProperties,
                     datasetDetails, dd.getHints(), dsType, DatasetIdFactory.generateDatasetId(),
-                    MetadataUtil.PENDING_ADD_OP);
+                    MetadataUtil.PENDING_ADD_OP, compressionScheme);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
             if (dd.getDatasetType() == DatasetType.INTERNAL) {
                 JobSpecification jobSpec = DatasetUtil.createDatasetJobSpec(dataset, metadataProvider);

@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
-import org.apache.asterix.active.IActiveEntityEventsListener;
-import org.apache.asterix.active.IActiveNotificationHandler;
 import org.apache.asterix.common.api.IDatasetInfoProvider;
 import org.apache.asterix.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -65,7 +63,7 @@ import org.apache.asterix.metadata.utils.RTreeResourceFactoryProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
 import org.apache.asterix.transaction.management.opcallbacks.LockThenSearchOperationCallbackFactory;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
@@ -149,6 +147,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     private final String metaTypeName;
     private final long rebalanceCount;
     private int pendingOp;
+    private final String compressionScheme;
 
     public Dataset(String dataverseName, String datasetName, String recordTypeDataverseName, String recordTypeName,
             String nodeGroupName, String compactionPolicy, Map<String, String> compactionPolicyProperties,
@@ -156,29 +155,30 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             int pendingOp) {
         this(dataverseName, datasetName, recordTypeDataverseName, recordTypeName, /*metaTypeDataverseName*/null,
                 /*metaTypeName*/null, nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails,
-                hints, datasetType, datasetId, pendingOp);
+                hints, datasetType, datasetId, pendingOp, CompressionManager.NONE);
     }
 
     public Dataset(String dataverseName, String datasetName, String itemTypeDataverseName, String itemTypeName,
             String metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName, String compactionPolicy,
             Map<String, String> compactionPolicyProperties, IDatasetDetails datasetDetails, Map<String, String> hints,
-            DatasetType datasetType, int datasetId, int pendingOp) {
+            DatasetType datasetType, int datasetId, int pendingOp, String compressionScheme) {
         this(dataverseName, datasetName, itemTypeDataverseName, itemTypeName, metaItemTypeDataverseName,
                 metaItemTypeName, nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints,
-                datasetType, datasetId, pendingOp, 0L);
+                datasetType, datasetId, pendingOp, 0L, compressionScheme);
     }
 
     public Dataset(Dataset dataset) {
         this(dataset.dataverseName, dataset.datasetName, dataset.recordTypeDataverseName, dataset.recordTypeName,
                 dataset.metaTypeDataverseName, dataset.metaTypeName, dataset.nodeGroupName,
                 dataset.compactionPolicyFactory, dataset.compactionPolicyProperties, dataset.datasetDetails,
-                dataset.hints, dataset.datasetType, dataset.datasetId, dataset.pendingOp, dataset.rebalanceCount);
+                dataset.hints, dataset.datasetType, dataset.datasetId, dataset.pendingOp, dataset.rebalanceCount,
+                dataset.compressionScheme);
     }
 
     public Dataset(String dataverseName, String datasetName, String itemTypeDataverseName, String itemTypeName,
             String metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName, String compactionPolicy,
             Map<String, String> compactionPolicyProperties, IDatasetDetails datasetDetails, Map<String, String> hints,
-            DatasetType datasetType, int datasetId, int pendingOp, long rebalanceCount) {
+            DatasetType datasetType, int datasetId, int pendingOp, long rebalanceCount, String compressionScheme) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.recordTypeName = itemTypeName;
@@ -194,6 +194,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         this.pendingOp = pendingOp;
         this.hints = hints;
         this.rebalanceCount = rebalanceCount;
+        this.compressionScheme = compressionScheme;
     }
 
     @Override
@@ -357,7 +358,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                     new Dataset(dataverseName, datasetName, getItemTypeDataverseName(), getItemTypeName(),
                             getMetaItemTypeDataverseName(), getMetaItemTypeName(), getNodeGroupName(),
                             getCompactionPolicy(), getCompactionPolicyProperties(), getDatasetDetails(), getHints(),
-                            getDatasetType(), getDatasetId(), MetadataUtil.PENDING_DROP_OP));
+                            getDatasetType(), getDatasetId(), MetadataUtil.PENDING_DROP_OP, getCompressionScheme()));
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
             bActiveTxn.setValue(false);
@@ -644,6 +645,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         tree.put("metaTypeDataverseName", metaTypeDataverseName);
         tree.put("metaTypeName", metaTypeName);
         tree.put("pendingOp", MetadataUtil.pendingOpToString(pendingOp));
+        tree.put("rebalanceCount", rebalanceCount);
+        tree.put("compressionScheme", compressionScheme);
         return tree;
     }
 
@@ -823,7 +826,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         return new Dataset(this.dataverseName, this.datasetName, this.recordTypeDataverseName, this.recordTypeName,
                 this.metaTypeDataverseName, this.metaTypeName, targetNodeGroupName, this.compactionPolicyFactory,
                 this.compactionPolicyProperties, this.datasetDetails, this.hints, this.datasetType,
-                DatasetIdFactory.generateAlternatingDatasetId(this.datasetId), this.pendingOp, this.rebalanceCount + 1);
+                DatasetIdFactory.generateAlternatingDatasetId(this.datasetId), this.pendingOp, this.rebalanceCount + 1,
+                this.compressionScheme);
     }
 
     // Gets an array of partition numbers for this dataset.
@@ -839,5 +843,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
     public String getFullyQualifiedName() {
         return dataverseName + '.' + datasetName;
+    }
+
+    public String getCompressionScheme() {
+        return compressionScheme;
     }
 }

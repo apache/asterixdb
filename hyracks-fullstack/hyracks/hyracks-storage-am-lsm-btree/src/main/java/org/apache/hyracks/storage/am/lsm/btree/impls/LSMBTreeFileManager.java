@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -37,6 +38,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManage
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 
 public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
 
@@ -46,24 +48,30 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
     private final boolean hasBloomFilter;
 
     public LSMBTreeFileManager(IIOManager ioManager, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> btreeFactory, boolean hasBloomFilter) {
-        super(ioManager, file, null);
+            TreeIndexFactory<? extends ITreeIndex> btreeFactory, boolean hasBloomFilter,
+            ICompressorDecompressorFactory compressorDecompressorFactory) {
+        super(ioManager, file, null, compressorDecompressorFactory);
         this.btreeFactory = btreeFactory;
         this.hasBloomFilter = hasBloomFilter;
+    }
+
+    public LSMBTreeFileManager(IIOManager ioManager, FileReference file,
+            TreeIndexFactory<? extends ITreeIndex> btreeFactory, boolean hasBloomFilter) {
+        this(ioManager, file, btreeFactory, hasBloomFilter, NoOpCompressorDecompressorFactory.INSTANCE);
     }
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String baseName = getNextComponentSequence(btreeFilter);
-        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX), null,
-                hasBloomFilter ? baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX) : null);
+        return new LSMComponentFileReferences(getFileReference(baseName + DELIMITER + BTREE_SUFFIX), null,
+                hasBloomFilter ? getFileReference(baseName + DELIMITER + BLOOM_FILTER_SUFFIX) : null);
     }
 
     @Override
     public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName) {
         final String baseName = IndexComponentFileReference.getMergeSequence(firstFileName, lastFileName);
-        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX), null,
-                hasBloomFilter ? baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX) : null);
+        return new LSMComponentFileReferences(getFileReference(baseName + DELIMITER + BTREE_SUFFIX), null,
+                hasBloomFilter ? getFileReference(baseName + DELIMITER + BLOOM_FILTER_SUFFIX) : null);
     }
 
     @Override

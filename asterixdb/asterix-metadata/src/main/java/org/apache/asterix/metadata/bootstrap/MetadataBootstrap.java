@@ -87,6 +87,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -338,7 +339,8 @@ public class MetadataBootstrap {
                     new AsterixVirtualBufferCacheProvider(datasetId),
                     storageComponentProvider.getIoOperationSchedulerProvider(),
                     appContext.getMetadataMergePolicyFactory(), GlobalConfig.DEFAULT_COMPACTION_POLICY_PROPERTIES, true,
-                    bloomFilterKeyFields, bloomFilterFalsePositiveRate, true, null);
+                    bloomFilterKeyFields, bloomFilterFalsePositiveRate, true, null,
+                    NoOpCompressorDecompressorFactory.INSTANCE);
             DatasetLocalResourceFactory dsLocalResourceFactory =
                     new DatasetLocalResourceFactory(datasetId, lsmBtreeFactory);
             // TODO(amoudi) Creating the index should be done through the same code path as

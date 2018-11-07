@@ -153,6 +153,14 @@ public class AdmObjectNode implements IAdmNode {
         return getString(this, field);
     }
 
+    public String getOptionalString(String field) {
+        final IAdmNode node = get(field);
+        if (node == null) {
+            return null;
+        }
+        return ((AdmStringNode) node).get();
+    }
+
     public static String getString(AdmObjectNode openFields, String field) throws HyracksDataException {
         IAdmNode node = openFields.get(field);
         if (node == null) {

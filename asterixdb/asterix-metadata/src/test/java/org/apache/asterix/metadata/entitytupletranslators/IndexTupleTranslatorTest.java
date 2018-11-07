@@ -30,7 +30,6 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
-import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -41,6 +40,7 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningS
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.junit.Assert;
@@ -62,9 +62,9 @@ public class IndexTupleTranslatorTest {
                     indicator == null ? null : Collections.singletonList(indicator),
                     Collections.singletonList(BuiltinType.AINT64), false, Collections.emptyList());
 
-            Dataset dataset =
-                    new Dataset("test", "d1", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES", "prefix",
-                            compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0);
+            Dataset dataset = new Dataset("test", "d1", "foo", "LogType", "CB", "MetaType", "DEFAULT_NG_ALL_NODES",
+                    "prefix", compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0,
+                    CompressionManager.NONE);
 
             Index index = new Index("test", "d1", "i1", IndexType.BTREE,
                     Collections.singletonList(Collections.singletonList("row_id")),

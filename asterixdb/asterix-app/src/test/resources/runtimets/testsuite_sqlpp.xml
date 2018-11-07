@@ -11121,4 +11121,63 @@
     </test-case>
   </test-group>
   &GeoQueries;
+  <test-group name="compression">
+    <test-case FilePath="compression">
+      <compilation-unit name="incompressible-pages/large-page">
+        <output-dir compare="Text">incompressible-pages/large-page</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="compression">
+      <compilation-unit name="incompressible-pages/small-page">
+        <output-dir compare="Text">incompressible-pages/small-page</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="compression">
+      <compilation-unit name="invalid-compression-scheme">
+        <output-dir compare="Text">invalid-compression-scheme</output-dir>
+        <expected-error>ASX1096: Unknown compression scheme zip. Supported schemes are [snappy,none]</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="compression">
+      <compilation-unit name="scheme-none">
+        <output-dir compare="Text">scheme-none</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="compression">
+      <compilation-unit name="scheme-snappy">
+        <output-dir compare="Text">scheme-snappy</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="ddl-with-clause">
+    <test-case FilePath="ddl-with-clause">
+      <compilation-unit name="missing-non-optional">
+        <output-dir compare="Text">missing-non-optional</output-dir>
+        <expected-error>ASX1061: Field "merge-policy.name" in the with clause cannot be null or missing</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl-with-clause">
+      <compilation-unit name="type-mismatch">
+        <output-dir compare="Text">type-mismatch</output-dir>
+        <expected-error>ASX1060: Field "merge-policy.parameters.max-mergable-component-size" in the with clause must be of type bigint, but found string</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl-with-clause">
+      <compilation-unit name="unsupported-field">
+        <output-dir compare="Text">unsupported-field</output-dir>
+        <expected-error>ASX1059: Field(s) [unknown-field] unsupported in the with clause</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl-with-clause">
+      <compilation-unit name="unsupported-subfield">
+        <output-dir compare="Text">unsupported-subfield</output-dir>
+        <expected-error>ASX1097: Subfield(s) [unknown-subfield] in "merge-policy" unsupported in the with clause</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

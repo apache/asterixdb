@@ -41,6 +41,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 import org.apache.hyracks.util.trace.ITraceCategoryRegistry;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.TraceCategoryRegistry;
@@ -99,13 +100,16 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             lsmTree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits,
                     cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
                     ioScheduler, ioOpCallbackFactory, needKeyDupCheck, filterTypeTraits, filterCmp, btreefields,
-                    filterfields, true, metadataPageManagerFactory, updateAware, ITracer.NONE);
+                    filterfields, true, metadataPageManagerFactory, updateAware, ITracer.NONE,
+                    NoOpCompressorDecompressorFactory.INSTANCE);
         } else {
             lsmTree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits,
                     cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
                     ioScheduler, ioOpCallbackFactory, needKeyDupCheck, null, null, null, null, true,
-                    metadataPageManagerFactory, updateAware, new Tracer(LSMBTreeTestContext.class.getSimpleName(),
-                            ITraceCategoryRegistry.CATEGORIES_ALL, new TraceCategoryRegistry()));
+                    metadataPageManagerFactory,
+                    updateAware, new Tracer(LSMBTreeTestContext.class.getSimpleName(),
+                            ITraceCategoryRegistry.CATEGORIES_ALL, new TraceCategoryRegistry()),
+                    NoOpCompressorDecompressorFactory.INSTANCE);
         }
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree, filtered);
         return testCtx;

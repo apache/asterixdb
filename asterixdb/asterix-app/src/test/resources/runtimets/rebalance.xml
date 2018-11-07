@@ -77,5 +77,26 @@ STATUS LINE: HTTP/1.1 400 Bad Request
 ERROR_BODY: {"results":"to rebalance a particular dataset, the parameter dataverseName must be given"}</expected-error>
       </compilation-unit>
     </test-case>
+    <!-- Rebalance with compression -->
+    <test-case FilePath="rebalance">
+      <compilation-unit name="single_dataset_compressed">
+        <output-dir compare="Text">single_dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="rebalance">
+      <compilation-unit name="single_dataset_with_index_compressed">
+        <output-dir compare="Text">single_dataset_with_index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="rebalance">
+      <compilation-unit name="single_dataverse_compressed">
+        <output-dir compare="Text">single_dataverse</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="rebalance">
+      <compilation-unit name="all_datasets_compressed">
+        <output-dir compare="Text">all_datasets</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

@@ -22,7 +22,6 @@ import static org.apache.hyracks.control.nc.io.IOManager.IO_REQUEST_QUEUE_SIZE;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,12 +41,12 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.logging.log4j.Level;
@@ -80,18 +79,18 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     private final BlockingQueue<BufferCacheHeaderHelper> headerPageCache =
             new ArrayBlockingQueue<>(IO_REQUEST_QUEUE_SIZE);
 
+    private IIOReplicationManager ioReplicationManager;
+    private final List<ICachedPageInternal> cachedPages = new ArrayList<>();
+    private final AtomicLong masterPinCount = new AtomicLong();
+
+    private boolean closed;
+
     //DEBUG
     private static final Level fileOpsLevel = Level.TRACE;
     private ArrayList<CachedPage> confiscatedPages;
     private Lock confiscateLock;
     private HashMap<CachedPage, StackTraceElement[]> confiscatedPagesOwner;
     private ConcurrentHashMap<CachedPage, StackTraceElement[]> pinnedPageOwner;
-    //!DEBUG
-    private IIOReplicationManager ioReplicationManager;
-    private final List<ICachedPageInternal> cachedPages = new ArrayList<>();
-    private final AtomicLong masterPinCount = new AtomicLong();
-
-    private boolean closed;
 
     public BufferCache(IIOManager ioManager, IPageReplacementStrategy pageReplacementStrategy,
             IPageCleanerPolicy pageCleanerPolicy, IFileMapManager fileMapManager, int maxOpenFiles,
@@ -158,7 +157,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         synchronized (fileInfoMap) {
             fInfo = fileInfoMap.get(fileId);
         }
-        if (fInfo == null) {
+        if (fInfo == null || fInfo.hasBeenDeleted() || !fInfo.hasBeenOpened()) {
             throw new HyracksDataException("pin called on a fileId " + fileId + " that has not been created.");
         } else if (fInfo.getReferenceCount() <= 0) {
             throw new HyracksDataException("pin called on a fileId " + fileId + " that has not been opened.");
@@ -546,35 +545,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
     }
 
     private void read(CachedPage cPage) throws HyracksDataException {
-        BufferedFileHandle fInfo = getFileInfo(cPage);
+        BufferedFileHandle fInfo = getFileHandle(cPage);
         cPage.buffer.clear();
-        BufferCacheHeaderHelper header = checkoutHeaderHelper();
-        try {
-            long bytesRead = ioManager.syncRead(fInfo.getFileHandle(),
-                    getOffsetForPage(BufferedFileHandle.getPageId(cPage.dpid)), header.prepareRead());
-
-            if (bytesRead != getPageSizeWithHeader()) {
-                if (bytesRead == -1) {
-                    // disk order scan code seems to rely on this behavior, so silently return
-                    return;
-                }
-                throw new HyracksDataException("Failed to read a complete page: " + bytesRead);
-            }
-            int totalPages = header.processRead(cPage);
-
-            if (totalPages > 1) {
-                pageReplacementStrategy.fixupCapacityOnLargeRead(cPage);
-                cPage.buffer.position(pageSize);
-                cPage.buffer.limit(totalPages * pageSize);
-                ioManager.syncRead(fInfo.getFileHandle(), getOffsetForPage(cPage.getExtraBlockPageId()), cPage.buffer);
-            }
-        } finally {
-            returnHeaderHelper(header);
-        }
-    }
-
-    private long getOffsetForPage(long pageId) {
-        return pageId * getPageSizeWithHeader();
+        fInfo.read(cPage);
     }
 
     @Override
@@ -583,67 +556,16 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         pageReplacementStrategy.resizePage((ICachedPageInternal) cPage, totalPages, extraPageBlockHelper);
     }
 
-    BufferedFileHandle getFileInfo(CachedPage cPage) throws HyracksDataException {
-        return getFileInfo(BufferedFileHandle.getFileId(cPage.dpid));
-    }
-
-    BufferedFileHandle getFileInfo(int fileId) throws HyracksDataException {
-        BufferedFileHandle fInfo;
-        synchronized (fileInfoMap) {
-            fInfo = fileInfoMap.get(fileId);
-        }
-        if (fInfo == null) {
-            throw HyracksDataException.create(ErrorCode.FILE_DOES_NOT_EXIST, fileId);
-        }
-        return fInfo;
-    }
-
-    private BufferCacheHeaderHelper checkoutHeaderHelper() {
-        BufferCacheHeaderHelper helper = headerPageCache.poll();
-        if (helper == null) {
-            helper = new BufferCacheHeaderHelper(pageSize);
-        }
-        return helper;
-    }
-
-    private void returnHeaderHelper(BufferCacheHeaderHelper buffer) {
-        headerPageCache.offer(buffer);
-    }
-
     void write(CachedPage cPage) throws HyracksDataException {
-        BufferedFileHandle fInfo = getFileInfo(cPage);
+        BufferedFileHandle fInfo = getFileHandle(cPage);
         // synchronize on fInfo to prevent the file handle from being deleted until the page is written.
         synchronized (fInfo) {
-            if (fInfo.fileHasBeenDeleted()) {
+            if (fInfo.hasBeenDeleted()) {
                 return;
             }
-            ByteBuffer buf = cPage.buffer.duplicate();
-            final int totalPages = cPage.getFrameSizeMultiplier();
-            final int extraBlockPageId = cPage.getExtraBlockPageId();
-            final boolean contiguousLargePages = (BufferedFileHandle.getPageId(cPage.dpid) + 1) == extraBlockPageId;
-            BufferCacheHeaderHelper header = checkoutHeaderHelper();
-            try {
-                buf.limit(contiguousLargePages ? pageSize * totalPages : pageSize);
-                buf.position(0);
-                long bytesWritten = ioManager.syncWrite(fInfo.getFileHandle(),
-                        getOffsetForPage(BufferedFileHandle.getPageId(cPage.dpid)), header.prepareWrite(cPage, buf));
-
-                if (bytesWritten != (contiguousLargePages ? pageSize * (totalPages - 1) : 0)
-                        + getPageSizeWithHeader()) {
-                    throw new HyracksDataException("Failed to write completely: " + bytesWritten);
-                }
-            } finally {
-                returnHeaderHelper(header);
-            }
-            if (totalPages > 1 && !contiguousLargePages) {
-                buf.limit(totalPages * pageSize);
-                ioManager.syncWrite(fInfo.getFileHandle(), getOffsetForPage(extraBlockPageId), buf);
-            }
-            if (buf.capacity() != pageSize * totalPages) {
-                throw new IllegalStateException("Illegal number of bytes written, expected bytes written: "
-                        + pageSize * totalPages + " actual bytes writte: " + buf.capacity());
-            }
+            fInfo.write(cPage);
         }
+
     }
 
     @Override
@@ -794,8 +716,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         synchronized (fileInfoMap) {
             fileInfoMap.forEach((key, value) -> {
                 try {
-                    sweepAndFlush(key, true);
-                    ioManager.close(value.getFileHandle());
+                    sweepAndFlush(value, true);
+                    value.close();
                 } catch (HyracksDataException e) {
                     if (LOGGER.isWarnEnabled()) {
                         LOGGER.log(Level.WARN, "Error flushing file id: " + key, e);
@@ -811,11 +733,14 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Creating file: " + fileRef + " in cache: " + this);
         }
-        IoUtil.create(fileRef);
+        BufferedFileHandle.createFile(this, fileRef);
+        int fileId;
         try {
             synchronized (fileInfoMap) {
-                return fileMapManager.registerFile(fileRef);
+                fileId = fileMapManager.registerFile(fileRef);
+                getOrCreateFileHandle(fileId);
             }
+            return fileId;
         } catch (Exception e) {
             // If file registration failed for any reason, we need to undo the file creation
             try {
@@ -851,11 +776,14 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         }
         try {
             final BufferedFileHandle fInfo = getOrCreateFileHandle(fileId);
-            if (fInfo.getFileHandle() == null) {
+            //CompressedFileReference may open another file which may sweep and close out this fInfo
+            fInfo.incReferenceCount();
+
+            if (!fInfo.hasBeenOpened()) {
                 // a new file
                 synchronized (fInfo) {
                     // prevent concurrent opening of the same file
-                    if (fInfo.getFileHandle() == null) {
+                    if (!fInfo.hasBeenOpened()) {
                         if (fileInfoMap.size() > maxOpenFiles) {
                             closeOpeningFiles(fInfo);
                         }
@@ -864,15 +792,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                         synchronized (fileInfoMap) {
                             fileRef = fileMapManager.lookupFileName(fileId);
                         }
-                        IFileHandle fh = ioManager.open(fileRef, IIOManager.FileReadWriteMode.READ_WRITE,
-                                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
-                        fInfo.setFileHandle(fh);
+                        fInfo.open(fileRef);
                     }
                 }
             }
-            fInfo.incReferenceCount();
         } catch (Exception e) {
-            removeFileInfo(fileId);
+            removeFileHandle(fileId);
             throw HyracksDataException.create(e);
         }
     }
@@ -888,11 +813,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                     if (fh != newFileHandle && fh.getReferenceCount() <= 0) {
                         if (fh.getReferenceCount() < 0) {
                             throw new IllegalStateException("Illegal reference count " + fh.getReferenceCount()
-                                    + " of file " + fh.getFileHandle().getFileReference());
+                                    + " of file " + fh.getFileReference());
                         }
                         int entryFileId = entry.getKey();
-                        sweepAndFlush(entryFileId, true);
-                        ioManager.close(entry.getValue().getFileHandle());
+                        sweepAndFlush(fh, true);
+                        entry.getValue().close();
                         fileInfoMap.remove(entryFileId);
                         unreferencedFileFound = true;
                         // for-each iterator is invalid because we changed
@@ -908,7 +833,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         }
     }
 
-    private void sweepAndFlush(int fileId, boolean flushDirtyPages) throws HyracksDataException {
+    private void sweepAndFlush(BufferedFileHandle fInfo, boolean flushDirtyPages) throws HyracksDataException {
+        if (!fInfo.hasBeenOpened()) {
+            //Skip flushing as the file has not been open
+            return;
+        }
+        final int fileId = fInfo.getFileId();
         for (final CacheBucket bucket : pageMap) {
             bucket.bucketLock.lock();
             try {
@@ -973,7 +903,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
         synchronized (fileInfoMap) {
             BufferedFileHandle fInfo = fileInfoMap.get(fileId);
-            if (fInfo == null) {
+            if (fInfo == null || !fInfo.hasBeenOpened()) {
                 throw new HyracksDataException("Closing unopened file");
             }
             if (fInfo.decReferenceCount() < 0) {
@@ -997,7 +927,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         synchronized (fileInfoMap) {
             fInfo = fileInfoMap.get(fileId);
         }
-        ioManager.sync(fInfo.getFileHandle(), metadata);
+        fInfo.force(metadata);
     }
 
     @Override
@@ -1013,7 +943,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         if (mapped) {
             deleteFile(fileId);
         } else {
-            IoUtil.delete(fileRef);
+            BufferedFileHandle.deleteFile(fileRef);
         }
     }
 
@@ -1022,11 +952,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         if (LOGGER.isEnabled(fileOpsLevel)) {
             LOGGER.log(fileOpsLevel, "Deleting file: " + fileId + " in cache: " + this);
         }
-        BufferedFileHandle fInfo = removeFileInfo(fileId);
+        BufferedFileHandle fInfo = removeFileHandle(fileId);
         if (fInfo == null) {
             return;
         }
-        sweepAndFlush(fileId, false);
+        sweepAndFlush(fInfo, false);
         try {
             if (fInfo.getReferenceCount() > 0) {
                 throw new HyracksDataException("Deleting open file");
@@ -1040,11 +970,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             } finally {
                 try {
                     synchronized (fInfo) {
-                        ioManager.close(fInfo.getFileHandle());
+                        fInfo.close();
                         fInfo.markAsDeleted();
                     }
                 } finally {
-                    IoUtil.delete(fileRef);
+                    BufferedFileHandle.deleteFile(fileRef);
                 }
             }
         }
@@ -1178,10 +1108,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
             if (fInfo == null) {
                 throw new HyracksDataException("No such file mapped for fileId:" + fileId);
             }
-            if (DEBUG) {
-                assert ioManager.getSize(fInfo.getFileHandle()) % getPageSizeWithHeader() == 0;
-            }
-            return (int) (ioManager.getSize(fInfo.getFileHandle()) / getPageSizeWithHeader());
+            return fInfo.getNumberOfPages();
         }
     }
 
@@ -1290,16 +1217,33 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
         return null;
     }
 
-    private BufferedFileHandle getOrCreateFileHandle(int fileId) {
+    private BufferedFileHandle getOrCreateFileHandle(int fileId) throws HyracksDataException {
         synchronized (fileInfoMap) {
-            return fileInfoMap.computeIfAbsent(fileId, id -> new BufferedFileHandle(fileId, null));
+            final FileReference fileRef = fileMapManager.lookupFileName(fileId);
+            return fileInfoMap.computeIfAbsent(fileId, id -> BufferedFileHandle.create(fileRef, fileId, this, ioManager,
+                    headerPageCache, pageReplacementStrategy));
         }
     }
 
-    private BufferedFileHandle removeFileInfo(int fileId) {
+    private BufferedFileHandle removeFileHandle(int fileId) {
         synchronized (fileInfoMap) {
             return fileInfoMap.remove(fileId);
         }
+    }
+
+    private BufferedFileHandle getFileHandle(CachedPage cPage) throws HyracksDataException {
+        return getFileHandle(BufferedFileHandle.getFileId(cPage.dpid));
+    }
+
+    private BufferedFileHandle getFileHandle(int fileId) throws HyracksDataException {
+        BufferedFileHandle fInfo;
+        synchronized (fileInfoMap) {
+            fInfo = fileInfoMap.get(fileId);
+        }
+        if (fInfo == null) {
+            throw HyracksDataException.create(ErrorCode.FILE_DOES_NOT_EXIST, fileId);
+        }
+        return fInfo;
     }
 
     private ICachedPage getPageLoop(long dpid, int multiplier, boolean confiscate) throws HyracksDataException {
@@ -1442,52 +1386,14 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
 
     @Override
     public void purgeHandle(int fileId) throws HyracksDataException {
-        BufferedFileHandle fh = removeFileInfo(fileId);
+        BufferedFileHandle fh = removeFileHandle(fileId);
         if (fh != null) {
             synchronized (fileInfoMap) {
                 fileMapManager.unregisterFile(fileId);
+                fh.purge();
             }
-            ioManager.close(fh.getFileHandle());
         }
 
-    }
-
-    static class BufferCacheHeaderHelper {
-        private static final int FRAME_MULTIPLIER_OFF = 0;
-        private static final int EXTRA_BLOCK_PAGE_ID_OFF = FRAME_MULTIPLIER_OFF + 4; // 4
-
-        private final ByteBuffer buf;
-        private final ByteBuffer[] array;
-
-        private BufferCacheHeaderHelper(int pageSize) {
-            buf = ByteBuffer.allocate(RESERVED_HEADER_BYTES + pageSize);
-            array = new ByteBuffer[] { buf, null };
-        }
-
-        private ByteBuffer[] prepareWrite(CachedPage cPage, ByteBuffer pageBuffer) {
-            buf.position(0);
-            buf.limit(RESERVED_HEADER_BYTES);
-            buf.putInt(FRAME_MULTIPLIER_OFF, cPage.getFrameSizeMultiplier());
-            buf.putInt(EXTRA_BLOCK_PAGE_ID_OFF, cPage.getExtraBlockPageId());
-            array[1] = pageBuffer;
-            return array;
-        }
-
-        private ByteBuffer prepareRead() {
-            buf.position(0);
-            buf.limit(buf.capacity());
-            return buf;
-        }
-
-        private int processRead(CachedPage cPage) {
-            buf.position(RESERVED_HEADER_BYTES);
-            cPage.buffer.position(0);
-            cPage.buffer.put(buf);
-            int multiplier = buf.getInt(FRAME_MULTIPLIER_OFF);
-            cPage.setFrameSizeMultiplier(multiplier);
-            cPage.setExtraBlockPageId(buf.getInt(EXTRA_BLOCK_PAGE_ID_OFF));
-            return multiplier;
-        }
     }
 
     @Override
@@ -1506,6 +1412,16 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent {
                 }
             }
         }
+    }
+
+    @Override
+    public ICompressedPageWriter getCompressedPageWriter(int fileId) {
+        final BufferedFileHandle fInfo;
+        synchronized (fileInfoMap) {
+            fInfo = fileInfoMap.get(fileId);
+        }
+
+        return fInfo.getCompressedPageWriter();
     }
 
 }

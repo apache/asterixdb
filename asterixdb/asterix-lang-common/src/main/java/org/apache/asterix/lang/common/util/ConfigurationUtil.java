@@ -28,12 +28,9 @@ import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
 
-public class MergePolicyUtils {
-    public static final String MERGE_POLICY_PARAMETER_NAME = "merge-policy";
-    public static final String MERGE_POLICY_NAME_PARAMETER_NAME = "name";
-    public static final String MERGE_POLICY_PARAMETERS_PARAMETER_NAME = "parameters";
+public class ConfigurationUtil {
 
-    private MergePolicyUtils() {
+    private ConfigurationUtil() {
     }
 
     /**
@@ -48,20 +45,30 @@ public class MergePolicyUtils {
         Map<String, String> map = new HashMap<>();
         for (Entry<String, IAdmNode> field : parameters.getFields()) {
             IAdmNode value = field.getValue();
-            switch (value.getType()) {
-                case BOOLEAN:
-                case DOUBLE:
-                case BIGINT:
-                    map.put(field.getKey(), value.toString());
-                    break;
-                case STRING:
-                    map.put(field.getKey(), ((AdmStringNode) value).get());
-                    break;
-                default:
-                    throw new CompilationException(ErrorCode.MERGE_POLICY_PARAMETER_INVALID_TYPE, value.getType());
-            }
+            map.put(field.getKey(), getStringValue(value));
         }
         return map;
     }
 
+    /**
+     * Get string value of {@link IAdmNode}
+     *
+     * @param value
+     *            IAdmNode value should be of type integer or string
+     * @return
+     *         string value of <code>value</code>
+     * @throws CompilationException
+     */
+    public static String getStringValue(IAdmNode value) throws CompilationException {
+        switch (value.getType()) {
+            case BOOLEAN:
+            case DOUBLE:
+            case BIGINT:
+                return value.toString();
+            case STRING:
+                return ((AdmStringNode) value).get();
+            default:
+                throw new CompilationException(ErrorCode.CONFIGURATION_PARAMETER_INVALID_TYPE, value.getType());
+        }
+    }
 }

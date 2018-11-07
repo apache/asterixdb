@@ -35,4 +35,12 @@ public interface ICachedPageInternal extends ICachedPage {
     int getExtraBlockPageId();
 
     void setExtraBlockPageId(int extraBlockPageId);
+
+    void setCompressedPageOffset(long offset);
+
+    long getCompressedPageOffset();
+
+    void setCompressedPageSize(int size);
+
+    int getCompressedPageSize();
 }

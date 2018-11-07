@@ -45,6 +45,8 @@ public class CachedPage implements ICachedPageInternal {
     private IQueueInfo queueInfo;
     private int multiplier;
     private int extraBlockPageId;
+    private long compressedOffset;
+    private int compressedSize;
     // DEBUG
     private static final boolean DEBUG = false;
     private final StackTraceElement[] ctorStack;
@@ -223,5 +225,24 @@ public class CachedPage implements ICachedPageInternal {
         } else {
             LOGGER.error("An IO Failure took place but the failure callback is not set", e);
         }
+    }
+
+    public void setCompressedPageOffset(long offset) {
+        this.compressedOffset = offset;
+    }
+
+    @Override
+    public long getCompressedPageOffset() {
+        return compressedOffset;
+    }
+
+    @Override
+    public void setCompressedPageSize(int size) {
+        this.compressedSize = size;
+    }
+
+    @Override
+    public int getCompressedPageSize() {
+        return compressedSize;
     }
 }

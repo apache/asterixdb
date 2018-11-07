@@ -22,6 +22,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.DOUBLE;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 
@@ -47,7 +48,8 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(POSITIVE_INTEGER, 2),
         STORAGE_METADATA_MEMORYCOMPONENT_NUMPAGES(POSITIVE_INTEGER, 8),
         STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d),
-        STORAGE_MAX_ACTIVE_WRITABLE_DATASETS(UNSIGNED_INTEGER, 8);
+        STORAGE_MAX_ACTIVE_WRITABLE_DATASETS(UNSIGNED_INTEGER, 8),
+        STORAGE_COMPRESSION_BLOCK(STRING, "none");
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -88,6 +90,8 @@ public class StorageProperties extends AbstractProperties {
                     return "The maximum acceptable false positive rate for bloom filters associated with LSM indexes";
                 case STORAGE_MAX_ACTIVE_WRITABLE_DATASETS:
                     return "The maximum number of datasets that can be concurrently modified";
+                case STORAGE_COMPRESSION_BLOCK:
+                    return "The default compression scheme for the storage";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -177,6 +181,10 @@ public class StorageProperties extends AbstractProperties {
 
     public int getMaxActiveWritableDatasets() {
         return accessor.getInt(Option.STORAGE_MAX_ACTIVE_WRITABLE_DATASETS);
+    }
+
+    public String getCompressionScheme() {
+        return accessor.getString(Option.STORAGE_COMPRESSION_BLOCK);
     }
 
     protected int getMetadataDatasets() {
