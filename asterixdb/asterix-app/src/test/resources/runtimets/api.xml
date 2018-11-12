@@ -118,5 +118,10 @@
         <output-dir compare="Text">feed-stats</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="net-diagnostics">
+        <output-dir compare="Text">net-diagnostics</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

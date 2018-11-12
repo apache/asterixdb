@@ -80,8 +80,8 @@ public class NetworkOutputChannel implements IFrameWriter {
                         InetSocketAddress remoteAddress = ccb.getRemoteAddress();
                         String nameBefore = Thread.currentThread().getName();
                         try {
-                            Thread.currentThread()
-                                    .setName(nameBefore + ":SendingTo(" + Objects.toString(remoteAddress) + ")");
+                            Thread.currentThread().setName(
+                                    nameBefore + ":SendingTo(" + Objects.toString(remoteAddress) + ") over " + ccb);
                             wait();
                         } finally {
                             Thread.currentThread().setName(nameBefore);

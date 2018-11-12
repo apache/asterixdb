@@ -37,11 +37,13 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JSONUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String INDENT = "\t";
 
@@ -275,5 +277,13 @@ public class JSONUtil {
 
     public static void put(ObjectNode o, String name, List<String> elements) {
         elements.forEach(o.putArray(name)::add);
+    }
+
+    public static ObjectNode createObject() {
+        return OBJECT_MAPPER.createObjectNode();
+    }
+
+    public static ArrayNode createArray() {
+        return OBJECT_MAPPER.createArrayNode();
     }
 }

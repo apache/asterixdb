@@ -104,6 +104,10 @@ public class NetworkManager implements IChannelConnectionFactory {
         return mConn.openChannel();
     }
 
+    public MuxDemux getMuxDemux() {
+        return md;
+    }
+
     private class ChannelOpenListener implements IChannelOpenListener {
         @Override
         public void channelOpened(ChannelControlBlock channel) {

@@ -28,6 +28,11 @@ import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.net.protocols.tcp.ITCPConnectionListener;
 import org.apache.hyracks.net.protocols.tcp.TCPConnection;
 import org.apache.hyracks.net.protocols.tcp.TCPEndpoint;
+import org.apache.hyracks.util.JSONUtil;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Multiplexed Connection Manager.
@@ -43,7 +48,8 @@ public class MuxDemux {
 
     private final int maxConnectionAttempts;
 
-    private final Map<InetSocketAddress, MultiplexedConnection> connectionMap;
+    private final Map<InetSocketAddress, MultiplexedConnection> outgoingConnectionMap;
+    private final Map<InetSocketAddress, MultiplexedConnection> incomingConnectionMap;
 
     private final TCPEndpoint tcpEndpoint;
 
@@ -69,13 +75,14 @@ public class MuxDemux {
         this.channelOpenListener = listener;
         this.maxConnectionAttempts = maxConnectionAttempts;
         this.channelInterfaceFatory = channelInterfaceFatory;
-        connectionMap = new HashMap<>();
+        outgoingConnectionMap = new HashMap<>();
+        incomingConnectionMap = new HashMap<>();
         this.tcpEndpoint = new TCPEndpoint(new ITCPConnectionListener() {
             @Override
             public void connectionEstablished(TCPConnection connection) {
                 MultiplexedConnection mConn;
                 synchronized (MuxDemux.this) {
-                    mConn = connectionMap.get(connection.getRemoteAddress());
+                    mConn = outgoingConnectionMap.get(connection.getRemoteAddress());
                 }
                 assert mConn != null;
                 mConn.setTCPConnection(connection);
@@ -89,17 +96,18 @@ public class MuxDemux {
                 mConn.setTCPConnection(connection);
                 connection.setEventListener(mConn);
                 connection.setAttachment(mConn);
+                incomingConnectionMap.put(connection.getRemoteAddress(), mConn);
             }
 
             @Override
             public void connectionFailure(InetSocketAddress remoteAddress, IOException error) {
                 MultiplexedConnection mConn;
                 synchronized (MuxDemux.this) {
-                    mConn = connectionMap.get(remoteAddress);
+                    mConn = outgoingConnectionMap.get(remoteAddress);
                     assert mConn != null;
                     int nConnectionAttempts = mConn.getConnectionAttempts();
                     if (nConnectionAttempts > MuxDemux.this.maxConnectionAttempts) {
-                        connectionMap.remove(remoteAddress);
+                        outgoingConnectionMap.remove(remoteAddress);
                         mConn.setConnectionFailure(new IOException(remoteAddress.toString() + ": " + error, error));
                     } else {
                         mConn.setConnectionAttempts(nConnectionAttempts + 1);
@@ -112,7 +120,9 @@ public class MuxDemux {
             public void connectionClosed(TCPConnection connection) {
                 synchronized (MuxDemux.this) {
                     if (connection.getType() == TCPConnection.ConnectionType.OUTGOING) {
-                        connectionMap.remove(connection.getRemoteAddress());
+                        outgoingConnectionMap.remove(connection.getRemoteAddress());
+                    } else if (connection.getType() == TCPConnection.ConnectionType.INCOMING) {
+                        incomingConnectionMap.remove(connection.getRemoteAddress());
                     }
                 }
             }
@@ -144,10 +154,10 @@ public class MuxDemux {
     public MultiplexedConnection connect(InetSocketAddress remoteAddress) throws InterruptedException, NetException {
         MultiplexedConnection mConn;
         synchronized (this) {
-            mConn = connectionMap.get(remoteAddress);
+            mConn = outgoingConnectionMap.get(remoteAddress);
             if (mConn == null) {
                 mConn = new MultiplexedConnection(this);
-                connectionMap.put(remoteAddress, mConn);
+                outgoingConnectionMap.put(remoteAddress, mConn);
                 tcpEndpoint.initiateConnection(remoteAddress);
             }
         }
@@ -185,5 +195,21 @@ public class MuxDemux {
      */
     public IChannelInterfaceFactory getChannelInterfaceFactory() {
         return channelInterfaceFatory;
+    }
+
+    public synchronized JsonNode getState() {
+        final ObjectNode state = JSONUtil.createObject();
+        state.put("localAddress", tcpEndpoint.getLocalAddress().toString());
+        final ArrayNode outgoingConnections = JSONUtil.createArray();
+        state.set("outgoingConnections", outgoingConnections);
+        for (MultiplexedConnection connection : outgoingConnectionMap.values()) {
+            connection.getState().ifPresent(outgoingConnections::add);
+        }
+        final ArrayNode incomingConnections = JSONUtil.createArray();
+        state.set("incomingConnections", incomingConnections);
+        for (MultiplexedConnection connection : incomingConnectionMap.values()) {
+            connection.getState().ifPresent(incomingConnections::add);
+        }
+        return state;
     }
 }

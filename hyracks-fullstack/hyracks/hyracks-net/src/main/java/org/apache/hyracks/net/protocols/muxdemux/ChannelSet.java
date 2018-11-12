@@ -24,8 +24,11 @@ import java.util.BitSet;
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.comm.MuxDemuxCommand;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.hyracks.util.JSONUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 public class ChannelSet {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -242,5 +245,15 @@ public class ChannelSet {
 
     public MultiplexedConnection getMultiplexedConnection() {
         return mConn;
+    }
+
+    public synchronized ArrayNode getState() {
+        final ArrayNode state = JSONUtil.createArray();
+        for (ChannelControlBlock ccb : ccbArray) {
+            if (ccb != null) {
+                state.add(ccb.getState());
+            }
+        }
+        return state;
     }
 }

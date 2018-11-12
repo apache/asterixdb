@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.BitSet;
+import java.util.Optional;
 
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
@@ -32,9 +33,14 @@ import org.apache.hyracks.api.comm.MuxDemuxCommand;
 import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.net.protocols.tcp.ITCPConnectionEventListener;
 import org.apache.hyracks.net.protocols.tcp.TCPConnection;
+import org.apache.hyracks.util.JSONUtil;
 import org.apache.hyracks.util.annotations.ThreadSafetyGuaranteedBy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * A {@link MultiplexedConnection} can be used by clients to create multiple "channels"
@@ -441,5 +447,16 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
     public InetSocketAddress getRemoteAddress() {
         return tcpConnection == null ? null : tcpConnection.getRemoteAddress();
+    }
+
+    public synchronized Optional<JsonNode> getState() {
+        if (tcpConnection == null) {
+            return Optional.empty();
+        }
+        final ObjectNode state = JSONUtil.createObject();
+        state.put("remoteAddress", getRemoteAddress().toString());
+        final ArrayNode channels = cSet.getState();
+        state.set("channels", channels);
+        return Optional.of(state);
     }
 }

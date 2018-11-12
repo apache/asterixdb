@@ -29,6 +29,10 @@ import org.apache.hyracks.api.comm.IChannelReadInterface;
 import org.apache.hyracks.api.comm.IChannelWriteInterface;
 import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection.WriterState;
+import org.apache.hyracks.util.JSONUtil;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Handle to a channel that represents a logical full-duplex communication end-point.
@@ -167,5 +171,18 @@ public class ChannelControlBlock implements IChannelControlBlock {
 
     public InetSocketAddress getRemoteAddress() {
         return cSet.getMultiplexedConnection().getRemoteAddress();
+    }
+
+    public JsonNode getState() {
+        final ObjectNode state = JSONUtil.createObject();
+        state.put("id", channelId);
+        state.put("localClose", localClose.get());
+        state.put("localCloseAck", localCloseAck.get());
+        state.put("remoteClose", remoteClose.get());
+        state.put("remoteCloseAck", remoteCloseAck.get());
+        state.put("readCredits", ri.getCredits());
+        state.put("writeCredits", wi.getCredits());
+        state.put("completelyClosed", completelyClosed());
+        return state;
     }
 }
