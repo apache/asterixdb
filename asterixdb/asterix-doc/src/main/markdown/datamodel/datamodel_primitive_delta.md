@@ -114,7 +114,7 @@ The total length of the byte sequence can be up to 2,147,483,648.
         { "v1": line("10.1234,1.11 0.102,-11.22"), "v2": line("0.1234,-1.0E-10 0.105,-1.02") }
 
 
-### <a id="PrimitiveTypesRectangle">Rectangle</a>###
+### <a id="PrimitiveTypesRectangle">Rectangle</a> ###
 `rectangle` consists of two points that represent the _*bottom left*_ and _*upper right*_ corners of a rectangle.
 
  * Example:

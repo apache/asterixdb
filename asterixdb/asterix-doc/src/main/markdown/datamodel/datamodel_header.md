@@ -39,7 +39,7 @@
     * [Duration/Year_month_duration/Day_time_duration](#PrimitiveTypesDuration)
     * [Interval](#PrimitiveTypesInterval)
     * [UUID](#PrimitiveTypesUUID)
-* [Incomplete Information Types] (#IncompleteInformationTypes)
+* [Incomplete Information Types](#IncompleteInformationTypes)
     * [Null](#IncompleteInformationTypesNull)
     * [Missing](#IncompleteInformationTypesMissing)
 * [Derived Types](#DerivedTypes)

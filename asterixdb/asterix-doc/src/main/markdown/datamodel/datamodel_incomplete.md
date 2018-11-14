@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 
-## <a id="IncompleteInformationTypes">Incomplete Information Types</a>##
+## <a id="IncompleteInformationTypes">Incomplete Information Types</a> ##
 
 ### <a id="IncompleteInformationTypesNull">Null</a> ###
 `null` is a special value that is often used to represent an unknown value.
