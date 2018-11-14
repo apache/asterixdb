@@ -19,11 +19,10 @@
 
 ## <a id="AggregateFunctions">Aggregate Functions (Array Functions) </a> ##
 
-This section contains detailed descriptions of each SQL++ aggregate function (i.e., array function).
-Note that as described in the SQL++ query reference documentation, standard
-SQL aggregate functions (e.g., `MIN`, `MAX`, `SUM`, `COUNT`, and `AVG`)
-are not real functions in SQL++ but just syntactic sugars over corresponding
-SQL++ builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
+This section contains detailed descriptions of each aggregate function (i.e., array function) in the query language.
+Note that standard SQL aggregate functions (e.g., `MIN`, `MAX`, `SUM`, `COUNT`, and `AVG`)
+are not real functions in the query language, but just syntactic sugars over corresponding
+builtin aggregate functions (e.g., `ARRAY_MIN`, `ARRAY_MAX`,
 `ARRAY_SUM`, `ARRAY_COUNT`, and `ARRAY_AVG`).
 
 ### array_count ###
