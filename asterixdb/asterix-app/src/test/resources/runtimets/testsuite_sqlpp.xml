@@ -9984,6 +9984,11 @@
         <output-dir compare="Text">http_feed</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="feeds">
+      <compilation-unit name="http_feed_json">
+        <output-dir compare="Text">http_feed_json</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="meta">
     <test-case FilePath="meta">

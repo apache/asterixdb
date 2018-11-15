@@ -27,7 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.input.record.GenericRecord;
+import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -49,7 +49,7 @@ public class HttpServerRecordReader implements IRecordReader<char[]> {
     private static final String DEFAULT_ENTRY_POINT = "/";
     private static final int DEFAULT_QUEUE_SIZE = 128;
     private LinkedBlockingQueue<String> inputQ;
-    private GenericRecord<char[]> record;
+    private CharArrayRecord record;
     private boolean closed = false;
     private WebManager webManager;
     private HttpServer webServer;
@@ -57,7 +57,7 @@ public class HttpServerRecordReader implements IRecordReader<char[]> {
     public HttpServerRecordReader(int port, String entryPoint, int queueSize, HttpServerConfig httpServerConfig)
             throws Exception {
         this.inputQ = new LinkedBlockingQueue<>(queueSize > 0 ? queueSize : DEFAULT_QUEUE_SIZE);
-        this.record = new GenericRecord<>();
+        this.record = new CharArrayRecord(0);
         webManager = new WebManager();
         webServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), port, httpServerConfig);
         webServer.addServlet(new HttpFeedServlet(webServer.ctx(),
