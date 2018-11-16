@@ -26,9 +26,9 @@ is largely backwards compatible with SQL.
 SQL++ originated from research in the FORWARD project at UC San Diego, and it has
 much in common with SQL; some differences exist due to the different data models that
 the two languages were designed to serve.
-SQL was designed in the 1970's for interacting with the flat, schema-ified world of
-relational databases, while SQL++ is much newer and targets the nested, schema-optional
-(or even schema-less) world of modern NoSQL systems.
+SQL was designed for interacting with the flat, schema-ified world of relational
+databases, while SQL++ generalizes SQL to also handle nested data formats (like JSON) and
+the schema-optional (or even schema-less) data models of modern NoSQL and BigData systems.
 
 In the context of Apache AsterixDB, the query language is intended for working with the Asterix Data Model
 ([ADM](../datamodel.html)), a data model based on a superset of JSON with an enriched and flexible type system.
