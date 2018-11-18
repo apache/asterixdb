@@ -181,13 +181,6 @@ public interface ILSMIndex extends IIndex {
     ILSMHarness getHarness();
 
     /**
-     * Cleanup the files of the failed operation
-     *
-     * @param operation
-     */
-    void cleanUpFilesForFailedOperation(ILSMIOOperation operation);
-
-    /**
      * @return the absolute path of the index
      */
     String getIndexIdentifier();

@@ -860,25 +860,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     }
 
     @Override
-    public void cleanUpFilesForFailedOperation(ILSMIOOperation operation) {
-        LSMComponentFileReferences componentFiles = operation.getComponentFiles();
-        if (componentFiles == null) {
-            return;
-        }
-        FileReference[] files = componentFiles.getFileReferences();
-        for (FileReference file : files) {
-            try {
-                if (file != null) {
-                    diskBufferCache.closeFileIfOpen(file);
-                    diskBufferCache.deleteFile(file);
-                }
-            } catch (Throwable th) { // NOSONAR Must catch all failures
-                operation.getFailure().addSuppressed(th);
-            }
-        }
-    }
-
-    @Override
     public String getIndexIdentifier() {
         return fileManager.getBaseDir().getAbsolutePath();
     }

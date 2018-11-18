@@ -25,7 +25,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
-import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 
 public interface ILSMIOOperation extends Callable<LSMIOOperationStatus>, IPageWriteFailureCallback {
@@ -88,9 +88,12 @@ public interface ILSMIOOperation extends Callable<LSMIOOperationStatus>, IPageWr
     ILSMIndexAccessor getAccessor();
 
     /**
-     * @return the component files produced by this operation
+     * clean up left over files in case of an exception during execution
+     *
+     * @param bufferCache
+     *            a buffercache that manages the files
      */
-    LSMComponentFileReferences getComponentFiles();
+    void cleanup(IBufferCache bufferCache);
 
     /**
      * @return the failure in the io operation if any, null otherwise

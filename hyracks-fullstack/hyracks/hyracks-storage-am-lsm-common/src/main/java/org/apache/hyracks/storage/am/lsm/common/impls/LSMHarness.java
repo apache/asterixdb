@@ -553,7 +553,7 @@ public class LSMHarness implements ILSMHarness {
         }
         // if the operation failed, we need to cleanup files
         if (operation.getStatus() == LSMIOOperationStatus.FAILURE) {
-            lsmIndex.cleanUpFilesForFailedOperation(operation);
+            operation.cleanup(lsmIndex.getBufferCache());
         }
     }
 

@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public class NoOpIoOperation implements ILSMIOOperation {
@@ -73,7 +74,7 @@ public class NoOpIoOperation implements ILSMIOOperation {
     }
 
     @Override
-    public LSMComponentFileReferences getComponentFiles() {
+    public void cleanup(IBufferCache bufferCache) {
         throw new UnsupportedOperationException();
     }
 

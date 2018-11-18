@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
@@ -110,8 +111,8 @@ class TracedIOOperation implements ILSMIOOperation {
     }
 
     @Override
-    public LSMComponentFileReferences getComponentFiles() {
-        return ioOp.getComponentFiles();
+    public void cleanup(IBufferCache bufferCache) {
+        ioOp.cleanup(bufferCache);
     }
 
     @Override

@@ -129,7 +129,7 @@ public class LSMIndexDiskComponentBulkLoader implements IIndexBulkLoader {
             failed = true;
             final ILSMIOOperation loadOp = opCtx.getIoOperation();
             loadOp.setFailure(th);
-            lsmIndex.cleanUpFilesForFailedOperation(loadOp);
+            loadOp.cleanup(lsmIndex.getBufferCache());
         }
     }
 }

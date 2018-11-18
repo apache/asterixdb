@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.ExceptionUtils;
@@ -30,6 +31,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
 public abstract class AbstractIoOperation implements ILSMIOOperation {
@@ -76,6 +78,27 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     public String getIndexIdentifier() {
         return indexIdentifier;
     }
+
+    @Override
+    public void cleanup(IBufferCache bufferCache) {
+        LSMComponentFileReferences componentFiles = getComponentFiles();
+        if (componentFiles == null) {
+            return;
+        }
+        FileReference[] files = componentFiles.getFileReferences();
+        for (FileReference file : files) {
+            try {
+                if (file != null) {
+                    bufferCache.closeFileIfOpen(file);
+                    bufferCache.deleteFile(file);
+                }
+            } catch (HyracksDataException hde) {
+                getFailure().addSuppressed(hde);
+            }
+        }
+    }
+
+    protected abstract LSMComponentFileReferences getComponentFiles();
 
     @Override
     public Throwable getFailure() {
