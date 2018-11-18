@@ -1779,19 +1779,7 @@ public class TestExecutor {
             InputStream resultStream = executeQueryService(
                     "select dv.DataverseName from Metadata.`Dataverse` as dv order by dv.DataverseName;",
                     getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.CLEAN_JSON);
-            String out = IOUtils.toString(resultStream, StandardCharsets.UTF_8);
-            ObjectMapper om = new ObjectMapper();
-            om.setConfig(om.getDeserializationConfig().with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT));
-            JsonNode result;
-            try {
-                result = om.readValue(out, ObjectNode.class).get("results");
-            } catch (JsonMappingException e) {
-                LOGGER.warn("error mapping response '{}' to json", out, e);
-                result = null;
-            }
-            if (result == null) {
-                return;
-            }
+            JsonNode result = extractResult(IOUtils.toString(resultStream, StandardCharsets.UTF_8));
             for (int i = 0; i < result.size(); i++) {
                 JsonNode json = result.get(i);
                 if (json != null) {
@@ -1818,6 +1806,21 @@ public class TestExecutor {
         } catch (Throwable th) {
             th.printStackTrace();
             throw th;
+        }
+    }
+
+    private JsonNode extractResult(String jsonString) throws IOException {
+        ObjectMapper om = new ObjectMapper();
+        om.setConfig(om.getDeserializationConfig().with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT));
+        try {
+            final JsonNode result = om.readValue(jsonString, ObjectNode.class).get("results");
+            if (result == null) {
+                throw new IllegalArgumentException("No field 'results' in " + jsonString);
+            }
+            return result;
+        } catch (JsonMappingException e) {
+            LOGGER.warn("error mapping response '{}' to json", jsonString, e);
+            return om.createArrayNode();
         }
     }
 
