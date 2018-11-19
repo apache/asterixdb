@@ -26,13 +26,15 @@ import java.util.Map;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.parser.TweetParser;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-public class TweetParserFactory implements IRecordDataParserFactory<String> {
+public class TweetParserFactory implements IRecordDataParserFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
-    private static final List<String> parserFormats = Collections.unmodifiableList(Arrays.asList("twitter-status"));
+    private static final List<String> parserFormats =
+            Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.FORMAT_TWEET));
     private ARecordType recordType;
 
     @Override
@@ -46,7 +48,7 @@ public class TweetParserFactory implements IRecordDataParserFactory<String> {
     }
 
     @Override
-    public IRecordDataParser<String> createRecordParser(IHyracksTaskContext ctx) {
+    public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) {
         TweetParser dataParser = new TweetParser(recordType);
         return dataParser;
     }

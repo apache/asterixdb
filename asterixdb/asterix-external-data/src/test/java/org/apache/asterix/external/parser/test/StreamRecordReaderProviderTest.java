@@ -35,7 +35,7 @@ public class StreamRecordReaderProviderTest {
     public void Test() throws AsterixException {
         List<String> recordReaderFormats =
                 Arrays.asList(ExternalDataConstants.FORMAT_LINE_SEPARATED, ExternalDataConstants.FORMAT_ADM,
-                        ExternalDataConstants.FORMAT_JSON, ExternalDataConstants.FORMAT_SEMISTRUCTURED,
+                        ExternalDataConstants.FORMAT_JSON_LOWER_CASE, ExternalDataConstants.FORMAT_SEMISTRUCTURED,
                         ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_CSV);
         Map<String, String> config = new HashMap<>();
         for (String format : recordReaderFormats) {

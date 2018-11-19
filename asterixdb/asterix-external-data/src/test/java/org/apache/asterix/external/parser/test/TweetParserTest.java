@@ -34,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.parser.TweetParser;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -64,12 +65,12 @@ public class TweetParserTest {
                 new ARecordType("TweetType", new String[] { "id", "geo" }, new IAType[] { AINT64, geoUnionType }, true);
 
         TweetParser parser = new TweetParser(tweetRecordType);
+        CharArrayRecord record = new CharArrayRecord();
 
         List<String> lines = Files.readAllLines(Paths.get(getClass().getResource("/test_tweets.txt").toURI()));
         ByteArrayOutputStream is = new ByteArrayOutputStream();
         DataOutput output = new DataOutputStream(is);
         for (int iter1 = 0; iter1 < lines.size(); iter1++) {
-            GenericRecord<String> record = new GenericRecord<>();
             record.set(lines.get(iter1));
             try {
                 parser.parse(record, output);
@@ -93,9 +94,9 @@ public class TweetParserTest {
         List<String> lines = Files.readAllLines(Paths.get(getClass().getResource("/test_tweets.txt").toURI()));
         ByteArrayOutputStream is = new ByteArrayOutputStream();
         DataOutput output = new DataOutputStream(is);
+        CharArrayRecord record = new CharArrayRecord();
         int regularCount = 0;
         for (int iter1 = 0; iter1 < lines.size(); iter1++) {
-            GenericRecord<String> record = new GenericRecord<>();
             record.set(lines.get(iter1));
             try {
                 parser.parse(record, output);

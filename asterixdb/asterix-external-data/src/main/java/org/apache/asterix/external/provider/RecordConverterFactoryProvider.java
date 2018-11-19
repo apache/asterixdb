@@ -31,7 +31,7 @@ public class RecordConverterFactoryProvider {
             throws AsterixException {
         switch (recordFormat) {
             case ExternalDataConstants.FORMAT_ADM:
-            case ExternalDataConstants.FORMAT_JSON:
+            case ExternalDataConstants.FORMAT_JSON_LOWER_CASE:
                 // converter that produces records of adm/json type
                 switch (format) {
                     case ExternalDataConstants.FORMAT_CSV:

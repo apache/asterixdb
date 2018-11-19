@@ -43,7 +43,7 @@ import org.apache.logging.log4j.Logger;
 
 import twitter4j.FilterQuery;
 
-public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> {
+public class TwitterRecordReaderFactory implements IRecordReaderFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
@@ -128,9 +128,9 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
     }
 
     @Override
-    public IRecordReader<? extends String> createRecordReader(IHyracksTaskContext ctx, int partition)
+    public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
-        IRecordReader<? extends String> recordReader;
+        IRecordReader<? extends char[]> recordReader;
         switch (configuration.get(ExternalDataConstants.KEY_READER)) {
             case ExternalDataConstants.KEY_ADAPTER_NAME_PULL_TWITTER:
                 recordReader = new TwitterPullRecordReader(TwitterUtil.getTwitterService(configuration),
@@ -161,8 +161,8 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<String> 
     }
 
     @Override
-    public Class<? extends String> getRecordClass() {
-        return String.class;
+    public Class<? extends char[]> getRecordClass() {
+        return char[].class;
     }
 
     private boolean validateConfiguration(Map<String, String> configuration) {

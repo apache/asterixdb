@@ -24,17 +24,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.input.record.GenericRecord;
+import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.TwitterUtil;
 
 import twitter4j.FilterQuery;
 import twitter4j.TwitterStream;
 
-public class TwitterPushRecordReader implements IRecordReader<String> {
+public class TwitterPushRecordReader implements IRecordReader<char[]> {
     private LinkedBlockingQueue<String> inputQ;
     private TwitterStream twitterStream;
-    private GenericRecord<String> record;
+    private CharArrayRecord record;
     private boolean closed = false;
 
     public TwitterPushRecordReader(TwitterStream twitterStream, TwitterUtil.TweetListener tweetListener,
@@ -60,7 +60,7 @@ public class TwitterPushRecordReader implements IRecordReader<String> {
     }
 
     private void init(TwitterStream twitterStream) {
-        record = new GenericRecord<>();
+        record = new CharArrayRecord();
         inputQ = new LinkedBlockingQueue<>();
         this.twitterStream = twitterStream;
     }
@@ -81,7 +81,7 @@ public class TwitterPushRecordReader implements IRecordReader<String> {
     }
 
     @Override
-    public IRawRecord<String> next() throws IOException, InterruptedException {
+    public IRawRecord<char[]> next() throws IOException, InterruptedException {
         String tweet = inputQ.poll();
         if (tweet == null) {
             return null;

@@ -153,7 +153,8 @@ public class ExternalDataConstants {
     public static final String FORMAT_HIVE = "hive";
     public static final String FORMAT_BINARY = "binary";
     public static final String FORMAT_ADM = "adm";
-    public static final String FORMAT_JSON = "json";
+    public static final String FORMAT_JSON_LOWER_CASE = "json";
+    public static final String FORMAT_JSON_UPPER_CASE = "JSON";
     public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
     public static final String FORMAT_TWEET = "twitter-status";
     public static final String FORMAT_RSS = "rss";

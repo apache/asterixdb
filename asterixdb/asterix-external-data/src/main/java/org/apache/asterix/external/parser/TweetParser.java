@@ -47,7 +47,13 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class TweetParser extends AbstractDataParser implements IRecordDataParser<String> {
+/**
+ * This class was introduced to parse Twitter data. As Tweets are JSON formatted records, we can use the JSON parser to
+ * to parse them instead of having this dedicated parser. In the future, we could either deprecate this class, or add
+ * some Tweet specific parsing processes into this class.
+ */
+
+public class TweetParser extends AbstractDataParser implements IRecordDataParser<char[]> {
     private final IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool =
             new ListObjectPool<>(new RecordBuilderFactory());
     private final IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool =
@@ -252,12 +258,12 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
     }
 
     @Override
-    public void parse(IRawRecord<? extends String> record, DataOutput out) throws HyracksDataException {
+    public void parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
         try {
             //TODO get rid of this temporary json
             resetPools();
             ObjectMapper om = new ObjectMapper();
-            writeRecord(om.readTree(record.get()), out, recordType);
+            writeRecord(om.readTree(record.getBytes()), out, recordType);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

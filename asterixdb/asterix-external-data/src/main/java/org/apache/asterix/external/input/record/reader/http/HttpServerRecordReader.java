@@ -57,7 +57,7 @@ public class HttpServerRecordReader implements IRecordReader<char[]> {
     public HttpServerRecordReader(int port, String entryPoint, int queueSize, HttpServerConfig httpServerConfig)
             throws Exception {
         this.inputQ = new LinkedBlockingQueue<>(queueSize > 0 ? queueSize : DEFAULT_QUEUE_SIZE);
-        this.record = new CharArrayRecord(0);
+        this.record = new CharArrayRecord();
         webManager = new WebManager();
         webServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), port, httpServerConfig);
         webServer.addServlet(new HttpFeedServlet(webServer.ctx(),
@@ -77,7 +77,7 @@ public class HttpServerRecordReader implements IRecordReader<char[]> {
         if (srecord == null) {
             return null;
         }
-        record.set(srecord.toCharArray());
+        record.set(srecord);
         return record;
     }
 

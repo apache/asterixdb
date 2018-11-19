@@ -128,4 +128,10 @@ public class CharArrayRecord implements IRawRecord<char[]> {
         builder.getChars(0, builder.length(), value, 0);
         this.size = builder.length();
     }
+
+    public void set(String strValue) throws IOException {
+        ensureCapacity(strValue.length());
+        strValue.getChars(0, strValue.length(), value, 0);
+        this.size = strValue.length();
+    }
 }

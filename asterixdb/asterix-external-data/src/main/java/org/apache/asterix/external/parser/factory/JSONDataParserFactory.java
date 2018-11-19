@@ -27,6 +27,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.parser.JSONDataParser;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -41,7 +42,8 @@ import com.fasterxml.jackson.core.JsonParser;
 public class JSONDataParserFactory extends AbstractRecordStreamParserFactory<char[]> {
 
     private static final long serialVersionUID = 1L;
-    private static final List<String> PARSER_FORMAT = Collections.unmodifiableList(Arrays.asList("json"));
+    private static final List<String> PARSER_FORMAT = Collections.unmodifiableList(
+            Arrays.asList(ExternalDataConstants.FORMAT_JSON_LOWER_CASE, ExternalDataConstants.FORMAT_JSON_UPPER_CASE));
     private static final List<ATypeTag> UNSUPPORTED_TYPES = Collections
             .unmodifiableList(Arrays.asList(ATypeTag.MULTISET, ATypeTag.POINT3D, ATypeTag.CIRCLE, ATypeTag.RECTANGLE,
                     ATypeTag.INTERVAL, ATypeTag.DAYTIMEDURATION, ATypeTag.DURATION, ATypeTag.BINARY));
