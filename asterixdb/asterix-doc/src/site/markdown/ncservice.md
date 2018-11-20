@@ -345,7 +345,9 @@ The following parameters are configured under the "[common]" section.
 | common  | compiler.joinmemory                       | The memory budget (in bytes) for a join operator instance in a partition | 33554432 (32 MB) |
 | common  | compiler.parallelism                      | The degree of parallelism for query execution. Zero means to use the storage parallelism as the query execution parallelism, while other integer values dictate the number of query execution parallel partitions. The system will fall back to use the number of all available CPU cores in the cluster as the degree of parallelism if the number set by a user is too large or too small | 0 |
 | common  | compiler.sortmemory                       | The memory budget (in bytes) for a sort operator instance in a partition | 33554432 (32 MB) |
-| common  | compiler.textsearchmemory                       | The memory budget (in bytes) for an inverted-index-search operator instance in a partition | 33554432 (32 MB) |
+| common  | compiler.sort.parallel                    | Enable full parallel sort for queries | true |
+| common  | compiler.sort.samples                     | The number of samples taken from each partition to guide the sort operation when full parallel sort is enabled | 100 |
+| common  | compiler.textsearchmemory                 | The memory budget (in bytes) for an inverted-index-search operator instance in a partition | 33554432 (32 MB) |
 | common  | log.level                                 | The logging level for master and slave processes | WARNING |
 | common  | max.wait.active.cluster                   | The max pending time (in seconds) for cluster startup. After the threshold, if the cluster still is not up and running, it is considered unavailable | 60 |
 | common  | messaging.frame.count                     | Number of reusable frames for NC to NC messaging | 512 |

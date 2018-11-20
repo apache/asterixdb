@@ -192,9 +192,10 @@ the URL and path needed to locate the data in HDFS and a description of the data
 
 ### <a id="Indices">Indices</a>
 
-    IndexSpecification ::= <INDEX> Identifier IfNotExists <ON> QualifiedName
-                           "(" ( IndexField ) ( "," IndexField )* ")" ( "type" IndexType "?")?
-                           ( (<NOT>)? <ENFORCED> )?
+    IndexSpecification ::= (<INDEX> Identifier IfNotExists <ON> QualifiedName
+                           "(" ( IndexField ) ( "," IndexField )* ")" (<TYPE> IndexType)? (<ENFORCED>)?)
+                           |
+                           <PRIMARY> <INDEX> Identifier? IfNotExists <ON> QualifiedName (<TYPE> <BTREE>)?
     IndexType          ::= <BTREE> | <RTREE> | <KEYWORD> | <NGRAM> "(" IntegerLiteral ")"
 
 The CREATE INDEX statement creates a secondary index on one or more fields of a specified dataset.
@@ -216,14 +217,25 @@ field.
 
     CREATE INDEX gbAuthorIdx ON GleambookMessages(authorId) TYPE BTREE;
 
-The following example creates an open btree index called gbSendTimeIdx on the (non-predeclared) sendTime field of the GleambookMessages dataset having datetime type.
-This index can be useful for accelerating exact-match queries, range search queries, and joins involving the sendTime field.
-The index is enforced so that records that do not have the "sendTime" field or have a mismatched type on the field
+The following example creates an open btree index called gbSendTimeIdx on the (non-declared) `sendTime` field of the GleambookMessages dataset having datetime type.
+This index can be useful for accelerating exact-match queries, range search queries, and joins involving the `sendTime` field.
+The index is enforced so that records that do not have the `sendTime` field or have a mismatched type on the field
 cannot be inserted into the dataset.
 
 #### Example
 
     CREATE INDEX gbSendTimeIdx ON GleambookMessages(sendTime: datetime?) TYPE BTREE ENFORCED;
+
+The following example creates an open btree index called gbReadTimeIdx on the (non-declared) `readTime`
+field of the GleambookMessages dataset having datetime type.
+This index can be useful for accelerating exact-match queries, range search queries,
+and joins involving the `readTime` field.
+The index is not enforced so that records that do not have the `readTime` field or have a mismatched type on the field
+can still be inserted into the dataset.
+
+#### Example
+
+    CREATE INDEX gbReadTimeIdx ON GleambookMessages(readTime: datetime?);
 
 The following example creates a btree index called crpUserScrNameIdx on screenName,
 a nested field residing within a object-valued user field in the ChirpMessages dataset.
@@ -252,3 +264,32 @@ The following example creates a keyword index called fbMessageIdx on the message
 #### Example
 
     CREATE INDEX fbMessageIdx ON GleambookMessages(message) TYPE KEYWORD;
+
+The following example creates a special secondary index which holds only the primary keys.
+This index is useful for speeding up aggregation queries which involve only primary keys.
+The name of the index is optional. If the name is not specified, the system will generate
+one. When the user would like to drop this index, the metadata can be queried to find the system-generated name.
+
+#### Example
+
+    CREATE PRIMARY INDEX gb_pk_idx ON GleambookMessages;
+
+An example query that can be accelerated using the primary-key index:
+
+    SELECT COUNT(*) FROM GleambookMessages;
+
+To look up the the above primary-key index, issue the following query:
+
+    SELECT VALUE i
+    FROM Metadata.`Index` i
+    WHERE i.DataverseName = "TinySocial" AND i.DatasetName = "GleambookMessages";
+
+The query returns:
+
+    [ { "DataverseName": "TinySocial", "DatasetName": "GleambookMessages", "IndexName": "GleambookMessages", "IndexStructure": "BTREE", "SearchKey": [ [ "messageId" ] ], "IsPrimary": true, "Timestamp": "Wed Nov 07 17:25:11 PST 2018", "PendingOp": 0 }
+    , { "DataverseName": "TinySocial", "DatasetName": "GleambookMessages", "IndexName": "gb_pk_idx", "IndexStructure": "BTREE", "SearchKey": [  ], "IsPrimary": false, "Timestamp": "Wed Nov 07 17:25:11 PST 2018", "PendingOp": 0 }
+     ]
+
+Remember that `CREATE PRIMARY INDEX` creates a secondary index.
+That is the reason the `IsPrimary` field is false.
+The primary-key index can be identified by the fact that the `SearchKey` field is empty since it only contains primary key fields.
