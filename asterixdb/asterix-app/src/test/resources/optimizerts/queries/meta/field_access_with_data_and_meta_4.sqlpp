@@ -38,4 +38,4 @@ create type DataType as open {
 create dataset ds(DataType) with meta(MetaType) primary key meta().id;
 create primary index on ds;
 
-select count(id) from ds;
+select max(id) from ds;

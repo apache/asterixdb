@@ -17,25 +17,16 @@
  * under the License.
  */
 
-/*
- * Description: tests that meta().id isn't resolved as PK when the primary key happens to have the same name as the meta.
- *              Data scan happens.
- */
+drop  dataverse Twitter if exists;
+create  dataverse Twitter;
 
-drop dataverse test if exists;
-create dataverse test;
-use test;
+use Twitter;
 
-create type MetaType as open {
-  id:int32
+
+create type TweetType as{
+  id : int,
+  sid : int,
+  message : string
 };
 
-create type DataType as open {
-  id:int32,
-  text: string
-};
-
-create dataset ds(DataType) with meta(MetaType) primary key id;
-create primary index on ds;
-
-select max(meta().id) from ds;
+create  dataset Tweet(TweetType) primary key id;

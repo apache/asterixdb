@@ -60,8 +60,8 @@
                                                                         -- AGGREGATE  |UNPARTITIONED|
                                                                           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                                                                             -- AGGREGATE  |PARTITIONED|
-                                                                              -- STREAM_PROJECT  |PARTITIONED|
-                                                                                -- STREAM_SELECT  |PARTITIONED|
+                                                                              -- STREAM_SELECT  |PARTITIONED|
+                                                                                -- STREAM_PROJECT  |PARTITIONED|
                                                                                   -- ASSIGN  |PARTITIONED|
                                                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -91,8 +91,8 @@
                                                                                         -- AGGREGATE  |UNPARTITIONED|
                                                                                           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                                                                                             -- AGGREGATE  |PARTITIONED|
-                                                                                              -- STREAM_PROJECT  |PARTITIONED|
-                                                                                                -- STREAM_SELECT  |PARTITIONED|
+                                                                                              -- STREAM_SELECT  |PARTITIONED|
+                                                                                                -- STREAM_PROJECT  |PARTITIONED|
                                                                                                   -- ASSIGN  |PARTITIONED|
                                                                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -139,8 +139,8 @@
                                                                                             -- AGGREGATE  |UNPARTITIONED|
                                                                                               -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                                                                                                 -- AGGREGATE  |PARTITIONED|
-                                                                                                  -- STREAM_PROJECT  |PARTITIONED|
-                                                                                                    -- STREAM_SELECT  |PARTITIONED|
+                                                                                                  -- STREAM_SELECT  |PARTITIONED|
+                                                                                                    -- STREAM_PROJECT  |PARTITIONED|
                                                                                                       -- ASSIGN  |PARTITIONED|
                                                                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -168,8 +168,8 @@
                                                                                                               -- AGGREGATE  |UNPARTITIONED|
                                                                                                                 -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                                                                                                                   -- AGGREGATE  |PARTITIONED|
-                                                                                                                    -- STREAM_PROJECT  |PARTITIONED|
-                                                                                                                      -- STREAM_SELECT  |PARTITIONED|
+                                                                                                                    -- STREAM_SELECT  |PARTITIONED|
+                                                                                                                      -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                         -- ASSIGN  |PARTITIONED|
                                                                                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

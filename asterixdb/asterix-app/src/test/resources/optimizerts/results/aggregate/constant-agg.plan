@@ -5,9 +5,7 @@
         -- AGGREGATE  |UNPARTITIONED|
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
             -- AGGREGATE  |PARTITIONED|
-              -- ASSIGN  |PARTITIONED|
-                -- STREAM_PROJECT  |PARTITIONED|
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                -- DATASOURCE_SCAN  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN  |PARTITIONED|
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

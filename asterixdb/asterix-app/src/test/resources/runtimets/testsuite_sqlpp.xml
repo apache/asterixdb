@@ -385,6 +385,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="count_dataset">
+        <output-dir compare="Text">count_dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="count_empty_01">
         <output-dir compare="Text">count_empty_01</output-dir>
       </compilation-unit>
@@ -1299,6 +1304,11 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="count_01">
         <output-dir compare="Text">count_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="count_dataset">
+        <output-dir compare="Text">count_dataset</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">

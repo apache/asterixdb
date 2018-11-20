@@ -36,6 +36,7 @@ public class TypeHelper {
         switch (t.getTypeTag()) {
             case MISSING:
             case NULL:
+            case ANY:
                 return true;
             case UNION:
                 return ((AUnionType) t).isUnknownableType();
