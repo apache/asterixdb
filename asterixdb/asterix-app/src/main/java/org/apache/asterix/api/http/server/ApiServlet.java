@@ -136,7 +136,7 @@ public class ApiServlet extends AbstractServlet {
             IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
             IResultSet resultSet = ServletUtil.getResultSet(hcc, appCtx, ctx);
             IParser parser = parserFactory.createParser(query);
-            List<Statement> aqlStatements = parser.parse();
+            List<Statement> statements = parser.parse();
             SessionConfig sessionConfig = new SessionConfig(format, true, isSet(executeQuery), true, planFormat);
             sessionConfig.set(SessionConfig.FORMAT_HTML, true);
             sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, csvAndHeader);
@@ -145,7 +145,7 @@ public class ApiServlet extends AbstractServlet {
                     isSet(printLogicalPlanParam), isSet(printOptimizedLogicalPlanParam), isSet(printJob));
             SessionOutput sessionOutput = new SessionOutput(sessionConfig, out);
             MetadataManager.INSTANCE.init();
-            IStatementExecutor translator = statementExectorFactory.create(appCtx, aqlStatements, sessionOutput,
+            IStatementExecutor translator = statementExectorFactory.create(appCtx, statements, sessionOutput,
                     compilationProvider, componentProvider);
             double duration;
             long startTime = System.currentTimeMillis();

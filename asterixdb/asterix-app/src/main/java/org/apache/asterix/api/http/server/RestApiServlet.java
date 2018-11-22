@@ -190,10 +190,10 @@ public abstract class RestApiServlet extends AbstractServlet {
             response.setStatus(HttpResponseStatus.OK);
             IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
             IParser parser = parserFactory.createParser(query);
-            List<Statement> aqlStatements = parser.parse();
-            validate(aqlStatements);
+            List<Statement> statements = parser.parse();
+            validate(statements);
             MetadataManager.INSTANCE.init();
-            IStatementExecutor translator = statementExecutorFactory.create(appCtx, aqlStatements, sessionOutput,
+            IStatementExecutor translator = statementExecutorFactory.create(appCtx, statements, sessionOutput,
                     compilationProvider, componentProvider);
             final IResultSet resultSet = ServletUtil.getResultSet(hcc, appCtx, ctx);
             final IRequestParameters requestParameters = new RequestParameters(resultSet,
@@ -222,8 +222,8 @@ public abstract class RestApiServlet extends AbstractServlet {
         }
     }
 
-    private void validate(List<Statement> aqlStatements) throws AsterixException {
-        for (Statement st : aqlStatements) {
+    private void validate(List<Statement> statements) throws AsterixException {
+        for (Statement st : statements) {
             if ((st.getCategory() & getAllowedCategories()) == 0) {
                 throw new AsterixException(String.format(getErrorMessage(), st.getKind()));
             }

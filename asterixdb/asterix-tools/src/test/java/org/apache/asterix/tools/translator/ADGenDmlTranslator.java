@@ -36,13 +36,13 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 public class ADGenDmlTranslator extends AbstractLangTranslator {
 
     private final MetadataTransactionContext mdTxnCtx;
-    private final List<Statement> aqlStatements;
+    private final List<Statement> statements;
     private Map<TypeSignature, IAType> types;
     private Map<TypeSignature, TypeDataGen> typeDataGenMap;
 
-    public ADGenDmlTranslator(MetadataTransactionContext mdTxnCtx, List<Statement> aqlStatements) {
+    public ADGenDmlTranslator(MetadataTransactionContext mdTxnCtx, List<Statement> statements) {
         this.mdTxnCtx = mdTxnCtx;
-        this.aqlStatements = aqlStatements;
+        this.statements = statements;
     }
 
     public void translate() throws AlgebricksException {
@@ -50,7 +50,7 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
         types = new HashMap<>();
         typeDataGenMap = new HashMap<>();
 
-        for (Statement stmt : aqlStatements) {
+        for (Statement stmt : statements) {
             if (stmt.getKind() == Statement.Kind.TYPE_DECL) {
                 TypeDecl td = (TypeDecl) stmt;
                 String typeDataverse =
@@ -70,7 +70,7 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
     }
 
     private String getDefaultDataverse() {
-        for (Statement stmt : aqlStatements) {
+        for (Statement stmt : statements) {
             if (stmt.getKind() == Statement.Kind.DATAVERSE_DECL) {
                 return ((DataverseDecl) stmt).getDataverseName().getValue();
             }
