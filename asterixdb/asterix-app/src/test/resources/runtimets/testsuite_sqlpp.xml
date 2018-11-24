@@ -6258,13 +6258,28 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="cosh">
+        <output-dir compare="Text">cosh</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="sin">
         <output-dir compare="Text">sin</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="sinh">
+        <output-dir compare="Text">sinh</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="tan">
         <output-dir compare="Text">tan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
+      <compilation-unit name="tanh">
+        <output-dir compare="Text">tanh</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">

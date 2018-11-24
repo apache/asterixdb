@@ -198,6 +198,30 @@
         { "v1": 0.5403023058681398, "v2": -0.4161468365471424, "v3": 1.0, "v4": 0.8775825618903728, "v5": 0.562379076290703 }
 
 
+### cosh ###
+ * Syntax:
+
+        cosh(numeric_value)
+
+ * Computes the hyperbolic cosine value of the argument.
+ * Arguments:
+    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value.
+ * Return Value:
+    * the `double` hyperbolic cosine value for the argument,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-numeric input value will cause a type error.
+
+ * Example:
+
+        { "v1": cosh(1), "v2": cosh(2), "v3": cosh(0), "v4": cosh(float("0.5")), "v5": cosh(double("8")) };
+
+
+ * The expected result is:
+
+        { "v1": 1.5430806348152437, "v2": 3.7621956910836314, "v3": 1.0, "v4": 1.1276259652063807, "v5": 1490.479161252178 }
+
+
 ### degrees ###
  * Syntax:
 
@@ -487,6 +511,30 @@
         { "v1": 0.8414709848078965, "v2": 0.9092974268256817, "v3": 0.0, "v4": 0.479425538604203, "v5": 0.8268795405320025 }
 
 
+### sinh ###
+ * Syntax:
+
+        sinh(numeric_value)
+
+ * Computes the hyperbolic sine value of the argument.
+ * Arguments:
+    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value.
+ * Return Value:
+    * the `double` hyperbolic sine value for the argument,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-numeric input value will cause a type error.
+
+ * Example:
+
+        { "v1": sinh(1), "v2": sinh(2), "v3": sinh(0), "v4": sinh(float("0.5")), "v5": sinh(double("8")) };
+
+
+ * The expected result is:
+
+        { "v1": 1.1752011936438014, "v2": 3.626860407847019, "v3": 0.0, "v4": 0.5210953054937474, "v5": 1490.4788257895502 }
+
+
 ### sqrt ###
  * Syntax:
 
@@ -533,6 +581,30 @@
  * The expected result is:
 
         { "v1": 1.5574077246549023, "v2": -2.185039863261519, "v3": 0.0, "v4": 0.5463024898437905, "v5": 1.4703241557027185 }
+
+
+### tanh ###
+ * Syntax:
+
+        tanh(numeric_value)
+
+ * Computes the hyperbolic tangent value of the argument.
+ * Arguments:
+    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint`/`float`/`double` value.
+ * Return Value:
+    * the `double` hyperbolic tangent value for the argument,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-numeric input value will cause a type error.
+
+ * Example:
+
+        { "v1": tanh(1), "v2": tanh(2), "v3": tanh(0), "v4": tanh(float("0.5")), "v5": tanh(double("8")) };
+
+
+ * The expected result is:
+
+        { "v1": 0.7615941559557649, "v2": 0.964027580075817, "v3": 0.0, "v4": 0.4621171572600098, "v5": 0.999999774929676 }
 
 
 ### trunc ###
