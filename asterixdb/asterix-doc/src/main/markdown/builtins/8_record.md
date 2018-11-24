@@ -356,10 +356,10 @@
           "location": {"city": "Irvine", "state": "CA"}
         }
 
-### object_wrap ###
+### object_unwrap ###
  * Syntax:
 
-        object_wrap(input_object)
+        object_unwrap(input_object)
 
  * Returns the value of the single name-value pair that appears in `input_object`.
  * Arguments:
@@ -372,7 +372,7 @@
 
  * Example:
 
-        object_wrap(
+        object_unwrap(
                      {
                        "id": 1
                      }
