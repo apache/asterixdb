@@ -1727,8 +1727,6 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="hints">
-  </test-group>
   <test-group name="big-object">
     <test-case FilePath="big-object">
       <compilation-unit name="big_object_load">
@@ -1773,10 +1771,6 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="distinct">
-  </test-group>
-  <test-group name="tinysocial">
-  </test-group>
   <test-group name="types">
     <test-case FilePath="types">
       <compilation-unit name="domain_boundaries">
@@ -1799,8 +1793,6 @@
         <output-dir compare="Clean-JSON">issue-ASTERIXDB-1165</output-dir>
       </compilation-unit>
     </test-case>
-  </test-group>
-  <test-group name="csv">
   </test-group>
   <test-group name="binary">
     <test-case FilePath="binary">
