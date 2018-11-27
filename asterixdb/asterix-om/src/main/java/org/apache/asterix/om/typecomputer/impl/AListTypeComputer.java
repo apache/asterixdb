@@ -40,25 +40,36 @@ public class AListTypeComputer extends AbstractResultTypeComputer {
     public static final AListTypeComputer INSTANCE_APPEND = new AListTypeComputer(2, -1, false, true, false);
     public static final AListTypeComputer INSTANCE_INSERT = new AListTypeComputer(3, -1, false, true, false);
     public static final AListTypeComputer INSTANCE_REPLACE = new AListTypeComputer(3, 4, false, true, false);
+    public static final AListTypeComputer INSTANCE_SLICE = new AListTypeComputer(-1, -1, false, false, true, false);
 
     private final int minNumArgs;
     private final int maxNumArgs;
     private final boolean listIsLast;
     private final boolean makeOpen;
     private final boolean nullInNullOut;
+    private final boolean isCheckArgumentsCount;
 
+    // Maintain the old constructor
     private AListTypeComputer(int minNumArgs, int maxNumArgs, boolean listIsLast, boolean makeOpen,
             boolean nullInNullOut) {
+        this(minNumArgs, maxNumArgs, listIsLast, makeOpen, nullInNullOut, true);
+    }
+
+    // Use this constructor to skip checking the arguments count
+    private AListTypeComputer(int minNumArgs, int maxNumArgs, boolean listIsLast, boolean makeOpen,
+            boolean nullInNullOut, boolean isCheckArgumentsCount) {
         this.minNumArgs = minNumArgs;
         this.maxNumArgs = maxNumArgs;
         this.listIsLast = listIsLast;
         this.makeOpen = makeOpen;
         this.nullInNullOut = nullInNullOut;
+        this.isCheckArgumentsCount = isCheckArgumentsCount;
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        if (strippedInputTypes.length < minNumArgs || (maxNumArgs > 0 && strippedInputTypes.length > maxNumArgs)) {
+        if (isCheckArgumentsCount && (strippedInputTypes.length < minNumArgs
+                || (maxNumArgs > 0 && strippedInputTypes.length > maxNumArgs))) {
             String functionName = ((AbstractFunctionCallExpression) expr).getFunctionIdentifier().getName();
             throw new CompilationException(ErrorCode.COMPILATION_INVALID_NUM_OF_ARGS, expr.getSourceLocation(),
                     functionName);

@@ -239,6 +239,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-symdiffn", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier ARRAY_STAR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-star", 1);
+    public static final FunctionIdentifier ARRAY_SLICE_WITHOUT_END_POSITION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-slice", 2);
+    public static final FunctionIdentifier ARRAY_SLICE_WITH_END_POSITION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-slice", 3);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -1923,6 +1927,8 @@ public class BuiltinFunctions {
         addFunction(ARRAY_SYMDIFF, AListMultiListArgsTypeComputer.INSTANCE, true);
         addFunction(ARRAY_SYMDIFFN, AListMultiListArgsTypeComputer.INSTANCE, true);
         addFunction(ARRAY_STAR, OpenARecordTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_SLICE_WITH_END_POSITION, AListTypeComputer.INSTANCE_SLICE, true);
+        addFunction(ARRAY_SLICE_WITHOUT_END_POSITION, AListTypeComputer.INSTANCE_SLICE, true);
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);

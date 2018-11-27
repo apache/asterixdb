@@ -78,9 +78,11 @@ public class TypeComputerTest {
 
         // functions that check the number of args inside the type computer
         List<Mutable<ILogicalExpression>> replaceArgs = createArgs(4, mockTypeEnv);
+        List<Mutable<ILogicalExpression>> sliceArgs = createArgs(3, mockTypeEnv);
         List<Mutable<ILogicalExpression>> rangeArgs = createArgs(3, mockTypeEnv);
         HashMap<String, List<Mutable<ILogicalExpression>>> map = new HashMap<>();
         map.put("INSTANCE_REPLACE", replaceArgs);
+        map.put("INSTANCE_SLICE", sliceArgs);
         map.put("ArrayRangeTypeComputer", rangeArgs);
 
         // Several exceptional type computers.

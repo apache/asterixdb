@@ -241,7 +241,9 @@ import org.apache.asterix.runtime.evaluators.functions.ArrayRemoveDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayRepeatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayReplaceDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayReverseDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArraySliceWithEndPositionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArraySortDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArraySliceWithoutEndPositionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayStarDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArraySymDiffDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArraySymDiffnDescriptor;
@@ -498,6 +500,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.addGenerated(ArrayRangeDescriptor.FACTORY);
         fc.addGenerated(ArrayFlattenDescriptor.FACTORY);
         fc.add(ArrayReplaceDescriptor.FACTORY);
+        fc.addGenerated(ArraySliceWithEndPositionDescriptor.FACTORY);
+        fc.addGenerated(ArraySliceWithoutEndPositionDescriptor.FACTORY);
         fc.addGenerated(ArraySymDiffDescriptor.FACTORY);
         fc.addGenerated(ArraySymDiffnDescriptor.FACTORY);
         fc.addGenerated(ArrayStarDescriptor.FACTORY);

@@ -2041,6 +2041,37 @@
         <expected-error>Cannot compare non-primitive values (in line 27, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_slice/array_slice_double_argument">
+        <output-dir compare="Text">array_slice/array_slice_double_argument</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_slice/array_slice_int_argument">
+        <output-dir compare="Text">array_slice/array_slice_int_argument</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_slice/array_slice_negative_argument">
+        <output-dir compare="Text">array_slice/array_slice_negative_argument</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_slice/array_slice_missing_result">
+        <output-dir compare="Text">array_slice/array_slice_missing_result</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_slice/array_slice_null_result">
+        <output-dir compare="Text">array_slice/array_slice_null_result</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_slice/array_slice_exception_result">
+        <output-dir compare="Text">array_slice/array_slice_exception_result</output-dir>
+        <expected-error>Compilation error</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="boolean">
     <test-case FilePath="boolean">
