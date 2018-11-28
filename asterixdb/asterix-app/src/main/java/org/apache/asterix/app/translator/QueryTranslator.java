@@ -309,7 +309,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         activeDataverse = handleUseDataverseStatement(metadataProvider, stmt);
                         break;
                     case CREATE_DATAVERSE:
-                        handleCreateDataverseStatement(metadataProvider, stmt);
+                        handleCreateDataverseStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case DATASET_DECL:
                         handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -324,7 +324,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleCreateNodeGroupStatement(metadataProvider, stmt);
                         break;
                     case DATAVERSE_DROP:
-                        handleDataverseDropStatement(metadataProvider, stmt, hcc);
+                        handleDataverseDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case DATASET_DROP:
                         handleDatasetDropStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -466,7 +466,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateDataverseStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleCreateDataverseStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
         CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
         String dvName = stmtCreateDataverse.getDataverseName().getValue();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1227,7 +1228,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleDataverseDropStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         DataverseDropStatement stmtDelete = (DataverseDropStatement) stmt;
         SourceLocation sourceLoc = stmtDelete.getSourceLocation();
         String dataverseName = stmtDelete.getDataverseName().getValue();
