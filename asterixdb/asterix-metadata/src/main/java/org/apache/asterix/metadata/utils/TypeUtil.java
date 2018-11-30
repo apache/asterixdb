@@ -24,7 +24,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -51,8 +54,9 @@ public class TypeUtil {
      */
     public static Pair<ARecordType, ARecordType> createEnforcedType(ARecordType recordType, ARecordType metaType,
             List<Index> indexes) throws AlgebricksException {
-        ARecordType enforcedRecordType = recordType;
+        IAType enforcedRecordType = recordType;
         ARecordType enforcedMetaType = metaType;
+        List<String> subFieldName;
         for (Index index : indexes) {
             if (!index.isSecondaryIndex() || !index.isOverridingKeyFieldTypes()) {
                 continue;
@@ -61,21 +65,28 @@ public class TypeUtil {
                 throw new AlgebricksException("Indexing an open field is only supported on the record part");
             }
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
-                Deque<Pair<ARecordType, String>> nestedTypeStack = new ArrayDeque<>();
+                // keeps track of a record type and a field name in that record type
+                Deque<Pair<IAType, String>> nestedTypeStack = new ArrayDeque<>();
                 List<String> splits = index.getKeyFieldNames().get(i);
-                ARecordType nestedFieldType = enforcedRecordType;
+                IAType nestedFieldType = enforcedRecordType;
                 boolean openRecords = false;
                 String bridgeName = nestedFieldType.getTypeName();
                 int j;
-                // Build the stack for the enforced type
+                // enforcedRecordType must always be/stay as ARecordType
+                validateRecord(enforcedRecordType);
+                // build the stack for the enforced type, stack of a mixture of ARecord and AUnion(ARecord) types
+                // try to build up to the last record field, e.g. for a.b.c.d.e, build up to and including "d"
                 for (j = 1; j < splits.size(); j++) {
                     nestedTypeStack.push(new Pair<>(nestedFieldType, splits.get(j - 1)));
                     bridgeName = nestedFieldType.getTypeName();
-                    nestedFieldType = (ARecordType) enforcedRecordType.getSubFieldType(splits.subList(0, j));
+                    subFieldName = splits.subList(0, j);
+                    nestedFieldType = ((ARecordType) enforcedRecordType).getSubFieldType(subFieldName);
                     if (nestedFieldType == null) {
                         openRecords = true;
                         break;
                     }
+                    // nestedFieldType (i.e. nested record field) must be either ARecordType or AUnion(ARecordType)
+                    validateNestedRecord(nestedFieldType, subFieldName);
                 }
                 if (openRecords) {
                     // create the smallest record
@@ -87,19 +98,23 @@ public class TypeUtil {
                         enforcedRecordType = new ARecordType(splits.get(k), new String[] { splits.get(k + 1) },
                                 new IAType[] { AUnionType.createUnknownableType(enforcedRecordType) }, true);
                     }
-                    // Bridge the gap
-                    Pair<ARecordType, String> gapPair = nestedTypeStack.pop();
-                    ARecordType parent = gapPair.first;
+                    // bridge the gap. Update the parent type to include the new optional field, e.g. c.d.e
+                    Pair<IAType, String> gapPair = nestedTypeStack.pop();
+                    ARecordType parent = (ARecordType) TypeComputeUtils.getActualType(gapPair.first);
 
+                    // parent type must be "open" to allow inclusion of the non-declared field
                     IAType[] parentFieldTypes = ArrayUtils.addAll(parent.getFieldTypes().clone(),
                             new IAType[] { AUnionType.createUnknownableType(enforcedRecordType) });
                     enforcedRecordType = new ARecordType(bridgeName,
                             ArrayUtils.addAll(parent.getFieldNames(), enforcedRecordType.getTypeName()),
                             parentFieldTypes, true);
+                    // make nullable/missable if the original parent was nullable/missable
+                    enforcedRecordType = keepUnknown(gapPair.first, (ARecordType) enforcedRecordType);
                 } else {
-                    //Schema is closed all the way to the field
-                    //enforced fields are either null or strongly typed
-                    Map<String, IAType> recordNameTypesMap = TypeUtil.createRecordNameTypeMap(nestedFieldType);
+                    // schema is closed all the way to the field. Enforced fields are either null or strongly typed
+                    // e.g. nestedFieldType = a.b.c.d
+                    ARecordType lastNestedRecord = (ARecordType) TypeComputeUtils.getActualType(nestedFieldType);
+                    Map<String, IAType> recordNameTypesMap = TypeUtil.createRecordNameTypeMap(lastNestedRecord);
                     // if a an enforced field already exists and the type is correct
                     IAType enforcedFieldType = recordNameTypesMap.get(splits.get(splits.size() - 1));
                     if (enforcedFieldType != null && enforcedFieldType.getTypeTag() == ATypeTag.UNION
@@ -108,44 +123,49 @@ public class TypeUtil {
                     }
                     if (enforcedFieldType != null && !ATypeHierarchy.canPromote(enforcedFieldType.getTypeTag(),
                             index.getKeyFieldTypes().get(i).getTypeTag())) {
-                        throw new AlgebricksException("Cannot enforce field " + index.getKeyFieldNames().get(i)
-                                + " to have type " + index.getKeyFieldTypes().get(i));
+                        throw new AsterixException(ErrorCode.COMPILATION_ERROR,
+                                "Cannot enforce field \"" + String.join(".", index.getKeyFieldNames().get(i))
+                                        + "\" to have type " + index.getKeyFieldTypes().get(i));
                     }
                     if (enforcedFieldType == null) {
                         recordNameTypesMap.put(splits.get(splits.size() - 1),
                                 AUnionType.createUnknownableType(index.getKeyFieldTypes().get(i)));
                     }
-                    enforcedRecordType = new ARecordType(nestedFieldType.getTypeName(),
+                    enforcedRecordType = new ARecordType(lastNestedRecord.getTypeName(),
                             recordNameTypesMap.keySet().toArray(new String[recordNameTypesMap.size()]),
                             recordNameTypesMap.values().toArray(new IAType[recordNameTypesMap.size()]),
-                            nestedFieldType.isOpen());
+                            lastNestedRecord.isOpen());
+                    // make nullable/missable if the original nestedFieldType was nullable/missable
+                    enforcedRecordType = keepUnknown(nestedFieldType, (ARecordType) enforcedRecordType);
                 }
 
                 // Create the enforced type for the nested fields in the schema, from the ground up
                 if (!nestedTypeStack.isEmpty()) {
                     while (!nestedTypeStack.isEmpty()) {
-                        Pair<ARecordType, String> nestedTypePair = nestedTypeStack.pop();
-                        ARecordType nestedRecType = nestedTypePair.first;
+                        Pair<IAType, String> nestedType = nestedTypeStack.pop();
+                        ARecordType nestedRecType = (ARecordType) TypeComputeUtils.getActualType(nestedType.first);
                         IAType[] nestedRecTypeFieldTypes = nestedRecType.getFieldTypes().clone();
-                        nestedRecTypeFieldTypes[nestedRecType.getFieldIndex(nestedTypePair.second)] =
-                                enforcedRecordType;
+                        nestedRecTypeFieldTypes[nestedRecType.getFieldIndex(nestedType.second)] = enforcedRecordType;
                         enforcedRecordType = new ARecordType(nestedRecType.getTypeName() + "_enforced",
                                 nestedRecType.getFieldNames(), nestedRecTypeFieldTypes, nestedRecType.isOpen());
+                        // make nullable/missable if the original nestedRecType was nullable/missable
+                        enforcedRecordType = keepUnknown(nestedType.first, (ARecordType) enforcedRecordType);
                     }
                 }
             }
         }
-        return new Pair<>(enforcedRecordType, enforcedMetaType);
+        // the final enforcedRecordType built must be ARecordType since the original dataset rec. type can't be nullable
+        validateRecord(enforcedRecordType);
+        return new Pair<>((ARecordType) enforcedRecordType, enforcedMetaType);
     }
 
     /**
      * Creates a map from name to type for fields in the passed type
      *
-     * @param recordType
-     *            the type to be mapped
+     * @param recordType the type to be mapped
      * @return a map mapping all fields to their types
      */
-    public static Map<String, IAType> createRecordNameTypeMap(ARecordType recordType) {
+    private static Map<String, IAType> createRecordNameTypeMap(ARecordType recordType) {
         LinkedHashMap<String, IAType> recordNameTypesMap = new LinkedHashMap<>();
         for (int j = 0; j < recordType.getFieldNames().length; j++) {
             recordNameTypesMap.put(recordType.getFieldNames()[j], recordType.getFieldTypes()[j]);
@@ -153,4 +173,43 @@ public class TypeUtil {
         return recordNameTypesMap;
     }
 
+    /**
+     * Maintains the {@code updatedRecordType} as nullable/missable (?) in case it was originally nullable/missable
+     * @param originalRecordType the original record type
+     * @param updatedRecordType the original record type being enforced/modified with new non-declared fields included
+     * @return {@code updatedRecordType}
+     */
+    private static IAType keepUnknown(IAType originalRecordType, ARecordType updatedRecordType) {
+        if (originalRecordType.getTypeTag() == ATypeTag.UNION) {
+            return AUnionType.createUnknownableType(updatedRecordType, updatedRecordType.getTypeName());
+        }
+        return updatedRecordType;
+    }
+
+    /**
+     * Makes sure the dataset record type being enforced/modified stays as a pure record type
+     * @param enforcedDatasetRecordType the dataset record type enforced and modified by adding the extra fields indexed
+     */
+    private static void validateRecord(IAType enforcedDatasetRecordType) {
+        if (enforcedDatasetRecordType.getTypeTag() != ATypeTag.OBJECT) {
+            throw new IllegalStateException("The dataset type must be a record type to be able to build an index");
+        }
+    }
+
+    /**
+     * Makes sure the chain of fields accessed and leading to the indexed field are all valid record types.
+     * E.g. for CREATE INDEX idx on ds(a.b.c.d: int) validate that a, b and c are all valid record types (?).
+     * @param nestedRecordType the nested record field being accessed
+     * @param fieldName the name of the nested record field
+     * @throws AsterixException when supplying bad fields, e.g. CREATE INDEX i on ds(a.b: int, a.b.c: int) (mostly
+     * for non-declared fields)
+     */
+    private static void validateNestedRecord(IAType nestedRecordType, List<String> fieldName) throws AsterixException {
+        IAType actualType = TypeComputeUtils.getActualType(nestedRecordType);
+        if (actualType.getTypeTag() != ATypeTag.OBJECT) {
+            String fName = String.join(".", fieldName);
+            throw new AsterixException(ErrorCode.COMPILATION_ERROR,
+                    "Field accessor is not defined for \"" + fName + "\" of type " + actualType.getTypeTag());
+        }
+    }
 }

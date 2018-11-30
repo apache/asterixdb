@@ -4284,6 +4284,16 @@
           <output-dir compare="Text">word-jaccard-inline</output-dir>
         </compilation-unit>
       </test-case>
+      <test-case FilePath="nested-open-index/index-join">
+        <compilation-unit name="btree-secondary-non-enforced-equi-join">
+          <output-dir compare="Text">btree-secondary-non-enforced-equi-join</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-open-index/index-join">
+        <compilation-unit name="btree-secondary-non-enforced-equi-join-2">
+          <output-dir compare="Text">btree-secondary-non-enforced-equi-join-2</output-dir>
+        </compilation-unit>
+      </test-case>
     </test-group>
     <test-group name="nested-open-index/index-leftouterjoin">
       <test-case FilePath="nested-open-index/index-leftouterjoin">
@@ -4386,6 +4396,26 @@
       <test-case FilePath="nested-open-index/index-selection">
         <compilation-unit name="rtree-secondary-index">
           <output-dir compare="Text">rtree-secondary-index</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-open-index/index-selection">
+        <compilation-unit name="non-enforced-01">
+          <output-dir compare="Text">non-enforced-01</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-open-index/index-selection">
+        <compilation-unit name="non-enforced-02">
+          <output-dir compare="Text">non-enforced-02</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-open-index/index-selection">
+        <compilation-unit name="non-enforced-03">
+          <output-dir compare="Text">non-enforced-03</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="nested-open-index/index-selection">
+        <compilation-unit name="non-enforced-04">
+          <output-dir compare="Text">non-enforced-04</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>
