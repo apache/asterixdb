@@ -21,7 +21,6 @@ package org.apache.hyracks.examples.text.client;
 import java.io.File;
 import java.util.EnumSet;
 
-import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
@@ -63,6 +62,7 @@ import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOpera
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
 import org.apache.hyracks.examples.text.WordTupleParserFactory;
+import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 

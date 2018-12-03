@@ -23,7 +23,6 @@ import static org.apache.hyracks.examples.tpch.client.Common.lineitemDesc;
 import static org.apache.hyracks.examples.tpch.client.Common.lineitemParserFactories;
 import static org.apache.hyracks.examples.tpch.client.Common.parseFileSplits;
 
-import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -58,6 +57,7 @@ import org.apache.hyracks.dataflow.std.group.aggregators.IntSumFieldAggregatorFa
 import org.apache.hyracks.dataflow.std.group.aggregators.MultiFieldsAggregatorFactory;
 import org.apache.hyracks.dataflow.std.group.external.ExternalGroupOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.group.sort.SortGroupByOperatorDescriptor;
+import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 

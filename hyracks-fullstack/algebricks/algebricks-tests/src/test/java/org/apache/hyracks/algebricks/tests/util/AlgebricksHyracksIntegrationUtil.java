@@ -25,7 +25,6 @@ import java.util.EnumSet;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
-import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
@@ -34,6 +33,7 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.ipc.impl.HyracksConnection;
 
 public class AlgebricksHyracksIntegrationUtil {
 

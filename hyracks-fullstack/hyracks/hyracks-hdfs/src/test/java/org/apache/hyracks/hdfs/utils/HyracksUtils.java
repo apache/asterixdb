@@ -21,7 +21,7 @@ package org.apache.hyracks.hdfs.utils;
 
 import java.util.EnumSet;
 
-import org.apache.hyracks.api.client.HyracksConnection;
+import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;

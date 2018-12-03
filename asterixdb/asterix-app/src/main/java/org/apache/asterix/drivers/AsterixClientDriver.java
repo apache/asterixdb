@@ -26,8 +26,8 @@ import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.file.StorageComponentProvider;
-import org.apache.hyracks.api.client.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.kohsuke.args4j.CmdLineParser;
 
 public class AsterixClientDriver {

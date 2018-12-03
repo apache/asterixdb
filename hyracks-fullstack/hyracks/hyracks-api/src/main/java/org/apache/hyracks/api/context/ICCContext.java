@@ -22,7 +22,7 @@ import java.net.InetAddress;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hyracks.api.client.ClusterControllerInfo;
+import org.apache.hyracks.api.client.impl.ClusterControllerInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.topology.ClusterTopology;
 

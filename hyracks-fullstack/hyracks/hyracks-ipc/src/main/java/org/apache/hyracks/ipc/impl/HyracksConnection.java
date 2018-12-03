@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.client;
+package org.apache.hyracks.ipc.impl;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -37,6 +37,10 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
+import org.apache.hyracks.api.client.IHyracksClientInterface;
+import org.apache.hyracks.api.client.NodeControllerInfo;
+import org.apache.hyracks.api.client.impl.ClusterControllerInfo;
 import org.apache.hyracks.api.client.impl.JobSpecificationActivityClusterGraphGeneratorFactory;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.deployment.DeploymentId;
@@ -52,8 +56,6 @@ import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.ipc.api.RPCInterface;
-import org.apache.hyracks.ipc.impl.IPCSystem;
-import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.InterruptibleAction;
 import org.apache.logging.log4j.Level;

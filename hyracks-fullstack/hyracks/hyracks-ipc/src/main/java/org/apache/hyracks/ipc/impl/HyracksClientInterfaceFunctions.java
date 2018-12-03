@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.client;
+package org.apache.hyracks.ipc.impl;
 
 import java.io.Serializable;
 import java.net.URL;

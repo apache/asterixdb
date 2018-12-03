@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.client;
-
-import org.apache.hyracks.api.control.CcId;
+package org.apache.hyracks.api.client.impl;
 
 import java.io.Serializable;
+
+import org.apache.hyracks.api.control.CcId;
 
 public class ClusterControllerInfo implements Serializable {
     private static final long serialVersionUID = 1L;

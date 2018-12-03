@@ -72,8 +72,8 @@
 
   <modules>
     <module>hyracks-util</module>
-    <module>hyracks-ipc</module>
     <module>hyracks-api</module>
+    <module>hyracks-ipc</module>
     <module>hyracks-comm</module>
     <module>hyracks-client</module>
     <module>hyracks-dataflow-common</module>
