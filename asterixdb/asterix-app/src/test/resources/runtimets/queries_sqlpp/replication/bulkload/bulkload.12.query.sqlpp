@@ -18,5 +18,5 @@
  */
 
 use tpch;
-
+SET `compiler.parallelism` "-1";
 select value count(*) from LineItem;
