@@ -54,8 +54,8 @@ public class TweetParserFactory implements IRecordDataParserFactory<char[]> {
     }
 
     @Override
-    public Class<? extends String> getRecordClass() {
-        return String.class;
+    public Class<? extends char[]> getRecordClass() {
+        return char[].class;
     }
 
     @Override
