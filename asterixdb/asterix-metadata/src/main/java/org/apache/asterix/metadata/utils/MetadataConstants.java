@@ -26,9 +26,23 @@ public class MetadataConstants {
 
     // Name of the dataverse the metadata lives in.
     public static final String METADATA_DATAVERSE_NAME = "Metadata";
-
     // Name of the node group where metadata is stored on.
     public static final String METADATA_NODEGROUP_NAME = "MetadataGroup";
+
+    public static final String DATAVERSE_DATASET_NAME = "Dataverse";
+    public static final String DATASET_DATASET_NAME = "Dataset";
+    public static final String INDEX_DATASET_NAME = "Index";
+    public static final String DATATYPE_DATASET_NAME = "Datatype";
+    public static final String NODE_DATASET_NAME = "Node";
+    public static final String NODEGROUP_DATASET_NAME = "Nodegroup";
+    public static final String FUNCTION_DATASET_NAME = "Function";
+    public static final String DATASOURCE_ADAPTER_DATASET_NAME = "DatasourceAdapter";
+    public static final String LIBRARY_DATASET_NAME = "Library";
+    public static final String FEED_DATASET_NAME = "Feed";
+    public static final String FEED_CONNECTION_DATASET_NAME = "FeedConnection";
+    public static final String FEED_POLICY_DATASET_NAME = "FeedPolicy";
+    public static final String COMPACTION_POLICY_DATASET_NAME = "CompactionPolicy";
+    public static final String EXTERNAL_FILE_DATASET_NAME = "ExternalFile";
 
     private MetadataConstants() {
     }

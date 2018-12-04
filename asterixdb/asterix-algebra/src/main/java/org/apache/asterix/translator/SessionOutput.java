@@ -35,7 +35,7 @@ public class SessionOutput {
 
     private final SessionOutput.ResultDecorator preResultDecorator;
     private final SessionOutput.ResultDecorator postResultDecorator;
-    private final SessionOutput.ResultAppender handleAppender;
+    private SessionOutput.ResultAppender handleAppender;
     private final SessionOutput.ResultAppender statusAppender;
 
     public SessionOutput(SessionConfig config, PrintWriter out) {
@@ -57,6 +57,10 @@ public class SessionOutput {
      */
     public PrintWriter out() {
         return this.bufferedOut != null ? this.bufferedOut : this.out;
+    }
+
+    public void setHandleAppender(SessionOutput.ResultAppender handleAppender) {
+        this.handleAppender = handleAppender;
     }
 
     /**

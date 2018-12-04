@@ -34,33 +34,33 @@ public class MetadataPrimaryIndexes {
     public static final MetadataIndexImmutableProperties PROPERTIES_METADATA =
             new MetadataIndexImmutableProperties(MetadataConstants.METADATA_DATAVERSE_NAME, 0, 0);
     public static final MetadataIndexImmutableProperties PROPERTIES_DATAVERSE =
-            new MetadataIndexImmutableProperties("Dataverse", 1, 1);
+            new MetadataIndexImmutableProperties(MetadataConstants.DATAVERSE_DATASET_NAME, 1, 1);
     public static final MetadataIndexImmutableProperties PROPERTIES_DATASET =
-            new MetadataIndexImmutableProperties("Dataset", 2, 2);
+            new MetadataIndexImmutableProperties(MetadataConstants.DATASET_DATASET_NAME, 2, 2);
     public static final MetadataIndexImmutableProperties PROPERTIES_DATATYPE =
-            new MetadataIndexImmutableProperties("Datatype", 3, 3);
+            new MetadataIndexImmutableProperties(MetadataConstants.DATATYPE_DATASET_NAME, 3, 3);
     public static final MetadataIndexImmutableProperties PROPERTIES_INDEX =
-            new MetadataIndexImmutableProperties("Index", 4, 4);
+            new MetadataIndexImmutableProperties(MetadataConstants.INDEX_DATASET_NAME, 4, 4);
     public static final MetadataIndexImmutableProperties PROPERTIES_NODE =
-            new MetadataIndexImmutableProperties("Node", 5, 5);
+            new MetadataIndexImmutableProperties(MetadataConstants.NODE_DATASET_NAME, 5, 5);
     public static final MetadataIndexImmutableProperties PROPERTIES_NODEGROUP =
-            new MetadataIndexImmutableProperties("Nodegroup", 6, 6);
+            new MetadataIndexImmutableProperties(MetadataConstants.NODEGROUP_DATASET_NAME, 6, 6);
     public static final MetadataIndexImmutableProperties PROPERTIES_FUNCTION =
-            new MetadataIndexImmutableProperties("Function", 7, 7);
+            new MetadataIndexImmutableProperties(MetadataConstants.FUNCTION_DATASET_NAME, 7, 7);
     public static final MetadataIndexImmutableProperties PROPERTIES_DATASOURCE_ADAPTER =
-            new MetadataIndexImmutableProperties("DatasourceAdapter", 8, 8);
+            new MetadataIndexImmutableProperties(MetadataConstants.DATASOURCE_ADAPTER_DATASET_NAME, 8, 8);
     public static final MetadataIndexImmutableProperties PROPERTIES_LIBRARY =
-            new MetadataIndexImmutableProperties("Library", 9, 9);
+            new MetadataIndexImmutableProperties(MetadataConstants.LIBRARY_DATASET_NAME, 9, 9);
     public static final MetadataIndexImmutableProperties PROPERTIES_FEED =
-            new MetadataIndexImmutableProperties("Feed", 10, 10);
+            new MetadataIndexImmutableProperties(MetadataConstants.FEED_DATASET_NAME, 10, 10);
     public static final MetadataIndexImmutableProperties PROPERTIES_FEED_CONNECTION =
-            new MetadataIndexImmutableProperties("FeedConnection", 11, 11);
+            new MetadataIndexImmutableProperties(MetadataConstants.FEED_CONNECTION_DATASET_NAME, 11, 11);
     public static final MetadataIndexImmutableProperties PROPERTIES_FEED_POLICY =
-            new MetadataIndexImmutableProperties("FeedPolicy", 12, 12);
+            new MetadataIndexImmutableProperties(MetadataConstants.FEED_POLICY_DATASET_NAME, 12, 12);
     public static final MetadataIndexImmutableProperties PROPERTIES_COMPACTION_POLICY =
-            new MetadataIndexImmutableProperties("CompactionPolicy", 13, 13);
+            new MetadataIndexImmutableProperties(MetadataConstants.COMPACTION_POLICY_DATASET_NAME, 13, 13);
     public static final MetadataIndexImmutableProperties PROPERTIES_EXTERNAL_FILE =
-            new MetadataIndexImmutableProperties("ExternalFile", 14, 14);
+            new MetadataIndexImmutableProperties(MetadataConstants.EXTERNAL_FILE_DATASET_NAME, 14, 14);
 
     public static final IMetadataIndex DATAVERSE_DATASET =
             new MetadataIndex(PROPERTIES_DATAVERSE, 2, new IAType[] { BuiltinType.ASTRING },

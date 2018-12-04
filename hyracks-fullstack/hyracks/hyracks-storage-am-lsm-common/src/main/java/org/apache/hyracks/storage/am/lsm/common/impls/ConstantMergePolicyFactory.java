@@ -18,8 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,12 +34,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class ConstantMergePolicyFactory implements ILSMMergePolicyFactory {
 
     private static final long serialVersionUID = 1L;
+    public static final String NAME = "constant";
     public static final String NUM_COMPONENTS = "num-components";
-    private static final Set<String> PROPERTIES_NAMES = new HashSet<>(Arrays.asList(NUM_COMPONENTS));
+    public static final Set<String> PROPERTIES_NAMES = Collections.singleton(NUM_COMPONENTS);
 
     @Override
     public String getName() {
-        return "constant";
+        return NAME;
     }
 
     @Override

@@ -64,6 +64,7 @@ import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.utils.Servlets;
+import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
@@ -1785,7 +1786,7 @@ public class TestExecutor {
                 if (json != null) {
                     String dvName = json.get("DataverseName").asText();
                     if (!dvName.equals("Metadata") && !dvName.equals("Default")) {
-                        toBeDropped.add(dvName);
+                        toBeDropped.add(SqlppStatementUtil.enclose(dvName));
                     }
                 }
             }

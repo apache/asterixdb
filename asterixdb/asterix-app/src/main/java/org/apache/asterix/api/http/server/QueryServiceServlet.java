@@ -115,19 +115,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) {
-        try {
-            handleRequest(request, response);
-        } catch (IOException e) {
-            // Servlet methods should not throw exceptions
-            // http://cwe.mitre.org/data/definitions/600.html
-            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
-        } catch (Throwable th) {// NOSONAR: Logging and re-throwing
-            try {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, th.getMessage(), th);
-            } catch (Throwable ignored) { // NOSONAR: Logging failure
-            }
-            throw th;
-        }
+        handleRequest(request, response);
     }
 
     @Override
@@ -209,7 +197,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         private ResultStatus resultStatus = ResultStatus.SUCCESS;
         private HttpResponseStatus httpResponseStatus = HttpResponseStatus.OK;
 
-        void setStatus(ResultStatus resultStatus, HttpResponseStatus httpResponseStatus) {
+        public void setStatus(ResultStatus resultStatus, HttpResponseStatus httpResponseStatus) {
             this.resultStatus = resultStatus;
             this.httpResponseStatus = httpResponseStatus;
         }
@@ -281,29 +269,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return SessionConfig.OutputFormat.CLEAN_JSON;
     }
 
-    private static SessionOutput createSessionOutput(QueryServiceRequestParameters param, String handleUrl,
-            PrintWriter resultWriter) {
+    private static SessionOutput createSessionOutput(PrintWriter resultWriter) {
         SessionOutput.ResultDecorator resultPrefix = ResultUtil.createPreResultDecorator();
         SessionOutput.ResultDecorator resultPostfix = ResultUtil.createPostResultDecorator();
-        SessionOutput.ResultAppender appendHandle = ResultUtil.createResultHandleAppender(handleUrl);
         SessionOutput.ResultAppender appendStatus = ResultUtil.createResultStatusAppender();
-
-        SessionConfig.OutputFormat format = getFormat(param.getFormat());
-        final SessionConfig.PlanFormat planFormat = SessionConfig.PlanFormat.get(param.getPlanFormat(),
-                param.getPlanFormat(), SessionConfig.PlanFormat.JSON, LOGGER);
-        SessionConfig sessionConfig = new SessionConfig(format, planFormat);
-        sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
-        sessionConfig.set(SessionConfig.OOB_EXPR_TREE, param.isExpressionTree());
-        sessionConfig.set(SessionConfig.OOB_REWRITTEN_EXPR_TREE, param.isRewrittenExpressionTree());
-        sessionConfig.set(SessionConfig.OOB_LOGICAL_PLAN, param.isLogicalPlan());
-        sessionConfig.set(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN, param.isOptimizedLogicalPlan());
-        sessionConfig.set(SessionConfig.OOB_HYRACKS_JOB, param.isJob());
-        sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.isPretty());
-        sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
-                format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON);
-        sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, format == SessionConfig.OutputFormat.CSV
-                && "present".equals(getParameterValue(param.getFormat(), Attribute.HEADER.str())));
-        return new SessionOutput(sessionConfig, resultWriter, resultPrefix, resultPostfix, appendHandle, appendStatus);
+        SessionConfig sessionConfig = new SessionConfig(SessionConfig.OutputFormat.CLEAN_JSON);
+        return new SessionOutput(sessionConfig, resultWriter, resultPrefix, resultPostfix, null, appendStatus);
     }
 
     private static void printClientContextID(PrintWriter pw, QueryServiceRequestParameters params) {
@@ -411,62 +382,67 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return result;
     }
 
-    private QueryServiceRequestParameters getRequestParameters(IServletRequest request) throws IOException {
-        final String contentType = HttpUtil.getContentTypeOnly(request);
-        QueryServiceRequestParameters param = new QueryServiceRequestParameters();
+    protected void setRequestParam(IServletRequest request, QueryServiceRequestParameters param)
+            throws IOException, AlgebricksException {
         param.setHost(host(request));
         param.setPath(servletPath(request));
+        String contentType = HttpUtil.getContentTypeOnly(request);
         if (HttpUtil.ContentType.APPLICATION_JSON.equals(contentType)) {
             try {
-                JsonNode jsonRequest = OBJECT_MAPPER.readTree(HttpUtil.getRequestBody(request));
-                final String statementParam = Parameter.STATEMENT.str();
-                if (jsonRequest.has(statementParam)) {
-                    param.setStatement(jsonRequest.get(statementParam).asText());
-                }
-                param.setFormat(toLower(getOptText(jsonRequest, Parameter.FORMAT.str())));
-                param.setPretty(getOptBoolean(jsonRequest, Parameter.PRETTY.str(), false));
-                param.setMode(toLower(getOptText(jsonRequest, Parameter.MODE.str())));
-                param.setClientContextID(getOptText(jsonRequest, Parameter.CLIENT_ID.str()));
-                param.setTimeout(getOptText(jsonRequest, Parameter.TIMEOUT.str()));
-                param.setMaxResultReads(getOptText(jsonRequest, Parameter.MAX_RESULT_READS.str()));
-                param.setPlanFormat(getOptText(jsonRequest, Parameter.PLAN_FORMAT.str()));
-                param.setExpressionTree(getOptBoolean(jsonRequest, Parameter.EXPRESSION_TREE.str(), false));
-                param.setRewrittenExpressionTree(
-                        getOptBoolean(jsonRequest, Parameter.REWRITTEN_EXPRESSION_TREE.str(), false));
-                param.setLogicalPlan(getOptBoolean(jsonRequest, Parameter.LOGICAL_PLAN.str(), false));
-                param.setOptimizedLogicalPlan(
-                        getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN.str(), false));
-                param.setJob(getOptBoolean(jsonRequest, Parameter.JOB.str(), false));
-                param.setSignature(getOptBoolean(jsonRequest, Parameter.SIGNATURE.str(), true));
-                param.setStatementParams(
-                        getOptStatementParameters(jsonRequest, jsonRequest.fieldNames(), JsonNode::get, v -> v));
-                param.setMultiStatement(getOptBoolean(jsonRequest, Parameter.MULTI_STATEMENT.str(), true));
+                setParamFromJSON(request, param);
             } catch (JsonParseException | JsonMappingException e) {
                 // if the JSON parsing fails, the statement is empty and we get an empty statement error
                 GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
             }
         } else {
-            param.setStatement(request.getParameter(Parameter.STATEMENT.str()));
-            if (param.getStatement() == null) {
-                param.setStatement(HttpUtil.getRequestBody(request));
-            }
-            param.setFormat(toLower(request.getParameter(Parameter.FORMAT.str())));
-            param.setPretty(Boolean.parseBoolean(request.getParameter(Parameter.PRETTY.str())));
-            param.setMode(toLower(request.getParameter(Parameter.MODE.str())));
-            param.setClientContextID(request.getParameter(Parameter.CLIENT_ID.str()));
-            param.setTimeout(request.getParameter(Parameter.TIMEOUT.str()));
-            param.setMaxResultReads(request.getParameter(Parameter.MAX_RESULT_READS.str()));
-            param.setPlanFormat(request.getParameter(Parameter.PLAN_FORMAT.str()));
-            final String multiStatementParam = request.getParameter(Parameter.MULTI_STATEMENT.str());
-            param.setMultiStatement(multiStatementParam == null || Boolean.parseBoolean(multiStatementParam));
-            try {
-                param.setStatementParams(getOptStatementParameters(request, request.getParameterNames().iterator(),
-                        IServletRequest::getParameter, OBJECT_MAPPER::readTree));
-            } catch (JsonParseException | JsonMappingException e) {
-                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
-            }
+            setParamFromRequest(request, param);
         }
-        return param;
+    }
+
+    private void setParamFromJSON(IServletRequest request, QueryServiceRequestParameters param) throws IOException {
+        JsonNode jsonRequest = OBJECT_MAPPER.readTree(HttpUtil.getRequestBody(request));
+        param.setFormat(toLower(getOptText(jsonRequest, Parameter.FORMAT.str())));
+        param.setPretty(getOptBoolean(jsonRequest, Parameter.PRETTY.str(), false));
+        param.setMode(toLower(getOptText(jsonRequest, Parameter.MODE.str())));
+        param.setClientContextID(getOptText(jsonRequest, Parameter.CLIENT_ID.str()));
+        param.setTimeout(getOptText(jsonRequest, Parameter.TIMEOUT.str()));
+        param.setMaxResultReads(getOptText(jsonRequest, Parameter.MAX_RESULT_READS.str()));
+        param.setPlanFormat(getOptText(jsonRequest, Parameter.PLAN_FORMAT.str()));
+        param.setExpressionTree(getOptBoolean(jsonRequest, Parameter.EXPRESSION_TREE.str(), false));
+        param.setRewrittenExpressionTree(getOptBoolean(jsonRequest, Parameter.REWRITTEN_EXPRESSION_TREE.str(), false));
+        param.setLogicalPlan(getOptBoolean(jsonRequest, Parameter.LOGICAL_PLAN.str(), false));
+        param.setOptimizedLogicalPlan(getOptBoolean(jsonRequest, Parameter.OPTIMIZED_LOGICAL_PLAN.str(), false));
+        param.setJob(getOptBoolean(jsonRequest, Parameter.JOB.str(), false));
+        param.setSignature(getOptBoolean(jsonRequest, Parameter.SIGNATURE.str(), true));
+        param.setStatementParams(
+                getOptStatementParameters(jsonRequest, jsonRequest.fieldNames(), JsonNode::get, v -> v));
+        param.setMultiStatement(getOptBoolean(jsonRequest, Parameter.MULTI_STATEMENT.str(), true));
+        String statementParam = Parameter.STATEMENT.str();
+        if (jsonRequest.has(statementParam)) {
+            param.setStatement(jsonRequest.get(statementParam).asText());
+        }
+    }
+
+    private void setParamFromRequest(IServletRequest request, QueryServiceRequestParameters param) throws IOException {
+        param.setStatement(request.getParameter(Parameter.STATEMENT.str()));
+        if (param.getStatement() == null) {
+            param.setStatement(HttpUtil.getRequestBody(request));
+        }
+        param.setFormat(toLower(request.getParameter(Parameter.FORMAT.str())));
+        param.setPretty(Boolean.parseBoolean(request.getParameter(Parameter.PRETTY.str())));
+        param.setMode(toLower(request.getParameter(Parameter.MODE.str())));
+        param.setClientContextID(request.getParameter(Parameter.CLIENT_ID.str()));
+        param.setTimeout(request.getParameter(Parameter.TIMEOUT.str()));
+        param.setMaxResultReads(request.getParameter(Parameter.MAX_RESULT_READS.str()));
+        param.setPlanFormat(request.getParameter(Parameter.PLAN_FORMAT.str()));
+        final String multiStatementParam = request.getParameter(Parameter.MULTI_STATEMENT.str());
+        param.setMultiStatement(multiStatementParam == null || Boolean.parseBoolean(multiStatementParam));
+        try {
+            param.setStatementParams(getOptStatementParameters(request, request.getParameterNames().iterator(),
+                    IServletRequest::getParameter, OBJECT_MAPPER::readTree));
+        } catch (JsonParseException | JsonMappingException e) {
+            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, e.getMessage(), e);
+        }
     }
 
     private static ResultDelivery parseResultDelivery(String mode) {
@@ -508,35 +484,31 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return "http://" + host + path + handlePath(delivery);
     }
 
-    private void handleRequest(IServletRequest request, IServletResponse response) throws IOException {
-        QueryServiceRequestParameters param = getRequestParameters(request);
-        LOGGER.info("handleRequest: {}", param);
+    private void handleRequest(IServletRequest request, IServletResponse response) {
         long elapsedStart = System.nanoTime();
-        final PrintWriter httpWriter = response.writer();
-
-        ResultDelivery delivery = parseResultDelivery(param.getMode());
-
-        final ResultProperties resultProperties = param.getMaxResultReads() == null ? new ResultProperties(delivery)
-                : new ResultProperties(delivery, Long.parseLong(param.getMaxResultReads()));
-
-        String handleUrl = getHandleUrl(param.getHost(), param.getPath(), delivery);
-        SessionOutput sessionOutput = createSessionOutput(param, handleUrl, httpWriter);
-        SessionConfig sessionConfig = sessionOutput.config();
-        HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
-
+        long errorCount = 1;
         Stats stats = new Stats();
         RequestExecutionState execution = new RequestExecutionState();
-
-        // buffer the output until we are ready to set the status of the response message correctly
-        sessionOutput.hold();
-        sessionOutput.out().print("{\n");
-        printRequestId(sessionOutput.out());
-        printClientContextID(sessionOutput.out(), param);
-        printSignature(sessionOutput.out(), param);
-        printType(sessionOutput.out(), sessionConfig);
-        long errorCount = 1; // so far we just return 1 error
-        List<ExecutionWarning> warnings = Collections.emptyList(); // we don't have any warnings yet
+        List<ExecutionWarning> warnings = Collections.emptyList();
+        PrintWriter httpWriter = response.writer();
+        SessionOutput sessionOutput = createSessionOutput(httpWriter);
+        QueryServiceRequestParameters param = new QueryServiceRequestParameters();
         try {
+            // buffer the output until we are ready to set the status of the response message correctly
+            sessionOutput.hold();
+            sessionOutput.out().print("{\n");
+            HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
+            setRequestParam(request, param);
+            LOGGER.info("handleRequest: {}", param);
+            ResultDelivery delivery = parseResultDelivery(param.getMode());
+            setSessionConfig(sessionOutput, param, delivery);
+            ResultProperties resultProperties = param.getMaxResultReads() == null ? new ResultProperties(delivery)
+                    : new ResultProperties(delivery, Long.parseLong(param.getMaxResultReads()));
+            printAdditionalResultFields(sessionOutput.out());
+            printRequestId(sessionOutput.out());
+            printClientContextID(sessionOutput.out(), param);
+            printSignature(sessionOutput.out(), param);
+            printType(sessionOutput.out(), sessionOutput.config());
             if (param.getStatement() == null || param.getStatement().isEmpty()) {
                 throw new RuntimeDataException(ErrorCode.NO_STATEMENT_PROVIDED);
             }
@@ -643,11 +615,38 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         }
     }
 
+    private void setSessionConfig(SessionOutput sessionOutput, QueryServiceRequestParameters param,
+            ResultDelivery delivery) {
+        String handleUrl = getHandleUrl(param.getHost(), param.getPath(), delivery);
+        sessionOutput.setHandleAppender(ResultUtil.createResultHandleAppender(handleUrl));
+        SessionConfig sessionConfig = sessionOutput.config();
+        SessionConfig.OutputFormat format = getFormat(param.getFormat());
+        SessionConfig.PlanFormat planFormat = SessionConfig.PlanFormat.get(param.getPlanFormat(), param.getPlanFormat(),
+                SessionConfig.PlanFormat.JSON, LOGGER);
+        sessionConfig.setFmt(format);
+        sessionConfig.setPlanFormat(planFormat);
+        sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
+        sessionConfig.set(SessionConfig.OOB_EXPR_TREE, param.isExpressionTree());
+        sessionConfig.set(SessionConfig.OOB_REWRITTEN_EXPR_TREE, param.isRewrittenExpressionTree());
+        sessionConfig.set(SessionConfig.OOB_LOGICAL_PLAN, param.isLogicalPlan());
+        sessionConfig.set(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN, param.isOptimizedLogicalPlan());
+        sessionConfig.set(SessionConfig.OOB_HYRACKS_JOB, param.isJob());
+        sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.isPretty());
+        sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
+                format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON);
+        sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, format == SessionConfig.OutputFormat.CSV
+                && "present".equals(getParameterValue(param.getFormat(), Attribute.HEADER.str())));
+    }
+
     protected void printError(PrintWriter sessionOut, Throwable throwable) {
         ResultUtil.printError(sessionOut, throwable);
     }
 
-    protected void printWarnings(PrintWriter pw, List<ExecutionWarning> warnings) {
+    protected void printAdditionalResultFields(PrintWriter sessionOut) {
+        // do nothing
+    }
+
+    private void printWarnings(PrintWriter pw, List<ExecutionWarning> warnings) {
         ResultUtil.printWarnings(pw, warnings);
     }
 

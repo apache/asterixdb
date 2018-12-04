@@ -20,7 +20,9 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,14 +38,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class PrefixMergePolicyFactory implements ILSMMergePolicyFactory {
 
     private static final long serialVersionUID = 1L;
-
-    private static final String[] SET_VALUES =
-            new String[] { "max-mergable-component-size", "max-tolerance-component-count" };
-    private static final Set<String> PROPERTIES_NAMES = new HashSet<>(Arrays.asList(SET_VALUES));
+    public static final String NAME = "prefix";
+    public static final String MAX_MERGABLE_SIZE = "max-mergable-component-size";
+    public static final String MAX_TOLERANCE_COUNT = "max-tolerance-component-count";
+    public static final Set<String> PROPERTIES_NAMES =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList(MAX_MERGABLE_SIZE, MAX_TOLERANCE_COUNT)));
 
     @Override
     public String getName() {
-        return "prefix";
+        return NAME;
     }
 
     @Override

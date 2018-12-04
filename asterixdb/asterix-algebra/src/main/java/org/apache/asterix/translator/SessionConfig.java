@@ -128,8 +128,8 @@ public class SessionConfig implements Serializable {
     public static final String FORMAT_QUOTE_RECORD = "quote-record";
 
     // Output format.
-    private final OutputFormat fmt;
-    private final PlanFormat planFormat;
+    private OutputFormat fmt;
+    private PlanFormat planFormat;
 
     // Standard execution flags.
     private final boolean executeQuery;
@@ -160,8 +160,6 @@ public class SessionConfig implements Serializable {
      *            Whether to execute the query or not.
      * @param generateJobSpec
      *            Whether to generate the Hyracks job specification (if
-     * @param lpfmt
-     *            Plan format for logical plan.
      */
     public SessionConfig(OutputFormat fmt, boolean optimize, boolean executeQuery, boolean generateJobSpec) {
         this(fmt, optimize, executeQuery, generateJobSpec, PlanFormat.STRING);
@@ -184,11 +182,19 @@ public class SessionConfig implements Serializable {
         return this.fmt;
     }
 
+    public void setFmt(OutputFormat fmt) {
+        this.fmt = fmt;
+    }
+
     /**
      * Retrieve the PlanFormat for this execution.
      */
     public PlanFormat getPlanFormat() {
         return this.planFormat;
+    }
+
+    public void setPlanFormat(PlanFormat planFormat) {
+        this.planFormat = planFormat;
     }
 
     /**
