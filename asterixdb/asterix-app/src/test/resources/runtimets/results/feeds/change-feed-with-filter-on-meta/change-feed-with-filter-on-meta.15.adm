@@ -1,0 +1,4 @@
+{ "rec": { "id": 9, "name": "Sandra Pec", "age": 36, "hobby": "hiking" }, "meta": { "id": "rec9_US", "class_type": 3, "updated_date": "2018-06-09" } }
+{ "rec": { "id": 10, "name": "Sandra Lan", "age": 36, "hobby": "football" }, "meta": { "id": "rec10_US", "class_type": 3, "updated_date": "2017-06-09" } }
+{ "rec": { "id": 11, "name": "Trever Jones", "age": 36, "hobby": "hiking" }, "meta": { "id": "rec11_UK", "class_type": 3, "updated_date": "2018-09-09" } }
+{ "rec": { "id": 12, "name": "Ruth Pec", "age": 36, "hobby": "swimming" }, "meta": { "id": "rec12_UK", "class_type": 3, "updated_date": "2016-09-01" } }

@@ -1,0 +1,5 @@
+{ "rec": { "id": 3, "name": "Dan David", "age": 40, "hobby": "bowling" }, "meta": { "id": "rec3_UK", "class_type": 2, "updated_date": "2018-02-02" } }
+{ "rec": { "id": 5, "name": "Sandy Donald", "age": 35, "hobby": "soccer" }, "meta": { "id": "rec5_UK", "class_type": 2, "updated_date": "2018-01-04" } }
+{ "rec": { "id": 8, "name": "Mat Steve", "age": 45, "hobby": "tennis" }, "meta": { "id": "rec8_UK", "class_type": 2, "updated_date": "2018-06-05" } }
+{ "rec": { "id": 11, "name": "Trever Jones", "age": 36, "hobby": "hiking" }, "meta": { "id": "rec11_UK", "class_type": 3, "updated_date": "2018-09-09" } }
+{ "rec": { "id": 12, "name": "Ruth Pec", "age": 36, "hobby": "swimming" }, "meta": { "id": "rec12_UK", "class_type": 3, "updated_date": "2016-09-01" } }

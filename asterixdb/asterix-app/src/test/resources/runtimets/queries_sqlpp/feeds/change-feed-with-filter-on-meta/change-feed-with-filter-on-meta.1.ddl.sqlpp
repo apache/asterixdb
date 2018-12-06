@@ -1,0 +1,73 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : Create and connect a feed with a filter on meta() fields. Specify the data source for the meta() for
+ *                some datasets and leave it out for others.
+ * Expected Res : Success
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+use test;
+
+create type DataType as open {
+id:int,
+name:string,
+age:int,
+hobby:string
+};
+
+create type MetaType as closed {
+id:string,
+class_type:int,
+updated_date:string
+};
+
+create dataset US_DS1(DataType) with meta(MetaType) primary key meta().id;
+create dataset UK_DS1(DataType) with meta(MetaType) primary key meta().id;
+create dataset CLASS1_DS1(DataType) with meta(MetaType) primary key meta().id;
+create dataset CLASS2_DS1(DataType) with meta(MetaType) primary key meta().id;
+create dataset CLASS3_DS1(DataType) with meta(MetaType) primary key meta().id;
+create dataset REC_B2016_1(DataType) with meta(MetaType) primary key meta().id;
+create dataset REC_A2016_1(DataType) with meta(MetaType) primary key meta().id;
+
+create dataset US_DS2(DataType) with meta(MetaType) primary key meta().id;
+create dataset UK_DS2(DataType) with meta(MetaType) primary key meta().id;
+create dataset CLASS1_DS2(DataType) with meta(MetaType) primary key meta().id;
+create dataset CLASS2_DS2(DataType) with meta(MetaType) primary key meta().id;
+create dataset CLASS3_DS2(DataType) with meta(MetaType) primary key meta().id;
+create dataset REC_B2016_2(DataType) with meta(MetaType) primary key meta().id;
+create dataset REC_A2016_2(DataType) with meta(MetaType) primary key meta().id;
+
+create feed ds_stream with {
+ "adapter-name" : "localfs",
+ "reader" : "localfs",
+ "parser" : "record-with-metadata",
+ "type-name" : "DataType",
+ "meta-type-name" : "MetaType",
+ "path" : "asterix_nc1://data/csv/people2.csv",
+ "format" : "csv",
+ "delimiter" : ",",
+ "record-format" : "adm",
+ "record-index" : "3",
+ "key-indexes" : "0",
+ "key-indicators" : "1",
+ "header" : "false",
+ "change-feed" : "true"
+};
