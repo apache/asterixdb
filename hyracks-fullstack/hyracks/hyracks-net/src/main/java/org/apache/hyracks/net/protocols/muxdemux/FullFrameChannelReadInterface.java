@@ -36,7 +36,7 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
     private final BlockingDeque<ByteBuffer> riEmptyStack;
     private final IChannelControlBlock ccb;
 
-    FullFrameChannelReadInterface(IChannelControlBlock ccb) {
+    public FullFrameChannelReadInterface(IChannelControlBlock ccb) {
         this.ccb = ccb;
         riEmptyStack = new LinkedBlockingDeque<>();
         credits = 0;
@@ -45,8 +45,8 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
             if (ccb.isRemotelyClosed()) {
                 return;
             }
-            riEmptyStack.push(buffer);
             final int delta = buffer.remaining();
+            riEmptyStack.push(buffer);
             ccb.addPendingCredits(delta);
         };
     }
