@@ -18,15 +18,18 @@
  */
 package org.apache.hyracks.client.result;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import org.apache.hyracks.api.result.ResultJobRecord.Status;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.api.result.IResultDirectory;
 import org.apache.hyracks.api.result.ResultDirectoryRecord;
+import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.result.ResultSetId;
-import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.RPCInterface;
+import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 
@@ -35,9 +38,11 @@ public class ResultDirectory implements IResultDirectory {
     private final IPCSystem ipc;
     private final IResultDirectory remoteResultDirectory;
 
-    public ResultDirectory(String resultHost, int resultPort) throws Exception {
+    public ResultDirectory(String resultHost, int resultPort, ISocketChannelFactory socketChannelFactory)
+            throws IOException, IPCException {
         RPCInterface rpci = new RPCInterface();
-        ipc = new IPCSystem(new InetSocketAddress(0), rpci, new JavaSerializationBasedPayloadSerializerDeserializer());
+        ipc = new IPCSystem(new InetSocketAddress(0), socketChannelFactory, rpci,
+                new JavaSerializationBasedPayloadSerializerDeserializer());
         ipc.start();
         IIPCHandle ddsIpchandle = ipc.getReconnectingHandle(new InetSocketAddress(resultHost, resultPort));
         this.remoteResultDirectory = new ResultDirectoryRemoteProxy(ddsIpchandle, rpci);

@@ -140,7 +140,8 @@ public class CCApplication extends BaseCCApplication {
 
         String strIP = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
         int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
-        hcc = new HyracksConnection(strIP, port);
+        hcc = new HyracksConnection(strIP, port,
+                ccServiceCtx.getControllerService().getNetworkSecurityManager().getSocketChannelFactory());
         MetadataBuiltinFunctions.init();
         ILibraryManager libraryManager = new ExternalLibraryManager();
         ReplicationProperties repProp =

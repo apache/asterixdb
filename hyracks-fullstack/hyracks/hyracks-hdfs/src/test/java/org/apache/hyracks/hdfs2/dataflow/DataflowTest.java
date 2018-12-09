@@ -31,7 +31,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -53,6 +52,7 @@ import org.apache.hyracks.hdfs.lib.TextKeyValueParserFactory;
 import org.apache.hyracks.hdfs.lib.TextTupleWriterFactory;
 import org.apache.hyracks.hdfs.utils.HyracksUtils;
 import org.apache.hyracks.hdfs2.scheduler.Scheduler;
+import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.junit.Assert;
 
 /**

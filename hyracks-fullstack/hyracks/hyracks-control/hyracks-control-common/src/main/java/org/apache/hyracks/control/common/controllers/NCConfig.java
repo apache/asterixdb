@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
@@ -85,7 +86,10 @@ public class NCConfig extends ControllerConfig {
         NCSERVICE_PID(INTEGER, -1),
         COMMAND(STRING, "hyracksnc"),
         JVM_ARGS(STRING, (String) null),
-        TRACE_CATEGORIES(STRING_ARRAY, new String[0]);
+        TRACE_CATEGORIES(STRING_ARRAY, new String[0]),
+        KEY_STORE_PATH(STRING, (String) null),
+        TRUST_STORE_PATH(STRING, (String) null),
+        KEY_STORE_PASSWORD(STRING, (String) null);
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -208,6 +212,12 @@ public class NCConfig extends ControllerConfig {
                     return "JVM args to pass to the NCDriver";
                 case TRACE_CATEGORIES:
                     return "Categories for tracing";
+                case KEY_STORE_PATH:
+                    return "A fully-qualified path to a key store file that will be used for secured connections";
+                case TRUST_STORE_PATH:
+                    return "A fully-qualified path to a trust store file that will be used for secured connections";
+                case KEY_STORE_PASSWORD:
+                    return "The password to the provided key store";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -253,6 +263,7 @@ public class NCConfig extends ControllerConfig {
         super(configManager);
         this.appConfig = nodeId == null ? configManager.getAppConfig() : configManager.getNodeEffectiveConfig(nodeId);
         configManager.register(Option.class);
+        configManager.register(ControllerConfig.Option.class);
         setNodeId(nodeId);
         this.nodeId = nodeId;
         configManager.registerArgsListener(appArgs::addAll);
@@ -536,5 +547,25 @@ public class NCConfig extends ControllerConfig {
 
     public void setVirtualNC() {
         configManager.set(nodeId, Option.NCSERVICE_PORT, NCSERVICE_PORT_DISABLED);
+    }
+
+    public String getKeyStorePath() {
+        return appConfig.getString(Option.KEY_STORE_PATH);
+    }
+
+    public String getKeyStorePassword() {
+        return appConfig.getString(Option.KEY_STORE_PASSWORD);
+    }
+
+    public void setKeyStorePath(String keyStorePath) {
+        configManager.set(Option.KEY_STORE_PATH, keyStorePath);
+    }
+
+    public String getTrustStorePath() {
+        return appConfig.getString(Option.TRUST_STORE_PATH);
+    }
+
+    public void setTrustStorePath(String keyStorePath) {
+        configManager.set(CCConfig.Option.TRUST_STORE_PATH, keyStorePath);
     }
 }

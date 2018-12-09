@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 
@@ -43,6 +44,8 @@ final class IPCHandle implements IIPCHandle {
     private ByteBuffer outBuffer;
 
     private boolean full;
+
+    private ISocketChannel socketChannel;
 
     IPCHandle(IPCSystem system, InetSocketAddress remoteAddress) {
         this.system = system;
@@ -98,6 +101,14 @@ final class IPCHandle implements IIPCHandle {
 
     void setKey(SelectionKey key) {
         this.key = key;
+    }
+
+    public ISocketChannel getSocketChannel() {
+        return socketChannel;
+    }
+
+    public void setSocketChannel(ISocketChannel socketChannel) {
+        this.socketChannel = socketChannel;
     }
 
     public synchronized boolean isConnected() {

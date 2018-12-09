@@ -52,10 +52,12 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobInfo;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.ipc.api.RPCInterface;
+import org.apache.hyracks.ipc.sockets.PlainSocketChannelFactory;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.InterruptibleAction;
 import org.apache.logging.log4j.Level;
@@ -102,17 +104,22 @@ public final class HyracksConnection implements IHyracksClientConnection {
      *            host name.
      * @throws Exception
      */
-    public HyracksConnection(String ccHost, int ccPort) throws Exception {
+    public HyracksConnection(String ccHost, int ccPort, ISocketChannelFactory socketChannelFactory) throws Exception {
         this.ccHost = ccHost;
         this.ccPort = ccPort;
         RPCInterface rpci = new RPCInterface();
-        ipc = new IPCSystem(new InetSocketAddress(0), rpci, new JavaSerializationBasedPayloadSerializerDeserializer());
+        ipc = new IPCSystem(new InetSocketAddress(0), socketChannelFactory, rpci,
+                new JavaSerializationBasedPayloadSerializerDeserializer());
         ipc.start();
         hci = new HyracksClientInterfaceRemoteProxy(ipc.getReconnectingHandle(new InetSocketAddress(ccHost, ccPort)),
                 rpci);
         ccInfo = hci.getClusterControllerInfo();
         uninterruptibleExecutor.execute(new UninterrubtileRequestHandler());
         uninterruptibleExecutor.execute(new UninterrubtileHandlerWatcher());
+    }
+
+    public HyracksConnection(String ccHost, int ccPort) throws Exception {
+        this(ccHost, ccPort, PlainSocketChannelFactory.INSTANCE);
     }
 
     @Override

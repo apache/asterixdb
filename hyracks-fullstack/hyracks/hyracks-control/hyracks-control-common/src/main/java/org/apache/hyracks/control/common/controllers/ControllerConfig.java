@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.control.common.controllers;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
+
 import java.io.Serializable;
 import java.net.URL;
 import java.util.function.Function;
@@ -46,7 +48,8 @@ public class ControllerConfig implements Serializable {
                 OptionTypes.STRING,
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
                         .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "logs"),
-                "The directory where logs for this node are written");
+                "The directory where logs for this node are written"),
+        SSL_ENABLED(BOOLEAN, false, "A flag indicating if cluster communications should use secured connections");
 
         private final IOptionType type;
         private final String description;
@@ -121,5 +124,9 @@ public class ControllerConfig implements Serializable {
 
     public String getLogDir() {
         return configManager.getAppConfig().getString(ControllerConfig.Option.LOG_DIR);
+    }
+
+    public boolean isSslEnabled() {
+        return getAppConfig().getBoolean(Option.SSL_ENABLED);
     }
 }

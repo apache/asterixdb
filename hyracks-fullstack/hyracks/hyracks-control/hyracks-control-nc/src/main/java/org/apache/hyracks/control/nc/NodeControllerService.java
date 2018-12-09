@@ -56,6 +56,8 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobParameterByteStore;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
+import org.apache.hyracks.api.network.INetworkSecurityConfig;
+import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.api.util.CleanupUtils;
@@ -88,6 +90,8 @@ import org.apache.hyracks.ipc.api.IIPCEventListener;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.exceptions.IPCException;
 import org.apache.hyracks.ipc.impl.IPCSystem;
+import org.apache.hyracks.ipc.security.NetworkSecurityConfig;
+import org.apache.hyracks.ipc.security.NetworkSecurityManager;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
@@ -159,6 +163,8 @@ public class NodeControllerService implements IControllerService {
 
     private final MemoryManager memoryManager;
 
+    private final INetworkSecurityManager networkSecurityManager;
+
     private StackTraceElement[] shutdownCallStack;
 
     private MessagingNetworkManager messagingNetManager;
@@ -193,6 +199,8 @@ public class NodeControllerService implements IControllerService {
         if (application == null) {
             throw new IllegalArgumentException("INCApplication cannot be null");
         }
+        final INetworkSecurityConfig securityConfig = getNetworkSecurityConfig();
+        networkSecurityManager = new NetworkSecurityManager(securityConfig);
         this.application = application;
         id = ncConfig.getNodeId();
         if (id == null) {
@@ -278,7 +286,8 @@ public class NodeControllerService implements IControllerService {
     public void start() throws Exception {
         LOGGER.log(Level.INFO, "Starting NodeControllerService");
         ipc = new IPCSystem(new InetSocketAddress(ncConfig.getClusterListenAddress(), ncConfig.getClusterListenPort()),
-                new NodeControllerIPCI(this), new CCNCFunctions.SerializerDeserializer());
+                networkSecurityManager.getSocketChannelFactory(), new NodeControllerIPCI(this),
+                new CCNCFunctions.SerializerDeserializer());
         ipc.start();
         partitionManager = new PartitionManager(this);
         netManager = new NetworkManager(ncConfig.getDataListenAddress(), ncConfig.getDataListenPort(), partitionManager,
@@ -717,5 +726,15 @@ public class NodeControllerService implements IControllerService {
 
     public INCApplication getApplication() {
         return application;
+    }
+
+    @Override
+    public INetworkSecurityManager getNetworkSecurityManager() {
+        return networkSecurityManager;
+    }
+
+    protected INetworkSecurityConfig getNetworkSecurityConfig() {
+        return NetworkSecurityConfig.of(ncConfig.isSslEnabled(), ncConfig.getKeyStorePath(),
+                ncConfig.getKeyStorePassword(), ncConfig.getTrustStorePath());
     }
 }

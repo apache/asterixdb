@@ -36,8 +36,10 @@ public class ServletUtil {
             synchronized (ctx) {
                 resultSet = (IResultSet) ctx.get(RESULTSET_ATTR);
                 if (resultSet == null) {
-                    resultSet =
-                            new ResultSet(hcc, appCtx.getCompilerProperties().getFrameSize(), ResultReader.NUM_READERS);
+                    resultSet = new ResultSet(hcc,
+                            appCtx.getServiceContext().getControllerService().getNetworkSecurityManager()
+                                    .getSocketChannelFactory(),
+                            appCtx.getCompilerProperties().getFrameSize(), ResultReader.NUM_READERS);
                     ctx.put(RESULTSET_ATTR, resultSet);
                 }
             }

@@ -49,6 +49,8 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.job.JobParameterByteStore;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.apache.hyracks.api.network.INetworkSecurityConfig;
+import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.api.topology.TopologyDefinitionParser;
@@ -80,6 +82,8 @@ import org.apache.hyracks.control.common.work.WorkQueue;
 import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
+import org.apache.hyracks.ipc.security.NetworkSecurityConfig;
+import org.apache.hyracks.ipc.security.NetworkSecurityManager;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
 import org.apache.logging.log4j.Level;
@@ -146,6 +150,8 @@ public class ClusterControllerService implements IControllerService {
 
     private final CcId ccId;
 
+    private final INetworkSecurityManager networkSecurityManager;
+
     static {
         ExitUtil.init();
     }
@@ -163,6 +169,9 @@ public class ClusterControllerService implements IControllerService {
         this.application = application;
         File jobLogFolder = new File(ccConfig.getRootDir(), "logs/jobs");
         jobLog = new LogFile(jobLogFolder);
+
+        final INetworkSecurityConfig securityConfig = getNetworkSecurityConfig();
+        networkSecurityManager = new NetworkSecurityManager(securityConfig);
 
         // WorkQueue is in charge of heartbeat as well as other events.
         workQueue = new WorkQueue("ClusterController", Thread.MAX_PRIORITY);
@@ -204,12 +213,13 @@ public class ClusterControllerService implements IControllerService {
         LOGGER.log(Level.INFO, "Starting ClusterControllerService: " + this);
         serverCtx = new ServerContext(ServerContext.ServerType.CLUSTER_CONTROLLER, new File(ccConfig.getRootDir()));
         IIPCI ccIPCI = new ClusterControllerIPCI(this);
-        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.getClusterListenPort()), ccIPCI,
-                new CCNCFunctions.SerializerDeserializer());
+        clusterIPC = new IPCSystem(new InetSocketAddress(ccConfig.getClusterListenPort()),
+                networkSecurityManager.getSocketChannelFactory(), ccIPCI, new CCNCFunctions.SerializerDeserializer());
         IIPCI ciIPCI = new ClientInterfaceIPCI(this, jobIdFactory);
         clientIPC =
                 new IPCSystem(new InetSocketAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort()),
-                        ciIPCI, new JavaSerializationBasedPayloadSerializerDeserializer());
+                        networkSecurityManager.getSocketChannelFactory(), ciIPCI,
+                        new JavaSerializationBasedPayloadSerializerDeserializer());
         webServer = new WebServer(this, ccConfig.getConsoleListenPort());
         clusterIPC.start();
         clientIPC.start();
@@ -537,5 +547,15 @@ public class ClusterControllerService implements IControllerService {
     @Override
     public Object getApplicationContext() {
         return application.getApplicationContext();
+    }
+
+    @Override
+    public INetworkSecurityManager getNetworkSecurityManager() {
+        return networkSecurityManager;
+    }
+
+    protected INetworkSecurityConfig getNetworkSecurityConfig() {
+        return NetworkSecurityConfig.of(ccConfig.isSslEnabled(), ccConfig.getKeyStorePath(),
+                ccConfig.getKeyStorePassword(), ccConfig.getTrustStorePath());
     }
 }

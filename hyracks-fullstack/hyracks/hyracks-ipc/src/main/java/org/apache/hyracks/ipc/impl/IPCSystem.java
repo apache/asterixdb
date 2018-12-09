@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.ipc.api.IIPCEventListener;
 import org.apache.hyracks.ipc.api.IIPCHandle;
 import org.apache.hyracks.ipc.api.IIPCI;
@@ -45,9 +46,9 @@ public class IPCSystem {
 
     private final IPCPerformanceCounters perfCounters;
 
-    public IPCSystem(InetSocketAddress socketAddress, IIPCI ipci, IPayloadSerializerDeserializer serde)
-            throws IOException {
-        cMgr = new IPCConnectionManager(this, socketAddress);
+    public IPCSystem(InetSocketAddress socketAddress, ISocketChannelFactory socketChannelFactory, IIPCI ipci,
+            IPayloadSerializerDeserializer serde) throws IOException {
+        cMgr = new IPCConnectionManager(this, socketAddress, socketChannelFactory);
         this.ipci = ipci;
         this.serde = serde;
         midFactory = new AtomicLong();

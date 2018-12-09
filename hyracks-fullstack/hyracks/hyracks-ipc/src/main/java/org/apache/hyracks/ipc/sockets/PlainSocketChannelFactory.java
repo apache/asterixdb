@@ -16,31 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.service;
+package org.apache.hyracks.ipc.sockets;
 
-import java.util.Timer;
-import java.util.concurrent.ExecutorService;
+import java.nio.channels.SocketChannel;
 
-import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.network.INetworkSecurityManager;
+import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 
-public interface IControllerService {
-    void start() throws Exception;
+public class PlainSocketChannelFactory implements ISocketChannelFactory {
 
-    void stop() throws Exception;
+    public static final PlainSocketChannelFactory INSTANCE = new PlainSocketChannelFactory();
 
-    IServiceContext getContext();
+    @Override
+    public ISocketChannel createServerChannel(SocketChannel socketChannel) {
+        return new PlainSocketChannel(socketChannel);
+    }
 
-    ExecutorService getExecutor();
-
-    Timer getTimer();
-
-    Object getApplicationContext();
-
-    /**
-     * Gets the network security manager
-     *
-     * @return the network security manager
-     */
-    INetworkSecurityManager getNetworkSecurityManager();
+    @Override
+    public ISocketChannel createClientChannel(SocketChannel socketChannel) {
+        return new PlainSocketChannel(socketChannel);
+    }
 }

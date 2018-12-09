@@ -74,7 +74,10 @@ public class CCConfig extends ControllerConfig {
         JOB_MANAGER_CLASS(STRING, "org.apache.hyracks.control.cc.job.JobManager"),
         ENFORCE_FRAME_WRITER_PROTOCOL(BOOLEAN, false),
         CORES_MULTIPLIER(POSITIVE_INTEGER, 3),
-        CONTROLLER_ID(SHORT, (short) 0x0000);
+        CONTROLLER_ID(SHORT, (short) 0x0000),
+        KEY_STORE_PATH(STRING),
+        TRUST_STORE_PATH(STRING),
+        KEY_STORE_PASSWORD(STRING);
 
         private final IOptionType parser;
         private Object defaultValue;
@@ -188,6 +191,12 @@ public class CCConfig extends ControllerConfig {
                             + "execution level";
                 case CONTROLLER_ID:
                     return "The 16-bit (0-65535) id of this Cluster Controller";
+                case KEY_STORE_PATH:
+                    return "A fully-qualified path to a key store file that will be used for secured connections";
+                case TRUST_STORE_PATH:
+                    return "A fully-qualified path to a trust store file that will be used for secured connections";
+                case KEY_STORE_PASSWORD:
+                    return "The password to the provided key store";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -212,6 +221,7 @@ public class CCConfig extends ControllerConfig {
     public CCConfig(ConfigManager configManager) {
         super(configManager);
         configManager.register(Option.class);
+        configManager.register(ControllerConfig.Option.class);
         configManager.registerArgsListener(appArgs::addAll);
     }
 
@@ -433,5 +443,25 @@ public class CCConfig extends ControllerConfig {
 
     public CcId getCcId() {
         return CcId.valueOf(getAppConfig().getShort(Option.CONTROLLER_ID));
+    }
+
+    public String getKeyStorePath() {
+        return getAppConfig().getString(Option.KEY_STORE_PATH);
+    }
+
+    public String getKeyStorePassword() {
+        return getAppConfig().getString(Option.KEY_STORE_PASSWORD);
+    }
+
+    public void setKeyStorePath(String keyStorePath) {
+        configManager.set(Option.KEY_STORE_PATH, keyStorePath);
+    }
+
+    public String getTrustStorePath() {
+        return getAppConfig().getString(Option.TRUST_STORE_PATH);
+    }
+
+    public void setTrustStorePath(String trustStorePath) {
+        configManager.set(Option.TRUST_STORE_PATH, trustStorePath);
     }
 }

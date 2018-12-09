@@ -53,6 +53,7 @@ import org.apache.hyracks.control.nc.resources.memory.FrameManager;
 import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import org.apache.hyracks.ipc.impl.HyracksConnection;
+import org.apache.hyracks.ipc.sockets.PlainSocketChannelFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
@@ -154,7 +155,7 @@ public abstract class AbstractIntegrationTest {
 
         IFrameTupleAccessor frameTupleAccessor = new ResultFrameTupleAccessor();
 
-        IResultSet resultSet = new ResultSet(hcc, spec.getFrameSize(), nReaders);
+        IResultSet resultSet = new ResultSet(hcc, PlainSocketChannelFactory.INSTANCE, spec.getFrameSize(), nReaders);
         IResultSetReader reader = resultSet.createReader(jobId, resultSetId);
 
         List<String> resultRecords = new ArrayList<>();

@@ -187,6 +187,7 @@
                 <exclude>src/test/resources/**/only*.xml</exclude>
                 <exclude>src/main/resources/sdk/**</exclude>
                 <exclude>src/main/resources/dashboard/**</exclude>
+                <exclude>src/test/resources/security/**</exclude>
               </excludes>
             </configuration>
           </execution>

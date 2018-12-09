@@ -34,6 +34,7 @@
     "replication\.log\.buffer\.pagesize" : 131072,
     "replication\.strategy" : "none",
     "replication\.timeout" : 30,
+    "ssl\.enabled" : false,
     "storage.max.active.writable.datasets" : 8,
     "txn\.commitprofiler\.enabled" : false,
     "txn\.commitprofiler\.reportinterval" : 5,

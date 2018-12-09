@@ -478,7 +478,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                         // TODO(mblow): multicc
                         CcId primaryCcId = ncSrv.getPrimaryCcId();
                         ClusterControllerInfo ccInfo = ncSrv.getNodeParameters(primaryCcId).getClusterControllerInfo();
-                        hcc = new HyracksConnection(ccInfo.getClientNetAddress(), ccInfo.getClientNetPort());
+                        hcc = new HyracksConnection(ccInfo.getClientNetAddress(), ccInfo.getClientNetPort(),
+                                ncSrv.getNetworkSecurityManager().getSocketChannelFactory());
                     } catch (Exception e) {
                         throw HyracksDataException.create(e);
                     }

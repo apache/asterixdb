@@ -24,9 +24,12 @@ import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.net.ssl.SSLEngine;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.utils.URIBuilder;
@@ -106,5 +109,25 @@ public class NetworkUtil {
     public static String decodeIPv6LiteralHost(String hostname) {
         return hostname.length() > 0 && hostname.charAt(0) == '[' ? hostname.substring(1, hostname.length() - 1)
                 : hostname;
+    }
+
+    public static ByteBuffer enlargeSslPacketBuffer(SSLEngine engine, ByteBuffer buffer) {
+        return enlargeSslBuffer(buffer, engine.getSession().getPacketBufferSize());
+    }
+
+    public static ByteBuffer enlargeSslApplicationBuffer(SSLEngine engine, ByteBuffer buffer) {
+        return enlargeSslBuffer(buffer, engine.getSession().getApplicationBufferSize());
+    }
+
+    public static ByteBuffer enlargeSslBuffer(ByteBuffer src, int sessionProposedCapacity) {
+        final ByteBuffer enlargedBuffer;
+        if (sessionProposedCapacity > src.capacity()) {
+            enlargedBuffer = ByteBuffer.allocate(sessionProposedCapacity);
+        } else {
+            enlargedBuffer = ByteBuffer.allocate(src.capacity() * 2);
+        }
+        src.flip();
+        enlargedBuffer.put(src);
+        return enlargedBuffer;
     }
 }

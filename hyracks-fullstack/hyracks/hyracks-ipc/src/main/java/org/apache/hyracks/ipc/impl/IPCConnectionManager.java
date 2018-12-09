@@ -36,8 +36,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 
+import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.NetworkUtil;
 import org.apache.logging.log4j.Level;
@@ -71,8 +73,12 @@ public class IPCConnectionManager {
 
     private volatile boolean stopped;
 
-    IPCConnectionManager(IPCSystem system, InetSocketAddress socketAddress) throws IOException {
+    private final ISocketChannelFactory socketChannelFactory;
+
+    IPCConnectionManager(IPCSystem system, InetSocketAddress socketAddress, ISocketChannelFactory socketChannelFactory)
+            throws IOException {
         this.system = system;
+        this.socketChannelFactory = socketChannelFactory;
         this.serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.socket().setReuseAddress(true);
         serverSocketChannel.configureBlocking(false);
@@ -209,7 +215,8 @@ public class IPCConnectionManager {
                 SelectionKey key = i.next();
                 i.remove();
                 final SelectableChannel sc = key.channel();
-                if (key.isReadable()) {
+                // do not attempt to read until handle is set (e.g. after handshake is completed)
+                if (key.isReadable() && key.attachment() != null) {
                     read(key);
                 } else if (key.isWritable()) {
                     write(key);
@@ -229,8 +236,13 @@ public class IPCConnectionManager {
             try {
                 connected = channel.finishConnect();
                 if (connected) {
-                    connectableKey.interestOps(SelectionKey.OP_READ);
-                    connectionEstablished(handle);
+                    SelectionKey channelKey = channel.register(selector, SelectionKey.OP_READ);
+                    final ISocketChannel clientChannel = socketChannelFactory.createClientChannel(channel);
+                    if (clientChannel.requiresHandshake()) {
+                        asyncHandshake(clientChannel, handle, channelKey);
+                    } else {
+                        connectionEstablished(handle, channelKey, clientChannel);
+                    }
                 }
             } catch (IOException e) {
                 LOGGER.warn("Exception finishing connect", e);
@@ -248,11 +260,13 @@ public class IPCConnectionManager {
             try {
                 channel = serverSocketChannel.accept();
                 register(channel);
+                final ISocketChannel serverChannel = socketChannelFactory.createServerChannel(channel);
                 channelKey = channel.register(selector, SelectionKey.OP_READ);
-                IPCHandle handle = new IPCHandle(system, null);
-                handle.setKey(channelKey);
-                channelKey.attach(handle);
-                handle.setState(HandleState.CONNECT_RECEIVED);
+                if (serverChannel.requiresHandshake()) {
+                    asyncHandshake(serverChannel, null, channelKey);
+                } else {
+                    connectionReceived(serverChannel, channelKey);
+                }
             } catch (IOException e) {
                 LOGGER.error("Failed to accept channel ", e);
                 close(channelKey, channel);
@@ -268,12 +282,17 @@ public class IPCConnectionManager {
                     register(channel);
                     if (channel.connect(handle.getRemoteAddress())) {
                         channelKey = channel.register(selector, SelectionKey.OP_READ);
-                        connectionEstablished(handle);
+                        final ISocketChannel clientChannel = socketChannelFactory.createClientChannel(channel);
+                        if (clientChannel.requiresHandshake()) {
+                            asyncHandshake(clientChannel, handle, channelKey);
+                        } else {
+                            connectionEstablished(handle, channelKey, clientChannel);
+                        }
                     } else {
                         channelKey = channel.register(selector, SelectionKey.OP_CONNECT);
+                        handle.setKey(channelKey);
+                        channelKey.attach(handle);
                     }
-                    handle.setKey(channelKey);
-                    channelKey.attach(handle);
                 } catch (IOException e) {
                     LOGGER.error("Failed to accept channel ", e);
                     close(channelKey, channel);
@@ -283,10 +302,13 @@ public class IPCConnectionManager {
             workingPendingConnections.clear();
         }
 
-        private void connectionEstablished(IPCHandle handle) {
+        private void connectionEstablished(IPCHandle handle, SelectionKey channelKey, ISocketChannel channel) {
+            handle.setSocketChannel(channel);
             handle.setState(HandleState.CONNECT_SENT);
+            handle.setKey(channelKey);
             registerHandle(handle);
             IPCConnectionManager.this.write(createInitialReqMessage(handle));
+            channelKey.attach(handle);
         }
 
         private void sendPendingMessages() {
@@ -367,7 +389,7 @@ public class IPCConnectionManager {
             IPCHandle handle = (IPCHandle) readableKey.attachment();
             ByteBuffer readBuffer = handle.getInBuffer();
             try {
-                int len = channel.read(readBuffer);
+                int len = handle.getSocketChannel().read(readBuffer);
                 if (len < 0) {
                     close(readableKey, channel);
                     return;
@@ -386,15 +408,16 @@ public class IPCConnectionManager {
         private void write(SelectionKey writableKey) {
             SocketChannel channel = (SocketChannel) writableKey.channel();
             IPCHandle handle = (IPCHandle) writableKey.attachment();
+            final ISocketChannel socketChannel = handle.getSocketChannel();
             ByteBuffer writeBuffer = handle.getOutBuffer();
             try {
-                int len = channel.write(writeBuffer);
+                int len = socketChannel.write(writeBuffer);
                 if (len < 0) {
                     close(writableKey, channel);
                     return;
                 }
                 system.getPerformanceCounters().addMessageBytesSent(len);
-                if (!writeBuffer.hasRemaining()) {
+                if (!writeBuffer.hasRemaining() && !socketChannel.isPendingWrite()) {
                     writableKey.interestOps(writableKey.interestOps() & ~SelectionKey.OP_WRITE);
                 }
                 if (handle.full()) {
@@ -444,6 +467,32 @@ public class IPCConnectionManager {
         private <T> void moveAll(List<T> source, List<T> target) {
             target.addAll(source);
             source.clear();
+        }
+
+        private void asyncHandshake(ISocketChannel socketChannel, IPCHandle handle, SelectionKey channelKey) {
+            CompletableFuture.supplyAsync(socketChannel::handshake).exceptionally(ex -> false).thenAccept(
+                    handshakeSuccess -> handleHandshakeCompletion(handshakeSuccess, socketChannel, handle, channelKey));
+        }
+
+        private void handleHandshakeCompletion(Boolean handshakeSuccess, ISocketChannel socketChannel, IPCHandle handle,
+                SelectionKey channelKey) {
+            if (handshakeSuccess) {
+                if (handle == null) {
+                    connectionReceived(socketChannel, channelKey);
+                } else {
+                    connectionEstablished(handle, channelKey, socketChannel);
+                }
+            } else {
+                close(channelKey, socketChannel.getSocketChannel());
+            }
+        }
+
+        private void connectionReceived(ISocketChannel channel, SelectionKey channelKey) {
+            final IPCHandle handle = new IPCHandle(system, null);
+            handle.setState(HandleState.CONNECT_RECEIVED);
+            handle.setSocketChannel(channel);
+            handle.setKey(channelKey);
+            channelKey.attach(handle);
         }
     }
 }
