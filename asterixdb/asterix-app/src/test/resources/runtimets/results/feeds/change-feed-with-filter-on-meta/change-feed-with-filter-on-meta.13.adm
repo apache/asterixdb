@@ -1,5 +1,5 @@
-{ "rec": { "id": 1, "name": "John Mad", "age": 29, "hobby": "reading" }, "meta": { "id": "rec1_US", "class_type": 1, "updated_date": "2007-02-02" } }
-{ "rec": { "id": 2, "name": "Scott Scott", "age": 30, "hobby": "hiking" }, "meta": { "id": "rec2_US", "class_type": 1, "updated_date": "2008-02-04" } }
-{ "rec": { "id": 4, "name": "Robert Moore", "age": 32, "hobby": "reading" }, "meta": { "id": "rec4_US", "class_type": 1, "updated_date": "2006-01-04" } }
-{ "rec": { "id": 7, "name": "Watson Jordon", "age": 28, "hobby": "basketball" }, "meta": { "id": "rec7_US", "class_type": 1, "updated_date": "2018-06-07" } }
-{ "rec": { "id": 14, "name": "Sarah Tran", "age": 20, "hobby": "reading" }, "meta": { "id": "rec14_US", "class_type": 1, "updated_date": "2010-09-01" } }
+{ "rec": { "id": 1, "name": "John Mad", "age": 29, "hobby": "reading" }, "meta": { "id": "rec1_US", "class_type": 1, "updated_date": "2007-02-02" }, "count": [ 5 ] }
+{ "rec": { "id": 2, "name": "Scott Scott", "age": 30, "hobby": "hiking" }, "meta": { "id": "rec2_US", "class_type": 1, "updated_date": "2008-02-04" }, "count": [ 5 ] }
+{ "rec": { "id": 4, "name": "Robert Moore", "age": 32, "hobby": "reading" }, "meta": { "id": "rec4_US", "class_type": 1, "updated_date": "2006-01-04" }, "count": [ 5 ] }
+{ "rec": { "id": 7, "name": "Watson Jordon", "age": 28, "hobby": "basketball" }, "meta": { "id": "rec7_US", "class_type": 1, "updated_date": "2018-06-07" }, "count": [ 5 ] }
+{ "rec": { "id": 14, "name": "Sarah Tran", "age": 20, "hobby": "reading" }, "meta": { "id": "rec14_US", "class_type": 1, "updated_date": "2010-09-01" }, "count": [ 5 ] }

@@ -1,5 +1,5 @@
-{ "rec": { "id": 3, "name": "Dan David", "age": 40, "hobby": "bowling" }, "meta": { "id": "rec3_UK", "class_type": 2, "updated_date": "2018-02-02" } }
-{ "rec": { "id": 5, "name": "Sandy Donald", "age": 35, "hobby": "soccer" }, "meta": { "id": "rec5_UK", "class_type": 2, "updated_date": "2018-01-04" } }
-{ "rec": { "id": 6, "name": "Joe Dana", "age": 24, "hobby": "tennis" }, "meta": { "id": "rec6_US", "class_type": 2, "updated_date": "2018-06-05" } }
-{ "rec": { "id": 8, "name": "Mat Steve", "age": 45, "hobby": "tennis" }, "meta": { "id": "rec8_UK", "class_type": 2, "updated_date": "2018-06-05" } }
-{ "rec": { "id": 13, "name": "Sally Bush", "age": 29, "hobby": "reading" }, "meta": { "id": "rec13_US", "class_type": 2, "updated_date": "2014-09-01" } }
+{ "rec": { "id": 3, "name": "Dan David", "age": 40, "hobby": "bowling" }, "meta": { "id": "rec3_UK", "class_type": 2, "updated_date": "2018-02-02" }, "count": [ 5 ] }
+{ "rec": { "id": 5, "name": "Sandy Donald", "age": 35, "hobby": "soccer" }, "meta": { "id": "rec5_UK", "class_type": 2, "updated_date": "2018-01-04" }, "count": [ 5 ] }
+{ "rec": { "id": 6, "name": "Joe Dana", "age": 24, "hobby": "tennis" }, "meta": { "id": "rec6_US", "class_type": 2, "updated_date": "2018-06-05" }, "count": [ 5 ] }
+{ "rec": { "id": 8, "name": "Mat Steve", "age": 45, "hobby": "tennis" }, "meta": { "id": "rec8_UK", "class_type": 2, "updated_date": "2018-06-05" }, "count": [ 5 ] }
+{ "rec": { "id": 13, "name": "Sally Bush", "age": 29, "hobby": "reading" }, "meta": { "id": "rec13_US", "class_type": 2, "updated_date": "2014-09-01" }, "count": [ 5 ] }

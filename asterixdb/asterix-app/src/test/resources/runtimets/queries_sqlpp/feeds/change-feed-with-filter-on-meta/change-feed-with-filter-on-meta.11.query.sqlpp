@@ -19,4 +19,4 @@
 
 use test;
 
-select value {"rec": v, "meta": meta()} from US_DS2 v order by v.id;
+select value {"rec": v, "meta": meta(), "count": (select value count(*) from US_DS2 c)} from US_DS2 v order by v.id;
