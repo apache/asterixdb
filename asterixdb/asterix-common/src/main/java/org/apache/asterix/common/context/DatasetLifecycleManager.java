@@ -579,6 +579,8 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             if (!dsInfo.isMemoryAllocated() && !dsInfo.isExternal()) {
                 while (!memoryManager.allocate(datasetId)) {
                     if (!evictCandidateDataset()) {
+                        LOGGER.warn("failed to allocate memory for dataset {}. Currently allocated {}",
+                                dsInfo::getDatasetID, ((DatasetMemoryManager) memoryManager)::getState);
                         throw new HyracksDataException("Cannot allocate dataset " + dsInfo.getDatasetID()
                                 + " memory since memory budget would be exceeded.");
                     }

@@ -24,9 +24,14 @@ import java.util.Map;
 import org.apache.asterix.common.api.IDatasetMemoryManager;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
+import org.apache.hyracks.util.JSONUtil;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @ThreadSafe
 public class DatasetMemoryManager implements IDatasetMemoryManager {
@@ -114,6 +119,14 @@ public class DatasetMemoryManager implements IDatasetMemoryManager {
                 : storageProperties.getMemoryComponentNumPages();
     }
 
+    public JsonNode getState() {
+        final ObjectNode state = JSONUtil.createObject();
+        state.put("availableBudget", available);
+        state.set("allocated", budgetMapToJsonArray(allocatedMap));
+        state.set("reserved", budgetMapToJsonArray(reservedMap));
+        return state;
+    }
+
     private long getTotalSize(int datasetId) {
         return storageProperties.getMemoryComponentPageSize() * (long) getNumPages(datasetId);
     }
@@ -125,5 +138,16 @@ public class DatasetMemoryManager implements IDatasetMemoryManager {
     private void allocateReserved(int datasetId) {
         final Long reserved = reservedMap.get(datasetId);
         allocatedMap.put(datasetId, reserved);
+    }
+
+    private static ArrayNode budgetMapToJsonArray(Map<Integer, Long> memorytMap) {
+        final ArrayNode array = JSONUtil.createArray();
+        memorytMap.forEach((k, v) -> {
+            final ObjectNode dataset = JSONUtil.createObject();
+            dataset.put("datasetId", k);
+            dataset.put("budget", v);
+            array.add(dataset);
+        });
+        return array;
     }
 }
