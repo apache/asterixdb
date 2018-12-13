@@ -32,6 +32,7 @@ import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
@@ -53,10 +54,11 @@ public class MessagingNetworkManager {
     private final Map<IChannelControlBlock, ICloseableBufferAcceptor> channelFullBufferAcceptor = new HashMap<>();
 
     public MessagingNetworkManager(NodeControllerService ncs, String inetAddress, int inetPort, int nThreads,
-            String publicInetAddress, int publicInetPort, IChannelInterfaceFactory channelInterfaceFactory) {
+            String publicInetAddress, int publicInetPort, IChannelInterfaceFactory channelInterfaceFactory,
+            ISocketChannelFactory socketChannelFactory) {
         this.ncs = ncs;
         md = new MuxDemux(new InetSocketAddress(inetAddress, inetPort), new ChannelOpenListener(), nThreads,
-                MAX_CONNECTION_ATTEMPTS, channelInterfaceFactory);
+                MAX_CONNECTION_ATTEMPTS, channelInterfaceFactory, socketChannelFactory);
         publicNetworkAddress = new NetworkAddress(publicInetAddress, publicInetPort);
     }
 

@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.net.protocols.tcp.ITCPConnectionListener;
 import org.apache.hyracks.net.protocols.tcp.TCPConnection;
 import org.apache.hyracks.net.protocols.tcp.TCPEndpoint;
@@ -68,13 +69,18 @@ public class MuxDemux {
      *            - Number of threads to use for data transfer
      * @param maxConnectionAttempts
      *            - Maximum number of connection attempts
+     * @param channelInterfaceFactory
+     *            - The channel interface factory
+     * @param socketChannelFactory
+     *            - The socket channel factory
      */
     public MuxDemux(InetSocketAddress localAddress, IChannelOpenListener listener, int nThreads,
-            int maxConnectionAttempts, IChannelInterfaceFactory channelInterfaceFatory) {
+            int maxConnectionAttempts, IChannelInterfaceFactory channelInterfaceFactory,
+            ISocketChannelFactory socketChannelFactory) {
         this.localAddress = localAddress;
         this.channelOpenListener = listener;
         this.maxConnectionAttempts = maxConnectionAttempts;
-        this.channelInterfaceFatory = channelInterfaceFatory;
+        this.channelInterfaceFatory = channelInterfaceFactory;
         outgoingConnectionMap = new HashMap<>();
         incomingConnectionMap = new HashMap<>();
         this.tcpEndpoint = new TCPEndpoint(new ITCPConnectionListener() {
@@ -126,7 +132,7 @@ public class MuxDemux {
                     }
                 }
             }
-        }, nThreads);
+        }, nThreads, socketChannelFactory);
         perfCounters = new MuxDemuxPerformanceCounters();
     }
 

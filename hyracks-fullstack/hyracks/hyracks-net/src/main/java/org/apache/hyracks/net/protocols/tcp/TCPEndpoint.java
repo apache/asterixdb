@@ -19,6 +19,8 @@
 package org.apache.hyracks.net.protocols.tcp;
 
 import static org.apache.hyracks.net.protocols.tcp.TCPConnection.ConnectionType;
+import static org.apache.hyracks.net.protocols.tcp.TCPConnection.ConnectionType.INCOMING;
+import static org.apache.hyracks.net.protocols.tcp.TCPConnection.ConnectionType.OUTGOING;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -31,7 +33,10 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.util.NetworkUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,9 +57,13 @@ public class TCPEndpoint {
 
     private int nextThread;
 
-    public TCPEndpoint(ITCPConnectionListener connectionListener, int nThreads) {
+    private final ISocketChannelFactory socketChannelFactory;
+
+    public TCPEndpoint(ITCPConnectionListener connectionListener, int nThreads,
+            ISocketChannelFactory socketChannelFactory) {
         this.connectionListener = connectionListener;
         this.nThreads = nThreads;
+        this.socketChannelFactory = socketChannelFactory;
     }
 
     public void start(InetSocketAddress localAddress) throws IOException {
@@ -113,6 +122,8 @@ public class TCPEndpoint {
 
         private final List<SocketChannel> workingIncomingConnections;
 
+        private final List<PendingHandshakeConnection> handshakeCompletedConnections;
+
         private final Selector selector;
 
         public IOThread() throws IOException {
@@ -123,6 +134,7 @@ public class TCPEndpoint {
             this.workingPendingConnections = new ArrayList<>();
             this.incomingConnections = new ArrayList<>();
             this.workingIncomingConnections = new ArrayList<>();
+            handshakeCompletedConnections = new ArrayList<>();
             selector = Selector.open();
         }
 
@@ -151,8 +163,7 @@ public class TCPEndpoint {
                                     SelectionKey key = channel.register(selector, SelectionKey.OP_CONNECT);
                                     key.attach(address);
                                 } else {
-                                    SelectionKey key = channel.register(selector, 0);
-                                    createConnection(key, channel);
+                                    socketConnected(address, channel);
                                 }
                             }
                         }
@@ -161,15 +172,15 @@ public class TCPEndpoint {
                     if (!workingIncomingConnections.isEmpty()) {
                         for (SocketChannel channel : workingIncomingConnections) {
                             register(channel);
-                            SelectionKey sKey = channel.register(selector, 0);
-                            TCPConnection connection = new TCPConnection(TCPEndpoint.this, channel, sKey, selector,
-                                    ConnectionType.INCOMING);
-                            sKey.attach(connection);
-                            synchronized (connectionListener) {
-                                connectionListener.acceptedConnection(connection);
-                            }
+                            connectionReceived(channel);
                         }
                         workingIncomingConnections.clear();
+                    }
+                    if (!handshakeCompletedConnections.isEmpty()) {
+                        for (final PendingHandshakeConnection conn : handshakeCompletedConnections) {
+                            handshakeCompleted(conn);
+                        }
+                        handshakeCompletedConnections.clear();
                     }
                     if (n > 0) {
                         Iterator<SelectionKey> i = selector.selectedKeys().iterator();
@@ -211,7 +222,7 @@ public class TCPEndpoint {
                                     }
                                 }
                                 if (finishConnect) {
-                                    createConnection(key, channel);
+                                    socketConnected((InetSocketAddress) key.attachment(), channel);
                                 }
                             }
                         }
@@ -222,13 +233,29 @@ public class TCPEndpoint {
             }
         }
 
-        private void createConnection(SelectionKey key, SocketChannel channel) {
-            TCPConnection connection =
-                    new TCPConnection(TCPEndpoint.this, channel, key, selector, ConnectionType.OUTGOING);
-            key.attach(connection);
-            key.interestOps(0);
-            synchronized (connectionListener) {
-                connectionListener.connectionEstablished(connection);
+        private void handshakeCompleted(PendingHandshakeConnection conn) {
+            try {
+                if (conn.handshakeSuccess) {
+                    final SelectionKey key = conn.socketChannel.getSocketChannel().register(selector, 0);
+                    final TCPConnection tcpConn =
+                            new TCPConnection(TCPEndpoint.this, conn.socketChannel, key, selector, conn.type);
+                    key.attach(tcpConn);
+                    switch (conn.type) {
+                        case INCOMING:
+                            connectionAccepted(tcpConn);
+                            break;
+                        case OUTGOING:
+                            connectionEstablished(tcpConn);
+                            break;
+                        default:
+                            throw new IllegalStateException("Unknown connection type: " + conn.type);
+                    }
+                } else {
+                    handleHandshakeFailure(conn);
+                }
+            } catch (Exception e) {
+                LOGGER.error("failed to establish connection after handshake", e);
+                handleHandshakeFailure(conn);
             }
         }
 
@@ -261,6 +288,76 @@ public class TCPEndpoint {
         private void register(SocketChannel channel) throws IOException {
             NetworkUtil.configure(channel);
             channel.configureBlocking(false);
+        }
+
+        private void socketConnected(InetSocketAddress remoteAddress, SocketChannel channel) {
+            final ISocketChannel socketChannel = socketChannelFactory.createClientChannel(channel);
+            final PendingHandshakeConnection conn =
+                    new PendingHandshakeConnection(socketChannel, remoteAddress, OUTGOING);
+            if (socketChannel.requiresHandshake()) {
+                asyncHandshake(conn);
+            } else {
+                conn.handshakeSuccess = true;
+                handshakeCompletedConnections.add(conn);
+            }
+        }
+
+        private void connectionReceived(SocketChannel channel) {
+            final ISocketChannel socketChannel = socketChannelFactory.createServerChannel(channel);
+            final PendingHandshakeConnection conn = new PendingHandshakeConnection(socketChannel, null, INCOMING);
+            if (socketChannel.requiresHandshake()) {
+                asyncHandshake(conn);
+            } else {
+                conn.handshakeSuccess = true;
+                handshakeCompletedConnections.add(conn);
+            }
+        }
+
+        private void asyncHandshake(PendingHandshakeConnection connection) {
+            CompletableFuture.supplyAsync(connection.socketChannel::handshake).exceptionally(ex -> false)
+                    .thenAccept(handshakeSuccess -> handleHandshakeCompletion(handshakeSuccess, connection));
+        }
+
+        private void handleHandshakeCompletion(Boolean handshakeSuccess, PendingHandshakeConnection conn) {
+            conn.handshakeSuccess = handshakeSuccess;
+            handshakeCompletedConnections.add(conn);
+            selector.wakeup();
+        }
+
+        private void connectionEstablished(TCPConnection connection) {
+            synchronized (connectionListener) {
+                connectionListener.connectionEstablished(connection);
+            }
+        }
+
+        private void connectionAccepted(TCPConnection connection) {
+            synchronized (connectionListener) {
+                connectionListener.acceptedConnection(connection);
+            }
+        }
+
+        private void handleHandshakeFailure(PendingHandshakeConnection conn) {
+            NetworkUtil.closeQuietly(conn.socketChannel);
+            if (conn.type == OUTGOING) {
+                synchronized (connectionListener) {
+                    connectionListener.connectionFailure(conn.address, new IOException("handshake failure"));
+                }
+            }
+        }
+    }
+
+    private static class PendingHandshakeConnection {
+
+        private final ISocketChannel socketChannel;
+        private final ConnectionType type;
+        private final InetSocketAddress address;
+        private boolean handshakeSuccess = false;
+
+        PendingHandshakeConnection(ISocketChannel socketChannel, InetSocketAddress address,
+                ConnectionType connectionType) {
+            this.socketChannel = socketChannel;
+            this.type = connectionType;
+            this.address = address;
         }
     }
 }

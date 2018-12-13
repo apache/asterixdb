@@ -20,13 +20,13 @@ package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,7 +52,7 @@ public class FullFrameChannelReadInterface extends AbstractChannelReadInterface 
     }
 
     @Override
-    public int read(SocketChannel sc, int size) throws IOException, NetException {
+    public int read(ISocketChannel sc, int size) throws IOException, NetException {
         while (true) {
             if (size <= 0) {
                 return size;

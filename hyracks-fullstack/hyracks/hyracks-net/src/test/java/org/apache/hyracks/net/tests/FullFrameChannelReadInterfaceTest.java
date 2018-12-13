@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.hyracks.api.comm.IBufferFactory;
 import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelReadInterface;
 import org.apache.hyracks.util.StorageUtil;
@@ -61,7 +62,7 @@ public class FullFrameChannelReadInterfaceTest {
         readInterface.setFullBufferAcceptor(new ReadFullBufferAcceptor(fullBufferQ));
         readInterface.setBufferFactory(bufferFactory, RECEIVER_BUFFER_COUNT, FRAME_SIZE);
         Assert.assertEquals(EXPECTED_CHANNEL_CREDIT, channelCredit.get());
-        final SocketChannel socketChannel = mockSocketChannel(ccb);
+        final ISocketChannel socketChannel = mockSocketChannel(ccb);
         final Thread networkFrameReader = new Thread(() -> {
             try {
                 int framesRead = FRAMES_TO_READ_COUNT;
@@ -124,8 +125,8 @@ public class FullFrameChannelReadInterfaceTest {
         return ccb;
     }
 
-    private SocketChannel mockSocketChannel(IChannelControlBlock ccb) throws IOException {
-        final SocketChannel sc = Mockito.mock(SocketChannel.class);
+    private ISocketChannel mockSocketChannel(IChannelControlBlock ccb) throws IOException {
+        final ISocketChannel sc = Mockito.mock(ISocketChannel.class);
         Mockito.when(sc.read(Mockito.any(ByteBuffer.class))).thenAnswer(invocation -> {
             ccb.addPendingCredits(-FRAME_SIZE);
             final ByteBuffer buffer = invocation.getArgumentAt(0, ByteBuffer.class);

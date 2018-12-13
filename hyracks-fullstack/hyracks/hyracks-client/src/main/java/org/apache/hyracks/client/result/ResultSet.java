@@ -44,7 +44,7 @@ public class ResultSet implements IResultSet {
         NetworkAddress ddsAddress = hcc.getResultDirectoryAddress();
         resultDirectory = new ResultDirectory(ddsAddress.getAddress(), ddsAddress.getPort(), socketChannelFactory);
 
-        netManager = new ClientNetworkManager(nReaders);
+        netManager = new ClientNetworkManager(nReaders, socketChannelFactory);
         netManager.start();
 
         resultClientCtx = new ResultClientContext(frameSize);

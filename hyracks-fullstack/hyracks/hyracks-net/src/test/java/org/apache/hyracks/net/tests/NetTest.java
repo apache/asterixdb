@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hyracks.api.comm.IBufferAcceptor;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
+import org.apache.hyracks.ipc.sockets.PlainSocketChannelFactory;
 import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 import org.apache.hyracks.net.protocols.muxdemux.FullFrameChannelInterfaceFactory;
 import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
@@ -162,7 +163,7 @@ public class NetTest {
             }
         };
         return new MuxDemux(new InetSocketAddress("127.0.0.1", 0), md1OpenListener, 1, 5,
-                FullFrameChannelInterfaceFactory.INSTANCE);
+                FullFrameChannelInterfaceFactory.INSTANCE, PlainSocketChannelFactory.INSTANCE);
     }
 
     private class ChannelIO {

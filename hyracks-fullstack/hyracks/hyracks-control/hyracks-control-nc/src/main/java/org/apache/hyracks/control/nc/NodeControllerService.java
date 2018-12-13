@@ -273,12 +273,12 @@ public class NodeControllerService implements IControllerService {
         resultNetworkManager = new ResultNetworkManager(ncConfig.getResultListenAddress(),
                 ncConfig.getResultListenPort(), resultPartitionManager, ncConfig.getNetThreadCount(),
                 ncConfig.getNetBufferCount(), ncConfig.getResultPublicAddress(), ncConfig.getResultPublicPort(),
-                FullFrameChannelInterfaceFactory.INSTANCE);
+                FullFrameChannelInterfaceFactory.INSTANCE, networkSecurityManager.getSocketChannelFactory());
         if (ncConfig.getMessagingListenAddress() != null && serviceCtx.getMessagingChannelInterfaceFactory() != null) {
             messagingNetManager = new MessagingNetworkManager(this, ncConfig.getMessagingListenAddress(),
                     ncConfig.getMessagingListenPort(), ncConfig.getNetThreadCount(),
                     ncConfig.getMessagingPublicAddress(), ncConfig.getMessagingPublicPort(),
-                    serviceCtx.getMessagingChannelInterfaceFactory());
+                    serviceCtx.getMessagingChannelInterfaceFactory(), networkSecurityManager.getSocketChannelFactory());
         }
     }
 
@@ -292,7 +292,8 @@ public class NodeControllerService implements IControllerService {
         partitionManager = new PartitionManager(this);
         netManager = new NetworkManager(ncConfig.getDataListenAddress(), ncConfig.getDataListenPort(), partitionManager,
                 ncConfig.getNetThreadCount(), ncConfig.getNetBufferCount(), ncConfig.getDataPublicAddress(),
-                ncConfig.getDataPublicPort(), FullFrameChannelInterfaceFactory.INSTANCE);
+                ncConfig.getDataPublicPort(), FullFrameChannelInterfaceFactory.INSTANCE,
+                networkSecurityManager.getSocketChannelFactory());
         netManager.start();
         startApplication();
         init();

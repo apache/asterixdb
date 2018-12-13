@@ -29,6 +29,7 @@ import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.comm.channels.IChannelConnectionFactory;
 import org.apache.hyracks.comm.channels.NetworkOutputChannel;
@@ -60,11 +61,11 @@ public class NetworkManager implements IChannelConnectionFactory {
 
     public NetworkManager(String inetAddress, int inetPort, PartitionManager partitionManager, int nThreads,
             int nBuffers, String publicInetAddress, int publicInetPort,
-            IChannelInterfaceFactory channelInterfaceFactory) {
+            IChannelInterfaceFactory channelInterfaceFactory, ISocketChannelFactory socketChannelFactory) {
         this.partitionManager = partitionManager;
         this.nBuffers = nBuffers;
         md = new MuxDemux(new InetSocketAddress(inetAddress, inetPort), new ChannelOpenListener(), nThreads,
-                MAX_CONNECTION_ATTEMPTS, channelInterfaceFactory);
+                MAX_CONNECTION_ATTEMPTS, channelInterfaceFactory, socketChannelFactory);
         // Just save these values for the moment; may be reset in start()
         publicNetworkAddress = new NetworkAddress(publicInetAddress, publicInetPort);
     }

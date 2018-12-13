@@ -19,10 +19,10 @@
 package org.apache.asterix.messaging;
 
 import java.io.IOException;
-import java.nio.channels.SocketChannel;
 
 import org.apache.hyracks.api.comm.IBufferAcceptor;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.net.protocols.muxdemux.AbstractChannelReadInterface;
 
 public class MessagingChannelReadInterface extends AbstractChannelReadInterface {
@@ -32,7 +32,7 @@ public class MessagingChannelReadInterface extends AbstractChannelReadInterface 
     }
 
     @Override
-    public int read(SocketChannel sc, int size) throws IOException, NetException {
+    public int read(ISocketChannel sc, int size) throws IOException, NetException {
         while (true) {
             if (size <= 0) {
                 return size;

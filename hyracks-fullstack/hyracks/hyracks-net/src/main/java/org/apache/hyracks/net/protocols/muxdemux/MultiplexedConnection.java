@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
 import java.util.BitSet;
 import java.util.Optional;
 
@@ -31,6 +30,7 @@ import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.comm.IConnectionWriterState;
 import org.apache.hyracks.api.comm.MuxDemuxCommand;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.net.protocols.tcp.ITCPConnectionEventListener;
 import org.apache.hyracks.net.protocols.tcp.TCPConnection;
 import org.apache.hyracks.util.JSONUtil;
@@ -160,6 +160,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
 
         private IChannelControlBlock ccb;
 
+        private boolean pendingWriteCompletion = false;
+
         public WriterState() {
             cmdWriteBuffer = ByteBuffer.allocateDirect(MuxDemuxCommand.COMMAND_SIZE);
             cmdWriteBuffer.flip();
@@ -168,7 +170,8 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
         }
 
         boolean writePending() {
-            return cmdWriteBuffer.remaining() > 0 || (pendingBuffer != null && pendingWriteSize > 0);
+            return cmdWriteBuffer.remaining() > 0 || (pendingBuffer != null && pendingWriteSize > 0)
+                    || pendingWriteCompletion;
         }
 
         @Override
@@ -181,7 +184,10 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
             this.ccb = ccb;
         }
 
-        boolean performPendingWrite(SocketChannel sc) throws IOException {
+        boolean performPendingWrite(ISocketChannel sc) throws IOException {
+            if (pendingWriteCompletion && !sc.completeWrite()) {
+                return false;
+            }
             int len = cmdWriteBuffer.remaining();
             if (len > 0) {
                 int written = sc.write(cmdWriteBuffer);
@@ -209,10 +215,16 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
                 pendingBuffer = null;
                 pendingWriteSize = 0;
             }
+            // must ensure all pending writes are performed before calling ccb.writeComplete()
+            if (sc.isPendingWrite()) {
+                pendingWriteCompletion = true;
+                return false;
+            }
             if (ccb != null) {
                 ccb.writeComplete();
                 ccb = null;
             }
+            pendingWriteCompletion = false;
             return true;
         }
 
@@ -223,7 +235,7 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
     }
 
     void driveWriterStateMachine() throws IOException, NetException {
-        SocketChannel sc = tcpConnection.getSocketChannel();
+        ISocketChannel sc = tcpConnection.getSocketChannel();
         if (writerState.writePending()) {
             if (!writerState.performPendingWrite(sc)) {
                 return;
@@ -339,9 +351,9 @@ public class MultiplexedConnection implements ITCPConnectionEventListener {
     }
 
     void driveReaderStateMachine() throws IOException, NetException {
-        SocketChannel sc = tcpConnection.getSocketChannel();
+        ISocketChannel sc = tcpConnection.getSocketChannel();
         int chunksRead = 0;
-        while (chunksRead < MAX_CHUNKS_READ_PER_CYCLE) {
+        while (chunksRead < MAX_CHUNKS_READ_PER_CYCLE || sc.isPendingRead()) {
             if (readerState.readBuffer.remaining() > 0) {
                 int read = sc.read(readerState.readBuffer);
                 if (read < 0) {

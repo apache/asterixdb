@@ -19,9 +19,9 @@
 package org.apache.hyracks.api.comm;
 
 import java.io.IOException;
-import java.nio.channels.SocketChannel;
 
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.hyracks.api.network.ISocketChannel;
 
 /**
  * Represents the read interface of a {@link IChannelControlBlock}.
@@ -68,7 +68,7 @@ public interface IChannelReadInterface {
      * @throws IOException
      * @throws NetException
      */
-    public int read(SocketChannel sc, int size) throws IOException, NetException;
+    public int read(ISocketChannel sc, int size) throws IOException, NetException;
 
     /**
      * Sets the read credits of this {@link IChannelReadInterface}

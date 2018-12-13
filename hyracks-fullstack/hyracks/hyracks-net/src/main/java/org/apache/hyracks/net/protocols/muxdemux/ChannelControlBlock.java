@@ -20,7 +20,6 @@ package org.apache.hyracks.net.protocols.muxdemux;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hyracks.api.comm.IChannelControlBlock;
@@ -28,6 +27,7 @@ import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.comm.IChannelReadInterface;
 import org.apache.hyracks.api.comm.IChannelWriteInterface;
 import org.apache.hyracks.api.exceptions.NetException;
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.net.protocols.muxdemux.MultiplexedConnection.WriterState;
 import org.apache.hyracks.util.JSONUtil;
 
@@ -91,7 +91,7 @@ public class ChannelControlBlock implements IChannelControlBlock {
         wi.writeComplete();
     }
 
-    synchronized int read(SocketChannel sc, int size) throws IOException, NetException {
+    synchronized int read(ISocketChannel sc, int size) throws IOException, NetException {
         return ri.read(sc, size);
     }
 

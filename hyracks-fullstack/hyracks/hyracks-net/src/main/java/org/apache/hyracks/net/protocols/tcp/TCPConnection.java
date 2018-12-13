@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,7 +38,7 @@ public class TCPConnection {
 
     private final TCPEndpoint endpoint;
 
-    private final SocketChannel channel;
+    private final ISocketChannel channel;
     private final InetSocketAddress remoteAddress;
     private final SelectionKey key;
 
@@ -50,26 +50,26 @@ public class TCPConnection {
 
     private ConnectionType type;
 
-    public TCPConnection(TCPEndpoint endpoint, SocketChannel channel, SelectionKey key, Selector selector,
+    public TCPConnection(TCPEndpoint endpoint, ISocketChannel channel, SelectionKey key, Selector selector,
             ConnectionType type) {
         this.endpoint = endpoint;
         this.channel = channel;
         this.key = key;
         this.selector = selector;
         this.type = type;
-        remoteAddress = (InetSocketAddress) channel.socket().getRemoteSocketAddress();
+        remoteAddress = (InetSocketAddress) channel.getSocketChannel().socket().getRemoteSocketAddress();
     }
 
     public TCPEndpoint getEndpoint() {
         return endpoint;
     }
 
-    public SocketChannel getSocketChannel() {
+    public ISocketChannel getSocketChannel() {
         return channel;
     }
 
     public InetSocketAddress getLocalAddress() {
-        return (InetSocketAddress) channel.socket().getLocalSocketAddress();
+        return (InetSocketAddress) channel.getSocketChannel().socket().getLocalSocketAddress();
     }
 
     public InetSocketAddress getRemoteAddress() {
