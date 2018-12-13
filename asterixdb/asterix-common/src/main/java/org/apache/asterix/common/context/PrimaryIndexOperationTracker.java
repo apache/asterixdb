@@ -201,6 +201,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
             }
             idGenerator.refresh();
             long flushLsn = logRecord.getLSN();
+            if (flushLsn == 0) {
+                LOGGER.warn("flushing an index with LSN 0. Flush log record: {}", logRecord::getLogRecordForDisplay);
+            }
             ILSMComponentId nextComponentId = idGenerator.getId();
             Map<String, Object> flushMap = new HashMap<>();
             flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
