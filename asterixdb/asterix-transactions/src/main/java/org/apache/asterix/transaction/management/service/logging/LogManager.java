@@ -187,10 +187,10 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
         }
         final int logSize = logRecord.getLogSize();
         ensureSpace(logSize);
-        appendPage.append(logRecord, appendLSN.get());
         if (logRecord.getLogType() == LogType.FLUSH) {
             logRecord.setLSN(appendLSN.get());
         }
+        appendPage.append(logRecord, appendLSN.get());
         if (logRecord.isMarker()) {
             logRecord.logAppended(appendLSN.get());
         }

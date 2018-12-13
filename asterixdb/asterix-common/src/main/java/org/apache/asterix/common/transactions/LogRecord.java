@@ -88,7 +88,7 @@ public class LogRecord implements ILogRecord {
     private final ILogMarkerCallback callback; // A callback for log mark operations
     private int PKFieldCnt;
     private ITransactionContext txnCtx;
-    private long LSN;
+    private volatile long LSN;
     private final AtomicBoolean isFlushed;
     private final PrimaryKeyTupleReference readPKValue;
     private final SimpleTupleReference readNewValue;
