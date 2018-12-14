@@ -75,7 +75,6 @@ import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId.IdCompareResult;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
@@ -752,6 +751,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             ILSMIndex index =
                     (ILSMIndex) datasetLifecycleManager.getIndex(logRecord.getDatasetId(), logRecord.getResourceId());
             ILSMIndexAccessor indexAccessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+            ILSMIndexOperationContext opCtx = indexAccessor.getOpContext();
+            opCtx.setFilterSkip(true);
             try {
                 switch (logRecord.getNewOp()) {
                     case AbstractIndexModificationOperationCallback.INSERT_BYTE:
