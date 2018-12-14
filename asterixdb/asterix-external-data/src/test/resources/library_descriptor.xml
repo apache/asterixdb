@@ -20,6 +20,14 @@
   <language>JAVA</language>
   <libraryFunctions>
     <libraryFunction>
+      <name>wordDetector</name>
+      <function_type>SCALAR</function_type>
+      <argument_type>ASTRING</argument_type>
+      <return_type>ABOOLEAN</return_type>
+      <definition>org.apache.asterix.external.library.WordInListFactory</definition>
+      <parameters>data/external_function/KeywordsDetector_List1.txt</parameters>
+    </libraryFunction>
+    <libraryFunction>
       <name>fnameDetector</name>
       <function_type>SCALAR</function_type>
       <argument_type>InputRecordType</argument_type>

@@ -184,8 +184,8 @@ public class FeedOperations {
                 argExprs.add(new LiteralExpr(new IntegerLiteral((Integer) arg)));
             } else if (arg instanceof String) {
                 argExprs.add(new LiteralExpr(new StringLiteral((String) arg)));
-            } else if (arg instanceof VariableExpr) {
-                argExprs.add((VariableExpr) arg);
+            } else if (arg instanceof Expression) {
+                argExprs.add((Expression) arg);
             }
         }
         return argExprs;
@@ -216,25 +216,16 @@ public class FeedOperations {
             whereClause = new WhereClause(whereClauseQuery.getBody());
         }
 
-        // TODO: This can be the place to add select predicate for ingestion
         // Attaching functions
-        int varIdx = 1;
-        VariableExpr previousVarExpr = fromTermLeftExpr;
-        ArrayList<LetClause> letClauses = new ArrayList<>();
-        for (FunctionSignature funcSig : feedConnection.getAppliedFunctions()) {
-            VarIdentifier intermediateVar = SqlppVariableUtil
-                    .toInternalVariableIdentifier(FEED_DATAFLOW_INTERMEIDATE_VAL_PREFIX + String.valueOf(varIdx));
-            VariableExpr intermediateVarExpr = new VariableExpr(intermediateVar);
-            CallExpr functionCallExpr = new CallExpr(funcSig, addArgs(previousVarExpr));
-            previousVarExpr = intermediateVarExpr;
-            LetClause letClause = new LetClause(intermediateVarExpr, functionCallExpr);
-            letClauses.add(letClause);
-            varIdx++;
+        Expression previousVarExpr = fromTermLeftExpr;
+        for (FunctionSignature functionSignature : feedConnection.getAppliedFunctions()) {
+            CallExpr functionCallExpr = new CallExpr(functionSignature, addArgs(previousVarExpr));
+            previousVarExpr = functionCallExpr;
         }
         // Constructing select clause
         SelectElement selectElement = new SelectElement(previousVarExpr);
         SelectClause selectClause = new SelectClause(selectElement, null, false);
-        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, letClauses, whereClause, null, null, null);
+        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, whereClause, null, null, null);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         SelectExpression body = new SelectExpression(null, selectSetOperation, null, null, true);
         Query query = new Query(false, true, body, 0);
