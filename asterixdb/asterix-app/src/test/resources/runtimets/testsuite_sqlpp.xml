@@ -4621,6 +4621,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="list">
+      <compilation-unit name="get-item_03">
+        <output-dir compare="Text">get-item_03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
       <compilation-unit name="len_01">
         <output-dir compare="Text">len_01</output-dir>
       </compilation-unit>

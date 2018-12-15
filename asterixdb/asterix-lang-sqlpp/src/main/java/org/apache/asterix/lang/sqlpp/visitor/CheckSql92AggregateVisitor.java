@@ -118,7 +118,15 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
 
     @Override
     public Boolean visit(IndexAccessor ia, ILangExpression parentSelectBlock) throws CompilationException {
-        return ia.getExpr().accept(this, parentSelectBlock);
+        if (ia.getExpr().accept(this, parentSelectBlock)) {
+            return true;
+        }
+
+        if (!ia.isAny() && ia.getIndexExpr().accept(this, parentSelectBlock)) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override

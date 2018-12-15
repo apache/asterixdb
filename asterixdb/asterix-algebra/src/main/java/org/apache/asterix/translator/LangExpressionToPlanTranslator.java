@@ -728,23 +728,34 @@ class LangExpressionToPlanTranslator
     public Pair<ILogicalOperator, LogicalVariable> visit(IndexAccessor ia, Mutable<ILogicalOperator> tupSource)
             throws CompilationException {
         SourceLocation sourceLoc = ia.getSourceLocation();
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(ia.getExpr(), tupSource);
+
+        // Expression pair
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> expressionPair =
+                langExprToAlgExpression(ia.getExpr(), tupSource);
         LogicalVariable v = context.newVar();
         AbstractFunctionCallExpression f;
+
+        // Index expression
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> indexPair = null;
+
         if (ia.isAny()) {
             f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.ANY_COLLECTION_MEMBER));
-            f.getArguments().add(new MutableObject<>(p.first));
-            f.setSourceLocation(sourceLoc);
+            f.getArguments().add(new MutableObject<>(expressionPair.first));
         } else {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> indexPair =
-                    langExprToAlgExpression(ia.getIndexExpr(), tupSource);
+            indexPair = langExprToAlgExpression(ia.getIndexExpr(), expressionPair.second);
             f = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.GET_ITEM));
-            f.getArguments().add(new MutableObject<>(p.first));
+            f.getArguments().add(new MutableObject<>(expressionPair.first));
             f.getArguments().add(new MutableObject<>(indexPair.first));
-            f.setSourceLocation(sourceLoc);
         }
+
+        f.setSourceLocation(sourceLoc);
         AssignOperator a = new AssignOperator(v, new MutableObject<>(f));
-        a.getInputs().add(p.second);
+
+        if (ia.isAny()) {
+            a.getInputs().add(expressionPair.second);
+        } else {
+            a.getInputs().add(indexPair.second); // NOSONAR: Called only if value exists
+        }
         a.setSourceLocation(sourceLoc);
         return new Pair<>(a, v);
     }
