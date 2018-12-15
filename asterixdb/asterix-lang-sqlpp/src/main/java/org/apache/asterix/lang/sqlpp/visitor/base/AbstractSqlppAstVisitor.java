@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.sqlpp.visitor.base;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.visitor.base.AbstractAstVisitor;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
@@ -113,6 +114,11 @@ public abstract class AbstractSqlppAstVisitor<R, T> extends AbstractAstVisitor<R
 
     @Override
     public R visit(WindowExpression winExpr, T arg) throws CompilationException {
+        return null;
+    }
+
+    @Override
+    public R visit(ListSliceExpression expression, T arg) throws CompilationException {
         return null;
     }
 }

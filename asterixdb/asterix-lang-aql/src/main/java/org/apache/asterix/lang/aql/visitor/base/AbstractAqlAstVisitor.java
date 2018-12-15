@@ -23,6 +23,7 @@ import org.apache.asterix.lang.aql.clause.DistinctClause;
 import org.apache.asterix.lang.aql.clause.ForClause;
 import org.apache.asterix.lang.aql.expression.FLWOGRExpression;
 import org.apache.asterix.lang.aql.expression.UnionExpr;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.visitor.base.AbstractAstVisitor;
 
 public abstract class AbstractAqlAstVisitor<R, T> extends AbstractAstVisitor<R, T> implements IAQLVisitor<R, T> {
@@ -47,4 +48,8 @@ public abstract class AbstractAqlAstVisitor<R, T> extends AbstractAstVisitor<R, 
         return null;
     }
 
+    @Override
+    public R visit(ListSliceExpression expression, T arg) throws CompilationException {
+        return null;
+    }
 }

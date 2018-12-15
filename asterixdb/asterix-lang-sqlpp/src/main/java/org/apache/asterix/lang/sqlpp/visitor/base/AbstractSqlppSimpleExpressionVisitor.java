@@ -39,6 +39,7 @@ import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -344,6 +345,18 @@ public class AbstractSqlppSimpleExpressionVisitor
             ia.setIndexExpr(visit(ia.getIndexExpr(), arg));
         }
         return ia;
+    }
+
+    @Override
+    public Expression visit(ListSliceExpression expression, ILangExpression arg) throws CompilationException {
+        expression.setExpr(visit(expression.getExpr(), expression));
+        expression.setStartIndexExpression(visit(expression.getStartIndexExpression(), arg));
+
+        // End index expression can be null (optional)
+        if (expression.hasEndExpression()) {
+            expression.setEndIndexExpression(visit(expression.getEndIndexExpression(), arg));
+        }
+        return expression;
     }
 
     @Override

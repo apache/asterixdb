@@ -30,6 +30,7 @@ import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
@@ -175,4 +176,5 @@ public interface ILangVisitor<R, T> {
 
     R visit(CompactStatement del, T arg) throws CompilationException;
 
+    R visit(ListSliceExpression expression, T arg) throws CompilationException;
 }

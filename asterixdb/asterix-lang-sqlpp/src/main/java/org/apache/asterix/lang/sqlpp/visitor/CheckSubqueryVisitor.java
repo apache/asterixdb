@@ -39,6 +39,7 @@ import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -225,6 +226,12 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     @Override
     public Boolean visit(IndexAccessor ia, ILangExpression arg) throws CompilationException {
         return visit(ia.getExpr(), arg) || visit(ia.getIndexExpr(), arg);
+    }
+
+    @Override
+    public Boolean visit(ListSliceExpression expression, ILangExpression arg) throws CompilationException {
+        return visit(expression.getExpr(), arg) || visit(expression.getStartIndexExpression(), arg)
+                || visit(expression.getEndIndexExpression(), arg);
     }
 
     @Override

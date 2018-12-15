@@ -40,6 +40,7 @@ import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -412,6 +413,18 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         ia.getExpr().accept(this, freeVars);
         if (ia.getIndexExpr() != null) {
             ia.getIndexExpr().accept(this, freeVars);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(ListSliceExpression expression, Collection<VariableExpr> freeVars) throws CompilationException {
+        expression.getExpr().accept(this, freeVars);
+        expression.getStartIndexExpression().accept(this, freeVars);
+
+        // End index expression can be null (optional)
+        if (expression.hasEndExpression()) {
+            expression.getEndIndexExpression().accept(this, freeVars);
         }
         return null;
     }

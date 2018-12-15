@@ -42,6 +42,7 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
@@ -201,6 +202,12 @@ public class AbstractAqlSimpleExpressionVisitor extends AbstractAqlQueryExpressi
             ia.setIndexExpr(visit(ia.getIndexExpr(), arg));
         }
         return ia;
+    }
+
+    @Override
+    public Expression visit(ListSliceExpression expression, ILangExpression arg) throws CompilationException {
+        // This functionality is not supported for AQL
+        return null;
     }
 
     protected Expression visit(Expression expr, ILangExpression arg) throws CompilationException {

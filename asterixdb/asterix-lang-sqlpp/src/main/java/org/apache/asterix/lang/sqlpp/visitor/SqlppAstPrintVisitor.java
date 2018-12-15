@@ -47,6 +47,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
@@ -355,6 +356,24 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             out.println(" " + orderbyModifierList.get(i));
         }
         out.println(skip(step) + ")");
+        return null;
+    }
+
+    @Override
+    public Void visit(ListSliceExpression expression, Integer step) throws CompilationException {
+        out.println(skip(step) + "ListSliceExpression [");
+        expression.getExpr().accept(this, step + 1);
+
+        out.print("Start Index: ");
+        expression.getStartIndexExpression().accept(this, step + 1);
+        out.println(skip(step) + ":");
+
+        // End index expression can be null (optional)
+        if (expression.hasEndExpression()) {
+            out.print("End Index: ");
+            expression.getEndIndexExpression().accept(this, step + 1);
+        }
+        out.println(skip(step) + "]");
         return null;
     }
 }

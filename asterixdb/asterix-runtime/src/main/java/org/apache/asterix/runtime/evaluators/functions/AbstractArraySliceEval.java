@@ -269,8 +269,8 @@ public abstract class AbstractArraySliceEval extends AbstractScalarEval {
                 throw new UnsupportedItemTypeException(sourceLoc, functionIdentifier, typeTag.serialize());
         }
 
-        // Values like 1, 2, 3.0 are ok, but 0.3 and 3.5 are not accepted
-        if (value > Math.floor(value)) {
+        // Values like 1, 2, 3.0 are ok, but 0.3 and 3.5 are not accepted, also handle NaN and INF/-INF
+        if (Double.isNaN(value) || Double.isInfinite(value) || value > Math.floor(value)) {
             throw new InvalidDataFormatException(sourceLoc, functionIdentifier, typeTag.serialize());
         }
 

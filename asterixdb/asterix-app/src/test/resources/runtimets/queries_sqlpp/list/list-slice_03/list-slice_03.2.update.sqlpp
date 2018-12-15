@@ -16,30 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.common.base;
 
-public interface Expression extends ILangExpression {
-    Kind getKind();
+use test;
 
-    enum Kind {
-        LITERAL_EXPRESSION,
-        FLWOGR_EXPRESSION,
-        IF_EXPRESSION,
-        QUANTIFIED_EXPRESSION,
-        LIST_CONSTRUCTOR_EXPRESSION,
-        RECORD_CONSTRUCTOR_EXPRESSION,
-        VARIABLE_EXPRESSION,
-        METAVARIABLE_EXPRESSION,
-        CALL_EXPRESSION,
-        OP_EXPRESSION,
-        FIELD_ACCESSOR_EXPRESSION,
-        INDEX_ACCESSOR_EXPRESSION,
-        LIST_SLICE_EXPRESSION,
-        UNARY_EXPRESSION,
-        UNION_EXPRESSION,
-        SELECT_EXPRESSION,
-        PRIMARY_EXPRESSION,
-        CASE_EXPRESSION,
-        WINDOW_EXPRESSION
-    }
-}
+insert into test.test([
+{"id": 1, "groupId": 1, "name": "Name value", "arrayItems": [1, 2, 3], "multisetItems": {{1, 2, 3}}},
+{"id": 2, "groupId": 1, "name": "Name value", "arrayItems": [1, 2, 3, 4], "multisetItems": {{1, 2, 3, 4}}, "openArrayItems": null},
+{"id": 3, "groupId": 2, "name": "Name value", "arrayItems": [1, 2, 3, 4, 5], "multisetItems": {{1, 2, 3, 4, 5}}, "openArrayItems": [1, 2, 3]}
+]);

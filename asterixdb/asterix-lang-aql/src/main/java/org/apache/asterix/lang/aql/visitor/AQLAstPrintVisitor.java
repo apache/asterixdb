@@ -28,6 +28,7 @@ import org.apache.asterix.lang.aql.expression.UnionExpr;
 import org.apache.asterix.lang.aql.visitor.base.IAQLVisitor;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.visitor.QueryPrintVisitor;
 
 class AQLAstPrintVisitor extends QueryPrintVisitor implements IAQLVisitor<Void, Integer> {
@@ -73,6 +74,12 @@ class AQLAstPrintVisitor extends QueryPrintVisitor implements IAQLVisitor<Void, 
         for (Expression expr : dc.getDistinctByExpr()) {
             expr.accept(this, step + 1);
         }
+        return null;
+    }
+
+    @Override
+    public Void visit(ListSliceExpression expression, Integer step) throws CompilationException {
+        // This functionality is not supported for AQL
         return null;
     }
 

@@ -35,7 +35,11 @@ use TinySocial;
   "t13": (array_slice([0, 1, 2, 3], "0", 3) IS NULL),   // Invalid start
   "t14": (array_slice([0, 1, 2, 3], 0, "3") IS NULL),   // Invalid end
   "t15": (SELECT value array_slice(d1.followers, null) IS NULL FROM d1),    // start is null
-  "t16": (SELECT value array_slice(d1.followers, null, 2) IS NULL FROM d1)  // start is null
+  "t16": (SELECT value array_slice(d1.followers, null, 2) IS NULL FROM d1), // start is null
+  "t17": (array_slice([0, 1, 2, 3], float("INF")) IS NULL),      // INF
+  "t18": (array_slice([0, 1, 2, 3], float("NaN")) IS NULL),      // NaN
+  "t19": (array_slice([0, 1, 2, 3], 1, float("INF")) IS NULL),   // INF
+  "t20": (array_slice([0, 1, 2, 3], 2, float("NaN")) IS NULL)    // NaN
 };
 
 // t15 has MISSING value in first record, so result will actually be [ null, true ]

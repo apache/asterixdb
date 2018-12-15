@@ -1,0 +1,1 @@
+{ "t1": [ true, false, false ], "t2": [ null, true, false ], "t3": [ null, true, true ], "t4": [ null, true, true ], "t5": [ null, true, true ], "t6": [ null, true, true ] }

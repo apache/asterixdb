@@ -41,6 +41,7 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
@@ -301,6 +302,33 @@ public class CloneAndSubstituteVariablesVisitor extends
         i.setSourceLocation(ia.getSourceLocation());
         i.addHints(ia.getHints());
         return new Pair<>(i, env);
+    }
+
+    @Override
+    public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(ListSliceExpression expression,
+            VariableSubstitutionEnvironment env) throws CompilationException {
+        Pair<ILangExpression, VariableSubstitutionEnvironment> expressionPair = expression.getExpr().accept(this, env);
+        Expression startIndexExpression;
+        Expression endIndexExpression = null;
+
+        // Start index expression
+        Pair<ILangExpression, VariableSubstitutionEnvironment> startExpressionPair =
+                expression.getStartIndexExpression().accept(this, env);
+        startIndexExpression = (Expression) startExpressionPair.first;
+
+        // End index expression (optional)
+        if (expression.hasEndExpression()) {
+            Pair<ILangExpression, VariableSubstitutionEnvironment> endExpressionPair =
+                    expression.getEndIndexExpression().accept(this, env);
+            endIndexExpression = (Expression) endExpressionPair.first;
+        }
+
+        // Resulted expression
+        ListSliceExpression resultExpression =
+                new ListSliceExpression((Expression) expressionPair.first, startIndexExpression, endIndexExpression);
+        resultExpression.setSourceLocation(expression.getSourceLocation());
+        resultExpression.addHints(expression.getHints());
+        return new Pair<>(resultExpression, env);
     }
 
     @Override

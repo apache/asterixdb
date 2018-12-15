@@ -31,6 +31,7 @@ import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.visitor.AbstractInlineUdfsVisitor;
@@ -78,6 +79,12 @@ public class AQLInlineUdfsVisitor extends AbstractInlineUdfsVisitor
         Pair<Boolean, List<Expression>> p = inlineUdfsInExprList(dc.getDistinctByExpr(), arg);
         dc.setDistinctByExpr(p.second);
         return p.first;
+    }
+
+    @Override
+    public Boolean visit(ListSliceExpression expression, List<FunctionDecl> arg) throws CompilationException {
+        // This functionality is not supported for AQL
+        return false;
     }
 
     @Override

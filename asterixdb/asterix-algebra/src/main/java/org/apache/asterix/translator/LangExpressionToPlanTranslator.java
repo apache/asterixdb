@@ -54,6 +54,7 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
@@ -120,7 +121,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressio
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -152,7 +152,6 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
-import org.apache.hyracks.algebricks.core.algebra.properties.UnpartitionedPropertyComputer;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileSplit;
@@ -758,6 +757,52 @@ class LangExpressionToPlanTranslator
         }
         a.setSourceLocation(sourceLoc);
         return new Pair<>(a, v);
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(ListSliceExpression expression,
+            Mutable<ILogicalOperator> tupSource) throws CompilationException {
+        SourceLocation sourceLoc = expression.getSourceLocation();
+
+        // Expression pair
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> expressionPair =
+                langExprToAlgExpression(expression.getExpr(), tupSource);
+        LogicalVariable variable = context.newVar();
+        AbstractFunctionCallExpression functionCallExpression;
+
+        // Start index expression pair
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> startIndexPair =
+                langExprToAlgExpression(expression.getStartIndexExpression(), expressionPair.second);
+
+        // End index expression can be null (optional)
+        // End index expression pair
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> endIndexPair = null;
+        if (expression.hasEndExpression()) {
+            endIndexPair = langExprToAlgExpression(expression.getEndIndexExpression(), startIndexPair.second);
+            functionCallExpression = new ScalarFunctionCallExpression(
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.ARRAY_SLICE_WITH_END_POSITION));
+            functionCallExpression.getArguments().add(new MutableObject<>(expressionPair.first));
+            functionCallExpression.getArguments().add(new MutableObject<>(startIndexPair.first));
+            functionCallExpression.getArguments().add(new MutableObject<>(endIndexPair.first));
+            functionCallExpression.setSourceLocation(sourceLoc);
+        } else {
+            functionCallExpression = new ScalarFunctionCallExpression(
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.ARRAY_SLICE_WITHOUT_END_POSITION));
+            functionCallExpression.getArguments().add(new MutableObject<>(expressionPair.first));
+            functionCallExpression.getArguments().add(new MutableObject<>(startIndexPair.first));
+            functionCallExpression.setSourceLocation(sourceLoc);
+        }
+
+        AssignOperator assignOperator = new AssignOperator(variable, new MutableObject<>(functionCallExpression));
+
+        if (expression.hasEndExpression()) {
+            assignOperator.getInputs().add(endIndexPair.second); // NOSONAR: Called only if value exists
+        } else {
+            assignOperator.getInputs().add(startIndexPair.second);
+        }
+
+        assignOperator.setSourceLocation(sourceLoc);
+        return new Pair<>(assignOperator, variable);
     }
 
     @Override

@@ -49,6 +49,7 @@ import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.parser.FunctionParser;
@@ -403,6 +404,17 @@ public class SqlppQueryRewriter implements IQueryRewriter {
             }
             for (Expression expr : winExpr.getOrderbyList()) {
                 expr.accept(this, arg);
+            }
+            return null;
+        }
+
+        @Override
+        public Void visit(ListSliceExpression expression, Void arg) throws CompilationException {
+            expression.getExpr().accept(this, arg);
+            expression.getStartIndexExpression().accept(this, arg);
+
+            if (expression.hasEndExpression()) {
+                expression.getEndIndexExpression().accept(this, arg);
             }
             return null;
         }

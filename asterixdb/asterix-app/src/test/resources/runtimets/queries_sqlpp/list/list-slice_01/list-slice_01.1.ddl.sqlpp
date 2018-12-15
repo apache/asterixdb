@@ -16,30 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.lang.common.base;
 
-public interface Expression extends ILangExpression {
-    Kind getKind();
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-    enum Kind {
-        LITERAL_EXPRESSION,
-        FLWOGR_EXPRESSION,
-        IF_EXPRESSION,
-        QUANTIFIED_EXPRESSION,
-        LIST_CONSTRUCTOR_EXPRESSION,
-        RECORD_CONSTRUCTOR_EXPRESSION,
-        VARIABLE_EXPRESSION,
-        METAVARIABLE_EXPRESSION,
-        CALL_EXPRESSION,
-        OP_EXPRESSION,
-        FIELD_ACCESSOR_EXPRESSION,
-        INDEX_ACCESSOR_EXPRESSION,
-        LIST_SLICE_EXPRESSION,
-        UNARY_EXPRESSION,
-        UNION_EXPRESSION,
-        SELECT_EXPRESSION,
-        PRIMARY_EXPRESSION,
-        CASE_EXPRESSION,
-        WINDOW_EXPRESSION
-    }
-}
+drop type testType if exists;
+create type testType as open {
+id: int64,
+groupId: int64,
+name: string,
+arrayItems: [int64],
+multisetItems: {{ int64 }}
+};
+
+drop dataset test if exists;
+create dataset test(testType) primary key id;

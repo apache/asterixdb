@@ -34,6 +34,7 @@ import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -105,6 +106,11 @@ public class CheckDatasetOnlyResolutionVisitor extends AbstractSqlppQueryExpress
 
     @Override
     public Boolean visit(IndexAccessor ia, ILangExpression expr) throws CompilationException {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(ListSliceExpression expression, ILangExpression expr) throws CompilationException {
         return false;
     }
 

@@ -38,6 +38,7 @@ import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -123,6 +124,27 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
         }
 
         if (!ia.isAny() && ia.getIndexExpr().accept(this, parentSelectBlock)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public Boolean visit(ListSliceExpression expression, ILangExpression parentSelectBlock)
+            throws CompilationException {
+        // Expression
+        if (expression.getExpr().accept(this, parentSelectBlock)) {
+            return true;
+        }
+
+        // Start index expression
+        if (expression.getStartIndexExpression().accept(this, parentSelectBlock)) {
+            return true;
+        }
+
+        // End index expression
+        if (expression.hasEndExpression() && expression.getEndIndexExpression().accept(this, parentSelectBlock)) {
             return true;
         }
 

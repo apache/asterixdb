@@ -36,6 +36,7 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
@@ -96,6 +97,17 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
             ia.getIndexExpr().accept(this, arg);
         }
 
+        return null;
+    }
+
+    @Override
+    public Void visit(ListSliceExpression expression, Void arg) throws CompilationException {
+        expression.getExpr().accept(this, arg);
+        expression.getStartIndexExpression().accept(this, arg);
+
+        if (expression.hasEndExpression()) {
+            expression.getEndIndexExpression().accept(this, arg);
+        }
         return null;
     }
 

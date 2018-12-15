@@ -92,6 +92,7 @@ import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
@@ -2293,9 +2294,11 @@ Expression ValueExpr() throws ParseException:
   AbstractAccessor accessor = null;
 }
 {
-  expr = PrimaryExpr() (
-     accessor = FieldAccessor(accessor != null ? accessor : expr)
-     | accessor = IndexAccessor(accessor != null ? accessor : expr)
+  expr = PrimaryExpr()
+  (
+    accessor = FieldAccessor(accessor != null ? accessor : expr)
+    |
+    accessor = IndexAccessor(accessor != null ? accessor : expr)
   )*
   {
     return accessor == null ? expr : accessor;
@@ -2315,30 +2318,52 @@ FieldAccessor FieldAccessor(Expression inputExpr) throws ParseException:
     }
 }
 
-IndexAccessor IndexAccessor(Expression inputExpr) throws ParseException:
+AbstractAccessor IndexAccessor(Expression inputExpr) throws ParseException:
 {
   Token startToken = null;
-  Expression expr = null;
+  boolean isListSliceExpression = false;
+  AbstractAccessor resultExpression = null;
+  Expression argumentExpression1 = null;
+  Expression argumentExpression2 = null;
 }
 {
   <LEFTBRACKET> { startToken = token; }
-  ( expr = Expression()
+  ( argumentExpression1 = Expression()
     {
-        if (expr.getKind() == Expression.Kind.LITERAL_EXPRESSION)
+        if (argumentExpression1.getKind() == Expression.Kind.LITERAL_EXPRESSION)
         {
-            Literal lit = ((LiteralExpr)expr).getValue();
+            Literal lit = ((LiteralExpr)argumentExpression1).getValue();
             if (lit.getLiteralType() != Literal.Type.INTEGER &&
                 lit.getLiteralType() != Literal.Type.LONG) {
-                throw new SqlppParseException(expr.getSourceLocation(), "Index should be an INTEGER");
+                throw new SqlppParseException(argumentExpression1.getSourceLocation(), "Index should be an INTEGER");
             }
         }
     }
   )
-
+  (<COLON>
+  {
+    isListSliceExpression = true;
+  }
+  ( argumentExpression2 = Expression()
+    {
+      if (argumentExpression2.getKind() == Expression.Kind.LITERAL_EXPRESSION) {
+          Literal lit = ((LiteralExpr)argumentExpression2).getValue();
+          if (lit.getLiteralType() != Literal.Type.INTEGER &&
+              lit.getLiteralType() != Literal.Type.LONG) {
+                  throw new SqlppParseException(argumentExpression2.getSourceLocation(), "Index should be an INTEGER");
+          }
+      }
+    })?
+  )?
   <RIGHTBRACKET>
   {
-    IndexAccessor ia = new IndexAccessor(inputExpr, expr);
-    return addSourceLocation(ia, startToken);
+    if (!isListSliceExpression) {
+        resultExpression = new IndexAccessor(inputExpr, argumentExpression1);
+    } else {
+        resultExpression = new ListSliceExpression(inputExpr, argumentExpression1, argumentExpression2);
+    }
+
+    return addSourceLocation(resultExpression, startToken);
   }
 }
 

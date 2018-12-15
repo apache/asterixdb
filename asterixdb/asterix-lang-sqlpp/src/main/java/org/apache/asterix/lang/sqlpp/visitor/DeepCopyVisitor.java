@@ -42,6 +42,7 @@ import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -481,6 +482,22 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         IndexAccessor copy = new IndexAccessor(expr, indexExpr);
         copy.setSourceLocation(ia.getSourceLocation());
         copy.addHints(ia.getHints());
+        return copy;
+    }
+
+    @Override
+    public Expression visit(ListSliceExpression expression, Void arg) throws CompilationException {
+        Expression expr = (Expression) expression.getExpr().accept(this, arg);
+        Expression startIndexExpression = (Expression) expression.getStartIndexExpression().accept(this, arg);
+
+        // End index expression can be null (optional)
+        Expression endIndexExpression = null;
+        if (expression.hasEndExpression()) {
+            endIndexExpression = (Expression) expression.getEndIndexExpression().accept(this, arg);
+        }
+        ListSliceExpression copy = new ListSliceExpression(expr, startIndexExpression, endIndexExpression);
+        copy.setSourceLocation(expression.getSourceLocation());
+        copy.addHints(expression.getHints());
         return copy;
     }
 

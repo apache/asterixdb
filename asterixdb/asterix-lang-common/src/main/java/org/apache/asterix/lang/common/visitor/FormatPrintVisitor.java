@@ -49,6 +49,7 @@ import org.apache.asterix.lang.common.expression.IfExpr;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.ListConstructor;
+import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
@@ -830,6 +831,22 @@ public class FormatPrintVisitor implements ILangVisitor<Void, Integer> {
 
     @Override
     public Void visit(CompactStatement del, Integer step) throws CompilationException {
+        return null;
+    }
+
+    @Override
+    public Void visit(ListSliceExpression expression, Integer step) throws CompilationException {
+        out.println(skip(step) + "ListSliceExpression [");
+        expression.getExpr().accept(this, step + 1);
+        out.print(skip(step + 1) + "Index: ");
+        expression.getStartIndexExpression().accept(this, step + 1);
+        out.println(skip(step) + ":");
+
+        // End index expression can be null (optional)
+        if (expression.hasEndExpression()) {
+            expression.getEndIndexExpression().accept(this, step + 1);
+        }
+        out.println(skip(step) + "]");
         return null;
     }
 
