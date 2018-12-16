@@ -103,7 +103,7 @@ public class GenerateFileMojo extends LicenseMojo {
     protected Map<String, String> templateProperties = new HashMap<>();
 
     @Parameter
-    private boolean stripFoundationAssertionFromNotices = true;
+    private boolean stripFoundationAssertionFromNotices = false;
 
     private SortedMap<String, SortedSet<Project>> noticeMap;
 
