@@ -72,7 +72,7 @@ public class AsterixHyracksIntegrationUtil {
     public static final int DEFAULT_HYRACKS_CC_CLIENT_PORT = 1098;
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
     public static final String RESOURCES_PATH = joinPath(getProjectPath().toString(), "src", "test", "resources");
-    public static final String DEFAULT_CONF_FILE = joinPath(RESOURCES_PATH, "cc-ssl.conf");
+    public static final String DEFAULT_CONF_FILE = joinPath(RESOURCES_PATH, "cc.conf");
     private static final String DEFAULT_STORAGE_PATH = joinPath("target", "io", "dir");
     private static String storagePath = DEFAULT_STORAGE_PATH;
     private static final long RESULT_TTL = TimeUnit.MINUTES.toMillis(5);
