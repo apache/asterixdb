@@ -77,7 +77,11 @@ final class Event {
             sb.append(",\"s\":\"").append(scope).append("\"");
         }
         if (args != null) {
-            sb.append(",\"args\":").append(args);
+            if (args.isEmpty()) {
+                sb.append(",\"args\":").append("\"\"");
+            } else {
+                sb.append(",\"args\":").append(args);
+            }
         }
         sb.append("}");
         return sb;

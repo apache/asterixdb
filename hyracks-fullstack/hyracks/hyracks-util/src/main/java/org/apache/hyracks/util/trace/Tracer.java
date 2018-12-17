@@ -34,20 +34,20 @@ import org.apache.logging.log4j.Logger;
  */
 public class Tracer implements ITracer {
 
-    public static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
-    protected static final Level TRACE_LOG_LEVEL = Level.INFO;
-    protected static final ThreadLocal<DateFormat> DATE_FORMAT =
+    private static final Level TRACE_LOG_LEVEL = Level.forName("TRACER", 570);
+    private static final ThreadLocal<DateFormat> DATE_FORMAT =
             ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"));
 
-    protected final Logger traceLog;
-    protected long categories;
-    protected TraceCategoryRegistry registry;
+    private final Logger traceLog;
+    private long categories;
+    private final TraceCategoryRegistry registry;
 
-    protected static final int pid = PidHelper.getPid();
+    private static final int pid = PidHelper.getPid();
 
     public Tracer(String name, long categories, TraceCategoryRegistry registry) {
-        final String traceLoggerName = Tracer.class.getName() + "@" + name;
+        final String traceLoggerName = Tracer.class.getName() + ".Traces." + name;
         LOGGER.info("Initialize Tracer " + traceLoggerName);
         this.traceLog = LogManager.getLogger(traceLoggerName);
         this.categories = categories;

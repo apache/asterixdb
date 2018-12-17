@@ -51,10 +51,12 @@ public class NCLogConfigurationFactory extends ConfigurationFactory {
         ComponentBuilder triggeringPolicy = builder.newComponent("Policies")
                 .addComponent(builder.newComponent("CronTriggeringPolicy").addAttribute("schedule", "0 0 0 * * ?"))
                 .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "50M"));
-        AppenderComponentBuilder defaultRoll = builder.newAppender("default", "RollingFile")
-                .addAttribute("fileName", FileUtil.joinPath(logDir, "nc-" + nodeId + ".log"))
-                .addAttribute("filePattern", FileUtil.joinPath(logDir, "nc-" + nodeId + "-%d{MM-dd-yy}.log.gz"))
-                .add(defaultLayout).addComponent(triggeringPolicy);
+        AppenderComponentBuilder defaultRoll =
+                builder.newAppender("default", "RollingFile")
+                        .addAttribute("fileName", FileUtil.joinPath(logDir, "nc-" + nodeId + ".log"))
+                        .addAttribute("filePattern",
+                                FileUtil.joinPath(logDir, "nc-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz"))
+                        .add(defaultLayout).addComponent(triggeringPolicy);
         builder.add(defaultRoll);
 
         // create the new logger
@@ -65,11 +67,21 @@ public class NCLogConfigurationFactory extends ConfigurationFactory {
                 builder.newAppender("access", "RollingFile")
                         .addAttribute("fileName", FileUtil.joinPath(logDir, "access-" + nodeId + ".log"))
                         .addAttribute("filePattern",
-                                FileUtil.joinPath(logDir, "access-" + nodeId + "-%d{MM-dd-yy}.log.gz"))
+                                FileUtil.joinPath(logDir, "access-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz"))
                         .add(accessLayout).addComponent(triggeringPolicy);
         builder.add(accessRoll);
         builder.add(builder.newLogger("org.apache.hyracks.http.server.CLFLogger", Level.forName("ACCESS", 550))
                 .add(builder.newAppenderRef("access")).addAttribute("additivity", false));
+
+        LayoutComponentBuilder traceLayout = builder.newLayout("PatternLayout").addAttribute("pattern", "%m,%n")
+                .addAttribute("header", "[").addAttribute("footer", "]");
+        AppenderComponentBuilder traceRoll = builder.newAppender("trace", "RollingFile")
+                .addAttribute("fileName", logDir + "trace-" + nodeId + ".log")
+                .addAttribute("filePattern", logDir + "trace-" + nodeId + "-%d{MM-dd-yy-ss}.log.gz").add(traceLayout)
+                .addComponent(triggeringPolicy);
+        builder.add(traceRoll);
+        builder.add(builder.newLogger("org.apache.hyracks.util.trace.Tracer.Traces", Level.forName("TRACER", 570))
+                .add(builder.newAppenderRef("trace")).addAttribute("additivity", false));
 
         return builder.build();
     }

@@ -19,6 +19,7 @@
 <Configuration status="WARN">
    <CustomLevels>
     <CustomLevel name="ACCESS" intLevel="550" />
+    <CustomLevel name="TRACER" intLevel="570" />
   </CustomLevels>
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
@@ -27,6 +28,12 @@
     <Console name="AccessLog" target="SYSTEM_OUT">
       <PatternLayout pattern="%m%n"/>
     </Console>
+    <Console name="TracerLog" target="SYSTEM_OUT">
+      <PatternLayout pattern="%m%n"/>
+    </Console>
+    <File name="TracerLogFile" fileName="target/tracer.log">
+      <PatternLayout pattern="%m,%n" header="[" footer="]"/>
+    </File>
   </Appenders>
   <Loggers>
     <Root level="WARN">
@@ -35,6 +42,10 @@
     <Logger name="org.apache.hyracks.control.nc.service" level="INFO"/>
     <Logger name="org.apache.hyracks.http.server.CLFLogger" level="ACCESS" additivity="false">
         <AppenderRef ref="AccessLog"/>
+    </Logger>
+    <Logger name="org.apache.hyracks.util.trace.Tracer.Traces" level="TRACER" additivity="false">
+      <AppenderRef ref="TracerLog"/>
+      <AppenderRef ref="TracerLogFile"/>
     </Logger>
   </Loggers>
 </Configuration>
