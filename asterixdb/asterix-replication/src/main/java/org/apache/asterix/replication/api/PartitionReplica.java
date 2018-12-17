@@ -24,7 +24,6 @@ import static org.apache.asterix.common.replication.IPartitionReplica.PartitionR
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
@@ -32,6 +31,7 @@ import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.asterix.replication.sync.ReplicaSynchronizer;
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.hyracks.util.NetworkUtil;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.hyracks.util.annotations.ThreadSafe;
@@ -53,7 +53,7 @@ public class PartitionReplica implements IPartitionReplica {
     private final ReplicaIdentifier id;
     private ByteBuffer reusbaleBuf;
     private PartitionReplicaStatus status = DISCONNECTED;
-    private SocketChannel sc;
+    private ISocketChannel sc;
 
     public PartitionReplica(ReplicaIdentifier id, INcApplicationContext appCtx) {
         this.id = id;
@@ -93,13 +93,10 @@ public class PartitionReplica implements IPartitionReplica {
         });
     }
 
-    public synchronized SocketChannel getChannel() {
+    public synchronized ISocketChannel getChannel() {
         try {
-            if (sc == null || !sc.isOpen() || !sc.isConnected()) {
-                sc = SocketChannel.open();
-                NetworkUtil.configure(sc);
-                sc.configureBlocking(true);
-                sc.connect(id.getLocation());
+            if (sc == null || !sc.getSocketChannel().isOpen() || !sc.getSocketChannel().isConnected()) {
+                sc = ReplicationProtocol.establishReplicaConnection(appCtx, id.getLocation());
             }
             return sc;
         } catch (IOException e) {

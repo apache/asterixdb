@@ -21,9 +21,11 @@ package org.apache.hyracks.api.network;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.WritableByteChannel;
 
-public interface ISocketChannel extends Closeable {
+public interface ISocketChannel extends WritableByteChannel, ReadableByteChannel, Closeable {
 
     /**
      * Indicates whether this {@link ISocketChannel} requires a client/server handshake before
@@ -91,4 +93,9 @@ public interface ISocketChannel extends Closeable {
      * @return the socket channel
      */
     SocketChannel getSocketChannel();
+
+    @Override
+    default boolean isOpen() {
+        return getSocketChannel().isOpen();
+    }
 }

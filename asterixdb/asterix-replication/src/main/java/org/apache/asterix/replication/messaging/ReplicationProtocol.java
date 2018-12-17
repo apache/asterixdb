@@ -22,17 +22,22 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
 import org.apache.asterix.replication.api.IReplicationMessage;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.replication.management.NetworkingUtil;
+import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.data.std.util.ExtendedByteArrayOutputStream;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.hyracks.util.StorageUtil;
 
 public class ReplicationProtocol {
@@ -65,7 +70,7 @@ public class ReplicationProtocol {
         Stream.of(ReplicationRequestType.values()).forEach(type -> TYPES.put(type.ordinal(), type));
     }
 
-    public static ByteBuffer readRequest(SocketChannel socketChannel, ByteBuffer dataBuffer) throws IOException {
+    public static ByteBuffer readRequest(ISocketChannel socketChannel, ByteBuffer dataBuffer) throws IOException {
         // read request size
         NetworkingUtil.readBytes(socketChannel, dataBuffer, Integer.BYTES);
         final int requestSize = dataBuffer.getInt();
@@ -75,7 +80,7 @@ public class ReplicationProtocol {
         return buf;
     }
 
-    public static ReplicationRequestType getRequestType(SocketChannel socketChannel, ByteBuffer byteBuffer)
+    public static ReplicationRequestType getRequestType(ISocketChannel socketChannel, ByteBuffer byteBuffer)
             throws IOException {
         // read replication request type
         NetworkingUtil.readBytes(socketChannel, byteBuffer, REPLICATION_REQUEST_TYPE_SIZE);
@@ -93,12 +98,12 @@ public class ReplicationProtocol {
         return Integer.parseInt(msg.substring(msg.indexOf(LOG_REPLICATION_ACK) + 1));
     }
 
-    public static void sendGoodbye(SocketChannel socketChannel) throws IOException {
+    public static void sendGoodbye(ISocketChannel socketChannel) throws IOException {
         ByteBuffer goodbyeBuffer = ReplicationProtocol.getGoodbyeBuffer();
         NetworkingUtil.transferBufferToChannel(socketChannel, goodbyeBuffer);
     }
 
-    public static void sendAck(SocketChannel socketChannel, ByteBuffer buf) {
+    public static void sendAck(ISocketChannel socketChannel, ByteBuffer buf) {
         try {
             buf.clear();
             buf.putInt(ReplicationRequestType.ACK.ordinal());
@@ -110,7 +115,7 @@ public class ReplicationProtocol {
     }
 
     public static void waitForAck(PartitionReplica replica) throws IOException {
-        final SocketChannel channel = replica.getChannel();
+        final ISocketChannel channel = replica.getChannel();
         final ByteBuffer buf = replica.getReusableBuffer();
         ReplicationRequestType responseFunction = ReplicationProtocol.getRequestType(channel, buf);
         if (responseFunction != ReplicationRequestType.ACK) {
@@ -119,12 +124,12 @@ public class ReplicationProtocol {
     }
 
     public static void sendTo(PartitionReplica replica, IReplicationMessage task) {
-        final SocketChannel channel = replica.getChannel();
+        final ISocketChannel channel = replica.getChannel();
         final ByteBuffer buf = replica.getReusableBuffer();
         sendTo(channel, task, buf);
     }
 
-    public static void sendTo(SocketChannel channel, IReplicationMessage task, ByteBuffer buf) {
+    public static void sendTo(ISocketChannel channel, IReplicationMessage task, ByteBuffer buf) {
         ExtendedByteArrayOutputStream outputStream = new ExtendedByteArrayOutputStream();
         try (DataOutputStream oos = new DataOutputStream(outputStream)) {
             task.serialize(oos);
@@ -135,18 +140,18 @@ public class ReplicationProtocol {
             requestBuffer.put(outputStream.getByteArray(), 0, outputStream.getLength());
             requestBuffer.flip();
             NetworkingUtil.transferBufferToChannel(channel, requestBuffer);
-            channel.socket().getOutputStream().flush();
+            channel.getSocketChannel().socket().getOutputStream().flush();
         } catch (IOException e) {
             throw new ReplicationException(e);
         }
     }
 
-    public static IReplicationMessage read(SocketChannel socketChannel, ByteBuffer buffer) throws IOException {
+    public static IReplicationMessage read(ISocketChannel socketChannel, ByteBuffer buffer) throws IOException {
         final ReplicationRequestType type = getRequestType(socketChannel, buffer);
         return readMessage(type, socketChannel, buffer);
     }
 
-    public static IReplicationMessage readMessage(ReplicationRequestType type, SocketChannel socketChannel,
+    public static IReplicationMessage readMessage(ReplicationRequestType type, ISocketChannel socketChannel,
             ByteBuffer buffer) {
         try {
             final ByteBuffer requestBuf = ReplicationProtocol.readRequest(socketChannel, buffer);
@@ -189,6 +194,24 @@ public class ReplicationProtocol {
         endLogRepBuffer.put((byte) 0);
         endLogRepBuffer.flip();
         return endLogRepBuffer;
+    }
+
+    public static ISocketChannel establishReplicaConnection(INcApplicationContext appCtx, InetSocketAddress location)
+            throws IOException {
+        final SocketChannel socketChannel = SocketChannel.open();
+        NetworkUtil.configure(socketChannel);
+        socketChannel.connect(location);
+        // perform handshake in a non-blocking mode
+        socketChannel.configureBlocking(false);
+        final ISocketChannelFactory socketChannelFactory =
+                appCtx.getServiceContext().getControllerService().getNetworkSecurityManager().getSocketChannelFactory();
+        final ISocketChannel clientChannel = socketChannelFactory.createClientChannel(socketChannel);
+        if (clientChannel.requiresHandshake() && !clientChannel.handshake()) {
+            throw new IllegalStateException("handshake failure");
+        }
+        // switch to blocking mode after handshake success
+        socketChannel.configureBlocking(true);
+        return clientChannel;
     }
 
     private static ByteBuffer ensureSize(ByteBuffer buffer, int size) {

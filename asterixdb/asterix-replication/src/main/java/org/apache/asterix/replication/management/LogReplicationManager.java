@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousCloseException;
-import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -46,6 +45,7 @@ import org.apache.asterix.replication.logging.TxnAckTracker;
 import org.apache.asterix.replication.logging.TxnLogReplicator;
 import org.apache.asterix.replication.messaging.ReplicateLogsTask;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -55,17 +55,17 @@ public class LogReplicationManager {
     private final LinkedBlockingQueue<ReplicationLogBuffer> emptyLogBuffersQ;
     private final LinkedBlockingQueue<ReplicationLogBuffer> pendingFlushLogBuffersQ;
     private final ByteBuffer txnLogsBatchSizeBuffer = ByteBuffer.allocate(Integer.BYTES);
-    private final Map<ReplicationDestination, SocketChannel> destinations = new HashMap<>();
+    private final Map<ReplicationDestination, ISocketChannel> destinations = new HashMap<>();
     private final IReplicationManager replicationManager;
     private final Executor executor;
     private final TxnAckTracker ackTracker = new TxnAckTracker();
-    private final Set<SocketChannel> failedSockets = new HashSet<>();
+    private final Set<ISocketChannel> failedSockets = new HashSet<>();
     private final Object transferLock = new Object();
     private final INcApplicationContext appCtx;
     private final int logPageSize;
     private final int logBatchSize;
     private ReplicationLogBuffer currentTxnLogBuffer;
-    private SocketChannel[] destSockets;
+    private ISocketChannel[] destSockets;
 
     public LogReplicationManager(INcApplicationContext appCtx, IReplicationManager replicationManager) {
         this.appCtx = appCtx;
@@ -100,11 +100,11 @@ public class LogReplicationManager {
                     return;
                 }
                 LOGGER.info(() -> "register " + dest);
-                SocketChannel socketChannel = dest.getLogReplicationChannel();
+                ISocketChannel socketChannel = dest.getLogReplicationChannel(appCtx);
                 handshake(dest, socketChannel);
                 destinations.put(dest, socketChannel);
                 failedSockets.remove(socketChannel);
-                destSockets = destinations.values().toArray(new SocketChannel[destinations.size()]);
+                destSockets = destinations.values().toArray(new ISocketChannel[0]);
             }
         }
     }
@@ -117,9 +117,9 @@ public class LogReplicationManager {
                 }
                 LOGGER.info(() -> "unregister " + dest);
                 ackTracker.unregister(dest);
-                SocketChannel destSocket = destinations.remove(dest);
+                ISocketChannel destSocket = destinations.remove(dest);
                 failedSockets.remove(destSocket);
-                destSockets = destinations.values().toArray(new SocketChannel[destinations.size()]);
+                destSockets = destinations.values().toArray(new ISocketChannel[0]);
                 endReplication(destSocket);
             }
         }
@@ -143,7 +143,7 @@ public class LogReplicationManager {
         buffer.mark();
         synchronized (transferLock) {
             if (destSockets != null) {
-                for (SocketChannel replicaSocket : destSockets) {
+                for (ISocketChannel replicaSocket : destSockets) {
                     try {
                         // send batch size then the batch itself
                         NetworkingUtil.transferBufferToChannel(replicaSocket, txnLogsBatchSizeBuffer);
@@ -192,15 +192,15 @@ public class LogReplicationManager {
         pendingFlushLogBuffersQ.add(currentTxnLogBuffer);
     }
 
-    private void handshake(ReplicationDestination dest, SocketChannel socketChannel) {
+    private void handshake(ReplicationDestination dest, ISocketChannel socketChannel) {
         final String nodeId = appCtx.getServiceContext().getNodeId();
         final ReplicateLogsTask task = new ReplicateLogsTask(nodeId);
         ReplicationProtocol.sendTo(socketChannel, task, null);
         executor.execute(new TxnAckListener(dest, socketChannel));
     }
 
-    private void endReplication(SocketChannel socketChannel) {
-        if (socketChannel.isConnected()) {
+    private void endReplication(ISocketChannel socketChannel) {
+        if (socketChannel.getSocketChannel().isConnected()) {
             // end log replication (by sending a dummy log with a single byte)
             final ByteBuffer endLogRepBuffer = ReplicationProtocol.getEndLogReplicationBuffer();
             try {
@@ -211,7 +211,7 @@ public class LogReplicationManager {
         }
     }
 
-    private synchronized void handleFailure(SocketChannel replicaSocket, IOException e) {
+    private synchronized void handleFailure(ISocketChannel replicaSocket, IOException e) {
         if (failedSockets.contains(replicaSocket)) {
             return;
         }
@@ -224,9 +224,9 @@ public class LogReplicationManager {
 
     private class TxnAckListener implements Runnable {
         private final ReplicationDestination dest;
-        private final SocketChannel replicaSocket;
+        private final ISocketChannel replicaSocket;
 
-        TxnAckListener(ReplicationDestination dest, SocketChannel replicaSocket) {
+        TxnAckListener(ReplicationDestination dest, ISocketChannel replicaSocket) {
             this.dest = dest;
             this.replicaSocket = replicaSocket;
         }
@@ -235,8 +235,8 @@ public class LogReplicationManager {
         public void run() {
             Thread.currentThread().setName("TxnAckListener (" + dest + ")");
             LOGGER.info("Started listening on socket: {}", dest);
-            try (BufferedReader incomingResponse =
-                    new BufferedReader(new InputStreamReader(replicaSocket.socket().getInputStream()))) {
+            try (BufferedReader incomingResponse = new BufferedReader(
+                    new InputStreamReader(replicaSocket.getSocketChannel().socket().getInputStream()))) {
                 while (true) {
                     final String response = incomingResponse.readLine();
                     if (response == null) {

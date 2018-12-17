@@ -34,6 +34,7 @@ import org.apache.asterix.replication.logging.RemoteLogRecord;
 import org.apache.asterix.replication.logging.RemoteLogsProcessor;
 import org.apache.asterix.replication.management.ReplicationChannel;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.network.ISocketChannel;
 
 /**
  * A task to replicate transaction logs from master replica
@@ -53,7 +54,7 @@ public class ReplicateLogsTask implements IReplicaTask {
         final RemoteLogsProcessor logsProcessor = replicationChannel.getRemoteLogsProcessor();
         final ILogManager logManager = appCtx.getTransactionSubsystem().getLogManager();
         final RemoteLogRecord reusableLog = new RemoteLogRecord();
-        final SocketChannel channel = worker.getChannel();
+        final ISocketChannel channel = worker.getChannel();
         ByteBuffer logsBuffer = ByteBuffer.allocate(logManager.getLogPageSize());
         try {
             while (true) {

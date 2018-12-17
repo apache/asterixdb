@@ -34,6 +34,7 @@ import org.apache.asterix.replication.messaging.PartitionResourcesListResponse;
 import org.apache.asterix.replication.messaging.PartitionResourcesListTask;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
+import org.apache.hyracks.api.network.ISocketChannel;
 
 /**
  * Ensures that the files between master and a replica are synchronized
@@ -69,7 +70,7 @@ public class ReplicaFilesSynchronizer {
 
     private Set<String> getReplicaFiles(int partition) throws IOException {
         final PartitionResourcesListTask replicaFilesRequest = new PartitionResourcesListTask(partition);
-        final SocketChannel channel = replica.getChannel();
+        final ISocketChannel channel = replica.getChannel();
         final ByteBuffer reusableBuffer = replica.getReusableBuffer();
         ReplicationProtocol.sendTo(replica, replicaFilesRequest);
         final PartitionResourcesListResponse response =

@@ -35,6 +35,10 @@ import org.apache.asterix.replication.logging.RemoteLogsProcessor;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.asterix.replication.messaging.ReplicationProtocol.ReplicationRequestType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.network.INetworkSecurityManager;
+import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,9 +74,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             LOGGER.log(Level.INFO, "opened Replication Channel @ IP Address: " + nodeIP + ":" + dataPort);
             while (serverSocketChannel.isOpen()) {
                 SocketChannel socketChannel = serverSocketChannel.accept();
-                socketChannel.configureBlocking(true);
-                //start a new thread to handle the request
-                appCtx.getThreadExecutor().execute(new ReplicationWorker(socketChannel));
+                connectionAccepted(socketChannel);
             }
         } catch (AsynchronousCloseException e) {
             LOGGER.debug("Replication channel closed", e);
@@ -93,12 +95,27 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         }
     }
 
+    private void connectionAccepted(SocketChannel socketChannel) {
+        try {
+            NetworkUtil.configure(socketChannel);
+            socketChannel.configureBlocking(false);
+            final INetworkSecurityManager networkSecurityManager =
+                    appCtx.getServiceContext().getControllerService().getNetworkSecurityManager();
+            final ISocketChannelFactory socketChannelFactory = networkSecurityManager.getSocketChannelFactory();
+            final ISocketChannel serverChannel = socketChannelFactory.createServerChannel(socketChannel);
+            //start a new thread to handle the request
+            appCtx.getThreadExecutor().execute(new ReplicationWorker(serverChannel));
+        } catch (Exception e) {
+            LOGGER.error("failed to process accepted connection", e);
+        }
+    }
+
     private class ReplicationWorker implements IReplicationWorker {
-        private final SocketChannel socketChannel;
+        private final ISocketChannel socketChannel;
         private final ByteBuffer inBuffer;
         private final ByteBuffer outBuffer;
 
-        public ReplicationWorker(SocketChannel socketChannel) {
+        public ReplicationWorker(ISocketChannel socketChannel) {
             this.socketChannel = socketChannel;
             inBuffer = ByteBuffer.allocate(ReplicationProtocol.INITIAL_BUFFER_SIZE);
             outBuffer = ByteBuffer.allocate(ReplicationProtocol.INITIAL_BUFFER_SIZE);
@@ -108,6 +125,10 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         public void run() {
             Thread.currentThread().setName("Replication Worker");
             try {
+                if (socketChannel.requiresHandshake() && !socketChannel.handshake()) {
+                    return;
+                }
+                socketChannel.getSocketChannel().configureBlocking(true);
                 ReplicationRequestType requestType = ReplicationProtocol.getRequestType(socketChannel, inBuffer);
                 while (requestType != ReplicationRequestType.GOODBYE) {
                     handle(requestType);
@@ -116,18 +137,12 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             } catch (Exception e) {
                 LOGGER.warn("Unexpected error during replication.", e);
             } finally {
-                if (socketChannel.isOpen()) {
-                    try {
-                        socketChannel.close();
-                    } catch (IOException e) {
-                        LOGGER.warn("Failed to close replication socket.", e);
-                    }
-                }
+                NetworkUtil.closeQuietly(socketChannel);
             }
         }
 
         @Override
-        public SocketChannel getChannel() {
+        public ISocketChannel getChannel() {
             return socketChannel;
         }
 

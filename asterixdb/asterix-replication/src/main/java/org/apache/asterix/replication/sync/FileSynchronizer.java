@@ -32,6 +32,7 @@ import org.apache.asterix.replication.messaging.ReplicateFileTask;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.network.ISocketChannel;
 
 public class FileSynchronizer {
 
@@ -50,7 +51,7 @@ public class FileSynchronizer {
     public void replicate(String file, boolean metadata) {
         try {
             final IIOManager ioManager = appCtx.getIoManager();
-            final SocketChannel channel = replica.getChannel();
+            final ISocketChannel channel = replica.getChannel();
             final FileReference filePath = ioManager.resolve(file);
             ReplicateFileTask task = new ReplicateFileTask(file, filePath.getFile().length(), metadata);
             ReplicationProtocol.sendTo(replica, task);

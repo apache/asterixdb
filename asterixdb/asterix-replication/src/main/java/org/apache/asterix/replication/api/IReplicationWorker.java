@@ -19,14 +19,15 @@
 package org.apache.asterix.replication.api;
 
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
+
+import org.apache.hyracks.api.network.ISocketChannel;
 
 public interface IReplicationWorker extends Runnable {
 
     /**
      * @return The replication socket channel.
      */
-    SocketChannel getChannel();
+    ISocketChannel getChannel();
 
     /**
      * Gets a reusable buffer that can be used to send data

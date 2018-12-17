@@ -184,9 +184,11 @@ public class SslSocketChannel implements ISocketChannel {
 
     @Override
     public synchronized void close() throws IOException {
-        engine.closeOutbound();
-        new SslHandshake(this).handshake();
-        socketChannel.close();
+        if (socketChannel.isOpen()) {
+            engine.closeOutbound();
+            new SslHandshake(this).handshake();
+            socketChannel.close();
+        }
     }
 
     @Override

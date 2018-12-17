@@ -20,17 +20,17 @@ package org.apache.asterix.replication.api;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.SocketChannel;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.replication.IReplicationDestination;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
-import org.apache.hyracks.util.NetworkUtil;
+import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,7 +39,7 @@ public class ReplicationDestination implements IReplicationDestination {
     private static final Logger LOGGER = LogManager.getLogger();
     private final Set<IPartitionReplica> replicas = new HashSet<>();
     private final InetSocketAddress location;
-    private SocketChannel logRepChannel;
+    private ISocketChannel logRepChannel;
 
     private ReplicationDestination(InetSocketAddress location) {
         this.location = location;
@@ -75,13 +75,11 @@ public class ReplicationDestination implements IReplicationDestination {
                 && replica.getStatus() == IPartitionReplica.PartitionReplicaStatus.IN_SYNC).findAny();
     }
 
-    public synchronized SocketChannel getLogReplicationChannel() {
+    public synchronized ISocketChannel getLogReplicationChannel(INcApplicationContext appCtx) {
         try {
-            if (logRepChannel == null || !logRepChannel.isOpen() || !logRepChannel.isConnected()) {
-                logRepChannel = SocketChannel.open();
-                NetworkUtil.configure(logRepChannel);
-                logRepChannel.configureBlocking(true);
-                logRepChannel.connect(location);
+            if (logRepChannel == null || !logRepChannel.getSocketChannel().isOpen()
+                    || !logRepChannel.getSocketChannel().isConnected()) {
+                logRepChannel = ReplicationProtocol.establishReplicaConnection(appCtx, location);
             }
             return logRepChannel;
         } catch (IOException e) {
@@ -91,7 +89,7 @@ public class ReplicationDestination implements IReplicationDestination {
 
     private synchronized void closeLogReplicationChannel() {
         try {
-            if (logRepChannel != null && logRepChannel.isOpen()) {
+            if (logRepChannel != null && logRepChannel.getSocketChannel().isOpen()) {
                 ReplicationProtocol.sendGoodbye(logRepChannel);
                 logRepChannel.close();
                 logRepChannel = null;

@@ -90,6 +90,7 @@ public class FlushDatasetOperatorDescriptor extends AbstractSingleActivityOperat
                             datasetLifeCycleManager.flushDataset(datasetId.getId(), false);
                         }
                     }
+                    datasetInfo.waitForIO();
                 } catch (ACIDException e) {
                     throw HyracksDataException.create(e);
                 }

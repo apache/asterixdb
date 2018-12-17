@@ -33,6 +33,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Enumeration;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.network.ISocketChannel;
 
 public class NetworkingUtil {
 
@@ -40,7 +41,7 @@ public class NetworkingUtil {
         throw new AssertionError("This util class should not be initialized.");
     }
 
-    public static void readBytes(SocketChannel socketChannel, ByteBuffer byteBuffer, int length) throws IOException {
+    public static void readBytes(ISocketChannel socketChannel, ByteBuffer byteBuffer, int length) throws IOException {
         byteBuffer.clear();
         byteBuffer.limit(length);
 
@@ -53,7 +54,7 @@ public class NetworkingUtil {
         byteBuffer.flip();
     }
 
-    public static void sendFile(FileChannel fileChannel, SocketChannel socketChannel) throws IOException {
+    public static void sendFile(FileChannel fileChannel, ISocketChannel socketChannel) throws IOException {
         long pos = 0;
         long fileSize = fileChannel.size();
         long remainingBytes = fileSize;
@@ -63,11 +64,10 @@ public class NetworkingUtil {
             pos += transferredBytes;
             remainingBytes -= transferredBytes;
         }
-
-        socketChannel.socket().getOutputStream().flush();
+        socketChannel.getSocketChannel().socket().getOutputStream().flush();
     }
 
-    public static void downloadFile(FileChannel fileChannel, SocketChannel socketChannel) throws IOException {
+    public static void downloadFile(FileChannel fileChannel, ISocketChannel socketChannel) throws IOException {
         long pos = 0;
         long fileSize = fileChannel.size();
         long count = fileSize;
@@ -97,7 +97,7 @@ public class NetworkingUtil {
         return hostName;
     }
 
-    public static void transferBufferToChannel(SocketChannel socketChannel, ByteBuffer requestBuffer)
+    public static void transferBufferToChannel(ISocketChannel socketChannel, ByteBuffer requestBuffer)
             throws IOException {
         while (requestBuffer.hasRemaining()) {
             socketChannel.write(requestBuffer);
