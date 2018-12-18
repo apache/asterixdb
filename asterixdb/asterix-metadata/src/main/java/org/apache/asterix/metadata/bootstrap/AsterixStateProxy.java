@@ -23,8 +23,11 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.metadata.RMIClientFactory;
+import org.apache.asterix.metadata.RMIServerFactory;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataNode;
+import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,8 +41,13 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     private IMetadataNode metadataNode;
     private static final IAsterixStateProxy cc = new AsterixStateProxy();
 
-    public static IAsterixStateProxy registerRemoteObject(int metadataCallbackPort) throws RemoteException {
-        IAsterixStateProxy stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, metadataCallbackPort);
+    public static IAsterixStateProxy registerRemoteObject(INetworkSecurityManager networkSecurityManager,
+            int metadataCallbackPort) throws RemoteException {
+        final RMIServerFactory serverSocketFactory = new RMIServerFactory(networkSecurityManager);
+        final RMIClientFactory clientSocketFactory =
+                new RMIClientFactory(networkSecurityManager.getConfiguration().isSslEnabled());
+        final IAsterixStateProxy stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, metadataCallbackPort,
+                clientSocketFactory, serverSocketFactory);
         LOGGER.info("Asterix Distributed State Proxy Bound");
         return stub;
     }

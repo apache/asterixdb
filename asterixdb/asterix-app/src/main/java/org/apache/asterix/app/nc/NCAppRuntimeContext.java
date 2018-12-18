@@ -66,6 +66,8 @@ import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataNode;
+import org.apache.asterix.metadata.RMIClientFactory;
+import org.apache.asterix.metadata.RMIServerFactory;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataBootstrap;
@@ -84,6 +86,7 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
+import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -430,8 +433,13 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public synchronized void exportMetadataNodeStub() throws RemoteException {
         if (metadataNodeStub == null) {
+            final INetworkSecurityManager networkSecurityManager =
+                    ncServiceContext.getControllerService().getNetworkSecurityManager();
+            final RMIServerFactory serverSocketFactory = new RMIServerFactory(networkSecurityManager);
+            final RMIClientFactory clientSocketFactory =
+                    new RMIClientFactory(networkSecurityManager.getConfiguration().isSslEnabled());
             metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
-                    getMetadataProperties().getMetadataPort());
+                    getMetadataProperties().getMetadataPort(), clientSocketFactory, serverSocketFactory);
         }
     }
 

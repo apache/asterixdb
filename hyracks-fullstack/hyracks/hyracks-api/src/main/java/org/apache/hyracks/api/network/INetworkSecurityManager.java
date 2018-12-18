@@ -50,4 +50,11 @@ public interface INetworkSecurityManager {
      * @return the socket channel factory
      */
     ISocketChannelFactory getSocketChannelFactory();
+
+    /**
+     * Gets the current configuration of this {@link INetworkSecurityManager}
+     *
+     * @return the current configuration
+     */
+    INetworkSecurityConfig getConfiguration();
 }

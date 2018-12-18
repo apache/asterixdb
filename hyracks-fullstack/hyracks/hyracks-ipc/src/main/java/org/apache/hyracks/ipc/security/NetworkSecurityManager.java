@@ -41,6 +41,9 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
 
     public NetworkSecurityManager(INetworkSecurityConfig config) {
         this.config = config;
+        if (config.isSslEnabled()) {
+            System.setProperty("javax.net.ssl.trustStore", config.getTrustStoreFile().getAbsolutePath());
+        }
         sslSocketFactory = new SslSocketChannelFactory(this);
     }
 
@@ -81,6 +84,11 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
             return sslSocketFactory;
         }
         return PlainSocketChannelFactory.INSTANCE;
+    }
+
+    @Override
+    public INetworkSecurityConfig getConfiguration() {
+        return config;
     }
 
     @Override
