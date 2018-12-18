@@ -99,11 +99,7 @@ public final class JRecord implements IJObject {
         if (pos >= 0) {
             fields[pos] = fieldValue;
         } else {
-            if (openFields.get(fieldName) != null) {
-                openFields.put(fieldName, fieldValue);
-            } else {
-                throw new RuntimeDataException(ErrorCode.LIBRARY_JAVA_JOBJECTS_UNKNOWN_FIELD, fieldName);
-            }
+            openFields.put(fieldName, fieldValue);
         }
     }
 

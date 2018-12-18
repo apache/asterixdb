@@ -35,8 +35,7 @@ dept:string
 };
 
 create type DetectResultType as open{
-id:int64,
-sensitive: boolean
+id:int64
 };
 
 create dataset EmpDataset(InputRecordType) primary key id;
