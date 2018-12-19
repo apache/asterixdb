@@ -208,21 +208,24 @@ A type error will be raised if the first expression in a quantified expression d
 
     PathExpression  ::= PrimaryExpression ( Field | Index )*
     Field           ::= "." Identifier
-    Index           ::= "[" Expression "]"
+    Index           ::= "[" Expression (":" ( Expression )? )? "]"
 
-Components of complex types in the data model are accessed via path expressions.
-Path access can be applied to the result of a query expression that yields an instance of a complex type, for example, a
-object or array instance.
-For objects, path access is based on field names.
-For arrays, path access is based on (zero-based) array-style indexing.
-Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`.
-For multisets path access is also zero-based and returns an arbitrary multiset element if the index is within the size
-of the multiset or `MISSING` otherwise.
-Type errors will be raised for inappropriate use of a path expression, such as applying a field accessor to a numeric
-value.
+Components of complex types in the data model are accessed via path expressions. Path access can be applied to the
+result of a query expression that yields an instance of a complex type, for example, an object or an array instance.
 
-The following examples illustrate field access for a object, index-based element access for an array, and also a
-composition thereof.
+For objects, path access is based on field names, and it accesses the field whose name was specified.<br/>
+For arrays, path access is based on (zero-based) array-style indexing. Array indexes can be used to retrieve either a
+single element from an array, or a whole subset of an array. Accessing a single element is achieved by
+providing a single index argument (zero-based element position), while obtaining a subset of an array is achieved by
+providing the `start` and `end` (zero-based) index positions; the returned subset is from position `start` to position
+`end - 1`; the `end` position argument is optional. Multisets have similar behavior to arrays, except for retrieving
+arbitrary items as the order of items is not fixed in multisets.
+
+Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`. Type errors
+will be raised for inappropriate use of a path expression, such as applying a field accessor to a numeric value.
+
+The following examples illustrate field access for an object, index-based element access or subset retrieval of an array,
+and also a composition thereof.
 
 ##### Examples
 
@@ -231,6 +234,10 @@ composition thereof.
     (["a", "b", "c"])[2]
 
     ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array[2]
+
+    (["a", "b", "c"])[0:2]
+
+    (["a", "b", "c"])[0:]
 
 
 ## <a id="Primary_expressions">Primary Expressions</a>
