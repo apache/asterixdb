@@ -29,6 +29,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.replication.IReplicationDestination;
+import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.logging.log4j.LogManager;
@@ -77,8 +78,7 @@ public class ReplicationDestination implements IReplicationDestination {
 
     public synchronized ISocketChannel getLogReplicationChannel(INcApplicationContext appCtx) {
         try {
-            if (logRepChannel == null || !logRepChannel.getSocketChannel().isOpen()
-                    || !logRepChannel.getSocketChannel().isConnected()) {
+            if (!NetworkingUtil.isHealthy(logRepChannel)) {
                 logRepChannel = ReplicationProtocol.establishReplicaConnection(appCtx, location);
             }
             return logRepChannel;

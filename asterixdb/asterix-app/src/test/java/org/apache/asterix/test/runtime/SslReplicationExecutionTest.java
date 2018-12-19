@@ -78,7 +78,7 @@ public class SslReplicationExecutionTest {
         LangExecutionUtil.tearDown();
     }
 
-    @Parameters(name = "ReplicationExecutionTest {index}: {0}")
+    @Parameters(name = "SslReplicationExecutionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         return LangExecutionUtil.tests("replication.xml", "replication.xml");
     }

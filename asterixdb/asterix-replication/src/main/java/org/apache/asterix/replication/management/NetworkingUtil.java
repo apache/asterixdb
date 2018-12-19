@@ -127,4 +127,8 @@ public class NetworkingUtil {
     public static SocketAddress getSocketAddress(NetworkAddress netAddr) throws UnknownHostException {
         return new InetSocketAddress(InetAddress.getByAddress(netAddr.lookupIpAddress()), netAddr.getPort());
     }
+
+    public static boolean isHealthy(ISocketChannel sc) {
+        return sc != null && sc.getSocketChannel().isOpen() && sc.getSocketChannel().isConnected();
+    }
 }

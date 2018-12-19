@@ -29,6 +29,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
+import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.asterix.replication.sync.ReplicaSynchronizer;
 import org.apache.hyracks.api.network.ISocketChannel;
@@ -95,7 +96,7 @@ public class PartitionReplica implements IPartitionReplica {
 
     public synchronized ISocketChannel getChannel() {
         try {
-            if (sc == null || !sc.getSocketChannel().isOpen() || !sc.getSocketChannel().isConnected()) {
+            if (!NetworkingUtil.isHealthy(sc)) {
                 sc = ReplicationProtocol.establishReplicaConnection(appCtx, id.getLocation());
             }
             return sc;
