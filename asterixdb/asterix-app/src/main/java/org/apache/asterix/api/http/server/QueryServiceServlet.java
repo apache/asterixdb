@@ -382,8 +382,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return result;
     }
 
-    protected void setRequestParam(IServletRequest request, QueryServiceRequestParameters param)
-            throws IOException, AlgebricksException {
+    protected void setRequestParam(IServletRequest request, QueryServiceRequestParameters param,
+            Map<String, String> optionalParams) throws IOException, AlgebricksException {
         param.setHost(host(request));
         param.setPath(servletPath(request));
         String contentType = HttpUtil.getContentTypeOnly(request);
@@ -498,7 +498,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             sessionOutput.hold();
             sessionOutput.out().print("{\n");
             HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, HttpUtil.Encoding.UTF8);
-            setRequestParam(request, param);
+            Map<String, String> optionalParams = null;
+            if (optionalParamProvider != null) {
+                optionalParams = optionalParamProvider.apply(request);
+            }
+            setRequestParam(request, param, optionalParams);
             LOGGER.info("handleRequest: {}", param);
             ResultDelivery delivery = parseResultDelivery(param.getMode());
             setSessionConfig(sessionOutput, param, delivery);
@@ -513,10 +517,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 throw new RuntimeDataException(ErrorCode.NO_STATEMENT_PROVIDED);
             }
             String statementsText = param.getStatement() + ";";
-            Map<String, String> optionalParams = null;
-            if (optionalParamProvider != null) {
-                optionalParams = optionalParamProvider.apply(request);
-            }
             Map<String, byte[]> statementParams = org.apache.asterix.app.translator.RequestParameters
                     .serializeParameterValues(param.getStatementParams());
             // CORS

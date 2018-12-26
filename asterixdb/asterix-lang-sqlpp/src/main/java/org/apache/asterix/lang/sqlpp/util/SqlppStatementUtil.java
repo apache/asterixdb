@@ -44,6 +44,7 @@ public class SqlppStatementUtil {
     private SqlppStatementUtil() {
     }
 
+    @SuppressWarnings("squid:S1172") // unused variable
     public static StringBuilder getCreateDataverseStatement(StringBuilder stringBuilder, String dataverseName,
             boolean ifNotExists, int version) {
         stringBuilder.append(CREATE_DATAVERSE);
@@ -51,6 +52,7 @@ public class SqlppStatementUtil {
         return ifNotExists(stringBuilder, ifNotExists).append(SEMI_COLON);
     }
 
+    @SuppressWarnings("squid:S1172") // unused variable
     public static StringBuilder getDropDatasetStatement(StringBuilder stringBuilder, String dataverseName,
             String datasetName, boolean ifExists, int version) {
         stringBuilder.append(DROP_DATASET);
@@ -58,6 +60,7 @@ public class SqlppStatementUtil {
         return ifExists(stringBuilder, ifExists).append(SEMI_COLON);
     }
 
+    @SuppressWarnings("squid:S1172") // unused variable
     public static StringBuilder getCreateIndexStatement(StringBuilder stringBuilder, String dataverseName,
             String datasetName, String indexName, String fields, int version) {
         stringBuilder.append(CREATE_INDEX);
@@ -65,6 +68,7 @@ public class SqlppStatementUtil {
         return enclose(stringBuilder, dataverseName, datasetName).append(fields).append(SEMI_COLON);
     }
 
+    @SuppressWarnings("squid:S1172") // unused variable
     public static StringBuilder getCreatePrimaryIndexStatement(StringBuilder stringBuilder, String dataverseName,
             String datasetName, String indexName, int version) {
         stringBuilder.append(CREATE_PRIMARY_INDEX);
@@ -72,6 +76,7 @@ public class SqlppStatementUtil {
         return enclose(stringBuilder, dataverseName, datasetName).append(SEMI_COLON);
     }
 
+    @SuppressWarnings("squid:S1172") // unused variable
     public static StringBuilder getDropIndexStatement(StringBuilder stringBuilder, String dataverseName,
             String datasetName, String indexName, boolean ifExists, int version) {
         stringBuilder.append(DROP_INDEX);
