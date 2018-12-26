@@ -65,11 +65,11 @@ public class ADMPrinterFactoryProvider implements IPrinterFactoryProvider {
     }
 
     @Override
-    public IPrinterFactory getPrinterFactory(Object type) {
-        IAType aqlType = (IAType) type;
+    public IPrinterFactory getPrinterFactory(Object typeInfo) {
+        IAType type = (IAType) typeInfo;
 
-        if (aqlType != null) {
-            switch (aqlType.getTypeTag()) {
+        if (type != null) {
+            switch (type.getTypeTag()) {
                 case TINYINT:
                     return AInt8PrinterFactory.INSTANCE;
                 case SMALLINT:
@@ -118,16 +118,16 @@ public class ADMPrinterFactoryProvider implements IPrinterFactoryProvider {
                 case BINARY:
                     return ABinaryHexPrinterFactory.INSTANCE;
                 case OBJECT:
-                    return new ARecordPrinterFactory((ARecordType) aqlType);
+                    return new ARecordPrinterFactory((ARecordType) type);
                 case ARRAY:
-                    return new AOrderedlistPrinterFactory((AOrderedListType) aqlType);
+                    return new AOrderedlistPrinterFactory((AOrderedListType) type);
                 case MULTISET:
-                    return new AUnorderedlistPrinterFactory((AUnorderedListType) aqlType);
+                    return new AUnorderedlistPrinterFactory((AUnorderedListType) type);
                 case UNION:
-                    if (((AUnionType) aqlType).isUnknownableType()) {
-                        return new AOptionalFieldPrinterFactory((AUnionType) aqlType);
+                    if (((AUnionType) type).isUnknownableType()) {
+                        return new AOptionalFieldPrinterFactory((AUnionType) type);
                     } else {
-                        return new AUnionPrinterFactory((AUnionType) aqlType);
+                        return new AUnionPrinterFactory((AUnionType) type);
                     }
                 case UUID:
                     return AUUIDPrinterFactory.INSTANCE;

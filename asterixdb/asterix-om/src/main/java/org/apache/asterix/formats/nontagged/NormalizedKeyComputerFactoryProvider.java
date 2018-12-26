@@ -39,10 +39,10 @@ public class NormalizedKeyComputerFactoryProvider implements INormalizedKeyCompu
     }
 
     @Override
-    public INormalizedKeyComputerFactory getNormalizedKeyComputerFactory(Object type, boolean ascending) {
-        IAType aqlType = (IAType) type;
+    public INormalizedKeyComputerFactory getNormalizedKeyComputerFactory(Object typeInfo, boolean ascending) {
+        IAType type = (IAType) typeInfo;
         if (ascending) {
-            switch (aqlType.getTypeTag()) {
+            switch (type.getTypeTag()) {
                 case DATE:
                 case TIME:
                 case YEARMONTHDURATION:
@@ -66,7 +66,7 @@ public class NormalizedKeyComputerFactoryProvider implements INormalizedKeyCompu
                     return null;
             }
         } else {
-            switch (aqlType.getTypeTag()) {
+            switch (type.getTypeTag()) {
                 case DATE:
                 case TIME:
                 case YEARMONTHDURATION:

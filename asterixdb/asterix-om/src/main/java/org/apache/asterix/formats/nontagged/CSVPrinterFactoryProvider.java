@@ -61,11 +61,11 @@ public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
     }
 
     @Override
-    public IPrinterFactory getPrinterFactory(Object type) {
-        IAType aqlType = (IAType) type;
+    public IPrinterFactory getPrinterFactory(Object typeInfo) {
+        IAType type = (IAType) typeInfo;
 
-        if (aqlType != null) {
-            switch (aqlType.getTypeTag()) {
+        if (type != null) {
+            switch (type.getTypeTag()) {
                 case TINYINT:
                     return AInt8PrinterFactory.INSTANCE;
                 case SMALLINT:
@@ -112,16 +112,16 @@ public class CSVPrinterFactoryProvider implements IPrinterFactoryProvider {
                 case STRING:
                     return AStringPrinterFactory.INSTANCE;
                 case OBJECT:
-                    return new ARecordPrinterFactory((ARecordType) aqlType);
+                    return new ARecordPrinterFactory((ARecordType) type);
                 case ARRAY:
                     throw new NotImplementedException("'Orderedlist' type unsupported for CSV output");
                 case MULTISET:
                     throw new NotImplementedException("'Unorderedlist' type unsupported for CSV output");
                 case UNION:
-                    if (((AUnionType) aqlType).isUnknownableType()) {
-                        return new AOptionalFieldPrinterFactory((AUnionType) aqlType);
+                    if (((AUnionType) type).isUnknownableType()) {
+                        return new AOptionalFieldPrinterFactory((AUnionType) type);
                     } else {
-                        return new AUnionPrinterFactory((AUnionType) aqlType);
+                        return new AUnionPrinterFactory((AUnionType) type);
                     }
                 case UUID:
                     return AUUIDPrinterFactory.INSTANCE;

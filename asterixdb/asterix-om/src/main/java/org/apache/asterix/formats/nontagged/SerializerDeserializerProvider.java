@@ -87,23 +87,23 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
     @SuppressWarnings("rawtypes")
     @Override
     public ISerializerDeserializer getSerializerDeserializer(Object typeInfo) {
-        IAType aqlType = (IAType) typeInfo;
-        if (aqlType == null) {
+        IAType type = (IAType) typeInfo;
+        if (type == null) {
             return null;
         }
-        switch (aqlType.getTypeTag()) {
+        switch (type.getTypeTag()) {
             case ANY:
             case UNION:
                 // we could do smth better for nullable fields
                 return AObjectSerializerDeserializer.INSTANCE;
             default:
-                return addTag(getNonTaggedSerializerDeserializer(aqlType));
+                return addTag(getNonTaggedSerializerDeserializer(type));
         }
     }
 
     @SuppressWarnings("rawtypes")
-    public ISerializerDeserializer getNonTaggedSerializerDeserializer(IAType aqlType) {
-        switch (aqlType.getTypeTag()) {
+    public ISerializerDeserializer getNonTaggedSerializerDeserializer(IAType type) {
+        switch (type.getTypeTag()) {
             case CIRCLE:
                 return ACircleSerializerDeserializer.INSTANCE;
             case DATE:
@@ -145,7 +145,7 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
             case INTERVAL:
                 return AIntervalSerializerDeserializer.INSTANCE;
             case ARRAY:
-                return new AOrderedListSerializerDeserializer((AOrderedListType) aqlType);
+                return new AOrderedListSerializerDeserializer((AOrderedListType) type);
             case POINT:
                 return APointSerializerDeserializer.INSTANCE;
             case POINT3D:
@@ -155,9 +155,9 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
             case POLYGON:
                 return APolygonSerializerDeserializer.INSTANCE;
             case OBJECT:
-                return new ARecordSerializerDeserializer((ARecordType) aqlType);
+                return new ARecordSerializerDeserializer((ARecordType) type);
             case MULTISET:
-                return new AUnorderedListSerializerDeserializer((AUnorderedListType) aqlType);
+                return new AUnorderedListSerializerDeserializer((AUnorderedListType) type);
             case UUID:
                 return AUUIDSerializerDeserializer.INSTANCE;
             case SHORTWITHOUTTYPEINFO:
@@ -166,7 +166,7 @@ public class SerializerDeserializerProvider implements ISerializerDeserializerPr
                 return AGeometrySerializerDeserializer.INSTANCE;
             default:
                 throw new NotImplementedException(
-                        "No serializer/deserializer implemented for type " + aqlType.getTypeTag() + " .");
+                        "No serializer/deserializer implemented for type " + type.getTypeTag() + " .");
         }
     }
 

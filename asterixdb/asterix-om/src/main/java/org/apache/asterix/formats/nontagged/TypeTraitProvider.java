@@ -43,12 +43,12 @@ public class TypeTraitProvider implements ITypeTraitProvider {
     public static final TypeTraitProvider INSTANCE = new TypeTraitProvider();
 
     @Override
-    public ITypeTraits getTypeTrait(Object type) {
-        IAType aqlType = (IAType) type;
-        if (aqlType == null) {
+    public ITypeTraits getTypeTrait(Object typeInfo) {
+        IAType type = (IAType) typeInfo;
+        if (type == null) {
             return null;
         }
-        switch (aqlType.getTypeTag()) {
+        switch (type.getTypeTag()) {
             case BOOLEAN:
             case TINYINT:
                 return ONEBYTETYPETRAIT;
